@@ -22,6 +22,7 @@ from aeat.adapters.outbound.aeat.sede._nif_iva_check import (
     NifIvaCheckResult,
     NifIvaCheckSedeDriver,
     extract_verdict_from_response_text,
+    is_aeat_auth_gate_redirect,
 )
 from aeat.domain.calculations.registry import RegistryValidationError
 
@@ -115,3 +116,34 @@ def test_extract_verdict_parses_invalid_response_text_before_positive_tokens() -
 
 def test_extract_verdict_returns_unknown_for_unrecognized_response_text() -> None:
     assert extract_verdict_from_response_text("") == "unknown"
+
+
+def test_auth_gate_detector_matches_aeat_4033_redirect() -> None:
+    """The detector recognises AEAT's 4033 / 403 error landing URL exactly.
+
+    Verified end-to-end via .tmp/probe_nif_iva_driver.py against live
+    AEAT: navigating to ConsultaIntracomunitarios without authentication
+    lands at this exact URL.
+    """
+
+    assert is_aeat_auth_gate_redirect("https://sede.agenciatributaria.gob.es/Sede/errores/erro4033.html")
+    assert is_aeat_auth_gate_redirect(
+        "https://sede.agenciatributaria.gob.es/Sede/errores/erro4033.html?from=ConsultaIntracomunitarios"
+    )
+
+
+def test_auth_gate_detector_rejects_non_4033_aeat_pages() -> None:
+    """Other AEAT error pages and the form servlet itself are not auth-gates."""
+
+    assert not is_aeat_auth_gate_redirect(
+        "https://www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/ConsultaIntracomunitarios"
+    )
+    assert not is_aeat_auth_gate_redirect("https://sede.agenciatributaria.gob.es/Sede/errores/erro4032.html")
+    assert not is_aeat_auth_gate_redirect("https://sede.agenciatributaria.gob.es/Sede/iva.html")
+
+
+def test_auth_gate_detector_rejects_non_aeat_hosts() -> None:
+    """The detector pins to AEAT subdomains; arbitrary URLs containing 'erro4033' do not match."""
+
+    assert not is_aeat_auth_gate_redirect("https://example.com/erro4033.html")
+    assert not is_aeat_auth_gate_redirect("")

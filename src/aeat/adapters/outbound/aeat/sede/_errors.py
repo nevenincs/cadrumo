@@ -55,6 +55,10 @@ class SedeFailureMode(StrEnum):
     SITE_HEALTH_FAILED = "site_health_failed"
     BROWSER_BACKEND_FAILED = "browser_backend_failed"
     EXTERNAL_SHAPE_CHANGED = "external_shape_changed"
+    # Surface that requires AEAT authentication (cl@ve / certificate)
+    # which the live driver does not hold. The form navigation succeeds
+    # at HTTP 200 but redirects to AEAT's standard 4033 / 403 error page.
+    AUTH_GATE_DETECTED = "auth_gate_detected"
 
 
 class SedeNavigationError(SedeError):

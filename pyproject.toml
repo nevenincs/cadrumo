@@ -68,6 +68,7 @@ dependencies = [
   # CPython — required by aeat.status._parsers.expedientes to
   # localise AEAT timestamps to Europe/Madrid).
   "tzdata>=2026.2 ; sys_platform == 'win32'",
+  "xlrd>=2.0.1",
 ]
 
 [project.scripts]

@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ._enums import InvoiceKind, IvaRate, PaymentStatus
+from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -24,12 +24,7 @@ def _valid_line(
     quantity_dec = Decimal(quantity)
     unit_price_dec = Decimal(unit_price)
     subtotal = quantity_dec * unit_price_dec
-    rate = {
-        IvaRate.RATE_0: Decimal("0"),
-        IvaRate.RATE_4: Decimal("0.04"),
-        IvaRate.RATE_10: Decimal("0.10"),
-        IvaRate.RATE_21: Decimal("0.21"),
-    }.get(iva_rate)
+    rate = iva_rate_percentage(iva_rate)
     iva_amount = Decimal("0") if rate is None else (subtotal * rate)
     return InvoiceLine(
         description=description,
@@ -119,6 +114,151 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
                 "subtotal": Decimal("50.00"),
                 "iva_rate": IvaRate.RATE_21,
                 "iva_amount": Decimal("10.50"),
+            }
+        )
+
+
+def test_invoice_counterparty_eu_member_state_returns_typed_enum_for_eu_country() -> None:
+    """Promote the str counterparty_country into the substrate-typed
+    EUMemberState through the typed accessor — downstream consumers
+    (OSS / IOSS / intra-community routing) work against the closed enum
+    rather than a raw 2-letter string."""
+    from aeat.domain.vat import EUMemberState
+
+    invoice = _valid_invoice(
+        counterparty_country="DE",
+        counterparty_tax_id="DE123456789",
+    )
+    assert invoice.counterparty_country == "DE"
+    assert invoice.counterparty_eu_member_state is EUMemberState.DE
+    assert invoice.counterparty_is_eu_member is True
+
+
+def test_invoice_counterparty_eu_member_state_returns_none_for_non_eu_country() -> None:
+    """Non-EU counterparties resolve to None — Modelo 369 OSS bindings
+    and intra-community classifiers gate on
+    counterparty_is_eu_member to skip non-EU lines."""
+    invoice = _valid_invoice(
+        counterparty_country="US",
+        counterparty_tax_id="US123456789",
+    )
+    assert invoice.counterparty_country == "US"
+    assert invoice.counterparty_eu_member_state is None
+    assert invoice.counterparty_is_eu_member is False
+
+
+def test_invoice_iva_classification_for_line_returns_substrate_typed_record() -> None:
+    """Invoice.iva_classification_for_line(line) returns the canonical
+    substrate-grounded triple (VATCategory + VATRateKind +
+    IvaFlowDirection) bundled in IvaInvoiceClassification — the typed
+    record downstream filing surfaces consume."""
+    from aeat.domain.invoices import IvaInvoiceClassification
+    from aeat.domain.vat import (
+        IvaFlowDirection,
+        IvaSettlementSide,
+        VATCategory,
+        VATRateKind,
+    )
+
+    line = _valid_line(iva_rate=IvaRate.RATE_21)
+    invoice = _valid_invoice(lines=(line,))
+
+    classification = invoice.iva_classification_for_line(line)
+    assert isinstance(classification, IvaInvoiceClassification)
+    assert classification.category is VATCategory.DOMESTIC_GENERAL_21
+    assert classification.rate_kind is VATRateKind.GENERAL
+    assert classification.flow_direction is IvaFlowDirection.REPERCUTIDO
+    assert classification.settlement_sides == frozenset({IvaSettlementSide.DEVENGADA})
+
+
+def test_invoice_iva_classification_received_invoice_resolves_to_soportado() -> None:
+    """A received invoice routes lines to SOPORTADO (input IVA / cuotas
+    deducibles per LIVA art 92), regardless of rate slot."""
+    from aeat.domain.vat import IvaFlowDirection, IvaSettlementSide
+
+    line = _valid_line(iva_rate=IvaRate.RATE_10)
+    invoice = _valid_invoice(
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="BILL-001",
+        counterparty_name="Proveedor SL",
+        lines=(line,),
+    )
+
+    classification = invoice.iva_classification_for_line(line)
+    assert classification.flow_direction is IvaFlowDirection.SOPORTADO
+    assert classification.settlement_sides == frozenset({IvaSettlementSide.DEDUCIBLE})
+
+
+def test_invoice_counterparty_eu_member_state_handles_lowercase_input_via_uppercase_storage() -> None:
+    """counterparty_country normalises to uppercase at validation time
+    (validate_country_code). The eu_member_state accessor lowercases
+    again for substrate enum lookup. Round-trip works regardless of
+    input case."""
+    from aeat.domain.vat import EUMemberState
+
+    invoice = _valid_invoice(
+        counterparty_country="fr",  # input lowercase
+        counterparty_tax_id="FR12345678901",
+    )
+    assert invoice.counterparty_country == "FR"  # stored uppercase
+    assert invoice.counterparty_eu_member_state is EUMemberState.FR
+
+
+def test_invoice_iva_category_is_typed_as_vat_category_substrate_enum() -> None:
+    """Invoice.iva_category is now strongly-typed VATCategory | None
+    instead of free-form str | None. Pydantic coerces string inputs
+    (the historical persistence shape) into VATCategory members and
+    serializes them back to their string values, so existing
+    serialization round-trips remain valid."""
+    from aeat.domain.vat import VATCategory
+
+    invoice = _valid_invoice()
+    # Default value is None
+    assert invoice.iva_category is None
+
+    # String input coerces to VATCategory
+    invoice = Invoice.model_validate(
+        {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": "INV-001",
+            "issued_at": date(2026, 4, 1),
+            "counterparty_name": "Cliente SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": Decimal("100"),
+            "iva_total": Decimal("21"),
+            "grand_total": Decimal("121"),
+            "currency": "EUR",
+            "lines": (_valid_line(),),
+            "payment_status": PaymentStatus.PAID,
+            "iva_category": "domestic_general_21",  # string input
+        }
+    )
+    assert invoice.iva_category is VATCategory.DOMESTIC_GENERAL_21
+    # JSON round-trip preserves the enum value as its string form
+    json_dump = invoice.model_dump(mode="json")
+    assert json_dump["iva_category"] == "domestic_general_21"
+
+
+def test_invoice_iva_category_rejects_unknown_string() -> None:
+    """An unknown iva_category string must fail validation now that the
+    field is typed against the closed VATCategory enum."""
+    with pytest.raises(ValidationError):
+        Invoice.model_validate(
+            {
+                "kind": InvoiceKind.ISSUED,
+                "invoice_number": "INV-001",
+                "issued_at": date(2026, 4, 1),
+                "counterparty_name": "Cliente SL",
+                "counterparty_tax_id": "B12345674",
+                "counterparty_country": "ES",
+                "base_total": Decimal("100"),
+                "iva_total": Decimal("21"),
+                "grand_total": Decimal("121"),
+                "currency": "EUR",
+                "lines": (_valid_line(),),
+                "payment_status": PaymentStatus.PAID,
+                "iva_category": "bogus-category",
             }
         )
 

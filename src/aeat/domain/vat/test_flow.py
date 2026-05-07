@@ -145,3 +145,151 @@ def test_iva_flow_load_registry_recognises_three_articles() -> None:
     assert "ley-37-1992:art-84" in catalogues.legal
     assert "ley-37-1992:art-88" in catalogues.legal
     assert "ley-37-1992:art-92" in catalogues.legal
+
+
+# ---------------------------------------------------------------------------
+# Devengada vs deducible cornerstone codification
+# ---------------------------------------------------------------------------
+
+
+def test_iva_settlement_side_enum_has_two_closed_members() -> None:
+    """IVA settlement rests on two cornerstones — devengada (output IVA
+    owed to the Treasury) and deducible (input IVA reclaimable from the
+    Treasury). The enum must be closed at exactly these two members."""
+    from aeat.domain.vat import IvaSettlementSide
+
+    assert {s for s in IvaSettlementSide} == {
+        IvaSettlementSide.DEVENGADA,
+        IvaSettlementSide.DEDUCIBLE,
+    }
+
+
+def test_iva_settlement_side_string_values_are_kebab_case() -> None:
+    from aeat.domain.vat import IvaSettlementSide
+
+    assert IvaSettlementSide.DEVENGADA.value == "devengada"
+    assert IvaSettlementSide.DEDUCIBLE.value == "deducible"
+
+
+def test_repercutido_flow_contributes_to_devengada_only() -> None:
+    """LIVA art 88 — repercusión charges output IVA to the customer;
+    nothing on the deducible side."""
+    from aeat.domain.vat import IvaSettlementSide, settlement_sides_for_flow
+
+    sides = settlement_sides_for_flow(IvaFlowDirection.REPERCUTIDO)
+    assert sides == frozenset({IvaSettlementSide.DEVENGADA})
+
+
+def test_soportado_flow_contributes_to_deducible_only() -> None:
+    """LIVA art 92 — cuotas tributarias deducibles; the sujeto pasivo
+    bears IVA via direct repercusión and may deduct it."""
+    from aeat.domain.vat import IvaSettlementSide, settlement_sides_for_flow
+
+    sides = settlement_sides_for_flow(IvaFlowDirection.SOPORTADO)
+    assert sides == frozenset({IvaSettlementSide.DEDUCIBLE})
+
+
+def test_autorepercutido_flow_contributes_to_both_sides() -> None:
+    """LIVA art 84.Uno.2 inversión del sujeto pasivo — the recipient
+    self-assesses BOTH a devengada entry and a matching deducible entry
+    on the same operation. The two cancel arithmetically inside Modelo
+    303 but both must be booked."""
+    from aeat.domain.vat import IvaSettlementSide, settlement_sides_for_flow
+
+    sides = settlement_sides_for_flow(IvaFlowDirection.AUTOREPERCUTIDO)
+    assert sides == frozenset(
+        {IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}
+    )
+
+
+def test_devengada_flow_directions_set_matches_devengada_predicate() -> None:
+    from aeat.domain.vat import DEVENGADA_FLOW_DIRECTIONS, is_devengada_flow
+
+    assert DEVENGADA_FLOW_DIRECTIONS == {
+        IvaFlowDirection.REPERCUTIDO,
+        IvaFlowDirection.AUTOREPERCUTIDO,
+    }
+    for flow in IvaFlowDirection:
+        assert is_devengada_flow(flow) == (flow in DEVENGADA_FLOW_DIRECTIONS)
+
+
+def test_deducible_flow_directions_set_matches_deducible_predicate() -> None:
+    from aeat.domain.vat import DEDUCIBLE_FLOW_DIRECTIONS, is_deducible_flow
+
+    assert DEDUCIBLE_FLOW_DIRECTIONS == {
+        IvaFlowDirection.SOPORTADO,
+        IvaFlowDirection.AUTOREPERCUTIDO,
+    }
+    for flow in IvaFlowDirection:
+        assert is_deducible_flow(flow) == (flow in DEDUCIBLE_FLOW_DIRECTIONS)
+
+
+def test_devengada_and_deducible_flow_sets_intersect_at_autorepercutido() -> None:
+    """The intersection of the two cornerstone flow sets is exactly
+    AUTOREPERCUTIDO — the only flow that contributes to both sides on
+    the same operation."""
+    from aeat.domain.vat import (
+        DEDUCIBLE_FLOW_DIRECTIONS,
+        DEVENGADA_FLOW_DIRECTIONS,
+    )
+
+    assert DEVENGADA_FLOW_DIRECTIONS & DEDUCIBLE_FLOW_DIRECTIONS == frozenset(
+        {IvaFlowDirection.AUTOREPERCUTIDO}
+    )
+
+
+def test_devengada_and_deducible_flow_sets_union_to_full_flow_taxonomy() -> None:
+    """Every flow direction contributes to at least one settlement side —
+    the union of the two cornerstone sets covers the full taxonomy."""
+    from aeat.domain.vat import (
+        DEDUCIBLE_FLOW_DIRECTIONS,
+        DEVENGADA_FLOW_DIRECTIONS,
+    )
+
+    assert DEVENGADA_FLOW_DIRECTIONS | DEDUCIBLE_FLOW_DIRECTIONS == set(IvaFlowDirection)
+
+
+def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
+    """The settlement-side mapping must cover every IvaFlowDirection
+    member — no flow falls through to an unclassified state."""
+    from aeat.domain.vat import settlement_sides_for_flow
+
+    for flow in IvaFlowDirection:
+        sides = settlement_sides_for_flow(flow)
+        assert sides, f"{flow!r} maps to empty settlement-side set"
+
+
+def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
+    """Modelo 303 cuota-devengada-total formula sums repercutido (3 rate
+    tiers) + autorepercutido — the same flows as DEVENGADA_FLOW_DIRECTIONS.
+    This test is a contract gate: if the substrate's devengada set ever
+    changes, this test fires unless 303's formula updates in lockstep."""
+    from aeat.domain.calculations.registry import load_registry_tree
+    from aeat.domain.vat import (
+        DEVENGADA_FLOW_DIRECTIONS,
+        IvaFlowDirection,
+    )
+
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    m303 = next(m for m in modelos if m.id == "303")
+    revision = m303.revisions["2009-y-siguientes"]
+
+    # Each ledger_iva_aggregation binding declares its flow direction in
+    # the selector. Collect the flow directions of all bindings whose
+    # cuota contributes to cuota-devengada-total via the formula.
+    devengada_formula = next(
+        f for f in revision.formulas if f.id == "modelo-303-iva-cuota-devengada-total"
+    )
+    casilla_to_binding = {c.id: c.binding for c in revision.casillas if c.binding}
+    binding_flows: set[IvaFlowDirection] = set()
+    # Walk the formula expression to find casilla operands
+    for arg in devengada_formula.expression.args or ():
+        casilla_id = arg.casilla
+        if casilla_id is None or casilla_id not in casilla_to_binding:
+            continue
+        binding_id = casilla_to_binding[casilla_id]
+        binding = next(b for b in revision.bindings if b.id == binding_id)
+        flow_value = binding.selector["flow_direction"]
+        binding_flows.add(IvaFlowDirection(flow_value))
+
+    assert binding_flows == DEVENGADA_FLOW_DIRECTIONS

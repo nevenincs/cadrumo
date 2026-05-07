@@ -746,6 +746,91 @@ def verify_registry_cmd(
     _emit_metric("modelos", ",".join(report.modelos))
 
 
+@app.command("audit-oracles", help="Surface live-parity oracle binding mismatches at startup.")
+def audit_oracles_cmd(
+    registry_root: Annotated[
+        Path,
+        typer.Option(
+            "--registry-root",
+            exists=True,
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.inspect_registry_root_help"),
+        ),
+    ] = Path("registry/aeat"),
+    environment: Annotated[
+        str,
+        typer.Option(
+            "--environment",
+            help="Live parity catalogue environment to audit against: production / test_environment / both.",
+        ),
+    ] = "production",
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help=tr("cli.registry.json_help")),
+    ] = False,
+) -> None:
+    """Audit registered live-parity oracles against every modelo's cross-reference bindings.
+
+    Loads the registry, registers every committed oracle adapter into a
+    fresh catalogue, then runs ``audit_registry_oracle_bindings``. Each
+    failure names the modelo, revision, cross-reference, oracle id, and
+    underlying catalogue error. Exit code is non-zero when failures
+    exist so CI / pre-deploy pipelines can gate on a clean audit.
+    """
+
+    from typing import cast as _cast
+
+    from ...domain.calculations.registry._aeat_nif_iva_oracle import (
+        AeatNifIvaCheckerOracle,
+    )
+    from ...domain.calculations.registry._groi_oracle import GroiOracle
+    from ...domain.calculations.registry._live_parity import (
+        LiveParityCatalogue,
+        OracleEnvironment,
+        audit_registry_oracle_bindings,
+    )
+    from ...domain.calculations.registry._loader import load_registry_tree
+
+    if environment not in {"production", "test_environment", "both"}:
+        raise typer.BadParameter(
+            f"environment must be 'production', 'test_environment', or 'both'; got {environment!r}"
+        )
+
+    modelos, _catalogues = load_registry_tree(registry_root)
+    oracle_catalogue = LiveParityCatalogue()
+    oracle_catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    oracle_catalogue.register(GroiOracle(), environment="production")
+
+    failures = audit_registry_oracle_bindings(
+        modelos,
+        oracle_catalogue,
+        environment=_cast(OracleEnvironment, environment),
+    )
+
+    if json_output:
+        typer.echo(
+            json.dumps(
+                {
+                    "environment": environment,
+                    "registered_oracle_ids": sorted(oracle_catalogue.ids()),
+                    "failure_count": len(failures),
+                    "failures": list(failures),
+                },
+                indent=2,
+            )
+        )
+    else:
+        _emit_metric("environment", environment)
+        _emit_metric("registered_oracle_ids", ",".join(sorted(oracle_catalogue.ids())))
+        _emit_metric("failure_count", len(failures))
+        for index, failure in enumerate(failures):
+            _emit_metric(f"failure[{index}]", failure)
+    if failures:
+        raise typer.Exit(code=1)
+
+
 @app.command("list-filed-data", help=tr("cli.registry.list_filed_data_help"))
 def list_filed_data_cmd(
     modelo: Annotated[

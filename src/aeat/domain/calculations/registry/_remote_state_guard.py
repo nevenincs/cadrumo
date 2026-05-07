@@ -27,6 +27,25 @@ _AEAT_HOST_SUFFIXES = (
     "agenciatributaria.gob.es",
     "aeat.es",
 )
+# Canonical AEAT write-class action labels that EVERY guard policy
+# attached to a live cross-reference / oracle MUST include. This is the
+# read-only mandate enforced as code: AEAT writes are PERMANENTLY
+# FORBIDDEN under any classification, and any operation whose action
+# text mentions one of these is rejected by the guard before any
+# network or browser call leaves the process. Callers import this
+# constant rather than redeclaring it so the canonical set stays
+# centralised.
+AEAT_WRITE_FORBIDDEN_ACTIONS: tuple[str, ...] = (
+    "server-side-save",
+    "signing",
+    "presentation",
+    "payment",
+    "amendment",
+    "cancellation",
+    "document-submission",
+    "declaration-submission",
+)
+
 _FORBIDDEN_TOKENS = (
     "post",
     "submit",

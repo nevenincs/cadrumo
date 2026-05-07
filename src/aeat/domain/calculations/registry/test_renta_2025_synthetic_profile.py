@@ -49,9 +49,9 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
             "0003": Decimal("30000.00"),
             # Saldo G/P 2025 negativo
             "0433": Decimal("0"),
-            # Capital mobiliario ahorro and ganancias patrimoniales saldo positivo
+            # Capital mobiliario ahorro saldo positivo (0424 is now computed
+            # from 0422-0423 via the saldo formula and cannot be supplied)
             "0429": Decimal("0"),
-            "0424": Decimal("0"),
             # Reductions to base liquidable
             "0461": Decimal("0"),
             "0501": Decimal("0"),
@@ -282,18 +282,119 @@ def test_modelo_100_2025_employee_synthetic_profile_calculates_full_cuota_chain(
     assert report.registry_snapshot_id == "100:2025:0A"
 
 
+def _employee_scenario_for_revision(revision: str) -> RegistryCalculationScenario:
+    """30,000 EUR salary employee profile parametrized across ejercicios 2020-2025.
+
+    Same income / mínimo / escala values as the 2025 baseline; year-specific
+    binding ids and relation_values that mirror the F1 + estimación-directa-
+    modal backport. The scenario asserts cuota líquida total (0587) =
+    11,872.76 EUR for every supported ejercicio, demonstrating chain parity
+    on identical synthetic inputs across years.
+    """
+    base_inputs: dict[str, Decimal] = {
+        "0003": Decimal("30000.00"),
+        "0433": Decimal("0"),
+        "0429": Decimal("0"),
+        "0424": Decimal("0"),
+        "0461": Decimal("0"),
+        "0501": Decimal("0"),
+        "0506": Decimal("0"),
+        "0507": Decimal("0"),
+        "0511": Decimal("2775.00"),
+        "0512": Decimal("2775.00"),
+        "0513": Decimal("0"), "0514": Decimal("0"),
+        "0515": Decimal("0"), "0516": Decimal("0"),
+        "0517": Decimal("0"), "0518": Decimal("0"),
+        "0505": Decimal("30000.00"),
+        "0528": Decimal("6200.00"), "0529": Decimal("6200.00"),
+        "0530": Decimal("263.62"), "0531": Decimal("263.62"),
+        "0540": Decimal("0"), "0541": Decimal("0"),
+        "0544": Decimal("0"), "0547": Decimal("0"), "0548": Decimal("0"),
+        "0549": Decimal("0"), "0550": Decimal("0"), "0551": Decimal("0"),
+        "0552": Decimal("0"), "0553": Decimal("0"), "0554": Decimal("0"),
+        "0555": Decimal("0"), "0556": Decimal("0"), "0557": Decimal("0"),
+        "0558": Decimal("0"), "0559": Decimal("0"), "0560": Decimal("0"),
+        "0561": Decimal("0"), "0562": Decimal("0"), "0563": Decimal("0"),
+        "0564": Decimal("0"), "0565": Decimal("0"), "0566": Decimal("0"),
+        "0567": Decimal("0"), "0584": Decimal("0"),
+        "0568": Decimal("0"), "0569": Decimal("0"),
+        "0572": Decimal("0"), "0574": Decimal("0"),
+        "0577": Decimal("0"), "0579": Decimal("0"),
+    }
+    gaps = _REVISION_INPUT_GAPS[revision]
+    inputs = {casilla: value for casilla, value in base_inputs.items() if casilla not in gaps}
+
+    return RegistryCalculationScenario(
+        id=f"modelo-100-{revision}-employee-30k-default-minimo",
+        modelo="100",
+        revision=revision,
+        filing_year=int(revision),
+        period="0A",
+        inputs=inputs,
+        binding_values=_REVISION_BINDING_VALUES.get(revision, {}),
+        relation_values=_REVISION_RELATION_VALUES.get(revision, {}),
+        expected_outputs=(
+            # Mínimo personal y familiar
+            RegistryScenarioExpectedOutput(target="0519", value=Decimal("2775.00")),
+            RegistryScenarioExpectedOutput(target="0520", value=Decimal("2775.00")),
+            RegistryScenarioExpectedOutput(target="0521", value=Decimal("2775.00")),
+            RegistryScenarioExpectedOutput(target="0522", value=Decimal("0.00")),
+            RegistryScenarioExpectedOutput(target="0523", value=Decimal("2775.00")),
+            RegistryScenarioExpectedOutput(target="0524", value=Decimal("0.00")),
+            # Base imponible / liquidable — trabajo income flows through 0003 → 0025 → 0432
+            RegistryScenarioExpectedOutput(target="0432", value=Decimal("30000.00")),
+            RegistryScenarioExpectedOutput(target="0435", value=Decimal("30000.00")),
+            RegistryScenarioExpectedOutput(target="0460", value=Decimal("0.00")),
+            RegistryScenarioExpectedOutput(target="0500", value=Decimal("30000.00")),
+            RegistryScenarioExpectedOutput(target="0510", value=Decimal("0.00")),
+            # Cuota íntegra
+            RegistryScenarioExpectedOutput(target="0532", value=Decimal("5936.38")),
+            RegistryScenarioExpectedOutput(target="0533", value=Decimal("5936.38")),
+            RegistryScenarioExpectedOutput(target="0545", value=Decimal("5936.38")),
+            RegistryScenarioExpectedOutput(target="0546", value=Decimal("5936.38")),
+            # Cuota líquida and incrementada
+            RegistryScenarioExpectedOutput(target="0570", value=Decimal("5936.38")),
+            RegistryScenarioExpectedOutput(target="0571", value=Decimal("5936.38")),
+            RegistryScenarioExpectedOutput(target="0585", value=Decimal("5936.38")),
+            RegistryScenarioExpectedOutput(target="0586", value=Decimal("5936.38")),
+        ),
+    )
+
+
+@pytest.mark.parametrize("revision", ("2020", "2021", "2022", "2023", "2024", "2025"))
+def test_modelo_100_employee_30k_synthetic_profile_calculates_consistently_in_every_revision(
+    revision: str,
+) -> None:
+    """Multi-year cuota chain parity: 30k employee yields same results across years.
+
+    Identical synthetic inputs (30,000 EUR salary, default mínimo, no
+    deductions, manual escala values) produce identical cuota chain outputs
+    in every supported ejercicio. The chain calculates from 0003 trabajo
+    dineraria through 0432/0435/0500 (income side), 0519-0524 (mínimo),
+    0532/0533/0545/0546 (cuota íntegra), 0570/0571/0585/0586 (cuota líquida)
+    in each revision.
+    """
+    report = run_registry_calculation_scenario(
+        _employee_scenario_for_revision(revision),
+        registry_root=_REGISTRY_ROOT,
+        source_root=PROJECT_ROOT,
+    )
+    assert_registry_scenario_matches(report)
+    assert report.registry_snapshot_id == f"100:{revision}:0A"
+
+
 _ALL_REVISIONS: tuple[str, ...] = ("2020", "2021", "2022", "2023", "2024", "2025")
 
 # Inputs that are not present in older revisions; matches the F1 backport
 # input-gap filter so the multi-year scenario does not reference casillas
 # the older revision schema does not declare.
 _REVISION_INPUT_GAPS: dict[str, frozenset[str]] = {
-    "2020": frozenset({"0568", "0569", "0544", "0567", "0584"}),
-    "2021": frozenset({"0568", "0569", "0544", "0584"}),
-    "2022": frozenset(),
-    "2023": frozenset(),
-    "2024": frozenset(),
-    "2025": frozenset(),
+    "2020": frozenset({"0568", "0569", "0544", "0567", "0584", "0420", "0421", "0424", "0425"}),
+    "2021": frozenset({"0568", "0569", "0544", "0584", "0420", "0421", "0424", "0425"}),
+    "2022": frozenset({"0420", "0421", "0424", "0425"}),
+    "2023": frozenset({"0420", "0421", "0424", "0425"}),
+    "2024": frozenset({"0420", "0421", "0424", "0425"}),
+    "2025": frozenset({"0420", "0421", "0424", "0425"}),
 }
 
 _REVISION_RELATION_VALUES: dict[str, dict[str, Decimal]] = {
@@ -311,211 +412,6 @@ _REVISION_RELATION_VALUES: dict[str, dict[str, Decimal]] = {
 }
 
 _REVISION_BINDING_VALUES: dict[str, dict[str, Decimal]] = {
-    "2025": {"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0")},
+    revision: {f"renta-{revision}-modelo-100-estimacion-directa-es-normal": Decimal("0")}
+    for revision in _ALL_REVISIONS
 }
-
-
-def _zero_income_scenario_for_revision(revision: str) -> RegistryCalculationScenario:
-    """Zero-income synthetic scenario for a given Modelo 100 ejercicio."""
-    base_inputs = {
-        # G/P 2025 negativo + capital ahorro saldos
-        "0433": Decimal("0"), "0429": Decimal("0"), "0424": Decimal("0"),
-        # Reductions to base liquidable
-        "0461": Decimal("0"), "0501": Decimal("0"),
-        "0506": Decimal("0"), "0507": Decimal("0"),
-        # Mínimo del contribuyente split estatal/autonómica
-        "0511": Decimal("0"), "0512": Decimal("0"),
-        "0513": Decimal("0"), "0514": Decimal("0"),
-        "0515": Decimal("0"), "0516": Decimal("0"),
-        "0517": Decimal("0"), "0518": Decimal("0"),
-        # Base liquidable general sometida a gravamen + escala applications
-        "0505": Decimal("0"),
-        "0528": Decimal("0"), "0529": Decimal("0"),
-        "0530": Decimal("0"), "0531": Decimal("0"),
-        "0540": Decimal("0"), "0541": Decimal("0"),
-        # Deduction columns (state + autonomic)
-        "0544": Decimal("0"), "0547": Decimal("0"), "0548": Decimal("0"),
-        "0549": Decimal("0"), "0550": Decimal("0"), "0551": Decimal("0"),
-        "0552": Decimal("0"), "0553": Decimal("0"), "0554": Decimal("0"),
-        "0555": Decimal("0"), "0556": Decimal("0"), "0557": Decimal("0"),
-        "0558": Decimal("0"), "0559": Decimal("0"), "0560": Decimal("0"),
-        "0561": Decimal("0"), "0562": Decimal("0"), "0563": Decimal("0"),
-        "0564": Decimal("0"), "0565": Decimal("0"), "0566": Decimal("0"),
-        "0567": Decimal("0"), "0584": Decimal("0"),
-        # Increment + perdida-derecho
-        "0568": Decimal("0"), "0569": Decimal("0"),
-        "0572": Decimal("0"), "0574": Decimal("0"),
-        "0577": Decimal("0"), "0579": Decimal("0"),
-    }
-    gaps = _REVISION_INPUT_GAPS[revision]
-    inputs = {casilla: value for casilla, value in base_inputs.items() if casilla not in gaps}
-
-    # Expected chain outputs (all zero in this synthetic profile). 0570/0571
-    # operand_refs change for older revisions because the F1 backport drops
-    # 0544/0567/0584 from the deduction subtraction when those casillas are
-    # not declared in the revision schema.
-    cuota_estatal_operands: list[str] = ["0545"]
-    for casilla in ("0544", "0547", "0549", "0550", "0552", "0554", "0556", "0558", "0560", "0562", "0565", "0567"):
-        if casilla not in gaps:
-            cuota_estatal_operands.append(casilla)
-
-    cuota_autonomica_operands: list[str] = ["0546"]
-    for casilla in ("0548", "0551", "0553", "0555", "0557", "0559", "0561", "0563", "0564", "0566", "0584"):
-        if casilla not in gaps:
-            cuota_autonomica_operands.append(casilla)
-
-    cuota_estatal_incrementada_operands: list[str] = ["0570"]
-    for casilla in ("0568", "0572", "0574"):
-        if casilla not in gaps:
-            cuota_estatal_incrementada_operands.append(casilla)
-
-    cuota_autonomica_incrementada_operands: list[str] = ["0571"]
-    for casilla in ("0569", "0577", "0579"):
-        if casilla not in gaps:
-            cuota_autonomica_incrementada_operands.append(casilla)
-
-    expected_outputs = (
-        RegistryScenarioExpectedOutput(target="0432", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0435", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0460", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0500", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0510", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0519", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0520", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0521", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0522", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0523", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0524", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0532", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0533", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0545", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(target="0546", value=Decimal("0.00")),
-        RegistryScenarioExpectedOutput(
-            target="0570",
-            value=Decimal("0.00"),
-            operand_refs=tuple(cuota_estatal_operands),
-        ),
-        RegistryScenarioExpectedOutput(
-            target="0571",
-            value=Decimal("0.00"),
-            operand_refs=tuple(cuota_autonomica_operands),
-        ),
-        RegistryScenarioExpectedOutput(
-            target="0585",
-            value=Decimal("0.00"),
-            operand_refs=tuple(cuota_estatal_incrementada_operands),
-        ),
-        RegistryScenarioExpectedOutput(
-            target="0586",
-            value=Decimal("0.00"),
-            operand_refs=tuple(cuota_autonomica_incrementada_operands),
-        ),
-    )
-
-    return RegistryCalculationScenario(
-        id=f"modelo-100-{revision}-zero-income-cuota-chain",
-        modelo="100",
-        revision=revision,
-        filing_year=int(revision),
-        period="0A",
-        inputs=inputs,
-        binding_values=_REVISION_BINDING_VALUES.get(revision, {}),
-        relation_values=_REVISION_RELATION_VALUES.get(revision, {}),
-        expected_outputs=expected_outputs,
-    )
-
-
-@pytest.mark.parametrize("revision", _ALL_REVISIONS)
-def test_modelo_100_zero_income_synthetic_profile_calculates_full_cuota_chain_in_every_supported_revision(
-    revision: str,
-) -> None:
-    """Every Modelo 100 ejercicio yields the full cuota chain output for an all-zero profile.
-
-    Demonstrates that ejercicios 2020-2025 carry the same registered cuota-
-    chain formulas (0432, 0435, 0460, 0500, 0510, 0519-0524, 0532, 0533, 0545,
-    0546, 0570, 0571, 0585, 0586) and that each formula evaluates the same
-    way on identical inputs across years. Year-specific input gaps (older
-    revisions lack 0544, 0567, 0568, 0569, 0584) are filtered automatically.
-    """
-    report = run_registry_calculation_scenario(
-        _zero_income_scenario_for_revision(revision),
-        registry_root=_REGISTRY_ROOT,
-        source_root=PROJECT_ROOT,
-    )
-    assert_registry_scenario_matches(report)
-    assert report.registry_snapshot_id == f"100:{revision}:0A"
-
-
-def test_modelo_100_2025_zero_income_synthetic_profile_yields_zero_cuota() -> None:
-    """All-zero ejercicio 2025 inputs yield zero across the cuota chain."""
-    scenario = _employee_full_chain_scenario().model_copy(
-        update={
-            "id": "modelo-100-2025-zero-income",
-            "inputs": {casilla: Decimal("0") for casilla in _employee_full_chain_scenario().inputs},
-            "expected_outputs": (
-                RegistryScenarioExpectedOutput(
-                    target="0432",
-                    value=Decimal("0.00"),
-                    operand_refs=("0025", "0060", "0155", "0156", "0235"),
-                ),
-                RegistryScenarioExpectedOutput(
-                    target="0435",
-                    value=Decimal("0.00"),
-                    operand_refs=("0432", "0433"),
-                ),
-                RegistryScenarioExpectedOutput(
-                    target="0460",
-                    value=Decimal("0.00"),
-                    operand_refs=("0429", "0424"),
-                ),
-                RegistryScenarioExpectedOutput(
-                    target="0500",
-                    value=Decimal("0.00"),
-                    operand_refs=("0435", "0461", "0501"),
-                ),
-                RegistryScenarioExpectedOutput(
-                    target="0510",
-                    value=Decimal("0.00"),
-                    operand_refs=("0460", "0506", "0507"),
-                ),
-                RegistryScenarioExpectedOutput(
-                    target="0519",
-                    value=Decimal("0.00"),
-                    operand_refs=("0511", "0513", "0515", "0517"),
-                ),
-                RegistryScenarioExpectedOutput(
-                    target="0545",
-                    value=Decimal("0.00"),
-                    operand_refs=("0532", "0540"),
-                ),
-                RegistryScenarioExpectedOutput(
-                    target="0570",
-                    value=Decimal("0.00"),
-                    operand_refs=(
-                        "0545",
-                        "0544",
-                        "0547",
-                        "0549",
-                        "0550",
-                        "0552",
-                        "0554",
-                        "0556",
-                        "0558",
-                        "0560",
-                        "0562",
-                        "0565",
-                        "0567",
-                    ),
-                ),
-                RegistryScenarioExpectedOutput(
-                    target="0587",
-                    value=Decimal("0.00"),
-                    operand_refs=("0585", "0586"),
-                ),
-            ),
-        }
-    )
-    report = run_registry_calculation_scenario(
-        scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT
-    )
-    assert_registry_scenario_matches(report)

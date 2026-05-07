@@ -1,0 +1,276 @@
+"""Cross-substrate legal-basis binding verification.
+
+This test module is the canonical gate that every rate value used by
+the IVA / IRPF substrate and modelo registry matches its BOE legal
+authority.
+
+For each rate, the chain of references is checked end-to-end:
+
+1. The BOE corpus excerpt contains the operative percentage string
+   (e.g., "21 por ciento" in LIVA art 90).
+2. The registry parameter / VAT_RATE_TABLE entry stores the matching
+   numeric value (Decimal "0.21" = 21 %).
+3. The substrate's typed enum (IvaRate / VATRateKind) maps to the
+   substrate-resolved percentage.
+4. The pydantic-typed Python wrapper
+   (:func:`iva_rate_percentage`) returns the same value.
+
+If any link in the chain drifts, this module fires a focused
+failure rather than letting the discrepancy hide behind pure
+unit-test isolation.
+
+The test names use the LIVA / LIRPF article number directly so the
+audit trail from BOE → substrate → ledger → modelo is grep-able.
+"""
+
+from __future__ import annotations
+
+import re
+import tomllib
+from datetime import date
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from aeat.core.paths import PROJECT_ROOT
+from aeat.domain.invoices import IvaRate
+from aeat.domain.invoices._enums import iva_rate_percentage
+from aeat.domain.vat import (
+    LIVA_ART_161_RECARGO,
+    EUMemberState,
+    VATRateKind,
+    lookup_rate,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+
+# Canonical date for rate lookups during these legal-binding checks.
+# 2025 is the current ejercicio at the time of writing, with stable
+# rates after the temporary 2022-2024 RATE_5 window closed.
+_BINDING_DATE = date(2025, 6, 15)
+
+
+def _strip_html(html: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.replace("\xa0", " "))).strip()
+
+
+def _read_corpus_excerpt(name: str) -> str:
+    path = PROJECT_ROOT / "corpus" / "normatives" / "html" / name
+    return path.read_text(encoding="utf-8")
+
+
+def _legal_entry(toml_relative: str, article_id: str) -> dict[str, str | list[str]]:
+    path = PROJECT_ROOT / "registry" / "aeat" / "legal" / toml_relative
+    with path.open("rb") as handle:
+        data = tomllib.load(handle)
+    return data["legal"][article_id]
+
+
+# ---------------------------------------------------------------------------
+# LIVA art 90 — general 21 %
+# ---------------------------------------------------------------------------
+
+
+def test_liva_art_90_corpus_excerpt_quotes_21_per_cent_general_rate() -> None:
+    body = _strip_html(_read_corpus_excerpt("ley-37-1992-art-90.html"))
+    assert "Tipo impositivo general" in body
+    assert "21 por ciento" in body
+
+
+def test_liva_art_90_substrate_general_rate_resolves_to_21_per_cent_for_es() -> None:
+    rate = lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, _BINDING_DATE)
+    assert rate.pct == Decimal("21")
+
+
+def test_iva_rate_21_helper_resolves_to_substrate_general_rate() -> None:
+    """IvaRate.RATE_21 wrapper must return the substrate's GENERAL
+    rate divided by 100, anchored to LIVA art 90."""
+    expected = lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, _BINDING_DATE).pct / Decimal("100")
+    assert iva_rate_percentage(IvaRate.RATE_21, on_date=_BINDING_DATE) == expected
+
+
+def test_liva_art_90_legal_entry_carries_required_text() -> None:
+    entry = _legal_entry("iva-rates.toml", "ley-37-1992:art-90")
+    required_text = entry["required_text"]
+    assert any("Tipo impositivo general" in t for t in required_text)
+    assert any("21 por ciento" in t for t in required_text)
+
+
+# ---------------------------------------------------------------------------
+# LIVA art 91 Uno — reduced 10 %
+# ---------------------------------------------------------------------------
+
+
+def test_liva_art_91_corpus_excerpt_quotes_10_and_4_per_cent_reduced_rates() -> None:
+    body = _strip_html(_read_corpus_excerpt("ley-37-1992-art-91.html"))
+    assert "Tipos impositivos reducidos" in body
+    assert "10 por ciento" in body
+    assert "4 por ciento" in body
+
+
+def test_liva_art_91_substrate_reduced_rate_resolves_to_10_per_cent_for_es() -> None:
+    rate = lookup_rate(EUMemberState.ES, VATRateKind.REDUCED, _BINDING_DATE)
+    assert rate.pct == Decimal("10")
+
+
+def test_iva_rate_10_helper_resolves_to_substrate_reduced_rate() -> None:
+    expected = lookup_rate(EUMemberState.ES, VATRateKind.REDUCED, _BINDING_DATE).pct / Decimal("100")
+    assert iva_rate_percentage(IvaRate.RATE_10, on_date=_BINDING_DATE) == expected
+
+
+# ---------------------------------------------------------------------------
+# LIVA art 91 Dos — super-reduced 4 %
+# ---------------------------------------------------------------------------
+
+
+def test_liva_art_91_substrate_super_reduced_rate_resolves_to_4_per_cent_for_es() -> None:
+    rate = lookup_rate(EUMemberState.ES, VATRateKind.SUPER_REDUCED, _BINDING_DATE)
+    assert rate.pct == Decimal("4")
+
+
+def test_iva_rate_4_helper_resolves_to_substrate_super_reduced_rate() -> None:
+    expected = lookup_rate(EUMemberState.ES, VATRateKind.SUPER_REDUCED, _BINDING_DATE).pct / Decimal("100")
+    assert iva_rate_percentage(IvaRate.RATE_4, on_date=_BINDING_DATE) == expected
+
+
+def test_liva_art_91_legal_entry_carries_both_reduced_and_super_reduced_quotes() -> None:
+    entry = _legal_entry("iva-rates.toml", "ley-37-1992:art-91")
+    required_text = entry["required_text"]
+    assert any("10 por ciento" in t for t in required_text)
+    assert any("4 por ciento" in t for t in required_text)
+
+
+# ---------------------------------------------------------------------------
+# LIVA art 161 — recargo de equivalencia (5.2 / 1.4 / 0.5 / 1.75)
+# ---------------------------------------------------------------------------
+
+
+def test_liva_art_161_corpus_excerpt_quotes_all_four_recargo_rates() -> None:
+    body = _strip_html(_read_corpus_excerpt("ley-37-1992-art-161.html"))
+    assert "Tipos" in body
+    for needle in ("5,2 por ciento", "1,4 por ciento", "0,50 por ciento", "1,75 por ciento"):
+        assert needle in body
+
+
+def test_liva_art_161_substrate_general_recargo_matches_5_2_per_cent() -> None:
+    """LIVA art 161 1° — 5,2% applied to 21% IVA tier supplies."""
+    assert LIVA_ART_161_RECARGO.general_rate == Decimal("0.052")
+
+
+def test_liva_art_161_substrate_reduced_recargo_matches_1_4_per_cent() -> None:
+    """LIVA art 161 2° — 1,4% applied to 10% IVA tier (art 91 Uno)."""
+    assert LIVA_ART_161_RECARGO.reducido_rate == Decimal("0.014")
+
+
+def test_liva_art_161_substrate_super_reduced_recargo_matches_0_5_per_cent() -> None:
+    """LIVA art 161 3° — 0,5% applied to 4% IVA tier (art 91 Dos)."""
+    assert LIVA_ART_161_RECARGO.super_reducido_rate == Decimal("0.005")
+
+
+def test_liva_art_161_substrate_tabaco_recargo_matches_1_75_per_cent() -> None:
+    """LIVA art 161 4° — 1,75% on labores del tabaco (Impuesto Especial)."""
+    assert LIVA_ART_161_RECARGO.tabaco_rate == Decimal("0.0175")
+
+
+def test_liva_art_161_recargo_matches_iva_tier_alignment() -> None:
+    """The recargo de equivalencia tiers align 1:1 with the IVA rate
+    tiers per LIVA art 161 1° (general) / 2° (art 91 Uno) / 3° (art
+    91 Dos). Each tier has matching IVA + recargo percentages
+    declared by separate articles. This test confirms the alignment
+    is consistent across the two rate tables."""
+    iva_general = lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, _BINDING_DATE).pct
+    iva_reducido = lookup_rate(EUMemberState.ES, VATRateKind.REDUCED, _BINDING_DATE).pct
+    iva_super = lookup_rate(EUMemberState.ES, VATRateKind.SUPER_REDUCED, _BINDING_DATE).pct
+
+    # Sanity: IVA tiers resolve to 21/10/4 per LIVA art 90/91
+    assert (iva_general, iva_reducido, iva_super) == (
+        Decimal("21"),
+        Decimal("10"),
+        Decimal("4"),
+    )
+
+    # Recargo tiers resolve to 5.2/1.4/0.5 per LIVA art 161
+    assert LIVA_ART_161_RECARGO.general_rate * Decimal("100") == Decimal("5.200")
+    assert LIVA_ART_161_RECARGO.reducido_rate * Decimal("100") == Decimal("1.400")
+    assert LIVA_ART_161_RECARGO.super_reducido_rate * Decimal("100") == Decimal("0.500")
+
+
+# ---------------------------------------------------------------------------
+# LIRPF art 85 — imputación rates (1.1 / 2 / lookback 10)
+# ---------------------------------------------------------------------------
+
+
+def test_lirpf_art_85_corpus_excerpt_quotes_imputation_rates() -> None:
+    body = _strip_html(_read_corpus_excerpt("ley-35-2006-art-85.html"))
+    assert "Imputación de rentas inmobiliarias" in body
+    assert "2 por ciento" in body
+    assert "1,1 por ciento" in body
+    assert "diez períodos impositivos anteriores" in body
+
+
+def test_lirpf_art_85_imputacion_substrate_matches_boe_text() -> None:
+    from aeat.domain.rental._imputacion_parameters import LIRPF_ART_85_IMPUTACION
+
+    assert LIRPF_ART_85_IMPUTACION.recent_revision_rate == Decimal("0.011")  # 1.1 %
+    assert LIRPF_ART_85_IMPUTACION.old_or_no_revision_rate == Decimal("0.02")  # 2 %
+    assert LIRPF_ART_85_IMPUTACION.catastral_revision_lookback_years == 10
+
+
+# ---------------------------------------------------------------------------
+# Cross-substrate IvaRate / VATRateKind alignment
+# ---------------------------------------------------------------------------
+
+
+def test_iva_rate_slot_to_vat_rate_kind_mapping_is_total_and_consistent() -> None:
+    """Every IvaRate slot (except NOT_SUBJECT, which is out of scope of
+    IVA) must map to a VATRateKind tier. The mapping is the bridge
+    between the invoice-domain rate slots and the substrate's rate
+    tiers, anchored to LIVA arts 90-91."""
+    from aeat.domain.invoices._enums import _IVA_RATE_TO_VAT_KIND
+
+    # The closed mapping covers exactly the four numeric slots
+    assert set(_IVA_RATE_TO_VAT_KIND.keys()) == {
+        IvaRate.RATE_4,
+        IvaRate.RATE_10,
+        IvaRate.RATE_21,
+    }
+    # Slot ↔ tier alignment per LIVA art 90 / 91
+    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_21] is VATRateKind.GENERAL
+    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_10] is VATRateKind.REDUCED
+    assert _IVA_RATE_TO_VAT_KIND[IvaRate.RATE_4] is VATRateKind.SUPER_REDUCED
+
+
+def test_iva_rate_zero_resolves_to_zero_percent_directly() -> None:
+    """RATE_0 doesn't map through VATRateKind — it's a direct
+    Decimal('0') return. This is correct: zero-rated supplies don't
+    need substrate lookup since the rate is structurally zero."""
+    assert iva_rate_percentage(IvaRate.RATE_0, on_date=_BINDING_DATE) == Decimal("0")
+
+
+def test_iva_rate_exempt_and_not_subject_resolve_to_none() -> None:
+    """EXEMPT and NOT_SUBJECT lines have no numeric rate — the helper
+    must return None, anchoring the absence in the substrate
+    classification rather than producing a sentinel zero."""
+    assert iva_rate_percentage(IvaRate.EXEMPT, on_date=_BINDING_DATE) is None
+    assert iva_rate_percentage(IvaRate.NOT_SUBJECT, on_date=_BINDING_DATE) is None
+
+
+# ---------------------------------------------------------------------------
+# Registry tree loader picks up all rate articles
+# ---------------------------------------------------------------------------
+
+
+def test_registry_tree_loader_recognises_all_rate_articles() -> None:
+    """The registry tree must surface every LIVA / LIRPF rate article
+    that backs the IVA + IRPF rate substrate. If any article is missing
+    from the catalogue, downstream modelo bindings can't reference it
+    and validation fails — this test catches the regression upstream."""
+    from aeat.domain.calculations.registry import load_registry_tree
+
+    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    assert "ley-37-1992:art-90" in catalogues.legal
+    assert "ley-37-1992:art-91" in catalogues.legal
+    assert "ley-37-1992:art-161" in catalogues.legal
+    assert "ley-35-2006:art-85" in catalogues.legal

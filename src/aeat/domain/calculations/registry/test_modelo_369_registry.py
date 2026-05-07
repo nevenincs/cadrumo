@@ -2,15 +2,23 @@
 
 from __future__ import annotations
 
+import warnings
 from datetime import date
 
 import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from . import RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
-from ._record_design import extract_record_design_workbook
-from ._schema import ModeloDefinition
+from . import (
+    ModeloDefinition,
+    OssIossLedgerObservation,
+    RegistryCatalogues,
+    RegistryValidator,
+    build_snapshot,
+    extract_record_design,
+    load_registry_tree,
+    resolve_ledger_oss_aggregation_binding_values,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -274,7 +282,9 @@ def test_modelo_369_official_record_design_workbook_is_parseable() -> None:
     _, catalogues = _load_modelo_369()
     source = catalogues.sources["aeat-dr-369-2021"]
 
-    sheets = extract_record_design_workbook(PROJECT_ROOT / source.corpus_path)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        sheets = extract_record_design(PROJECT_ROOT / source.corpus_path)
     by_name = {sheet.name: sheet for sheet in sheets}
 
     assert len(sheets) == 14
@@ -310,11 +320,7 @@ def test_modelo_369_each_revision_declares_at_least_one_oss_aggregation_binding(
     modelo, _ = _load_modelo_369()
     for revision_id in ("esquema-exterior", "esquema-union", "esquema-importacion"):
         revision = modelo.revisions[revision_id]
-        oss_bindings = [
-            binding
-            for binding in revision.bindings
-            if binding.source == "ledger_oss_aggregation"
-        ]
+        oss_bindings = [binding for binding in revision.bindings if binding.source == "ledger_oss_aggregation"]
         assert oss_bindings, f"{revision_id} declares no ledger_oss_aggregation bindings"
 
 
@@ -324,10 +330,6 @@ def test_modelo_369_esquema_union_demonstrator_bindings_resolve_end_to_end() -> 
     Esquema Unión observations."""
     from decimal import Decimal
 
-    from aeat.domain.calculations.registry._bindings import (
-        OssIossLedgerObservation,
-        resolve_ledger_oss_aggregation_binding_values,
-    )
     from aeat.domain.vat import (
         EUMemberState,
         InvoiceDirection,
@@ -387,10 +389,6 @@ def test_modelo_369_esquema_importacion_ioss_binding_resolves_low_value_sale() -
     """End-to-end smoke test for the IOSS Importación binding."""
     from decimal import Decimal
 
-    from aeat.domain.calculations.registry._bindings import (
-        OssIossLedgerObservation,
-        resolve_ledger_oss_aggregation_binding_values,
-    )
     from aeat.domain.vat import (
         EUMemberState,
         InvoiceDirection,
@@ -436,3 +434,219 @@ def test_modelo_369_esquema_union_constructs_link_oss_bindings() -> None:
     assert "modelo-369-union-de-services-21pct" in construct.bindings
     assert "modelo-369-union-fr-services-21pct" in construct.bindings
     assert "modelo-369-union-de-goods-distance-21pct" in construct.bindings
+
+
+# ---------------------------------------------------------------------------
+# Per-Esquema bound + computed result casillas
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("revision_id", "bound_casilla_ids", "total_casilla_id", "formula_id", "app_link_id"),
+    [
+        (
+            "esquema-exterior",
+            ("iva.exterior.de.services-cuota",),
+            "iva.exterior.cuota-total",
+            "modelo-369-exterior-cuota-total",
+            "modelo-369-exterior-calculation",
+        ),
+        (
+            "esquema-union",
+            (
+                "iva.union.de.services-cuota",
+                "iva.union.fr.services-cuota",
+                "iva.union.de.goods-distance-cuota",
+            ),
+            "iva.union.cuota-total",
+            "modelo-369-union-cuota-total",
+            "modelo-369-union-calculation",
+        ),
+        (
+            "esquema-importacion",
+            ("iva.importacion.de.low-value-cuota",),
+            "iva.importacion.cuota-total",
+            "modelo-369-importacion-cuota-total",
+            "modelo-369-importacion-calculation",
+        ),
+    ],
+)
+def test_modelo_369_per_esquema_result_casillas_present(
+    revision_id: str,
+    bound_casilla_ids: tuple[str, ...],
+    total_casilla_id: str,
+    formula_id: str,
+    app_link_id: str,
+) -> None:
+    modelo, _ = _load_modelo_369()
+    revision = modelo.revisions[revision_id]
+    casilla_ids = {c.id for c in revision.casillas}
+    formula_ids = {f.id for f in revision.formulas}
+    app_link_ids = {link.id for link in revision.application_links}
+
+    for bound_id in bound_casilla_ids:
+        assert bound_id in casilla_ids
+    assert total_casilla_id in casilla_ids
+    assert formula_id in formula_ids
+    assert app_link_id in app_link_ids
+
+
+def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
+    """Full chain: ledger observations → ledger_oss_aggregation bindings →
+    bound casillas → cuota-total formula sum."""
+    from decimal import Decimal
+
+    from aeat.domain.vat import (
+        EUMemberState,
+        InvoiceDirection,
+        OssIossRegime,
+        TransactionKind,
+        VATRateKind,
+    )
+
+    from . import (
+        build_snapshot,
+        calculate_registry_snapshot,
+        resolve_bound_casilla_inputs,
+    )
+
+    modelo, catalogues = _load_modelo_369()
+    revision = modelo.revisions["esquema-union"]
+
+    observations = [
+        OssIossLedgerObservation(
+            ledger_id="inv-de-services",
+            transaction_date=date(2025, 6, 15),
+            regime=OssIossRegime.UNION_SCHEME,
+            destination_member_state=EUMemberState.DE,
+            rate_kind=VATRateKind.GENERAL,
+            invoice_direction=InvoiceDirection.ISSUED,
+            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+            base_amount=Decimal("1000"),
+            iva_amount=Decimal("190"),
+        ),
+        OssIossLedgerObservation(
+            ledger_id="inv-fr-services",
+            transaction_date=date(2025, 6, 20),
+            regime=OssIossRegime.UNION_SCHEME,
+            destination_member_state=EUMemberState.FR,
+            rate_kind=VATRateKind.GENERAL,
+            invoice_direction=InvoiceDirection.ISSUED,
+            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
+            base_amount=Decimal("500"),
+            iva_amount=Decimal("100"),
+        ),
+        OssIossLedgerObservation(
+            ledger_id="inv-de-goods",
+            transaction_date=date(2025, 7, 1),
+            regime=OssIossRegime.UNION_SCHEME,
+            destination_member_state=EUMemberState.DE,
+            rate_kind=VATRateKind.GENERAL,
+            invoice_direction=InvoiceDirection.ISSUED,
+            transaction_kind=TransactionKind.OSS_UNION_GOODS_DISTANCE_SALE,
+            base_amount=Decimal("200"),
+            iva_amount=Decimal("38"),
+        ),
+    ]
+
+    binding_values = resolve_ledger_oss_aggregation_binding_values(revision, observations)
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2025,
+        period="1T",
+        revision_id="esquema-union",
+    )
+    casilla_inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=casilla_inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(2025, 4, 15)},
+    )
+
+    assert result.values["iva.union.de.services-cuota"] == Decimal("190")
+    assert result.values["iva.union.fr.services-cuota"] == Decimal("100")
+    assert result.values["iva.union.de.goods-distance-cuota"] == Decimal("38")
+    assert result.values["iva.union.cuota-total"] == Decimal("328.00")
+
+
+def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> None:
+    from decimal import Decimal
+
+    from aeat.domain.vat import (
+        EUMemberState,
+        InvoiceDirection,
+        OssIossRegime,
+        TransactionKind,
+        VATRateKind,
+    )
+
+    from . import (
+        build_snapshot,
+        calculate_registry_snapshot,
+        resolve_bound_casilla_inputs,
+    )
+
+    modelo, catalogues = _load_modelo_369()
+    revision = modelo.revisions["esquema-importacion"]
+
+    observations = [
+        OssIossLedgerObservation(
+            ledger_id="ioss-de-1",
+            transaction_date=date(2025, 6, 1),
+            regime=OssIossRegime.IMPORT_SCHEME,
+            destination_member_state=EUMemberState.DE,
+            rate_kind=VATRateKind.GENERAL,
+            invoice_direction=InvoiceDirection.ISSUED,
+            transaction_kind=TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE,
+            base_amount=Decimal("80"),
+            iva_amount=Decimal("15.20"),
+        ),
+        OssIossLedgerObservation(
+            ledger_id="ioss-de-2",
+            transaction_date=date(2025, 6, 2),
+            regime=OssIossRegime.IMPORT_SCHEME,
+            destination_member_state=EUMemberState.DE,
+            rate_kind=VATRateKind.GENERAL,
+            invoice_direction=InvoiceDirection.ISSUED,
+            transaction_kind=TransactionKind.IOSS_DISTANCE_SALE_LOW_VALUE,
+            base_amount=Decimal("120"),
+            iva_amount=Decimal("22.80"),
+        ),
+    ]
+
+    binding_values = resolve_ledger_oss_aggregation_binding_values(revision, observations)
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=2025,
+        period="01",
+        revision_id="esquema-importacion",
+    )
+    casilla_inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=casilla_inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(2025, 2, 15)},
+    )
+
+    assert result.values["iva.importacion.de.low-value-cuota"] == Decimal("38.00")
+    assert result.values["iva.importacion.cuota-total"] == Decimal("38.00")
+
+
+def test_modelo_369_constructs_link_calculation_application_link() -> None:
+    """Each Esquema construct must reference its own calculation app link."""
+    modelo, _ = _load_modelo_369()
+    expected = {
+        "esquema-exterior": "modelo-369-exterior-calculation",
+        "esquema-union": "modelo-369-union-calculation",
+        "esquema-importacion": "modelo-369-importacion-calculation",
+    }
+    for revision_id, calc_link_id in expected.items():
+        revision = modelo.revisions[revision_id]
+        construct = revision.constructs[0]
+        assert calc_link_id in construct.application_links
