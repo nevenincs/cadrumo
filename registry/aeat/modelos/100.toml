@@ -2781,7 +2781,9 @@ target = "0585"
 expression = { op = "sum", args = [
     { casilla = "0570" },
     { casilla = "0572" },
+    { casilla = "0573" },
     { casilla = "0574" },
+    { casilla = "0576" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-67"]
@@ -2797,7 +2799,9 @@ target = "0586"
 expression = { op = "sum", args = [
     { casilla = "0571" },
     { casilla = "0577" },
+    { casilla = "0578" },
     { casilla = "0579" },
+    { casilla = "0581" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77"]
@@ -5601,7 +5605,9 @@ target = "0585"
 expression = { op = "sum", args = [
     { casilla = "0570" },
     { casilla = "0572" },
+    { casilla = "0573" },
     { casilla = "0574" },
+    { casilla = "0576" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-67"]
@@ -5617,7 +5623,9 @@ target = "0586"
 expression = { op = "sum", args = [
     { casilla = "0571" },
     { casilla = "0577" },
+    { casilla = "0578" },
     { casilla = "0579" },
+    { casilla = "0581" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77"]
@@ -8669,8 +8677,11 @@ target = "0585"
 expression = { op = "sum", args = [
     { casilla = "0570" },
     { casilla = "0568" },
+    { casilla = "0582" },
     { casilla = "0572" },
+    { casilla = "0573" },
     { casilla = "0574" },
+    { casilla = "0576" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-67"]
@@ -8686,8 +8697,11 @@ target = "0586"
 expression = { op = "sum", args = [
     { casilla = "0571" },
     { casilla = "0569" },
+    { casilla = "0583" },
     { casilla = "0577" },
+    { casilla = "0578" },
     { casilla = "0579" },
+    { casilla = "0581" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77"]
@@ -11769,8 +11783,11 @@ target = "0585"
 expression = { op = "sum", args = [
     { casilla = "0570" },
     { casilla = "0568" },
+    { casilla = "0582" },
     { casilla = "0572" },
+    { casilla = "0573" },
     { casilla = "0574" },
+    { casilla = "0576" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-67"]
@@ -11786,8 +11803,12 @@ target = "0586"
 expression = { op = "sum", args = [
     { casilla = "0571" },
     { casilla = "0569" },
+    { casilla = "0583" },
     { casilla = "0577" },
+    { casilla = "0578" },
     { casilla = "0579" },
+    { casilla = "0581" },
+    { casilla = "0504" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77"]
@@ -14871,8 +14892,11 @@ target = "0585"
 expression = { op = "sum", args = [
     { casilla = "0570" },
     { casilla = "0568" },
+    { casilla = "0582" },
     { casilla = "0572" },
+    { casilla = "0573" },
     { casilla = "0574" },
+    { casilla = "0576" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-67"]
@@ -14888,8 +14912,12 @@ target = "0586"
 expression = { op = "sum", args = [
     { casilla = "0571" },
     { casilla = "0569" },
+    { casilla = "0583" },
     { casilla = "0577" },
+    { casilla = "0578" },
     { casilla = "0579" },
+    { casilla = "0581" },
+    { casilla = "0504" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77"]
@@ -20232,8 +20260,11 @@ target = "0585"
 expression = { op = "sum", args = [
     { casilla = "0570" },
     { casilla = "0568" },
+    { casilla = "0582" },
     { casilla = "0572" },
+    { casilla = "0573" },
     { casilla = "0574" },
+    { casilla = "0576" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-67", "orden-hac-277-2026:art-3"]
@@ -20249,8 +20280,12 @@ target = "0586"
 expression = { op = "sum", args = [
     { casilla = "0571" },
     { casilla = "0569" },
+    { casilla = "0583" },
     { casilla = "0577" },
+    { casilla = "0578" },
     { casilla = "0579" },
+    { casilla = "0581" },
+    { casilla = "0504" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-77", "orden-hac-277-2026:art-3"]
