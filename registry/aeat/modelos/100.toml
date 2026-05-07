@@ -388,6 +388,8 @@ formulas = [
     "renta-2020-resto-a-ingresar-positivo",
     "renta-2020-deduccion-doble-imposicion-internacional-suma",
     "renta-2020-importe-derecho-reduccion-pension-suma",
+    "renta-2020-cuota-liquida-autonomica-incrementada-passthrough",
+    "renta-2020-deduccion-economia-social-passthrough",
 ]
 
 [[revisions."2020".constructs]]
@@ -414,6 +416,8 @@ formulas = [
 id = "renta-2020-mini-model-capital-mobiliario"
 title = "Modelo 100 2020 capital mobiliario aggregators"
 legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
     "ley-35-2006:art-25",
     "ley-35-2006:art-26",
     "ley-35-2006:art-33",
@@ -442,6 +446,7 @@ formulas = [
     "renta-2020-iic-ganancias-reducidas-suma",
     "renta-2020-iic-paraisos-fiscales-suma",
     "renta-2020-iic-perdidas-reducidas-suma",
+    "renta-2020-capital-inmobiliario-intereses-gastos-passthrough",
 ]
 
 [[revisions."2020".constructs]]
@@ -550,6 +555,42 @@ formulas = [
     "renta-2020-trabajo-suma-rendimientos-netos-previos",
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-cuota-liquida-autonomica-incrementada-passthrough"
+target = "0671"
+expression = { op = "copy", args = [{ casilla = "0586" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-deduccion-economia-social-passthrough"
+target = "0879"
+expression = { op = "copy", args = [{ casilla = "1179" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "deducciones"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-inmobiliario-intereses-gastos-passthrough"
+target = "1224"
+expression = { op = "copy", args = [{ casilla = "0108" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["rendimiento neto", "capital inmobiliario"]
 
 [[revisions."2020".formulas]]
 id = "renta-2020-importe-derecho-reduccion-pension-suma"
@@ -2908,6 +2949,8 @@ formulas = [
     "renta-2021-deduccion-doble-imposicion-internacional-suma",
     "renta-2021-anualidades-alimentos-hijos-suma",
     "renta-2021-importe-derecho-reduccion-pension-suma",
+    "renta-2021-cuota-liquida-autonomica-incrementada-passthrough",
+    "renta-2021-deduccion-economia-social-passthrough",
 ]
 
 [[revisions."2021".constructs]]
@@ -2934,6 +2977,8 @@ formulas = [
 id = "renta-2021-mini-model-capital-mobiliario"
 title = "Modelo 100 2021 capital mobiliario aggregators"
 legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
     "ley-35-2006:art-25",
     "ley-35-2006:art-26",
     "ley-35-2006:art-33",
@@ -2962,6 +3007,7 @@ formulas = [
     "renta-2021-iic-ganancias-reducidas-suma",
     "renta-2021-iic-paraisos-fiscales-suma",
     "renta-2021-iic-perdidas-reducidas-suma",
+    "renta-2021-capital-inmobiliario-intereses-gastos-passthrough",
 ]
 
 [[revisions."2021".constructs]]
@@ -3070,6 +3116,42 @@ formulas = [
     "renta-2021-trabajo-suma-rendimientos-netos-previos",
     "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-cuota-liquida-autonomica-incrementada-passthrough"
+target = "0671"
+expression = { op = "copy", args = [{ casilla = "0586" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-deduccion-economia-social-passthrough"
+target = "0879"
+expression = { op = "copy", args = [{ casilla = "1179" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "deducciones"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-inmobiliario-intereses-gastos-passthrough"
+target = "1224"
+expression = { op = "copy", args = [{ casilla = "0108" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["rendimiento neto", "capital inmobiliario"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-importe-derecho-reduccion-pension-suma"
@@ -5449,6 +5531,8 @@ formulas = [
     "renta-2022-deduccion-doble-imposicion-internacional-suma",
     "renta-2022-anualidades-alimentos-hijos-suma",
     "renta-2022-importe-derecho-reduccion-pension-suma",
+    "renta-2022-cuota-liquida-autonomica-incrementada-passthrough",
+    "renta-2022-deduccion-economia-social-passthrough",
 ]
 
 [[revisions."2022".constructs]]
@@ -5487,6 +5571,8 @@ formulas = [
 id = "renta-2022-mini-model-capital-mobiliario"
 title = "Modelo 100 2022 capital mobiliario aggregators"
 legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
     "ley-35-2006:art-25",
     "ley-35-2006:art-26",
     "ley-35-2006:art-33",
@@ -5515,6 +5601,7 @@ formulas = [
     "renta-2022-iic-ganancias-reducidas-suma",
     "renta-2022-iic-paraisos-fiscales-suma",
     "renta-2022-iic-perdidas-reducidas-suma",
+    "renta-2022-capital-inmobiliario-intereses-gastos-passthrough",
 ]
 
 [[revisions."2022".constructs]]
@@ -5628,6 +5715,42 @@ formulas = [
     "renta-2022-trabajo-suma-rendimientos-netos-previos",
     "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-cuota-liquida-autonomica-incrementada-passthrough"
+target = "0671"
+expression = { op = "copy", args = [{ casilla = "0586" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-deduccion-economia-social-passthrough"
+target = "0879"
+expression = { op = "copy", args = [{ casilla = "1179" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "deducciones"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-inmobiliario-intereses-gastos-passthrough"
+target = "1224"
+expression = { op = "copy", args = [{ casilla = "0108" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["rendimiento neto", "capital inmobiliario"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-importe-derecho-reduccion-pension-suma"
@@ -8227,6 +8350,8 @@ formulas = [
     "renta-2023-deduccion-doble-imposicion-internacional-suma",
     "renta-2023-anualidades-alimentos-hijos-suma",
     "renta-2023-importe-derecho-reduccion-pension-suma",
+    "renta-2023-cuota-liquida-autonomica-incrementada-passthrough",
+    "renta-2023-deduccion-economia-social-passthrough",
 ]
 
 [[revisions."2023".constructs]]
@@ -8265,6 +8390,8 @@ formulas = [
 id = "renta-2023-mini-model-capital-mobiliario"
 title = "Modelo 100 2023 capital mobiliario aggregators"
 legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
     "ley-35-2006:art-25",
     "ley-35-2006:art-26",
     "ley-35-2006:art-33",
@@ -8293,6 +8420,7 @@ formulas = [
     "renta-2023-iic-ganancias-reducidas-suma",
     "renta-2023-iic-paraisos-fiscales-suma",
     "renta-2023-iic-perdidas-reducidas-suma",
+    "renta-2023-capital-inmobiliario-intereses-gastos-passthrough",
 ]
 
 [[revisions."2023".constructs]]
@@ -8407,6 +8535,42 @@ formulas = [
     "renta-2023-trabajo-suma-rendimientos-netos-previos",
     "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-cuota-liquida-autonomica-incrementada-passthrough"
+target = "0671"
+expression = { op = "copy", args = [{ casilla = "0586" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-deduccion-economia-social-passthrough"
+target = "0879"
+expression = { op = "copy", args = [{ casilla = "1179" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "deducciones"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-inmobiliario-intereses-gastos-passthrough"
+target = "1224"
+expression = { op = "copy", args = [{ casilla = "0108" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["rendimiento neto", "capital inmobiliario"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-importe-derecho-reduccion-pension-suma"
@@ -11034,6 +11198,8 @@ formulas = [
     "renta-2024-deduccion-doble-imposicion-internacional-suma",
     "renta-2024-anualidades-alimentos-hijos-suma",
     "renta-2024-importe-derecho-reduccion-pension-suma",
+    "renta-2024-cuota-liquida-autonomica-incrementada-passthrough",
+    "renta-2024-deduccion-economia-social-passthrough",
 ]
 
 [[revisions."2024".constructs]]
@@ -11072,6 +11238,8 @@ formulas = [
 id = "renta-2024-mini-model-capital-mobiliario"
 title = "Modelo 100 2024 capital mobiliario aggregators"
 legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
     "ley-35-2006:art-25",
     "ley-35-2006:art-26",
     "ley-35-2006:art-33",
@@ -11100,6 +11268,7 @@ formulas = [
     "renta-2024-iic-ganancias-reducidas-suma",
     "renta-2024-iic-paraisos-fiscales-suma",
     "renta-2024-iic-perdidas-reducidas-suma",
+    "renta-2024-capital-inmobiliario-intereses-gastos-passthrough",
 ]
 
 [[revisions."2024".constructs]]
@@ -11214,6 +11383,42 @@ formulas = [
     "renta-2024-trabajo-suma-rendimientos-netos-previos",
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-cuota-liquida-autonomica-incrementada-passthrough"
+target = "0671"
+expression = { op = "copy", args = [{ casilla = "0586" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-deduccion-economia-social-passthrough"
+target = "0879"
+expression = { op = "copy", args = [{ casilla = "1179" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "deducciones"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-inmobiliario-intereses-gastos-passthrough"
+target = "1224"
+expression = { op = "copy", args = [{ casilla = "0108" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["rendimiento neto", "capital inmobiliario"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-importe-derecho-reduccion-pension-suma"
@@ -17079,6 +17284,8 @@ formulas = [
     "renta-2025-deduccion-doble-imposicion-internacional-suma",
     "renta-2025-anualidades-alimentos-hijos-suma",
     "renta-2025-importe-derecho-reduccion-pension-suma",
+    "renta-2025-cuota-liquida-autonomica-incrementada-passthrough",
+    "renta-2025-deduccion-economia-social-passthrough",
 ]
 
 [[revisions."2025".constructs]]
@@ -17112,6 +17319,8 @@ formulas = [
 id = "renta-2025-mini-model-capital-mobiliario"
 title = "Modelo 100 2025 capital mobiliario aggregators"
 legal_refs = [
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
     "ley-35-2006:art-25",
     "ley-35-2006:art-26",
     "ley-35-2006:art-33",
@@ -17132,6 +17341,7 @@ formulas = [
     "renta-2025-iic-ganancias-reducidas-suma",
     "renta-2025-iic-paraisos-fiscales-suma",
     "renta-2025-iic-perdidas-reducidas-suma",
+    "renta-2025-capital-inmobiliario-intereses-gastos-passthrough",
 ]
 
 [[revisions."2025".constructs]]
@@ -17226,6 +17436,42 @@ formulas = [
     "renta-2025-diferimiento-reinversion-imputacion-suma",
     "renta-2025-transparencia-fiscal-suma",
 ]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-cuota-liquida-autonomica-incrementada-passthrough"
+target = "0671"
+expression = { op = "copy", args = [{ casilla = "0586" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota líquida autonómica", "comunidad autónoma"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-deduccion-economia-social-passthrough"
+target = "0879"
+expression = { op = "copy", args = [{ casilla = "1179" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-77"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["comunidad autónoma", "deducciones"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-inmobiliario-intereses-gastos-passthrough"
+target = "1224"
+expression = { op = "copy", args = [{ casilla = "0108" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["rendimiento neto", "capital inmobiliario"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-importe-derecho-reduccion-pension-suma"
