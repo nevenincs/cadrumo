@@ -320,12 +320,16 @@ prerequisites and acceptance tests.
    `renta-2025-modelo-100-estimacion-directa-es-normal`) to consume
    the typed enums rather than free-form strings — tracked under
    slice #18 (typed-binding rollout).
-2. **Substrate-S2: legal article catalogue closure** — fetch and register
-   the missing LIRPF articles for the uncovered mini-models: art-31
-   (estimación objetiva), art-33-37 (ganancias y pérdidas), art-68
-   sub-points (deducciones generales), art-81-bis (maternidad / large
-   family), art-82-83 (tributación familiar), art-90-91 (atribución de
-   rentas).
+2. **Substrate-S2: legal article catalogue closure** — partial delivery
+   2026-05-07. art-31 (estimación objetiva) and art-85 (imputación
+   rentas inmobiliarias) were already catalogued from earlier slices.
+   art-33 (concepto G/P), art-34 (importe G/P normas generales), art-37
+   (normas específicas de valoración), art-82 (tributación conjunta),
+   art-83 (modalidades de unidad familiar) added. Remaining gaps for
+   later slices: art-35, art-36 (transmisiones onerosas / lucrativas
+   detalladas), art-68 sub-points (deducciones generales), art-81-bis
+   (maternidad / large family), art-90, art-91 (atribución / transparencia
+   internacional).
 3. **Substrate-S3: cross-modelo relations + dependency_classifications +
    constructs backport to 2020-2024** — currently 2025-only (Task #42).
 4. **Substrate-S4: escala progresiva parameters per ejercicio** — encode
