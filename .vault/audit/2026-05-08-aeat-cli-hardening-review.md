@@ -59,3 +59,23 @@ Review notes:
   not invoke the callback without a command. The final implementation sets the
   root group to invoke the callback without a command while preserving
   no-argument help behavior.
+
+## Review Pass 3: `DISCOVERED-006` Setup Status Boundary
+
+Scope reviewed: `src/aeat/application/setup_status.py`,
+`src/aeat/application/test_setup_status.py`, and
+`src/aeat/entrypoints/cli/_setup.py`.
+
+No CRITICAL, HIGH, MEDIUM, or LOW findings were identified in this slice.
+
+Review notes:
+
+- Setup readiness and next-action projection now live in an application-layer
+  typed report.
+- The CLI handler delegates to the backend service and renders the returned
+  fields without recomputing readiness.
+- Backend tests cover each current next-action branch using real domain and
+  application models.
+- The first verification pass exposed that `profile validate` still needed the
+  existing `validate_profile` import; the repair restored that import without
+  moving profile validation logic back into `setup status`.
