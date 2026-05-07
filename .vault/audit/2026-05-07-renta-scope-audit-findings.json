@@ -7,9 +7,9 @@
       "input_kind": {
         "manual": 1531
       },
-      "computed_targets": 115,
-      "casillas_consumed_by_formulas": 308,
-      "casillas_declared_but_never_read": 1191,
+      "computed_targets": 119,
+      "casillas_consumed_by_formulas": 320,
+      "casillas_declared_but_never_read": 1177,
       "bindings_consumed_count": 1
     },
     "2021": {
@@ -18,9 +18,9 @@
         "informational": 4,
         "manual": 1689
       },
-      "computed_targets": 115,
-      "casillas_consumed_by_formulas": 309,
-      "casillas_declared_but_never_read": 1352,
+      "computed_targets": 120,
+      "casillas_consumed_by_formulas": 328,
+      "casillas_declared_but_never_read": 1330,
       "bindings_consumed_count": 1
     },
     "2022": {
@@ -29,9 +29,9 @@
         "informational": 4,
         "manual": 1848
       },
-      "computed_targets": 128,
-      "casillas_consumed_by_formulas": 334,
-      "casillas_declared_but_never_read": 1480,
+      "computed_targets": 134,
+      "casillas_consumed_by_formulas": 358,
+      "casillas_declared_but_never_read": 1453,
       "bindings_consumed_count": 1
     },
     "2023": {
@@ -40,9 +40,9 @@
         "informational": 4,
         "manual": 1925
       },
-      "computed_targets": 129,
-      "casillas_consumed_by_formulas": 339,
-      "casillas_declared_but_never_read": 1551,
+      "computed_targets": 135,
+      "casillas_consumed_by_formulas": 363,
+      "casillas_declared_but_never_read": 1524,
       "bindings_consumed_count": 1
     },
     "2024": {
@@ -51,9 +51,9 @@
         "informational": 4,
         "manual": 2058
       },
-      "computed_targets": 129,
-      "casillas_consumed_by_formulas": 339,
-      "casillas_declared_but_never_read": 1684,
+      "computed_targets": 135,
+      "casillas_consumed_by_formulas": 363,
+      "casillas_declared_but_never_read": 1657,
       "bindings_consumed_count": 1
     },
     "2025": {
@@ -64,9 +64,9 @@
         "computed": 35,
         "informational": 3
       },
-      "computed_targets": 138,
-      "casillas_consumed_by_formulas": 391,
-      "casillas_declared_but_never_read": 1805,
+      "computed_targets": 144,
+      "casillas_consumed_by_formulas": 415,
+      "casillas_declared_but_never_read": 1778,
       "bindings_consumed_count": 1
     }
   },
@@ -122,18 +122,18 @@
     "regimenes_especiales": {
       "label": "Regímenes especiales / atribución de rentas",
       "total_casillas": 85,
-      "computed": 3,
+      "computed": 4,
       "bound": 0,
       "manual": 85,
-      "coverage_pct": 3.5
+      "coverage_pct": 4.7
     },
     "ganancias_capital_mobiliario_ahorro": {
       "label": "G/P y capital mobiliario en base ahorro",
       "total_casillas": 219,
-      "computed": 19,
+      "computed": 20,
       "bound": 0,
       "manual": 219,
-      "coverage_pct": 8.7
+      "coverage_pct": 9.1
     },
     "base_y_cuota": {
       "label": "Base imponible/liquidable y cuota chain",
@@ -162,10 +162,10 @@
     "anexo_c_canarias": {
       "label": "Anexo C — Canarias (RIC, ZEC)",
       "total_casillas": 179,
-      "computed": 0,
+      "computed": 2,
       "bound": 0,
       "manual": 179,
-      "coverage_pct": 0.0
+      "coverage_pct": 1.1
     },
     "retenciones_pagos_a_cuenta": {
       "label": "Retenciones e ingresos a cuenta + pagos fraccionados",
@@ -178,15 +178,15 @@
     "regimenes_atribucion": {
       "label": "Atribución de rentas + regímenes especiales (transparencia, art. 85)",
       "total_casillas": 312,
-      "computed": 3,
+      "computed": 4,
       "bound": 0,
       "manual": 312,
-      "coverage_pct": 1.0
+      "coverage_pct": 1.3
     },
     "uncategorised": {
       "label": "Uncategorised (section[0] not anchor-mapped)",
       "total_casillas": 147,
-      "computed": 52,
+      "computed": 53,
       "bound": 0,
       "manual": 147
     }
@@ -199,26 +199,26 @@
     "top_cited": [
       [
         "ley-35-2006:art-33",
-        285
+        301
       ],
       [
         "ley-35-2006:art-34",
-        285
+        301
       ],
       [
         "ley-35-2006:art-37",
-        285
+        301
       ],
       [
         "orden-hac-277-2026:art-3",
         98
       ],
       [
-        "ley-35-2006:art-25",
-        78
+        "ley-35-2006:art-50",
+        89
       ],
       [
-        "ley-35-2006:art-50",
+        "ley-35-2006:art-25",
         78
       ],
       [
@@ -231,7 +231,7 @@
       ],
       [
         "ley-35-2006:art-49",
-        54
+        60
       ],
       [
         "ley-35-2006:art-26",
