@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from enum import StrEnum
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..calculations.registry import ModeloDefinition, ModeloRevision
 from ._schema import ProfileSchemaDefinition
+
+if TYPE_CHECKING:
+    from ..calculations.registry._schema import ModeloDefinition, ModeloRevision
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
