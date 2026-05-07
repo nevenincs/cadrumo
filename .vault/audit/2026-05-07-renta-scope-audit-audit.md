@@ -186,6 +186,37 @@ LIVA/IVA articles that belong to the IVA substrate, not Renta.
 resolves to a catalogue article. This is a strong signal that the cuota
 chain rollout did not introduce stale references.
 
+### Layer 9 — Typed-binding inventory
+
+Each Renta binding that classifies a substrate axis must consume a
+closed-membership pydantic enum from `aeat.domain.renta` rather than
+parse free-form strings at runtime. The substrate enums delivered in
+S1 (`RentaCCAA`, `EstimacionDirectaModalidad`, `RentaIncomeType`)
+are the canonical taxonomy.
+
+| Metric | Count |
+|---|---:|
+| Total bridge candidates | 7 |
+| Formally typed (declares `typed_enum`) | 0 |
+| Informally typed (selector matches enum members) | 0 |
+| Free-form (no typed bridge at all) | 7 |
+
+**2026-05-07 baseline**: zero of seven bridge-candidate bindings are
+typed. Six are the per-revision
+`renta-{year}-modelo-100-estimacion-directa-es-normal` bindings whose
+selector encodes the modality as the casilla 0168 boolean string
+"N" / "S" rather than the typed enum members `normal` / `simplificada`.
+The seventh is the 2025-only
+`renta-2025-profile-tax-residence-ccaa` binding whose selector
+references a `profile_key = "tax.residence.ccaa"` that resolves to a
+free-form string at runtime.
+
+The H4 phase deliverable is to bridge each of these to its typed
+enum. Initial sub-slice ships the audit Layer 9 driver (delivered);
+subsequent sub-slices add `typed_enum` metadata to each binding plus
+a registry-load-time validation that the bound value is a member of
+the declared enum.
+
 ### Layer 8 — Test honesty inventory
 
 Classifies every Renta test as one of three kinds:

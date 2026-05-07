@@ -372,6 +372,98 @@ def layer7_scenario_coverage() -> dict:
     return coverage
 
 
+_TYPED_ENUM_BRIDGES: tuple[tuple[str, str, tuple[str, ...]], ...] = (
+    # (binding_id_pattern, expected_typed_enum, accepted_member_values)
+    # The pattern matches against renta-{year}-... binding ids by suffix.
+    (
+        "modelo-100-estimacion-directa-es-normal",
+        "EstimacionDirectaModalidad",
+        ("normal", "simplificada"),
+    ),
+    (
+        "profile-tax-residence-ccaa",
+        "RentaCCAA",
+        (
+            "and", "ara", "ast", "bal", "can", "cab", "clm", "cyl", "cat", "ext",
+            "gal", "mad", "mur", "nav", "pva", "lar", "val", "ceu", "mel",
+        ),
+    ),
+)
+
+
+def layer9_typed_binding_inventory(modelo: dict) -> dict:
+    """Inventory which Renta substrate-axis bindings carry typed-enum metadata.
+
+    For each binding whose id suffix matches a typed-enum bridge, record:
+      - whether the binding declares a `typed_enum` field (formal typed
+        bridge),
+      - whether its selector's true_value / false_value or fixed values
+        match the expected enum members (informal typed bridge),
+      - whether it is still free-form (no typed bridge at all).
+
+    The Renta substrate enums (`RentaCCAA`, `EstimacionDirectaModalidad`,
+    `RentaIncomeType`) are the canonical taxonomy. Every Renta binding
+    that classifies a substrate axis should consume one of these enums
+    rather than parse free-form strings at runtime.
+    """
+    bridges_by_suffix: dict[str, tuple[str, frozenset[str]]] = {
+        suffix: (enum_name, frozenset(accepted))
+        for suffix, enum_name, accepted in _TYPED_ENUM_BRIDGES
+    }
+    inventory: dict[str, dict] = {}
+    for rev_id, rev in modelo.get("revisions", {}).items():
+        if not isinstance(rev, dict):
+            continue
+        rev_summary: dict[str, dict] = {}
+        for binding in rev.get("bindings", []) or []:
+            binding_id = binding.get("id", "")
+            for suffix, (enum_name, accepted) in bridges_by_suffix.items():
+                if binding_id.endswith(suffix):
+                    selector = binding.get("selector", {}) or {}
+                    selector_values: set[str] = set()
+                    if "true_value" in selector:
+                        selector_values.add(str(selector["true_value"]).lower())
+                    if "false_value" in selector:
+                        selector_values.add(str(selector["false_value"]).lower())
+                    if "value" in selector:
+                        selector_values.add(str(selector["value"]).lower())
+                    declares_typed_enum = "typed_enum" in binding
+                    informal_match_count = len(selector_values & accepted)
+                    rev_summary[binding_id] = {
+                        "expected_enum": enum_name,
+                        "declares_typed_enum_field": declares_typed_enum,
+                        "selector_values": sorted(selector_values),
+                        "informal_match_count": informal_match_count,
+                        "free_form": not declares_typed_enum
+                        and informal_match_count == 0,
+                    }
+        if rev_summary:
+            inventory[rev_id] = rev_summary
+    # Aggregate
+    total_bridges = sum(len(v) for v in inventory.values())
+    typed_count = sum(
+        1 for rev in inventory.values() for entry in rev.values()
+        if entry["declares_typed_enum_field"]
+    )
+    informal_count = sum(
+        1 for rev in inventory.values() for entry in rev.values()
+        if not entry["declares_typed_enum_field"] and entry["informal_match_count"] > 0
+    )
+    free_form_count = sum(
+        1 for rev in inventory.values() for entry in rev.values()
+        if entry["free_form"]
+    )
+    return {
+        "by_revision": inventory,
+        "summary": {
+            "total_bridge_candidates": total_bridges,
+            "formally_typed": typed_count,
+            "informally_typed": informal_count,
+            "free_form": free_form_count,
+        },
+    }
+
+
 def render_markdown(findings: dict) -> str:
     today = findings["audit_date"]
     lines: list[str] = []
@@ -481,6 +573,42 @@ def render_markdown(findings: dict) -> str:
         f"{len(l8['by_file'])}.\n"
     )
 
+    # Layer 9 — Typed-binding inventory
+    l9 = findings["layer9"]
+    s9 = l9["summary"]
+    lines.append("## Layer 9 — Typed-binding inventory\n")
+    lines.append(
+        "Each Renta binding that classifies a substrate axis (autonomous "
+        "community of residence, estimación directa modality, etc.) must "
+        "consume a closed-membership pydantic enum from `aeat.domain.renta` "
+        "rather than parse free-form strings at runtime. This layer "
+        "inventories the bridge-candidate bindings and reports their typing "
+        "status: formally typed (declares a `typed_enum` field), "
+        "informally typed (selector values happen to match enum members "
+        "without explicit declaration), or free-form.\n"
+    )
+    lines.append(
+        f"- **Total bridge candidates**: {s9['total_bridge_candidates']}\n"
+        f"- **Formally typed (declares `typed_enum`)**: {s9['formally_typed']}\n"
+        f"- **Informally typed (selector matches enum members)**: {s9['informally_typed']}\n"
+        f"- **Free-form (no typed bridge at all)**: {s9['free_form']}\n"
+    )
+    if l9["by_revision"]:
+        lines.append("\n### Per-revision typed-binding status\n")
+        for rev_id in sorted(l9["by_revision"].keys()):
+            entries = l9["by_revision"][rev_id]
+            lines.append(f"\n**Revision {rev_id}** ({len(entries)} bridge candidates):\n")
+            for binding_id in sorted(entries.keys()):
+                e = entries[binding_id]
+                if e["declares_typed_enum_field"]:
+                    status = f"formally typed → `{e['expected_enum']}`"
+                elif e["informal_match_count"] > 0:
+                    status = f"informally typed → matches `{e['expected_enum']}`"
+                else:
+                    status = f"🚨 free-form (expected `{e['expected_enum']}`)"
+                lines.append(f"- `{binding_id}` — {status}")
+    lines.append("")
+
     # Honest summary
     rev2025 = findings["layer1"].get("2025", {})
     total_cas = rev2025.get("total_casillas", 0)
@@ -516,6 +644,7 @@ def main() -> int:
         "layer4": layer4_legal_grounding(modelo),
         "layer7": layer7_scenario_coverage(),
         "layer8": layer8_test_honesty_inventory(),
+        "layer9": layer9_typed_binding_inventory(modelo),
     }
     json_path = OUTPUT_DIR / f"{date.today()}-renta-scope-audit-findings.json"
     json_path.write_text(json.dumps(findings, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

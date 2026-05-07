@@ -439,5 +439,94 @@
       "total_zero_value_assertions": 9,
       "total_nonzero_value_assertions": 47
     }
+  },
+  "layer9": {
+    "by_revision": {
+      "2020": {
+        "renta-2020-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": false,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": true
+        }
+      },
+      "2021": {
+        "renta-2021-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": false,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": true
+        }
+      },
+      "2022": {
+        "renta-2022-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": false,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": true
+        }
+      },
+      "2023": {
+        "renta-2023-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": false,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": true
+        }
+      },
+      "2024": {
+        "renta-2024-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": false,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": true
+        }
+      },
+      "2025": {
+        "renta-2025-modelo-100-estimacion-directa-es-normal": {
+          "expected_enum": "EstimacionDirectaModalidad",
+          "declares_typed_enum_field": false,
+          "selector_values": [
+            "n",
+            "s"
+          ],
+          "informal_match_count": 0,
+          "free_form": true
+        },
+        "renta-2025-profile-tax-residence-ccaa": {
+          "expected_enum": "RentaCCAA",
+          "declares_typed_enum_field": false,
+          "selector_values": [],
+          "informal_match_count": 0,
+          "free_form": true
+        }
+      }
+    },
+    "summary": {
+      "total_bridge_candidates": 7,
+      "formally_typed": 0,
+      "informally_typed": 0,
+      "free_form": 7
+    }
   }
 }
