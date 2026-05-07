@@ -311,10 +311,15 @@ prerequisites and acceptance tests.
 
 ### Substrate slices (block downstream formula slices)
 
-1. **Substrate-S1: Renta typed enums** — register `RentaIncomeType`,
-   `RentaCCAA`, `EstimacionDirectaModalidad` in `src/aeat/domain/renta/`
-   following the IVA `VATCategory` pattern. Bridge them to the existing
-   profile bindings.
+1. **Substrate-S1: Renta typed enums** — DELIVERED 2026-05-07 (commit
+   `1113197e`). `RentaIncomeType` (11 members), `RentaCCAA` (19
+   members), `EstimacionDirectaModalidad` (2 members) registered at
+   `src/aeat/domain/renta/_substrate.py`. 8 membership + round-trip
+   tests pass. Pending follow-up: bridge the existing profile bindings
+   (`renta-2025-profile-tax-residence-ccaa`,
+   `renta-2025-modelo-100-estimacion-directa-es-normal`) to consume
+   the typed enums rather than free-form strings — tracked under
+   slice #18 (typed-binding rollout).
 2. **Substrate-S2: legal article catalogue closure** — fetch and register
    the missing LIRPF articles for the uncovered mini-models: art-31
    (estimación objetiva), art-33-37 (ganancias y pérdidas), art-68
