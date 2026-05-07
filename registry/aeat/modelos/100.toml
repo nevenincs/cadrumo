@@ -511,6 +511,8 @@ formulas = [
     "renta-2020-acciones-no-negociadas-ganancia-reducida-no-exenta",
     "renta-2020-saldo-negativo-pendiente-base-ahorro",
     "renta-2020-saldo-negativo-pendiente-base-general",
+    "renta-2020-saldo-gp-base-ahorro-cap-25",
+    "renta-2020-saldo-gp-base-general-cap-25",
 ]
 
 [[revisions."2020".constructs]]
@@ -565,6 +567,36 @@ formulas = [
     "renta-2020-trabajo-suma-rendimientos-netos-previos",
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-saldo-gp-base-general-cap-25"
+target = "0433"
+expression = { op = "min", args = [
+    { casilla = "0421" },
+    { op = "percent", args = [{ casilla = "0432" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "base imponible general"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-saldo-gp-base-ahorro-cap-25"
+target = "0446"
+expression = { op = "min", args = [
+    { casilla = "0425" },
+    { op = "percent", args = [{ casilla = "0429" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2020".formulas]]
 id = "renta-2020-deducciones-actividades-economicas-estatal-suma"
@@ -2592,7 +2624,7 @@ required_text = ["base imponible general", "rendimientos"]
 [[revisions."2020".formulas]]
 id = "renta-2020-base-imponible-general"
 target = "0435"
-expression = { op = "sum", args = [
+expression = { op = "subtract", args = [
     { casilla = "0432" },
     { casilla = "0433" },
 ] }
@@ -3300,6 +3332,8 @@ formulas = [
     "renta-2021-acciones-no-negociadas-ganancia-reducida-no-exenta",
     "renta-2021-saldo-negativo-pendiente-base-ahorro",
     "renta-2021-saldo-negativo-pendiente-base-general",
+    "renta-2021-saldo-gp-base-ahorro-cap-25",
+    "renta-2021-saldo-gp-base-general-cap-25",
 ]
 
 [[revisions."2021".constructs]]
@@ -3354,6 +3388,36 @@ formulas = [
     "renta-2021-trabajo-suma-rendimientos-netos-previos",
     "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-saldo-gp-base-general-cap-25"
+target = "0433"
+expression = { op = "min", args = [
+    { casilla = "0421" },
+    { op = "percent", args = [{ casilla = "0432" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "base imponible general"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-saldo-gp-base-ahorro-cap-25"
+target = "0446"
+expression = { op = "min", args = [
+    { casilla = "0425" },
+    { op = "percent", args = [{ casilla = "0429" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-deducciones-actividades-economicas-estatal-suma"
@@ -5418,7 +5482,7 @@ required_text = ["base imponible general", "rendimientos"]
 [[revisions."2021".formulas]]
 id = "renta-2021-base-imponible-general"
 target = "0435"
-expression = { op = "sum", args = [
+expression = { op = "subtract", args = [
     { casilla = "0432" },
     { casilla = "0433" },
 ] }
@@ -6144,6 +6208,8 @@ formulas = [
     "renta-2022-acciones-no-negociadas-ganancia-reducida-no-exenta",
     "renta-2022-saldo-negativo-pendiente-base-ahorro",
     "renta-2022-saldo-negativo-pendiente-base-general",
+    "renta-2022-saldo-gp-base-ahorro-cap-25",
+    "renta-2022-saldo-gp-base-general-cap-25",
 ]
 
 [[revisions."2022".constructs]]
@@ -6198,6 +6264,36 @@ formulas = [
     "renta-2022-trabajo-suma-rendimientos-netos-previos",
     "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-saldo-gp-base-general-cap-25"
+target = "0433"
+expression = { op = "min", args = [
+    { casilla = "0421" },
+    { op = "percent", args = [{ casilla = "0432" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "base imponible general"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-saldo-gp-base-ahorro-cap-25"
+target = "0446"
+expression = { op = "min", args = [
+    { casilla = "0425" },
+    { op = "percent", args = [{ casilla = "0429" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-deducciones-actividades-economicas-estatal-suma"
@@ -8492,7 +8588,7 @@ required_text = ["base imponible general", "rendimientos"]
 [[revisions."2022".formulas]]
 id = "renta-2022-base-imponible-general"
 target = "0435"
-expression = { op = "sum", args = [
+expression = { op = "subtract", args = [
     { casilla = "0432" },
     { casilla = "0433" },
 ] }
@@ -9225,6 +9321,8 @@ formulas = [
     "renta-2023-acciones-no-negociadas-ganancia-reducida-no-exenta",
     "renta-2023-saldo-negativo-pendiente-base-ahorro",
     "renta-2023-saldo-negativo-pendiente-base-general",
+    "renta-2023-saldo-gp-base-ahorro-cap-25",
+    "renta-2023-saldo-gp-base-general-cap-25",
 ]
 
 [[revisions."2023".constructs]]
@@ -9279,6 +9377,36 @@ formulas = [
     "renta-2023-trabajo-suma-rendimientos-netos-previos",
     "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-saldo-gp-base-general-cap-25"
+target = "0433"
+expression = { op = "min", args = [
+    { casilla = "0421" },
+    { op = "percent", args = [{ casilla = "0432" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "base imponible general"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-saldo-gp-base-ahorro-cap-25"
+target = "0446"
+expression = { op = "min", args = [
+    { casilla = "0425" },
+    { op = "percent", args = [{ casilla = "0429" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-deducciones-actividades-economicas-estatal-suma"
@@ -11602,7 +11730,7 @@ required_text = ["base imponible general", "rendimientos"]
 [[revisions."2023".formulas]]
 id = "renta-2023-base-imponible-general"
 target = "0435"
-expression = { op = "sum", args = [
+expression = { op = "subtract", args = [
     { casilla = "0432" },
     { casilla = "0433" },
 ] }
@@ -12344,6 +12472,8 @@ formulas = [
     "renta-2024-acciones-no-negociadas-ganancia-reducida-no-exenta",
     "renta-2024-saldo-negativo-pendiente-base-ahorro",
     "renta-2024-saldo-negativo-pendiente-base-general",
+    "renta-2024-saldo-gp-base-ahorro-cap-25",
+    "renta-2024-saldo-gp-base-general-cap-25",
 ]
 
 [[revisions."2024".constructs]]
@@ -12398,6 +12528,36 @@ formulas = [
     "renta-2024-trabajo-suma-rendimientos-netos-previos",
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-saldo-gp-base-general-cap-25"
+target = "0433"
+expression = { op = "min", args = [
+    { casilla = "0421" },
+    { op = "percent", args = [{ casilla = "0432" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "base imponible general"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-saldo-gp-base-ahorro-cap-25"
+target = "0446"
+expression = { op = "min", args = [
+    { casilla = "0425" },
+    { op = "percent", args = [{ casilla = "0429" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-deducciones-actividades-economicas-estatal-suma"
@@ -14715,7 +14875,7 @@ required_text = ["base imponible general", "rendimientos"]
 [[revisions."2024".formulas]]
 id = "renta-2024-base-imponible-general"
 target = "0435"
-expression = { op = "sum", args = [
+expression = { op = "subtract", args = [
     { casilla = "0432" },
     { casilla = "0433" },
 ] }
@@ -18684,6 +18844,8 @@ formulas = [
     "renta-2025-acciones-no-negociadas-ganancia-reducida-no-exenta",
     "renta-2025-saldo-negativo-pendiente-base-ahorro",
     "renta-2025-saldo-negativo-pendiente-base-general",
+    "renta-2025-saldo-gp-base-ahorro-cap-25",
+    "renta-2025-saldo-gp-base-general-cap-25",
 ]
 
 [[revisions."2025".constructs]]
@@ -18716,6 +18878,36 @@ formulas = [
     "renta-2025-diferimiento-reinversion-imputacion-suma",
     "renta-2025-transparencia-fiscal-suma",
 ]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-saldo-gp-base-general-cap-25"
+target = "0433"
+expression = { op = "min", args = [
+    { casilla = "0421" },
+    { op = "percent", args = [{ casilla = "0432" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49", "ley-35-2006:art-50"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["ganancias y pérdidas patrimoniales", "base imponible general"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-saldo-gp-base-ahorro-cap-25"
+target = "0446"
+expression = { op = "min", args = [
+    { casilla = "0425" },
+    { op = "percent", args = [{ casilla = "0429" }, { literal = "25" }] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-deducciones-actividades-economicas-estatal-suma"
@@ -21344,7 +21536,7 @@ required_text = ["base imponible general", "rendimientos"]
 [[revisions."2025".formulas]]
 id = "renta-2025-base-imponible-general"
 target = "0435"
-expression = { op = "sum", args = [
+expression = { op = "subtract", args = [
     { casilla = "0432" },
     { casilla = "0433" },
 ] }
