@@ -5404,3 +5404,44 @@ both-sides invariant explicitly tested.
   (flow_direction, settlement_sides) consistency. 17 focused tests
   pass + 34 prior flow tests stay green. Substrate is now the
   canonical ledger-side categorization authority. Commit `34f89632`.
+
+- [x] invoice_line_to_iva_observation — ledger→modelo bridge. Closes
+  the loop from invoice metadata to substrate-classified
+  IvaLedgerObservation records consumed by ledger_iva_aggregation
+  binding selectors. Standard-case helper for domestic IVA; reverse-
+  charge / intra-community / OSS / IOSS / export-import cases
+  construct IvaLedgerObservation directly with the appropriate
+  VATCategory from the substrate classifier. End-to-end smoke
+  verified: 2 issued + 1 received invoice lines flow through the
+  bridge into Modelo 303 binding resolver producing 210 / 50 / 84
+  binding totals. Commit `95b2da5e`.
+
+### Standardized Pydantic IVA Pipeline (Now Complete)
+
+The IVA system has a complete typed pipeline from raw invoice
+metadata to filing-grade modelo result-casillas, every step being a
+pydantic-strict frozen record or a closed function:
+
+```
+Invoice line metadata (IvaRate slot + InvoiceKind)
+  → classify_invoice_line_for_iva()
+  → IvaInvoiceClassification (with derived settlement-side set)
+  → invoice_line_to_iva_observation()
+  → IvaLedgerObservation (substrate-classified ledger line)
+  → resolve_ledger_iva_aggregation_binding_values()
+  → binding values (Decimal per binding id)
+  → resolve_bound_casilla_inputs()
+  → casilla values (Decimal per bound casilla id)
+  → calculate_registry_snapshot() with formulas
+  → result casilla totals (cuota-devengada-total /
+    cuota-deducible-total / resultado-regimen-general)
+```
+
+Anchor articles travel along every layer: LIVA art 88 (repercusión)
+on devengada flows, LIVA art 92 (deducible) on soportado flows,
+LIVA art 84.Uno.2 (inversión del sujeto pasivo) on autorepercutido
+flows, plus the modelo-establishing Orden Ministerial.
+
+The substrate is now the single source of truth for IVA
+classification, and the ledger surface bridges into the modelo
+registry through one canonical function per axis.
