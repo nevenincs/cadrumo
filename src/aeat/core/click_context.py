@@ -74,13 +74,35 @@ def json_output_requested() -> bool:
     """Return ``True`` when the active context requests JSON output.
 
     Checks every recognised JSON flag spelling — ``--json``, ``--as-json``,
-    ``--json-out``, ``--json-output`` — across the Click context chain.
+    ``--json-out``, ``--json-output`` — across the Click context chain. It
+    also recognises the root AEAT ``--format json`` option, including Typer's
+    Python-facing ``format_`` parameter name.
     The variant tolerance lets callers register the flag under whichever
     Python parameter name fits their command without breaking the
     output-mode probe.
     """
 
-    return current_context_has_any(_JSON_PARAM_NAMES)
+    ctx = click.get_current_context(silent=True)
+    while ctx is not None:
+        for name in _JSON_PARAM_NAMES:
+            if bool(ctx.params.get(name, False)):
+                return True
+        if _context_value_is_json(ctx.params.get("format")) or _context_value_is_json(ctx.params.get("format_")):
+            return True
+        if isinstance(ctx.obj, dict):
+            for name in _JSON_PARAM_NAMES:
+                if bool(ctx.obj.get(name, False)):
+                    return True
+            if _context_value_is_json(ctx.obj.get("format")):
+                return True
+        ctx = ctx.parent
+    return False
+
+
+def _context_value_is_json(value: object) -> bool:
+    """Return ``True`` when a Click context value requests JSON output."""
+
+    return isinstance(value, str) and value.strip().lower() == "json"
 
 
 __all__ = ["current_cli_flag", "json_output_requested"]

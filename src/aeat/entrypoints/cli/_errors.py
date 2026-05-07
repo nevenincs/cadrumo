@@ -295,6 +295,13 @@ def _decorate_typer_node(
 ) -> None:
     """Recursively decorate every command/group callback under ``app``."""
 
+    registered_callback = app.registered_callback
+    if (
+        registered_callback is not None
+        and _is_wrap_candidate(registered_callback.callback)
+        and prefix not in skip_paths
+    ):
+        registered_callback.callback = command_error_boundary(registered_callback.callback)
     for command in app.registered_commands:
         name = command.name or _callback_name(command.callback)
         path = (*prefix, name)

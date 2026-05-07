@@ -604,6 +604,45 @@ def test_profile_set_requires_active_profile(monkeypatch: pytest.MonkeyPatch, tm
     assert "aeat setup init --name NAME" in result.output
 
 
+def test_root_error_boundary_renders_auth_session_errors_without_traceback(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    init = _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z"])
+    configure = _invoke(["setup", "auth", "configure", "--provider", "clave_movil"])
+    result = _invoke(["setup", "auth", "whoami"])
+
+    assert init.exit_code == 0, init.output
+    assert configure.exit_code == 0, configure.output
+    assert result.exit_code == 3, result.output
+    assert "AUTH:" in result.output
+    assert "aeat setup auth login" in result.output
+    assert "Traceback" not in result.output
+    assert "AuthSessionUnavailableError" not in result.output
+
+
+def test_root_error_boundary_honours_global_json_format(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    init = _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z"])
+    configure = _invoke(["setup", "auth", "configure", "--provider", "clave_movil"])
+    result = _invoke(["--format", "json", "setup", "auth", "whoami"])
+
+    assert init.exit_code == 0, init.output
+    assert configure.exit_code == 0, configure.output
+    assert result.exit_code == 3, result.output
+    payload = json.loads(_json_output(result))["error"]
+    assert payload["category"] == "AUTH"
+    assert payload["code"] == "AUTH_CLI_AUTH_SESSION_UNAVAILABLE"
+    assert payload["suggestion"] == "aeat setup auth login"
+    assert "Traceback" not in result.output
+
+
 def test_profile_keys_match_domain_registry_names() -> None:
     result = _invoke(["setup", "profile", "list-keys"])
 
