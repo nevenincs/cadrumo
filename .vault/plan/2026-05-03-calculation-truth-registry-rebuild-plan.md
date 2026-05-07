@@ -5388,3 +5388,19 @@ abstraction. The ledger domain has one canonical primitive to ask
 "does this transaction owe IVA to the Treasury or claim a deduction
 back?" — anchored to BOE-cited LIVA articles, with the AUTOREPERCUTIDO
 both-sides invariant explicitly tested.
+
+- [x] IvaInvoiceClassification reusable record. Bridges the substrate
+  triple (VATCategory + VATRateKind + IvaFlowDirection) plus the
+  derived settlement-side classification (devengada / deducible) into
+  one frozen pydantic record the ledger and downstream filing
+  surfaces propagate without re-deriving the mapping.
+  classify_invoice_line_for_iva(iva_rate, invoice_kind) helper covers
+  the standard domestic-IVA case (the most common autónomo
+  operation); reverse-charge, intra-community, OSS / IOSS, export /
+  import cases construct IvaInvoiceClassification directly with the
+  appropriate VATCategory from the substrate classifier. Properties
+  contributes_to_devengada / contributes_to_deducible / is_reverse_charge
+  expose the cornerstone classifications. Constructor cross-validates
+  (flow_direction, settlement_sides) consistency. 17 focused tests
+  pass + 34 prior flow tests stay green. Substrate is now the
+  canonical ledger-side categorization authority. Commit `34f89632`.
