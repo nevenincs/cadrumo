@@ -720,6 +720,8 @@ cli:
       set_key_help: Clave de perfil a modificar
       set_value_help: Valor que se guardará
       show_help: Mostrar los datos del perfil activo
+      show_all_keys_help: Mostrar todas las claves de perfil, incluidas las no configuradas
+      show_unset_help: Mostrar todas las claves de perfil con <unset> para valores vacíos
       unset_help: Borrar un valor del perfil
       unset_key_help: Clave de perfil a borrar
       use_help: Activar un perfil local

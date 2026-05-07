@@ -713,6 +713,8 @@ cli:
       set_key_help: Clau de perfil a modificar
       set_value_help: Valor que es desarà
       show_help: Mostrar les dades del perfil actiu
+      show_all_keys_help: Mostrar totes les claus de perfil, inclosos els valors no configurats
+      show_unset_help: Mostrar totes les claus de perfil amb <unset> per als valors buits
       unset_help: Esborrar un valor del perfil
       unset_key_help: Clau de perfil a esborrar
       use_help: Activar un perfil local

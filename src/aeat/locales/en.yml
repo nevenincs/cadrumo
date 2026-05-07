@@ -705,6 +705,8 @@ cli:
       set_key_help: Profile key to change
       set_value_help: Value to save
       show_help: Show the active profile values
+      show_all_keys_help: Show every profile key, including unset values
+      show_unset_help: Show every profile key with <unset> for empty values
       unset_help: Clear one profile value
       unset_key_help: Profile key to clear
       use_help: Activate a local profile

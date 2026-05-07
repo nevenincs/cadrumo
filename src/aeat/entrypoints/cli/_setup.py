@@ -16,7 +16,7 @@ from ...application.auth import (
     inspect_auth_acquisition_lock,
     require_verified_aeat_session,
 )
-from ...application.profile import validate_profile
+from ...application.profile import list_profile_value_rows, validate_profile
 from ...application.setup_status import build_setup_status
 from ...application.user_cli import (
     clear_profile_values,
@@ -422,13 +422,22 @@ def profile_use(
 
 
 @profile_app.command("show", help=tr("cli.setup.profile.show_help"))
-def profile_show(ctx: typer.Context) -> None:
+def profile_show(
+    ctx: typer.Context,
+    all_keys: bool = typer.Option(False, "--all-keys", help=tr("cli.setup.profile.show_all_keys_help")),
+    unset: bool = typer.Option(False, "--unset", help=tr("cli.setup.profile.show_unset_help")),
+) -> None:
     state, name = _active_profile_or_exit(ctx)
     record = state.active_profile_record()
     assert record is not None
-    payload = {"active_profile": name, "values": record.values}
+    rows = list_profile_value_rows(record.values, include_unset=all_keys or unset)
+    payload = {
+        "active_profile": name,
+        "values": {row.key: row.value for row in rows if row.is_set and row.value is not None},
+        "rows": rows,
+    }
     lines: list[str] = [f"{tr('cli.setup.headers.profile')}\t{name}"]
-    lines.extend(f"{key}\t{value}" for key, value in sorted(record.values.items()))
+    lines.extend(f"{row.key}\t{row.value if row.value is not None else '<unset>'}" for row in rows)
     _emit(ctx, payload, lines)
 
 

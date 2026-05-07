@@ -58,6 +58,18 @@ class ProfileValidationResult(BaseModel):
     unknown_keys: tuple[str, ...] = ()
 
 
+class ProfileValueRow(BaseModel):
+    """One schema-backed profile value row for CLI/API display."""
+
+    model_config = _STRICT_FROZEN
+
+    key: str
+    value: str | None
+    is_set: bool
+    requirement: ProfileKeyRequirement
+    description: str
+
+
 def _has_value(values: Mapping[str, str], key: str) -> bool:
     """Return whether ``values[key]`` is present and non-blank."""
     raw = values.get(key)
@@ -125,10 +137,47 @@ def list_profile_key_records() -> tuple[ProfileKey, ...]:
     return PROFILE_KEYS
 
 
+def list_profile_value_rows(
+    values: Mapping[str, str],
+    *,
+    include_unset: bool = False,
+) -> tuple[ProfileValueRow, ...]:
+    """Return schema-backed profile rows for display surfaces.
+
+    Args:
+        values: Stored profile key/value mapping.
+        include_unset: When ``True``, include every key declared in the
+            profile schema registry with :data:`None` for missing or blank
+            values. When ``False``, include only keys that are actually set.
+
+    Returns:
+        Rows ordered by the domain profile-key registry.
+    """
+
+    rows: list[ProfileValueRow] = []
+    for entry in PROFILE_KEYS:
+        value = values.get(entry.key)
+        is_set = value is not None and value.strip() != ""
+        if not is_set and not include_unset:
+            continue
+        rows.append(
+            ProfileValueRow(
+                key=entry.key,
+                value=value.strip() if is_set and value is not None else None,
+                is_set=is_set,
+                requirement=entry.requirement,
+                description=str(entry.description),
+            )
+        )
+    return tuple(rows)
+
+
 __all__ = [
     "ProfileKey",
     "ProfileKeyRequirement",
     "ProfileValidationResult",
+    "ProfileValueRow",
     "list_profile_key_records",
+    "list_profile_value_rows",
     "validate_profile",
 ]
