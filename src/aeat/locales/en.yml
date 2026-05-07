@@ -671,6 +671,7 @@ cli:
       active: Active
       auth_provider: Authentication provider
       authenticated_at: Authenticated at
+      completeness: Completeness
       description: Description
       id: ID
       key: Key
