@@ -123,6 +123,65 @@ def test_invoice_line_rejects_larger_rounding_drift() -> None:
         )
 
 
+def test_invoice_iva_category_is_typed_as_vat_category_substrate_enum() -> None:
+    """Invoice.iva_category is now strongly-typed VATCategory | None
+    instead of free-form str | None. Pydantic coerces string inputs
+    (the historical persistence shape) into VATCategory members and
+    serializes them back to their string values, so existing
+    serialization round-trips remain valid."""
+    from aeat.domain.vat import VATCategory
+
+    invoice = _valid_invoice()
+    # Default value is None
+    assert invoice.iva_category is None
+
+    # String input coerces to VATCategory
+    invoice = Invoice.model_validate(
+        {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": "INV-001",
+            "issued_at": date(2026, 4, 1),
+            "counterparty_name": "Cliente SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": Decimal("100"),
+            "iva_total": Decimal("21"),
+            "grand_total": Decimal("121"),
+            "currency": "EUR",
+            "lines": (_valid_line(),),
+            "payment_status": PaymentStatus.PAID,
+            "iva_category": "domestic_general_21",  # string input
+        }
+    )
+    assert invoice.iva_category is VATCategory.DOMESTIC_GENERAL_21
+    # JSON round-trip preserves the enum value as its string form
+    json_dump = invoice.model_dump(mode="json")
+    assert json_dump["iva_category"] == "domestic_general_21"
+
+
+def test_invoice_iva_category_rejects_unknown_string() -> None:
+    """An unknown iva_category string must fail validation now that the
+    field is typed against the closed VATCategory enum."""
+    with pytest.raises(ValidationError):
+        Invoice.model_validate(
+            {
+                "kind": InvoiceKind.ISSUED,
+                "invoice_number": "INV-001",
+                "issued_at": date(2026, 4, 1),
+                "counterparty_name": "Cliente SL",
+                "counterparty_tax_id": "B12345674",
+                "counterparty_country": "ES",
+                "base_total": Decimal("100"),
+                "iva_total": Decimal("21"),
+                "grand_total": Decimal("121"),
+                "currency": "EUR",
+                "lines": (_valid_line(),),
+                "payment_status": PaymentStatus.PAID,
+                "iva_category": "bogus-category",
+            }
+        )
+
+
 def test_iva_rate_percentage_is_resolved_against_centralized_vat_substrate() -> None:
     """iva_rate_percentage must derive its values from registry/aeat/vat/rates.toml.
 

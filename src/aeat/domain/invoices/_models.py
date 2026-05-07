@@ -23,6 +23,7 @@ from typing import Any, Self
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ...core.identity import validate_spanish_tax_id
+from ..vat import VATCategory
 from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
 from ._validators import validate_country_code, validate_vat_number
 
@@ -202,7 +203,7 @@ class Invoice(BaseModel):
     payment_status: PaymentStatus
     linked_transaction_ids: tuple[str, ...] = ()
     notes: str = ""
-    iva_category: str | None = None
+    iva_category: VATCategory | None = None
     retention_rate: Decimal | None = None
     retention_amount: Decimal | None = None
     payment_id: str | None = None
@@ -290,7 +291,8 @@ class Invoice(BaseModel):
         if "retention_amount" in payload and payload["retention_amount"] is not None:
             payload["retention_amount"] = _coerce_decimal(payload["retention_amount"])
         if "iva_category" in payload and isinstance(payload["iva_category"], str):
-            payload["iva_category"] = payload["iva_category"].strip() or None
+            stripped = payload["iva_category"].strip()
+            payload["iva_category"] = VATCategory(stripped) if stripped else None
         if "payment_id" in payload and isinstance(payload["payment_id"], str):
             normalized_payment_id = payload["payment_id"].strip().lower()
             if normalized_payment_id:
