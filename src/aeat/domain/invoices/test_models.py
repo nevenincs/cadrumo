@@ -147,6 +147,48 @@ def test_invoice_counterparty_eu_member_state_returns_none_for_non_eu_country() 
     assert invoice.counterparty_is_eu_member is False
 
 
+def test_invoice_iva_classification_for_line_returns_substrate_typed_record() -> None:
+    """Invoice.iva_classification_for_line(line) returns the canonical
+    substrate-grounded triple (VATCategory + VATRateKind +
+    IvaFlowDirection) bundled in IvaInvoiceClassification — the typed
+    record downstream filing surfaces consume."""
+    from aeat.domain.invoices import IvaInvoiceClassification
+    from aeat.domain.vat import (
+        IvaFlowDirection,
+        IvaSettlementSide,
+        VATCategory,
+        VATRateKind,
+    )
+
+    line = _valid_line(iva_rate=IvaRate.RATE_21)
+    invoice = _valid_invoice(lines=(line,))
+
+    classification = invoice.iva_classification_for_line(line)
+    assert isinstance(classification, IvaInvoiceClassification)
+    assert classification.category is VATCategory.DOMESTIC_GENERAL_21
+    assert classification.rate_kind is VATRateKind.GENERAL
+    assert classification.flow_direction is IvaFlowDirection.REPERCUTIDO
+    assert classification.settlement_sides == frozenset({IvaSettlementSide.DEVENGADA})
+
+
+def test_invoice_iva_classification_received_invoice_resolves_to_soportado() -> None:
+    """A received invoice routes lines to SOPORTADO (input IVA / cuotas
+    deducibles per LIVA art 92), regardless of rate slot."""
+    from aeat.domain.vat import IvaFlowDirection, IvaSettlementSide
+
+    line = _valid_line(iva_rate=IvaRate.RATE_10)
+    invoice = _valid_invoice(
+        kind=InvoiceKind.RECEIVED,
+        invoice_number="BILL-001",
+        counterparty_name="Proveedor SL",
+        lines=(line,),
+    )
+
+    classification = invoice.iva_classification_for_line(line)
+    assert classification.flow_direction is IvaFlowDirection.SOPORTADO
+    assert classification.settlement_sides == frozenset({IvaSettlementSide.DEDUCIBLE})
+
+
 def test_invoice_counterparty_eu_member_state_handles_lowercase_input_via_uppercase_storage() -> None:
     """counterparty_country normalises to uppercase at validation time
     (validate_country_code). The eu_member_state accessor lowercases
