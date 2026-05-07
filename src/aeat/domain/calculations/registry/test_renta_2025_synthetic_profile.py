@@ -311,7 +311,8 @@ _REVISION_RELATION_VALUES: dict[str, dict[str, Decimal]] = {
 }
 
 _REVISION_BINDING_VALUES: dict[str, dict[str, Decimal]] = {
-    "2025": {"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0")},
+    revision: {f"renta-{revision}-modelo-100-estimacion-directa-es-normal": Decimal("0")}
+    for revision in _ALL_REVISIONS
 }
 
 
