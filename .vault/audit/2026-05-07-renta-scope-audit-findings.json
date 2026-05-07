@@ -337,5 +337,107 @@
       "covered": false,
       "matching_scenarios": []
     }
+  },
+  "layer8": {
+    "by_file": {
+      "src/aeat/domain/calculations/registry/test_renta_2025_synthetic_profile.py": {
+        "test_count": 2,
+        "tests": [
+          "test_modelo_100_2025_employee_synthetic_profile_calculates_full_cuota_chain",
+          "test_modelo_100_employee_30k_synthetic_profile_calculates_consistently_in_every_revision"
+        ],
+        "kind": "behaviour",
+        "zero_value_assertions": 8,
+        "nonzero_value_assertions": 31,
+        "nonzero_decimal_inputs": 47,
+        "contains_vacuous_smoke_pattern": false
+      },
+      "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py": {
+        "test_count": 8,
+        "tests": [
+          "test_minimo_personal_y_familiar_aggregates_all_four_components_estatal",
+          "test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_minimo",
+          "test_cuota_integra_estatal_combines_general_and_ahorro_components",
+          "test_cuota_liquida_estatal_subtracts_state_side_deduction_columns",
+          "test_cuota_liquida_incrementada_adds_back_perdida_derecho_increments",
+          "test_cuota_liquida_total_sums_estatal_plus_autonomica",
+          "test_base_imponible_general_subtracts_negative_capital_gains_balance",
+          "test_base_liquidable_general_applies_reductions"
+        ],
+        "kind": "behaviour",
+        "zero_value_assertions": 1,
+        "nonzero_value_assertions": 16,
+        "nonzero_decimal_inputs": 42,
+        "contains_vacuous_smoke_pattern": false
+      },
+      "src/aeat/domain/calculations/registry/test_renta_cuota_chain_contract.py": {
+        "test_count": 8,
+        "tests": [
+          "test_renta_cuota_chain_articles_are_catalogued",
+          "test_renta_minimo_personal_y_familiar_formulas_present_2025",
+          "test_renta_base_imponible_liquidable_formulas_present_2025",
+          "test_renta_cuota_integra_formulas_present_2025",
+          "test_renta_cuota_liquida_formulas_present_2025",
+          "test_renta_multi_year_cuota_chain_sources_are_catalogued",
+          "test_renta_cuota_chain_present_in_all_supported_revisions",
+          "test_renta_cuota_chain_can_support_multi_year_calculation_parity"
+        ],
+        "kind": "structural",
+        "zero_value_assertions": 0,
+        "nonzero_value_assertions": 0,
+        "nonzero_decimal_inputs": 0,
+        "contains_vacuous_smoke_pattern": false
+      },
+      "src/aeat/domain/calculations/registry/test_modelo_100_drift_detection.py": {
+        "test_count": 8,
+        "tests": [
+          "test_top_level_cuota_chain_targets_present_in_every_supported_revision",
+          "test_every_revision_with_formulas_exposes_a_calculation_application_link",
+          "test_every_supported_revision_carries_a_filing_application_link",
+          "test_no_orphan_formula_feeding_bindings_in_any_revision",
+          "test_no_orphan_parameters_in_any_revision",
+          "test_every_relation_references_an_existing_target_binding",
+          "test_every_formula_binding_reference_resolves_to_a_declared_binding",
+          "test_every_formula_parameter_reference_resolves_to_a_declared_parameter"
+        ],
+        "kind": "structural",
+        "zero_value_assertions": 0,
+        "nonzero_value_assertions": 0,
+        "nonzero_decimal_inputs": 0,
+        "contains_vacuous_smoke_pattern": false
+      },
+      "src/aeat/domain/calculations/registry/test_schema_hygiene.py": {
+        "test_count": 8,
+        "tests": [
+          "test_no_duplicate_casilla_ids_within_a_revision",
+          "test_no_duplicate_casilla_numbers_within_a_revision",
+          "test_section_paths_are_non_empty",
+          "test_section_parts_are_snake_case",
+          "test_section_paths_do_not_leak_xml_root_containers",
+          "test_registry_tests_describe_current_behaviour_not_removed_work",
+          "test_registry_tests_do_not_define_schema_authority_objects",
+          "test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_outputs"
+        ],
+        "kind": "structural",
+        "zero_value_assertions": 0,
+        "nonzero_value_assertions": 0,
+        "nonzero_decimal_inputs": 0,
+        "contains_vacuous_smoke_pattern": false
+      }
+    },
+    "summary": {
+      "behaviour_files": [
+        "src/aeat/domain/calculations/registry/test_renta_2025_synthetic_profile.py",
+        "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py"
+      ],
+      "structural_files": [
+        "src/aeat/domain/calculations/registry/test_renta_cuota_chain_contract.py",
+        "src/aeat/domain/calculations/registry/test_modelo_100_drift_detection.py",
+        "src/aeat/domain/calculations/registry/test_schema_hygiene.py"
+      ],
+      "files_with_vacuous_pattern": [],
+      "total_zero_value_assertions": 9,
+      "total_nonzero_value_assertions": 47
+    }
   }
 }

@@ -258,6 +258,86 @@ _RENTA_ARCHETYPES: tuple[tuple[str, str, tuple[str, ...]], ...] = (
 )
 
 
+_RENTA_TEST_FILES = (
+    "src/aeat/domain/calculations/registry/test_renta_2025_synthetic_profile.py",
+    "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py",
+    "src/aeat/domain/calculations/registry/test_renta_cuota_chain_contract.py",
+    "src/aeat/domain/calculations/registry/test_modelo_100_drift_detection.py",
+    "src/aeat/domain/calculations/registry/test_schema_hygiene.py",
+)
+
+
+def layer8_test_honesty_inventory() -> dict:
+    """Classify every Renta test as behaviour / structural / vacuous.
+
+    A test is:
+      - **behaviour** if it asserts at least one non-zero numeric output
+        derived from at least one non-zero numeric input. The math
+        actually has to compute correctly for the test to pass.
+      - **structural** if it asserts presence/absence of registry
+        elements (formulas registered, articles catalogued, no orphans)
+        without any numeric assertion. Catches removal/rename
+        regressions but does not test computation.
+      - **vacuous** if it provides all-zero inputs AND asserts all-zero
+        outputs. The chain calculates 0 = 0 + 0 - 0 + ... which never
+        fails. False coverage signal.
+    """
+    import re
+
+    inventory: dict[str, dict] = {}
+    for rel_path in _RENTA_TEST_FILES:
+        path = PROJECT_ROOT / rel_path
+        if not path.exists():
+            inventory[rel_path] = {"missing": True}
+            continue
+        text = path.read_text(encoding="utf-8")
+        # Collect test function names
+        test_names = re.findall(r"^def (test_\w+)", text, re.MULTILINE)
+        # Crude per-file classification: count zero vs non-zero numeric assertions
+        zero_value_assertions = len(re.findall(r'value=Decimal\("0(?:\.0+)?"\)', text))
+        nonzero_value_assertions = len(re.findall(r'value=Decimal\("(?!0(?:\.0+)?")[^"]+"\)', text))
+        nonzero_inputs = len(re.findall(r'Decimal\("(?!0(?:\.0+)?")[^"]+"\)', text))
+        # Heuristic file-level classification
+        if nonzero_value_assertions > 0 and nonzero_inputs > 0:
+            file_kind = "behaviour"
+        elif nonzero_value_assertions == 0 and nonzero_inputs == 0:
+            file_kind = "structural"
+        else:
+            file_kind = "mixed"
+        # Count "vacuous" patterns: parametrized zero-income asserting all zero
+        vacuous_indicator = (
+            "zero_income" in text or "zero-income" in text
+        ) and zero_value_assertions > nonzero_value_assertions
+        inventory[rel_path] = {
+            "test_count": len(test_names),
+            "tests": test_names,
+            "kind": file_kind,
+            "zero_value_assertions": zero_value_assertions,
+            "nonzero_value_assertions": nonzero_value_assertions,
+            "nonzero_decimal_inputs": nonzero_inputs,
+            "contains_vacuous_smoke_pattern": vacuous_indicator,
+        }
+    # Aggregate
+    summary = {
+        "behaviour_files": [
+            p for p, d in inventory.items() if d.get("kind") == "behaviour"
+        ],
+        "structural_files": [
+            p for p, d in inventory.items() if d.get("kind") == "structural"
+        ],
+        "files_with_vacuous_pattern": [
+            p for p, d in inventory.items() if d.get("contains_vacuous_smoke_pattern")
+        ],
+        "total_zero_value_assertions": sum(
+            d.get("zero_value_assertions", 0) for d in inventory.values()
+        ),
+        "total_nonzero_value_assertions": sum(
+            d.get("nonzero_value_assertions", 0) for d in inventory.values()
+        ),
+    }
+    return {"by_file": inventory, "summary": summary}
+
+
 def layer7_scenario_coverage() -> dict:
     """Inspect test files for synthetic-profile scenarios; map to archetypes."""
     test_files = [
@@ -365,6 +445,42 @@ def render_markdown(findings: dict) -> str:
         lines.append(f"| `{arch_id}` | {l7['label']} | {covered_mark} | {scenarios} |")
     lines.append("")
 
+    # Layer 8 — Test honesty
+    l8 = findings["layer8"]
+    s8 = l8["summary"]
+    lines.append("## Layer 8 — Test honesty inventory\n")
+    lines.append(
+        "Classifies every Renta test as **behaviour** (asserts non-zero numeric "
+        "output from non-zero input — the math has to compute correctly), "
+        "**structural** (asserts presence/absence of registry elements — "
+        "catches removal/rename regressions but does NOT test computation), "
+        "or contains a **vacuous smoke pattern** (all-zero inputs / all-zero "
+        "outputs — the chain computes 0 = 0 + 0 - 0 + ... which never fails, "
+        "giving false coverage).\n"
+    )
+    lines.append("| File | Tests | Kind | Zero asserts | Non-zero asserts | Non-zero inputs | Vacuous pattern |")
+    lines.append("|---|---:|---|---:|---:|---:|:---:|")
+    for path, info in l8["by_file"].items():
+        if info.get("missing"):
+            lines.append(f"| `{path}` | (missing) | — | — | — | — | — |")
+            continue
+        flag = "🚨 yes" if info["contains_vacuous_smoke_pattern"] else "no"
+        lines.append(
+            f"| `{path.split('/')[-1]}` | {info['test_count']} | "
+            f"{info['kind']} | {info['zero_value_assertions']} | "
+            f"{info['nonzero_value_assertions']} | {info['nonzero_decimal_inputs']} | "
+            f"{flag} |"
+        )
+    lines.append("")
+    lines.append(
+        f"**Total numeric assertions**: "
+        f"{s8['total_zero_value_assertions']} zero + "
+        f"{s8['total_nonzero_value_assertions']} non-zero. "
+        f"**Files with vacuous-smoke pattern**: "
+        f"{len(s8['files_with_vacuous_pattern'])} of "
+        f"{len(l8['by_file'])}.\n"
+    )
+
     # Honest summary
     rev2025 = findings["layer1"].get("2025", {})
     total_cas = rev2025.get("total_casillas", 0)
@@ -399,6 +515,7 @@ def main() -> int:
         "layer3": layer3_mini_model_coverage(modelo, "2025"),
         "layer4": layer4_legal_grounding(modelo),
         "layer7": layer7_scenario_coverage(),
+        "layer8": layer8_test_honesty_inventory(),
     }
     json_path = OUTPUT_DIR / f"{date.today()}-renta-scope-audit-findings.json"
     json_path.write_text(json.dumps(findings, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")

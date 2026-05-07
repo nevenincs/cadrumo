@@ -186,6 +186,49 @@ LIVA/IVA articles that belong to the IVA substrate, not Renta.
 resolves to a catalogue article. This is a strong signal that the cuota
 chain rollout did not introduce stale references.
 
+### Layer 8 — Test honesty inventory
+
+Classifies every Renta test as one of three kinds:
+
+- **Behaviour test** — asserts at least one non-zero numeric output
+  derived from at least one non-zero numeric input. The math actually
+  has to compute correctly for the test to pass. These tests catch
+  formula swaps, dropped operands, and inverted negates.
+- **Structural test** — asserts presence/absence of registry elements
+  (formulas registered, articles catalogued, no orphans). Catches
+  removal/rename regressions but does NOT test computation.
+- **Vacuous smoke pattern** — all-zero inputs AND all-zero expected
+  outputs. The chain computes `0 = 0 + 0 - 0 + ...` which never
+  fails. False coverage signal — looks like a behaviour test, behaves
+  like nothing.
+
+| File | Tests | Kind | Zero asserts | Non-zero asserts | Non-zero inputs | Vacuous pattern |
+|---|---:|---|---:|---:|---:|:---:|
+| `test_renta_2025_synthetic_profile.py` | 2 | behaviour | 8 | 31 | 47 | no |
+| `test_renta_chain_behaviour.py` | 8 | behaviour | 1 | 16 | 42 | no |
+| `test_renta_cuota_chain_contract.py` | 8 | structural | 0 | 0 | 0 | no |
+| `test_modelo_100_drift_detection.py` | 8 | structural | 0 | 0 | 0 | no |
+| `test_schema_hygiene.py` | 8 | structural | 0 | 0 | 0 | no |
+
+**Total numeric assertions**: 9 zero + 47 non-zero. **Files with
+vacuous-smoke pattern**: 0 of 5.
+
+**2026-05-07 cleanup pass:** the audit's first run flagged 7 vacuous
+zero-input zero-output tests (one per supported ejercicio in a
+parametrized scenario plus one standalone 2025 boundary case). They
+asserted that all-zero input produces all-zero output for ~14
+casillas × 6 years = 84 zero numeric assertions, none of which tested
+anything observable. Removed in the same commit that adds Layer 8.
+The test count went 45 → 38 with no loss of behavioural coverage:
+chain calculation across years is already exercised by the
+parametrized 30k employee scenario which produces non-zero outputs
+in each year.
+
+A new schema-hygiene guard at
+`test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_outputs`
+flags any future Renta scenario whose inputs and expected outputs are
+all zero. New vacuous tests will trip this guard at PR time.
+
 ### Layer 7 — Scenario archetype coverage
 
 | Archetype | Label | Covered |
@@ -342,6 +385,15 @@ prerequisites and acceptance tests.
 21. **External-surface registration** — Layer 6 audit deliverable; verify
     Renta WEB Open / authenticated / borrador / justificante surfaces are
     declared with guard policies and adapter coverage.
+22. **Test honesty enforcement** — Layer 8 hardening already landed
+    (`test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_outputs`).
+    Extension: every behaviour test must derive its expected output
+    INDEPENDENTLY of the formula being tested (no `assert
+    actual == formula(inputs)` patterns where the test re-implements
+    the formula). The audit's Layer 2 driver (deferred) will enforce
+    this through formula-trace inspection: for every numeric
+    assertion, confirm the expected value is a literal Decimal, not a
+    runtime-derived expression.
 
 ## Continuous use
 
