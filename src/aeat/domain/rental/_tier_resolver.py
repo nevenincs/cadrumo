@@ -185,7 +185,8 @@ def resolve_reduccion(
     if not contract.lau_17_6_compliant:
         _logger.debug("reduccion tier: FORFEIT (LAU 17.6 non-compliant) for contract_id=%s", contract.id)
         return _FORFEIT_LAU_17_6
-    if _qualifies_for_tier_90(contract, finca):
+    rebaja_threshold = _resolve_prior_rent_rebaja_threshold(period_year)
+    if _qualifies_for_tier_90(contract, finca, prior_rent_rebaja_threshold=rebaja_threshold):
         _logger.debug("reduccion tier: TIER_90 for contract_id=%s finca_id=%s", contract.id, finca.id)
         return _TIER_90
     tier_70 = _resolve_tier_70(contract, finca)
@@ -204,10 +205,15 @@ def resolve_reduccion(
     return _TIER_50
 
 
-def _qualifies_for_tier_90(contract: RentalContract, finca: RentalFinca) -> bool:
+def _qualifies_for_tier_90(
+    contract: RentalContract,
+    finca: RentalFinca,
+    *,
+    prior_rent_rebaja_threshold: Decimal,
+) -> bool:
     """Tier a) — same landlord + new contract + zona tensionada +
-    initial rent more than 5 % below the prior contract's indexed
-    last rent.
+    initial rent more than ``prior_rent_rebaja_threshold`` below the
+    prior contract's indexed last rent.
     """
     if not finca.is_stressed_area:
         return False
@@ -219,7 +225,31 @@ def _qualifies_for_tier_90(contract: RentalContract, finca: RentalFinca) -> bool
         _logger.warning("tier resolver: negative initial_rent for contract_id=%s", contract.id)
         raise TierResolutionError("initial_rent must be non-negative")
     rebaja_ratio = (contract.prior_contract_last_rent - contract.initial_rent) / contract.prior_contract_last_rent
-    return rebaja_ratio > PRIOR_RENT_REBAJA_THRESHOLD
+    return rebaja_ratio > prior_rent_rebaja_threshold
+
+
+def _resolve_prior_rent_rebaja_threshold(period_year: int) -> Decimal:
+    """Read the LIRPF art. 23.2 a) rebaja threshold from the registry parameter.
+
+    Reads ``renta-<period_year>-rental-prior-rent-rebaja-threshold`` from
+    Modelo 100. Falls back to the documented module-level constant when the
+    registry lookup raises (e.g. unregistered year).
+    """
+    from aeat.domain.calculations.registry import RegistryValidationError, read_parameter
+
+    try:
+        return read_parameter(
+            "100",
+            str(period_year),
+            f"renta-{period_year}-rental-prior-rent-rebaja-threshold",
+            date_context={"filing_period": date(period_year, 12, 31)},
+        )
+    except RegistryValidationError:
+        _logger.debug(
+            "rental rebaja threshold: registry lookup failed for period_year=%d; fallback to PRIOR_RENT_REBAJA_THRESHOLD",
+            period_year,
+        )
+        return PRIOR_RENT_REBAJA_THRESHOLD
 
 
 def _resolve_tier_70(

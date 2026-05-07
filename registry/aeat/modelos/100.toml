@@ -1528,6 +1528,23 @@ source_ref = "lirpf-cuota-chain-authority"
 required_text = ["estimación directa", "rendimiento neto"]
 
 [[revisions."2020".parameters]]
+id = "renta-2020-rental-prior-rent-rebaja-threshold"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2020".parameters.values]]
+value = "0.05"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+
+[[revisions."2020".parameters]]
 id = "renta-2020-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
 data_type = "ratio"
 unit = "percent"
@@ -4461,6 +4478,23 @@ source_refs = ["aeat-dr-100-2021-dictionary", "lirpf-cuota-chain-authority"]
 [[revisions."2021".bindings.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2021".parameters]]
+id = "renta-2021-rental-prior-rent-rebaja-threshold"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2021".parameters.values]]
+value = "0.05"
+date_axis = "filing_period"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
 
 [[revisions."2021".parameters]]
 id = "renta-2021-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
@@ -7508,6 +7542,23 @@ source_refs = ["aeat-dr-100-2022-dictionary", "lirpf-cuota-chain-authority"]
 [[revisions."2022".bindings.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["estimación directa", "rendimiento neto"]
+
+[[revisions."2022".parameters]]
+id = "renta-2022-rental-prior-rent-rebaja-threshold"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2022".parameters.values]]
+value = "0.05"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
 
 [[revisions."2022".parameters]]
 id = "renta-2022-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
@@ -10759,6 +10810,23 @@ source_ref = "lirpf-cuota-chain-authority"
 required_text = ["estimación directa", "rendimiento neto"]
 
 [[revisions."2023".parameters]]
+id = "renta-2023-rental-prior-rent-rebaja-threshold"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2023".parameters.values]]
+value = "0.05"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
 id = "renta-2023-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
 data_type = "ratio"
 unit = "percent"
@@ -13982,6 +14050,23 @@ source_ref = "lirpf-cuota-chain-authority"
 required_text = ["estimación directa", "rendimiento neto"]
 
 [[revisions."2024".parameters]]
+id = "renta-2024-rental-prior-rent-rebaja-threshold"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2024".parameters.values]]
+value = "0.05"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters]]
 id = "renta-2024-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
 data_type = "ratio"
 unit = "percent"
@@ -15529,6 +15614,82 @@ source_refs = [
     "aeat-modelo-100-procedure",
     "aeat-renta-web-open",
 ]
+
+[[revisions."2025".parameters]]
+id = "renta-2025-rental-prior-rent-rebaja-threshold"
+data_type = "ratio"
+unit = "ratio"
+legal_refs = ["ley-35-2006:art-23"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["capital inmobiliario", "reducción"]
+
+[[revisions."2025".parameters.values]]
+value = "0.05"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters]]
+id = "renta-2025-escala-estatal-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["escala general", "base liquidable general"]
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "12450"
+upper_bound = "20200"
+fixed_addition = "1182.75"
+marginal_rate = "0.12"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "20200"
+upper_bound = "35200"
+fixed_addition = "2112.75"
+marginal_rate = "0.15"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "60000"
+fixed_addition = "4362.75"
+marginal_rate = "0.185"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "60000"
+upper_bound = "300000"
+fixed_addition = "8950.75"
+marginal_rate = "0.225"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "300000"
+fixed_addition = "62950.75"
+marginal_rate = "0.245"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
 
 [[revisions."2025".parameters]]
 id = "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate"
