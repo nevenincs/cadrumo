@@ -261,7 +261,14 @@ async def collect_groi_observations(
 
 
 async def _open_groi_form(page: Any, *, timeout_ms: int) -> None:
-    """Wait for the NIF input + submit button to become interactive."""
+    """Wait for the NIF input + submit button + verify the form's action URL.
+
+    Read-only mandate: before any submit click runs, this check confirms
+    the form's ``action`` attribute still points at the expected
+    ``ConsultaOperadorSedeGroiServlet`` consult endpoint. If AEAT silently
+    retargeted the form to a different action (e.g., a write endpoint
+    masquerading under the same URL), the driver refuses to submit.
+    """
 
     await _first_visible_locator(
         page,
@@ -277,6 +284,41 @@ async def _open_groi_form(page: Any, *, timeout_ms: int) -> None:
         description="GROI submit button",
         timeout_ms=timeout_ms,
     )
+    await _assert_form_action_is_consult_endpoint(page, timeout_ms=timeout_ms)
+
+
+# The form's ``action`` attribute is captured live as the relative path
+# ``ConsultaOperadorSedeGroiServlet`` (relative to the page's www2 host).
+# Any deviation indicates AEAT changed the form's submission target and
+# the driver must refuse to submit until the change is investigated.
+_EXPECTED_FORM_ACTION = "ConsultaOperadorSedeGroiServlet"
+
+
+async def _assert_form_action_is_consult_endpoint(page: Any, *, timeout_ms: int) -> None:
+    form = page.locator("form").first
+    action = await _playwright_stage(
+        form.get_attribute("action", timeout=timeout_ms),
+        stage="open-groi-form:assert-action",
+        description="GROI form action attribute",
+        timeout_ms=timeout_ms,
+    )
+    if action != _EXPECTED_FORM_ACTION:
+        raise SedeParseError(
+            f"GROI form action drift detected: expected {_EXPECTED_FORM_ACTION!r}, got {action!r}",
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context={
+                "stage": "open-groi-form:assert-action",
+                "expected_action": _EXPECTED_FORM_ACTION,
+                "observed_action": action or "<missing>",
+            },
+            suggestion=(
+                "AEAT changed the GROI form's submission target. The driver "
+                "refuses to submit until the change is investigated and the "
+                "expected action constant is updated. This is the read-only "
+                "mandate's last line of defense before a click would post to "
+                "the new (potentially state-modifying) endpoint."
+            ),
+        )
 
 
 async def _check_single_nif(
