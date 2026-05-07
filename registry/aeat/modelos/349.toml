@@ -266,6 +266,20 @@ oracle_id = "aeat-groi-spanish-roi-checker"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
 source_refs = ["aeat-groi-spanish-roi-procedure"]
 
+# Applicability gate: the GROI Spanish-ROI consult is only relevant
+# to a taxpayer who actually conducts intracommunity operations.
+# Subjects with does_intracomunitario=false do not file Modelo 349
+# at all and therefore have no business invoking the GROI counterparty
+# check. The all-mode aggregation is the default; if a future predicate
+# is added (e.g. iva.roi_enrolled), it AND-composes with this one.
+[[revisions."2020-y-siguientes".live_cross_references.applicability_predicates]]
+field = "does_intracomunitario"
+op = "equals"
+value = true
+explanation = "GROI Spanish-ROI counterparty check applies only when the taxpayer conducts declarable intracommunity operations."
+legal_refs = ["orden-eha-769-2010:art-1"]
+source_refs = ["aeat-modelo-349-procedure"]
+
 # --- Workbook parity (PDF record-design only; no formula form) ---
 
 [[revisions."2020-y-siguientes".workbook_parity_refs]]

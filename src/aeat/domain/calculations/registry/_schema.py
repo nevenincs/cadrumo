@@ -252,6 +252,18 @@ class ExtractionProfileDefinition(RegistryModel):
         return value
 
 
+ProfileFactValue = bool | int | str
+
+
+class ProfilePredicateDefinition(RegistryModel):
+    field: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_.-]*$")
+    op: Literal["equals", "not_equals"]
+    value: ProfileFactValue
+    explanation: str = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+
 class LiveCrossReferenceDecision(RegistryModel):
     id: CrossReferenceId
     evidence_tier: EvidenceTier
@@ -279,6 +291,15 @@ class LiveCrossReferenceDecision(RegistryModel):
     # registry-load time, so the registry remains loadable when adapters
     # are imported lazily.
     oracle_id: str | None = Field(default=None, min_length=1, max_length=128)
+    # Optional applicability gate: when non-empty the cross-reference is
+    # only applicable to a taxpayer profile whose values satisfy these
+    # predicates under the chosen mode. An empty tuple (the default) means
+    # the cross-reference is unconditionally applicable, preserving the
+    # behaviour of every binding declared before this field existed. Used
+    # to gate optional surfaces (GROI / IXVI for ROI-enrolled subjects,
+    # OSS bindings for OSS-enrolled subjects, etc.).
+    applicability_condition_mode: Literal["all", "any"] = "all"
+    applicability_predicates: tuple[ProfilePredicateDefinition, ...] = ()
 
     @field_validator("oracle_id")
     @classmethod
@@ -362,6 +383,8 @@ class LiveCrossReferenceDecision(RegistryModel):
                     f"cross-reference {self.id!r} authenticated simulator method "
                     f"{method!r} not in (GET, HEAD, OPTIONS, POST)"
                 )
+        if self.applicability_condition_mode == "any" and not self.applicability_predicates:
+            raise ValueError(f"cross-reference {self.id!r} any-mode requires applicability predicates")
         return self
 
 
@@ -560,18 +583,6 @@ class DependencyClassificationDefinition(RegistryModel):
         if self.treatment == "direct_annual_settlement" and not self.relation_refs:
             raise ValueError(f"dependency classification {self.id!r} must declare relation_refs")
         return self
-
-
-ProfileFactValue = bool | int | str
-
-
-class ProfilePredicateDefinition(RegistryModel):
-    field: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_.-]*$")
-    op: Literal["equals", "not_equals"]
-    value: ProfileFactValue
-    explanation: str = Field(min_length=1)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
 
 
 class DeadlineApplicabilityCondition(ProfilePredicateDefinition):

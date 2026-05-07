@@ -37,11 +37,13 @@ from ._remote_state_guard import (
     assert_remote_operation_allowed,
     evaluate_remote_operation,
 )
+from ._schedules import profile_condition_matches
 
 if TYPE_CHECKING:
-    from ._schema import ModeloDefinition
+    from ._schema import LiveCrossReferenceDecision, ModeloDefinition
 
 __all__ = [
+    "CrossReferenceApplicability",
     "LiveParityCatalogue",
     "LiveParityOracle",
     "OracleEnvironment",
@@ -52,6 +54,7 @@ __all__ = [
     "audit_oracle_bindings",
     "audit_registry_oracle_bindings",
     "build_planned_operations",
+    "evaluate_cross_reference_applicability",
     "pre_flight_oracle_operations",
     "resolve_cross_reference_oracle",
 ]
@@ -357,6 +360,59 @@ def assert_oracle_operations_allowed(
             raise RegistryValidationError(
                 f"oracle {oracle.oracle_id!r} operation {index} blocked by policy {policy.id!r}: {exc}"
             ) from exc
+
+
+class CrossReferenceApplicability(_ParityModel):
+    """Profile-applicability outcome for one live cross-reference decision.
+
+    The model is the typed signal callers consume to decide whether to
+    invoke a cross-reference at all. ``applicable=True`` with no
+    predicates declared is the default backwards-compatible case (every
+    binding declared before the applicability gate landed).
+    """
+
+    cross_reference_id: str = Field(min_length=1, max_length=128)
+    applicable: bool
+    matched_explanations: tuple[str, ...] = ()
+    unmet_predicate_fields: tuple[str, ...] = ()
+
+
+def evaluate_cross_reference_applicability(
+    decision: LiveCrossReferenceDecision,
+    profile_facts: Mapping[str, object] | object,
+) -> CrossReferenceApplicability:
+    """Evaluate a cross-reference's applicability against a profile.
+
+    Returns a typed :class:`CrossReferenceApplicability` rather than a
+    bare bool so callers (resolver, audit, live tests) consume a
+    single shape. The function is profile-state evaluation only; it
+    performs no network or catalogue lookup.
+
+    A decision with no applicability_predicates is unconditionally
+    applicable (backwards-compat). When predicates are declared, mode
+    governs combination: ``all`` requires every predicate to match;
+    ``any`` requires at least one match.
+    """
+
+    if not decision.applicability_predicates:
+        return CrossReferenceApplicability(
+            cross_reference_id=decision.id,
+            applicable=True,
+        )
+    matched: list[str] = []
+    unmet: list[str] = []
+    for predicate in decision.applicability_predicates:
+        if profile_condition_matches(predicate, profile_facts):
+            matched.append(predicate.explanation)
+        else:
+            unmet.append(predicate.field)
+    applicable = not unmet if decision.applicability_condition_mode == "all" else bool(matched)
+    return CrossReferenceApplicability(
+        cross_reference_id=decision.id,
+        applicable=applicable,
+        matched_explanations=tuple(matched),
+        unmet_predicate_fields=tuple(unmet),
+    )
 
 
 def resolve_cross_reference_oracle(
