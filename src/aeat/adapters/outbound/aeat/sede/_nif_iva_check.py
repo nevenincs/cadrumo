@@ -254,18 +254,27 @@ async def collect_nif_iva_check_observations(
         # error. Detect the redirect explicitly and surface auth-gate context.
         if is_aeat_auth_gate_redirect(page.url):
             raise SedeNavigationError(
-                "NIF-IVA form requires AEAT authentication; landed on AEAT 4033 page",
+                "IXVI form requires AEAT auth tier above cl@ve-movil; landed on AEAT 4033 page",
                 failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
                 context={
                     "stage": "post-form-navigation",
                     "landing_url": page.url,
                     "expected_url": str(AEAT_NIF_IVA_VERIFICATION_URL),
+                    "auth_tested": "clave_movil",
+                    "auth_tested_unlocks": "www2 GROI ConsultaOperadorSedeGroiServlet",
+                    "auth_tested_does_not_unlock": "www1 IXVI ConsultaIntracomunitarios",
                 },
                 suggestion=(
-                    "AEAT's VIES proxy form is gated by cl@ve / certificate "
-                    "auth. Either drive the oracle through an authenticated "
-                    "BrowserSession or pivot the oracle target to the EU "
-                    "Commission's public VIES service at ec.europa.eu."
+                    "Empirical finding (live probe 2026-05-07 via DefaultBrowserSession + "
+                    "cl@ve-movil): the same authenticated session that unlocks the www2 "
+                    "GROI Spanish-ROI consult surface is REJECTED by the www1 IXVI "
+                    "foreign-EU surface. Next auth tier to test is X.509 certificate "
+                    "(via the certificate auth provider). If certificate also 4033s, the "
+                    "IXVI surface likely requires the caller's own NIF to be ROI-registered "
+                    "(modelo 036/037 box 582). Until either path lands, use the GROI "
+                    "adapter for Spanish-counterparty verification or pivot foreign-EU "
+                    "verification to the EU Commission's public VIES at ec.europa.eu "
+                    "(separate adapter; requires expanding the host-pinning allow-list)."
                 ),
             )
 
