@@ -24,7 +24,10 @@ import pytest
 
 from aeat.adapters.outbound.aeat.sede._groi_check import GroiSedeDriver
 from aeat.domain.calculations.registry._groi_oracle import GROI_ORACLE_ID, GroiOracle
-from aeat.domain.calculations.registry._remote_state_guard import RemoteStateGuardPolicy
+from aeat.domain.calculations.registry._remote_state_guard import (
+    AEAT_WRITE_FORBIDDEN_ACTIONS,
+    RemoteStateGuardPolicy,
+)
 from aeat.entrypoints.cli._live import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
@@ -34,11 +37,17 @@ _PROBE_NIF = "A28015865"
 
 
 def _live_policy() -> RemoteStateGuardPolicy:
+    """The live policy enforces the read-only mandate via the canonical AEAT
+    write-class forbidden_actions set. AEAT writes are PERMANENTLY FORBIDDEN;
+    every test that exercises the GROI oracle does so with this guard active.
+    """
+
     return RemoteStateGuardPolicy(
         id="modelo-349-groi-spanish-roi-check",
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
         allowed_hosts=("www2.agenciatributaria.gob.es",),
+        forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
         synthetic_data_allowed=True,
         requires_authentication=False,
         requires_aeat_authorization=False,

@@ -13,6 +13,29 @@ The oracle is the SPANISH-counterparty sibling of
 surface is ``public_read_surface``; the registry's surface-kind
 compatibility table at ``_live_parity._COMPATIBLE_SURFACE_PAIRS``
 already declares that pair.
+
+READ-ONLY MANDATE
+-----------------
+
+AEAT writes are PERMANENTLY FORBIDDEN. The GROI form's submit handler
+is an HTTP POST to ``ConsultaOperadorSedeGroiServlet`` — but per AEAT
+service contract this POST is a CONSULT (a SELECT against the ROI
+registry) and modifies no AEAT-side state. The submitting NIF is not
+recorded against the queried NIF, no draft is created, no filing
+history entry is generated. Every observation captured during live
+probing 2026-05-07 confirmed the form's only side effect is rendering
+a verdict page back to the caller.
+
+Defense-in-depth nonetheless: the registry's :class:`RemoteStateGuard`
+fence intercepts every operation the oracle emits BEFORE any browser
+action runs. Any guard policy attached to a GROI cross-reference MUST
+declare ``forbidden_actions`` containing the canonical
+:data:`AEAT_WRITE_FORBIDDEN_ACTIONS` set so that, were a future driver
+refactor to mislabel an operation (or were AEAT to silently change the
+endpoint to a state-modifying action), the guard rejects the
+operation BEFORE it leaves the process. The unit and live tests
+exercise the guard with deliberately fabricated write operations to
+prove the read-only invariant by construction.
 """
 
 from __future__ import annotations

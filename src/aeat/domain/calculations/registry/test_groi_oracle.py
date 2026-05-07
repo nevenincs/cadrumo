@@ -13,6 +13,7 @@ uses so a calculation engine can drive both oracles uniformly.
 from __future__ import annotations
 
 import pytest
+from pydantic import AnyUrl
 
 from ._errors import RegistryValidationError
 from ._groi_oracle import (
@@ -24,7 +25,12 @@ from ._groi_oracle import (
     register_default,
 )
 from ._live_parity import LiveParityCatalogue, LiveParityOracle
-from ._remote_state_guard import RemoteStateGuardPolicy
+from ._remote_state_guard import (
+    AEAT_WRITE_FORBIDDEN_ACTIONS,
+    RemoteOperation,
+    RemoteStateGuardPolicy,
+    assert_remote_operation_allowed,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -35,6 +41,7 @@ def _aeat_policy() -> RemoteStateGuardPolicy:
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
         allowed_hosts=("www2.agenciatributaria.gob.es",),
+        forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
         synthetic_data_allowed=True,
         requires_authentication=False,
         requires_aeat_authorization=False,
@@ -47,6 +54,7 @@ def _wrong_host_policy() -> RemoteStateGuardPolicy:
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
         allowed_hosts=("sede.agenciatributaria.gob.es",),
+        forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
         synthetic_data_allowed=True,
         requires_authentication=False,
         requires_aeat_authorization=False,
@@ -199,3 +207,119 @@ def test_register_default_test_environment_classification_supported() -> None:
     assert catalogue.environment_of(GROI_ORACLE_ID) == "test_environment"
     with pytest.raises(RegistryValidationError):
         catalogue.lookup(GROI_ORACLE_ID, environment="production")
+
+
+# ---------------------------------------------------------------------------
+# HARD MANDATE: AEAT writes are PERMANENTLY FORBIDDEN. Every GROI guard
+# policy must reject every fabricated write-class operation. The tests below
+# prove the read-only invariant by construction — they exercise the guard
+# directly with deliberately malformed write operations and confirm
+# RegistryValidationError fires before any browser interaction could occur.
+# ---------------------------------------------------------------------------
+
+
+def test_groi_planned_operations_emit_zero_write_class_action_labels() -> None:
+    """The oracle's enumerated operations must contain no AEAT write-class action label."""
+
+    oracle = GroiOracle()
+    operations = oracle.planned_operations(
+        b"",
+        expected={"A28015865": "valid", "B12345678": "valid"},
+    )
+    for operation in operations:
+        action = (operation.action or "").lower()
+        for forbidden in AEAT_WRITE_FORBIDDEN_ACTIONS:
+            assert forbidden.lower() not in action, (operation, forbidden)
+
+
+def test_groi_planned_operations_emit_only_read_only_http_methods() -> None:
+    """Every kind='http' operation must use GET / HEAD / OPTIONS — never a write method."""
+
+    oracle = GroiOracle()
+    operations = oracle.planned_operations(b"", expected={"A28015865": "valid"})
+    for operation in operations:
+        if operation.kind == "http":
+            assert operation.method in {"GET", "HEAD", "OPTIONS"}, operation
+
+
+@pytest.mark.parametrize("forbidden_label", AEAT_WRITE_FORBIDDEN_ACTIONS)
+def test_guard_blocks_fabricated_write_class_browser_action_under_groi_policy(forbidden_label: str) -> None:
+    """The guard rejects every write-class action label the GROI policy declares forbidden."""
+
+    fabricated = RemoteOperation(kind="browser_action", action=f"trigger-{forbidden_label}-on-aeat")
+    with pytest.raises(RegistryValidationError, match="forbidden action"):
+        assert_remote_operation_allowed(_aeat_policy(), fabricated)
+
+
+@pytest.mark.parametrize(
+    "forbidden_token",
+    ("submit", "send", "post", "save", "sign", "payment", "presentar", "enviar", "firmar"),
+)
+def test_guard_blocks_fabricated_browser_action_carrying_forbidden_token(forbidden_token: str) -> None:
+    """The guard's global forbidden-token set blocks any action label containing a write verb."""
+
+    fabricated = RemoteOperation(kind="browser_action", action=f"groi-{forbidden_token}-form-data")
+    with pytest.raises(RegistryValidationError, match="forbidden"):
+        assert_remote_operation_allowed(_aeat_policy(), fabricated)
+
+
+def test_guard_blocks_fabricated_http_post_to_aeat_under_groi_policy() -> None:
+    """An HTTP POST to AEAT (write method) is rejected before any network call."""
+
+    fabricated = RemoteOperation(
+        kind="http",
+        method="POST",
+        url=AEAT_GROI_URL,
+    )
+    with pytest.raises(RegistryValidationError, match="write method"):
+        assert_remote_operation_allowed(_aeat_policy(), fabricated)
+
+
+def test_guard_blocks_fabricated_http_put_to_aeat_under_groi_policy() -> None:
+    """PUT, DELETE, PATCH — every write method is blocked, not just POST."""
+
+    for method in ("PUT", "DELETE", "PATCH"):
+        fabricated = RemoteOperation(kind="http", method=method, url=AEAT_GROI_URL)
+        with pytest.raises(RegistryValidationError, match="write method"):
+            assert_remote_operation_allowed(_aeat_policy(), fabricated)
+
+
+def test_guard_blocks_http_get_to_aeat_host_outside_policy_allowed_hosts() -> None:
+    """Even a GET to a non-allow-listed AEAT host is rejected."""
+
+    fabricated = RemoteOperation(
+        kind="http",
+        method="GET",
+        url=AnyUrl("https://www99.agenciatributaria.gob.es/some/forbidden/path"),
+    )
+    with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
+        assert_remote_operation_allowed(_aeat_policy(), fabricated)
+
+
+def test_groi_oracle_verify_payload_returns_blocked_on_fabricated_write_intent() -> None:
+    """Top-level oracle Protocol returns verdict=blocked rather than letting a write reach AEAT.
+
+    The guard fence is the contract. Even if a future driver mislabels an
+    operation, the oracle's verify_payload runs the guard preflight first
+    and returns a ParityResult(verdict='blocked') — no Playwright code runs,
+    no network call leaves the process.
+    """
+
+    # Hand-craft a policy whose forbidden_actions catches the GROI driver's
+    # check-nif label, simulating a "future-mislabeled" scenario.
+    paranoid_policy = RemoteStateGuardPolicy(
+        id="paranoid-policy",
+        evidence_tier="executable_parity_evidence",
+        classification="open_simulator",
+        allowed_hosts=("www2.agenciatributaria.gob.es",),
+        forbidden_actions=(*AEAT_WRITE_FORBIDDEN_ACTIONS, "check-nif"),
+        synthetic_data_allowed=True,
+        requires_authentication=False,
+        requires_aeat_authorization=False,
+    )
+    oracle = GroiOracle()
+    result = oracle.verify_payload(paranoid_policy, b"", expected={"A28015865": "valid"})
+
+    assert result.verdict == "blocked"
+    assert "blocked by remote-state guard" in result.narrative
+    assert result.fields == ()
