@@ -260,6 +260,7 @@ class LiveCrossReferenceDecision(RegistryModel):
         "integration_test_service",
         "public_read_surface",
         "authenticated_read_surface",
+        "authenticated_simulator",
         "static_official_documentation",
     ]
     guard_policy_id: str
@@ -301,7 +302,7 @@ class LiveCrossReferenceDecision(RegistryModel):
     @model_validator(mode="after")
     def _validate_cross_reference(self) -> LiveCrossReferenceDecision:
         if (
-            self.surface in {"open_simulator", "integration_test_service"}
+            self.surface in {"open_simulator", "integration_test_service", "authenticated_simulator"}
             and self.evidence_tier != "executable_parity_evidence"
         ):
             raise ValueError(f"cross-reference {self.id!r} live surface requires executable parity evidence")
@@ -313,7 +314,13 @@ class LiveCrossReferenceDecision(RegistryModel):
             raise ValueError(f"cross-reference {self.id!r} static documentation is not executable parity evidence")
         if (
             self.surface
-            in {"open_simulator", "integration_test_service", "public_read_surface", "authenticated_read_surface"}
+            in {
+                "open_simulator",
+                "integration_test_service",
+                "public_read_surface",
+                "authenticated_read_surface",
+                "authenticated_simulator",
+            }
             and not self.allowed_hosts
         ):
             raise ValueError(f"cross-reference {self.id!r} must declare allowed_hosts")
@@ -325,6 +332,8 @@ class LiveCrossReferenceDecision(RegistryModel):
             raise ValueError(f"cross-reference {self.id!r} authenticated read surface must require authentication")
         if self.surface == "authenticated_read_surface" and not self.requires_aeat_authorization:
             raise ValueError(f"cross-reference {self.id!r} authenticated read surface must require authorization")
+        if self.surface == "authenticated_simulator" and not self.requires_authentication:
+            raise ValueError(f"cross-reference {self.id!r} authenticated simulator must require authentication")
         if self.surface in {"public_read_surface", "authenticated_read_surface"} and self.synthetic_data_allowed:
             raise ValueError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
         if self.surface == "static_official_documentation" and self.synthetic_data_allowed:
@@ -338,6 +347,21 @@ class LiveCrossReferenceDecision(RegistryModel):
                 "OPTIONS",
             }:
                 raise ValueError(f"cross-reference {self.id!r} read surface method {method!r} is not read-only")
+            # authenticated_simulator declares the AEAT-prescribed query
+            # method (POST is the GROI / IXVI form-submit mechanism). The
+            # remote-state guard's HTTP-method check stays strict for
+            # ``kind="http"`` operations; only the cross-reference's
+            # allowed_methods declaration is widened.
+            if self.surface == "authenticated_simulator" and method not in {
+                "GET",
+                "HEAD",
+                "OPTIONS",
+                "POST",
+            }:
+                raise ValueError(
+                    f"cross-reference {self.id!r} authenticated simulator method "
+                    f"{method!r} not in (GET, HEAD, OPTIONS, POST)"
+                )
         return self
 
 
