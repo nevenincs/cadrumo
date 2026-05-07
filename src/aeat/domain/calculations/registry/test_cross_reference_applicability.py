@@ -166,6 +166,124 @@ def test_groi_349_binding_is_not_applicable_when_profile_is_not_intracomunitario
     assert len(applicable.matched_explanations) == 1
 
 
+def _load_binding(modelo_id: str, revision_id: str, cross_reference_id: str) -> LiveCrossReferenceDecision:
+    from aeat.core.paths import PROJECT_ROOT
+
+    from . import load_registry_tree
+
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo = next(modelo for modelo in modelos if modelo.id == modelo_id)
+    return next(
+        decision
+        for decision in modelo.revisions[revision_id].live_cross_references
+        if decision.id == cross_reference_id
+    )
+
+
+def test_oss_369_binding_is_not_applicable_when_profile_is_not_oss_enrolled() -> None:
+    """The committed Modelo 369 OSS read binding evaluates to applicable=False
+    under a profile that hasn't enrolled in the OSS regime.
+
+    Mirrors the GROI test pattern. Non-tautological: applicability comes
+    from the profile state; the test asserts the gate semantics, not
+    formula arithmetic.
+    """
+
+    binding = _load_binding("369", "esquema-exterior", "modelo-369-exterior-filed-declarations-read")
+
+    not_enrolled = evaluate_cross_reference_applicability(
+        binding,
+        profile_facts={"iva": {"oss_enrolled": False}},
+    )
+    assert not_enrolled.applicable is False
+    assert not_enrolled.unmet_predicate_fields == ("iva.oss_enrolled",)
+    assert not_enrolled.matched_explanations == ()
+
+    enrolled = evaluate_cross_reference_applicability(
+        binding,
+        profile_facts={"iva": {"oss_enrolled": True}},
+    )
+    assert enrolled.applicable is True
+    assert enrolled.unmet_predicate_fields == ()
+    assert len(enrolled.matched_explanations) == 1
+
+
+def test_oss_369_cross_reference_declares_iva_oss_enrolled_predicate() -> None:
+    """The committed OSS read binding must carry the OSS enrollment gate.
+
+    Pinning the registered predicate fields catches a regression where
+    the predicate is silently dropped on a future TOML edit. Mirrors
+    the GROI pinning test.
+    """
+
+    binding = _load_binding("369", "esquema-exterior", "modelo-369-exterior-filed-declarations-read")
+    assert binding.applicability_predicates, "OSS-369 binding must declare an applicability gate"
+    assert binding.applicability_condition_mode == "all"
+    fields = {predicate.field for predicate in binding.applicability_predicates}
+    assert "iva.oss_enrolled" in fields
+
+
+def test_user_profile_contract_rejects_typoed_predicate_field() -> None:
+    """Predicate fields must resolve in the user_profile schema.
+
+    A typo'd field (`iva.roi_enrolled_X`) would silently match nothing
+    and the binding would always evaluate to applicable=False. The
+    user_profile registry contract validator catches this at registry
+    load time, surfacing a structural failure naming the cross-
+    reference + bad selector. Mirrors the existing schedule /
+    deadline-window predicate validation.
+    """
+
+    from aeat.core.paths import PROJECT_ROOT
+
+    from ...user_profile._loader import load_user_profile_schema
+    from ...user_profile._registry_contract import (
+        UserProfileRegistryContractSeverity,
+        validate_user_profile_registry_contract,
+    )
+    from . import ModeloDefinition, ModeloRevision, load_registry_tree
+
+    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelo_349 = next(modelo for modelo in modelos if modelo.id == "349")
+    revision = modelo_349.revisions["2020-y-siguientes"]
+    binding = next(
+        decision
+        for decision in revision.live_cross_references
+        if decision.id == "modelo-349-groi-spanish-counterparty-check"
+    )
+
+    typoed_predicate = ProfilePredicateDefinition(
+        field="iva.roi_enrolled_X",
+        op="equals",
+        value=True,
+        explanation="Typo'd field for validator coverage.",
+        legal_refs=("orden-hac-174-2020:art-1",),
+        source_refs=("aeat-modelo-349-procedure",),
+    )
+    bad_binding = binding.model_copy(update={"applicability_predicates": (typoed_predicate,)})
+    bad_revision = revision.model_copy(
+        update={
+            "live_cross_references": tuple(
+                bad_binding if decision.id == bad_binding.id else decision
+                for decision in revision.live_cross_references
+            ),
+        }
+    )
+    bad_modelo: ModeloDefinition = modelo_349.model_copy(update={"revisions": {"2020-y-siguientes": bad_revision}})
+    assert isinstance(bad_revision, ModeloRevision)
+
+    schema = load_user_profile_schema()
+    report = validate_user_profile_registry_contract([bad_modelo], schema)
+    matching = [
+        issue
+        for issue in report.issues
+        if issue.surface == "cross_reference_applicability" and issue.selector == "iva.roi_enrolled_X"
+    ]
+    assert matching, "validator did not catch the typo'd predicate field"
+    assert matching[0].severity is UserProfileRegistryContractSeverity.ERROR
+    assert matching[0].construct_id == "modelo-349-groi-spanish-counterparty-check"
+
+
 def test_groi_349_cross_reference_declares_does_intracomunitario_predicate() -> None:
     """The committed modelo-349-groi-spanish-counterparty-check binding must
     carry an applicability gate so non-intracom subjects skip the consult.
