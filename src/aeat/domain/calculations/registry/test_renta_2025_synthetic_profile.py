@@ -245,12 +245,12 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
             RegistryScenarioExpectedOutput(
                 target="0585",
                 value=Decimal("5936.38"),
-                operand_refs=("0570", "0568", "0572", "0574"),
+                operand_refs=("0570", "0568", "0582", "0572", "0573", "0574", "0576"),
             ),
             RegistryScenarioExpectedOutput(
                 target="0586",
                 value=Decimal("5936.38"),
-                operand_refs=("0571", "0569", "0577", "0579"),
+                operand_refs=("0571", "0569", "0583", "0577", "0578", "0579", "0581", "0504"),
             ),
             # Cuota líquida total (existing formula at 0587)
             RegistryScenarioExpectedOutput(
