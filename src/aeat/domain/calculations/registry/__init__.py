@@ -38,7 +38,12 @@ from ._export import (
     resolve_export_layout,
 )
 from ._export_parse import ParsedExportFieldValue, ParsedExportPayload, parse_export_payload
-from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
+from ._formula_runtime import (
+    RegistryCalculationEntry,
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
+    read_parameter,
+)
 from ._groi_oracle import (
     AEAT_GROI_URL,
     GROI_ORACLE_ID,
@@ -304,6 +309,7 @@ __all__ = [
     "parse_workbook_cell_ref",
     "previous_filing_observation_requirements",
     "profile_condition_matches",
+    "read_parameter",
     "relation_source_requirements",
     "remote_state_policy_from_cross_reference",
     "replay_parity_tape",
