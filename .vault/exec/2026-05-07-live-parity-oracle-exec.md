@@ -211,3 +211,54 @@ should consume.
   test_audit_oracle_surface_compatibility +
   test_public_api_boundaries + test_registry_schema +
   test_schema_hygiene + user_profile/).
+
+## Hardening pass (slices 13 — 15, 2026-05-08)
+
+Third execution window hardens the applicability gate against the
+two main regression vectors: typo'd predicate fields and missing
+runtime enforcement.
+
+### Slice 13 — Predicate field validation against profile schema
+
+`UserProfileRegistryContractIssue` gains the
+`cross_reference_applicability` surface literal. New
+`_cross_reference_applicability_issues` walker checks every
+declared `applicability_predicates[*].field` against the
+schedule-predicate index built from the user-profile schema. A
+typo'd field surfaces a typed error at registry load time,
+mirroring the existing schedule / deadline-window predicate
+validation. New contract test
+`test_user_profile_contract_rejects_typoed_predicate_field` proves
+the gate catches a substituted bad selector on the GROI binding.
+
+### Slice 14 — Resolver-side runtime gate
+
+`resolve_cross_reference_oracle` accepts optional `decision` and
+`profile_facts` arguments. When both are supplied the resolver
+calls `evaluate_cross_reference_applicability` first and raises a
+typed `RegistryValidationError` naming the unmet predicate fields
+if the binding is not applicable to the profile. Three new
+contract tests cover the applicable-pass, not-applicable-raise,
+and legacy-omitted (gate skipped, opt-in) branches. The
+catalogue-only path stays intact for adapters that haven't yet
+threaded profile facts.
+
+### Slice 15 — OSS-369 mirror tests
+
+Two new tests on the OSS-369 binding mirror the GROI test pattern:
+applicability=False under `iva.oss_enrolled=false`, applicability=
+True under `iva.oss_enrolled=true`, with the expected typed
+unmet-fields shape; plus a structural pinning test that catches
+predicate drop on a future TOML edit. Both share a
+`_load_binding(modelo_id, revision_id, cross_reference_id)` helper
+to avoid re-walking the registry per test.
+
+### Gates achieved (2026-05-08 hardening)
+
+- `ruff` / `ty` clean across every touched source file.
+- `aeat app registry verify --json` reports `verified: true`.
+- `aeat app registry audit-oracles --json` reports `failure_count:
+  0` with 2 applicability declarations surfaced.
+- Touched-surface test sweep: 102 / 102 pass (added 6 new tests
+  across the three slices, plus the existing 96 from the prior
+  windows).

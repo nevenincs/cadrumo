@@ -31,7 +31,13 @@ class UserProfileRegistryContractIssue(BaseModel):
     severity: UserProfileRegistryContractSeverity
     modelo_id: str
     revision_id: str
-    surface: Literal["binding", "filing_schedule", "deadline_window", "export_layout"]
+    surface: Literal[
+        "binding",
+        "filing_schedule",
+        "deadline_window",
+        "export_layout",
+        "cross_reference_applicability",
+    ]
     construct_id: str
     selector: str
     message: str = Field(min_length=1)
@@ -118,6 +124,7 @@ def validate_user_profile_registry_contract(
             issues.extend(_binding_issues(modelo.id, revision, index))
             issues.extend(_schedule_issues(modelo.id, revision, index))
             issues.extend(_deadline_issues(modelo.id, revision, index))
+            issues.extend(_cross_reference_applicability_issues(modelo.id, revision, index))
             issues.extend(_export_issues(modelo.id, revision, index))
     return UserProfileRegistryContractReport(
         schema_id=schema.id,
@@ -212,6 +219,29 @@ def _deadline_issues(
     return tuple(issues)
 
 
+def _cross_reference_applicability_issues(
+    modelo_id: str,
+    revision: ModeloRevision,
+    index: UserProfileSelectorIndex,
+) -> tuple[UserProfileRegistryContractIssue, ...]:
+    issues: list[UserProfileRegistryContractIssue] = []
+    for cross_reference in revision.live_cross_references:
+        for predicate in cross_reference.applicability_predicates:
+            if predicate.field not in index.schedule_predicates:
+                issues.append(
+                    _issue(
+                        severity=UserProfileRegistryContractSeverity.ERROR,
+                        modelo_id=modelo_id,
+                        revision_id=revision.id,
+                        surface="cross_reference_applicability",
+                        construct_id=cross_reference.id,
+                        selector=predicate.field,
+                        message="cross-reference applicability predicate is not declared by user-profile schema",
+                    )
+                )
+    return tuple(issues)
+
+
 def _export_issues(
     modelo_id: str,
     revision: ModeloRevision,
@@ -279,7 +309,13 @@ def _issue(
     severity: UserProfileRegistryContractSeverity,
     modelo_id: str,
     revision_id: str,
-    surface: Literal["binding", "filing_schedule", "deadline_window", "export_layout"],
+    surface: Literal[
+        "binding",
+        "filing_schedule",
+        "deadline_window",
+        "export_layout",
+        "cross_reference_applicability",
+    ],
     construct_id: str,
     selector: str,
     message: str,

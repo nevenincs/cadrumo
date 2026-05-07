@@ -423,6 +423,8 @@ def resolve_cross_reference_oracle(
     oracle_id: str | None,
     catalogue: LiveParityCatalogue,
     environment: OracleEnvironment = "production",
+    decision: LiveCrossReferenceDecision | None = None,
+    profile_facts: Mapping[str, object] | object | None = None,
 ) -> LiveParityOracle:
     """Resolve a cross-reference's bound oracle through the catalogue.
 
@@ -435,10 +437,26 @@ def resolve_cross_reference_oracle(
     references with no oracle are not resolved here; their absence is a
     distinct case from "binding present but unresolvable" and the caller
     handles it before delegating.
+
+    Optional applicability gate: when both ``decision`` and
+    ``profile_facts`` are supplied, ``evaluate_cross_reference_applicability``
+    runs first and the resolver raises a typed
+    :class:`RegistryValidationError` naming the unmet predicate fields if
+    the binding is not applicable to the profile. Callers that don't
+    thread profile facts (legacy adapters, the audit) keep the old
+    catalogue-only resolution path by omitting both arguments.
     """
 
     if oracle_id is None:
         raise RegistryValidationError(f"cross-reference {cross_reference_id!r} has no oracle binding to resolve")
+    if decision is not None and profile_facts is not None:
+        applicability = evaluate_cross_reference_applicability(decision, profile_facts)
+        if not applicability.applicable:
+            unmet = ", ".join(applicability.unmet_predicate_fields) or "<unmet>"
+            raise RegistryValidationError(
+                f"cross-reference {cross_reference_id!r} is not applicable to the supplied "
+                f"profile: unmet predicate fields ({unmet})"
+            )
     try:
         return catalogue.lookup(oracle_id, environment=environment)
     except RegistryValidationError as exc:

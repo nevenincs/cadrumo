@@ -20,6 +20,8 @@ from ._live_parity import (
     LiveParityOracle,
     resolve_cross_reference_oracle,
 )
+from ._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
+from ._schema import LiveCrossReferenceDecision, ProfilePredicateDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -93,6 +95,96 @@ def test_environment_mismatch_error_names_cross_reference_and_oracle() -> None:
     assert "modelo-100-test-only-binding" in message
     assert ORACLE_ID in message
     assert "test_environment" in message
+
+
+def _gated_decision() -> LiveCrossReferenceDecision:
+    """A LiveCrossReferenceDecision with an applicability predicate gating it."""
+
+    return LiveCrossReferenceDecision(
+        id="modelo-349-nif-iva-check",
+        evidence_tier="executable_parity_evidence",
+        surface="open_simulator",
+        guard_policy_id="modelo-349-nif-iva-check-policy",
+        allowed_hosts=("ec.europa.eu",),
+        allowed_methods=("GET",),
+        forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
+        synthetic_data_allowed=True,
+        requires_authentication=False,
+        requires_aeat_authorization=False,
+        legal_refs=("orden-eha-769-2010:art-1",),
+        source_refs=("aeat-modelo-349-procedure",),
+        oracle_id=ORACLE_ID,
+        applicability_predicates=(
+            ProfilePredicateDefinition(
+                field="does_intracomunitario",
+                op="equals",
+                value=True,
+                explanation="NIF-IVA check applies only to intracom subjects.",
+                legal_refs=("orden-eha-769-2010:art-1",),
+                source_refs=("aeat-modelo-349-procedure",),
+            ),
+        ),
+    )
+
+
+def test_resolver_passes_when_applicability_gate_satisfied() -> None:
+    """When decision + profile_facts are supplied AND the gate passes,
+    the resolver behaves identically to the legacy catalogue-only path."""
+
+    catalogue = _catalogue_with_production_oracle()
+    decision = _gated_decision()
+
+    resolved = resolve_cross_reference_oracle(
+        cross_reference_id=decision.id,
+        oracle_id=ORACLE_ID,
+        catalogue=catalogue,
+        environment="production",
+        decision=decision,
+        profile_facts={"does_intracomunitario": True},
+    )
+
+    assert resolved.oracle_id == ORACLE_ID
+
+
+def test_resolver_raises_when_applicability_gate_says_not_applicable() -> None:
+    """When the profile fails the predicate the resolver raises a typed
+    error naming the unmet predicate fields, BEFORE any catalogue lookup."""
+
+    catalogue = _catalogue_with_production_oracle()
+    decision = _gated_decision()
+
+    with pytest.raises(RegistryValidationError) as exc_info:
+        resolve_cross_reference_oracle(
+            cross_reference_id=decision.id,
+            oracle_id=ORACLE_ID,
+            catalogue=catalogue,
+            environment="production",
+            decision=decision,
+            profile_facts={"does_intracomunitario": False},
+        )
+
+    message = str(exc_info.value)
+    assert decision.id in message
+    assert "not applicable" in message
+    assert "does_intracomunitario" in message
+
+
+def test_resolver_ignores_applicability_gate_when_decision_or_profile_omitted() -> None:
+    """Callers that don't thread profile facts resolve through the
+    catalogue without any applicability check; the gate is opt-in."""
+
+    catalogue = _catalogue_with_production_oracle()
+    decision = _gated_decision()  # has applicability_predicates declared
+
+    # No decision/profile_facts supplied -> gate is skipped
+    resolved = resolve_cross_reference_oracle(
+        cross_reference_id=decision.id,
+        oracle_id=ORACLE_ID,
+        catalogue=catalogue,
+        environment="production",
+    )
+
+    assert resolved.oracle_id == ORACLE_ID
 
 
 def test_dual_environment_oracle_resolves_under_either_environment() -> None:
