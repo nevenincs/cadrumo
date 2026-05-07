@@ -166,7 +166,11 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
             RegistryScenarioExpectedOutput(
                 target="0460",
                 value=Decimal("0.00"),
-                operand_refs=("0429", "0424"),
+                operand_refs=(
+                    "0424", "0429",
+                    "0436", "0439", "0440", "0441", "0442", "0443", "0444", "0445", "0447",
+                    "0446", "0449", "0450", "0451", "0452", "0453", "0454", "0455", "0448",
+                ),
             ),
             RegistryScenarioExpectedOutput(
                 target="0500",
