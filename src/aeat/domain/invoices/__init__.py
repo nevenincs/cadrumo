@@ -11,6 +11,7 @@ from ._enums import InvoiceKind, IvaRate, PaymentStatus
 from ._iva_classification import (
     IvaInvoiceClassification,
     classify_invoice_line_for_iva,
+    invoice_line_to_iva_observation,
 )
 from ._errors import (
     InvoiceCatalogueError,
@@ -50,6 +51,7 @@ __all__ = [
     "ReconciliationSuggestion",
     "classify_invoice_line_for_iva",
     "derive_invoice_id",
+    "invoice_line_to_iva_observation",
     "link_transaction",
     "link_transaction_bidirectional",
     "suggest_reconciliations",
