@@ -5366,3 +5366,25 @@ backed by the same VATCategory + VATRateKind + IvaFlowDirection
 substrate triple. The cross-modelo previous_filing dependency from
 390 across the four 303 quarters demonstrates that the canonical
 resumen-anual reconciliation pattern works end-to-end.
+
+- [x] Devengada vs deducible IVA settlement cornerstone codification.
+  Adds IvaSettlementSide closed enum (DEVENGADA / DEDUCIBLE),
+  flow→sides mapping, canonical predicates (is_devengada_flow,
+  is_deducible_flow), and frozen sets (DEVENGADA_FLOW_DIRECTIONS,
+  DEDUCIBLE_FLOW_DIRECTIONS) so the ledger and modelo registries
+  categorize transactions through one substrate primitive instead of
+  re-deriving the mapping inline. Anchored to LIVA arts 88 (output) /
+  92 (input) / 84.Uno.2 (both legs of inversión). Set-theoretic
+  invariants: DEVENGADA ∩ DEDUCIBLE = {AUTOREPERCUTIDO},
+  DEVENGADA ∪ DEDUCIBLE = full taxonomy. Modelo 303 contract-gate
+  test confirms the cuota-devengada-total formula sums exactly the
+  DEVENGADA_FLOW_DIRECTIONS set; if the substrate ever changes the
+  test fires unless the modelo formula updates in lockstep. 11 new
+  tests pass + 23 prior flow tests stay green. Commit `fc196b15`.
+
+The IVA classification triple (VATCategory + VATRateKind +
+IvaFlowDirection) is now wrapped by the settlement-side cornerstone
+abstraction. The ledger domain has one canonical primitive to ask
+"does this transaction owe IVA to the Treasury or claim a deduction
+back?" — anchored to BOE-cited LIVA articles, with the AUTOREPERCUTIDO
+both-sides invariant explicitly tested.
