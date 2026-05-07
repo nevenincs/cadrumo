@@ -17,6 +17,7 @@ from ...application.auth import (
     require_verified_aeat_session,
 )
 from ...application.profile import validate_profile
+from ...application.setup_status import build_setup_status
 from ...application.user_cli import (
     clear_profile_values,
     set_active_profile,
@@ -96,33 +97,14 @@ def setup_init(
 @app.command("status", help=tr("cli.setup.status.help"))
 def setup_status(ctx: typer.Context) -> None:
     """Show profile, auth, and validation readiness."""
-    current = _state()
-    record = current.active_profile_record()
-    profile_ready = False
-    missing_required: list[str] = []
-    if record is not None:
-        result = validate_profile(record.values)
-        profile_ready = result.valid
-        missing_required = list(result.missing_required)
-    auth_provider = current.auth.provider or ""
-    login_ready = current.auth.authenticated_at is not None
-    if record is None:
-        next_action = "aeat setup init --name NAME"
-    elif missing_required:
-        next_action = f"aeat setup profile set {missing_required[0]} VALUE"
-    elif not auth_provider:
-        next_action = "aeat setup auth configure --provider certificate --file PATH"
-    elif not login_ready:
-        next_action = "aeat setup auth login"
-    else:
-        next_action = "aeat app overview status"
+    report = build_setup_status(_state())
     payload = {
-        "active_profile": current.active_profile,
-        "profile_ready": profile_ready,
-        "missing_required": missing_required,
-        "auth_provider": auth_provider,
-        "login_ready": login_ready,
-        "next_action": next_action,
+        "active_profile": report.active_profile,
+        "profile_ready": report.profile_ready,
+        "missing_required": list(report.missing_required),
+        "auth_provider": report.auth_provider,
+        "login_ready": report.login_ready,
+        "next_action": report.next_action,
     }
     yes_label = tr("cli.setup.labels.yes")
     no_label = tr("cli.setup.labels.no")
@@ -130,12 +112,12 @@ def setup_status(ctx: typer.Context) -> None:
         ctx,
         payload,
         [
-            f"{tr('cli.setup.headers.profile')}\t{current.active_profile or ''}",
-            f"{tr('cli.setup.headers.profile_ready')}\t{yes_label if profile_ready else no_label}",
-            f"{tr('cli.setup.headers.missing')}\t{', '.join(missing_required) or '-'}",
-            f"{tr('cli.setup.headers.auth_provider')}\t{auth_provider}",
-            f"{tr('cli.setup.headers.login_ready')}\t{yes_label if login_ready else no_label}",
-            f"{tr('cli.setup.headers.next')}\t{next_action}",
+            f"{tr('cli.setup.headers.profile')}\t{report.active_profile or ''}",
+            f"{tr('cli.setup.headers.profile_ready')}\t{yes_label if report.profile_ready else no_label}",
+            f"{tr('cli.setup.headers.missing')}\t{', '.join(report.missing_required) or '-'}",
+            f"{tr('cli.setup.headers.auth_provider')}\t{report.auth_provider}",
+            f"{tr('cli.setup.headers.login_ready')}\t{yes_label if report.login_ready else no_label}",
+            f"{tr('cli.setup.headers.next')}\t{report.next_action}",
         ],
     )
 
