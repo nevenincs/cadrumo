@@ -451,6 +451,7 @@ formulas = [
     "renta-2020-iic-perdidas-reducidas-suma",
     "renta-2020-capital-inmobiliario-intereses-gastos-passthrough",
     "renta-2020-saldo-capital-mobiliario-cap-25-base-ahorro",
+    "renta-2020-capital-mobiliario-saldo-pendiente-base-ahorro",
 ]
 
 [[revisions."2020".constructs]]
@@ -559,6 +560,21 @@ formulas = [
     "renta-2020-trabajo-suma-rendimientos-netos-previos",
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-capital-mobiliario-saldo-pendiente-base-ahorro"
+target = "1283"
+expression = { op = "subtract", args = [
+    { casilla = "0430" },
+    { casilla = "0436" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2020".formulas]]
 id = "renta-2020-saldo-capital-mobiliario-cap-25-base-ahorro"
@@ -3122,6 +3138,7 @@ formulas = [
     "renta-2021-iic-perdidas-reducidas-suma",
     "renta-2021-capital-inmobiliario-intereses-gastos-passthrough",
     "renta-2021-saldo-capital-mobiliario-cap-25-base-ahorro",
+    "renta-2021-capital-mobiliario-saldo-pendiente-base-ahorro",
 ]
 
 [[revisions."2021".constructs]]
@@ -3230,6 +3247,21 @@ formulas = [
     "renta-2021-trabajo-suma-rendimientos-netos-previos",
     "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-capital-mobiliario-saldo-pendiente-base-ahorro"
+target = "1283"
+expression = { op = "subtract", args = [
+    { casilla = "0430" },
+    { casilla = "0436" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-saldo-capital-mobiliario-cap-25-base-ahorro"
@@ -5826,6 +5858,7 @@ formulas = [
     "renta-2022-iic-perdidas-reducidas-suma",
     "renta-2022-capital-inmobiliario-intereses-gastos-passthrough",
     "renta-2022-saldo-capital-mobiliario-cap-25-base-ahorro",
+    "renta-2022-capital-mobiliario-saldo-pendiente-base-ahorro",
 ]
 
 [[revisions."2022".constructs]]
@@ -5939,6 +5972,21 @@ formulas = [
     "renta-2022-trabajo-suma-rendimientos-netos-previos",
     "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-capital-mobiliario-saldo-pendiente-base-ahorro"
+target = "1283"
+expression = { op = "subtract", args = [
+    { casilla = "0430" },
+    { casilla = "0436" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-saldo-capital-mobiliario-cap-25-base-ahorro"
@@ -8768,6 +8816,7 @@ formulas = [
     "renta-2023-iic-perdidas-reducidas-suma",
     "renta-2023-capital-inmobiliario-intereses-gastos-passthrough",
     "renta-2023-saldo-capital-mobiliario-cap-25-base-ahorro",
+    "renta-2023-capital-mobiliario-saldo-pendiente-base-ahorro",
 ]
 
 [[revisions."2023".constructs]]
@@ -8882,6 +8931,21 @@ formulas = [
     "renta-2023-trabajo-suma-rendimientos-netos-previos",
     "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-capital-mobiliario-saldo-pendiente-base-ahorro"
+target = "1283"
+expression = { op = "subtract", args = [
+    { casilla = "0430" },
+    { casilla = "0436" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-saldo-capital-mobiliario-cap-25-base-ahorro"
@@ -11748,6 +11812,7 @@ formulas = [
     "renta-2024-iic-perdidas-reducidas-suma",
     "renta-2024-capital-inmobiliario-intereses-gastos-passthrough",
     "renta-2024-saldo-capital-mobiliario-cap-25-base-ahorro",
+    "renta-2024-capital-mobiliario-saldo-pendiente-base-ahorro",
 ]
 
 [[revisions."2024".constructs]]
@@ -11862,6 +11927,21 @@ formulas = [
     "renta-2024-trabajo-suma-rendimientos-netos-previos",
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-capital-mobiliario-saldo-pendiente-base-ahorro"
+target = "1283"
+expression = { op = "subtract", args = [
+    { casilla = "0430" },
+    { casilla = "0436" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-saldo-capital-mobiliario-cap-25-base-ahorro"
@@ -17947,6 +18027,7 @@ formulas = [
     "renta-2025-iic-perdidas-reducidas-suma",
     "renta-2025-capital-inmobiliario-intereses-gastos-passthrough",
     "renta-2025-saldo-capital-mobiliario-cap-25-base-ahorro",
+    "renta-2025-capital-mobiliario-saldo-pendiente-base-ahorro",
 ]
 
 [[revisions."2025".constructs]]
@@ -18041,6 +18122,21 @@ formulas = [
     "renta-2025-diferimiento-reinversion-imputacion-suma",
     "renta-2025-transparencia-fiscal-suma",
 ]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-capital-mobiliario-saldo-pendiente-base-ahorro"
+target = "1283"
+expression = { op = "subtract", args = [
+    { casilla = "0430" },
+    { casilla = "0436" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-49"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base imponible del ahorro", "compensación"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-saldo-capital-mobiliario-cap-25-base-ahorro"

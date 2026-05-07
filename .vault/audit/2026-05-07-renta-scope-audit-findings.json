@@ -7,9 +7,9 @@
       "input_kind": {
         "manual": 1531
       },
-      "computed_targets": 125,
-      "casillas_consumed_by_formulas": 368,
-      "casillas_declared_but_never_read": 1126,
+      "computed_targets": 126,
+      "casillas_consumed_by_formulas": 369,
+      "casillas_declared_but_never_read": 1125,
       "bindings_consumed_count": 1
     },
     "2021": {
@@ -18,9 +18,9 @@
         "informational": 4,
         "manual": 1689
       },
-      "computed_targets": 126,
-      "casillas_consumed_by_formulas": 376,
-      "casillas_declared_but_never_read": 1279,
+      "computed_targets": 127,
+      "casillas_consumed_by_formulas": 377,
+      "casillas_declared_but_never_read": 1278,
       "bindings_consumed_count": 1
     },
     "2022": {
@@ -29,9 +29,9 @@
         "informational": 4,
         "manual": 1848
       },
-      "computed_targets": 140,
-      "casillas_consumed_by_formulas": 419,
-      "casillas_declared_but_never_read": 1389,
+      "computed_targets": 141,
+      "casillas_consumed_by_formulas": 420,
+      "casillas_declared_but_never_read": 1388,
       "bindings_consumed_count": 1
     },
     "2023": {
@@ -40,9 +40,9 @@
         "informational": 4,
         "manual": 1925
       },
-      "computed_targets": 141,
-      "casillas_consumed_by_formulas": 433,
-      "casillas_declared_but_never_read": 1451,
+      "computed_targets": 142,
+      "casillas_consumed_by_formulas": 434,
+      "casillas_declared_but_never_read": 1450,
       "bindings_consumed_count": 1
     },
     "2024": {
@@ -51,9 +51,9 @@
         "informational": 4,
         "manual": 2058
       },
-      "computed_targets": 141,
-      "casillas_consumed_by_formulas": 427,
-      "casillas_declared_but_never_read": 1590,
+      "computed_targets": 142,
+      "casillas_consumed_by_formulas": 428,
+      "casillas_declared_but_never_read": 1589,
       "bindings_consumed_count": 1
     },
     "2025": {
@@ -64,9 +64,9 @@
         "computed": 35,
         "informational": 3
       },
-      "computed_targets": 150,
-      "casillas_consumed_by_formulas": 488,
-      "casillas_declared_but_never_read": 1701,
+      "computed_targets": 151,
+      "casillas_consumed_by_formulas": 489,
+      "casillas_declared_but_never_read": 1700,
       "bindings_consumed_count": 1
     }
   },
@@ -162,10 +162,10 @@
     "anexo_c_canarias": {
       "label": "Anexo C — Canarias (RIC, ZEC)",
       "total_casillas": 179,
-      "computed": 2,
+      "computed": 3,
       "bound": 0,
       "manual": 179,
-      "coverage_pct": 1.1
+      "coverage_pct": 1.7
     },
     "retenciones_pagos_a_cuenta": {
       "label": "Retenciones e ingresos a cuenta + pagos fraccionados",
@@ -222,12 +222,12 @@
         78
       ],
       [
-        "ley-35-2006:art-30",
+        "ley-35-2006:art-49",
         72
       ],
       [
-        "ley-35-2006:art-49",
-        66
+        "ley-35-2006:art-30",
+        72
       ],
       [
         "ley-35-2006:art-28",
