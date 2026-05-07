@@ -362,6 +362,11 @@ formulas = [
 id = "renta-2020-mini-model-base-y-cuota"
 title = "Modelo 100 2020 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-62",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-66",
+    "ley-35-2006:art-74",
+    "ley-35-2006:art-75",
     "ley-35-2006:art-77",
 ]
 source_refs = [
@@ -370,6 +375,10 @@ source_refs = [
 formulas = [
     "renta-2020-cuota-irpf-comunidad-autonoma",
     "renta-2020-doble-imposicion-50-porciento",
+    "renta-2020-tipo-medio-gravamen-estatal-base-liquidable-general",
+    "renta-2020-tipo-medio-gravamen-autonomico-base-liquidable-general",
+    "renta-2020-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
+    "renta-2020-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
 ]
 
 [[revisions."2020".constructs]]
@@ -529,6 +538,82 @@ formulas = [
     "renta-2020-trabajo-suma-rendimientos-netos-previos",
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-tipo-medio-gravamen-estatal-base-liquidable-general"
+target = "0534"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0532" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra", "base liquidable general"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-tipo-medio-gravamen-autonomico-base-liquidable-general"
+target = "0535"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0533" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra autonómica", "base liquidable general"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
+target = "0542"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0540" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+
+[[revisions."2020".formulas]]
+id = "renta-2020-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"
+target = "0543"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0541" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2020".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "comunidad autónoma"]
 
 [[revisions."2020".formulas]]
 id = "renta-2020-ganancia-reducida-no-exenta-base-general"
@@ -2651,6 +2736,11 @@ formulas = [
 id = "renta-2021-mini-model-base-y-cuota"
 title = "Modelo 100 2021 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-62",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-66",
+    "ley-35-2006:art-74",
+    "ley-35-2006:art-75",
     "ley-35-2006:art-77",
 ]
 source_refs = [
@@ -2659,6 +2749,10 @@ source_refs = [
 formulas = [
     "renta-2021-cuota-irpf-comunidad-autonoma",
     "renta-2021-doble-imposicion-50-porciento",
+    "renta-2021-tipo-medio-gravamen-estatal-base-liquidable-general",
+    "renta-2021-tipo-medio-gravamen-autonomico-base-liquidable-general",
+    "renta-2021-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
+    "renta-2021-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
 ]
 
 [[revisions."2021".constructs]]
@@ -2818,6 +2912,82 @@ formulas = [
     "renta-2021-trabajo-suma-rendimientos-netos-previos",
     "renta-2021-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-tipo-medio-gravamen-estatal-base-liquidable-general"
+target = "0534"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0532" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra", "base liquidable general"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-tipo-medio-gravamen-autonomico-base-liquidable-general"
+target = "0535"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0533" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra autonómica", "base liquidable general"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
+target = "0542"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0540" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+
+[[revisions."2021".formulas]]
+id = "renta-2021-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"
+target = "0543"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0541" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2021".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "comunidad autónoma"]
 
 [[revisions."2021".formulas]]
 id = "renta-2021-ganancia-reducida-no-exenta-base-general"
@@ -4941,6 +5111,11 @@ formulas = [
 id = "renta-2022-mini-model-base-y-cuota"
 title = "Modelo 100 2022 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-62",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-66",
+    "ley-35-2006:art-74",
+    "ley-35-2006:art-75",
     "ley-35-2006:art-77",
 ]
 source_refs = [
@@ -4949,6 +5124,10 @@ source_refs = [
 formulas = [
     "renta-2022-cuota-irpf-comunidad-autonoma",
     "renta-2022-doble-imposicion-50-porciento",
+    "renta-2022-tipo-medio-gravamen-estatal-base-liquidable-general",
+    "renta-2022-tipo-medio-gravamen-autonomico-base-liquidable-general",
+    "renta-2022-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
+    "renta-2022-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
 ]
 
 [[revisions."2022".constructs]]
@@ -5122,6 +5301,82 @@ formulas = [
     "renta-2022-trabajo-suma-rendimientos-netos-previos",
     "renta-2022-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-tipo-medio-gravamen-estatal-base-liquidable-general"
+target = "0534"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0532" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra", "base liquidable general"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-tipo-medio-gravamen-autonomico-base-liquidable-general"
+target = "0535"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0533" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra autonómica", "base liquidable general"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
+target = "0542"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0540" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"
+target = "0543"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0541" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "comunidad autónoma"]
 
 [[revisions."2022".formulas]]
 id = "renta-2022-ganancia-reducida-no-exenta-base-general"
@@ -7415,6 +7670,11 @@ formulas = [
 id = "renta-2023-mini-model-base-y-cuota"
 title = "Modelo 100 2023 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-62",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-66",
+    "ley-35-2006:art-74",
+    "ley-35-2006:art-75",
     "ley-35-2006:art-77",
 ]
 source_refs = [
@@ -7423,6 +7683,10 @@ source_refs = [
 formulas = [
     "renta-2023-cuota-irpf-comunidad-autonoma",
     "renta-2023-doble-imposicion-50-porciento",
+    "renta-2023-tipo-medio-gravamen-estatal-base-liquidable-general",
+    "renta-2023-tipo-medio-gravamen-autonomico-base-liquidable-general",
+    "renta-2023-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
+    "renta-2023-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
 ]
 
 [[revisions."2023".constructs]]
@@ -7597,6 +7861,82 @@ formulas = [
     "renta-2023-trabajo-suma-rendimientos-netos-previos",
     "renta-2023-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-tipo-medio-gravamen-estatal-base-liquidable-general"
+target = "0534"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0532" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra", "base liquidable general"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-tipo-medio-gravamen-autonomico-base-liquidable-general"
+target = "0535"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0533" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra autonómica", "base liquidable general"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
+target = "0542"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0540" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+
+[[revisions."2023".formulas]]
+id = "renta-2023-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"
+target = "0543"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0541" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2023".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "comunidad autónoma"]
 
 [[revisions."2023".formulas]]
 id = "renta-2023-ganancia-reducida-no-exenta-base-general"
@@ -9918,6 +10258,11 @@ formulas = [
 id = "renta-2024-mini-model-base-y-cuota"
 title = "Modelo 100 2024 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-62",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-66",
+    "ley-35-2006:art-74",
+    "ley-35-2006:art-75",
     "ley-35-2006:art-77",
 ]
 source_refs = [
@@ -9926,6 +10271,10 @@ source_refs = [
 formulas = [
     "renta-2024-cuota-irpf-comunidad-autonoma",
     "renta-2024-doble-imposicion-50-porciento",
+    "renta-2024-tipo-medio-gravamen-estatal-base-liquidable-general",
+    "renta-2024-tipo-medio-gravamen-autonomico-base-liquidable-general",
+    "renta-2024-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
+    "renta-2024-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
 ]
 
 [[revisions."2024".constructs]]
@@ -10100,6 +10449,82 @@ formulas = [
     "renta-2024-trabajo-suma-rendimientos-netos-previos",
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-tipo-medio-gravamen-estatal-base-liquidable-general"
+target = "0534"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0532" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra", "base liquidable general"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-tipo-medio-gravamen-autonomico-base-liquidable-general"
+target = "0535"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0533" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra autonómica", "base liquidable general"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
+target = "0542"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0540" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+
+[[revisions."2024".formulas]]
+id = "renta-2024-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"
+target = "0543"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0541" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "comunidad autónoma"]
 
 [[revisions."2024".formulas]]
 id = "renta-2024-ganancia-reducida-no-exenta-base-general"
@@ -15659,6 +16084,11 @@ formulas = [
 id = "renta-2025-mini-model-base-y-cuota"
 title = "Modelo 100 2025 base imponible / base liquidable / cuota aggregators"
 legal_refs = [
+    "ley-35-2006:art-62",
+    "ley-35-2006:art-63",
+    "ley-35-2006:art-66",
+    "ley-35-2006:art-74",
+    "ley-35-2006:art-75",
     "ley-35-2006:art-77",
 ]
 source_refs = [
@@ -15667,6 +16097,10 @@ source_refs = [
 formulas = [
     "renta-2025-cuota-irpf-comunidad-autonoma",
     "renta-2025-doble-imposicion-50-porciento",
+    "renta-2025-tipo-medio-gravamen-estatal-base-liquidable-general",
+    "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-general",
+    "renta-2025-tipo-medio-gravamen-estatal-base-liquidable-ahorro",
+    "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-ahorro",
 ]
 
 [[revisions."2025".constructs]]
@@ -15808,6 +16242,82 @@ formulas = [
     "renta-2025-diferimiento-reinversion-imputacion-suma",
     "renta-2025-transparencia-fiscal-suma",
 ]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-tipo-medio-gravamen-estatal-base-liquidable-general"
+target = "0534"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0532" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra", "base liquidable general"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-general"
+target = "0535"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0505" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0533" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0505" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74", "ley-35-2006:art-75"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["cuota íntegra autonómica", "base liquidable general"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
+target = "0542"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0540" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-66"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "tipos de gravamen"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"
+target = "0543"
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "0510" }, { literal = "0" }] },
+    { op = "divide", args = [
+        { op = "multiply", args = [{ casilla = "0541" }, { literal = "100" }] },
+        { op = "max", args = [{ casilla = "0510" }, { literal = "0.01" }] },
+    ] },
+    { literal = "0" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["base liquidable del ahorro", "comunidad autónoma"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-ganancia-reducida-no-exenta-base-general"
