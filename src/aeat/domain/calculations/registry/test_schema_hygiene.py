@@ -41,6 +41,11 @@ _FORBIDDEN_TEST_NARRATIVE = (
     "migration state",
     "phase ",
     "wave ",
+    "backwards-compat",
+    "before the gate landed",
+    "added per",
+    "per-slice",
+    "adr (",
     "compatibility shim",
     "xfail",
 )
@@ -192,7 +197,7 @@ def test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_out
         text = path.read_text(encoding="utf-8")
         # Split into scenario blocks: each `_scenario` factory or RegistryCalculationScenario(...)
         scenario_blocks = re.split(r"(?=def \w+_scenario\b|RegistryCalculationScenario\()", text)
-        for idx, block in enumerate(scenario_blocks):
+        for block in scenario_blocks:
             if "RegistryCalculationScenario(" not in block and "expected_outputs" not in block:
                 continue
             # Extract inputs section and expected_outputs section
@@ -224,6 +229,59 @@ def test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_out
     assert not offences, "vacuous Renta synthetic scenarios:\n  " + "\n  ".join(offences)
 
 
+def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
+    """Every chain-behaviour and synthetic-profile scenario should carry a Renta WEB Open payload.
+
+    The payload sits at ``corpus/parity_replays/renta_web_open/{scenario_id}.json``
+    and pins the AEAT open-simulator's output for the scenario's synthetic inputs.
+    Phase H6 of the Renta full-coverage plan mandates this grounding for every
+    Modelo 100 scenario; this gate enforces it.
+
+    The gate is dormant during initial scaffolding: when no payloads are
+    captured yet, it records the inventory to a metrics file but does not
+    fail. As soon as ANY payload exists, it converts to a hard failure for
+    every other scenario that lacks one. This shape lets capture work land
+    incrementally while preventing back-sliding.
+    """
+
+    replay_dir = PROJECT_ROOT / "corpus" / "parity_replays" / "renta_web_open"
+    captured = {p.stem for p in replay_dir.glob("*.json")} if replay_dir.exists() else set()
+    chain_test = PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py"
+    synthetic_test = PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_2025_synthetic_profile.py"
+    declared: set[str] = set()
+    for path in (chain_test, synthetic_test):
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for match in re.finditer(r'_scenario_2025\(\s*"([^"]+)"', text):
+            declared.add(match.group(1))
+        for match in re.finditer(r'id\s*=\s*"(modelo-100-[^"]+)"', text):
+            declared.add(match.group(1))
+    uncovered = sorted(declared - captured)
+    metrics_path = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-replay-coverage.txt"
+    metrics_path.parent.mkdir(parents=True, exist_ok=True)
+    metrics_path.write_text(
+        "scenarios_total: {total}\n"
+        "scenarios_with_payload: {covered}\n"
+        "scenarios_uncovered: {uncovered_count}\n"
+        "coverage_pct: {pct:.1f}\n"
+        "uncovered_ids:\n{uncovered_listing}\n".format(
+            total=len(declared),
+            covered=len(declared & captured),
+            uncovered_count=len(uncovered),
+            pct=(100.0 * len(declared & captured) / len(declared)) if declared else 0.0,
+            uncovered_listing="\n".join(f"  - {sid}" for sid in uncovered) or "  (none)",
+        ),
+        encoding="utf-8",
+    )
+    if captured and uncovered:
+        raise AssertionError(
+            "Renta chain scenarios without Renta WEB Open replay payload "
+            "(capture via AEAT_LIVE_TESTS_ENABLED=1):\n  "
+            + "\n  ".join(uncovered)
+        )
+
+
 def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
     """Renta bindings that bridge a closed-membership substrate axis must declare `typed_enum`.
 
@@ -247,10 +305,9 @@ def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
         for revision in modelo.revisions.values():
             for binding in revision.bindings:
                 for suffix, expected_enum in bridges_by_suffix.items():
-                    if binding.id.endswith(suffix):
-                        if binding.typed_enum != expected_enum:
-                            offences.append(
-                                f"binding {binding.id!r} expected typed_enum={expected_enum!r}, "
-                                f"got {binding.typed_enum!r}"
-                            )
+                    if binding.id.endswith(suffix) and binding.typed_enum != expected_enum:
+                        offences.append(
+                            f"binding {binding.id!r} expected typed_enum={expected_enum!r}, "
+                            f"got {binding.typed_enum!r}"
+                        )
     assert not offences, "Renta typed-binding gate violations:\n  " + "\n  ".join(offences)
