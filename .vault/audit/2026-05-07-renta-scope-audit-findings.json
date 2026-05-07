@@ -7,9 +7,9 @@
       "input_kind": {
         "manual": 1531
       },
-      "computed_targets": 111,
-      "casillas_consumed_by_formulas": 299,
-      "casillas_declared_but_never_read": 1204,
+      "computed_targets": 114,
+      "casillas_consumed_by_formulas": 306,
+      "casillas_declared_but_never_read": 1194,
       "bindings_consumed_count": 1
     },
     "2021": {
@@ -18,9 +18,9 @@
         "informational": 4,
         "manual": 1689
       },
-      "computed_targets": 111,
-      "casillas_consumed_by_formulas": 300,
-      "casillas_declared_but_never_read": 1365,
+      "computed_targets": 114,
+      "casillas_consumed_by_formulas": 307,
+      "casillas_declared_but_never_read": 1355,
       "bindings_consumed_count": 1
     },
     "2022": {
@@ -29,9 +29,9 @@
         "informational": 4,
         "manual": 1848
       },
-      "computed_targets": 122,
-      "casillas_consumed_by_formulas": 323,
-      "casillas_declared_but_never_read": 1495,
+      "computed_targets": 127,
+      "casillas_consumed_by_formulas": 332,
+      "casillas_declared_but_never_read": 1483,
       "bindings_consumed_count": 1
     },
     "2023": {
@@ -40,9 +40,9 @@
         "informational": 4,
         "manual": 1925
       },
-      "computed_targets": 123,
-      "casillas_consumed_by_formulas": 328,
-      "casillas_declared_but_never_read": 1566,
+      "computed_targets": 128,
+      "casillas_consumed_by_formulas": 337,
+      "casillas_declared_but_never_read": 1554,
       "bindings_consumed_count": 1
     },
     "2024": {
@@ -51,9 +51,9 @@
         "informational": 4,
         "manual": 2058
       },
-      "computed_targets": 123,
-      "casillas_consumed_by_formulas": 328,
-      "casillas_declared_but_never_read": 1699,
+      "computed_targets": 128,
+      "casillas_consumed_by_formulas": 337,
+      "casillas_declared_but_never_read": 1687,
       "bindings_consumed_count": 1
     },
     "2025": {
@@ -64,9 +64,9 @@
         "computed": 35,
         "informational": 3
       },
-      "computed_targets": 132,
-      "casillas_consumed_by_formulas": 380,
-      "casillas_declared_but_never_read": 1819,
+      "computed_targets": 137,
+      "casillas_consumed_by_formulas": 389,
+      "casillas_declared_but_never_read": 1808,
       "bindings_consumed_count": 1
     }
   },
@@ -114,10 +114,10 @@
     "actividades_economicas_objetiva": {
       "label": "Actividades económicas — estimación objetiva (módulos)",
       "total_casillas": 113,
-      "computed": 0,
+      "computed": 1,
       "bound": 0,
       "manual": 113,
-      "coverage_pct": 0.0
+      "coverage_pct": 0.9
     },
     "regimenes_especiales": {
       "label": "Regímenes especiales / atribución de rentas",
@@ -130,10 +130,10 @@
     "ganancias_capital_mobiliario_ahorro": {
       "label": "G/P y capital mobiliario en base ahorro",
       "total_casillas": 219,
-      "computed": 17,
+      "computed": 19,
       "bound": 0,
       "manual": 219,
-      "coverage_pct": 7.8
+      "coverage_pct": 8.7
     },
     "base_y_cuota": {
       "label": "Base imponible/liquidable y cuota chain",
@@ -146,10 +146,10 @@
     "anexo_a_estatal": {
       "label": "Anexo A — deducciones generales (vivienda, donativos, cultural)",
       "total_casillas": 173,
-      "computed": 0,
+      "computed": 1,
       "bound": 0,
       "manual": 173,
-      "coverage_pct": 0.0
+      "coverage_pct": 0.6
     },
     "anexo_b_autonomicas": {
       "label": "Anexo B — deducciones autonómicas (17 CCAA)",
@@ -170,10 +170,10 @@
     "retenciones_pagos_a_cuenta": {
       "label": "Retenciones e ingresos a cuenta + pagos fraccionados",
       "total_casillas": 27,
-      "computed": 3,
+      "computed": 4,
       "bound": 0,
       "manual": 24,
-      "coverage_pct": 11.1
+      "coverage_pct": 14.8
     },
     "regimenes_atribucion": {
       "label": "Atribución de rentas + regímenes especiales (transparencia, art. 85)",
@@ -199,15 +199,15 @@
     "top_cited": [
       [
         "ley-35-2006:art-33",
-        277
+        285
       ],
       [
         "ley-35-2006:art-34",
-        277
+        285
       ],
       [
         "ley-35-2006:art-37",
-        277
+        285
       ],
       [
         "orden-hac-277-2026:art-3",
@@ -242,6 +242,10 @@
         42
       ],
       [
+        "ley-35-2006:art-77",
+        36
+      ],
+      [
         "ley-35-2006:art-74",
         36
       ],
@@ -250,12 +254,8 @@
         36
       ],
       [
-        "ley-35-2006:art-27",
-        31
-      ],
-      [
-        "ley-35-2006:art-62",
-        30
+        "ley-35-2006:art-99",
+        35
       ]
     ],
     "uncited_articles": [
