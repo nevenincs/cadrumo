@@ -720,6 +720,56 @@ def test_profile_validate_routes_through_application_layer(
     assert "activity" in payload["present_required"]
 
 
+def test_profile_show_all_keys_surfaces_unset_schema_rows(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    init = _invoke(
+        [
+            "setup",
+            "init",
+            "--name",
+            "operator",
+            "--activity",
+            "design",
+            "--tax-id",
+            "12345678Z",
+        ]
+    )
+    default_show = _invoke(["setup", "profile", "show"])
+    all_keys = _invoke(["setup", "profile", "show", "--all-keys"])
+
+    assert init.exit_code == 0, init.output
+    assert default_show.exit_code == 0, default_show.output
+    assert all_keys.exit_code == 0, all_keys.output
+    assert "tax.id\t12345678Z" in default_show.output
+    assert "address.postcode" not in default_show.output
+    assert "address.postcode\t<unset>" in all_keys.output
+    assert "--all-keys" in _invoke(["setup", "profile", "show", "--help"]).output
+    assert "--unset" in _invoke(["setup", "profile", "show", "--help"]).output
+
+
+def test_profile_show_all_keys_json_uses_typed_rows(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    init = _invoke(["setup", "init", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"])
+    result = _invoke(["--format", "json", "setup", "profile", "show", "--all-keys"])
+
+    assert init.exit_code == 0, init.output
+    assert result.exit_code == 0, result.output
+    payload = json.loads(_json_output(result))
+    rows = {row["key"]: row for row in payload["rows"]}
+    assert rows["tax.id"]["is_set"] is True
+    assert rows["tax.id"]["value"] == "12345678Z"
+    assert rows["address.postcode"]["is_set"] is False
+    assert rows["address.postcode"]["value"] is None
+
+
 def test_profile_validate_blocks_when_required_missing(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

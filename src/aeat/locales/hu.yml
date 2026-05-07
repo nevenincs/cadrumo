@@ -725,6 +725,8 @@ cli:
       set_key_help: Módosítandó profilkulcs
       set_value_help: Mentendő érték
       show_help: Aktív profil értékeinek megjelenítése
+      show_all_keys_help: Minden profilkulcs megjelenítése, a be nem állított értékekkel együtt
+      show_unset_help: Minden profilkulcs megjelenítése <unset> jelöléssel az üres értékekhez
       unset_help: Egy profilérték törlése
       unset_key_help: Törlendő profilkulcs
       use_help: Helyi profil aktiválása
