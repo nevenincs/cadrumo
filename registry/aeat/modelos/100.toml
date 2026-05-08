@@ -375,6 +375,8 @@ legal_refs = [
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
     "ley-35-2006:art-80",
+    "ley-35-2006:art-82",
+    "ley-35-2006:art-83",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -805,7 +807,7 @@ expression = { op = "sum", args = [
     { op = "negate", args = [{ casilla = "0547" }] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2020".formulas.source_citations]]
@@ -3477,6 +3479,8 @@ legal_refs = [
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
     "ley-35-2006:art-80",
+    "ley-35-2006:art-82",
+    "ley-35-2006:art-83",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -3925,7 +3929,7 @@ expression = { op = "sum", args = [
     { op = "negate", args = [{ casilla = "0547" }] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2021".formulas.source_citations]]
@@ -6626,6 +6630,8 @@ legal_refs = [
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
     "ley-35-2006:art-80",
+    "ley-35-2006:art-82",
+    "ley-35-2006:art-83",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -7091,7 +7097,7 @@ expression = { op = "sum", args = [
     { op = "negate", args = [{ casilla = "0547" }] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2022".formulas.source_citations]]
@@ -10028,6 +10034,8 @@ legal_refs = [
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
     "ley-35-2006:art-80",
+    "ley-35-2006:art-82",
+    "ley-35-2006:art-83",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -10494,7 +10502,7 @@ expression = { op = "sum", args = [
     { op = "negate", args = [{ casilla = "0547" }] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2023".formulas.source_citations]]
@@ -13469,6 +13477,8 @@ legal_refs = [
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
     "ley-35-2006:art-80",
+    "ley-35-2006:art-82",
+    "ley-35-2006:art-83",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -13935,7 +13945,7 @@ expression = { op = "sum", args = [
     { op = "negate", args = [{ casilla = "0547" }] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2024".formulas.source_citations]]
@@ -20354,6 +20364,8 @@ legal_refs = [
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
     "ley-35-2006:art-80",
+    "ley-35-2006:art-82",
+    "ley-35-2006:art-83",
     "ley-35-2006:art-99",
 ]
 source_refs = [
@@ -20787,7 +20799,7 @@ expression = { op = "sum", args = [
     { op = "negate", args = [{ casilla = "0547" }] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-77", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -28447,7 +28459,7 @@ section = ["resultados", "red_base_imponible_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2020".casillas]]
@@ -28777,7 +28789,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2020".casillas]]
@@ -28887,7 +28899,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2020-dictionary", "aeat-dr-100-2020-input-dictionary", "aeat-dr-100-2020-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2020".casillas]]
@@ -45541,7 +45553,7 @@ section = ["resultados", "red_base_imponible_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -45871,7 +45883,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -45981,7 +45993,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -64175,7 +64187,7 @@ section = ["resultados", "red_base_imponible_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -64505,7 +64517,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -64626,7 +64638,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -84558,7 +84570,7 @@ section = ["resultados", "red_base_imponible_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -84888,7 +84900,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -85042,7 +85054,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -105766,7 +105778,7 @@ section = ["resultados", "red_base_imponible_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -106096,7 +106108,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -106250,7 +106262,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-82", "ley-35-2006:art-83"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -127095,7 +127107,7 @@ section = ["resultados", "red_base_imponible_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "ley-35-2006:art-82", "ley-35-2006:art-83", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -127425,7 +127437,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "ley-35-2006:art-82", "ley-35-2006:art-83", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -127579,7 +127591,7 @@ section = ["resultados", "base_liquidable_res"]
 data_type = "money"
 required = false
 input_kind = "manual"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "ley-35-2006:art-82", "ley-35-2006:art-83", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
