@@ -201,7 +201,7 @@ def ledger_review(
                 if review and "amount" in review.fields:
                     amount_val = Decimal(review.fields["amount"])
 
-                payload = {
+                single_payload: dict[str, object] = {
                     "id": tx.transaction_id,
                     "date": (tx.raw.value_date or tx.raw.booked_date).isoformat(),
                     "amount": _fmt_decimal(amount_val),
@@ -211,7 +211,7 @@ def ledger_review(
                 }
                 _emit(
                     ctx,
-                    payload,
+                    single_payload,
                     [
                         f"{tr('cli.ledger.labels.id')}\t{tx.transaction_id}",
                         f"{tr('cli.ledger.labels.date')}\t{(tx.raw.value_date or tx.raw.booked_date).isoformat()}",
@@ -221,7 +221,7 @@ def ledger_review(
                 )
                 return
         raise _bad(tr("cli.ledger.errors.row_not_found", id=record_id))
-    payload = {
+    list_payload: dict[str, object] = {
         "rows": [
             {
                 "id": tx.transaction_id,
@@ -242,7 +242,7 @@ def ledger_review(
     )
     if not rows:
         lines.append(tr("cli.ledger.review.no_rows"))
-    _emit(ctx, payload, lines)
+    _emit(ctx, list_payload, lines)
 
 
 def _ledger_row_status(tx: Transaction, state: UserCliState) -> str:

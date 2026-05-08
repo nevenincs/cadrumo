@@ -1,25 +1,37 @@
 """Smoke tests for ``aeat filing`` CLI commands.
 
 Drives the root ``aeat`` Typer app via :class:`typer.testing.CliRunner`
-against per-test ``tmp_path`` directories wired through
-``AEAT_DRAFTS_DIR``, ``AEAT_SUBMISSIONS_DIR``,
-``AEAT_FINANCIAL_TXS_DIR``, and ``AEAT_DEFAULT_PROFILE_PATH``. Profile
-and submission fixtures round-trip through the real encrypted
-persistence layer rather than the production master key.
+against a per-test isolated SQLite backend (engine cached by
+``AEAT_DATABASE_URL``) and an ephemeral master key. Drafts and
+submissions persist through the real encrypted SQL repository; the
+``drafts_dir`` / ``submissions_dir`` fixtures retain the env-var
+plumbing only because the schema-provider and submission browser-trace
+paths still consume the env vars.
 """
 
 from __future__ import annotations
 
 import json
+import os
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
+from ....adapters.persistence.storage import (
+    EncryptedBlobStore,
+    EphemeralMasterKeyProvider,
+    SecretStore,
+    override_master_key_provider,
+    override_secret_store,
+)
+from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.filing import FilingBuilderError, FilingOperatorProfile, build_draft, build_runtime_schema_provider
 from ....core.config import PROJECT_ROOT
 from ....domain.deadlines import AutonomoProfile, IVARegime
+from ....domain.filing._repository import FilingDraftRepository
 from ....domain.submission import SubmissionAttempt, SubmissionRepository, SubmissionStatus, SubmittedFiling
 from . import app
 
@@ -28,6 +40,41 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _JUSTIFICANTE_FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
 
 runner = CliRunner()
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    """Per-test SQLite + ephemeral master key so list_records sees only fresh rows.
+
+    Mirrors the pattern used by ``tests/import_contract/domain/invoices``
+    and ``aeat.application.archive.test_archive``.
+    """
+    previous_db = os.environ.get("AEAT_DATABASE_URL")
+    os.environ["AEAT_DATABASE_URL"] = f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"
+    dispose_engine()
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    blob_store = EncryptedBlobStore(
+        root_dir=tmp_path / "blobs",
+        master_key_provider=provider,
+    )
+    secret_store = SecretStore(
+        store_dir=tmp_path / "secrets",
+        blob_store=blob_store,
+        master_key_provider=provider,
+    )
+    override_secret_store(secret_store)
+    try:
+        yield
+    finally:
+        override_master_key_provider(None)
+        override_secret_store(None)
+        dispose_engine()
+        if previous_db is None:
+            os.environ.pop("AEAT_DATABASE_URL", None)
+        else:
+            os.environ["AEAT_DATABASE_URL"] = previous_db
 
 
 def _registry_modelo_calculable_without_inputs() -> str:
@@ -57,7 +104,6 @@ def _write_inputs(tmp_path: Path) -> Path:
 
 
 def _write_submitted_filing(
-    submissions_dir: Path,
     *,
     modelo: str,
     period: str,
@@ -85,14 +131,26 @@ def _write_submitted_filing(
             ),
         ),
     )
-    SubmissionRepository(store_dir=submissions_dir).save(filing)
+    SubmissionRepository().save(filing)
     return filing
 
 
-def _single_draft_path(drafts_dir: Path) -> Path:
-    drafts = list(drafts_dir.glob("*.envelope.json"))
-    assert len(drafts) == 1
+def _single_draft_id() -> str:
+    """Return the only draft id persisted in the per-test repository."""
+    drafts = FilingDraftRepository().list_draft_ids()
+    assert len(drafts) == 1, drafts
     return drafts[0]
+
+
+def _single_draft_path() -> Path:
+    """Return the logical path of the only persisted draft."""
+    repository = FilingDraftRepository()
+    return repository.envelope_path_for(_single_draft_id())
+
+
+def _persisted_draft_count() -> int:
+    """Return the number of drafts in the per-test repository."""
+    return len(FilingDraftRepository().list_draft_ids())
 
 
 @pytest.fixture
@@ -123,14 +181,17 @@ def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 @pytest.fixture
 def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Persist an :class:`AutonomoProfile` through the SQL secure-object backend.
+
+    The setup-profile namespace is path-keyed: the natural object key
+    is the resolved POSIX path of the configured profile location, so
+    we write to the SQL backend under exactly that key and point
+    ``AEAT_DEFAULT_PROFILE_PATH`` at the same path.
+    """
     from datetime import UTC, datetime
 
-    from ....adapters.persistence.storage import (
-        Envelope,
-        SensitivityClass,
-        save_encrypted_envelope,
-    )
-    from ....adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    from ....adapters.persistence.storage import SensitivityClass
+    from ....adapters.persistence.storage.sql import SecureObjectRepository
 
     profile = AutonomoProfile(
         tax_id="00000000T",
@@ -141,17 +202,14 @@ def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         bienes_extranjero_above_threshold=False,
     )
     target = tmp_path / "profile.json"
-    envelope = Envelope[AutonomoProfile](
+    object_key = target.expanduser().resolve().as_posix()
+    SecureObjectRepository().save(
+        namespace="aeat.application.setup.profile",
+        object_key=object_key,
+        classification=SensitivityClass.IDENTITY,
         schema_version=1,
         written_at=datetime.now(UTC),
-        classification=SensitivityClass.IDENTITY,
-        payload=profile,
-    )
-    save_encrypted_envelope(
-        envelope,
-        target,
-        master_key_provider=_resolve_master_key_provider(),
-        hkdf_context=b"aeat.application.setup.profile.v1",
+        payload=profile.model_dump_json().encode("utf-8"),
     )
     monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", str(target))
     return target
@@ -186,7 +244,7 @@ class TestFilingCLI:
         )
         assert result.exit_code == 0, result.output
         assert f"registry:{modelo}:" in result.output
-        assert _single_draft_path(drafts_dir).exists()
+        assert _persisted_draft_count() == 1
 
     def test_build_writes_draft_to_disk(self, tmp_path: Path, drafts_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
@@ -207,7 +265,7 @@ class TestFilingCLI:
         )
         assert result.exit_code == 0, result.output
         assert f"registry:{modelo}:" in result.output
-        assert _single_draft_path(drafts_dir).exists()
+        assert _persisted_draft_count() == 1
 
     def test_show_and_validate_round_trip(self, tmp_path: Path, drafts_dir: Path, transactions_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
@@ -227,7 +285,7 @@ class TestFilingCLI:
             ],
         )
         assert build_result.exit_code == 0, build_result.output
-        draft_path = _single_draft_path(drafts_dir)
+        draft_path = _single_draft_path()
 
         show_result = runner.invoke(app, ["show", str(draft_path)])
         assert show_result.exit_code == 0, show_result.output
@@ -261,7 +319,7 @@ class TestFilingCLI:
             ],
         )
         assert result.exit_code == 0, result.output
-        draft_path = _single_draft_path(drafts_dir)
+        draft_path = _single_draft_path()
 
         validate_result = runner.invoke(app, ["validate", str(draft_path)])
         assert validate_result.exit_code == 0, validate_result.output
@@ -304,8 +362,7 @@ class TestFilingCLI:
         assert result.exit_code != 0, result.output
         assert "registry calculation failed" in result.output
         assert "irpf.previous_year_economic_activity_net_income" in result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
-        assert not list(submissions_dir.glob("*.envelope.json"))
+        assert _persisted_draft_count() == 0
 
     def test_import_rejects_missing_pdf(
         self,
@@ -319,8 +376,7 @@ class TestFilingCLI:
             ["import", "--from-justificante", str(missing)],
         )
         assert result.exit_code != 0, result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
-        assert not list(submissions_dir.glob("*.envelope.json"))
+        assert _persisted_draft_count() == 0
 
     def test_import_rejects_unsupported_modelo(
         self,
@@ -333,8 +389,7 @@ class TestFilingCLI:
             ["import", "--from-justificante", str(pdf)],
         )
         assert result.exit_code != 0, result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
-        assert not list(submissions_dir.glob("*.envelope.json"))
+        assert _persisted_draft_count() == 0
 
     def test_complementaria_submit_command_is_absent(
         self,
@@ -391,9 +446,9 @@ class TestFilingCLI:
             ],
         )
         assert build_result.exit_code == 0, build_result.output
-        draft_path = _single_draft_path(drafts_dir)
+        draft_path = _single_draft_path()
         draft_id = draft_path.name.removesuffix(".envelope.json")
-        submitted = _write_submitted_filing(submissions_dir, modelo=modelo, period=period, draft_id=draft_id)
+        submitted = _write_submitted_filing(modelo=modelo, period=period, draft_id=draft_id)
         payload = {
             "original_submission_id": submitted.submission_id,
             "updated_inputs": {
@@ -407,5 +462,7 @@ class TestFilingCLI:
         )
 
         assert result.exit_code == 0, result.output
-        assert len(list(drafts_dir.glob("*.envelope.json"))) == 2
-        assert (submissions_dir / "amendments").exists()
+        assert _persisted_draft_count() == 2
+        from ....domain.filing._complementaria_repository import FilingAmendmentRepository
+
+        assert FilingAmendmentRepository().list_amendment_ids()

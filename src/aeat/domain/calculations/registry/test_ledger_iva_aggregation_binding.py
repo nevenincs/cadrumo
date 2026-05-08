@@ -16,14 +16,15 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.core.paths import PROJECT_ROOT
-from aeat.domain.calculations.registry import load_registry_tree
-from aeat.domain.calculations.registry._bindings import (
+from aeat.domain.calculations.registry import (
+    DataBindingDefinition,
     IvaLedgerObservation,
+    ModeloRevision,
+    RegistryValidationError,
+    load_registry_tree,
     resolve_ledger_iva_aggregation_binding_values,
     validate_ledger_iva_aggregation_binding_definition,
 )
-from aeat.domain.calculations.registry._errors import RegistryValidationError
-from aeat.domain.calculations.registry._schema import DataBindingDefinition, ModeloRevision
 from aeat.domain.vat import (
     IvaFlowDirection,
     VATCategory,

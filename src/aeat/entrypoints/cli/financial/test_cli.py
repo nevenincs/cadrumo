@@ -72,7 +72,7 @@ def test_financial_ingest_rejects_invalid_source(tmp_path: Path) -> None:
     source.write_text("foo,bar\n1,2\n", encoding="utf-8")
     result = _RUNNER.invoke(financial_app, ["ingest", str(source)])
     assert result.exit_code == 2
-    assert "validation error" in result.output.lower()
+    assert "do not match any supported bank layout" in result.output.lower()
 
 
 def test_financial_ingest_reports_ingest_errors(tmp_path: Path) -> None:
@@ -84,10 +84,10 @@ def test_financial_ingest_reports_ingest_errors(tmp_path: Path) -> None:
     )
     result = _RUNNER.invoke(financial_app, ["ingest", str(source)])
     assert result.exit_code == 2
-    assert "ingest error" in result.output.lower()
+    assert "ingestion process has failed" in result.output.lower()
 
 
-def test_financial_ingest_persist_operator_moment(tmp_path: Path) -> None:
+def test_financial_ingest_persist_round_trips_secure_catalogue(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """``aeat financial ingest --persist`` writes to the encrypted catalogue and is idempotent."""
 
     from ....adapters.persistence.storage import (
@@ -97,6 +97,11 @@ def test_financial_ingest_persist_operator_moment(tmp_path: Path) -> None:
         override_master_key_provider,
         override_secret_store,
     )
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....domain.transactions._repository import TransactionCatalogueRepository
+
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    dispose_engine()
 
     provider = EphemeralMasterKeyProvider()
     blob_store = EncryptedBlobStore(
@@ -110,7 +115,6 @@ def test_financial_ingest_persist_operator_moment(tmp_path: Path) -> None:
     )
     override_master_key_provider(provider)
     override_secret_store(secret_store)
-    catalogue_dir = tmp_path / "catalogue"
     try:
         result = _RUNNER.invoke(
             financial_app,
@@ -120,17 +124,12 @@ def test_financial_ingest_persist_operator_moment(tmp_path: Path) -> None:
                 "--provider",
                 "auto",
                 "--persist",
-                "--catalogue-dir",
-                str(catalogue_dir),
             ],
         )
         assert result.exit_code == 0, result.output
-        # The envelope file landed under the catalogue directory at
-        # FINANCIAL classification.
-        envelope_path = catalogue_dir / "transactions.envelope.json"
-        assert envelope_path.exists()
-        envelope_text = envelope_path.read_text(encoding="utf-8")
-        assert '"classification":"financial"' in envelope_text
+        # Catalogue persisted in the encrypted SQL backend at FINANCIAL classification.
+        catalogue = TransactionCatalogueRepository().load()
+        assert len(catalogue.transactions) == 2
         assert "imported=2" in result.output
         assert "skipped=0" in result.output
 
@@ -144,8 +143,6 @@ def test_financial_ingest_persist_operator_moment(tmp_path: Path) -> None:
                 "--provider",
                 "auto",
                 "--persist",
-                "--catalogue-dir",
-                str(catalogue_dir),
             ],
         )
         assert result_b.exit_code == 0, result_b.output
@@ -154,10 +151,11 @@ def test_financial_ingest_persist_operator_moment(tmp_path: Path) -> None:
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
+        dispose_engine()
 
 
-def test_financial_ingest_no_persist_preserves_pipe_workflow(tmp_path: Path) -> None:
-    """``--no-persist`` keeps the legacy stdout-only pipe behaviour intact."""
+def test_financial_ingest_no_persist_keeps_catalogue_empty(tmp_path: Path) -> None:
+    """``--no-persist`` streams rows without writing the catalogue."""
     result = _RUNNER.invoke(
         financial_app,
         [

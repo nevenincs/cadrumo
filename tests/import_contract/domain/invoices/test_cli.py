@@ -122,11 +122,7 @@ def _make_transaction(
     return Transaction.model_validate({"raw": raw, "direction": direction})
 
 
-def _seed_environment(tmp_path: Path) -> tuple[InvoiceCatalogue, TransactionCatalogue, dict[str, str]]:
-    invoices_dir = tmp_path / "invoices"
-    transactions_dir = tmp_path / "transactions"
-    invoices_dir.mkdir()
-    transactions_dir.mkdir()
+def _seed_catalogues() -> tuple[InvoiceCatalogue, TransactionCatalogue]:
     invoice_catalogue = InvoiceCatalogue.from_invoices(
         [
             _make_invoice(invoice_number="INV-001"),
@@ -134,28 +130,24 @@ def _seed_environment(tmp_path: Path) -> tuple[InvoiceCatalogue, TransactionCata
         ]
     )
     transaction_catalogue = TransactionCatalogue.from_transactions([_make_transaction()])
-    InvoiceCatalogueRepository(store_dir=invoices_dir).save(invoice_catalogue)
-    TransactionCatalogueRepository(store_dir=transactions_dir).save(transaction_catalogue)
-    env = {
-        "AEAT_INVOICES_DIR": str(invoices_dir),
-        "AEAT_FINANCIAL_TXS_DIR": str(transactions_dir),
-    }
-    return invoice_catalogue, transaction_catalogue, env
+    InvoiceCatalogueRepository().save(invoice_catalogue)
+    TransactionCatalogueRepository().save(transaction_catalogue)
+    return invoice_catalogue, transaction_catalogue
 
 
-def test_financial_invoices_list_emits_full_catalogue(tmp_path: Path) -> None:
+def test_financial_invoices_list_emits_full_catalogue() -> None:
     """`aeat financial invoices list` must print every stored invoice."""
-    invoices, _, env = _seed_environment(tmp_path)
-    result = _RUNNER.invoke(financial_app, ["invoices", "list"], env=env)
+    invoices, _ = _seed_catalogues()
+    result = _RUNNER.invoke(financial_app, ["invoices", "list"])
     assert result.exit_code == 0, result.output
     for invoice in invoices.values():
         assert invoice.invoice_id in result.output
 
 
-def test_financial_invoices_list_filters_by_kind(tmp_path: Path) -> None:
+def test_financial_invoices_list_filters_by_kind() -> None:
     """`--kind issued` filters to ISSUED invoices only."""
-    invoices, _, env = _seed_environment(tmp_path)
-    result = _RUNNER.invoke(financial_app, ["invoices", "list", "--kind", "ISSUED"], env=env)
+    invoices, _ = _seed_catalogues()
+    result = _RUNNER.invoke(financial_app, ["invoices", "list", "--kind", "ISSUED"])
     assert result.exit_code == 0, result.output
     issued_ids = [invoice.invoice_id for invoice in invoices.values() if invoice.kind is InvoiceKind.ISSUED]
     received_ids = [invoice.invoice_id for invoice in invoices.values() if invoice.kind is InvoiceKind.RECEIVED]
@@ -165,78 +157,76 @@ def test_financial_invoices_list_filters_by_kind(tmp_path: Path) -> None:
         assert invoice_id not in result.output
 
 
-def test_financial_invoices_show_emits_json(tmp_path: Path) -> None:
+def test_financial_invoices_show_emits_json() -> None:
     """`aeat financial invoices show <id>` must emit the stored invoice JSON."""
-    invoices, _, env = _seed_environment(tmp_path)
-    invoice = next(invoices.values())
-    result = _RUNNER.invoke(financial_app, ["invoices", "show", invoice.invoice_id], env=env)
+    invoices, _ = _seed_catalogues()
+    invoice = next(iter(invoices.values()))
+    result = _RUNNER.invoke(financial_app, ["invoices", "show", invoice.invoice_id])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.stdout)
     assert payload["invoice_id"] == invoice.invoice_id
 
 
-def test_financial_invoices_show_missing_id_exits_two(tmp_path: Path) -> None:
+def test_financial_invoices_show_missing_id_exits_two() -> None:
     """Missing invoice ID must exit code 2."""
-    _, _, env = _seed_environment(tmp_path)
-    result = _RUNNER.invoke(financial_app, ["invoices", "show", "missing"], env=env)
+    _seed_catalogues()
+    result = _RUNNER.invoke(financial_app, ["invoices", "show", "missing"])
     assert result.exit_code == 2
 
 
-def test_financial_invoices_link_updates_both_files(tmp_path: Path) -> None:
+def test_financial_invoices_link_updates_both_files() -> None:
     """`aeat financial invoices link` must update both catalogues on disk."""
-    invoices, transactions, env = _seed_environment(tmp_path)
-    invoice = next(invoices.values())
-    transaction = next(transactions.values())
+    invoices, transactions = _seed_catalogues()
+    invoice = next(iter(invoices.values()))
+    transaction = next(iter(transactions.values()))
 
     result = _RUNNER.invoke(
         financial_app,
         ["invoices", "link", invoice.invoice_id, transaction.transaction_id],
-        env=env,
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.stdout)
     assert transaction.transaction_id in payload["linked_transaction_ids"]
 
-    updated_invoices = InvoiceCatalogueRepository(store_dir=tmp_path / "invoices").load()
+    updated_invoices = InvoiceCatalogueRepository().load()
     updated_invoice = updated_invoices.get(invoice.invoice_id)
     assert updated_invoice is not None
     assert transaction.transaction_id in updated_invoice.linked_transaction_ids
 
 
-def test_financial_invoices_reconcile_prints_suggestions(tmp_path: Path) -> None:
+def test_financial_invoices_reconcile_prints_suggestions() -> None:
     """`aeat financial invoices reconcile` prints the suggestion table."""
-    _, transactions, env = _seed_environment(tmp_path)
-    transaction = next(transactions.values())
+    _, transactions = _seed_catalogues()
+    transaction = next(iter(transactions.values()))
 
-    result = _RUNNER.invoke(financial_app, ["invoices", "reconcile"], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "reconcile"])
     assert result.exit_code == 0, result.output
     assert transaction.transaction_id in result.output
 
 
-def test_financial_invoices_reconcile_apply_persists_links(tmp_path: Path) -> None:
+def test_financial_invoices_reconcile_apply_persists_links() -> None:
     """`reconcile --apply` performs the bidirectional link on each match."""
-    _, transactions, env = _seed_environment(tmp_path)
-    transaction = next(transactions.values())
+    _, transactions = _seed_catalogues()
+    transaction = next(iter(transactions.values()))
 
-    result = _RUNNER.invoke(financial_app, ["invoices", "reconcile", "--apply"], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "reconcile", "--apply"])
     assert result.exit_code == 0, result.output
 
-    updated = InvoiceCatalogueRepository(store_dir=tmp_path / "invoices").load()
+    updated = InvoiceCatalogueRepository().load()
     assert any(transaction.transaction_id in invoice.linked_transaction_ids for invoice in updated.values())
 
 
-def test_financial_invoices_verify_exits_zero_when_consistent(tmp_path: Path) -> None:
+def test_financial_invoices_verify_exits_zero_when_consistent() -> None:
     """`aeat financial invoices verify` exits 0 when no drift exists."""
-    _, _, env = _seed_environment(tmp_path)
-    result = _RUNNER.invoke(financial_app, ["invoices", "verify"], env=env)
+    _seed_catalogues()
+    result = _RUNNER.invoke(financial_app, ["invoices", "verify"])
     assert result.exit_code == 0, result.output
 
 
-def test_financial_invoices_verify_exits_two_when_drifted(tmp_path: Path) -> None:
+def test_financial_invoices_verify_exits_two_when_drifted() -> None:
     """`verify` must exit code 2 when the two catalogues disagree."""
-    env_initial = _seed_environment(tmp_path)
-    _, transactions, env = env_initial
-    transaction = next(transactions.values())
+    _, transactions = _seed_catalogues()
+    transaction = next(iter(transactions.values()))
 
     # Build a drifted invoice that cites the transaction; transaction side does not.
     drifted_line = InvoiceLine.model_validate(
@@ -266,18 +256,16 @@ def test_financial_invoices_verify_exits_two_when_drifted(tmp_path: Path) -> Non
             "linked_transaction_ids": (transaction.transaction_id,),
         }
     )
-    InvoiceCatalogueRepository(store_dir=tmp_path / "invoices").save(
-        InvoiceCatalogue.from_invoices([drifted]),
-    )
+    InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices([drifted]))
 
-    result = _RUNNER.invoke(financial_app, ["invoices", "verify"], env=env)
+    result = _RUNNER.invoke(financial_app, ["invoices", "verify"])
     assert result.exit_code == 2, result.output
 
 
-def test_financial_invoices_unmatched_lists_unlinked_invoices(tmp_path: Path) -> None:
+def test_financial_invoices_unmatched_lists_unlinked_invoices() -> None:
     """`aeat financial invoices unmatched` prints invoices without transactions."""
-    invoices, _, env = _seed_environment(tmp_path)
-    result = _RUNNER.invoke(financial_app, ["invoices", "unmatched"], env=env)
+    invoices, _ = _seed_catalogues()
+    result = _RUNNER.invoke(financial_app, ["invoices", "unmatched"])
     assert result.exit_code == 0, result.output
     for invoice in invoices.values():
         assert invoice.invoice_id in result.output

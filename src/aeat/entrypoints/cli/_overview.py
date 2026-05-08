@@ -74,7 +74,7 @@ def overview_status(
             ],
             "verbose": verbose,
         }
-        lines: list[str] = [
+        lines = [
             f"{tr('cli.overview.period')}\t{canonical}",
             f"{tr('cli.overview.drafts')}\t{len(per_modelo_drafts)}",
         ]
