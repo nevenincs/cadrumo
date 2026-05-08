@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Any, Self
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ...core.identity import validate_spanish_tax_id
+from .._identifiers import canonical_decimal_string
 from ..vat import EUMemberState, VATCategory
 from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
 
@@ -38,13 +39,6 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _LINE_TOLERANCE = Decimal("0.01")
 _HEX_TRANSACTION_ID_LENGTH = 64
 _HEX_INVOICE_ID_LENGTH = 64
-
-
-def _canonical_decimal(value: Decimal) -> str:
-    """Render a ``Decimal`` into a stable fixed-point string for hashing."""
-    if value.is_zero():
-        return "0"
-    return format(value.normalize(), "f")
 
 
 def derive_invoice_id(
@@ -79,7 +73,7 @@ def derive_invoice_id(
         {
             "counterparty_tax_id": counterparty_tax_id,
             "currency": currency,
-            "grand_total": _canonical_decimal(grand_total),
+            "grand_total": canonical_decimal_string(grand_total),
             "invoice_number": invoice_number,
             "issued_at": issued_at.isoformat(),
             "kind": kind.value,
