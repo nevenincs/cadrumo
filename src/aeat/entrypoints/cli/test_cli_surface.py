@@ -14,6 +14,7 @@ state envelope writes through the in-process plain-bytes backend.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -91,8 +92,10 @@ def _registry_modelo_requiring_cli_sources() -> str:
                 inputs={},
                 schema_provider=provider,
             )
-        except FilingBuilderError:
-            return modelo
+        except FilingBuilderError as exc:
+            if "has no supplied value" in str(exc):
+                return modelo
+            continue
         except RegistryError:
             # Modelo lacks a revision for the test period — not a CLI-input gap.
             continue
@@ -488,7 +491,7 @@ def test_app_ledger_import_dry_run_does_not_persist(
     assert json.loads(after.output)["transactions"] == 0
 
 
-def test_app_ledger_import_persists_and_review_lists_row(
+def test_app_ledger_import_reimport_edit_review_round_trips_state(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -496,16 +499,98 @@ def test_app_ledger_import_persists_and_review_lists_row(
     statement = tmp_path / "n26.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n"
+        "2026-04-16,SaaS Vendor,Subscription,-48.40,EUR,n26-002\n",
         encoding="utf-8",
     )
     imported = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"])
     assert imported.exit_code == 0
+    imported_payload = json.loads(imported.output)
+    assert imported_payload["rows"] == 2
+    assert imported_payload["imported"] == 2
+    assert imported_payload["skipped"] == 0
+
+    repeated = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"])
+    assert repeated.exit_code == 0
+    repeated_payload = json.loads(repeated.output)
+    assert repeated_payload["rows"] == 2
+    assert repeated_payload["imported"] == 0
+    assert repeated_payload["skipped"] == 2
+
     review = _invoke(["--format", "json", "app", "ledger", "review"])
     assert review.exit_code == 0
     payload = json.loads(review.output)
-    assert len(payload["rows"]) == 1
-    assert payload["rows"][0]["status"] in {"pending", "reviewed", "skipped"}
+    rows_by_description = {row["description"]: row for row in payload["rows"]}
+    assert set(rows_by_description) == {"Invoice 1", "Subscription"}
+    assert {row["status"] for row in payload["rows"]} == {"pending"}
+    vendor_id = rows_by_description["Subscription"]["id"]
+
+    edited = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "edit",
+            "--id",
+            vendor_id,
+            "--set",
+            "category=software",
+            "--set",
+            "business.share=0.75",
+            "--split",
+            "business=0.75",
+            "--split",
+            "personal=0.25",
+            "--reason",
+            "classify mixed-use software subscription",
+        ]
+    )
+    assert edited.exit_code == 0
+    edited_payload = json.loads(edited.output)
+    assert edited_payload["review"]["fields"] == {"business.share": "0.75", "category": "software"}
+    assert edited_payload["review"]["split"]["business_share"] == "0.75"
+    assert edited_payload["review"]["split"]["personal_share"] == "0.25"
+
+    single = _invoke(["--format", "json", "app", "ledger", "review", "--id", vendor_id])
+    assert single.exit_code == 0
+    single_payload = json.loads(single.output)
+    assert single_payload["amount"] == "-48.4"
+    assert single_payload["review"]["fields"]["category"] == "software"
+    assert single_payload["review"]["split"]["reason"] == "classify mixed-use software subscription"
+
+    reviewed = _invoke(["--format", "json", "app", "ledger", "review", "--filter", "status=reviewed"])
+    assert reviewed.exit_code == 0
+    reviewed_payload = json.loads(reviewed.output)
+    assert reviewed_payload["rows"] == [
+        {
+            "id": vendor_id,
+            "date": "2026-04-16",
+            "amount": "-48.40",
+            "description": "Subscription",
+            "status": "reviewed",
+        }
+    ]
+
+    cleared = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "edit",
+            "--id",
+            vendor_id,
+            "--split",
+            "clear",
+            "--reason",
+            "remove mixed-use split",
+        ]
+    )
+    assert cleared.exit_code == 0
+    cleared_payload = json.loads(cleared.output)
+    assert cleared_payload["review"]["split"] is None
+    assert cleared_payload["review"]["fields"] == {"business.share": "0.75", "category": "software"}
 
 
 def test_app_ledger_review_filter_rejects_unknown_key(
@@ -549,7 +634,113 @@ def test_app_invoice_match_period_renders_typed_result(
     assert payload["unmatched"] == []
 
 
-def test_app_declaration_calculate_persists_draft(
+def test_app_invoice_import_reimport_edit_match_round_trips_state(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate(monkeypatch, tmp_path)
+    statement = tmp_path / "bank.csv"
+    statement.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-04-15,Client SL,Invoice F-001,121.00,EUR,bank-001\n",
+        encoding="utf-8",
+    )
+    ledger_import = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv"])
+    assert ledger_import.exit_code == 0
+    ledger_review = _invoke(["--format", "json", "app", "ledger", "review"])
+    assert ledger_review.exit_code == 0
+    payment_id = json.loads(ledger_review.output)["rows"][0]["id"]
+
+    invoices = tmp_path / "issued.json"
+    invoices.write_text(
+        json.dumps(
+            [
+                {
+                    "invoice_number": "F-001",
+                    "issued_at": "2026-04-14",
+                    "counterparty_tax_id": "B12345674",
+                    "counterparty_name": "Client SL",
+                    "base_total": "100.00",
+                    "iva_rate": "21",
+                    "iva_total": "21.00",
+                    "grand_total": "121.00",
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    imported = _invoke(["--format", "json", "app", "invoice", "import", str(invoices), "--kind", "issued"])
+    assert imported.exit_code == 0
+    imported_payload = json.loads(imported.output)
+    assert imported_payload == {"rows": 1, "imported": 1, "skipped": 0}
+
+    repeated = _invoke(["--format", "json", "app", "invoice", "import", str(invoices), "--kind", "issued"])
+    assert repeated.exit_code == 0
+    repeated_payload = json.loads(repeated.output)
+    assert repeated_payload == {"rows": 1, "imported": 0, "skipped": 1}
+
+    invoice_rows = _invoke(["--format", "json", "app", "invoice", "review"])
+    assert invoice_rows.exit_code == 0
+    invoice_id = json.loads(invoice_rows.output)["rows"][0]["id"]
+
+    review = _invoke(["--format", "json", "app", "invoice", "review", "--id", invoice_id])
+    assert review.exit_code == 0
+    review_payload = json.loads(review.output)
+    assert review_payload["base"] == "100"
+    assert review_payload["iva"] == "21"
+    assert review_payload["payment"] is None
+
+    edited = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "invoice",
+            "edit",
+            "--id",
+            invoice_id,
+            "--set",
+            "base=120.00",
+            "--set",
+            "iva.rate=21",
+            "--set",
+            f"payment.id={payment_id}",
+            "--reason",
+            "align invoice with collected payment",
+        ]
+    )
+    assert edited.exit_code == 0
+    edited_payload = json.loads(edited.output)
+    assert edited_payload["review"]["fields"] == {
+        "base": "120",
+        "iva.rate": "21",
+        "payment.id": payment_id,
+    }
+
+    matched = _invoke(["--format", "json", "app", "invoice", "match", "--period", "2026-Q1"])
+    assert matched.exit_code == 0
+    matched_payload = json.loads(matched.output)
+    assert matched_payload["matched"] == [{"invoice": invoice_id, "payment": payment_id}]
+    assert matched_payload["unmatched"] == []
+
+    paid_rows = _invoke(["--format", "json", "app", "invoice", "review", "--filter", "status=paid"])
+    assert paid_rows.exit_code == 0
+    paid_payload = json.loads(paid_rows.output)
+    assert paid_payload["rows"] == [
+        {
+            "id": invoice_id,
+            "kind": "ISSUED",
+            "base": "120",
+            "iva": "25.2",
+            "status": "paid",
+            "payment": payment_id,
+            "payment.id": payment_id,
+        }
+    ]
+
+
+def test_app_declaration_calculate_review_approve_export_verify_round_trips(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -557,12 +748,16 @@ def test_app_declaration_calculate_persists_draft(
     assert (
         _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z", "--activity", "design"]).exit_code == 0
     )
+    assert _invoke(["setup", "profile", "set", "declaration.type", "I"]).exit_code == 0
+    assert _invoke(["setup", "profile", "set", "surnames", "EXPORT TEST"]).exit_code == 0
+    assert _invoke(["setup", "profile", "set", "name", "ANA"]).exit_code == 0
     modelo = _registry_modelo_calculable_without_cli_sources()
     result = _invoke(["--format", "json", "app", "declaration", "calculate", "--period", "2026Q1", "--modelo", modelo])
     assert result.exit_code == 0
     payload = json.loads(result.output)
     assert payload["draft"]["modelo"] == modelo
     assert payload["draft"]["period"] == "2026Q1"
+    draft_id = payload["draft"]["draft_id"]
     assert payload["summary"]["next_action"] in {
         "review",
         "approve",
@@ -571,6 +766,85 @@ def test_app_declaration_calculate_persists_draft(
         "amend",
         "resolve-blockers",
     }
+
+    review_by_id = _invoke(["--format", "json", "app", "declaration", "review", "--id", draft_id])
+    assert review_by_id.exit_code == 0
+    review_by_id_payload = json.loads(review_by_id.output)
+    assert review_by_id_payload["draft"]["draft_id"] == draft_id
+    assert review_by_id_payload["values"]
+
+    review_by_period = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "declaration",
+            "review",
+            "--modelo",
+            modelo,
+            "--period",
+            "2026Q1",
+        ]
+    )
+    assert review_by_period.exit_code == 0
+    review_by_period_payload = json.loads(review_by_period.output)
+    assert review_by_period_payload["draft"]["draft_id"] == draft_id
+    assert review_by_period_payload["values"] == review_by_id_payload["values"]
+
+    approved = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "declaration",
+            "approve",
+            "--id",
+            draft_id,
+            "--by",
+            "qa",
+            "--reason",
+            "roundtrip export verification",
+        ]
+    )
+    assert approved.exit_code == 0
+    approved_payload = json.loads(approved.output)
+    assert approved_payload["draft_id"] == draft_id
+    assert approved_payload["status"] == "APPROVED"
+
+    first_output = tmp_path / "first-export.txt"
+    first_export = _invoke(
+        ["--format", "json", "app", "declaration", "export", "--id", draft_id, "--output", str(first_output)]
+    )
+    assert first_export.exit_code == 0
+    first_payload = json.loads(first_export.output)
+    first_bytes = first_output.read_bytes()
+    assert first_payload["receipt"]["draft_id"] == draft_id
+    assert first_payload["receipt"]["byte_size"] == len(first_bytes)
+    assert first_payload["receipt"]["file_sha256"] == hashlib.sha256(first_bytes).hexdigest()
+
+    second_output = tmp_path / "second-export.txt"
+    second_export = _invoke(
+        ["--format", "json", "app", "declaration", "export", "--id", draft_id, "--output", str(second_output)]
+    )
+    assert second_export.exit_code == 0
+    assert second_output.read_bytes() == first_bytes
+
+    first_verify = _invoke(
+        ["--format", "json", "app", "declaration", "verify", "--id", draft_id, "--file", str(first_output)]
+    )
+    assert first_verify.exit_code == 0
+    first_verify_payload = json.loads(first_verify.output)
+    assert first_verify_payload["verdict"]["verdict"] == "match"
+    assert first_verify_payload["verdict"]["mismatched_casillas"] == []
+
+    second_verify = _invoke(
+        ["--format", "json", "app", "declaration", "verify", "--id", draft_id, "--file", str(second_output)]
+    )
+    assert second_verify.exit_code == 0
+    second_verify_payload = json.loads(second_verify.output)
+    assert second_verify_payload["verdict"]["verdict"] == "match"
+    assert second_verify_payload["verdict"]["mismatched_casillas"] == []
+    assert second_verify_payload["verdict"]["file_sha256"] == first_verify_payload["verdict"]["file_sha256"]
 
 
 def test_app_declaration_status_filter_reports_match_state(
