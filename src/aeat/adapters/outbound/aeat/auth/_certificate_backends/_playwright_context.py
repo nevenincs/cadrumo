@@ -21,18 +21,13 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from ......core.logging import get_logger
-from ._base import _CertBackend
+from ._base import CERTIFICATE_CONTEXT_MARKER, _CertBackend
 from ._httpx_fallback import HttpxFallbackBackend
 
 if TYPE_CHECKING:
     from ..certificate import HandshakeResult, LoadedCertificate
 
 log = get_logger(__name__)
-
-_MARKER_ATTR = "_aeat_certificate_thumbprint"
-"""Attribute name the browser session layer stamps on a constructed
-:class:`playwright.async_api.BrowserContext` to record the thumbprint
-of the client certificate it was provisioned with."""
 
 
 def build_client_certificates_kwarg(
@@ -85,7 +80,7 @@ class PlaywrightContextBackend(_CertBackend):
 
         The browser session layer is expected to tag the constructed
         :class:`playwright.async_api.BrowserContext` with an attribute
-        named :data:`_MARKER_ATTR` matching ``cert.sha256_thumbprint``.
+        named :data:`CERTIFICATE_CONTEXT_MARKER` matching ``cert.sha256_thumbprint``.
         If the marker is absent, raises
         :class:`aeat.adapters.outbound.aeat.auth.certificate.CertificateError`
         pointing the operator at :func:`build_client_certificates_kwarg`.
@@ -102,7 +97,7 @@ class PlaywrightContextBackend(_CertBackend):
         """
         from ..certificate import CertificateError
 
-        marker = getattr(context, _MARKER_ATTR, None)
+        marker = getattr(context, CERTIFICATE_CONTEXT_MARKER, None)
         if marker != cert.sha256_thumbprint:
             raise CertificateError(
                 "BrowserContext was not constructed with the expected client "
@@ -111,7 +106,7 @@ class PlaywrightContextBackend(_CertBackend):
                 "use aeat.adapters.outbound.aeat.auth._certificate_backends._playwright_context."
                 "build_client_certificates_kwarg() from the browser session "
                 "factory and tag the resulting context with "
-                f"{_MARKER_ATTR}={cert.sha256_thumbprint!r}."
+                f"{CERTIFICATE_CONTEXT_MARKER}={cert.sha256_thumbprint!r}."
             )
         log.info(
             "verified playwright_context: thumbprint=%s",

@@ -98,8 +98,6 @@ AEAT_STORAGE_STATE_SCHEMA_VERSION: Final[int] = 1
 """Schema version for the persisted AEAT session metadata."""
 
 
-_MARKER_ATTR = CERTIFICATE_CONTEXT_MARKER
-
 # ── Boundary records ────────────────────────────────────────────────────────
 
 
@@ -1021,10 +1019,10 @@ class AeatAuthenticator:
         cert: LoadedCertificate,
     ) -> None:
         """Ensure the browser context was created with the expected certificate."""
-        marker = getattr(context, _MARKER_ATTR, None)
+        marker = getattr(context, CERTIFICATE_CONTEXT_MARKER, None)
         if marker != cert.sha256_thumbprint:
             raise AeatLoginAssertionError(
-                f"browser context was not tagged with the expected {_MARKER_ATTR} marker; cannot continue"
+                f"browser context was not tagged with the expected {CERTIFICATE_CONTEXT_MARKER} marker; cannot continue"
             )
 
     def _resolve_storage_state_path(
