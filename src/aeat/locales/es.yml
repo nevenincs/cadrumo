@@ -640,7 +640,10 @@ cli:
       Asistente para preparar declaraciones tributarias españolas
 
       Quickstart: aeat setup init --name NAME --tax-id NIF
+    debug_help: Mostrar logs internos de depuración en stderr
     format_help: Formato de salida para los resultados del comando
+    quiet_help: Mostrar solo errores en stderr
+    verbose_help: Mostrar logs internos informativos en stderr
     version_command_help: Mostrar la versión del paquete y el resumen del registro
     version_help: Mostrar la versión del paquete y el resumen del registro
   sanitize:

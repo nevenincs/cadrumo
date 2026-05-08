@@ -628,7 +628,10 @@ cli:
       Spanish tax filing assistant
 
       Quickstart: aeat setup init --name NAME --tax-id NIF
+    debug_help: Show internal debug logs on stderr
     format_help: Output format for command results
+    quiet_help: Show only errors on stderr
+    verbose_help: Show internal informational logs on stderr
     version_command_help: Show package version and registry summary
     version_help: Show package version and registry summary
   sanitize:

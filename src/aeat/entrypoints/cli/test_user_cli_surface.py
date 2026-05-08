@@ -96,6 +96,9 @@ def test_root_surface_contains_setup_and_app_only() -> None:
     assert "setup" in result.output
     assert "app" in result.output
     assert "--version" in result.output
+    assert "--quiet" in result.output
+    assert "--verbose" in result.output
+    assert "--debug" in result.output
     assert "-V" in result.output
     assert "version" in result.output
     for removed_command in (
