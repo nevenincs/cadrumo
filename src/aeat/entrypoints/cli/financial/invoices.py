@@ -10,7 +10,6 @@ bidirectionally, and reconcile unmatched records.
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 
 import typer
 
@@ -19,7 +18,7 @@ from ....application.invoices import (
     ReconciliationSuggestion,
     find_invoice,
     find_unmatched,
-    link_transaction_bidirectional,
+    link_invoice_transaction_repositories,
     reconcile_invoice_repositories,
     verify_link_consistency,
 )
@@ -120,9 +119,9 @@ def link_cmd(
     """Perform a bidirectional link and print the updated invoice.
 
     Delegates to
-    :func:`aeat.application.invoices.link_transaction_bidirectional`
+    :func:`aeat.application.invoices.link_invoice_transaction_repositories`
     so the link is recorded in both the invoice and transaction
-    catalogues atomically.
+    catalogues by the backend service.
 
     Args:
         invoice_id: Invoice that should reference ``transaction_id``.
@@ -134,18 +133,11 @@ def link_cmd(
             located after the save.
     """
     try:
-        updated_invoices, _ = link_transaction_bidirectional(Path(), Path(), invoice_id, transaction_id)
+        result = link_invoice_transaction_repositories(invoice_id=invoice_id, transaction_id=transaction_id)
     except (InvoiceError, TransactionError) as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
-    updated_invoice = find_invoice(updated_invoices, invoice_id)
-    if updated_invoice is None:
-        typer.echo(
-            tr("cli.financial.invoices.errors.not_found_after_update", id=invoice_id),
-            err=True,
-        )
-        raise typer.Exit(code=2)
-    typer.echo(updated_invoice.model_dump_json(indent=2))
+    typer.echo(result.invoice.model_dump_json(indent=2))
 
 
 @app.command(

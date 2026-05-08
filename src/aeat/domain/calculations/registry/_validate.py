@@ -13,6 +13,7 @@ from ._bindings import (
     validate_invoice_binding_definition,
     validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
+    validate_ledger_renta_expense_aggregation_binding_definition,
 )
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
@@ -413,6 +414,11 @@ class RegistryValidator:
             if binding.source == "ledger_iva_aggregation":
                 try:
                     validate_ledger_iva_aggregation_binding_definition(binding)
+                except RegistryValidationError as exc:
+                    failures.append(f"{prefix}: {exc}")
+            if binding.source == "ledger_renta_expense_aggregation":
+                try:
+                    validate_ledger_renta_expense_aggregation_binding_definition(binding)
                 except RegistryValidationError as exc:
                     failures.append(f"{prefix}: {exc}")
 
