@@ -144,7 +144,7 @@ def resolve_reduccion(
     finca: RentalFinca,
     period_year: int,
     *,
-    ejercicio_amendment_year: int = DEFAULT_EJERCICIO_AMENDMENT_YEAR,
+    ejercicio_amendment_year: int | None = None,
 ) -> TierResolution:
     """Resolve the LIRPF art. 23.2 reducción tier for ``contract`` in ``period_year``.
 
@@ -168,7 +168,12 @@ def resolve_reduccion(
             (cannot evaluate the 5 % rebaja threshold without prior-
             contract data).
     """
-    if period_year < ejercicio_amendment_year:
+    resolved_amendment_year = (
+        ejercicio_amendment_year
+        if ejercicio_amendment_year is not None
+        else _resolve_ejercicio_amendment_year(period_year)
+    )
+    if period_year < resolved_amendment_year:
         _logger.debug(
             "reduccion tier: pre-amendment flat 60%% for contract_id=%s period=%d",
             contract.id,
@@ -250,6 +255,31 @@ def _resolve_prior_rent_rebaja_threshold(period_year: int) -> Decimal:
             period_year,
         )
         return PRIOR_RENT_REBAJA_THRESHOLD
+
+
+def _resolve_ejercicio_amendment_year(period_year: int) -> int:
+    """Read the Ley 12/2023 amendment year from the registry parameter.
+
+    Reads ``renta-<period_year>-rental-ejercicio-amendment-year`` from
+    Modelo 100. Falls back to the documented module-level constant
+    ``DEFAULT_EJERCICIO_AMENDMENT_YEAR`` when the registry lookup raises.
+    """
+    from aeat.domain.calculations.registry import RegistryValidationError, read_parameter
+
+    try:
+        value = read_parameter(
+            "100",
+            str(period_year),
+            f"renta-{period_year}-rental-ejercicio-amendment-year",
+            date_context={"filing_period": date(period_year, 12, 31)},
+        )
+        return int(value)
+    except RegistryValidationError:
+        _logger.debug(
+            "rental amendment year: registry lookup failed for period_year=%d; fallback to DEFAULT_EJERCICIO_AMENDMENT_YEAR",
+            period_year,
+        )
+        return DEFAULT_EJERCICIO_AMENDMENT_YEAR
 
 
 def _resolve_tier_70(
