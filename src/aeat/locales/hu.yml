@@ -140,6 +140,8 @@ cli:
     errors:
       activate_profile: Kérjük, aktiváljon egy profilt a bevallások kezelése előtt
       at_least_one_edit: Legalább egy mezőt meg kell szerkeszteni
+      binding_assignment: "Érvénytelen --binding hozzárendelés: %{value}. Használja a KEY=ÉRTÉK formátumot (pl. irpf.previous_year_economic_activity_net_income=13000)."
+      binding_value_not_decimal: "A --binding %{value} értéke nem decimális szám."
       file_not_found: Bevallási fájl nem található
       filter_parse_error: Hiba a szűrő elemzésekor
       missing_id_or_period_modelo: Meg kell adni az azonosítót (ID) vagy az (időszak
@@ -172,6 +174,7 @@ cli:
       warnings: Figyelmeztetések
       'yes': Igen
     opts:
+      binding: "Adj meg egy binding értéket a 'declaration calculate' parancshoz KEY=ÉRTÉK formátumban (ismételhető). Használd: 'aeat app modelo bindings <modelo> --period <P>' a szükséges bindingek megtalálásához."
       by: A bevallást ellenőrző személy
       draft_id: Helyi tervezet azonosítója
       file: Ellenőrizendő helyi exportfájl

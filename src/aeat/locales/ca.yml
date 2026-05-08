@@ -130,6 +130,8 @@ cli:
     errors:
       activate_profile: Si us plau, activeu un perfil abans de gestionar declaracions
       at_least_one_edit: S'ha d'editar almenys un camp
+      binding_assignment: "Assignacio --binding invalida: %{value}. Useu el format KEY=VALOR (ex: irpf.previous_year_economic_activity_net_income=13000)."
+      binding_value_not_decimal: "El valor del --binding %{value} no es un nombre decimal."
       file_not_found: No s'ha trobat l'arxiu de la declaració
       filter_parse_error: Error en processar el filtre
       missing_id_or_period_modelo: S'ha de proporcionar l'ID o el (període + model)
@@ -160,6 +162,7 @@ cli:
       warnings: Advertiments
       'yes': Sí
     opts:
+      binding: "Subministra un valor de binding per a 'declaration calculate' com a KEY=VALOR (repetible). Useu 'aeat app modelo bindings <modelo> --period <P>' per descobrir els bindings necessaris."
       by: Persona que ha revisat la declaració
       draft_id: ID de l'esborrany local
       file: Fitxer local exportat a verificar

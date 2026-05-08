@@ -132,6 +132,8 @@ cli:
     errors:
       activate_profile: Por favor, active un perfil antes de gestionar declaraciones
       at_least_one_edit: Se debe editar al menos un campo
+      binding_assignment: "Asignacion --binding invalida: %{value}. Use el formato KEY=VALOR (ej: irpf.previous_year_economic_activity_net_income=13000)."
+      binding_value_not_decimal: "El valor del --binding %{value} no es un numero decimal."
       file_not_found: No se ha encontrado el archivo de la declaración
       filter_parse_error: Error al procesar el filtro
       missing_id_or_period_modelo: Se debe proporcionar el ID o el (periodo + modelo)
@@ -162,6 +164,7 @@ cli:
       warnings: Advertencias
       'yes': Sí
     opts:
+      binding: "Suministrar un valor de binding para 'declaration calculate' como KEY=VALOR (repetible). Use 'aeat app modelo bindings <modelo> --period <P>' para descubrir los bindings requeridos."
       by: Persona que revisó la declaración
       draft_id: ID del borrador local
       file: Archivo local exportado a verificar
