@@ -11,8 +11,15 @@ from typing import Any
 
 import typer
 
+from ...application.aggregation import aggregate_renta_ledger_expenses_from_repositories
 from ...application.auth import AuthProviderListing
 from ...application.user_cli import UserCliState, state_repository
+from ...core.paths import PROJECT_ROOT
+from ...domain.calculations.registry import (
+    ModeloRevision,
+    ValidatedRegistryAuthority,
+    resolve_ledger_renta_expense_aggregation_binding_values,
+)
 from ...domain.deadlines import AutonomoProfile, autonomo_profile_from_mapping
 from ...domain.filing import FilingDraft, FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
@@ -185,5 +192,54 @@ def _draft_by_id(draft_id: str) -> FilingDraft:
 
 def _aggregate_filing_inputs(modelo: str, period: str, state: UserCliState) -> dict[str, object]:
     """Return filing inputs aggregated from registry-approved sources."""
-    del modelo, period, state
+    del state
+    if modelo.strip() == "100" and _annual_filing_year(period) is not None:
+        filing_year = _annual_filing_year(period)
+        assert filing_year is not None
+        return _aggregate_renta_filing_inputs(
+            filing_year=filing_year,
+            transaction_repository=_tx_repo(),
+            invoice_repository=_invoice_repo(),
+        )
     return {}
+
+
+def _aggregate_renta_filing_inputs(
+    *,
+    filing_year: int,
+    transaction_repository: TransactionCatalogueRepository,
+    invoice_repository: InvoiceCatalogueRepository,
+) -> dict[str, object]:
+    aggregation = aggregate_renta_ledger_expenses_from_repositories(
+        period=str(filing_year),
+        transaction_repository=transaction_repository,
+        invoice_repository=invoice_repository,
+        profile_year=filing_year,
+    )
+    authority = ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+    snapshot = authority.snapshot("100", filing_year=filing_year, period="0A")
+    binding_values = resolve_ledger_renta_expense_aggregation_binding_values(
+        snapshot.revision,
+        aggregation.observations,
+    )
+    return _bound_inputs_from_available_bindings(snapshot.revision, binding_values)
+
+
+def _bound_inputs_from_available_bindings(
+    revision: ModeloRevision,
+    binding_values: dict[str, Decimal],
+) -> dict[str, object]:
+    return {
+        casilla.id: binding_values[casilla.binding]
+        for casilla in revision.casillas
+        if casilla.input_kind == "bound" and casilla.binding is not None and casilla.binding in binding_values
+    }
+
+
+def _annual_filing_year(period: str) -> int | None:
+    text = period.strip().upper()
+    if _re.fullmatch(r"\d{4}", text):
+        return int(text)
+    if _re.fullmatch(r"\d{4}A", text):
+        return int(text[:4])
+    return None

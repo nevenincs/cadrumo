@@ -20,8 +20,8 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from ._loader import load_modelo_directory, load_modelo_file
 from ._errors import RegistryLoadError
+from ._loader import load_modelo_directory, load_modelo_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -46,9 +46,7 @@ def _build_directory_layout(
     "modelo_filename",
     ["130.toml", "184.toml", "190.toml", "193.toml", "303.toml", "390.toml"],
 )
-def test_directory_mode_round_trip_matches_single_file_for_real_modelo(
-    tmp_path: Path, modelo_filename: str
-) -> None:
+def test_directory_mode_round_trip_matches_single_file_for_real_modelo(tmp_path: Path, modelo_filename: str) -> None:
     """Existing single-file modelos load byte-identically in directory mode.
 
     For each real modelo TOML in registry/aeat/modelos/, this test:
@@ -75,7 +73,7 @@ def test_directory_mode_round_trip_matches_single_file_for_real_modelo(
     in_revision = False
     for line in text.splitlines(keepends=True):
         stripped = line.strip()
-        if (stripped.startswith("[revisions") or stripped.startswith("[[revisions")):
+        if stripped.startswith("[revisions") or stripped.startswith("[[revisions"):
             in_revision = True
         if in_revision:
             revision_lines.append(line)
@@ -140,7 +138,7 @@ def test_directory_mode_rejects_missing_manifest(tmp_path: Path) -> None:
 
     target = tmp_path / "no_manifest"
     target.mkdir()
-    with pytest.raises(RegistryLoadError, match="missing manifest.toml"):
+    with pytest.raises(RegistryLoadError, match=r"missing manifest\.toml"):
         load_modelo_directory(target)
 
 

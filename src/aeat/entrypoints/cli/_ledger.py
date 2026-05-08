@@ -51,6 +51,65 @@ def _direction_resolver(raw: Any) -> TransactionDirection:
     return TransactionDirection.OUTGOING if raw.amount < 0 else TransactionDirection.INCOMING
 
 
+def _collect_ledger_edit_fields(spec: LedgerEditSpec) -> dict[str, str]:
+    """Materialise the typed edit fields a :class:`LedgerEditSpec` carries."""
+    fields: dict[str, str] = {}
+    if spec.category is not None:
+        fields["category"] = spec.category
+    if spec.business_share is not None:
+        fields["business.share"] = format(spec.business_share, "f")
+    if spec.reference is not None:
+        fields["reference"] = spec.reference
+    if spec.comments is not None:
+        fields["comments"] = spec.comments
+    if spec.document_path is not None:
+        fields["document.path"] = str(spec.document_path)
+    return fields
+
+
+def _resolve_skip_flag(skip: str | None) -> bool | None:
+    """Parse the ``--skip`` option's tri-state token."""
+    if skip is None:
+        return None
+    normalised = skip.strip().lower()
+    if normalised in {"true", "yes", "1"}:
+        return True
+    if normalised in {"false", "no", "0"}:
+        return False
+    raise _bad(tr("cli.ledger.errors.invalid_skip"))
+
+
+def _resolve_split(splits: list[str], *, reason: str) -> tuple[LedgerSplit | None, bool]:
+    """Parse one or more ``--split`` tokens.
+
+    Returns a (split_value, clear_split) pair: ``clear_split`` is True
+    only when the operator passed the literal ``--split clear`` token.
+    """
+    if not splits:
+        return None, False
+    if len(splits) == 1 and splits[0].strip().lower() == "clear":
+        return None, True
+    shares: dict[str, Decimal] = {}
+    for raw in splits:
+        if "=" not in raw:
+            raise _bad(tr("cli.ledger.errors.invalid_split_format", raw=raw))
+        key, _, value = raw.partition("=")
+        try:
+            shares[key.strip().lower()] = Decimal(value.strip())
+        except Exception as exc:
+            raise _bad(tr("cli.ledger.errors.invalid_split_value", v=value)) from exc
+    if "business" not in shares or "personal" not in shares:
+        raise _bad(tr("cli.ledger.errors.match_both_required"))
+    return (
+        LedgerSplit(
+            business_share=shares["business"],
+            personal_share=shares["personal"],
+            reason=reason,
+        ),
+        False,
+    )
+
+
 @app.command("import", help=tr("cli.ledger.import.help"))
 def ledger_import(
     ctx: typer.Context,
@@ -271,49 +330,9 @@ def ledger_edit(
         spec = LedgerEditSpec.from_strings(sets)
     except EditParseError as exc:
         raise _bad(tr("cli.ledger.errors.set_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
-    fields: dict[str, str] = {}
-    if spec.category is not None:
-        fields["category"] = spec.category
-    if spec.business_share is not None:
-        fields["business.share"] = format(spec.business_share, "f")
-    if spec.reference is not None:
-        fields["reference"] = spec.reference
-    if spec.comments is not None:
-        fields["comments"] = spec.comments
-    if spec.document_path is not None:
-        fields["document.path"] = str(spec.document_path)
-
-    skip_flag: bool | None = None
-    if skip is not None:
-        skip_normalised = skip.strip().lower()
-        if skip_normalised in {"true", "yes", "1"}:
-            skip_flag = True
-        elif skip_normalised in {"false", "no", "0"}:
-            skip_flag = False
-        else:
-            raise _bad(tr("cli.ledger.errors.invalid_skip"))
-
-    split_value: LedgerSplit | None = None
-    clear_split = False
-    if splits:
-        if len(splits) == 1 and splits[0].strip().lower() == "clear":
-            clear_split = True
-        else:
-            shares: dict[str, Decimal] = {}
-            for raw in splits:
-                if "=" not in raw:
-                    raise _bad(tr("cli.ledger.errors.invalid_split_format", raw=raw))
-                k, _, v = raw.partition("=")
-                try:
-                    shares[k.strip().lower()] = Decimal(v.strip())
-                except Exception as exc:
-                    raise _bad(tr("cli.ledger.errors.invalid_split_value", v=v)) from exc
-            if "business" not in shares or "personal" not in shares:
-                raise _bad(tr("cli.ledger.errors.match_both_required"))
-            split_value = LedgerSplit(
-                business_share=shares["business"], personal_share=shares["personal"], reason=reason
-            )
-
+    fields = _collect_ledger_edit_fields(spec)
+    skip_flag = _resolve_skip_flag(skip)
+    split_value, clear_split = _resolve_split(splits, reason=reason)
     if not (fields or skip_flag is not None or split_value is not None or clear_split):
         raise _bad(tr("cli.ledger.errors.edit_requires_one"))
 
