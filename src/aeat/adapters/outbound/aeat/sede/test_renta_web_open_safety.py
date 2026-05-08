@@ -109,17 +109,13 @@ def test_driver_routes_every_click_through_assert_click_target_safe() -> None:
     site).
     """
     text = _DRIVER_FILE.read_text(encoding="utf-8")
-    raw_clicks = [
-        m for m in re.finditer(r"\.click\(", text)
-    ]
-    canonical_click_site = re.search(
-        r"async def _click_expected\b", text
-    )
+    raw_clicks = [m for m in re.finditer(r"\.click\(", text)]
+    canonical_click_site = re.search(r"async def _click_expected\b", text)
     assert canonical_click_site is not None, "_click_expected wrapper missing — safety guard cannot enforce"
     # Find the boundaries of _click_expected: everything inside its body
     # is the canonical click site. Other occurrences are forbidden.
     body_start = canonical_click_site.start()
-    next_def = re.search(r"\nasync def \w+|\ndef \w+", text[body_start + 10:])
+    next_def = re.search(r"\nasync def \w+|\ndef \w+", text[body_start + 10 :])
     body_end = body_start + 10 + (next_def.start() if next_def else len(text))
     # Each raw click must be inside the canonical body window.
     forbidden_sites: list[str] = []
@@ -128,8 +124,7 @@ def test_driver_routes_every_click_through_assert_click_target_safe() -> None:
             line = text.count("\n", 0, m.start()) + 1
             forbidden_sites.append(f"line {line}: raw .click( at offset {m.start()}")
     assert not forbidden_sites, (
-        "raw locator.click() found outside _click_expected — SAFETY VIOLATION:\n  "
-        + "\n  ".join(forbidden_sites)
+        "raw locator.click() found outside _click_expected — SAFETY VIOLATION:\n  " + "\n  ".join(forbidden_sites)
     )
 
 
@@ -137,9 +132,7 @@ def test_driver_imports_safety_module() -> None:
     """The driver source must import the safety module — refactors that
     drop the import would silently disable the click-time guard."""
     text = _DRIVER_FILE.read_text(encoding="utf-8")
-    assert "from ._renta_web_open_safety import" in text, (
-        "driver missing safety-module import — safety guard disabled"
-    )
+    assert "from ._renta_web_open_safety import" in text, "driver missing safety-module import — safety guard disabled"
     assert "assert_click_target_safe" in text
     assert "install_page_safety_net" in text
 
@@ -153,7 +146,7 @@ def test_click_expected_calls_assert_click_target_safe_before_click() -> None:
     text = _DRIVER_FILE.read_text(encoding="utf-8")
     body_start = text.find("async def _click_expected")
     assert body_start >= 0
-    next_def = re.search(r"\nasync def \w+|\ndef \w+", text[body_start + 10:])
+    next_def = re.search(r"\nasync def \w+|\ndef \w+", text[body_start + 10 :])
     body_end = body_start + 10 + (next_def.start() if next_def else len(text))
     body = text[body_start:body_end]
     safety_pos = body.find("assert_click_target_safe")

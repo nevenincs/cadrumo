@@ -60,9 +60,7 @@ def test_modelo_353_other_months_close_at_30_days_following_month() -> None:
 
 def test_modelo_353_snapshot_builds_per_month() -> None:
     modelo, catalogues = _load_modelo_353()
-    snapshot = build_snapshot(
-        modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="06"
-    )
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="06")
     assert snapshot.revision.id == "2008-y-siguientes"
     assert "orden-eha-3434-2007:art-2" in snapshot.legal
 
@@ -86,11 +84,7 @@ def test_modelo_353_construct_links_workbook_parity() -> None:
 def test_modelo_353_declares_iva_aggregation_bindings() -> None:
     modelo, _ = _load_modelo_353()
     revision = modelo.revisions["2008-y-siguientes"]
-    iva_binding_ids = {
-        binding.id
-        for binding in revision.bindings
-        if binding.source == "ledger_iva_aggregation"
-    }
+    iva_binding_ids = {binding.id for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert iva_binding_ids == {
         "modelo-353-iva-repercutido-general-cuota",
         "modelo-353-iva-repercutido-reducido-cuota",
