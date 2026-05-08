@@ -58,7 +58,7 @@ The plan is grounded in `2026-05-08-cli-backend-boundary-reference` and
 | CLI-003 | `application.invoices` | API-003 | backend-owned-wrapper-verification |
 | CLI-004 | `application.profile` | API-004 | tracked-current-violation |
 | CLI-005 | `application.transactions` | API-002 | tracked-current-violation |
-| CLI-006 | `application.invoices` | API-003 | tracked-current-violation |
+| CLI-006 | `application.invoices` | API-003 | partial-invoice-cli-006-reconcile-landed |
 | CLI-007 | `application.filing` | API-005 | tracked-current-violation |
 | CLI-008 | `application.overview` | API-008 | tracked-current-violation |
 | CLI-009 | `application.registry` | API-006 | tracked-current-violation |
@@ -114,9 +114,9 @@ treated as proof of service behavior.
 |---|---|---|---|
 | W3-T1 | completed | CLI-003, API-003 | Add invoice import workflow for JSON/CSV parsing, defaults, line synthesis, duplicate handling, and import summaries. |
 | W3-T2 | completed | CLI-003, API-003 | Add invoice review/match projection service for IVA display totals, payment status, period-aware matching, and overlays. |
-| W3-T3 | deferred-for-backend-gap | CLI-006, API-003 | Add reconciliation apply service that persists invoice and transaction catalogues atomically. |
+| W3-T3 | completed | CLI-006, API-003 | Add reconciliation apply service that persists invoice and transaction catalogues atomically. |
 | W3-T4 | deferred-for-backend-gap | CLI-006 | Replace dummy `Path()` backend calls with explicit application-layer command inputs. |
-| W3-T5 | pending | TEST-006 | Move invoice list/link/reconcile/verify/unmatched business assertions to domain or application-layer tests. |
+| W3-T5 | in-progress | TEST-006 | Move invoice list/link/reconcile/verify/unmatched business assertions to domain or application-layer tests. |
 
 Gate after Wave 3: code review confirms invoice CLI commands only translate
 options to command DTOs and render returned projections. Audit review confirms
