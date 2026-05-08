@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -18,6 +17,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
 )
+from ...domain.period import parse_canonical_period, period_end_date
 from ._errors import VerificationError
 from ._schema import (
     ClassifiedDiscrepancy,
@@ -191,35 +191,16 @@ def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[str, 
     return extracted
 
 
-_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
-_MONTH_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$")
-_ANNUAL_PERIOD_RE = re.compile(r"^(?P<year>\d{4})A$")
-_RAW_QUARTER_RE = re.compile(r"^(?P<quarter>[1-4])T$")
-
-
 def _registry_period(period: str, ejercicio: str | None) -> tuple[int, str]:
-    if match := _QUARTER_PERIOD_RE.fullmatch(period):
-        return int(match.group("year")), f"{match.group('quarter')}T"
-    if match := _MONTH_PERIOD_RE.fullmatch(period):
-        return int(match.group("year")), match.group("month")
-    if match := _ANNUAL_PERIOD_RE.fullmatch(period):
-        return int(match.group("year")), "0A"
-    if ejercicio is not None and (match := _RAW_QUARTER_RE.fullmatch(period)):
-        return int(ejercicio), f"{match.group('quarter')}T"
-    raise RegistrySnapshotError(f"cannot map declaracion period {period!r}")
+    try:
+        return parse_canonical_period(period, ejercicio=ejercicio)
+    except ValueError as exc:
+        raise RegistrySnapshotError(f"cannot map declaracion period {period!r}") from exc
 
 
 def _filing_period_date(period: str, ejercicio: str | None) -> date:
     filing_year, registry_period = _registry_period(period, ejercicio)
-    if registry_period == "1T":
-        return date(filing_year, 3, 31)
-    if registry_period == "2T":
-        return date(filing_year, 6, 30)
-    if registry_period == "3T":
-        return date(filing_year, 9, 30)
-    if registry_period in {"4T", "0A"}:
-        return date(filing_year, 12, 31)
-    return date(filing_year, int(registry_period), 1)
+    return period_end_date(filing_year, registry_period)
 
 
 def _classify_discrepancy(
