@@ -3461,6 +3461,12 @@ legal_refs = [
     "ley-35-2006:art-49",
     "ley-35-2006:art-50",
     "ley-35-2006:art-85",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-87",
+    "ley-35-2006:art-88",
+    "ley-35-2006:art-89",
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -5317,7 +5323,7 @@ expression = { op = "sum", args = [
     { casilla = "1568" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-50"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-50", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -5331,7 +5337,7 @@ expression = { op = "sum", args = [
     { casilla = "1569" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -5345,7 +5351,7 @@ expression = { op = "sum", args = [
     { casilla = "1570" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-49", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -5387,7 +5393,7 @@ expression = { op = "sum", args = [
     { casilla = "1584" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -5401,7 +5407,7 @@ expression = { op = "sum", args = [
     { casilla = "1585" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -5415,7 +5421,7 @@ expression = { op = "sum", args = [
     { casilla = "1595" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -5429,7 +5435,7 @@ expression = { op = "sum", args = [
     { casilla = "1596" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37"]
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -5728,7 +5734,7 @@ expression = { op = "sum", args = [
     { op = "negate", args = [{ casilla = "1567" }] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -5745,7 +5751,7 @@ expression = { op = "sum", args = [
     { op = "negate", args = [{ casilla = "1574" }] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -5765,7 +5771,7 @@ expression = { op = "sum", args = [
     { op = "negate", args = [{ casilla = "0384" }] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30"]
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
