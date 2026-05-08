@@ -29,6 +29,7 @@ from ....adapters.inbound.financial.providers import (
     PdfN26Provider,
     XlsxProvider,
     detect_provider,
+    provider_for_extension,
 )
 from ....core.logging import get_logger
 from ....domain.transactions import RawTransaction
@@ -270,14 +271,7 @@ def _resolve_provider(provider: ProviderChoice, path: Path):
         detected = detect_provider(path)
         if detected is not None:
             return detected
-        suffix = path.suffix.lower()
-        if suffix in {".csv", ".txt"}:
-            return CsvProvider()
-        if suffix == ".xlsx":
-            return XlsxProvider()
-        if suffix in {".ofx", ".qfx"}:
-            return OfxProvider()
-        return None
+        return provider_for_extension(path)
     if provider is ProviderChoice.CSV:
         return CsvProvider()
     if provider is ProviderChoice.XLSX:
