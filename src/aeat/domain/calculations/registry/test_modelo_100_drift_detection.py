@@ -178,6 +178,8 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         "renta-2025-ric-materializacion-plazo-anos",
         "renta-2025-ric-mantenimiento-plazo-anos",
         "renta-2025-zec-tipo-gravamen-reducido",
+        "renta-2025-estimacion-objetiva-reduccion-general-rate",
+        "renta-2025-estimacion-objetiva-indice-corrector-empresas-pequena-dimension-rate",
     }
 )
 
