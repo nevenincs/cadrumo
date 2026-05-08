@@ -201,11 +201,7 @@ def _derive_invoice_id_when_complete(payload: dict[str, Any]) -> dict[str, Any]:
 def _normalise_invoice_collections(payload: dict[str, Any]) -> dict[str, Any]:
     if "linked_transaction_ids" in payload:
         payload["linked_transaction_ids"] = _normalise_linked_transaction_ids(payload["linked_transaction_ids"])
-    if (
-        "lines" in payload
-        and isinstance(payload["lines"], Sequence)
-        and not isinstance(payload["lines"], str | bytes)
-    ):
+    if "lines" in payload and isinstance(payload["lines"], Sequence) and not isinstance(payload["lines"], str | bytes):
         payload["lines"] = tuple(payload["lines"])
     return payload
 
