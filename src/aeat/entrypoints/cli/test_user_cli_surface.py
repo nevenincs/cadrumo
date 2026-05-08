@@ -13,7 +13,7 @@ from aeat.application.diagnostics import build_cli_version_report
 from aeat.domain.invoices import InvoiceCatalogueRepository
 from aeat.domain.transactions import TransactionCatalogueRepository
 
-from . import app
+from . import _import_failure_surface, _startup_import_error_text, app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -174,6 +174,20 @@ def test_config_doctor_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch
     assert "registry.load" in {check["name"] for check in payload["checks"]}
     assert logs_result.exit_code == 0, logs_result.output
     assert "path\t" in logs_result.output
+
+
+def test_startup_import_failure_points_to_config_doctor_without_traceback() -> None:
+    error = ModuleNotFoundError("No module named 'xlrd'", name="xlrd")
+
+    assert _startup_import_error_text(error) == (
+        "Cannot start AEAT command surface: missing dependency 'xlrd'.\nRun: aeat config doctor\n"
+    )
+    result = _RUNNER.invoke(_import_failure_surface("app", error), [])
+
+    assert result.exit_code == 1, result.output
+    assert "missing dependency 'xlrd'" in result.output
+    assert "aeat config doctor" in result.output
+    assert "Traceback" not in result.output
 
 
 def test_version_surfaces_render_backend_registry_summary() -> None:

@@ -132,7 +132,7 @@ Each execution step must record:
 
 | Done | audit_id | Severity | Surfaces | Required action ids | Primary owner route | Verification gate |
 |---|---|---|---|---|---|---|
-| [ ] | UX-001 | HIGH | `aeat`, missing `aeat config doctor` | A1, A2 | diagnostics backend plus config CLI | Missing dependency is rendered as structured diagnostic, not traceback. |
+| [x] | UX-001 | HIGH | `aeat`, missing `aeat config doctor` | A1, A2 | diagnostics backend plus config CLI | Missing dependency is rendered as structured diagnostic, not traceback. |
 | [ ] | UX-002 | HIGH | `aeat --version` | A3 | root CLI plus registry summary backend | `aeat --version`, `aeat -V`, and `aeat version` return version and registry summary. |
 | [ ] | UX-003 | HIGH | missing `aeat init`, setup/profile help ordering | A4, A5, A6 | onboarding backend plus root/setup CLI | Help and command tree expose workflow order and root quickstart. |
 | [ ] | UX-004 | HIGH | setup init/auth configure help | A7, A8 | command metadata/query backends plus setup CLI | Help output includes examples, format hints, and discovery pointers. |
@@ -154,8 +154,8 @@ Each execution step must record:
 
 | Done | action_id | Issue | Verb | Action | Wave | Backend owner | CLI owner | Verification | Review gate | Commit policy |
 |---|---|---|---|---|---|---|---|---|---|---|
-| [ ] | A1 | UX-001, UX-014 | ADD | Add `aeat config doctor` command. | W7 | diagnostics service | config CLI | Real doctor run reports typed sections. | Review doctor owns no diagnostics logic. | Commit doctor backend before CLI if large. |
-| [ ] | A2 | UX-001 | WRAP | Wrap CLI entry point import errors with one-line diagnostic pointing to `aeat config doctor`. | W6 | error boundary/diagnostics | root CLI | Import-error scenario emits no traceback. | Review boundary does not swallow developer diagnostics in debug. | Commit with error-boundary tests. |
+| [x] | A1 | UX-001, UX-014 | ADD | Add `aeat config doctor` command. | W7 | diagnostics service | config CLI | Real doctor run reports typed sections. | Review doctor owns no diagnostics logic. | Commit doctor backend before CLI if large. |
+| [x] | A2 | UX-001 | WRAP | Wrap CLI entry point import errors with one-line diagnostic pointing to `aeat config doctor`. | W6 | error boundary/diagnostics | root CLI | Import-error scenario emits no traceback. | Review boundary does not swallow developer diagnostics in debug. | Commit with error-boundary tests. |
 | [x] | A3 | UX-002 | ADD | Add `--version`, `-V`, and `aeat version`. | W7 | registry/package summary API | root CLI | Version output includes package and registry summary. | Review no direct TOML counting in CLI. | Commit as small root slice. |
 | [ ] | A4 | UX-003 | ADD | Add root `aeat init` onboarding wizard. | W7 | onboarding/profile/auth backend | root CLI | Non-interactive and interactive paths write through backend. | Review no profile/auth business logic in CLI. | Commit backend and CLI separately if needed. |
 | [ ] | A5 | UX-003 | REORDER | Group setup subcommands by workflow phase. | W7 | command metadata if needed | setup CLI | Help output matches workflow order. | Review no behavior hidden by help grouping. | Commit with help tests. |
