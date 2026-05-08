@@ -142,6 +142,7 @@ cli:
       at_least_one_edit: Legalább egy mezőt meg kell szerkeszteni
       binding_assignment: "Érvénytelen --binding hozzárendelés: %{value}. Használja a KEY=ÉRTÉK formátumot (pl. irpf.previous_year_economic_activity_net_income=13000)."
       binding_value_not_decimal: "A --binding %{value} értéke nem decimális szám."
+      draft_selector_ambiguous: "Használja vagy --id, vagy (--modelo + --period) párat; nem mindkettőt egyszerre."
       file_not_found: Bevallási fájl nem található
       filter_parse_error: Hiba a szűrő elemzésekor
       missing_id_or_period_modelo: Meg kell adni az azonosítót (ID) vagy az (időszak

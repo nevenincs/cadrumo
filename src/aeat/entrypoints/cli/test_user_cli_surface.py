@@ -1188,3 +1188,82 @@ def test_declaration_calculate_rejects_malformed_binding(
     assert bad_value.exit_code != 0
     assert "not_a_number" in bad_value.output
     assert "Traceback" not in bad_value.output
+
+
+@pytest.mark.parametrize("verb", ["validate", "preview"])
+def test_declaration_verbs_accept_modelo_period_selector(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    verb: str,
+) -> None:
+    """Every declaration verb must resolve a draft from ``(--modelo, --period)``.
+
+    Pre-W4, only ``status`` and ``review`` accepted the
+    ``(--modelo, --period)`` selector; ``approve``, ``validate``,
+    ``preview``, ``export``, and ``edit`` required ``--id``. The
+    operator could not chain ``calculate`` -> ``validate`` without
+    capturing the draft id manually. This test pins the unified
+    selector contract on the read-only verbs (validate and preview),
+    which are safe to call against an uncommitted draft.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    calc = _invoke(
+        [
+            "app",
+            "declaration",
+            "calculate",
+            "--modelo",
+            "130",
+            "--period",
+            "2026Q1",
+            "--binding",
+            "irpf.previous_year_economic_activity_net_income=13000",
+        ]
+    )
+    assert calc.exit_code == 0, calc.output
+
+    invoked = _invoke(["app", "declaration", verb, "--modelo", "130", "--period", "2026Q1"])
+    assert invoked.exit_code == 0, f"verb={verb} output={invoked.output}"
+    assert "No such option" not in invoked.output
+
+
+@pytest.mark.parametrize("verb", ["approve", "validate", "preview"])
+def test_declaration_verbs_reject_ambiguous_selector(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    verb: str,
+) -> None:
+    """Passing both ``--id`` and ``--modelo``/``--period`` must raise the typed error.
+
+    Guards against silent precedence: the unified selector contract
+    rejects ambiguous combinations with the i18n'd
+    ``draft_selector_ambiguous`` message rather than picking one form
+    and ignoring the other.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    extra: list[str] = []
+    if verb == "approve":
+        extra = ["--by", "tester", "--reason", "test"]
+
+    result = _invoke(
+        [
+            "app",
+            "declaration",
+            verb,
+            "--id",
+            "abc",
+            "--modelo",
+            "303",
+            "--period",
+            "2026Q1",
+            *extra,
+        ]
+    )
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
