@@ -2,14 +2,21 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
 from aeat import __version__
 
 from ..core.config import PROJECT_ROOT
+from ..core.logging import default_log_file_path
 from ..domain.calculations.registry._authority import ValidatedRegistryAuthority
+from .setup_status import SetupStatusReport, build_setup_status
+from .user_cli import state_repository
+
+DiagnosticStatus = Literal["ok", "warn", "fail"]
 
 
 class RegistryVersionSummary(BaseModel):
@@ -37,6 +44,33 @@ class CliVersionReport(BaseModel):
     registry: RegistryVersionSummary
 
 
+class DiagnosticCheck(BaseModel):
+    """One concrete config doctor check."""
+
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    status: DiagnosticStatus
+    summary: str
+    detail: str | None = None
+    next_action: str | None = None
+
+
+class ConfigDoctorReport(BaseModel):
+    """Local environment and configuration diagnostics for ``aeat config doctor``."""
+
+    model_config = ConfigDict(frozen=True)
+
+    overall: DiagnosticStatus
+    package_name: str
+    package_version: str
+    python_version: str
+    log_file: str
+    registry: RegistryVersionSummary
+    setup: SetupStatusReport | None
+    checks: tuple[DiagnosticCheck, ...]
+
+
 def build_cli_version_report(registry_root: Path | None = None) -> CliVersionReport:
     """Return the package and registry summary for CLI version surfaces."""
 
@@ -46,6 +80,94 @@ def build_cli_version_report(registry_root: Path | None = None) -> CliVersionRep
         package_version=__version__,
         registry=_build_registry_version_summary(root),
     )
+
+
+def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDoctorReport:
+    """Return local diagnostics for the config-facing doctor surface."""
+
+    root = registry_root or PROJECT_ROOT / "registry" / "aeat"
+    registry = _build_registry_version_summary(root)
+    checks: list[DiagnosticCheck] = [
+        DiagnosticCheck(
+            name="environment.python",
+            status="ok",
+            summary=sys.version.split()[0],
+        ),
+        DiagnosticCheck(
+            name="package.version",
+            status="ok",
+            summary=__version__,
+        ),
+        DiagnosticCheck(
+            name="logging.file",
+            status="ok" if default_log_file_path().parent.exists() else "warn",
+            summary=str(default_log_file_path()),
+            next_action=None if default_log_file_path().parent.exists() else "aeat --help",
+        ),
+        DiagnosticCheck(
+            name="registry.load",
+            status="ok" if registry.available else "fail",
+            summary=(
+                f"{registry.modelo_count} modelos, {registry.casilla_count} casillas"
+                if registry.available
+                else "registry unavailable"
+            ),
+            detail=registry.error,
+        ),
+    ]
+
+    setup_report: SetupStatusReport | None = None
+    try:
+        state = state_repository().load()
+        checks.append(DiagnosticCheck(name="secure_state.load", status="ok", summary="state backend readable"))
+        setup_report = build_setup_status(state)
+        checks.append(_profile_check(setup_report))
+        checks.append(_auth_check(setup_report))
+    except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
+        checks.append(
+            DiagnosticCheck(
+                name="secure_state.load",
+                status="fail",
+                summary="state backend unreadable",
+                detail=f"{type(exc).__name__}: {exc}",
+            )
+        )
+
+    return ConfigDoctorReport(
+        overall=_overall_status(tuple(checks)),
+        package_name="aeat",
+        package_version=__version__,
+        python_version=sys.version.split()[0],
+        log_file=str(default_log_file_path()),
+        registry=registry,
+        setup=setup_report,
+        checks=tuple(checks),
+    )
+
+
+def render_config_doctor_text(report: ConfigDoctorReport) -> str:
+    """Render a compact human-readable doctor report."""
+
+    lines = [
+        f"Overall\t{report.overall}",
+        f"Version\t{report.package_name} {report.package_version}",
+        f"Python\t{report.python_version}",
+        f"Logs\t{report.log_file}",
+    ]
+    if report.setup is not None:
+        lines.append(
+            f"Profile\t{report.setup.active_profile or '-'} "
+            f"({report.setup.profile_present_keys}/{report.setup.profile_total_keys})"
+        )
+        lines.append(f"Auth\t{report.setup.auth_provider or '-'}")
+    lines.append("Checks")
+    for check in report.checks:
+        lines.append(f"{check.status}\t{check.name}\t{check.summary}")
+        if check.detail:
+            lines.append(f"detail\t{check.detail}")
+        if check.next_action:
+            lines.append(f"next\t{check.next_action}")
+    return "\n".join(lines) + "\n"
 
 
 def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSummary:
@@ -71,6 +193,54 @@ def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSumma
     )
 
 
+def _profile_check(report: SetupStatusReport) -> DiagnosticCheck:
+    if report.active_profile is None:
+        return DiagnosticCheck(
+            name="profile.active",
+            status="warn",
+            summary="no active profile",
+            next_action="aeat setup init --name NAME --tax-id NIF",
+        )
+    if not report.profile_ready:
+        return DiagnosticCheck(
+            name="profile.required_keys",
+            status="warn",
+            summary=f"missing required keys: {', '.join(report.missing_required)}",
+            next_action=report.next_action,
+        )
+    return DiagnosticCheck(
+        name="profile.required_keys",
+        status="ok",
+        summary=f"{report.profile_present_keys}/{report.profile_total_keys} keys set",
+    )
+
+
+def _auth_check(report: SetupStatusReport) -> DiagnosticCheck:
+    if not report.auth_provider:
+        return DiagnosticCheck(
+            name="auth.provider",
+            status="warn",
+            summary="no authentication provider configured",
+            next_action="aeat setup auth configure --provider certificate --file PATH",
+        )
+    if not report.login_ready:
+        return DiagnosticCheck(
+            name="auth.session",
+            status="warn",
+            summary=f"{report.auth_provider} configured but no active session",
+            next_action="aeat setup auth login",
+        )
+    return DiagnosticCheck(name="auth.session", status="ok", summary=f"{report.auth_provider} session ready")
+
+
+def _overall_status(checks: tuple[DiagnosticCheck, ...]) -> DiagnosticStatus:
+    if any(check.status == "fail" for check in checks):
+        return "fail"
+    if any(check.status == "warn" for check in checks):
+        return "warn"
+    return "ok"
+
+
 def render_cli_version_text(report: CliVersionReport) -> str:
     """Render a compact text line for human-facing version output."""
 
@@ -89,7 +259,11 @@ def render_cli_version_text(report: CliVersionReport) -> str:
 
 __all__ = [
     "CliVersionReport",
+    "ConfigDoctorReport",
+    "DiagnosticCheck",
     "RegistryVersionSummary",
     "build_cli_version_report",
+    "build_config_doctor_report",
     "render_cli_version_text",
+    "render_config_doctor_text",
 ]

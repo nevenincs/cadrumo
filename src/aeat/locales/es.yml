@@ -84,6 +84,12 @@ cli:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
       period_empty: El periodo fiscal no puede estar vacío
       period_unrecognised: Periodo no reconocido
+  config:
+    app_help: Gestionar configuración local y diagnósticos
+    doctor:
+      help: Diagnosticar configuración local, registro, perfil, autenticación y logs
+      logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
+      logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
   data:
     app_help: Gestión de datos y registros fiscales
     ledgers:
