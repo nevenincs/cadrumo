@@ -17149,4 +17149,3 @@ source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary
 # money, X/FEC -> text, LGC/S_N -> boolean, N102 -> decimal, SEQ -> integer).
 # Existing hand-authored casillas in this revision are preserved.
 # ===========================================================================
-
