@@ -194,7 +194,8 @@ def resolve_reduccion(
     if _qualifies_for_tier_90(contract, finca, prior_rent_rebaja_threshold=rebaja_threshold):
         _logger.debug("reduccion tier: TIER_90 for contract_id=%s finca_id=%s", contract.id, finca.id)
         return _TIER_90
-    tier_70 = _resolve_tier_70(contract, finca)
+    age_min, age_max = _resolve_joven_tenant_age_range(period_year)
+    tier_70 = _resolve_tier_70(contract, finca, joven_age_min=age_min, joven_age_max=age_max)
     if tier_70 is not None:
         _logger.debug(
             "reduccion tier: %s for contract_id=%s finca_id=%s",
@@ -203,7 +204,8 @@ def resolve_reduccion(
             finca.id,
         )
         return tier_70
-    if _qualifies_for_tier_60_rehab(contract):
+    rehab_lookback_days = _resolve_rehab_lookback_days(period_year)
+    if _qualifies_for_tier_60_rehab(contract, rehab_lookback_days=rehab_lookback_days):
         _logger.debug("reduccion tier: TIER_60_REHAB for contract_id=%s", contract.id)
         return _TIER_60_REHAB
     _logger.debug("reduccion tier: TIER_50 (fallback) for contract_id=%s", contract.id)
@@ -285,6 +287,9 @@ def _resolve_ejercicio_amendment_year(period_year: int) -> int:
 def _resolve_tier_70(
     contract: RentalContract,
     finca: RentalFinca,
+    *,
+    joven_age_min: int,
+    joven_age_max: int,
 ) -> TierResolution | None:
     """Tier b) — split into two independent ordinals.
 
@@ -295,7 +300,7 @@ def _resolve_tier_70(
     public_admin_resolution = _resolve_tier_70_b_2(contract)
     if public_admin_resolution is not None:
         return public_admin_resolution
-    return _resolve_tier_70_b_1(contract, finca)
+    return _resolve_tier_70_b_1(contract, finca, joven_age_min=joven_age_min, joven_age_max=joven_age_max)
 
 
 def _resolve_tier_70_b_2(contract: RentalContract) -> TierResolution | None:
@@ -315,8 +320,11 @@ def _resolve_tier_70_b_2(contract: RentalContract) -> TierResolution | None:
 def _resolve_tier_70_b_1(
     contract: RentalContract,
     finca: RentalFinca,
+    *,
+    joven_age_min: int,
+    joven_age_max: int,
 ) -> TierResolution | None:
-    """Ordinal 1.º — first-time rental + zona tensionada + tenant aged 18-35.
+    """Ordinal 1.º — first-time rental + zona tensionada + tenant aged ``joven_age_min``-``joven_age_max``.
 
     Multi-tenant case: the reducción applies proportionally to the
     qualifying-co-tenant share. The age bracket is enforced at the
@@ -334,11 +342,11 @@ def _resolve_tier_70_b_1(
     if (
         contract.tenant_min_age is not None
         and contract.tenant_max_age is not None
-        and (contract.tenant_min_age < JOVEN_TENANT_AGE_MIN or contract.tenant_max_age > JOVEN_TENANT_AGE_MAX)
+        and (contract.tenant_min_age < joven_age_min or contract.tenant_max_age > joven_age_max)
         and contract.qualifying_co_tenant_count == contract.tenant_count
     ):
         raise TierResolutionError(
-            "tenant age range falls outside 18-35 but qualifying_co_tenant_count claims every co-tenant qualifies",
+            f"tenant age range falls outside {joven_age_min}-{joven_age_max} but qualifying_co_tenant_count claims every co-tenant qualifies",
         )
     qualifying_share = Decimal(contract.qualifying_co_tenant_count) / Decimal(contract.tenant_count)
     return TierResolution(
@@ -349,14 +357,76 @@ def _resolve_tier_70_b_1(
     )
 
 
-def _qualifies_for_tier_60_rehab(contract: RentalContract) -> bool:
-    """Tier c) — actuación de rehabilitación finished within 730 days
-    preceding the contract celebration date.
+def _qualifies_for_tier_60_rehab(
+    contract: RentalContract,
+    *,
+    rehab_lookback_days: int,
+) -> bool:
+    """Tier c) — actuación de rehabilitación finished within
+    ``rehab_lookback_days`` preceding the contract celebration date.
     """
     if contract.rehabilitation_finished_date is None:
         return False
     delta_days = (contract.contract_celebration_date - contract.rehabilitation_finished_date).days
-    return 0 <= delta_days <= REHAB_LOOKBACK_DAYS
+    return 0 <= delta_days <= rehab_lookback_days
+
+
+def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
+    """Read the joven-tenant age range (min, max) from registry parameters.
+
+    Reads ``renta-<period_year>-rental-joven-tenant-age-min`` and
+    ``-max``. Falls back to module constants on miss.
+    """
+    from aeat.domain.calculations.registry import RegistryValidationError, read_parameter
+
+    ctx = {"filing_period": date(period_year, 12, 31)}
+    try:
+        age_min = int(
+            read_parameter(
+                "100",
+                str(period_year),
+                f"renta-{period_year}-rental-joven-tenant-age-min",
+                date_context=ctx,
+            )
+        )
+    except RegistryValidationError:
+        age_min = JOVEN_TENANT_AGE_MIN
+    try:
+        age_max = int(
+            read_parameter(
+                "100",
+                str(period_year),
+                f"renta-{period_year}-rental-joven-tenant-age-max",
+                date_context=ctx,
+            )
+        )
+    except RegistryValidationError:
+        age_max = JOVEN_TENANT_AGE_MAX
+    return age_min, age_max
+
+
+def _resolve_rehab_lookback_days(period_year: int) -> int:
+    """Read the rehab-lookback window from the registry parameter.
+
+    Reads ``renta-<period_year>-rental-rehab-lookback-days`` from
+    Modelo 100. Falls back to ``REHAB_LOOKBACK_DAYS`` constant on miss.
+    """
+    from aeat.domain.calculations.registry import RegistryValidationError, read_parameter
+
+    try:
+        value = read_parameter(
+            "100",
+            str(period_year),
+            f"renta-{period_year}-rental-rehab-lookback-days",
+            date_context={"filing_period": date(period_year, 12, 31)},
+        )
+        return int(value)
+    except RegistryValidationError:
+        _logger.debug(
+            "rental rehab lookback: registry lookup failed for period_year=%d; fallback to REHAB_LOOKBACK_DAYS",
+            period_year,
+        )
+        return REHAB_LOOKBACK_DAYS
 
 
 __all__ = [

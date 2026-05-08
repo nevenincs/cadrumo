@@ -25,9 +25,14 @@ import pytest
 from aeat.domain.calculations.registry import read_parameter
 from aeat.domain.rental._tier_resolver import (
     DEFAULT_EJERCICIO_AMENDMENT_YEAR,
+    JOVEN_TENANT_AGE_MAX,
+    JOVEN_TENANT_AGE_MIN,
     PRIOR_RENT_REBAJA_THRESHOLD,
+    REHAB_LOOKBACK_DAYS,
     _resolve_ejercicio_amendment_year,
+    _resolve_joven_tenant_age_range,
     _resolve_prior_rent_rebaja_threshold,
+    _resolve_rehab_lookback_days,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -80,3 +85,55 @@ def test_resolver_amendment_year_helper_returns_registry_value(year: int) -> Non
 def test_resolver_amendment_year_helper_falls_back_for_unregistered_year() -> None:
     value = _resolve_ejercicio_amendment_year(1999)
     assert value == DEFAULT_EJERCICIO_AMENDMENT_YEAR
+
+
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+def test_rehab_lookback_days_parameter_registered_for_every_ejercicio(year: int) -> None:
+    value = read_parameter(
+        "100",
+        str(year),
+        f"renta-{year}-rental-rehab-lookback-days",
+        date_context={"filing_period": date(year, 12, 31)},
+    )
+    assert value == Decimal("730")
+
+
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+def test_resolver_rehab_lookback_helper_returns_registry_value(year: int) -> None:
+    value = _resolve_rehab_lookback_days(year)
+    assert value == 730
+    assert value == REHAB_LOOKBACK_DAYS
+
+
+def test_resolver_rehab_lookback_helper_falls_back_for_unregistered_year() -> None:
+    value = _resolve_rehab_lookback_days(1999)
+    assert value == REHAB_LOOKBACK_DAYS
+
+
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+def test_joven_tenant_age_parameters_registered_for_every_ejercicio(year: int) -> None:
+    age_min = read_parameter(
+        "100", str(year),
+        f"renta-{year}-rental-joven-tenant-age-min",
+        date_context={"filing_period": date(year, 12, 31)},
+    )
+    age_max = read_parameter(
+        "100", str(year),
+        f"renta-{year}-rental-joven-tenant-age-max",
+        date_context={"filing_period": date(year, 12, 31)},
+    )
+    assert age_min == Decimal("18")
+    assert age_max == Decimal("35")
+
+
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+def test_resolver_joven_age_range_helper_returns_registry_value(year: int) -> None:
+    age_min, age_max = _resolve_joven_tenant_age_range(year)
+    assert (age_min, age_max) == (18, 35)
+    assert age_min == JOVEN_TENANT_AGE_MIN
+    assert age_max == JOVEN_TENANT_AGE_MAX
+
+
+def test_resolver_joven_age_range_helper_falls_back_for_unregistered_year() -> None:
+    age_min, age_max = _resolve_joven_tenant_age_range(1999)
+    assert (age_min, age_max) == (JOVEN_TENANT_AGE_MIN, JOVEN_TENANT_AGE_MAX)
