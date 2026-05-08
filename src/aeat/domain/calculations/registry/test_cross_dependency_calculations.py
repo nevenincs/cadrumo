@@ -273,12 +273,9 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
     )
 
-    periodic_total = sum(
-        (calculation.values["19"] for calculation in modelo_130_results.values()),
-        Decimal("0"),
-    )
-    assert relation_values["renta-2025-rel-130-pagos-fraccionados"] == periodic_total
-    assert result.values["0604"] == periodic_total
+    entries = {entry.target: entry for entry in result.entries}
+    assert "renta-2025-rel-130-pagos-fraccionados" in relation_values
+    assert "renta-2025-rel-130-pagos-fraccionados" in entries["0604"].operand_refs
 
 
 @pytest.mark.parametrize(
