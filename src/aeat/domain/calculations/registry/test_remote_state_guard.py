@@ -10,6 +10,8 @@ from aeat.core.paths import PROJECT_ROOT
 from . import build_snapshot, load_registry_tree
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._remote_state_guard import (
+    _FORBIDDEN_TOKENS,
+    AEAT_WRITE_FORBIDDEN_VERB_TOKENS,
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
@@ -18,6 +20,21 @@ from ._remote_state_guard import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+
+def test_url_method_guard_includes_canonical_write_verb_tokens() -> None:
+    """The URL/method denylist MUST cover every canonical write-verb token.
+
+    Both this guard and the renta-web-open click-time safety adapter
+    derive from ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS``. If a future
+    refactor accidentally drops the canonical core from the URL/method
+    set, the safety net silently weakens — this regression test breaks
+    the build first.
+    """
+
+    forbidden = set(_FORBIDDEN_TOKENS)
+    missing = AEAT_WRITE_FORBIDDEN_VERB_TOKENS - forbidden
+    assert not missing, f"_FORBIDDEN_TOKENS is missing canonical write verbs: {sorted(missing)}"
 
 
 def _open_policy() -> RemoteStateGuardPolicy:
