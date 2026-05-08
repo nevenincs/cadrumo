@@ -13,6 +13,7 @@ from ....core.config import PROJECT_ROOT
 from ....domain.filing import FilingBuilderError, FilingDraft, FilingDraftStatus
 from ....domain.justificante import Justificante
 from .. import build_runtime_schema_provider
+from ..runtime import RegistrySchemaProvider
 from ..testing import build_registry_filing_draft
 from . import (
     FilingDivergenceKind,
@@ -61,7 +62,7 @@ _MODELO_123_INPUTS = {
 }
 
 
-def _provider():
+def _provider() -> RegistrySchemaProvider:
     return build_runtime_schema_provider()
 
 
