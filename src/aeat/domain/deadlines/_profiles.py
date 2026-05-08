@@ -28,6 +28,8 @@ def autonomo_profile_from_mapping(
         ),
     )
     iva = FilingIVAProfile(
+        roi_enrolled=_bool_value(values, "iva.roi_enrolled"),
+        oss_enrolled=_bool_value(values, "iva.oss_enrolled"),
         intracommunity_operations_exceed_50000_eur=_bool_value(
             values,
             "iva.intracommunity_operations_exceed_50000_eur",

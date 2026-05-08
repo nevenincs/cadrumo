@@ -173,8 +173,6 @@ def _load_invoices() -> InvoiceCatalogue:
 
 def _load_drafts() -> tuple[FilingDraft, ...]:
     repo = _draft_repo()
-    if not repo.store_dir.exists():
-        return ()
     return tuple(repo.iter_drafts())
 
 
