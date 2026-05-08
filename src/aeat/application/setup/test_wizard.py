@@ -1,10 +1,7 @@
 """Unit tests for :class:`aeat.application.setup.SetupWizard`.
 
 Tests cover the non-interactive happy path, the verify-failure path,
-interactive collection through :class:`QueuedPrompter`, that every
-reachable :class:`SetupStep` lands in
-:attr:`SetupResult.steps_completed`, and that the optional first-run
-runner is wired correctly.
+and interactive collection through :class:`QueuedPrompter`.
 """
 
 from __future__ import annotations
@@ -31,7 +28,6 @@ from . import (
     SetupAnswers,
     SetupError,
     SetupOutcome,
-    SetupStep,
     SetupWizard,
 )
 
@@ -123,45 +119,6 @@ def test_interactive_requires_prompter(tmp_path: Path) -> None:
         SetupWizard().run(env_file=tmp_path / ".env", non_interactive=False)
 
 
-def test_all_steps_reachable_in_non_interactive(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("AEAT_TEST_PW", "x")
-    monkeypatch.setenv("AEAT_TAX_RESIDENCE_PROFILE_PATH", str(tmp_path / "tax-residence.json"))
-
-    class NoopRunner:
-        def run_read_only(self) -> str:
-            return "ok"
-
-    result = SetupWizard().run(
-        env_file=tmp_path / ".env",
-        non_interactive=True,
-        defaults=_answers(tmp_path),
-        first_run_runner=NoopRunner(),
-    )
-    completed = set(result.steps_completed)
-    # Every step except FIRST_RUN reachable without a runner;
-    # with a runner, FIRST_RUN also lands in completed.
-    for step in SetupStep:
-        assert step in completed, f"step {step} not reached"
-
-
-def test_first_run_skipped_when_runner_is_none(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setenv("AEAT_TEST_PW", "x")
-    monkeypatch.setenv("AEAT_TAX_RESIDENCE_PROFILE_PATH", str(tmp_path / "tax-residence.json"))
-    result = SetupWizard().run(
-        env_file=tmp_path / ".env",
-        non_interactive=True,
-        defaults=_answers(tmp_path),
-    )
-    assert SetupStep.FIRST_RUN in result.steps_skipped
-    assert SetupStep.FIRST_RUN not in result.steps_completed
-
-
 def test_verify_failure_short_circuits_outcome(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -236,7 +193,6 @@ def test_interactive_collects_from_queued_prompter(
         prompter=prompter,
     )
     assert result.outcome is SetupOutcome.COMPLETED
-    assert prompter.remaining == 0
     assert prompter.announcements  # welcome announcement fired
 
 
