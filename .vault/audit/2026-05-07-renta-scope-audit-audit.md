@@ -364,11 +364,45 @@ prerequisites and acceptance tests.
    (maternidad / large family), art-90, art-91 (atribución / transparencia
    internacional).
 3. **Substrate-S3: cross-modelo relations + dependency_classifications +
-   constructs backport to 2020-2024** — currently 2025-only (Task #42).
-4. **Substrate-S4: escala progresiva parameters per ejercicio** — encode
-   the IRPF estatal escala (LIRPF art. 63) and autonomic escala (LIRPF
-   art. 74) brackets per year as registry parameters with year-scoped
-   valid_from/valid_to (Task #44).
+   constructs backport to 2020-2024** — DELIVERED 2026-05-08 (commits
+   `8ba4fd0e` mini-model construct ownership for Modelo 100; #42 closed).
+   8 mini-model constructs per ejercicio claim residual formulas.
+4. **Substrate-S4: escala progresiva parameters per ejercicio** —
+   ESTATAL DELIVERED 2026-05-08 across 6 ejercicios:
+   - 2020: 5-bracket pre-Ley 11/2020 shape (commit `86e0c617`)
+   - 2021-2024: 6-bracket post-amendment shape (commit `ac5872e2`)
+   - 2025: 6-bracket post-amendment shape (commit `35b2c5c0`)
+   Reuses the new `lookup_bracket` runtime op + `BracketEntry` schema
+   (commit `3e09e5a8`) and `read_parameter` public API (commit
+   `5369b78c`). 30 multi-year integration tests pass.
+   AUTONOMIC CCAA escalas per ejercicio remain — 17 CCAA × 6 years
+   needs per-CCAA Decreto Legislativo lookups.
+
+### Substrate prerequisites delivered 2026-05-08
+
+- `lookup_bracket` runtime op + `BracketEntry` pydantic strict-frozen
+  model + `data_type = "bracket_table"` literal extension to
+  `ParameterDefinition` (commit `3e09e5a8`). Validates bracket overlap,
+  axis presence, non-bracket-table guards. 10 contract tests pass.
+- `read_parameter(modelo_id, revision_id, parameter_id, *, date_context,
+  registry_root)` public API (commit `5369b78c`). Delegate over the
+  existing `_resolve_parameter` helper. Consumed in production by the
+  rental tier resolver (commit `35b2c5c0`). 5 contract tests pass.
+- `typed_enum` field on `DataBindingDefinition` + permanent guard
+  `test_renta_typed_binding_candidates_declare_substrate_enum_class`
+  (commit `d21f9dd4`). 7 of 7 candidate bindings formally typed; 0
+  free-form.
+- Renta WEB Open replay parity scaffold: `corpus/parity_replays/
+  renta_web_open/` directory + `test_renta_web_open_replay_payload_
+  matches_registry_via_oracle` parametrized test + soft hygiene gate
+  `test_every_renta_chain_scenario_has_renta_web_open_replay_payload`
+  + per-formula coverage gate
+  `test_every_modelo_100_formula_target_has_oracle_grounded_scenario_
+  coverage` (commits `6f3555fe`, `71d3e0a9`). Live capture entrypoint
+  `test_capture_baseline_employee_replay_payload` gated by
+  `AEAT_LIVE_TESTS_ENABLED=1` (commit `b741bd68`). Metrics persisted
+  to `.vault/audit/renta-web-open-replay-coverage.txt` and
+  `.vault/audit/renta-formula-oracle-coverage.txt`.
 
 ### Mini-model formula slices
 
