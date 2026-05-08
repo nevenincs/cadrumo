@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
-from pathlib import Path
 
 import typer
 from pydantic import BaseModel, ConfigDict
@@ -115,17 +114,10 @@ for _command, _schema in {
 
 
 @app.command(name="list", help=tr("cli.inventory.list.help"))
-def list_inventory(
-    storage_dir: Path | None = typer.Option(
-        None,
-        "--storage-dir",
-        help=tr("cli.inventory.list.storage_dir_help"),
-        hidden=True,
-    ),
-) -> None:
+def list_inventory() -> None:
     """List persisted inventory ledgers."""
 
-    ledgers = load_inventory(storage_dir=storage_dir)
+    ledgers = load_inventory()
     payload = [_ledger_payload(ledger) for ledger in ledgers]
     if json_output_requested():
         emit_json_success("data ledgers inventory list", payload)
@@ -170,12 +162,6 @@ def create_inventory(
         "--sku",
         help=tr("cli.inventory.create.sku_help"),
     ),
-    storage_dir: Path | None = typer.Option(
-        None,
-        "--storage-dir",
-        help=tr("cli.inventory.create.storage_dir_help"),
-        hidden=True,
-    ),
 ) -> None:
     """Create an inventory ledger without overwriting an existing one."""
 
@@ -198,7 +184,7 @@ def create_inventory(
         opening_stock=_decimal(opening_stock),
         opening_layers=layers,
     )
-    create_inventory_ledger(ledger, storage_dir=storage_dir)
+    create_inventory_ledger(ledger)
     payload = {"ledger": _ledger_payload(ledger), "stored": True}
     if json_output_requested():
         emit_json_success("data ledgers inventory create", payload)
@@ -222,12 +208,6 @@ def add_movement(
         help=tr("cli.inventory.movement.taxable_base_help"),
     ),
     vat_rate: str = typer.Option("21.00", "--vat-rate", help=tr("cli.inventory.movement.vat_rate_help")),
-    storage_dir: Path | None = typer.Option(
-        None,
-        "--storage-dir",
-        help=tr("cli.inventory.movement.storage_dir_help"),
-        hidden=True,
-    ),
 ) -> None:
     """Append a movement after validating the full valuation path."""
 
@@ -244,7 +224,7 @@ def add_movement(
         vat_rate=rate,
         vat_amount=None if base is None else _money(base * rate / Decimal("100")),
     )
-    updated = record_movement(actividad, movement, year=year, storage_dir=storage_dir)
+    updated = record_movement(actividad, movement, year=year)
     payload = {"ledger": _ledger_payload(updated), "movement_id": movement_id, "stored": True}
     if json_output_requested():
         emit_json_success("data ledgers inventory movement add", payload)
@@ -256,16 +236,10 @@ def add_movement(
 def preview_valuation(
     actividad: str = typer.Option(..., "--actividad", help=tr("cli.inventory.valuation.actividad_help")),
     year: int = typer.Option(..., "--year", help=tr("cli.inventory.valuation.year_help")),
-    storage_dir: Path | None = typer.Option(
-        None,
-        "--storage-dir",
-        help=tr("cli.inventory.valuation.storage_dir_help"),
-        hidden=True,
-    ),
 ) -> None:
     """Preview inventory valuation."""
 
-    ledger = _find_ledger(actividad, year, storage_dir=storage_dir)
+    ledger = _find_ledger(actividad, year)
     result = compute_inventory_valuation(ledger)
     payload = {
         "actividad_id": actividad,
@@ -296,9 +270,9 @@ def preview_valuation(
     )
 
 
-def _find_ledger(actividad: str, year: int, *, storage_dir: Path | None) -> InventoryLedger:
+def _find_ledger(actividad: str, year: int) -> InventoryLedger:
     """Return the persisted ledger for ``(actividad, year)`` or raise :exc:`InventoryLedgerError`."""
-    for ledger in load_inventory(storage_dir=storage_dir):
+    for ledger in load_inventory():
         if ledger.actividad_id == actividad and ledger.year == year:
             return ledger
     raise InventoryLedgerError(

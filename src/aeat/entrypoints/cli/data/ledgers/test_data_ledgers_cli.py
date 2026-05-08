@@ -16,6 +16,7 @@ import typer
 from typer.testing import CliRunner
 
 from .....adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from .....adapters.persistence.storage.sql import dispose_engine
 from ..._errors import decorate_typer_app
 from . import inventory as inventory_module
 
@@ -45,16 +46,18 @@ app = _build_ledgers_test_app()
 
 
 @pytest.fixture(autouse=True)
-def _ephemeral_master_key() -> Iterator[None]:
+def _ephemeral_master_key(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
     override_master_key_provider(EphemeralMasterKeyProvider())
     try:
         yield
     finally:
         override_master_key_provider(None)
+        dispose_engine()
 
 
-def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
-    storage = str(tmp_path)
+def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal() -> None:
     create = _RUNNER.invoke(
         app,
         [
@@ -73,8 +76,6 @@ def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
             "10.00",
             "--sku",
             "ssd",
-            "--storage-dir",
-            storage,
         ],
     )
     assert create.exit_code == 0, create.output
@@ -103,8 +104,6 @@ def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
             "20.00",
             "--vat-rate",
             "21.00",
-            "--storage-dir",
-            storage,
         ],
     )
     assert purchase.exit_code == 0, purchase.output
@@ -129,8 +128,6 @@ def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
             "ssd",
             "--quantity",
             "12",
-            "--storage-dir",
-            storage,
         ],
     )
     assert sale.exit_code == 0, sale.output
@@ -146,8 +143,6 @@ def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
             "retail",
             "--year",
             "2025",
-            "--storage-dir",
-            storage,
         ],
     )
     assert preview.exit_code == 0, preview.output
@@ -166,15 +161,13 @@ def test_data_ledgers_inventory_fifo_pmp_and_lifo_refusal(tmp_path) -> None:
             "2025",
             "--valuation-method",
             "lifo",
-            "--storage-dir",
-            storage,
         ],
     )
     assert lifo.exit_code == 2
     assert "LIFO" in lifo.output
 
 
-def test_data_ledgers_inventory_refuses_inconsistent_opening_layers(tmp_path) -> None:
+def test_data_ledgers_inventory_refuses_inconsistent_opening_layers() -> None:
     result = _RUNNER.invoke(
         app,
         [
@@ -191,8 +184,6 @@ def test_data_ledgers_inventory_refuses_inconsistent_opening_layers(tmp_path) ->
             "10",
             "--opening-unit-cost",
             "20.00",
-            "--storage-dir",
-            str(tmp_path),
         ],
     )
 
