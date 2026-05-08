@@ -16,11 +16,11 @@ from aeat.adapters.persistence.storage import (
     override_master_key_provider,
     override_secret_store,
 )
+from aeat.application.invoices import link_invoice_transaction_repositories
 from aeat.domain.invoices._enums import InvoiceKind, IvaRate, PaymentStatus
 from aeat.domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
 from aeat.domain.invoices._repository import InvoiceCatalogueRepository
 from aeat.domain.invoices._service import (
-    link_transaction_bidirectional,
     suggest_reconciliations,
     verify_link_consistency,
 )
@@ -297,9 +297,12 @@ def test_link_bidirectional_updates_both_catalogues() -> None:
     InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices([invoice]))
     TransactionCatalogueRepository().save(TransactionCatalogue.from_transactions([transaction]))
 
-    updated_invoices, updated_transactions = link_transaction_bidirectional(
-        Path(), Path(), invoice.invoice_id, transaction.transaction_id
+    result = link_invoice_transaction_repositories(
+        invoice_id=invoice.invoice_id,
+        transaction_id=transaction.transaction_id,
     )
+    updated_invoices = result.invoices
+    updated_transactions = result.transactions
 
     updated_invoice = updated_invoices.get(invoice.invoice_id)
     updated_transaction = updated_transactions.get(transaction.transaction_id)
