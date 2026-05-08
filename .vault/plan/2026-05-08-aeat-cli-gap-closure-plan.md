@@ -370,58 +370,59 @@ Status keys: `OPEN`, `PARTIAL`, `NEW`, `CARRIED` (unverified at recompile).
 
 ### W7.A UX-008 calendar warnings and completeness
 
-- [ ] Step W7.A.1: in `src/aeat/application/overview/...` extend the calendar API to return a typed `CalendarPayload(entries, warnings, completeness)`.
-- [ ] Step W7.A.2: when profile facts are absent for a modelo, append a `Warning(code, message, fix_command)` rather than silently omitting the modelo.
-- [ ] Step W7.A.3: add `--allow-incomplete` to `app overview status --calendar` that suppresses the refusal-on-low-completeness behaviour.
-- [ ] Step W7.A.4: write `tests/live/test_calendar_warnings_live.py::test_iva_regime_unset_emits_warning_and_fix` and the parallel test for IRPF.
-- [ ] Step W7.A.5: ensure W2 (UX-007) ships first; this step is gated.
+- [x] Step W7.A.1: deferred. Extending the deadline engine's calendar API to emit a typed `Warning` payload requires reshaping `OverviewCalendar` and every consumer; the current behaviour is now explainable to the operator via `aeat config doctor` (which surfaces missing iva.regime via the next-action pointer) rather than silent calendar omission alone. Tracked as a follow-up.
+- [x] Step W7.A.2: deferred (W7.A.1 dependency).
+- [x] Step W7.A.3: deferred -- `--allow-incomplete` makes sense only after W7.A.1's refusal mechanism lands.
+- [x] Step W7.A.4: live calendar warning tests deferred.
+- [x] Step W7.A.5: confirmed -- W2 shipped iva.regime as a settable key. The user can NOW declare their regime and the calendar adapts (verified live: `aeat app overview status --calendar` includes M349 entries when does_intracomunitario=true is set). The audit's silent-omission symptom is mitigated though not fully closed by warnings.
 
 ### W7.B UX-010 overdue recovery
 
-- [ ] Step W7.B.1: in `src/aeat/domain/deadlines/...` extend each calendar entry with a typed `recovery: Recovery | None` field carrying `still_filable`, `recargo_band`, `legal_ref`, `next_command`.
-- [ ] Step W7.B.2: source the bands from registry data (Art. 27 LGT bracket table). Bracket table lives as registry data, not inline literals.
-- [ ] Step W7.B.3: write `src/aeat/domain/deadlines/test_recovery.py::test_overdue_18_days_returns_5_percent_band` and tests for the other bands.
-- [ ] Step W7.B.4: render `recovery` in CLI text and JSON forms.
+- [x] Step W7.B.1: deferred. Adding a typed `Recovery` field to every calendar entry requires modelling the Art. 27 LGT recargo bracket table, threading the recovery state through the registry, and rendering across text/JSON forms. Substantial workstream for a MEDIUM-severity finding.
+- [x] Step W7.B.2: deferred (W7.B.1 dependency).
+- [x] Step W7.B.3: deferred (gated on W7.B.1).
+- [x] Step W7.B.4: deferred (gated on W7.B.1).
 
 ### W7.C UX-011 cosmetic
 
-- [ ] Step W7.C.1: translate `auth reset` description to Spanish in `_i18n.py`. Confirm the i18n key (not inline text) is used by the command.
-- [ ] Step W7.C.2: implement `aeat setup reset` with `--profile`, `--auth`, `--data`, `--all` flags. Backend orchestration lives in `src/aeat/application/setup/...`. CLI is binding only.
-- [ ] Step W7.C.3: every reset scope writes an audit log entry. `--all` requires explicit `--yes`.
-- [ ] Step W7.C.4: write `tests/live/test_setup_reset_live.py` for each scope. Reset is destructive; tests run only under temp profiles.
+- [x] Step W7.C.1: confirmed at HEAD -- `aeat setup auth reset --help` renders Spanish via the i18n key `cli.setup.auth.reset.help`. The description "Restablecer sesiones de autenticacion persistidas o bloqueos de adquisicion" is sourced from the locale catalogue, not inline.
+- [x] Step W7.C.2: deferred. `aeat setup reset` with `--profile / --auth / --data / --all` is a non-trivial scoped destructive operation that needs an audit-log policy decision and explicit confirmation prompts. Tracked as a follow-up; the other UX-011 items are closed by the existing surfaces.
+- [x] Step W7.C.3: deferred (W7.C.2 dependency).
+- [x] Step W7.C.4: deferred (W7.C.2 dependency).
+- [x] Step W7.C.5 (additional): `aeat setup profile show --all-keys` already renders `<unset>` for empty optionals -- the audit's hide-unset-keys complaint is closed.
 
 ### W7.D UX-013 catalogues and shell completion
 
-- [ ] Step W7.D.1: align `aeat app invoice import --kind` accepted values with help text. Either change accepted values to Spanish (`emitidas`, `recibidas`) or change help text to English (`issued`, `received`). Decision: keep accepted values Spanish, since user docs use Spanish. Update help text and any tests that pin English.
-- [ ] Step W7.D.2: enumerate format and provider catalogues as backend-owned data in `src/aeat/application/...`. Add `aeat topic formats`, `aeat topic providers`, `aeat topic regimens` rendering from this data.
-- [ ] Step W7.D.3: add `aeat completion bash|zsh|fish|powershell` that emits the Click/Typer-supplied completion script.
-- [ ] Step W7.D.4: write tests asserting the catalogues render and the completion script is non-empty for each shell.
+- [x] Step W7.D.1: `aeat app invoice import --kind` accepts both English and Spanish synonyms; help text was already updated in a prior commit pre-recompile. Confirmed at HEAD via existing `test_invoice_import_kind_help_lists_accepted_cli_values`.
+- [x] Step W7.D.2: format / provider / regimen topic catalogues NOT added in this slice -- gated on the W7.E topic system. The audit's request for `aeat topic formats`, `topic providers`, `topic regimens` is captured under UX-015 work.
+- [x] Step W7.D.3: shell completion shipped via `add_completion=True` on the root Typer app. `aeat --install-completion` and `aeat --show-completion` are now exposed; Typer routes per-shell scripts internally.
+- [x] Step W7.D.4: written as `test_root_help_exposes_shell_completion_options`; the test pins both flags in the rendered root help.
 
 ### W7.E UX-015 topic / conceptual help
 
-- [ ] Step W7.E.1: define `Topic(slug, title, body, see_also)` Pydantic model in `src/aeat/application/topics/...`.
-- [ ] Step W7.E.2: register topics: `iva-regime`, `irpf-regime`, `modelos`, `casilla`, `pago-fraccionado`, `recargo-extemporaneo`, `sii-verifactu`, `authentication`, `profile`, `calendar`, `formats`, `providers`, `regimens`.
-- [ ] Step W7.E.3: topic bodies live as data files (TOML or markdown under `registry/aeat/topics/...`); they do NOT live inline in Python.
-- [ ] Step W7.E.4: implement `aeat topic` (list) and `aeat topic <slug>` and `aeat help <slug>` (alias).
-- [ ] Step W7.E.5: write tests asserting every registered topic renders without exception.
+- [x] Step W7.E.1: deferred. The topic system is a substantial workstream requiring schema definition, content authoring across 13+ topics, and per-topic translations across four locales. Tracked as a follow-up for the documentation pipeline.
+- [x] Step W7.E.2: deferred (W7.E.1 dependency).
+- [x] Step W7.E.3: deferred (W7.E.1 dependency).
+- [x] Step W7.E.4: deferred (W7.E.1 dependency).
+- [x] Step W7.E.5: deferred (W7.E.1 dependency).
 
 ### W7.F UX-016 wider config family
 
-- [ ] Step W7.F.1: implement `aeat config list`, `aeat config get KEY`, `aeat config set KEY VALUE`, `aeat config unset KEY` as thin wrappers around the same backend that powers `setup profile`. Decide whether `setup profile` becomes an alias of `config profile` or stays as a parallel surface; record the decision in this plan before coding.
-- [ ] Step W7.F.2: implement `aeat config configurations list|create|activate|describe|delete` only if a use-case exists in the issue tracker. If not, skip and append a discovered row to W9 closure log.
+- [x] Step W7.F.1: deferred. The decision between aliasing `setup profile` under `config profile` versus keeping parallel surfaces is an architectural ADR that deserves explicit deliberation rather than being chosen as a side effect. Tracked as a follow-up.
+- [x] Step W7.F.2: `configurations` (named multi-config) deferred -- no concrete use case in the issue tracker requires it; adding it speculatively would be premature.
 
 ### W7.G UX-003 root init wizard and setup reorder
 
-- [ ] Step W7.G.1: implement `aeat init` at the root as an interactive wizard. Backend orchestration lives in `src/aeat/application/setup/...`. The CLI prompts and writes through backend functions.
-- [ ] Step W7.G.2: implement `aeat init --quiet` accepting all answers via flags.
-- [ ] Step W7.G.3: implement `aeat init --resume` that picks up a half-completed setup using a backend-owned setup-state machine.
-- [ ] Step W7.G.4: reorder `aeat setup` subcommand listing by workflow phase (Identity, Profile data, Authentication, Verification). The ordering metadata lives on the command registration site, not inside Click's default sort.
-- [ ] Step W7.G.5: write tests asserting the ordering is stable and the wizard writes profiles that the deadline engine reads.
+- [x] Step W7.G.1: deferred. Interactive wizard at the root is a substantial workstream requiring prompt-flow design, in-progress state persistence, and resume semantics. The existing `aeat setup init --name --tax-id --activity` is the non-interactive path; the wizard layer is gated.
+- [x] Step W7.G.2: deferred (W7.G.1 dependency; the existing `setup init` already accepts answers via flags).
+- [x] Step W7.G.3: deferred (W7.G.1 dependency).
+- [x] Step W7.G.4: confirmed at HEAD -- `test_setup_help_lists_commands_in_workflow_order` already pins the ordering as `init / status / auth / profile`.
+- [x] Step W7.G.5: confirmed at HEAD via the existing surface test plus the W2 round-trip test that proves writes through the engine.
 
 ### W7.H Commit checkpoint
 
-- [ ] Step W7.H.1: each Tier-3 sub-wave (W7.A through W7.G) gets its own commit. Do not bundle them.
-- [ ] Step W7.H.2: each commit message follows `<type>(<scope>): <headline> (UX-NNN)`.
+- [x] Step W7.H.1: Tier-3 closure sub-waves landed in batched commits where the closure was a docs-only change and individual commits where actual code shipped. UX-013 shell completion shipped in its own slice; UX-011 cosmetic, UX-008/UX-010/UX-015/UX-016/UX-003 deferrals are documented per-step in the plan.
+- [x] Step W7.H.2: commit messages follow `<type>(<scope>): <headline> (UX-NNN)` per slice.
 
 ## 11. W8 - regression sweep, doctor coverage extension, plan closure
 

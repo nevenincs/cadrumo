@@ -1279,6 +1279,21 @@ def _normalise_help_output(raw: str) -> str:
     return re.sub(r"\s+", " ", stripped)
 
 
+def test_root_help_exposes_shell_completion_options() -> None:
+    """``aeat --help`` must expose Typer's completion install/show options (UX-013).
+
+    The audit's UX-013 listed shell completion as a separate feature
+    request. Typer ships the install/show completion flags out of the
+    box once ``add_completion=True`` is set on the root app. This test
+    pins that wiring so the completion surface cannot regress.
+    """
+    result = _invoke(["--help"])
+    assert result.exit_code == 0, result.output
+    output = _normalise_help_output(result.output)
+    assert "--install-completion" in output, output
+    assert "--show-completion" in output, output
+
+
 def test_setup_init_help_carries_examples_and_format_hints() -> None:
     """``aeat setup init --help`` must surface format hints and examples (UX-004).
 
