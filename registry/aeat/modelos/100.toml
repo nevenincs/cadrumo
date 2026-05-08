@@ -370,6 +370,7 @@ legal_refs = [
     "ley-35-2006:art-66",
     "ley-35-2006:art-67",
     "ley-35-2006:art-68",
+    "ley-35-2006:art-68.4",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -603,7 +604,7 @@ id = "renta-2020-deduccion-ceuta-melilla-estatal-50-porciento"
 target = "0560"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-67"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2020".formulas.source_citations]]
@@ -615,7 +616,7 @@ id = "renta-2020-deduccion-ceuta-melilla-autonomica-50-porciento"
 target = "0561"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-77"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2020".formulas.source_citations]]
@@ -3335,6 +3336,7 @@ legal_refs = [
     "ley-35-2006:art-66",
     "ley-35-2006:art-67",
     "ley-35-2006:art-68",
+    "ley-35-2006:art-68.4",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -3570,7 +3572,7 @@ id = "renta-2021-deduccion-ceuta-melilla-estatal-50-porciento"
 target = "0560"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-67"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2021".formulas.source_citations]]
@@ -3582,7 +3584,7 @@ id = "renta-2021-deduccion-ceuta-melilla-autonomica-50-porciento"
 target = "0561"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-77"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2021".formulas.source_citations]]
@@ -6347,6 +6349,7 @@ legal_refs = [
     "ley-35-2006:art-66",
     "ley-35-2006:art-67",
     "ley-35-2006:art-68",
+    "ley-35-2006:art-68.4",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -6599,7 +6602,7 @@ id = "renta-2022-deduccion-ceuta-melilla-estatal-50-porciento"
 target = "0560"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-67"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2022".formulas.source_citations]]
@@ -6611,7 +6614,7 @@ id = "renta-2022-deduccion-ceuta-melilla-autonomica-50-porciento"
 target = "0561"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-77"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2022".formulas.source_citations]]
@@ -9612,6 +9615,7 @@ legal_refs = [
     "ley-35-2006:art-66",
     "ley-35-2006:art-67",
     "ley-35-2006:art-68",
+    "ley-35-2006:art-68.4",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -9865,7 +9869,7 @@ id = "renta-2023-deduccion-ceuta-melilla-estatal-50-porciento"
 target = "0560"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-67"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2023".formulas.source_citations]]
@@ -9877,7 +9881,7 @@ id = "renta-2023-deduccion-ceuta-melilla-autonomica-50-porciento"
 target = "0561"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-77"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2023".formulas.source_citations]]
@@ -12916,6 +12920,7 @@ legal_refs = [
     "ley-35-2006:art-66",
     "ley-35-2006:art-67",
     "ley-35-2006:art-68",
+    "ley-35-2006:art-68.4",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -13169,7 +13174,7 @@ id = "renta-2024-deduccion-ceuta-melilla-estatal-50-porciento"
 target = "0560"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-67"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2024".formulas.source_citations]]
@@ -13181,7 +13186,7 @@ id = "renta-2024-deduccion-ceuta-melilla-autonomica-50-porciento"
 target = "0561"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-77"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2024".formulas.source_citations]]
@@ -19528,6 +19533,7 @@ legal_refs = [
     "ley-35-2006:art-66",
     "ley-35-2006:art-67",
     "ley-35-2006:art-68",
+    "ley-35-2006:art-68.4",
     "ley-35-2006:art-74",
     "ley-35-2006:art-75",
     "ley-35-2006:art-77",
@@ -19748,7 +19754,7 @@ id = "renta-2025-deduccion-ceuta-melilla-estatal-50-porciento"
 target = "0560"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-67"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-67"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -19760,7 +19766,7 @@ id = "renta-2025-deduccion-ceuta-melilla-autonomica-50-porciento"
 target = "0561"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-77"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
