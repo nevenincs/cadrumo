@@ -116,7 +116,7 @@ treated as proof of service behavior.
 | W3-T2 | completed | CLI-003, API-003 | Add invoice review/match projection service for IVA display totals, payment status, period-aware matching, and overlays. |
 | W3-T3 | completed | CLI-006, API-003 | Add reconciliation apply service that persists invoice and transaction catalogues atomically. |
 | W3-T4 | completed | CLI-006 | Replace dummy `Path()` backend calls with explicit application-layer command inputs. |
-| W3-T5 | in-progress | TEST-006 | Move invoice list/link/reconcile/verify/unmatched business assertions to domain or application-layer tests. |
+| W3-T5 | completed | TEST-006 | Move invoice list/link/reconcile/verify/unmatched business assertions to domain or application-layer tests. |
 
 Gate after Wave 3: code review confirms invoice CLI commands only translate
 options to command DTOs and render returned projections. Audit review confirms
