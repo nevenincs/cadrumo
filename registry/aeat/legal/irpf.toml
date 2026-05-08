@@ -1357,6 +1357,25 @@ required_text = [
     "retenciones e ingresos a cuenta",
 ]
 
+[legal."ley-35-2006:art-91"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-91"
+document_id = "BOE-A-2006-20764"
+article = "91"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a91"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Imputación de rentas en régimen de transparencia fiscal internacional: imputa al contribuyente las rentas pasivas (dividendos, intereses, capital inmobiliario, ganancias, etc.) generadas por entidades no residentes que controla, salvo que la entidad tribute por un impuesto análogo al IS al menos al 75 por ciento del tipo español o disponga de medios materiales y personales para la actividad. Base legal de las casillas de transparencia fiscal internacional en Modelo 100."
+required_text = [
+    "transparencia fiscal internacional",
+    "rentas",
+]
+
 [legal."ley-35-2006:art-49"]
 evidence_tier = "legal_authority"
 authority = "boe"
