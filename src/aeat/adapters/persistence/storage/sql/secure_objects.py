@@ -2,19 +2,28 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast
 
-from sqlalchemy import Engine, delete, select, update
+from sqlalchemy import Engine, bindparam, delete, select, text, update
 from sqlalchemy.exc import IntegrityError
 
 from .....core.classification import SensitivityClass
-from ..errors import ClassificationError, EnvelopeVersionError, RepositoryError
+from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
+from ..errors import (
+    ClassificationError,
+    DecryptionError,
+    EnvelopeVersionError,
+    RepositoryError,
+)
 from . import _orm
 from .engine import get_engine
 from .session import session_scope
+
+_log = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +36,29 @@ class SecureObjectRecord:
     schema_version: int
     written_at: datetime
     payload: bytes
+
+
+@dataclass(frozen=True, slots=True)
+class SecureObjectUnreadable:
+    """One stored secure object that cannot be decrypted under the current master key.
+
+    Surfaced by :meth:`SecureObjectRepository.iter_records_with_failures`
+    so iterating consumers can count and report the unreadable subset
+    rather than aborting on the first failure. The plaintext is
+    cryptographically unrecoverable from this process — the master key
+    under which the row was sealed is no longer available.
+    """
+
+    namespace: str
+    row_id: int
+    object_key: bytes
+    classification: str
+    schema_version: int
+    written_at: datetime
+    reason: str
+
+
+SecureObjectListItem = SecureObjectRecord | SecureObjectUnreadable
 
 
 class SecureObjectRepository:
@@ -92,21 +124,119 @@ class SecureObjectRepository:
         expected_class: SensitivityClass,
         max_supported_version: int,
     ) -> Iterator[SecureObjectRecord]:
-        """Yield every decrypted object under ``namespace``."""
+        """Yield every decryptable object under ``namespace``.
 
-        with session_scope(self._engine) as session:
-            rows = tuple(
-                session.execute(
-                    select(_orm.SecureObjectRow)
-                    .where(_orm.SecureObjectRow.namespace == namespace)
-                    .order_by(_orm.SecureObjectRow.object_key)
-                ).scalars()
+        Rows whose payload cannot be decrypted under the current master
+        key are skipped; one ``WARNING`` log line summarises the count at
+        the end of the iteration. Use :meth:`iter_records_with_failures`
+        to receive a typed per-row outcome instead of skipping silently.
+        """
+        unreadable = 0
+        for item in self.iter_records_with_failures(
+            namespace,
+            expected_class=expected_class,
+            max_supported_version=max_supported_version,
+        ):
+            if isinstance(item, SecureObjectRecord):
+                yield item
+            else:
+                unreadable += 1
+        if unreadable > 0:
+            _log.warning(
+                "secure_objects: skipped %d unreadable row(s) in namespace %s; "
+                "the master key under which they were sealed is no longer available "
+                "(run 'aeat config doctor' for details).",
+                unreadable,
+                namespace,
             )
-        for row in rows:
-            yield self._record_from_row(
-                row,
-                expected_class=expected_class,
-                max_supported_version=max_supported_version,
+
+    def iter_records_with_failures(
+        self,
+        namespace: str,
+        *,
+        expected_class: SensitivityClass,
+        max_supported_version: int,
+    ) -> Iterator[SecureObjectListItem]:
+        """Yield a typed outcome per stored row under ``namespace``.
+
+        Each row is represented by either a :class:`SecureObjectRecord`
+        (the row decrypts cleanly and matches the consumer's classification
+        and schema-version contract) or a :class:`SecureObjectUnreadable`
+        (the on-wire ciphertext exists but cannot be decrypted under the
+        current master key, or its metadata fails the consumer's contract).
+
+        The iterator is fault-isolated: a failure on row ``N`` does not
+        prevent rows ``> N`` from being inspected. Consumers count the
+        failures and decide how to report them; nothing is auto-deleted.
+        """
+        with session_scope(self._engine) as session:
+            stmt = (
+                text(
+                    "SELECT id, object_key, classification, schema_version, "
+                    "written_at, payload "
+                    "FROM secure_objects WHERE namespace = :namespace "
+                    "ORDER BY object_key"
+                )
+                .bindparams(bindparam("namespace", value=namespace))
+                .columns(
+                    id=_orm.SecureObjectRow.__table__.c.id.type,
+                    object_key=_orm.SecureObjectRow.__table__.c.object_key.type,
+                    classification=_orm.SecureObjectRow.__table__.c.classification.type,
+                    schema_version=_orm.SecureObjectRow.__table__.c.schema_version.type,
+                    written_at=_orm.SecureObjectRow.__table__.c.written_at.type,
+                )
+            )
+            rows = session.execute(stmt).all()
+        for raw in rows:
+            row_id = int(raw.id)
+            object_key = bytes(raw.object_key)
+            classification_str = str(raw.classification)
+            schema_version = int(raw.schema_version)
+            written_at = raw.written_at
+            payload_wire = bytes(raw.payload)
+            try:
+                classification = SensitivityClass(classification_str)
+            except ValueError:
+                yield SecureObjectUnreadable(
+                    namespace=namespace,
+                    row_id=row_id,
+                    object_key=object_key,
+                    classification=classification_str,
+                    schema_version=schema_version,
+                    written_at=written_at,
+                    reason=f"unknown classification {classification_str!r}",
+                )
+                continue
+            if classification is not expected_class:
+                raise ClassificationError(
+                    f"secure object {namespace}/{object_key.hex()} has classification "
+                    f"{classification}; consumer expected {expected_class}",
+                )
+            if schema_version > max_supported_version:
+                raise EnvelopeVersionError(
+                    f"secure object {namespace}/{object_key.hex()} is at version "
+                    f"{schema_version}; consumer supports up to {max_supported_version}",
+                )
+            try:
+                payload_plain = decrypt_encrypted_bytes_column(payload_wire)
+            except DecryptionError as exc:
+                yield SecureObjectUnreadable(
+                    namespace=namespace,
+                    row_id=row_id,
+                    object_key=object_key,
+                    classification=classification_str,
+                    schema_version=schema_version,
+                    written_at=written_at,
+                    reason=str(exc),
+                )
+                continue
+            yield SecureObjectRecord(
+                namespace=namespace,
+                object_key=object_key,
+                classification=classification,
+                schema_version=schema_version,
+                written_at=written_at,
+                payload=payload_plain,
             )
 
     def load(
