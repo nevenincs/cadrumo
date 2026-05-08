@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterator
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast
 
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import Engine, bindparam, delete, select, text, update
 from sqlalchemy.exc import IntegrityError
 
@@ -25,21 +25,28 @@ from .session import session_scope
 
 _log = logging.getLogger(__name__)
 
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
-@dataclass(frozen=True, slots=True)
-class SecureObjectRecord:
-    """One decrypted sensitive object loaded from the SQL backend."""
 
-    namespace: str
+class SecureObjectRecord(BaseModel):
+    """One decrypted sensitive object loaded from the SQL backend.
+
+    Strict frozen pydantic v2 record so every load/list path emits a
+    validated boundary-crossing payload (per the project's pydantic
+    mandate).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    namespace: str = Field(min_length=1)
     object_key: bytes
     classification: SensitivityClass
-    schema_version: int
+    schema_version: int = Field(ge=1)
     written_at: datetime
     payload: bytes
 
 
-@dataclass(frozen=True, slots=True)
-class SecureObjectUnreadable:
+class SecureObjectUnreadable(BaseModel):
     """One stored secure object that cannot be decrypted under the current master key.
 
     Surfaced by :meth:`SecureObjectRepository.iter_records_with_failures`
@@ -49,13 +56,15 @@ class SecureObjectUnreadable:
     under which the row was sealed is no longer available.
     """
 
-    namespace: str
-    row_id: int
+    model_config = _STRICT_FROZEN
+
+    namespace: str = Field(min_length=1)
+    row_id: int = Field(ge=0)
     object_key: bytes
-    classification: str
-    schema_version: int
+    classification: str = Field(min_length=1)
+    schema_version: int = Field(ge=1)
     written_at: datetime
-    reason: str
+    reason: str = Field(min_length=1)
 
 
 SecureObjectListItem = SecureObjectRecord | SecureObjectUnreadable
