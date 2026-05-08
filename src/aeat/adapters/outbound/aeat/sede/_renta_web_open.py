@@ -22,6 +22,7 @@ from .....domain.calculations.registry._remote_state_guard import RemoteOperatio
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory
 from ._errors import SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
+from ._renta_web_open_safety import assert_click_target_safe, install_page_safety_net
 
 _SPANISH_AMOUNT_RE = compile(r"[-+]?\d{1,3}(?:\.\d{3})*,\d{2}|[-+]?\d+(?:[.,]\d+)?")
 logger = get_logger(__name__)
@@ -89,6 +90,11 @@ async def collect_renta_web_open_observation(
     try:
         context = await browser_session.create_context(storage_state={})
         page = cast(Any, await context.new_page())
+        # SAFETY-CRITICAL: install dialog auto-dismiss + URL navigation guard
+        # before any user interaction. The page-level safety net is the
+        # outermost defense layer; click-time `assert_click_target_safe`
+        # provides the inner ring.
+        await install_page_safety_net(page)
         await _playwright_stage(
             page.set_viewport_size({"width": 1366, "height": 900}),
             stage="set-viewport",
@@ -230,7 +236,18 @@ async def _fill_expected(locator: Any, value: str, *, stage: str, description: s
 
 
 async def _click_expected(locator: Any, *, stage: str, description: str, timeout_ms: int) -> None:
+    """Wait, safety-check, then click. Single click site for the driver — no bypass.
+
+    The safety check (``assert_click_target_safe``) runs BEFORE the click
+    is dispatched. If the locator's resolved text or href contains a
+    forbidden token (Presentar / Firmar / Pagar / etc.), the click is
+    refused and a :class:`SedeNavigationError` is raised. This is one of
+    the belt-and-suspenders defenses; the others are the page-level dialog
+    auto-dismiss + URL navigation guard installed in
+    ``install_page_safety_net``.
+    """
     await _expect_visible(locator, stage=stage, description=description, timeout_ms=timeout_ms)
+    await assert_click_target_safe(locator, stage=stage, description=description, timeout_ms=timeout_ms)
     await _playwright_stage(
         locator.click(timeout=timeout_ms),
         stage=stage,

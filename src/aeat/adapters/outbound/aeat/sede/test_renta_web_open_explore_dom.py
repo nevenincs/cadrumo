@@ -36,6 +36,7 @@ async def _capture_resumen_dom() -> tuple[str, str]:
         _fill_identification_profile,
         _expect_visible,
     )
+    from ._renta_web_open_safety import install_page_safety_net
 
     payload = RentaWebOpenLivePayload(timeout_ms=120_000)
     browser_session = await default_browser_session_factory(Settings())
@@ -43,6 +44,8 @@ async def _capture_resumen_dom() -> tuple[str, str]:
     try:
         context = await browser_session.create_context(storage_state={})
         page = cast(Any, await context.new_page())
+        # SAFETY-CRITICAL: install dialog dismissal + URL guards.
+        await install_page_safety_net(page)
         await page.set_viewport_size({"width": 1366, "height": 900})
         await browser_session.navigate(page, str(payload.app_url))
         await page.wait_for_load_state("networkidle", timeout=payload.timeout_ms)

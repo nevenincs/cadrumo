@@ -1,8 +1,7 @@
 """Tests asserting LIRPF art. 85 imputación parameters live in the registry.
 
-Closes the V-2 audit teardown: the rates and lookback must derive
-from ``registry/aeat/legal/irpf.toml`` rather than being Python
-literals on :mod:`aeat.domain.rental._aggregates`.
+The rates and lookback must derive from ``registry/aeat/legal/irpf.toml``
+rather than from Python literals on :mod:`aeat.domain.rental._aggregates`.
 """
 
 from __future__ import annotations

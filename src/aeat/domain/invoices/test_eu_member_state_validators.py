@@ -1,8 +1,7 @@
 """Tests for the registry-grounded EU member state validators.
 
-Closes the M-2 audit teardown: country code validation now anchors
-to :class:`aeat.domain.vat.EUMemberState` rather than to a hand-
-maintained list, and the new
+Country code validation anchors to :class:`aeat.domain.vat.EUMemberState`
+rather than a hand-maintained list, and the
 :func:`assert_eu_member_state_code` helper rejects non-EU codes for
 callers (e.g. Modelo 369 binding selectors) that need an EU-only
 boundary.

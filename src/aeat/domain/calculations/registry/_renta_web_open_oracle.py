@@ -68,7 +68,7 @@ class RentaWebOpenLivePayload(RentaWebOpenModel):
     app_url: AnyUrl = RENTA_WEB_OPEN_APP_URL
     timeout_ms: int = Field(default=60_000, ge=1_000, le=180_000)
     casilla_overrides: dict[str, str] = Field(default_factory=dict)
-    scrape_casillas: tuple[str, ...] = Field(default_factory=tuple)
+    scrape_casillas: list[str] = Field(default_factory=list)
 
 
 class RentaWebOpenObservation(RentaWebOpenModel):
