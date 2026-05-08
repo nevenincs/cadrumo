@@ -88,6 +88,9 @@ cli:
       help: Diagnose local configuration, registry, profile, auth, and logs
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
+      quarantine_help: Move undecryptable rows into a quarantine table (destructive; requires --yes)
+      quarantine_requires_yes: This operation is destructive. Re-run with --yes to confirm.
+      quarantine_yes_help: Explicitly confirm the quarantine operation
   data:
     app_help: Management of tax data and records
     ledgers:

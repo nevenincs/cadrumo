@@ -97,6 +97,9 @@ cli:
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
       logs_lines_help: Megjelenítendő friss naplósorok száma
+      quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló; --yes szükséges)
+      quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval a megerősítéshez.
+      quarantine_yes_help: A karantén művelet kifejezett megerősítése
   data:
     app_help: Adóadatok és nyilvántartások kezelése
     ledgers:

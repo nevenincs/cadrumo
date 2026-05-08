@@ -90,6 +90,9 @@ cli:
       help: Diagnosticar configuración local, registro, perfil, autenticación y logs
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
+      quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción destructiva, requiere --yes)
+      quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con --yes para confirmar.
+      quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
   data:
     app_help: Gestión de datos y registros fiscales
     ledgers:

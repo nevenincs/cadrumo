@@ -88,6 +88,9 @@ cli:
       help: Diagnosticar configuració local, registre, perfil, autenticació i logs
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
+      quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu; requereix --yes)
+      quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb --yes per confirmar.
+      quarantine_yes_help: Confirmar explícitament l'operació de quarantena
   data:
     app_help: Gestió de dades i registres fiscals
     ledgers:
