@@ -10,6 +10,10 @@ from pydantic import BaseModel, ConfigDict
 
 from aeat import __version__
 
+from ..adapters.persistence.storage.sql.secure_objects import (
+    SecureObjectNamespaceIntegrity,
+    SecureObjectRepository,
+)
 from ..core.config import PROJECT_ROOT
 from ..core.logging import default_log_file_path
 from ..domain.calculations.registry import ValidatedRegistryAuthority
@@ -56,6 +60,23 @@ class DiagnosticCheck(BaseModel):
     next_action: str | None = None
 
 
+class SecureObjectIntegrityReport(BaseModel):
+    """Aggregated decryptability counts across every populated namespace.
+
+    Surfaces how many rows of the local ``secure_objects`` table can be
+    decrypted under the current master key. A non-zero ``unreadable`` total
+    almost always means the keychain master-key entry was rotated or
+    regenerated since the affected rows were written; the plaintexts are
+    cryptographically unrecoverable from this process.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    namespaces: tuple[SecureObjectNamespaceIntegrity, ...] = ()
+    readable_total: int = 0
+    unreadable_total: int = 0
+
+
 class ConfigDoctorReport(BaseModel):
     """Local environment and configuration diagnostics for ``aeat config doctor``."""
 
@@ -68,6 +89,7 @@ class ConfigDoctorReport(BaseModel):
     log_file: str
     registry: RegistryVersionSummary
     setup: SetupStatusReport | None
+    secure_objects: SecureObjectIntegrityReport
     checks: tuple[DiagnosticCheck, ...]
 
 
@@ -133,6 +155,9 @@ def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDocto
             )
         )
 
+    secure_objects = _probe_secure_objects_integrity()
+    checks.append(_secure_objects_integrity_check(secure_objects))
+
     return ConfigDoctorReport(
         overall=_overall_status(tuple(checks)),
         package_name="aeat",
@@ -141,6 +166,7 @@ def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDocto
         log_file=str(default_log_file_path()),
         registry=registry,
         setup=setup_report,
+        secure_objects=secure_objects,
         checks=tuple(checks),
     )
 
@@ -190,6 +216,60 @@ def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSumma
         casilla_count=sum(len(revision.casillas) for revision in revisions),
         formula_count=sum(len(revision.formulas) for revision in revisions),
         revision_ids=tuple(sorted({str(revision.id) for revision in revisions})),
+    )
+
+
+def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
+    """Iterate every populated secure-objects namespace and aggregate counts.
+
+    Returns an empty report when the table is empty or the engine cannot
+    be reached. Non-empty results expose per-namespace counts so the
+    operator can locate which application surface holds rows from a
+    rotated master-key generation.
+    """
+    try:
+        repo = SecureObjectRepository()
+        namespaces = repo.list_namespaces()
+    except Exception:  # pragma: no cover - engine resolution depends on local backend.
+        return SecureObjectIntegrityReport()
+    integrity = tuple(repo.probe_namespace_integrity(ns) for ns in namespaces)
+    readable_total = sum(item.readable for item in integrity)
+    unreadable_total = sum(item.unreadable for item in integrity)
+    return SecureObjectIntegrityReport(
+        namespaces=integrity,
+        readable_total=readable_total,
+        unreadable_total=unreadable_total,
+    )
+
+
+def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> DiagnosticCheck:
+    """Render the ``secure_objects.integrity`` doctor row."""
+    if report.unreadable_total == 0:
+        if report.readable_total == 0:
+            return DiagnosticCheck(
+                name="secure_objects.integrity",
+                status="ok",
+                summary="no rows stored",
+            )
+        return DiagnosticCheck(
+            name="secure_objects.integrity",
+            status="ok",
+            summary=f"{report.readable_total} row(s) decryptable across {len(report.namespaces)} namespace(s)",
+        )
+    affected = ", ".join(
+        f"{item.namespace} ({item.unreadable}/{item.readable + item.unreadable})"
+        for item in report.namespaces
+        if item.unreadable > 0
+    )
+    return DiagnosticCheck(
+        name="secure_objects.integrity",
+        status="warn",
+        summary=(
+            f"{report.unreadable_total} unreadable row(s) sealed under a prior master key; "
+            f"{report.readable_total} row(s) decryptable"
+        ),
+        detail=affected,
+        next_action="aeat config doctor --quarantine-unreadable",
     )
 
 
