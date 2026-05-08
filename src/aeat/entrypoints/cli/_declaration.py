@@ -161,9 +161,10 @@ def declaration_calculate(
         )
     except FilingBuilderError as exc:
         raise _bad(str(exc)) from exc
+    blockers = tuple(f for f in draft.findings if f.severity is FilingFindingSeverity.ERROR)
     summary: DeclarationCalculateSummary = summarise_calculation(
         draft,
-        repair_hints=tuple(f.message for f in draft.findings if f.severity is FilingFindingSeverity.ERROR),
+        repair_hints=tuple(_translate(f.message) for f in blockers),
     )
     _draft_repo().save(draft)
     state_repository().update(
@@ -175,18 +176,40 @@ def declaration_calculate(
             status=draft.status.value,
         )
     )
+    next_pointer = _next_action_command(summary.next_action.value, canonical_modelo, canonical_period)
     payload = {"draft": draft, "summary": summary}
-    _emit(
-        ctx,
-        payload,
-        [
-            f"{tr('cli.declaration.labels.draft_id')}\t{draft.draft_id}",
-            f"{tr('cli.declaration.labels.status')}\t{draft.status.value}",
-            f"{tr('cli.declaration.labels.blockers')}\t{summary.blocker_count}",
-            f"{tr('cli.declaration.labels.warnings')}\t{summary.warning_count}",
-            f"{tr('cli.declaration.labels.next')}\t{summary.next_action.value}",
-        ],
-    )
+    lines: list[str] = [
+        f"{tr('cli.declaration.labels.draft_id')}\t{draft.draft_id}",
+        f"{tr('cli.declaration.labels.status')}\t{draft.status.value}",
+        f"{tr('cli.declaration.labels.blockers')}\t{summary.blocker_count}",
+        f"{tr('cli.declaration.labels.warnings')}\t{summary.warning_count}",
+    ]
+    for finding in blockers:
+        lines.append(f"blocker\tcasilla.{finding.casilla_id}\t{_translate(finding.message)}")
+    lines.append(f"{tr('cli.declaration.labels.next')}\t{next_pointer}")
+    _emit(ctx, payload, lines)
+
+
+def _next_action_command(next_action: str, modelo: str, period: str) -> str:
+    """Translate a ``DeclarationCalculateNextAction`` into a runnable CLI hint.
+
+    The audit (UX-021) flagged ``Siguiente: resolve-blockers`` as an
+    opaque recipe token. Each next-action value now maps to a literal
+    command the operator can copy and run, parameterised on the
+    current modelo and period.
+    """
+
+    if next_action == "resolve-blockers":
+        return f"aeat app declaration review --modelo {modelo} --period {period}"
+    if next_action == "review":
+        return f"aeat app declaration review --modelo {modelo} --period {period}"
+    if next_action == "approve":
+        return f"aeat app declaration approve --modelo {modelo} --period {period} --by NAME --reason TEXT"
+    if next_action == "export":
+        return f"aeat app declaration export --modelo {modelo} --period {period} --output PATH"
+    if next_action == "refresh-approval":
+        return f"aeat app declaration approve --modelo {modelo} --period {period} --by NAME --reason TEXT"
+    return next_action
 
 
 @app.command("review", help=tr("cli.declaration.review_help"))
