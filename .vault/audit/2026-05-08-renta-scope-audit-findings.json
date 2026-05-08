@@ -292,6 +292,166 @@
     ],
     "uncatalogued_articles": []
   },
+  "layer5": {
+    "relations_total": 9,
+    "closed_loop": 9,
+    "open_loop": 0,
+    "coverage_pct": 100.0,
+    "misalignments": []
+  },
+  "layer6": {
+    "total_surfaces": 7,
+    "surfaces_per_revision": {
+      "2020": 1,
+      "2021": 1,
+      "2022": 1,
+      "2023": 1,
+      "2024": 1,
+      "2025": 2
+    },
+    "guarded_count": 7,
+    "synthetic_data_allowed_count": 1,
+    "auth_required_count": 6,
+    "surfaces_per_revision_detail": {
+      "2020": [
+        {
+          "id": "modelo-100-filed-declarations-read",
+          "evidence_tier": "official_source_guidance",
+          "surface": "authenticated_read_surface",
+          "guard_policy_id": "modelo-100-filed-declarations-read-only",
+          "synthetic_data_allowed": false,
+          "requires_authentication": true
+        }
+      ],
+      "2021": [
+        {
+          "id": "modelo-100-filed-declarations-read",
+          "evidence_tier": "official_source_guidance",
+          "surface": "authenticated_read_surface",
+          "guard_policy_id": "modelo-100-filed-declarations-read-only",
+          "synthetic_data_allowed": false,
+          "requires_authentication": true
+        }
+      ],
+      "2022": [
+        {
+          "id": "modelo-100-filed-declarations-read",
+          "evidence_tier": "official_source_guidance",
+          "surface": "authenticated_read_surface",
+          "guard_policy_id": "modelo-100-filed-declarations-read-only",
+          "synthetic_data_allowed": false,
+          "requires_authentication": true
+        }
+      ],
+      "2023": [
+        {
+          "id": "modelo-100-filed-declarations-read",
+          "evidence_tier": "official_source_guidance",
+          "surface": "authenticated_read_surface",
+          "guard_policy_id": "modelo-100-filed-declarations-read-only",
+          "synthetic_data_allowed": false,
+          "requires_authentication": true
+        }
+      ],
+      "2024": [
+        {
+          "id": "modelo-100-filed-declarations-read",
+          "evidence_tier": "official_source_guidance",
+          "surface": "authenticated_read_surface",
+          "guard_policy_id": "modelo-100-filed-declarations-read-only",
+          "synthetic_data_allowed": false,
+          "requires_authentication": true
+        }
+      ],
+      "2025": [
+        {
+          "id": "modelo-100-renta-web-open",
+          "evidence_tier": "executable_parity_evidence",
+          "surface": "open_simulator",
+          "guard_policy_id": "modelo-100-renta-web-open-read-only",
+          "synthetic_data_allowed": true,
+          "requires_authentication": false
+        },
+        {
+          "id": "modelo-100-filed-declarations-read",
+          "evidence_tier": "official_source_guidance",
+          "surface": "authenticated_read_surface",
+          "guard_policy_id": "modelo-100-filed-declarations-read-only",
+          "synthetic_data_allowed": false,
+          "requires_authentication": true
+        }
+      ]
+    },
+    "application_links_per_revision": {
+      "2020": [
+        "modelo-100-export -> aeat.application.filing.export",
+        "modelo-100-filed-declarations-observation -> aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation",
+        "modelo-100-filing -> aeat.application.filing",
+        "modelo-100-2020-calculation -> aeat.domain.calculations.registry.calculate_registry_snapshot",
+        "modelo-100-2020-verification -> aeat.application.verification",
+        "modelo-100-2020-review -> aeat.application.filing.review",
+        "modelo-100-2020-approval -> aeat.application.filing.approval",
+        "modelo-100-2020-reconciliation -> aeat.application.reconciliation",
+        "modelo-100-2020-workflow -> aeat.application.workflow"
+      ],
+      "2021": [
+        "modelo-100-export -> aeat.application.filing.export",
+        "modelo-100-filed-declarations-observation -> aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation",
+        "modelo-100-filing -> aeat.application.filing",
+        "modelo-100-2021-calculation -> aeat.domain.calculations.registry.calculate_registry_snapshot",
+        "modelo-100-2021-verification -> aeat.application.verification",
+        "modelo-100-2021-review -> aeat.application.filing.review",
+        "modelo-100-2021-approval -> aeat.application.filing.approval",
+        "modelo-100-2021-reconciliation -> aeat.application.reconciliation",
+        "modelo-100-2021-workflow -> aeat.application.workflow"
+      ],
+      "2022": [
+        "modelo-100-export -> aeat.application.filing.export",
+        "modelo-100-filed-declarations-observation -> aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation",
+        "modelo-100-filing -> aeat.application.filing",
+        "modelo-100-2022-calculation -> aeat.domain.calculations.registry.calculate_registry_snapshot",
+        "modelo-100-2022-verification -> aeat.application.verification",
+        "modelo-100-2022-review -> aeat.application.filing.review",
+        "modelo-100-2022-approval -> aeat.application.filing.approval",
+        "modelo-100-2022-reconciliation -> aeat.application.reconciliation",
+        "modelo-100-2022-workflow -> aeat.application.workflow"
+      ],
+      "2023": [
+        "modelo-100-export -> aeat.application.filing.export",
+        "modelo-100-filed-declarations-observation -> aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation",
+        "modelo-100-filing -> aeat.application.filing",
+        "modelo-100-2023-calculation -> aeat.domain.calculations.registry.calculate_registry_snapshot",
+        "modelo-100-2023-verification -> aeat.application.verification",
+        "modelo-100-2023-review -> aeat.application.filing.review",
+        "modelo-100-2023-approval -> aeat.application.filing.approval",
+        "modelo-100-2023-reconciliation -> aeat.application.reconciliation",
+        "modelo-100-2023-workflow -> aeat.application.workflow"
+      ],
+      "2024": [
+        "modelo-100-export -> aeat.application.filing.export",
+        "modelo-100-filed-declarations-observation -> aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation",
+        "modelo-100-filing -> aeat.application.filing",
+        "modelo-100-2024-calculation -> aeat.domain.calculations.registry.calculate_registry_snapshot",
+        "modelo-100-2024-verification -> aeat.application.verification",
+        "modelo-100-2024-review -> aeat.application.filing.review",
+        "modelo-100-2024-approval -> aeat.application.filing.approval",
+        "modelo-100-2024-reconciliation -> aeat.application.reconciliation",
+        "modelo-100-2024-workflow -> aeat.application.workflow"
+      ],
+      "2025": [
+        "modelo-100-renta-web-open-cross-reference -> aeat.adapters.outbound.aeat.sede.renta_web_open",
+        "modelo-100-export -> aeat.application.filing.export",
+        "modelo-100-filed-declarations-observation -> aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation",
+        "modelo-100-filing -> aeat.application.filing",
+        "modelo-100-calculation -> aeat.domain.calculations.registry.calculate_registry_snapshot",
+        "modelo-100-verification -> aeat.application.verification",
+        "modelo-100-review -> aeat.application.filing.review",
+        "modelo-100-approval -> aeat.application.filing.approval",
+        "modelo-100-reconciliation -> aeat.application.filing.reconciliation",
+        "modelo-100-workflow -> aeat.application.workflow"
+      ]
+    }
+  },
   "layer7": {
     "A1_employee_only": {
       "label": "Employee only (single income, no deductions)",
