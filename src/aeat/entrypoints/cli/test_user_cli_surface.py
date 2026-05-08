@@ -506,6 +506,8 @@ def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.
     assert setup_payload["profile_present_keys"] == 0
     assert setup_payload["profile_total_keys"] > 0
     assert json.loads(_json_output(overview))["transactions"] == 0
+    assert "hashed_lookup.compute" not in setup.output
+    assert "hashed_lookup.compute" not in overview.output
 
 
 def test_invoice_import_edit_review_round_trip(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

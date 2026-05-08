@@ -18,7 +18,7 @@ from typing import Any, cast
 
 import pytest
 
-from .logging import SecretScrubbingFilter, get_logger
+from .logging import SecretScrubbingFilter, default_log_file_path, get_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -38,6 +38,19 @@ def _capture_logger_output() -> tuple[logging.Logger, logging.Logger, logging.Ha
     )
     root_logger.addHandler(handler)
     return logger, root_logger, handler, stream
+
+
+def test_default_logging_routes_warnings_to_file_not_stderr(capsys: pytest.CaptureFixture[str]) -> None:
+    """Warnings should be persisted for diagnostics without polluting CLI stderr."""
+
+    marker = "warning-route-marker-7f6a3c"
+    logger = get_logger("aeat.test_logging.default_route")
+
+    logger.warning(marker)
+
+    captured = capsys.readouterr()
+    assert marker not in captured.err
+    assert marker in default_log_file_path().read_text(encoding="utf-8")
 
 
 def test_secret_scrubbing_redacts_sensitive_fields_in_rendered_output() -> None:
