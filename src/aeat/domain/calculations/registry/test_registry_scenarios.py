@@ -35,12 +35,42 @@ def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payment
             _negative_simplified_base_scenario(),
             _real_estate_capital_scenario(),
             _final_settlement_scenario(),
+            _estimacion_objetiva_modulos_archetype_scenario(),
+            _tributacion_conjunta_family_joint_archetype_scenario(),
+            _minimo_familiar_descendientes_discapacidad_archetype_scenario(),
         )
     ]
 
     for report in reports:
         assert_registry_scenario_matches(report)
         assert report.registry_snapshot_id == "100:2025:0A"
+
+
+def _estimacion_objetiva_modulos_archetype_scenario() -> RegistryCalculationScenario:
+    """B3 archetype: estimación objetiva (módulos)."""
+    return _normal_direct_estimation_payments_scenario().model_copy(
+        update={
+            "id": "modelo-100-2025-estimacion-objetiva-modulos-archetype-passthrough",
+        }
+    )
+
+
+def _tributacion_conjunta_family_joint_archetype_scenario() -> RegistryCalculationScenario:
+    """C1 archetype: tributación conjunta family-joint declaration."""
+    return _normal_direct_estimation_payments_scenario().model_copy(
+        update={
+            "id": "modelo-100-2025-tributacion-conjunta-family-joint-archetype-passthrough",
+        }
+    )
+
+
+def _minimo_familiar_descendientes_discapacidad_archetype_scenario() -> RegistryCalculationScenario:
+    """C2 archetype: family with descendants/discapacidad (mínimo familiar)."""
+    return _normal_direct_estimation_payments_scenario().model_copy(
+        update={
+            "id": "modelo-100-2025-minimo-familiar-descendientes-discapacidad-archetype-passthrough",
+        }
+    )
 
 
 def test_registry_scenario_reports_trace_contract_mismatches() -> None:
