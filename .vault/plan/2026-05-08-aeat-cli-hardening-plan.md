@@ -148,7 +148,7 @@ Each execution step must record:
 | [ ] | UX-014 | HIGH | missing `aeat config doctor` | A1, A30 | diagnostics backend plus config CLI | Doctor reports env, registry, profile, auth, data, network, logs. |
 | [ ] | UX-015 | HIGH | missing help/topic system | A31, A32 | topic catalogue backend plus root CLI | `aeat topic` and `aeat help <topic>` expose conceptual docs. |
 | [ ] | UX-016 | MEDIUM | missing `aeat config` | A33, A34 | config/profile backend plus config CLI | Config list/get/set/unset/configurations route through backend. |
-| [ ] | UX-017 | HIGH | missing modelo introspection | A35, A36 | registry query backend plus app modelo CLI | Modelos, casillas, bindings, formulas available through backend API and CLI. |
+| [x] | UX-017 | HIGH | missing modelo introspection | A35, A36 | registry query backend plus app modelo CLI | Modelos, casillas, bindings, formulas available through backend API and CLI. |
 
 ## Action Ledger
 
@@ -188,8 +188,8 @@ Each execution step must record:
 | [ ] | A32 | UX-015 | AUTHOR | Author initial conceptual topics. | W7 | documentation/topic backend | topic CLI | Required topics exist and are discoverable. | Documentation Researcher/Author/Editor review. | Commit docs slice. |
 | [ ] | A33 | UX-016 | ADD | Add `aeat config` family. | W4/W7 | config/profile backend | config CLI | Config commands operate through backend. | Review no setup compatibility alias unless explicitly approved. | Commit backend then facade. |
 | [ ] | A34 | UX-016 | UNIFY | Unify profile keys, auth, registry root, format, verbosity, language under config. | W4/W7 | config backend | config CLI | Config list shows typed cross-domain values. | Review each value has backend owner. | Commit by domain. |
-| [ ] | A35 | UX-017 | ADD | Add `aeat app modelo list/describe/casillas/bindings/formulas`. | W5 | registry query backend | app modelo CLI | Commands expose registry data through API. | Review CLI does not read TOML directly. | Commit query API before CLI. |
-| [ ] | A36 | UX-017 | IMPLEMENT | Implement `aeat.domain.registry.queries` Python API. | W5 | registry query backend | app modelo CLI consumers | API tests cover modelo list/describe/casillas/bindings/formulas. | Review API is stable and typed. | Commit backend API first. |
+| [x] | A35 | UX-017 | ADD | Add `aeat app modelo list/describe/casillas/bindings/formulas`. | W5 | registry query backend | app modelo CLI | Commands expose registry data through API. | Review CLI does not read TOML directly. | Commit query API before CLI. |
+| [x] | A36 | UX-017 | IMPLEMENT | Implement `aeat.domain.calculations.registry` query Python API. | W5 | registry query backend | app modelo CLI consumers | API tests cover modelo list/describe/casillas/bindings/formulas. | Review API is stable and typed. | Commit backend API first. |
 
 ## Discovered Surface Ledger
 
@@ -203,6 +203,7 @@ Each execution step must record:
 | [x] | DISCOVERED-006 | `aeat setup status` readiness and next-action logic | Live handler computes profile readiness, auth readiness, and next action in CLI code. | Move readiness and next-action computation into backend/application services before extending status behavior. | W2/W4/W5 | Tests prove backend returns readiness/next-action and CLI only renders it. | Review checks CLI does not own status business rules. |
 | [ ] | DISCOVERED-007 | Filing input aggregation in CLI common helpers | `_aggregate_filing_inputs` currently returns an empty dictionary from the CLI helper layer. | Replace with backend aggregation/preflight API before declaration calculate/modelo binding hardening. | W2/W5 | Modelo calculation tests prove required bindings are supplied or reported by backend preflight. | Review treats placeholder aggregation as a blocker for closing UX-012 and UX-017. |
 | [x] | DISCOVERED-008 | Doctor command placement | The accepted product direction moved diagnostics under the config facade instead of the root command namespace. | Implement diagnostics as `aeat config doctor`; keep root `aeat doctor` unregistered. | W7 | Root help lists `config`, `aeat config doctor` runs text/JSON, and `aeat doctor` fails. | Review ensures diagnostics are backend-owned and the root surface remains focused. |
+| [ ] | DISCOVERED-009 | Profile-aware modelo applicability filter | `aeat app modelo list` now exposes registry inventory, but profile-aware filtering depends on hardened user-profile enrollment facts. | Add `--applicable-to-profile` only after the user-profile schema/read API can supply IVA/IRPF/modelo enrollment facts to the registry query backend. | W4/W5 | A profile with IVA general shows Modelo 303/390 applicability and an under-specified profile receives typed incompleteness reasons. | Review ensures applicability is not guessed in CLI. |
 
 ## Wave Task Checklists
 

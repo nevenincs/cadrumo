@@ -221,7 +221,7 @@ def test_app_surface_uses_singular_user_domains() -> None:
     result = _invoke(["app", "--help"])
 
     assert result.exit_code == 0, result.output
-    for command in ("overview", "ledger", "invoice", "declaration", "registry"):
+    for command in ("overview", "ledger", "invoice", "declaration", "modelo", "registry"):
         assert command in result.output
     for removed_command in ("declarations", "workspaces", "audits", "transactions", "imports"):
         assert removed_command not in result.output
@@ -233,6 +233,37 @@ def test_registry_verification_gate_is_registered_under_app_surface() -> None:
     assert result.exit_code == 0, result.output
     assert "--registry-root" in result.output
     assert "--source-root" in result.output
+
+
+def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
+    listed = _invoke(["--format", "json", "app", "modelo", "list", "--year", "2026"])
+    described = _invoke(["--format", "json", "app", "modelo", "describe", "303", "--period", "2026Q1"])
+    casillas = _invoke(
+        ["--format", "json", "app", "modelo", "casillas", "303", "--period", "2026Q1", "--input-kind", "computed"]
+    )
+    bindings = _invoke(["--format", "json", "app", "modelo", "bindings", "130", "--period", "2026Q1"])
+    formulas = _invoke(["--format", "json", "app", "modelo", "formulas", "303", "--period", "2026Q1"])
+
+    assert listed.exit_code == 0, listed.output
+    assert described.exit_code == 0, described.output
+    assert casillas.exit_code == 0, casillas.output
+    assert bindings.exit_code == 0, bindings.output
+    assert formulas.exit_code == 0, formulas.output
+    listed_payload = json.loads(_json_output(listed))
+    described_payload = json.loads(_json_output(described))
+    casilla_payload = json.loads(_json_output(casillas))
+    binding_payload = json.loads(_json_output(bindings))
+    formula_payload = json.loads(_json_output(formulas))
+    assert "303" in {row["code"] for row in listed_payload["modelos"]}
+    assert described_payload["code"] == "303"
+    assert described_payload["period"] == "1T"
+    assert casilla_payload["rows"]
+    assert {row["input_kind"] for row in casilla_payload["rows"]} == {"computed"}
+    assert any(
+        row["binding_id"] == "irpf.previous_year_economic_activity_net_income" for row in binding_payload["rows"]
+    )
+    assert {row["source"] for row in binding_payload["rows"]} == {"previous_filing"}
+    assert any(row["input_casillas"] or row["input_bindings"] for row in formula_payload["rows"])
 
 
 def test_user_help_surfaces_do_not_leak_translation_keys() -> None:

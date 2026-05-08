@@ -33,6 +33,7 @@ _overview_module: Any | None = None
 _ledger_module: Any | None = None
 _invoice_module: Any | None = None
 _declaration_module: Any | None = None
+_modelo_module: Any | None = None
 _registry_module: Any | None = None
 
 try:
@@ -46,6 +47,7 @@ try:
     from . import _declaration as _declaration_module
     from . import _invoice as _invoice_module
     from . import _ledger as _ledger_module
+    from . import _modelo as _modelo_module
     from . import _overview as _overview_module
     from . import registry as _registry_module
 except ModuleNotFoundError as exc:
@@ -164,11 +166,13 @@ if _app_import_error is None:
     assert _ledger_module is not None
     assert _invoice_module is not None
     assert _declaration_module is not None
+    assert _modelo_module is not None
     assert _registry_module is not None
     app_app.add_typer(_overview_module.app, name="overview")
     app_app.add_typer(_ledger_module.app, name="ledger")
     app_app.add_typer(_invoice_module.app, name="invoice")
     app_app.add_typer(_declaration_module.app, name="declaration")
+    app_app.add_typer(_modelo_module.app, name="modelo")
     app_app.add_typer(_registry_module.app, name="registry")
 
 
