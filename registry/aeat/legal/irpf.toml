@@ -1280,6 +1280,83 @@ required_text = [
     "cónyuges",
 ]
 
+[legal."ley-35-2006:art-86"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-86"
+document_id = "BOE-A-2006-20764"
+article = "86"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a86"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Régimen general de atribución de rentas: las rentas de las entidades sin personalidad jurídica se atribuyen a los socios, herederos, comuneros o partícipes según su porcentaje de participación. Base legal del Modelo 184 y de las casillas atribución en Modelo 100."
+required_text = [
+    "régimen de atribución",
+    "socios, herederos, comuneros o partícipes",
+]
+
+[legal."ley-35-2006:art-87"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-87"
+document_id = "BOE-A-2006-20764"
+article = "87"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a87"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Define qué entidades están en régimen de atribución de rentas: sociedades civiles sin objeto mercantil, herencias yacentes, comunidades de bienes y entidades del artículo 35.4 LGT, así como entidades extranjeras de naturaleza análoga."
+required_text = [
+    "entidades en régimen de atribución",
+    "sociedades civiles",
+    "comunidades de bienes",
+]
+
+[legal."ley-35-2006:art-88"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-88"
+document_id = "BOE-A-2006-20764"
+article = "88"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a88"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Calificación de la renta atribuida: la renta conserva la naturaleza de la fuente de donde procede para cada partícipe (rendimientos del trabajo, capital, actividades económicas, ganancias / pérdidas patrimoniales). Determina cómo se integran las rentas atribuidas en la base imponible del IRPF del socio."
+required_text = [
+    "calificación de la renta atribuida",
+    "naturaleza derivada de la actividad",
+]
+
+[legal."ley-35-2006:art-89"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-89"
+document_id = "BOE-A-2006-20764"
+article = "89"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a89"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Cálculo de la renta atribuible y pagos a cuenta: las rentas se determinan con arreglo a las normas del IRPF excluyendo reducciones de los artículos 23.2, 23.3, 26.2 y 32. Las retenciones soportadas por la entidad se atribuyen al partícipe en la misma proporción que la renta. Para socios sujetos al IS o IRNR con EP, la renta atribuible se determina con arreglo a las normas del IS."
+required_text = [
+    "cálculo de la renta atribuible",
+    "retenciones e ingresos a cuenta",
+]
+
 [legal."ley-35-2006:art-49"]
 evidence_tier = "legal_authority"
 authority = "boe"
