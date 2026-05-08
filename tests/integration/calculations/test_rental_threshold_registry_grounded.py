@@ -33,6 +33,7 @@ from aeat.domain.rental._tier_resolver import (
     _resolve_joven_tenant_age_range,
     _resolve_prior_rent_rebaja_threshold,
     _resolve_rehab_lookback_days,
+    _resolve_tier_reduccion_rate,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -137,3 +138,27 @@ def test_resolver_joven_age_range_helper_returns_registry_value(year: int) -> No
 def test_resolver_joven_age_range_helper_falls_back_for_unregistered_year() -> None:
     age_min, age_max = _resolve_joven_tenant_age_range(1999)
     assert (age_min, age_max) == (JOVEN_TENANT_AGE_MIN, JOVEN_TENANT_AGE_MAX)
+
+
+_TIER_RATES = (("tier-50", Decimal("0.50")), ("tier-60", Decimal("0.60")), ("tier-70", Decimal("0.70")), ("tier-90", Decimal("0.90")))
+
+
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+@pytest.mark.parametrize(("tier_id", "expected"), _TIER_RATES)
+def test_tier_reduccion_rate_parameter_registered_for_every_year(year: int, tier_id: str, expected: Decimal) -> None:
+    value = read_parameter(
+        "100", str(year),
+        f"renta-{year}-rental-reduccion-rate-{tier_id}",
+        date_context={"filing_period": date(year, 12, 31)},
+    )
+    assert value == expected
+
+
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+@pytest.mark.parametrize(("tier_id", "expected"), _TIER_RATES)
+def test_resolver_tier_rate_helper_returns_registry_value(year: int, tier_id: str, expected: Decimal) -> None:
+    assert _resolve_tier_reduccion_rate(year, tier_id) == expected
+
+
+def test_resolver_tier_rate_helper_falls_back_for_unregistered_year() -> None:
+    assert _resolve_tier_reduccion_rate(1999, "tier-90") == Decimal("0.90")
