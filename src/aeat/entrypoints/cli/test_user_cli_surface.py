@@ -1070,9 +1070,8 @@ def test_setup_profile_set_does_intracomunitario_round_trips_underscore_form(
     """Underscored keys must survive the user-cli store and surface to the engine.
 
     The engine reads ``does_intracomunitario`` as a literal key. The
-    user-cli normaliser previously folded ``_`` to ``.`` so the stored
-    form ``does.intracomunitario`` never matched the engine lookup. The
-    fix preserves underscores; this test pins the round-trip.
+    user-cli normaliser preserves underscores so the stored form
+    matches the engine lookup; this test pins the round-trip.
     """
     from aeat.application.user_cli import state_repository
     from aeat.domain.deadlines import autonomo_profile_from_mapping
