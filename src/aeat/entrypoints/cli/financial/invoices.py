@@ -1,10 +1,8 @@
 """Implement the ``aeat financial invoices`` Typer group.
 
-Surfaces the :mod:`aeat.application.invoices` and
-:mod:`aeat.domain.invoices` services as CLI verbs (``list``, ``show``,
-``link``, ``reconcile``, ``verify``, ``unmatched``) so operators can
-inspect the invoice catalogue, link invoices to transactions
-bidirectionally, and reconcile unmatched records.
+The group is a presentation layer over :mod:`aeat.application.invoices`:
+commands translate Typer arguments to backend calls and render returned
+DTOs.
 """
 
 from __future__ import annotations
@@ -16,22 +14,18 @@ import typer
 from ....application.invoices import (
     LinkInconsistency,
     ReconciliationSuggestion,
-    find_invoice,
-    find_unmatched,
+    get_invoice_from_repository,
     link_invoice_transaction_repositories,
+    list_invoice_repository_rows,
+    list_unmatched_invoice_repository_rows,
     reconcile_invoice_repositories,
-    verify_link_consistency,
+    verify_invoice_repository_links,
 )
 from ....domain.invoices import (
-    InvoiceCatalogue,
-    InvoiceCatalogueRepository,
     InvoiceError,
     InvoiceKind,
 )
-from ....domain.transactions import (
-    TransactionCatalogue,
-    TransactionError,
-)
+from ....domain.transactions import TransactionError
 from .._i18n import tr
 
 app = typer.Typer(
@@ -50,34 +44,32 @@ def list_cmd(
         help=tr("cli.financial.invoices.kind_help"),
     ),
 ) -> None:
-    """List invoices from the configured catalogue file.
-
-    Loads the catalogue via
-    :class:`aeat.domain.invoices.InvoiceCatalogueRepository` and prints
-    one tab-separated row per invoice, optionally filtered by
-    :class:`aeat.domain.invoices.InvoiceKind`.
+    """List invoice rows returned by the backend query service.
 
     Args:
         kind: Optional filter restricting output to issued or received
             invoices.
     """
-    catalogue = _load_invoice_catalogue_or_empty()
-    invoices = tuple(invoice for invoice in catalogue.values() if kind is None or invoice.kind is kind)
-    if not invoices:
+    try:
+        rows = list_invoice_repository_rows(kind=kind)
+    except InvoiceError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+    if not rows:
         typer.echo(tr("cli.financial.invoices.no_invoices"))
         return
     typer.echo(tr("cli.financial.invoices.headers.list"))
-    for invoice in sorted(invoices, key=lambda item: (item.issued_at, item.invoice_id)):
+    for row in rows:
         typer.echo(
             "\t".join(
                 [
-                    invoice.invoice_id,
-                    invoice.kind.value,
-                    invoice.issued_at.isoformat(),
-                    invoice.counterparty_name,
-                    _format_decimal(invoice.grand_total),
-                    invoice.currency,
-                    invoice.payment_status.value,
+                    row.invoice_id,
+                    row.kind.value,
+                    row.issued_at.isoformat(),
+                    row.counterparty_name,
+                    _format_decimal(row.grand_total),
+                    row.currency,
+                    row.payment_status,
                 ]
             )
         )
@@ -87,18 +79,20 @@ def list_cmd(
 def show_cmd(
     invoice_id: str = typer.Argument(..., help=tr("cli.financial.invoices.id_help")),
 ) -> None:
-    """Show one invoice from the configured catalogue file.
+    """Show one invoice returned by the backend query service.
 
     Args:
-        invoice_id: Stable invoice identifier to look up via
-            :func:`aeat.application.invoices.find_invoice`.
+        invoice_id: Stable invoice identifier to look up.
 
     Raises:
         :exc:`typer.Exit`: With exit code ``2`` when no invoice matches
             ``invoice_id``.
     """
-    catalogue = _load_invoice_catalogue_required()
-    invoice = find_invoice(catalogue, invoice_id)
+    try:
+        invoice = get_invoice_from_repository(invoice_id)
+    except InvoiceError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
     if invoice is None:
         typer.echo(
             tr("cli.financial.invoices.errors.not_found", id=invoice_id),
@@ -128,9 +122,8 @@ def link_cmd(
         transaction_id: Transaction that should reference ``invoice_id``.
 
     Raises:
-        :exc:`typer.Exit`: With exit code ``2`` when either catalogue
-            rejects the link or when the updated invoice cannot be
-            located after the save.
+        :exc:`typer.Exit`: With exit code ``2`` when the backend
+            service rejects the link.
     """
     try:
         result = link_invoice_transaction_repositories(invoice_id=invoice_id, transaction_id=transaction_id)
@@ -196,17 +189,18 @@ def reconcile_cmd(
 def verify_cmd() -> None:
     """Print any inconsistencies and exit non-zero when present.
 
-    Runs :func:`aeat.application.invoices.verify_link_consistency`
-    against both catalogues and exits with code ``2`` when any
-    one-sided link is detected.
+    Delegates verification to the backend and exits with code ``2``
+    when any one-sided link is returned.
 
     Raises:
         :exc:`typer.Exit`: With exit code ``2`` when inconsistencies
             are reported.
     """
-    invoices = _load_invoice_catalogue_or_empty()
-    transactions = _load_transaction_catalogue_or_empty()
-    inconsistencies = verify_link_consistency(invoices, transactions)
+    try:
+        inconsistencies = verify_invoice_repository_links()
+    except (InvoiceError, TransactionError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
     if not inconsistencies:
         typer.echo(tr("cli.financial.invoices.consistent"))
         return
@@ -232,8 +226,11 @@ def unmatched_cmd(
         kind: Optional :class:`aeat.domain.invoices.InvoiceKind` filter
             restricting the unmatched listing.
     """
-    invoices = _load_invoice_catalogue_or_empty()
-    unmatched = find_unmatched(invoices, kind=kind)
+    try:
+        unmatched = list_unmatched_invoice_repository_rows(kind=kind)
+    except InvoiceError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
     if not unmatched:
         typer.echo(tr("cli.financial.invoices.no_unmatched"))
         return
@@ -251,65 +248,6 @@ def unmatched_cmd(
                 ]
             )
         )
-
-
-def _invoice_catalogue_repository() -> InvoiceCatalogueRepository:
-    """Return the invoice catalogue repository bound to the secure backend."""
-    return InvoiceCatalogueRepository()
-
-
-def _load_invoice_catalogue_required() -> InvoiceCatalogue:
-    """Load the configured invoice catalogue or exit cleanly on failure.
-
-    Raises:
-        :exc:`typer.Exit`: With exit code ``2`` when the envelope file
-            is missing or when
-            :exc:`aeat.domain.invoices.InvoiceError` surfaces during load.
-    """
-    repository = _invoice_catalogue_repository()
-    if not repository.exists():
-        typer.echo(
-            tr("cli.financial_invoices.errors.catalogue_not_found", path="secure database"),
-            err=True,
-        )
-        raise typer.Exit(code=2)
-    try:
-        return repository.load()
-    except InvoiceError as exc:
-        typer.echo(str(exc), err=True)
-        raise typer.Exit(code=2) from exc
-
-
-def _load_invoice_catalogue_or_empty() -> InvoiceCatalogue:
-    """Load the configured invoice catalogue, returning an empty one when absent.
-
-    Raises:
-        :exc:`typer.Exit`: With exit code ``2`` when
-            :exc:`aeat.domain.invoices.InvoiceError` surfaces during load.
-    """
-    repository = _invoice_catalogue_repository()
-    try:
-        return repository.load()
-    except InvoiceError as exc:
-        typer.echo(str(exc), err=True)
-        raise typer.Exit(code=2) from exc
-
-
-def _load_transaction_catalogue_or_empty() -> TransactionCatalogue:
-    """Load the configured transaction catalogue, returning an empty one when absent.
-
-    Raises:
-        :exc:`typer.Exit`: With exit code ``2`` when
-            :exc:`aeat.domain.transactions.TransactionError` surfaces during load.
-    """
-    from ....domain.transactions import TransactionCatalogueRepository
-
-    repository = TransactionCatalogueRepository()
-    try:
-        return repository.load()
-    except TransactionError as exc:
-        typer.echo(str(exc), err=True)
-        raise typer.Exit(code=2) from exc
 
 
 def _print_suggestions(suggestions: tuple[ReconciliationSuggestion, ...]) -> None:
