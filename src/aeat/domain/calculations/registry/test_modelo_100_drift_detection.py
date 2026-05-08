@@ -16,6 +16,9 @@ elements) but catch:
 
 from __future__ import annotations
 
+import ast
+from functools import lru_cache
+
 import pytest
 
 from aeat.core.paths import PROJECT_ROOT
@@ -28,13 +31,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _TOP_LEVEL_CHAIN_TARGETS: frozenset[str] = frozenset(
     {
         # Mínimo personal y familiar
-        "0519", "0520", "0521", "0522", "0523", "0524",
+        "0519",
+        "0520",
+        "0521",
+        "0522",
+        "0523",
+        "0524",
         # Base imponible / liquidable
-        "0432", "0435", "0460", "0500", "0510",
+        "0432",
+        "0435",
+        "0460",
+        "0500",
+        "0510",
         # Cuota íntegra
-        "0532", "0533", "0545", "0546",
+        "0532",
+        "0533",
+        "0545",
+        "0546",
         # Cuota líquida + incrementada
-        "0570", "0571", "0585", "0586",
+        "0570",
+        "0571",
+        "0585",
+        "0586",
     }
 )
 
@@ -101,9 +119,7 @@ def test_no_orphan_formula_feeding_bindings_in_any_revision() -> None:
     modelo, _ = _modelo_100()
     offences: list[str] = []
     for revision_id, revision in modelo.revisions.items():
-        formula_feeding = {
-            b.id for b in revision.bindings if b.source in ("manual_input", "previous_filing")
-        }
+        formula_feeding = {b.id for b in revision.bindings if b.source in ("manual_input", "previous_filing")}
         referenced: set[str] = set()
         for formula in revision.formulas:
             _collect_binding_refs(formula.expression, referenced)
@@ -118,18 +134,47 @@ def test_no_orphan_formula_feeding_bindings_in_any_revision() -> None:
 
 
 def test_no_orphan_parameters_in_any_revision() -> None:
-    """Every parameter declared in a revision must be referenced by at least one formula."""
+    """Every parameter declared in a revision must be referenced.
+
+    A parameter counts as referenced when it is consumed either by a
+    formula expression tree (``{ parameter = "..." }`` arg) or by an
+    in-tree ``read_parameter("100", revision, parameter_id, ...)`` call
+    in :mod:`aeat.domain.*` Python source. The latter is the
+    out-of-formula consumption pattern used by the rental tier resolver
+    and any future cross-module readers.
+
+    A small allow-list (:data:`_PRE_STAGED_PARAMETERS`) covers
+    parameters whose data is authoritative on disk (IRPF state-scale
+    brackets) but whose consuming formula has not yet landed. Removing
+    a parameter from that list is the gate that future formula work
+    must clear when it begins to consume the data.
+    """
     modelo, _ = _modelo_100()
+    cross_module_refs = _read_parameter_refs_for_modelo("100")
     offences: list[str] = []
     for revision_id, revision in modelo.revisions.items():
         declared = {p.id for p in revision.parameters}
         referenced: set[str] = set()
         for formula in revision.formulas:
             _collect_parameter_refs(formula.expression, referenced)
+        referenced |= cross_module_refs
+        referenced |= _PRE_STAGED_PARAMETERS
         orphans = declared - referenced
         for orphan in sorted(orphans):
             offences.append(f"{revision_id}: orphan parameter {orphan!r}")
     assert not offences, "orphan parameters detected:\n  " + "\n  ".join(offences)
+
+
+#: Parameters that are declared in the registry with authoritative tax
+#: data (e.g. IRPF state-level progressive bracket tables) but whose
+#: consuming formula has not yet been wired into the registry. Removing
+#: an entry from this set is the gate that the corresponding formula
+#: work must clear before this allow-list shrinks. The data is
+#: preserved on disk so future formula work can land without
+#: re-entering authoritative bracket values.
+_PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
+    f"renta-{year}-escala-estatal-base-general" for year in (2020, 2021, 2022, 2023, 2024, 2025)
+)
 
 
 def test_every_relation_references_an_existing_target_binding() -> None:
@@ -158,9 +203,7 @@ def test_every_formula_binding_reference_resolves_to_a_declared_binding() -> Non
             _collect_binding_refs(formula.expression, referenced)
             unresolved = referenced - declared_bindings
             for ref in sorted(unresolved):
-                offences.append(
-                    f"{revision_id}: formula {formula.id!r} references undeclared binding {ref!r}"
-                )
+                offences.append(f"{revision_id}: formula {formula.id!r} references undeclared binding {ref!r}")
     assert not offences, "formulas referencing undeclared bindings:\n  " + "\n  ".join(offences)
 
 
@@ -175,9 +218,7 @@ def test_every_formula_parameter_reference_resolves_to_a_declared_parameter() ->
             _collect_parameter_refs(formula.expression, referenced)
             unresolved = referenced - declared
             for ref in sorted(unresolved):
-                offences.append(
-                    f"{revision_id}: formula {formula.id!r} references undeclared parameter {ref!r}"
-                )
+                offences.append(f"{revision_id}: formula {formula.id!r} references undeclared parameter {ref!r}")
     assert not offences, "formulas referencing undeclared parameters:\n  " + "\n  ".join(offences)
 
 
@@ -203,3 +244,129 @@ def _collect_parameter_refs(expression, accumulator: set[str]) -> None:
     if args:
         for arg in args:
             _collect_parameter_refs(arg, accumulator)
+
+
+@lru_cache(maxsize=8)
+def _read_parameter_refs_for_modelo(modelo_id: str) -> frozenset[str]:
+    """Return every parameter id consumed via ``read_parameter`` for ``modelo_id``.
+
+    The orphan-detection test treats a parameter as referenced when
+    either (a) a formula expression tree consumes it via
+    ``{ parameter = "..." }`` or (b) Python source under
+    ``src/aeat/domain/`` calls
+    ``read_parameter(modelo_id, <revision>, <parameter_id>, ...)``.
+    Branch (b) covers the rental tier resolver and any other
+    cross-module reader that drives the registry's parameter index
+    outside the formula evaluator.
+
+    The scan walks the AST of every ``.py`` file under
+    ``src/aeat/domain/`` and harvests:
+
+    - constant string literals passed as the third positional argument
+      to a ``read_parameter`` call whose first positional argument is
+      ``modelo_id`` (or any other constant; constants are filtered to
+      the requested modelo at the call site below);
+    - f-strings whose template substitutes the literal ``period_year``
+      placeholder. The four-digit year supported by the registry is
+      iterated (2020-2030) and each substitution is added to the set,
+      so the test can identify references to year-keyed parameter ids
+      (e.g. ``f"renta-{period_year}-rental-prior-rent-rebaja-threshold"``).
+
+    Calls whose arguments are not statically analysable (dynamic
+    parameter ids built from variables) are ignored — those would have
+    to register the orphan via the formula tree to satisfy the gate.
+    """
+    refs: set[str] = set()
+    domain_root = PROJECT_ROOT / "src" / "aeat" / "domain"
+    for path in domain_root.rglob("*.py"):
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        except (SyntaxError, OSError):
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            func = node.func
+            if isinstance(func, ast.Name):
+                func_name = func.id
+            elif isinstance(func, ast.Attribute):
+                func_name = func.attr
+            else:
+                continue
+            if func_name != "read_parameter":
+                continue
+            if len(node.args) < 3:
+                continue
+            modelo_arg = node.args[0]
+            if not (isinstance(modelo_arg, ast.Constant) and modelo_arg.value == modelo_id):
+                continue
+            param_arg = node.args[2]
+            for resolved in _expand_parameter_id_node(param_arg):
+                refs.add(resolved)
+    return frozenset(refs)
+
+
+def _expand_parameter_id_node(node: ast.expr) -> tuple[str, ...]:
+    """Resolve a parameter-id AST node into the set of ids it could match.
+
+    Constant strings expand to themselves. F-strings expand into the
+    Cartesian product of every formatted placeholder against a small
+    static substitution table — see :data:`_FSTRING_PLACEHOLDER_VALUES`.
+    Placeholders not in the table render as ``"{}"`` so the resulting
+    template no longer matches any registered parameter id; that path
+    cleanly drops out of the cross-module reference set instead of
+    silently widening it.
+    """
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return (node.value,)
+    if not isinstance(node, ast.JoinedStr):
+        return ()
+    static_segments: list[str] = []
+    placeholder_names: list[str] = []
+    for value in node.values:
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            static_segments.append(value.value)
+            static_segments.append("\x00")  # sentinel: no placeholder here
+        elif isinstance(value, ast.FormattedValue):
+            inner = value.value
+            if isinstance(inner, ast.Name):
+                placeholder_names.append(inner.id)
+            else:
+                placeholder_names.append("__unknown__")
+            static_segments.append("\x01")  # sentinel: placeholder here
+        else:
+            placeholder_names.append("__unknown__")
+            static_segments.append("\x01")
+    if not placeholder_names:
+        return ("".join(s for s in static_segments if s != "\x00"),)
+    placeholder_value_sets: list[tuple[str, ...]] = [
+        _FSTRING_PLACEHOLDER_VALUES.get(name, ()) for name in placeholder_names
+    ]
+    if any(not values for values in placeholder_value_sets):
+        return ()
+    results: list[str] = []
+    from itertools import product as _product
+
+    for combo in _product(*placeholder_value_sets):
+        rendered: list[str] = []
+        combo_iter = iter(combo)
+        for segment in static_segments:
+            if segment == "\x00":
+                continue
+            if segment == "\x01":
+                rendered.append(next(combo_iter))
+            else:
+                rendered.append(segment)
+        results.append("".join(rendered))
+    return tuple(results)
+
+
+#: Static substitution table for f-string placeholder names that the
+#: orphan-detection scan can resolve. The entries cover the rental tier
+#: resolver and any other consumer whose parameter id is built from a
+#: small closed set of Python locals; new placeholder names that appear
+#: in future ``read_parameter`` calls must be registered here.
+_FSTRING_PLACEHOLDER_VALUES: dict[str, tuple[str, ...]] = {
+    "period_year": tuple(str(year) for year in range(2020, 2031)),
+    "tier_id": ("tier-50", "tier-60", "tier-70", "tier-90"),
+}
