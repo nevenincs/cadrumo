@@ -32,11 +32,9 @@ failure cannot result in a real filing.
 
 from __future__ import annotations
 
-import re
-from collections.abc import Awaitable
+import contextlib
 from typing import Any
 
-from .....core.errors import SiteHealthError
 from .....core.logging import get_logger
 from ._errors import SedeFailureMode, SedeNavigationError
 
@@ -151,7 +149,10 @@ async def assert_click_target_safe(
     if matched is not None:
         logger.error(
             "renta web open click blocked by safety guard stage=%s description=%s text=%r matched_token=%r",
-            stage, description, text, matched,
+            stage,
+            description,
+            text,
+            matched,
         )
         raise SedeNavigationError(
             f"Renta WEB Open click blocked by safety guard: locator text "
@@ -174,7 +175,12 @@ async def assert_click_target_safe(
                         f"Renta WEB Open click blocked by safety guard: locator {attr}="
                         f"{attr_value!r} contains forbidden URL fragment {fragment!r}",
                         failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-                        context={"stage": stage, "description": description, attr: attr_value, "matched_fragment": fragment},
+                        context={
+                            "stage": stage,
+                            "description": description,
+                            attr: attr_value,
+                            "matched_fragment": fragment,
+                        },
                     )
 
 
@@ -195,17 +201,23 @@ async def install_page_safety_net(page: Any) -> None:
             message = "(unknown)"
         logger.warning(
             "renta web open safety: auto-dismissing dialog type=%s message=%r",
-            kind, message,
+            kind,
+            message,
         )
-        try:
+        with contextlib.suppress(Exception):
+            # Best-effort dismiss: a failure here cannot mask the safety
+            # guarantee — the test or audit will still see the warning log.
             await dialog.dismiss()
-        except Exception:
-            pass
+
+    _pending_dialog_tasks: set[Any] = set()
 
     def _dialog_handler(dialog: Any) -> None:
         # Playwright dialog handler must be sync; schedule async dismissal.
         import asyncio
-        asyncio.create_task(_on_dialog(dialog))
+
+        task = asyncio.create_task(_on_dialog(dialog))
+        _pending_dialog_tasks.add(task)
+        task.add_done_callback(_pending_dialog_tasks.discard)
 
     page.on("dialog", _dialog_handler)
 
@@ -215,15 +227,18 @@ async def install_page_safety_net(page: Any) -> None:
             if fragment in url:
                 logger.error(
                     "renta web open safety: blocking forbidden navigation method=%s url=%s matched_fragment=%s",
-                    request.method, request.url, fragment,
+                    request.method,
+                    request.url,
+                    fragment,
                 )
                 # Note: Playwright doesn't allow blocking from a request
                 # event listener directly; we log + raise on the next
                 # awaitable so the test surfaces the violation. The
                 # primary line of defense is the click guard.
-                raise SiteHealthError(
+                raise SedeNavigationError(
                     f"Renta WEB Open safety net intercepted request to {request.url} "
-                    f"(forbidden fragment: {fragment!r})"
+                    f"(forbidden fragment: {fragment!r})",
+                    failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
                 )
 
     page.on("request", _request_handler)

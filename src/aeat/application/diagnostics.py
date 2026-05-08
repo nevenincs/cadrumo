@@ -12,7 +12,7 @@ from aeat import __version__
 
 from ..core.config import PROJECT_ROOT
 from ..core.logging import default_log_file_path
-from ..domain.calculations.registry._authority import ValidatedRegistryAuthority
+from ..domain.calculations.registry import ValidatedRegistryAuthority
 from .setup_status import SetupStatusReport, build_setup_status
 from .user_cli import state_repository
 
@@ -22,7 +22,7 @@ DiagnosticStatus = Literal["ok", "warn", "fail"]
 class RegistryVersionSummary(BaseModel):
     """Stable registry summary suitable for version and doctor surfaces."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     available: bool
     registry_root: str
@@ -37,7 +37,7 @@ class RegistryVersionSummary(BaseModel):
 class CliVersionReport(BaseModel):
     """Version payload rendered by root CLI version surfaces."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     package_name: str
     package_version: str
@@ -47,7 +47,7 @@ class CliVersionReport(BaseModel):
 class DiagnosticCheck(BaseModel):
     """One concrete config doctor check."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     name: str
     status: DiagnosticStatus
@@ -59,7 +59,7 @@ class DiagnosticCheck(BaseModel):
 class ConfigDoctorReport(BaseModel):
     """Local environment and configuration diagnostics for ``aeat config doctor``."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     overall: DiagnosticStatus
     package_name: str
