@@ -1,10 +1,10 @@
 """Tests for the ``authenticated_simulator`` cross-reference surface category.
 
-Added per the authenticated-synthetic-surface-taxonomy ADR
-(2026-05-07): GROI's empirical semantics (cl@ve-movil required +
-synthetic NIFs accepted + form-submit POST) don't fit any existing
-surface category, so a new one was added with explicit validator
-rules.
+The ``authenticated_simulator`` category models cross-references whose
+empirical semantics are cl@ve-movil-required, synthetic-NIFs-accepted,
+and form-submit POST (the GROI binding's shape). The schema validator
+enforces explicit rules for the category; these tests pin the
+canonical content the validator allows.
 """
 
 from __future__ import annotations
@@ -107,13 +107,10 @@ def test_authenticated_simulator_permits_synthetic_data_optional_authorization()
 def test_authenticated_simulator_inherits_canonical_aeat_write_forbidden_actions() -> None:
     """Every authenticated_simulator cross-reference must include the canonical write-class set.
 
-    The schema validator does not enforce this directly (the
-    forbidden_actions field is a non-empty tuple per the existing
-    ``min_length=1`` constraint, but the canonical content check is
-    a project-level invariant). The plan's per-slice DUP check
-    confirms downstream cross-references import the canonical
-    constant rather than redeclaring it; this test pins the
-    canonical content for the GROI binding's expected shape.
+    The schema validator does not enforce this directly: the
+    ``forbidden_actions`` field is constrained only to be a non-empty
+    tuple via ``min_length=1``. The canonical-content check is a
+    project-level invariant pinning the GROI binding's expected shape.
     """
 
     decision = LiveCrossReferenceDecision.model_validate(_kwargs())
@@ -128,13 +125,13 @@ def test_authenticated_simulator_vat_id_check_pair_is_in_compatibility_table() -
 
 
 def test_existing_surface_categories_still_validate() -> None:
-    """Backwards-compat: every existing surface category continues to validate.
+    """Every non-``authenticated_simulator`` surface category continues to validate.
 
     Key shapes (open_simulator without auth, public_read_surface
     without auth and observation_evidence, authenticated_read_surface
     with auth + authorization, static_official_documentation) all
-    still produce valid models. Failure here would mean the schema
-    change broke an existing cross-reference.
+    produce valid models. Failure here would mean the schema rejected
+    a cross-reference whose category is not the new one.
     """
 
     # open_simulator

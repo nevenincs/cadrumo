@@ -16,7 +16,7 @@ from aeat.domain.profile import PROFILE_KEYS, TaxResidenceProfile
 from aeat.domain.profile.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
 from ._constructs import resolve_construct, resolve_revision_constructs
-from ._errors import RegistrySnapshotError, RegistryValidationError
+from . import RegistrySnapshotError, RegistryValidationError
 from ._export import resolve_export_layout
 from ._export_parse import parse_export_payload
 from ._formula_runtime import calculate_registry_snapshot
@@ -26,7 +26,7 @@ from ._remote_state_guard import (
     assert_remote_operation_allowed,
     remote_state_policy_from_cross_reference,
 )
-from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from . import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ._snapshot import build_snapshot
 from ._validate import RegistryValidator
 

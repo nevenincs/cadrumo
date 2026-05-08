@@ -10,7 +10,7 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from . import RegistryValidator, build_snapshot, calculate_registry_snapshot, load_registry_tree
-from ._bindings import RegistryFilingObservation
+from . import RegistryFilingObservation
 from ._relations import relation_source_requirements, resolve_relation_values_from_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

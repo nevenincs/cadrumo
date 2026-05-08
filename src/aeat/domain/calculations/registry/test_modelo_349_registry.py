@@ -10,7 +10,7 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from . import RegistryValidator, build_snapshot, load_registry_tree
-from ._bindings import (
+from . import (
     InvoiceObservation,
     invoice_binding_requirements,
     resolve_bound_casilla_inputs,

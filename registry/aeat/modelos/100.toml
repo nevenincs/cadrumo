@@ -19195,7 +19195,9 @@ id = "renta-final-settlement"
 title = "Modelo 100 final settlement result"
 legal_refs = [
     "ley-35-2006:art-99",
+    "rd-439-2007:art-100",
     "rd-439-2007:art-109",
+    "rd-439-2007:art-110",
     "orden-hac-277-2026:art-3",
 ]
 source_refs = [
@@ -19339,7 +19341,9 @@ legal_refs = [
     "ley-35-2006:art-23",
     "ley-35-2006:art-24",
     "ley-35-2006:art-30",
+    "rd-439-2007:art-100",
     "rd-439-2007:art-109",
+    "rd-439-2007:art-110",
     "orden-eha-3127-2009:art-1",
     "orden-eha-3377-2011:art-1",
     "orden-hac-1431-2025:art-2",
@@ -19466,6 +19470,7 @@ legal_refs = [
     "ley-35-2006:art-23",
     "ley-35-2006:art-24",
     "ley-35-2006:art-99",
+    "rd-439-2007:art-100",
     "rd-439-2007:art-109",
     "orden-hac-277-2026:art-3",
 ]
@@ -19590,6 +19595,7 @@ legal_refs = [
     "ley-35-2006:art-32",
     "rd-439-2007:art-30",
     "rd-439-2007:art-109",
+    "rd-439-2007:art-110",
     "orden-hac-277-2026:art-3",
 ]
 source_refs = [
@@ -21734,7 +21740,7 @@ expression = { op = "copy", args = [
     { casilla = "0153" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -21964,7 +21970,7 @@ expression = { op = "sum", args = [
     { relation = "renta-2025-rel-131-pagos-fraccionados" },
 ] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["rd-439-2007:art-109", "rd-439-2007:art-110", "orden-hac-277-2026:art-3"]
 source_refs = ["boe-modelo-100-2025-form"]
 
 [[revisions."2025".formulas.source_citations]]

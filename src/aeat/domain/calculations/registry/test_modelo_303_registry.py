@@ -9,7 +9,7 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from . import RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
-from ._schema import ModeloDefinition
+from . import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -166,7 +166,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
     ledger_iva_aggregation runtime resolver."""
     from decimal import Decimal
 
-    from aeat.domain.calculations.registry._bindings import (
+    from aeat.domain.calculations.registry import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
