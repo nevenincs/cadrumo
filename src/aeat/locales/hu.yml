@@ -677,9 +677,9 @@ cli:
     auth:
       app_help: AEAT-hitelesítés beállítása és ellenőrzése
       configure:
-        file_help: Tanúsítvány útvonala, ha a szolgáltató megköveteli
+        file_help: "P12/PFX tanúsítványfájl abszolút vagy relatív útvonala, ha a szolgáltató megköveteli. Példa: --file /ut/a/tanusitvany.p12."
         help: Hitelesítési szolgáltató beállítása
-        provider_help: Használandó hitelesítési szolgáltató
+        provider_help: "Hitelesítési szolgáltató. Futtasd: 'aeat setup auth providers' a támogatott szolgáltatók listájához (certificate, clave_movil)."
       login:
         help: A beállított helyi hitelesítési munkamenet indítása
       logout:
@@ -725,10 +725,10 @@ cli:
       unknown: Ismeretlen
       valid: Érvényes
     init:
-      activity_help: Fő gazdasági tevékenység
+      activity_help: "Az autonomo fő gazdasági tevékenysége. Szabad szöveg vagy IAE/CNAE kód. Példa: 'IT szakmai szolgáltatások' vagy '6201'."
       help: Adózói profil létrehozása vagy aktiválása
-      name_help: Helyi profil neve
-      tax_id_help: Adózói NIF/NIE/CIF
+      name_help: "Helyi címke a profil megkülönböztetésére (nem kerül elküldésre az AEAT-nak). Példa: 'ugyfel-acme' vagy 'sajat-profil'."
+      tax_id_help: "Spanyol adóazonosító. Formátum: 8 számjegy + betű (NIF), betű + 7 számjegy + betű (NIE), vagy betű + 7 számjegy + számjegy (CIF). Példa: 12345678Z."
     labels:
       'no': nem
       unset: nincs érték

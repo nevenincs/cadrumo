@@ -658,9 +658,9 @@ cli:
     auth:
       app_help: Configure and check AEAT authentication
       configure:
-        file_help: Certificate path when the provider requires it
+        file_help: "Absolute or relative path to a P12/PFX certificate file when the provider requires it. Example: --file /path/to/cert.p12."
         help: Configure the authentication provider
-        provider_help: Authentication provider to use
+        provider_help: "Authentication provider. Run 'aeat setup auth providers' to list supported providers (certificate, clave_movil)."
       login:
         help: Start the configured local authentication session
       logout:
@@ -705,10 +705,10 @@ cli:
       unknown: Unknown
       valid: Valid
     init:
-      activity_help: Main economic activity
+      activity_help: "Main economic activity of the autonomo. Free text or IAE/CNAE code. Example: 'IT professional services' or '6201'."
       help: Create or activate a taxpayer profile
-      name_help: Local profile name
-      tax_id_help: Taxpayer NIF/NIE/CIF
+      name_help: "Local label to distinguish this profile from others (never sent to AEAT). Example: 'client-acme' or 'my-profile'."
+      tax_id_help: "Spanish taxpayer identifier. Format: 8 digits + letter (NIF), letter + 7 digits + letter (NIE), or letter + 7 digits + digit (CIF). Example: 12345678Z."
     labels:
       'no': 'no'
       unset: unset
