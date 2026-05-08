@@ -19,6 +19,7 @@ from aeat.core.config import Settings
 
 from .diagnostics import (
     build_config_doctor_report,
+    quarantine_unreadable_secure_objects,
     render_config_doctor_text,
     secure_object_unreadable_total,
 )
@@ -137,7 +138,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
         integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
         assert integrity_check.status == "warn"
         assert "unreadable row" in integrity_check.summary
-        assert integrity_check.next_action == "aeat config doctor --quarantine-unreadable"
+        assert integrity_check.next_action == "aeat config doctor quarantine --yes"
 
         ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)
         # Three rows sealed under the OLD ephemeral key should be unreadable
@@ -231,3 +232,85 @@ def test_secure_object_unreadable_total_is_zero_on_clean_database(
     dispose_engine()
 
     assert secure_object_unreadable_total() == 0
+
+
+def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    """Quarantine archives the undecryptable rows; readable rows stay put.
+
+    Seeds two rows under master key K1 plus one row under K2, runs
+    the quarantine pipeline under K2, and asserts (via raw SQL) that:
+
+    - ``secure_objects`` retains exactly the K2-decryptable row.
+    - ``secure_objects_quarantine`` contains the two K1-sealed rows
+      with their original metadata.
+    - ``secure_object_unreadable_total()`` returns 0 after the run.
+
+    Proves the user's ciphertext is preserved (rows are archived, not
+    deleted) and that the active table is left in a fully-decryptable
+    state.
+    """
+    import sqlite3
+
+    db_path = tmp_path / "quar.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    dispose_engine()
+
+    key_old = EphemeralMasterKeyProvider()
+    key_new = EphemeralMasterKeyProvider()
+
+    override_master_key_provider(key_old)
+    engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine_old)
+    try:
+        repo_old = SecureObjectRepository(engine=engine_old)
+        for namespace, key, payload in (
+            ("aeat.test.quar.alpha", "row-old-1", b"old-1"),
+            ("aeat.test.quar.beta", "row-old-2", b"old-2"),
+        ):
+            repo_old.save(
+                namespace=namespace,
+                object_key=key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=payload,
+            )
+    finally:
+        engine_old.dispose()
+
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    override_master_key_provider(key_new)
+    dispose_engine()
+
+    engine_new = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    try:
+        SecureObjectRepository(engine=engine_new).save(
+            namespace="aeat.test.quar.alpha",
+            object_key="row-new-1",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime.now(UTC),
+            payload=b"new-1",
+        )
+    finally:
+        engine_new.dispose()
+
+    dispose_engine()
+    try:
+        report = quarantine_unreadable_secure_objects()
+        assert report.unreadable_total == 2
+        assert report.readable_total == 1
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
+
+    # Inspect the database directly to prove the row distribution.
+    with sqlite3.connect(db_path) as con:
+        active = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()[0]
+        archived = con.execute("SELECT COUNT(*) FROM secure_objects_quarantine").fetchone()[0]
+    assert active == 1, f"expected one row left in secure_objects; got {active}"
+    assert archived == 2, f"expected two rows archived; got {archived}"

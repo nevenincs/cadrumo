@@ -143,6 +143,100 @@ class SecureObjectRepository:
             )
         return tuple(rows)
 
+    def quarantine_unreadable_rows(self) -> tuple[SecureObjectNamespaceIntegrity, ...]:
+        """Move every undecryptable row into ``secure_objects_quarantine``.
+
+        Iterates every populated namespace, probes each row's payload
+        through :func:`decrypt_encrypted_bytes_column`, and for rows that
+        fail tag verification copies the original (encrypted) payload
+        plus all metadata into the quarantine table, then deletes the
+        row from ``secure_objects``. The quarantine table mirrors
+        ``secure_objects`` with the addition of a ``quarantined_at``
+        timestamp so the archive is auditable.
+
+        Decryptable rows are NOT touched; the quarantine table is created
+        on first use; nothing is auto-deleted from the user's data even
+        after quarantine. The operator can recover the quarantined rows
+        manually from the table if a missing master key is later
+        recovered (for example, restored from a recovery key backup).
+
+        Returns:
+            A :class:`SecureObjectIntegrityReport`-shaped summary
+            describing how many rows were quarantined per namespace.
+        """
+        from datetime import UTC
+
+        with session_scope(self._engine) as session:
+            session.execute(
+                text(
+                    "CREATE TABLE IF NOT EXISTS secure_objects_quarantine ("
+                    "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    "  source_id INTEGER NOT NULL,"
+                    "  namespace VARCHAR(128) NOT NULL,"
+                    "  object_key BLOB NOT NULL,"
+                    "  classification VARCHAR(32) NOT NULL,"
+                    "  schema_version INTEGER NOT NULL,"
+                    "  written_at DATETIME NOT NULL,"
+                    "  payload BLOB NOT NULL,"
+                    "  quarantined_at DATETIME NOT NULL"
+                    ")"
+                )
+            )
+            quarantined_at = datetime.now(UTC).isoformat()
+            namespaces = (
+                session.execute(text("SELECT DISTINCT namespace FROM secure_objects ORDER BY namespace"))
+                .scalars()
+                .all()
+            )
+            per_namespace: list[SecureObjectNamespaceIntegrity] = []
+            for namespace in namespaces:
+                rows = session.execute(
+                    text(
+                        "SELECT id, object_key, classification, schema_version, written_at, payload "
+                        "FROM secure_objects WHERE namespace = :namespace"
+                    ).bindparams(bindparam("namespace", value=namespace))
+                ).all()
+                quarantined = 0
+                retained = 0
+                for raw in rows:
+                    try:
+                        decrypt_encrypted_bytes_column(bytes(raw.payload))
+                    except DecryptionError:
+                        session.execute(
+                            text(
+                                "INSERT INTO secure_objects_quarantine "
+                                "(source_id, namespace, object_key, classification, schema_version, "
+                                " written_at, payload, quarantined_at) "
+                                "VALUES (:source_id, :namespace, :object_key, :classification, "
+                                "        :schema_version, :written_at, :payload, :quarantined_at)"
+                            ),
+                            {
+                                "source_id": int(raw.id),
+                                "namespace": namespace,
+                                "object_key": bytes(raw.object_key),
+                                "classification": str(raw.classification),
+                                "schema_version": int(raw.schema_version),
+                                "written_at": raw.written_at,
+                                "payload": bytes(raw.payload),
+                                "quarantined_at": quarantined_at,
+                            },
+                        )
+                        session.execute(
+                            text("DELETE FROM secure_objects WHERE id = :id"),
+                            {"id": int(raw.id)},
+                        )
+                        quarantined += 1
+                    else:
+                        retained += 1
+                per_namespace.append(
+                    SecureObjectNamespaceIntegrity(
+                        namespace=namespace,
+                        readable=retained,
+                        unreadable=quarantined,
+                    )
+                )
+        return tuple(per_namespace)
+
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
         """Count decryptable vs undecryptable rows in ``namespace``.
 

@@ -269,7 +269,7 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
             f"{report.readable_total} row(s) decryptable"
         ),
         detail=affected,
-        next_action="aeat config doctor --quarantine-unreadable",
+        next_action="aeat config doctor quarantine --yes",
     )
 
 
@@ -349,6 +349,37 @@ def secure_object_unreadable_total() -> int:
     return _probe_secure_objects_integrity().unreadable_total
 
 
+def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
+    """Move every undecryptable secure-object row into the quarantine table.
+
+    Delegates to :meth:`SecureObjectRepository.quarantine_unreadable_rows`,
+    which creates the ``secure_objects_quarantine`` archive table on
+    first use, copies each undecryptable row's metadata and (still
+    encrypted) payload into the archive, then deletes the row from the
+    active ``secure_objects`` table. Decryptable rows are not touched.
+
+    The user's ciphertext is preserved in the archive; nothing is
+    auto-deleted. If a missing master key is later recovered (e.g.
+    restored from a recovery-key backup), the operator can manually
+    re-import rows from the quarantine table.
+
+    Returns:
+        A :class:`SecureObjectIntegrityReport` whose ``namespaces``
+        report carries per-namespace ``unreadable`` counts (= rows
+        moved to quarantine) and ``readable`` counts (= rows retained
+        in ``secure_objects``).
+    """
+    repo = SecureObjectRepository()
+    namespaces = repo.quarantine_unreadable_rows()
+    quarantined_total = sum(item.unreadable for item in namespaces)
+    retained_total = sum(item.readable for item in namespaces)
+    return SecureObjectIntegrityReport(
+        namespaces=namespaces,
+        readable_total=retained_total,
+        unreadable_total=quarantined_total,
+    )
+
+
 __all__ = [
     "CliVersionReport",
     "ConfigDoctorReport",
@@ -357,6 +388,7 @@ __all__ = [
     "SecureObjectIntegrityReport",
     "build_cli_version_report",
     "build_config_doctor_report",
+    "quarantine_unreadable_secure_objects",
     "render_cli_version_text",
     "render_config_doctor_text",
     "secure_object_unreadable_total",
