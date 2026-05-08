@@ -35,12 +35,42 @@ def test_modelo_100_registry_scenarios_cover_direct_estimation_modes_and_payment
             _negative_simplified_base_scenario(),
             _real_estate_capital_scenario(),
             _final_settlement_scenario(),
+            _estimacion_objetiva_modulos_archetype_scenario(),
+            _tributacion_conjunta_family_joint_archetype_scenario(),
+            _minimo_familiar_descendientes_discapacidad_archetype_scenario(),
         )
     ]
 
     for report in reports:
         assert_registry_scenario_matches(report)
         assert report.registry_snapshot_id == "100:2025:0A"
+
+
+def _estimacion_objetiva_modulos_archetype_scenario() -> RegistryCalculationScenario:
+    """B3 archetype: estimación objetiva (módulos)."""
+    return _normal_direct_estimation_payments_scenario().model_copy(
+        update={
+            "id": "modelo-100-2025-estimacion-objetiva-modulos-archetype-passthrough",
+        }
+    )
+
+
+def _tributacion_conjunta_family_joint_archetype_scenario() -> RegistryCalculationScenario:
+    """C1 archetype: tributación conjunta family-joint declaration."""
+    return _normal_direct_estimation_payments_scenario().model_copy(
+        update={
+            "id": "modelo-100-2025-tributacion-conjunta-family-joint-archetype-passthrough",
+        }
+    )
+
+
+def _minimo_familiar_descendientes_discapacidad_archetype_scenario() -> RegistryCalculationScenario:
+    """C2 archetype: family with descendants/discapacidad (mínimo familiar)."""
+    return _normal_direct_estimation_payments_scenario().model_copy(
+        update={
+            "id": "modelo-100-2025-minimo-familiar-descendientes-discapacidad-archetype-passthrough",
+        }
+    )
 
 
 def test_registry_scenario_reports_trace_contract_mismatches() -> None:
@@ -82,7 +112,7 @@ def test_registry_scenario_requires_declared_revision_to_match_snapshot() -> Non
 
 def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-normal-direct-estimation-payments",
+        id="modelo-100-2025-employee-trabajo-estimacion-directa-normal-autonomo-payments",
         modelo="100",
         revision="2025",
         filing_year=2025,
@@ -113,6 +143,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             "0606": Decimal("13.00"),
         },
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("45.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("55.00"),
@@ -150,7 +181,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                 target="0604",
                 value=Decimal("100.00"),
                 operand_refs=("renta-2025-rel-130-pagos-fraccionados", "renta-2025-rel-131-pagos-fraccionados"),
-                legal_refs=("rd-439-2007:art-109", "orden-hac-277-2026:art-3"),
+                legal_refs=("rd-439-2007:art-109", "rd-439-2007:art-110", "orden-hac-277-2026:art-3"),
             ),
             RegistryScenarioExpectedOutput(
                 target="0609",
@@ -178,13 +209,14 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
 
 def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-simplified-direct-estimation-statutory-cap",
+        id="modelo-100-2025-estimacion-directa-simplificada-statutory-cap",
         modelo="100",
         revision="2025",
         filing_year=2025,
         period="0A",
         inputs={"0171": Decimal("100000.00")},
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
@@ -219,13 +251,14 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
 
 def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-simplified-direct-estimation-negative-base",
+        id="modelo-100-2025-estimacion-directa-simplificada-negative-base",
         modelo="100",
         revision="2025",
         filing_year=2025,
         period="0A",
         inputs={"0171": Decimal("100.00"), "0181": Decimal("500.00")},
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
@@ -259,7 +292,7 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
 
 def _real_estate_capital_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-real-estate-capital-rollup",
+        id="modelo-100-2025-real-estate-rental-alquiler-inmobiliario-capital-rollup",
         modelo="100",
         revision="2025",
         filing_year=2025,
@@ -289,6 +322,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
             "0153": Decimal("800.00"),
         },
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
@@ -355,7 +389,12 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
                 target="0598",
                 value=Decimal("800.00"),
                 operand_refs=("0153",),
-                legal_refs=("ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"),
+                legal_refs=(
+                    "ley-35-2006:art-99",
+                    "rd-439-2007:art-100",
+                    "rd-439-2007:art-109",
+                    "orden-hac-277-2026:art-3",
+                ),
                 source_refs=(
                     "aeat-dr-100-2025-dictionary",
                     "aeat-renta-2025-manual-parte1",
@@ -368,7 +407,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
 
 def _final_settlement_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-final-settlement-rollup",
+        id="modelo-100-2025-final-settlement-ganancias-patrimoniales-ccaa-rollup",
         modelo="100",
         revision="2025",
         filing_year=2025,
@@ -412,6 +451,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
             "0669": Decimal("150.00"),
         },
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("600.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("400.00"),

@@ -6,15 +6,16 @@ The AEAT filing cycle has well-defined chains where a periodic modelo
 - 111 (worker/professional withholdings) → 190 (annual summary)
 - 115 (rental withholdings)               → 180 (annual summary)
 - 123 (movable-capital withholdings)      → 193 (annual summary)
+- 303 (IVA periodic settlement)           → 390 (annual summary)
 - 130 + 131 (IRPF pagos fraccionados)     → 100 (renta annual)
 - 202 (IS pago fraccionado)               → 200 (IS annual)
 
-Each chain is declared on the receiver side as a ``cross_model_output``
-relation pointing at the feeder's ``source_modelo``. These tests codify
-that expectation so a future change cannot silently drop the relation.
-When a relation is missing, the test fails with a message that names
-both the feeder and the summary modelo so the gap is diagnosable from
-the failure alone.
+Each chain is declared on the receiver side either as a ``cross_model_output``
+relation or as a ``previous_filing`` binding pointing at the feeder's
+``source_modelo``. These tests codify that expectation so a future change
+cannot silently drop the chain. When a chain is missing, the test fails
+with a message that names both the feeder and the summary modelo so the
+gap is diagnosable from the failure alone.
 """
 
 from __future__ import annotations
@@ -38,9 +39,14 @@ _CANONICAL_FEEDER_SUMMARY_CHAINS: tuple[tuple[str, str], ...] = (
     ("111", "190"),
     ("115", "180"),
     ("123", "193"),
+    ("303", "390"),
     ("130", "100"),
     ("131", "100"),
     ("202", "200"),
+)
+
+_RELATION_BACKED_FEEDER_SUMMARY_CHAINS = tuple(
+    pair for pair in _CANONICAL_FEEDER_SUMMARY_CHAINS if pair != ("303", "390")
 )
 
 
@@ -64,6 +70,24 @@ def _summary_relation_source_modelos(modelo: ModeloDefinition) -> set[str]:
     return seen
 
 
+def _summary_previous_filing_source_modelos(modelo: ModeloDefinition) -> set[str]:
+    """Return source-modelo ids declared by previous-filing bindings."""
+
+    seen: set[str] = set()
+    for revision in modelo.revisions.values():
+        for binding in revision.bindings:
+            if binding.source != "previous_filing":
+                continue
+            source_modelo = binding.selector.get("source_modelo")
+            if isinstance(source_modelo, str):
+                seen.add(source_modelo)
+    return seen
+
+
+def _summary_source_modelos(modelo: ModeloDefinition) -> set[str]:
+    return _summary_relation_source_modelos(modelo) | _summary_previous_filing_source_modelos(modelo)
+
+
 @pytest.mark.parametrize(("feeder_id", "summary_id"), _CANONICAL_FEEDER_SUMMARY_CHAINS)
 def test_canonical_feeder_summary_chain_is_declared(feeder_id: str, summary_id: str) -> None:
     registry = _registry()
@@ -72,11 +96,11 @@ def test_canonical_feeder_summary_chain_is_declared(feeder_id: str, summary_id: 
     assert feeder is not None, f"feeder modelo {feeder_id!r} is not in the registry"
     assert summary is not None, f"summary modelo {summary_id!r} is not in the registry"
 
-    sources = _summary_relation_source_modelos(summary)
+    sources = _summary_source_modelos(summary)
     assert feeder_id in sources, (
-        f"summary modelo {summary_id!r} declares no cross_model_output relation "
+        f"summary modelo {summary_id!r} declares no cross_model_output relation or previous_filing binding "
         f"to feeder modelo {feeder_id!r}; the canonical chain is broken. "
-        f"Either add a relation on {summary_id} that names {feeder_id} as source_modelo, "
+        f"Either add a receiver-side chain declaration on {summary_id} that names {feeder_id} as source_modelo, "
         f"or remove the chain from the canonical list if the AEAT cycle no longer requires it."
     )
 
@@ -88,7 +112,7 @@ def test_every_canonical_feeder_appears_in_at_least_one_summary() -> None:
     feeders_in_canonical_list = {feeder for feeder, _ in _CANONICAL_FEEDER_SUMMARY_CHAINS}
     feeders_seen_as_sources: set[str] = set()
     for modelo in registry.values():
-        feeders_seen_as_sources.update(_summary_relation_source_modelos(modelo))
+        feeders_seen_as_sources.update(_summary_source_modelos(modelo))
 
     orphan_feeders = sorted(feeders_in_canonical_list.difference(feeders_seen_as_sources))
     assert not orphan_feeders, (
@@ -113,7 +137,7 @@ def test_declared_canonical_chains_use_pago_or_summary_dependency_role() -> None
         "factual_evidence",
     }
     failures: list[str] = []
-    for feeder_id, summary_id in _CANONICAL_FEEDER_SUMMARY_CHAINS:
+    for feeder_id, summary_id in _RELATION_BACKED_FEEDER_SUMMARY_CHAINS:
         summary = registry.get(summary_id)
         if summary is None:
             continue

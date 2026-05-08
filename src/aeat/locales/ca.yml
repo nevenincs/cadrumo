@@ -28,38 +28,6 @@ categories:
   test_profile:
     display_label_851219: Etiqueta de visualització 851219
 cli:
-  attachments:
-    add_help: Afegir un justificant o fitxer adjunt
-    add_kind_help: Tipus de fitxer adjunt (ex. factura, justificant, contracte)
-    add_link_invoice_help: Vincular el justificant a un ID de factura existent
-    add_link_tx_help: Vincular el justificant a un ID de transacció bancària
-    add_metadata_help: Afegir metadades personalitzades (clau=valor) al justificant
-    add_mime_type_help: Forçar un tipus MIME específic per al justificant
-    add_notes_help: Afegir notes o observacions al justificant
-    add_path_help: Ruta local del fitxer justificant a afegir
-    add_source_help: Origen o font del justificant (ex. correu, escàner, portal)
-    add_source_ref_help: Referència d'origen del justificant (ex. Message-ID de correu,
-      URL, localitzador)
-    app_help: Gestió de justificants i fitxers adjunts (afegir, llistar, visualitzar)
-    errors:
-      duplicate_metadata_key: 'La clau de metadades del justificant està duplicada:
-        {key}'
-      empty_metadata_key: La clau de metadades del justificant no pot estar buida
-      empty_metadata_value: El valor de metadades del justificant no pot estar buit
-      empty_mime_type: El tipus MIME del justificant no pot estar buit
-      empty_source_reference: La referència d'origen del justificant no pot estar
-        buida
-      invalid_metadata_format: Format de metadades del justificant no vàlid. Ha de
-        ser clau=valor
-    list:
-      no_attachments: No s'han trobat justificants o fitxers adjunts
-    list_header: Justificants i fitxers adjunts
-    list_help: Llistar els justificants i fitxers adjunts registrats
-    list_kind_filter_help: Filtrar justificants per tipus (ex. factura, tiquet, contracte)
-    list_linked_to_help: Filtrar justificants vinculats a un ID específic (transacció
-      o factura)
-    show_help: Mostrar els detalls i metadades d'un justificant
-    show_id_help: Identificador del justificant a mostrar
   browser:
     app_help: Gestió de l'automatització del navegador (Playwright)
     health:
@@ -71,12 +39,6 @@ cli:
       none: Cap
       retry_after_seconds: Reintentar després (segons)
       state: Estat operatiu
-  categories:
-    app_help: Gestió de categories de tràmits de l'AEAT
-    id_help: Identificador únic de la categoria
-    list_help: Llistar totes les categories de tràmits disponibles
-    show_help: Mostrar detalls d'una categoria específica
-    year_help: Exercici fiscal
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
@@ -88,6 +50,9 @@ cli:
       help: Diagnosticar configuració local, registre, perfil, autenticació i logs
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
+      quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu; requereix --yes)
+      quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb --yes per confirmar.
+      quarantine_yes_help: Confirmar explícitament l'operació de quarantena
   data:
     app_help: Gestió de dades i registres fiscals
     ledgers:
@@ -127,6 +92,9 @@ cli:
     errors:
       activate_profile: Si us plau, activeu un perfil abans de gestionar declaracions
       at_least_one_edit: S'ha d'editar almenys un camp
+      binding_assignment: "Assignacio --binding invalida: %{value}. Useu el format KEY=VALOR (ex: irpf.previous_year_economic_activity_net_income=13000)."
+      binding_value_not_decimal: "El valor del --binding %{value} no es un nombre decimal."
+      draft_selector_ambiguous: "Useu nomes --id o (--modelo + --period); no els dos alhora."
       file_not_found: No s'ha trobat l'arxiu de la declaració
       filter_parse_error: Error en processar el filtre
       missing_id_or_period_modelo: S'ha de proporcionar l'ID o el (període + model)
@@ -157,6 +125,7 @@ cli:
       warnings: Advertiments
       'yes': Sí
     opts:
+      binding: "Subministra un valor de binding per a 'declaration calculate' com a KEY=VALOR (repetible). Useu 'aeat app modelo bindings <modelo> --period <P>' per descobrir els bindings necessaris."
       by: Persona que ha revisat la declaració
       draft_id: ID de l'esborrany local
       file: Fitxer local exportat a verificar
@@ -511,71 +480,23 @@ cli:
       id_help: Identificador de l'entrada específica a revisar
       no_rows: No hi ha entrades del llibre pendents de revisió
       verbose_help: Mostrar informació detallada durant la revisió
-  llm:
-    app_help: Utilitats de models de llenguatge (LLM)
-    cache_app_help: Gestió de la memòria cau de respostes de LLM
-    cache_prune_help: Netejar entrades antigues de la memòria cau de LLM
-    cache_stats_help: Mostrar estadístiques d'ús de la memòria cau de LLM
-    complete_help: Generar una resposta completant el text proporcionat
-    context_help: Afegir context addicional per a la sol·licitud al LLM
-    errors:
-      invalid_input: Entrada per al LLM no vàlida
-      missing_variable: Falta una variable requerida en la plantilla del prompt
-    from_help: Idioma d'origen per a la traducció o el processament
-    input_help: Text d'entrada per processar amb el LLM
-    labels:
-      removed_cache_files: Arxius de memòria cau eliminats
-    language_help: Idioma de destinació o principal per a la sortida
-    prompt_id_help: Identificador del prompt a utilitzar
-    since_help: Data d'inici per filtrar o consultar (AAAA-MM-DD)
-    text_help: Text a analitzar o processar pel LLM
-    to_help: Idioma de destinació per a la traducció
-    translate_help: Traduir un text d'un idioma a un altre usant LLM
-    until_help: Data de fi per filtrar o consultar (AAAA-MM-DD)
-    usage_help: Mostrar l'ús de tokens i costos de LLM
-  normatives:
-    app_help: Consultar normativa i obligacions fiscals
-    errors:
-      load_failed: Fallada en carregar la base de dades normativa
-    headers:
-      citation: Cita legal
-      code: Codi
-      level: Nivell
-      message: Missatge
-      numero: Número
-      reference_id: ID de referència
-      titulo: Títol
-    labels:
-      articles: Articles
-      articulos: Articles
-      boe_id: ID BOE
-      boe_url: URL del BOE
-      found: Trobat
-      id: ID
-      kind: Tipus
-      last_reviewed_at: Última revisió
-      no_articulos: No hi ha articles disponibles
-      number: Número
-      published_at: Publicat el
-      reviewed_by: Revisat per
-      short_title: Títol curt
-      tags: Etiquetes
-    list_help: Llistar i filtrar normatives fiscals
-    list_tag_help: Filtrar normatives per etiqueta (ex. iva, irpf)
-    show_help: Mostrar detalls d'una normativa específica
-    show_ref_id_help: ID de referència de la normativa a mostrar
-    success:
-      clean: Neteja de normatives completada
-      verification_results: Resultats de verificació
-    verify_help: Verificar integritat i validesa de normatives
   overview:
+    allow_incomplete_help: "Permet el calendari amb valors per defecte quan falten claus de regim al perfil. Sense aquesta opcio el calendari es refusa si hi ha advertencies."
     app_help: Revisar l'estat actual de l'espai de treball fiscal
     calendar_help: Mostrar el calendari d'obligacions per a un rang de dates
+    calendar_refused_incomplete: "El perfil no declara les claus: %{keys}. Executeu 'aeat setup profile set <clau> <valor>' o useu --allow-incomplete per veure el calendari calculat amb valors per defecte."
     calendar_requires_dates: Useu --from i --to quan consulteu el calendari
     drafts: Esborranys
     from_help: Data inicial del calendari (AAAA-MM-DD)
     header: "Model\tPeríode\tEstat\tObre\tTanca"
     invoices: Factures
+    integrity_warning: "%{count} fila(es) locals no es poden desxifrar amb la clau mestra actual; executeu 'aeat config doctor' per al detall."
+    warning:
+      estimacion_objetiva_unset: "El perfil no declara si tributa IRPF en estimacio objectiva. El model 131 pot aplicar-se o no en consequencia."
+      intracomunitario_unset: "El perfil no declara si fa operacions intracomunitaries. El model 349 pot aplicar-se o no en consequencia."
+      iva_regime_unset: "El perfil no declara el seu regim IVA. El calendari assumeix regim general; els models 303 i 390 poden no correspondre."
+      retencion_arrendamientos_unset: "El perfil no declara si paga lloguers amb retencio. El model 115 pot aplicar-se o no en consequencia."
+      retencion_profesionales_unset: "El perfil no declara si paga a professionals amb retencio. El model 111 pot aplicar-se o no en consequencia."
     period: Període
     period_help: Període fiscal a revisar (per exemple, 2026-Q1)
     profile: Perfil
@@ -646,19 +567,14 @@ cli:
     verbose_help: Mostrar logs interns informatius a stderr
     version_command_help: Mostrar la versió del paquet i el resum del registre
     version_help: Mostrar la versió del paquet i el resum del registre
-  sanitize:
-    app_help: Gestió de la sanetització i anonimització de dades
-    labels:
-      available: Disponible
-    status_help: Mostrar l'estat de la sanetització de l'entorn
   setup:
     app_help: Preparar el perfil local i l'autenticació necessaris per usar l'aplicació
     auth:
       app_help: Configurar i comprovar l'autenticació de l'AEAT
       configure:
-        file_help: Ruta del certificat quan el proveïdor el requereixi
+        file_help: "Ruta absoluta o relativa al fitxer de certificat P12/PFX quan el proveidor el requereixi. Exemple: --file /ruta/al/certificat.p12."
         help: Configurar el proveïdor d'autenticació
-        provider_help: Proveïdor d'autenticació a usar
+        provider_help: "Proveidor d'autenticacio. Executeu 'aeat setup auth providers' per llistar els proveidors suportats (certificate, clave_movil)."
       login:
         help: Iniciar la sessió local d'autenticació configurada
       logout:
@@ -705,10 +621,10 @@ cli:
       unknown: Desconegut
       valid: Vàlid
     init:
-      activity_help: Activitat econòmica principal
+      activity_help: "Activitat economica principal de l'autonom. Text lliure o codi IAE/CNAE. Exemple: 'Serveis professionals d'informatica' o '6201'."
       help: Crear o activar un perfil de contribuent
-      name_help: Nom del perfil local
-      tax_id_help: NIF/NIE/CIF del contribuent
+      name_help: "Etiqueta local per distingir aquest perfil dels altres (no s'envia a l'AEAT). Exemple: 'client-acme' o 'meu-perfil'."
+      tax_id_help: "Identificador fiscal espanyol del contribuent. Format: 8 digits + lletra (NIF), lletra + 7 digits + lletra (NIE), o lletra + 7 digits + digit (CIF). Exemple: 12345678Z."
     labels:
       'no': 'no'
       unset: sense valor

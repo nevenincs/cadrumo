@@ -14,8 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.profile import CCAA, TaxResidenceProfile
-from ....domain.profile._errors import TaxResidenceProfileError
+from ....domain.profile import CCAA, TaxResidenceProfile, TaxResidenceProfileError
 from ..storage import EphemeralMasterKeyProvider, override_master_key_provider
 from ..storage.sql import dispose_engine
 from .tax_residence import (

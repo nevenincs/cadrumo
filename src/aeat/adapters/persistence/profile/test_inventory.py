@@ -46,24 +46,23 @@ def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> Mo
     )
 
 
-def test_inventory_persistence_and_real_movement_append(tmp_path) -> None:
+def test_inventory_persistence_and_real_movement_append() -> None:
     ledger = InventoryLedger(
         actividad_id="retail",
         year=2025,
         valuation_method=ValuationMethod.FIFO,
         opening_stock=Decimal("150.00"),
     )
-    save_inventory((ledger,), storage_dir=tmp_path)
+    save_inventory((ledger,))
 
     updated = record_movement(
         "retail",
         _movement(MovementKind.PURCHASE, "2", "10", 1),
         year=2025,
-        storage_dir=tmp_path,
     )
 
     assert len(updated.period_movements) == 1
-    assert load_inventory(storage_dir=tmp_path)[0] == updated
+    assert load_inventory()[0] == updated
 
 
 def test_inventory_persistence_is_encrypted_financial_secure_object(tmp_path) -> None:
@@ -86,7 +85,7 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(tmp_path) ->
         ),
     )
 
-    path = save_inventory((ledger,), storage_dir=tmp_path)
+    path = save_inventory((ledger,))
     db_bytes = (tmp_path / "aeat.db").read_bytes()
 
     assert not path.exists()
@@ -94,7 +93,7 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(tmp_path) ->
     assert b"purchase-canary" not in db_bytes
 
 
-def test_record_movement_refuses_invalid_negative_stock(tmp_path) -> None:
+def test_record_movement_refuses_invalid_negative_stock() -> None:
     ledger = InventoryLedger(
         actividad_id="retail",
         year=2025,
@@ -104,7 +103,7 @@ def test_record_movement_refuses_invalid_negative_stock(tmp_path) -> None:
             StockLayer(sku="ssd", quantity=Decimal("1"), unit_cost=Decimal("10.00"), source_movement_id="open-a"),
         ),
     )
-    save_inventory((ledger,), storage_dir=tmp_path)
+    save_inventory((ledger,))
 
     with pytest.raises(InventoryLedgerError, match="consume more stock"):
         record_movement(
@@ -117,5 +116,4 @@ def test_record_movement_refuses_invalid_negative_stock(tmp_path) -> None:
                 quantity=Decimal("2"),
             ),
             year=2025,
-            storage_dir=tmp_path,
         )

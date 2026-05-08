@@ -111,6 +111,7 @@ from ._relations import (
 )
 from ._remote_state_guard import (
     AEAT_WRITE_FORBIDDEN_ACTIONS,
+    AEAT_WRITE_FORBIDDEN_VERB_TOKENS,
     RemoteOperation,
     RemoteStateGuardPolicy,
     RemoteStateGuardResult,
@@ -196,6 +197,7 @@ from ._workbook_parity import (
 __all__ = [
     "AEAT_GROI_URL",
     "AEAT_WRITE_FORBIDDEN_ACTIONS",
+    "AEAT_WRITE_FORBIDDEN_VERB_TOKENS",
     "GROI_ORACLE_ID",
     "RENTA_WEB_OPEN_APP_URL",
     "RENTA_WEB_OPEN_LANDING_URL",

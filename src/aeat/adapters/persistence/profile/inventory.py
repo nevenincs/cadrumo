@@ -1,16 +1,13 @@
 """Encrypted SQL persistence for actividad economica inventory ledgers.
 
 :class:`aeat.domain.profile.inventory.InventoryLedger` payloads are stored
-as FINANCIAL-class secure objects in the primary database. ``store_dir`` is
-accepted only as a logical partition key for callers that used separate
-ledger roots before the secure-object backend.
+as FINANCIAL-class secure objects in the primary database.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from ....core.config import load_settings
 from ....core.errors import AeatError
 from ....core.logging import get_logger
 from ....domain.profile.errors import InventoryLedgerError
@@ -28,55 +25,39 @@ _log = get_logger(__name__)
 INVENTORY_LEDGER_FILENAME = "inventory-ledger.secure-object"
 _SECURE_OBJECT_VERSION = 1
 _INVENTORY_NAMESPACE = "aeat.persistence.profile.inventory"
+_LEDGER_OBJECT_KEY = "default"
 
 
-def default_storage_dir() -> Path:
-    """Return the configured governed ledger storage directory.
-
-    Returns:
-        Filesystem path resolved from
-        :attr:`aeat.core.config.Settings.aeat_ledgers_dir`.
-    """
-
-    return Path(load_settings().aeat_ledgers_dir)
-
-
-def load_inventory(*, storage_dir: Path | None = None) -> tuple[InventoryLedger, ...]:
+def load_inventory() -> tuple[InventoryLedger, ...]:
     """Load inventory ledgers from the encrypted ledger.
-
-    Args:
-        storage_dir: Override for the ledger storage directory; defaults to
-            :func:`default_storage_dir`.
 
     Returns:
         Tuple of persisted inventory ledgers, empty when no envelope exists.
     """
 
-    return InventoryLedgerRepository(store_dir=storage_dir or default_storage_dir()).load().ledgers
+    return InventoryLedgerRepository().load().ledgers
 
 
-def save_inventory(ledgers: tuple[InventoryLedger, ...], *, storage_dir: Path | None = None) -> Path:
+def save_inventory(ledgers: tuple[InventoryLedger, ...]) -> Path:
     """Persist ``ledgers`` as a governed FINANCIAL-class secure object.
 
     Args:
         ledgers: Inventory ledgers to persist.
-        storage_dir: Override for the ledger storage directory.
 
     Returns:
         Logical path identifying the secure object.
     """
 
-    repository = InventoryLedgerRepository(store_dir=storage_dir or default_storage_dir())
+    repository = InventoryLedgerRepository()
     repository.save(InventoryLedgerDocument(ledgers=ledgers))
     return repository.envelope_path
 
 
-def create_inventory_ledger(ledger: InventoryLedger, *, storage_dir: Path | None = None) -> InventoryLedgerDocument:
+def create_inventory_ledger(ledger: InventoryLedger) -> InventoryLedgerDocument:
     """Atomically create ``ledger`` and refuse duplicate (actividad, year) pairs.
 
     Args:
         ledger: Inventory ledger to insert.
-        storage_dir: Override for the ledger storage directory.
 
     Returns:
         The updated ledger document including the newly inserted ledger.
@@ -86,7 +67,7 @@ def create_inventory_ledger(ledger: InventoryLedger, *, storage_dir: Path | None
             with the same ``(actividad_id, year)`` pair already exists.
     """
 
-    return InventoryLedgerRepository(store_dir=storage_dir or default_storage_dir()).create(ledger)
+    return InventoryLedgerRepository().create(ledger)
 
 
 def record_movement(
@@ -94,7 +75,6 @@ def record_movement(
     movement: MovementRecord,
     *,
     year: int,
-    storage_dir: Path | None = None,
 ) -> InventoryLedger:
     """Append ``movement`` to an existing activity-and-year inventory ledger.
 
@@ -102,7 +82,6 @@ def record_movement(
         actividad_id: Identifier of the actividad economica owning the ledger.
         movement: Movement record to append.
         year: Tax year of the target ledger.
-        storage_dir: Override for the ledger storage directory.
 
     Returns:
         The updated inventory ledger.
@@ -113,7 +92,7 @@ def record_movement(
             or the resulting valuation is invalid.
     """
 
-    return InventoryLedgerRepository(store_dir=storage_dir or default_storage_dir()).record_movement(
+    return InventoryLedgerRepository().record_movement(
         actividad_id,
         movement,
         year=year,
@@ -123,27 +102,20 @@ def record_movement(
 class InventoryLedgerRepository:
     """Governed repository for the encrypted inventory ledger."""
 
-    def __init__(self, *, store_dir: Path) -> None:
-        """Initialize the repository.
-
-        Args:
-            store_dir: Directory in which the encrypted envelope and lock
-                sidecar used to live; now a logical partition key only.
-        """
-        self._store_dir = Path(store_dir)
+    def __init__(self) -> None:
         self._objects = SecureObjectRepository()
 
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
 
-        return self._store_dir / INVENTORY_LEDGER_FILENAME
+        return Path("db://secure_objects") / _INVENTORY_NAMESPACE / INVENTORY_LEDGER_FILENAME
 
     @property
     def lock_target(self) -> Path:
-        """Logical lock target retained for API stability."""
+        """Logical lock marker; SQL transactions govern writes."""
 
-        return self._store_dir / "inventory-ledger.lock"
+        return Path("db://secure_objects") / _INVENTORY_NAMESPACE / "inventory-ledger.lock"
 
     def load(self) -> InventoryLedgerDocument:
         """Load the ledger, returning an empty document when absent.
@@ -264,13 +236,12 @@ class InventoryLedgerRepository:
 
     @property
     def _object_key(self) -> str:
-        return self._store_dir.as_posix()
+        return _LEDGER_OBJECT_KEY
 
 
 __all__ = [
     "InventoryLedgerRepository",
     "create_inventory_ledger",
-    "default_storage_dir",
     "load_inventory",
     "record_movement",
     "save_inventory",

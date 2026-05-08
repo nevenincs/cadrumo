@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 import typer
@@ -53,11 +54,84 @@ app = typer.Typer(
 )
 
 
+def _resolve_draft_id(modelo: str | None, period: str | None, draft_id: str | None) -> str:
+    """Resolve a draft id from either ``--id`` or ``(--modelo, --period)``.
+
+    Every declaration verb accepts both flag forms. The helper raises a
+    typed CLI usage error when:
+
+    - ``--id`` is supplied alongside ``--modelo`` or ``--period``
+      (ambiguous selector);
+    - none of the three flags is supplied (no selector);
+    - one of ``--modelo`` / ``--period`` is supplied without the other
+      (incomplete selector); or
+    - the resolved (modelo, period) lookup has no matching draft pointer
+      in the active profile's user-cli state.
+
+    Args:
+        modelo: Optional ``--modelo`` argument.
+        period: Optional ``--period`` argument.
+        draft_id: Optional ``--id`` argument.
+
+    Returns:
+        The resolved canonical draft id.
+    """
+
+    if draft_id is not None and (modelo is not None or period is not None):
+        raise _bad(tr("cli.declaration.errors.draft_selector_ambiguous"))
+    if draft_id is not None:
+        return draft_id
+    if modelo is None or period is None:
+        raise _bad(tr("cli.declaration.errors.missing_id_or_period_modelo"))
+    canonical_period = _canonical_period(period)
+    canonical_modelo = modelo.strip()
+    state = _state()
+    pointer = state.declarations.get(declaration_key(canonical_modelo, canonical_period))
+    if pointer is None:
+        raise _bad(tr("cli.declaration.errors.no_draft_for_period"))
+    return pointer.draft_id
+
+
+def _parse_binding_assignment(raw: str) -> tuple[str, Decimal]:
+    """Parse one ``KEY=VALUE`` token from ``--binding`` into a typed pair.
+
+    Args:
+        raw: The exact string the operator passed after ``--binding``.
+
+    Returns:
+        A two-tuple ``(key, value)`` where ``key`` is the binding's
+        canonical id and ``value`` is a :class:`Decimal`.
+
+    Raises:
+        typer.BadParameter (via :func:`_bad`): If the assignment is
+            malformed (no ``=``, blank key, blank value) or the value
+            does not parse as a decimal number.
+    """
+
+    if "=" not in raw:
+        raise _bad(tr("cli.declaration.errors.binding_assignment", value=raw))
+    key, value = raw.split("=", 1)
+    key = key.strip()
+    value = value.strip()
+    if not key or not value:
+        raise _bad(tr("cli.declaration.errors.binding_assignment", value=raw))
+    try:
+        decimal_value = Decimal(value)
+    except InvalidOperation as exc:
+        raise _bad(tr("cli.declaration.errors.binding_value_not_decimal", value=value)) from exc
+    return key, decimal_value
+
+
 @app.command("calculate", help=tr("cli.declaration.calculate_help"))
 def declaration_calculate(
     ctx: typer.Context,
     period: str = typer.Option(..., "--period", help=tr("cli.declaration.opts.period")),
     modelo: str = typer.Option(..., "--modelo", help=tr("cli.declaration.opts.modelo")),
+    binding: list[str] = typer.Option(
+        [],
+        "--binding",
+        help=tr("cli.declaration.opts.binding"),
+    ),
 ) -> None:
     canonical_period = _canonical_period(period)
     canonical_modelo = modelo.strip()
@@ -72,7 +146,10 @@ def declaration_calculate(
         tax_id=tax_id,
         display_name=state.active_profile or "operator",
     )
-    inputs = _aggregate_filing_inputs(canonical_modelo, canonical_period, state)
+    inputs = dict(_aggregate_filing_inputs(canonical_modelo, canonical_period, state))
+    for raw_binding in binding:
+        key, value = _parse_binding_assignment(raw_binding)
+        inputs[key] = value
     try:
         schema_provider = build_runtime_schema_provider(modelos=(canonical_modelo,))
         draft = build_draft(
@@ -84,9 +161,10 @@ def declaration_calculate(
         )
     except FilingBuilderError as exc:
         raise _bad(str(exc)) from exc
+    blockers = tuple(f for f in draft.findings if f.severity is FilingFindingSeverity.ERROR)
     summary: DeclarationCalculateSummary = summarise_calculation(
         draft,
-        repair_hints=tuple(f.message for f in draft.findings if f.severity is FilingFindingSeverity.ERROR),
+        repair_hints=tuple(_translate(f.message) for f in blockers),
     )
     _draft_repo().save(draft)
     state_repository().update(
@@ -98,18 +176,40 @@ def declaration_calculate(
             status=draft.status.value,
         )
     )
+    next_pointer = _next_action_command(summary.next_action.value, canonical_modelo, canonical_period)
     payload = {"draft": draft, "summary": summary}
-    _emit(
-        ctx,
-        payload,
-        [
-            f"{tr('cli.declaration.labels.draft_id')}\t{draft.draft_id}",
-            f"{tr('cli.declaration.labels.status')}\t{draft.status.value}",
-            f"{tr('cli.declaration.labels.blockers')}\t{summary.blocker_count}",
-            f"{tr('cli.declaration.labels.warnings')}\t{summary.warning_count}",
-            f"{tr('cli.declaration.labels.next')}\t{summary.next_action.value}",
-        ],
-    )
+    lines: list[str] = [
+        f"{tr('cli.declaration.labels.draft_id')}\t{draft.draft_id}",
+        f"{tr('cli.declaration.labels.status')}\t{draft.status.value}",
+        f"{tr('cli.declaration.labels.blockers')}\t{summary.blocker_count}",
+        f"{tr('cli.declaration.labels.warnings')}\t{summary.warning_count}",
+    ]
+    for finding in blockers:
+        lines.append(f"blocker\tcasilla.{finding.casilla_id}\t{_translate(finding.message)}")
+    lines.append(f"{tr('cli.declaration.labels.next')}\t{next_pointer}")
+    _emit(ctx, payload, lines)
+
+
+def _next_action_command(next_action: str, modelo: str, period: str) -> str:
+    """Translate a ``DeclarationCalculateNextAction`` into a runnable CLI hint.
+
+    The audit (UX-021) flagged ``Siguiente: resolve-blockers`` as an
+    opaque recipe token. Each next-action value now maps to a literal
+    command the operator can copy and run, parameterised on the
+    current modelo and period.
+    """
+
+    if next_action == "resolve-blockers":
+        return f"aeat app declaration review --modelo {modelo} --period {period}"
+    if next_action == "review":
+        return f"aeat app declaration review --modelo {modelo} --period {period}"
+    if next_action == "approve":
+        return f"aeat app declaration approve --modelo {modelo} --period {period} --by NAME --reason TEXT"
+    if next_action == "export":
+        return f"aeat app declaration export --modelo {modelo} --period {period} --output PATH"
+    if next_action == "refresh-approval":
+        return f"aeat app declaration approve --modelo {modelo} --period {period} --by NAME --reason TEXT"
+    return next_action
 
 
 @app.command("review", help=tr("cli.declaration.review_help"))
@@ -209,9 +309,11 @@ def _declaration_status_matches(status: str, wanted: DeclarationReviewStatus | N
 @app.command("edit", help=tr("cli.declaration.edit_help"))
 def declaration_edit(
     ctx: typer.Context,
-    draft_id: str = typer.Option(..., "--id", help=tr("cli.declaration.opts.draft_id")),
     sets: list[str] = typer.Option([], "--set", help=tr("cli.declaration.opts.set")),
     reason: str = typer.Option(..., "--reason", help=tr("cli.declaration.opts.reason")),
+    draft_id: str | None = typer.Option(None, "--id", help=tr("cli.declaration.opts.draft_id")),
+    modelo: str | None = typer.Option(None, "--modelo", help=tr("cli.declaration.opts.modelo")),
+    period: str | None = typer.Option(None, "--period", help=tr("cli.declaration.opts.period")),
 ) -> None:
     from ...application.review._edit import DeclarationEditSpec
 
@@ -221,7 +323,8 @@ def declaration_edit(
         raise _bad(tr("cli.declaration.errors.set_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
     if not edit_spec.casilla_edits:
         raise _bad(tr("cli.declaration.errors.at_least_one_edit"))
-    draft = _draft_by_id(draft_id)
+    resolved_id = _resolve_draft_id(modelo, period, draft_id)
+    draft = _draft_by_id(resolved_id)
     operator = FilingOperatorProfile(
         tax_id=draft.profile_tax_id,
         display_name=draft.profile_tax_id,
@@ -269,11 +372,14 @@ def declaration_edit(
 @app.command("approve", help=tr("cli.declaration.approve_help"))
 def declaration_approve(
     ctx: typer.Context,
-    draft_id: str = typer.Option(..., "--id", help=tr("cli.declaration.opts.draft_id")),
     reviewer: str = typer.Option(..., "--by", help=tr("cli.declaration.opts.by")),
     reason: str = typer.Option(..., "--reason", help=tr("cli.declaration.opts.reason")),
+    draft_id: str | None = typer.Option(None, "--id", help=tr("cli.declaration.opts.draft_id")),
+    modelo: str | None = typer.Option(None, "--modelo", help=tr("cli.declaration.opts.modelo")),
+    period: str | None = typer.Option(None, "--period", help=tr("cli.declaration.opts.period")),
 ) -> None:
-    draft = _draft_by_id(draft_id)
+    resolved_id = _resolve_draft_id(modelo, period, draft_id)
+    draft = _draft_by_id(resolved_id)
     schema_provider = build_runtime_schema_provider(modelos=(draft.modelo,))
     approved = approve_draft(draft, approved_by=reviewer, schema_provider=schema_provider)
     _draft_repo().save(approved)
@@ -306,10 +412,13 @@ def declaration_approve(
 @app.command("validate", help=tr("cli.declaration.validate_help"))
 def declaration_validate(
     ctx: typer.Context,
-    draft_id: str = typer.Option(..., "--id", help=tr("cli.declaration.opts.draft_id")),
     output: Path | None = typer.Option(None, "--output", help=tr("cli.declaration.opts.output")),
+    draft_id: str | None = typer.Option(None, "--id", help=tr("cli.declaration.opts.draft_id")),
+    modelo: str | None = typer.Option(None, "--modelo", help=tr("cli.declaration.opts.modelo")),
+    period: str | None = typer.Option(None, "--period", help=tr("cli.declaration.opts.period")),
 ) -> None:
-    draft = _draft_by_id(draft_id)
+    resolved_id = _resolve_draft_id(modelo, period, draft_id)
+    draft = _draft_by_id(resolved_id)
     schema_provider = build_runtime_schema_provider(modelos=(draft.modelo,))
     refreshed = validate_draft(draft, schema_provider=schema_provider)
     _draft_repo().save(refreshed)
@@ -348,9 +457,13 @@ def declaration_validate(
 
 @app.command("preview", help=tr("cli.declaration.preview_help"))
 def declaration_preview(
-    ctx: typer.Context, draft_id: str = typer.Option(..., "--id", help=tr("cli.declaration.opts.draft_id"))
+    ctx: typer.Context,
+    draft_id: str | None = typer.Option(None, "--id", help=tr("cli.declaration.opts.draft_id")),
+    modelo: str | None = typer.Option(None, "--modelo", help=tr("cli.declaration.opts.modelo")),
+    period: str | None = typer.Option(None, "--period", help=tr("cli.declaration.opts.period")),
 ) -> None:
-    draft = _draft_by_id(draft_id)
+    resolved_id = _resolve_draft_id(modelo, period, draft_id)
+    draft = _draft_by_id(resolved_id)
     payload = {
         "draft_id": draft.draft_id,
         "modelo": draft.modelo,
@@ -370,10 +483,13 @@ def declaration_preview(
 @app.command("export", help=tr("cli.declaration.export_help"))
 def declaration_export(
     ctx: typer.Context,
-    draft_id: str = typer.Option(..., "--id", help=tr("cli.declaration.opts.draft_id")),
     output: Path = typer.Option(..., "--output", help=tr("cli.declaration.opts.output")),
+    draft_id: str | None = typer.Option(None, "--id", help=tr("cli.declaration.opts.draft_id")),
+    modelo: str | None = typer.Option(None, "--modelo", help=tr("cli.declaration.opts.modelo")),
+    period: str | None = typer.Option(None, "--period", help=tr("cli.declaration.opts.period")),
 ) -> None:
-    draft = _draft_by_id(draft_id)
+    resolved_id = _resolve_draft_id(modelo, period, draft_id)
+    draft = _draft_by_id(resolved_id)
     if draft.status is not FilingDraftStatus.APPROVED:
         raise _bad(tr("cli.declaration.errors.not_approved_for_export", status=draft.status.value))
     headers = _export_headers_from_active_profile()

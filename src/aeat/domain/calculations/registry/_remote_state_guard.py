@@ -46,44 +46,73 @@ AEAT_WRITE_FORBIDDEN_ACTIONS: tuple[str, ...] = (
     "declaration-submission",
 )
 
-_FORBIDDEN_TOKENS = (
+# Canonical AEAT write-action verb tokens — the universal, surface-agnostic
+# denylist of action labels (button text, URL action segments, English/Spanish
+# write verbs) that signal a state-modifying call. EVERY guard surface
+# (HTTP/method/url scanning here, Playwright click-time scanning in the
+# renta-web-open safety adapter, future stateful surfaces) MUST include
+# these tokens. The set is exported as ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS``
+# so all consumers derive from a single source of truth.
+#
+# Adapters that match additional surface-specific tokens (accented
+# variants for diacritic-preserving regex, multi-word button labels,
+# Validar pre-presentation verification surfaces) extend this set
+# rather than redeclaring the core.
+#
+# AEAT verification surfaces that stage uploaded files in server-side
+# state under the authenticated NIF even before legal presentation.
+# TGVI online (Transmisión y Gestión de Volúmenes de Información) creates
+# a FINALIZED state visible in declaration-history surfaces, configurable
+# for substitutive replacement of prior filings, and logged as an upload
+# attempt regardless of presentation. Per the live-parity-oracle ADR
+# decision D13a, these surfaces are forbidden under the production-NIF
+# classification; oracle adapters that target them must run only under
+# AEAT pre-production with test NIFs and declare the test environment
+# explicitly in their catalogue registration.
+AEAT_WRITE_FORBIDDEN_VERB_TOKENS: frozenset[str] = frozenset(
+    {
+        # Spanish action verbs (write-class)
+        "presentar",
+        "presentacion",
+        "enviar",
+        "guardar",
+        "firmar",
+        "pagar",
+        "domiciliar",
+        "modificar",
+        "anular",
+        "cancelar",
+        "subsanar",
+        "transmision",
+        "transmitir",
+        # AEAT-specific write surfaces
+        "tgvi",
+        # English equivalents matched against URL action labels and English text
+        "submit",
+        "sign",
+        "save",
+        "payment",
+    }
+)
+
+# Tokens unique to URL/HTTP-method scanning (not exposed for click-time
+# adapters because they are HTTP verbs or pre-state surface labels that
+# do not appear as button text).
+_URL_AND_METHOD_FORBIDDEN_TOKENS: tuple[str, ...] = (
     "post",
-    "submit",
     "send",
     "commit",
-    "save",
-    "sign",
-    "payment",
     "debit",
     "amend",
     "cancel",
     "delete",
-    "presentar",
-    "presentacion",
-    "enviar",
-    "guardar",
-    "firmar",
-    "pagar",
-    "domiciliar",
-    "modificar",
-    "anular",
-    "cancelar",
-    "subsanar",
     "borrador",
     "predeclaracion",
-    # AEAT verification surfaces that stage uploaded files in server-side
-    # state under the authenticated NIF even before legal presentation.
-    # TGVI online (Transmisión y Gestión de Volúmenes de Información) creates
-    # a FINALIZED state visible in declaration-history surfaces, configurable
-    # for substitutive replacement of prior filings, and logged as an upload
-    # attempt regardless of presentation. Per the live-parity-oracle ADR
-    # decision D13a, these surfaces are forbidden under the production-NIF
-    # classification; oracle adapters that target them must run only under
-    # AEAT pre-production with test NIFs and declare the test environment
-    # explicitly in their catalogue registration.
-    "tgvi",
-    "transmision",
-    "transmitir",
+)
+
+_FORBIDDEN_TOKENS: tuple[str, ...] = (
+    *sorted(AEAT_WRITE_FORBIDDEN_VERB_TOKENS),
+    *_URL_AND_METHOD_FORBIDDEN_TOKENS,
 )
 
 

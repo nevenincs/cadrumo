@@ -63,7 +63,8 @@ def _persist_original_draft(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, dra
     submissions_dir.mkdir()
     monkeypatch.setenv("AEAT_DRAFTS_DIR", str(drafts_dir))
     monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(submissions_dir))
-    FilingDraftRepository(store_dir=drafts_dir).save(draft)
+    del drafts_dir
+    FilingDraftRepository().save(draft)
 
 
 def _submitted_filing(
@@ -172,11 +173,8 @@ class TestBuildComplementaria:
         assert changed["19"].new_value == Decimal("1530.00")
         assert load_amendment(amendment.amendment_id).amendment_id == amendment.amendment_id
 
-    def test_load_amendment_rejects_traversal_id(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        submissions_dir = tmp_path / "submissions"
-        submissions_dir.mkdir()
-        monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(submissions_dir))
-        with pytest.raises(FilingAmendmentError, match="simple filename token"):
+    def test_load_amendment_rejects_traversal_id(self) -> None:
+        with pytest.raises(FilingAmendmentError, match="path separators"):
             load_amendment("../escape")
 
     def test_complementaria_requires_official_justificante_csv(

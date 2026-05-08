@@ -25,41 +25,6 @@ categories:
   test_profile:
     display_label_851219: Display label 851219
 cli:
-  attachments:
-    add_help: Add a justificante (receipt) or attachment
-    add_kind_help: Type of attachment (e.g. invoice, justificante (receipt), contract)
-    add_link_invoice_help: Link the justificante (receipt) to an existing invoice
-      ID
-    add_link_tx_help: Link the justificante (receipt) to a bank transaction ID
-    add_metadata_help: Add custom metadata (key=value) to the justificante (receipt)
-    add_mime_type_help: Force a specific MIME type for the justificante (receipt)
-    add_notes_help: Add notes or observations to the justificante (receipt)
-    add_path_help: Local path to the justificante (receipt) file to add
-    add_source_help: Origin or source of the justificante (receipt) (e.g. email, scan,
-      portal)
-    add_source_ref_help: Source reference of the justificante (receipt) (e.g. email
-      Message-ID, URL, locator)
-    app_help: Management of justificantes (receipts) and attachments (add, list, view)
-    errors:
-      duplicate_metadata_key: 'The justificante (receipt) metadata key is duplicated:
-        {key}'
-      empty_metadata_key: The justificante (receipt) metadata key cannot be empty
-      empty_metadata_value: The justificante (receipt) metadata value cannot be empty
-      empty_mime_type: The justificante (receipt) MIME type cannot be empty
-      empty_source_reference: The justificante (receipt) source reference cannot be
-        empty
-      invalid_metadata_format: Invalid justificante (receipt) metadata format. Must
-        be key=value
-    list:
-      no_attachments: No justificantes (receipts) or attachments found
-    list_header: Justificantes (receipts) and attachments
-    list_help: List registered justificantes (receipts) and attachments
-    list_kind_filter_help: Filter justificantes (receipts) by kind (e.g. invoice,
-      ticket, contract)
-    list_linked_to_help: Filter justificantes (receipts) linked to a specific ID (transaction
-      or invoice)
-    show_help: Show details and metadata for a justificante (receipt)
-    show_id_help: Identifier of the justificante (receipt) to show
   browser:
     app_help: Browser automation management (Playwright)
     health:
@@ -71,12 +36,6 @@ cli:
       none: None
       retry_after_seconds: Retry after (seconds)
       state: Operational State
-  categories:
-    app_help: Management of AEAT procedure categories
-    id_help: Unique identifier of the category
-    list_help: List all available procedure categories
-    show_help: Show details of a specific category
-    year_help: Fiscal year
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
@@ -88,6 +47,9 @@ cli:
       help: Diagnose local configuration, registry, profile, auth, and logs
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
+      quarantine_help: Move undecryptable rows into a quarantine table (destructive; requires --yes)
+      quarantine_requires_yes: This operation is destructive. Re-run with --yes to confirm.
+      quarantine_yes_help: Explicitly confirm the quarantine operation
   data:
     app_help: Management of tax data and records
     ledgers:
@@ -128,6 +90,9 @@ cli:
     errors:
       activate_profile: Please activate a profile before managing declarations
       at_least_one_edit: At least one field must be edited
+      binding_assignment: "Invalid --binding assignment: %{value}. Use the form KEY=VALUE (e.g. irpf.previous_year_economic_activity_net_income=13000)."
+      binding_value_not_decimal: "The --binding value %{value} is not a decimal number."
+      draft_selector_ambiguous: "Use either --id or (--modelo + --period); not both."
       file_not_found: Declaration file not found
       filter_parse_error: Error parsing the filter
       missing_id_or_period_modelo: ID or (period + tax form) must be provided
@@ -159,6 +124,7 @@ cli:
       warnings: Warnings
       'yes': 'Yes'
     opts:
+      binding: "Supply a binding value for 'declaration calculate' as KEY=VALUE (repeatable). Use 'aeat app modelo bindings <modelo> --period <P>' to discover required bindings."
       by: Person who reviewed the declaration
       draft_id: Local draft ID
       file: Local exported file to verify
@@ -507,71 +473,23 @@ cli:
       id_help: Identifier of the specific entry to review
       no_rows: No ledger entries pending review
       verbose_help: Show detailed information during review
-  llm:
-    app_help: Large Language Model (LLM) utilities
-    cache_app_help: Management of LLM response cache
-    cache_prune_help: Clean up old LLM cache entries
-    cache_stats_help: Show LLM cache usage statistics
-    complete_help: Generate a response by completing the provided text
-    context_help: Add additional context for the LLM request
-    errors:
-      invalid_input: Invalid LLM input
-      missing_variable: A required variable is missing in the prompt template
-    from_help: Source language for translation or processing
-    input_help: Input text to process with the LLM
-    labels:
-      removed_cache_files: Removed cache files
-    language_help: Target or primary language for the output
-    prompt_id_help: Identifier of the prompt to use
-    since_help: Start date for filtering or querying (YYYY-MM-DD)
-    text_help: Text to be analyzed or processed by the LLM
-    to_help: Target language for translation
-    translate_help: Translate a text from one language to another using LLM
-    until_help: End date for filtering or querying (YYYY-MM-DD)
-    usage_help: Show LLM token usage and costs
-  normatives:
-    app_help: Query tax regulations and obligations
-    errors:
-      load_failed: Failed to load normative database
-    headers:
-      citation: Legal citation
-      code: Code
-      level: Level
-      message: Message
-      numero: Number
-      reference_id: Reference ID
-      titulo: Title
-    labels:
-      articles: Articles
-      articulos: Articles
-      boe_id: BOE ID
-      boe_url: BOE URL
-      found: Found
-      id: ID
-      kind: Type
-      last_reviewed_at: Last reviewed at
-      no_articulos: No articles available
-      number: Number
-      published_at: Published at
-      reviewed_by: Reviewed by
-      short_title: Short title
-      tags: Tags
-    list_help: List and filter tax regulations
-    list_tag_help: Filter regulations by tag (e.g., iva, irpf)
-    show_help: Show details of a specific regulation
-    show_ref_id_help: Reference ID of the regulation to show
-    success:
-      clean: Normative cleanup completed
-      verification_results: Verification results
-    verify_help: Verify integrity and validity of regulations
   overview:
+    allow_incomplete_help: "Allow the calendar to be computed under defaults when regime keys are unset. Without this flag the calendar is refused when warnings exist."
     app_help: Review the current filing workspace
     calendar_help: Show the obligations calendar for a date range
+    calendar_refused_incomplete: "Profile does not declare keys: %{keys}. Run 'aeat setup profile set <key> <value>' or pass --allow-incomplete to see the calendar computed under defaults."
     calendar_requires_dates: Use --from and --to when showing the calendar
     drafts: Drafts
     from_help: Calendar start date (YYYY-MM-DD)
     header: "Model\tPeriod\tState\tOpens\tCloses"
     invoices: Invoices
+    integrity_warning: "%{count} local row(s) cannot be decrypted under the current master key; run 'aeat config doctor' for detail."
+    warning:
+      estimacion_objetiva_unset: "Profile does not declare whether IRPF estimacion objetiva applies. Modelo 131 may or may not apply accordingly."
+      intracomunitario_unset: "Profile does not declare intra-community operations. Modelo 349 may or may not apply accordingly."
+      iva_regime_unset: "Profile does not declare its IVA regime. Calendar assumes regimen general; modelos 303 and 390 may not apply."
+      retencion_arrendamientos_unset: "Profile does not declare whether rent is paid with retencion. Modelo 115 may or may not apply accordingly."
+      retencion_profesionales_unset: "Profile does not declare whether professionals are paid with retencion. Modelo 111 may or may not apply accordingly."
     period: Period
     period_help: Tax period to review (for example, 2026-Q1)
     profile: Profile
@@ -640,19 +558,14 @@ cli:
     verbose_help: Show internal informational logs on stderr
     version_command_help: Show package version and registry summary
     version_help: Show package version and registry summary
-  sanitize:
-    app_help: Data sanitization and anonymization management
-    labels:
-      available: Available
-    status_help: Show the environment sanitization status
   setup:
     app_help: Prepare the local profile and authentication needed to use the app
     auth:
       app_help: Configure and check AEAT authentication
       configure:
-        file_help: Certificate path when the provider requires it
+        file_help: "Absolute or relative path to a P12/PFX certificate file when the provider requires it. Example: --file /path/to/cert.p12."
         help: Configure the authentication provider
-        provider_help: Authentication provider to use
+        provider_help: "Authentication provider. Run 'aeat setup auth providers' to list supported providers (certificate, clave_movil)."
       login:
         help: Start the configured local authentication session
       logout:
@@ -697,10 +610,10 @@ cli:
       unknown: Unknown
       valid: Valid
     init:
-      activity_help: Main economic activity
+      activity_help: "Main economic activity of the autonomo. Free text or IAE/CNAE code. Example: 'IT professional services' or '6201'."
       help: Create or activate a taxpayer profile
-      name_help: Local profile name
-      tax_id_help: Taxpayer NIF/NIE/CIF
+      name_help: "Local label to distinguish this profile from others (never sent to AEAT). Example: 'client-acme' or 'my-profile'."
+      tax_id_help: "Spanish taxpayer identifier. Format: 8 digits + letter (NIF), letter + 7 digits + letter (NIE), or letter + 7 digits + digit (CIF). Example: 12345678Z."
     labels:
       'no': 'no'
       unset: unset

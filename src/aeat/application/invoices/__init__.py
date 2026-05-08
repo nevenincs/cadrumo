@@ -9,8 +9,9 @@ Key exports:
 
 * :func:`find_invoice`, :func:`find_unmatched` — read paths against the
   invoice catalogue.
-* :func:`link_transaction`, :func:`link_transaction_bidirectional` —
-  link an invoice to one or more transactions.
+* :func:`link_transaction` — link an invoice to one or more transactions.
+* :func:`link_invoice_transaction_repositories` — persisted
+  bidirectional invoice/transaction linking.
 * :func:`suggest_reconciliations` — heuristic matcher for unlinked
   invoices.
 * :func:`verify_link_consistency` and :class:`LinkInconsistency` —
@@ -25,7 +26,6 @@ from ...domain.invoices._service import (
     find_invoice,
     find_unmatched,
     link_transaction,
-    link_transaction_bidirectional,
     suggest_reconciliations,
     verify_link_consistency,
 )
@@ -86,7 +86,6 @@ __all__ = [
     "link_invoice_transaction_catalogues",
     "link_invoice_transaction_repositories",
     "link_transaction",
-    "link_transaction_bidirectional",
     "list_invoice_repository_rows",
     "list_invoice_rows",
     "list_unmatched_invoice_repository_rows",

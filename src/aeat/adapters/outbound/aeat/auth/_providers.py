@@ -19,6 +19,7 @@ from .....application.auth import (
     AuthProviderKind,
     describe_provider_operator_impact,
 )
+from ._certificate_backends._base import CERTIFICATE_CONTEXT_MARKER
 from ._certificate_backends._playwright_context import build_client_certificates_kwarg
 from .certificate import (
     CertificateNifParseError,
@@ -34,8 +35,6 @@ if TYPE_CHECKING:
     )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-CERTIFICATE_CONTEXT_MARKER = "_aeat_certificate_thumbprint"
 
 
 class CertificateSessionDetail(BaseModel):

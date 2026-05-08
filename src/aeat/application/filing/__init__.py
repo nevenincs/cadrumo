@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterator, Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -54,6 +53,7 @@ from ...domain.filing import (
     derive_validation_status,
     make_amendment_id,
 )
+from ...domain.period import parse_canonical_period, period_end_date
 from ._calculate import (
     DeclarationCalculateNextAction,
     DeclarationCalculateSummary,
@@ -216,36 +216,16 @@ def _load_registry_snapshot(*, modelo: str, period: str) -> RegistrySnapshot:
         ) from exc
 
 
-_QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
-_MONTH_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$")
-_ANNUAL_PERIOD_RE = re.compile(r"^(?P<year>\d{4})A$")
-
-
 def _registry_period(period: str) -> tuple[int, str]:
-    if re.fullmatch(r"\d{4}", period):
-        return int(period), "0A"
-    if match := _QUARTER_PERIOD_RE.fullmatch(period):
-        return int(match.group("year")), f"{match.group('quarter')}T"
-    if match := _MONTH_PERIOD_RE.fullmatch(period):
-        return int(match.group("year")), match.group("month")
-    if match := _ANNUAL_PERIOD_RE.fullmatch(period):
-        return int(match.group("year")), "0A"
-    raise FilingBuilderError(f"cannot map filing period {period!r} to a registry period")
+    try:
+        return parse_canonical_period(period)
+    except ValueError as exc:
+        raise FilingBuilderError(str(exc)) from exc
 
 
 def _filing_period_date(period: str) -> date:
     filing_year, registry_period = _registry_period(period)
-    if registry_period == "1T":
-        return date(filing_year, 3, 31)
-    if registry_period == "2T":
-        return date(filing_year, 6, 30)
-    if registry_period == "3T":
-        return date(filing_year, 9, 30)
-    if registry_period == "4T":
-        return date(filing_year, 12, 31)
-    if registry_period == "0A":
-        return date(filing_year, 12, 31)
-    return date(filing_year, int(registry_period), 1)
+    return period_end_date(filing_year, registry_period)
 
 
 def _formula_binding_ids(snapshot: RegistrySnapshot) -> set[str]:

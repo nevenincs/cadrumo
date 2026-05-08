@@ -49,6 +49,32 @@ _AAD_BYTES = b"aeat.column.encrypted_bytes.v1"
 _AAD_JSON = b"aeat.column.encrypted_json.v1"
 _HKDF_CONTEXT_COLUMN_LOOKUP = b"aeat.column.hashed_lookup.v1"
 
+
+def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
+    """Decrypt one ``EncryptedBytes`` on-wire payload under the active master key.
+
+    Exposed so iterator consumers (notably
+    :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`)
+    can decrypt rows one-by-one inside their own try/except, rather than
+    delegating to SQLAlchemy's column processor whose failure mode aborts
+    the entire result-set materialisation.
+
+    Args:
+        wire: The raw on-wire bytes stored in an ``EncryptedBytes`` column
+            (``nonce || ciphertext_with_tag``).
+
+    Returns:
+        The decrypted plaintext bytes.
+
+    Raises:
+        DecryptionError: If the AEAD tag fails to verify or the wire form
+            is malformed.
+    """
+    blob = EncryptedBlob.from_wire(wire)
+    key = _resolve_master_key()
+    return decrypt_record(blob, key=key, associated_data=_AAD_BYTES)
+
+
 _HASHED_LOOKUP_DIGEST_SIZE = 32
 """HMAC-SHA256 digest size in bytes."""
 

@@ -9,12 +9,9 @@ repository.
 from __future__ import annotations
 
 from decimal import Decimal
-from pathlib import Path
 from typing import Protocol, cast
 
-from ...core.config import load_settings
 from ...core.logging import get_logger
-from ...core.paths import resolve_record_json_path
 from ...domain.filing import FilingDraft, FilingDraftRepository, FilingValueKind
 from ...domain.filing._amendment import (
     AmendmentKind,
@@ -29,7 +26,6 @@ from ...domain.filing._errors import FilingAmendmentError, FilingBuilderError
 from ...domain.filing._protocols import CasillaSchemaProvider
 
 _logger = get_logger(__name__)
-_AMENDMENTS_DIRNAME = "amendments"
 
 
 class _SubmittedOriginal(Protocol):
@@ -87,7 +83,7 @@ def build_complementaria(
     )
     from ...domain.filing._complementaria_repository import FilingAmendmentRepository
 
-    FilingAmendmentRepository(store_dir=_amendments_dir()).save(amendment)
+    FilingAmendmentRepository().save(amendment)
     _logger.info(
         "built complementaria amendment_id=%s submission_id=%s",
         amendment.amendment_id,
@@ -115,7 +111,7 @@ def _submitted_original(original: object) -> _SubmittedOriginal:
 
 
 def _load_original_draft(draft_id: str) -> FilingDraft:
-    repository = FilingDraftRepository(store_dir=load_settings().aeat_drafts_dir)
+    repository = FilingDraftRepository()
     draft = repository.load(draft_id)
     if draft is None:
         raise FilingBuilderError(f"original draft {draft_id!r} is not persisted")
@@ -168,11 +164,11 @@ def load_amendment(amendment_id: str) -> FilingAmendment:
     """Load a previously persisted amendment by id."""
     from ...domain.filing._complementaria_repository import FilingAmendmentRepository
 
+    repository = FilingAmendmentRepository()
     try:
-        resolve_record_json_path(_amendments_dir(), amendment_id, context="amendment id")
+        repository.envelope_path_for(amendment_id)
     except ValueError as exc:
         raise FilingAmendmentError(str(exc)) from exc
-    repository = FilingAmendmentRepository(store_dir=_amendments_dir())
     loaded = repository.load(amendment_id)
     if loaded is None:
         raise FilingAmendmentError(f"no persisted amendment with id {amendment_id!r}")
@@ -184,23 +180,12 @@ def list_amendments(*, modelo: str | None = None) -> tuple[FilingAmendment, ...]
     """Return every persisted amendment, optionally filtered by modelo."""
     from ...domain.filing._complementaria_repository import FilingAmendmentRepository
 
-    target_dir = _amendments_dir()
-    if not target_dir.exists():
-        _logger.debug("amendments directory absent; returning empty list")
-        return ()
-    repository = FilingAmendmentRepository(store_dir=target_dir)
+    repository = FilingAmendmentRepository()
     results = tuple(
         amendment for amendment in repository.iter_amendments() if modelo is None or amendment.original_model == modelo
     )
     _logger.debug("listed %d amendments modelo_filter=%s", len(results), modelo)
     return results
-
-
-def _amendments_dir() -> Path:
-    settings = load_settings()
-    target = settings.aeat_submissions_dir / _AMENDMENTS_DIRNAME
-    target.mkdir(parents=True, exist_ok=True)
-    return target
 
 
 __all__ = [

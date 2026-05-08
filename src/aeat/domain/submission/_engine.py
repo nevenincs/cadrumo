@@ -3,7 +3,7 @@
 Exposes :class:`SubmissionEngine`, the only sanctioned surface for
 running preflight gates and reading historical
 :class:`aeat.domain.submission.SubmittedFiling` records persisted under
-:attr:`aeat.core.config.Settings.aeat_submissions_dir`.
+the secure SQL object backend.
 
 AEAT remote writes and write-shaped portal walks are permanently
 forbidden; the engine intentionally exposes no transport method.
@@ -34,9 +34,7 @@ class SubmissionEngine:
     Attributes:
         auth_provider: Narrow auth-provider probe used by preflight.
         deadline_checker: Narrow window checker used by preflight.
-        settings: Resolved :class:`aeat.core.config.Settings` whose
-            ``aeat_submissions_dir`` backs :meth:`load_submission` and
-            :meth:`list_submissions`.
+        settings: Resolved :class:`aeat.core.config.Settings`.
     """
 
     def __init__(
@@ -82,16 +80,16 @@ class SubmissionEngine:
 
         Raises:
             SubmissionError: If ``submission_id`` is malformed or no
-                file exists at the resolved path.
+                secure object exists for the supplied id.
         """
-        repository = SubmissionRepository(store_dir=self.settings.aeat_submissions_dir)
+        repository = SubmissionRepository()
         try:
             filing = repository.load(submission_id)
         except ValueError as exc:
             raise SubmissionError(str(exc)) from exc
         except StorageError as exc:
             _logger.error(
-                "submission record validation failed: id=%s path=%s",
+                "submission record validation failed: id=%s marker=%s",
                 submission_id,
                 repository.store_dir,
                 exc_info=True,
@@ -119,9 +117,9 @@ class SubmissionEngine:
         Returns:
             A chronologically reverse-sorted tuple of
             :class:`SubmittedFiling` records. Returns an empty tuple
-            when the submissions directory does not yet exist.
+            when no submission objects exist.
         """
-        repository = SubmissionRepository(store_dir=self.settings.aeat_submissions_dir)
+        repository = SubmissionRepository()
         results: list[SubmittedFiling] = []
         for filing in repository.iter_submissions():
             if modelo is not None and filing.modelo != modelo:

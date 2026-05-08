@@ -455,6 +455,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.persistence.storage.errors.SecureObjectUnreadableError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_SECURE_OBJECT_UNREADABLE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_secure_object_unreadable",
+            default_suggestion="aeat config doctor",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.persistence.storage.errors.EncryptionError",
         ErrorCode(
             code="INTEGRITY_STORAGE_ENCRYPTION",

@@ -29,39 +29,6 @@ categories:
   test_profile:
     display_label_851219: Etiqueta de visualización 851219
 cli:
-  attachments:
-    add_help: Añadir un justificante o archivo adjunto
-    add_kind_help: Tipo de archivo adjunto (ej. factura, justificante, contrato)
-    add_link_invoice_help: Vincular el justificante a un ID de factura existente
-    add_link_tx_help: Vincular el justificante a un ID de transacción bancaria
-    add_metadata_help: Añadir metadatos personalizados (clave=valor) al justificante
-    add_mime_type_help: Forzar un tipo MIME específico para el justificante
-    add_notes_help: Añadir notas u observaciones al justificante
-    add_path_help: Ruta local del archivo justificante a añadir
-    add_source_help: Origen o fuente del justificante (ej. correo, escáner, portal)
-    add_source_ref_help: Referencia de origen del justificante (ej. Message-ID de
-      correo, URL, localizador)
-    app_help: Gestión de justificantes y archivos adjuntos (añadir, listar, visualizar)
-    errors:
-      duplicate_metadata_key: 'La clave de metadatos del justificante está duplicada:
-        {key}'
-      empty_metadata_key: La clave de metadatos del justificante no puede estar vacía
-      empty_metadata_value: El valor de metadatos del justificante no puede estar
-        vacío
-      empty_mime_type: El tipo MIME del justificante no puede estar vacío
-      empty_source_reference: La referencia de origen del justificante no puede estar
-        vacía
-      invalid_metadata_format: Formato de metadatos del justificante no válido. Debe
-        ser clave=valor
-    list:
-      no_attachments: No se encontraron justificantes o archivos adjuntos
-    list_header: Justificantes y archivos adjuntos
-    list_help: Listar los justificantes y archivos adjuntos registrados
-    list_kind_filter_help: Filtrar justificantes por tipo (ej. factura, ticket, contrato)
-    list_linked_to_help: Filtrar justificantes vinculados a un ID específico (transacción
-      o factura)
-    show_help: Mostrar los detalles y metadatos de un justificante
-    show_id_help: Identificador del justificante a mostrar
   browser:
     app_help: Gestión de la automatización del navegador (Playwright)
     health:
@@ -73,12 +40,6 @@ cli:
       none: Ninguno
       retry_after_seconds: Reintentar después (segundos)
       state: Estado operativo
-  categories:
-    app_help: Gestión de categorías de trámites de la AEAT
-    id_help: Identificador único de la categoría
-    list_help: Listar todas las categorías de trámites disponibles
-    show_help: Mostrar detalles de una categoría específica
-    year_help: Ejercicio fiscal
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
@@ -90,6 +51,9 @@ cli:
       help: Diagnosticar configuración local, registro, perfil, autenticación y logs
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
+      quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción destructiva, requiere --yes)
+      quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con --yes para confirmar.
+      quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
   data:
     app_help: Gestión de datos y registros fiscales
     ledgers:
@@ -129,6 +93,9 @@ cli:
     errors:
       activate_profile: Por favor, active un perfil antes de gestionar declaraciones
       at_least_one_edit: Se debe editar al menos un campo
+      binding_assignment: "Asignacion --binding invalida: %{value}. Use el formato KEY=VALOR (ej: irpf.previous_year_economic_activity_net_income=13000)."
+      binding_value_not_decimal: "El valor del --binding %{value} no es un numero decimal."
+      draft_selector_ambiguous: "Use solo --id o (--modelo + --period); no ambos a la vez."
       file_not_found: No se ha encontrado el archivo de la declaración
       filter_parse_error: Error al procesar el filtro
       missing_id_or_period_modelo: Se debe proporcionar el ID o el (periodo + modelo)
@@ -159,6 +126,7 @@ cli:
       warnings: Advertencias
       'yes': Sí
     opts:
+      binding: "Suministrar un valor de binding para 'declaration calculate' como KEY=VALOR (repetible). Use 'aeat app modelo bindings <modelo> --period <P>' para descubrir los bindings requeridos."
       by: Persona que revisó la declaración
       draft_id: ID del borrador local
       file: Archivo local exportado a verificar
@@ -515,71 +483,23 @@ cli:
       id_help: Identificador de la entrada específica a revisar
       no_rows: No hay entradas del libro pendientes de revisión
       verbose_help: Mostrar información detallada durante la revisión
-  llm:
-    app_help: Utilidades de modelos de lenguaje (LLM)
-    cache_app_help: Gestión de la caché de respuestas de LLM
-    cache_prune_help: Limpiar entradas antiguas de la caché de LLM
-    cache_stats_help: Mostrar estadísticas de uso de la caché de LLM
-    complete_help: Generar una respuesta completando el texto proporcionado
-    context_help: Añadir contexto adicional para la solicitud al LLM
-    errors:
-      invalid_input: Entrada para el LLM no válida
-      missing_variable: Falta una variable requerida en la plantilla del prompt
-    from_help: Idioma de origen para la traducción o el procesamiento
-    input_help: Texto de entrada para procesar con el LLM
-    labels:
-      removed_cache_files: Archivos de caché eliminados
-    language_help: Idioma destino o principal para la salida
-    prompt_id_help: Identificador del prompt a utilizar
-    since_help: Fecha de inicio para filtrar o consultar (AAAA-MM-DD)
-    text_help: Texto a analizar o procesar por el LLM
-    to_help: Idioma de destino para la traducción
-    translate_help: Traducir un texto de un idioma a otro usando LLM
-    until_help: Fecha de fin para filtrar o consultar (AAAA-MM-DD)
-    usage_help: Mostrar el uso de tokens y costes de LLM
-  normatives:
-    app_help: Consultar normativa y obligaciones fiscales
-    errors:
-      load_failed: Fallo al cargar la base de datos normativa
-    headers:
-      citation: Cita legal
-      code: Código
-      level: Nivel
-      message: Mensaje
-      numero: Número
-      reference_id: ID de referencia
-      titulo: Título
-    labels:
-      articles: Artículos
-      articulos: Artículos
-      boe_id: ID BOE
-      boe_url: URL del BOE
-      found: Encontrado
-      id: ID
-      kind: Tipo
-      last_reviewed_at: Última revisión
-      no_articulos: No hay artículos disponibles
-      number: Número
-      published_at: Publicado el
-      reviewed_by: Revisado por
-      short_title: Título corto
-      tags: Etiquetas
-    list_help: Listar y filtrar normativas fiscales
-    list_tag_help: Filtrar normativas por etiqueta (ej. iva, irpf)
-    show_help: Mostrar detalles de una normativa específica
-    show_ref_id_help: ID de referencia de la normativa a mostrar
-    success:
-      clean: Limpieza de normativas completada
-      verification_results: Resultados de verificación
-    verify_help: Verificar integridad y validez de normativas
   overview:
+    allow_incomplete_help: "Permitir el calendario con valores por defecto cuando faltan claves de regimen en el perfil. Sin esta opcion, el calendario se rechaza si hay advertencias."
     app_help: Revisar el estado actual del espacio de trabajo fiscal
     calendar_help: Mostrar calendario de obligaciones para un rango de fechas
+    calendar_refused_incomplete: "El perfil no declara las claves: %{keys}. Ejecuta 'aeat setup profile set <clave> <valor>' o usa --allow-incomplete para ver el calendario calculado bajo valores por defecto."
     calendar_requires_dates: Use --from y --to al consultar el calendario
     drafts: Borradores
     from_help: Fecha inicial del calendario (AAAA-MM-DD)
     header: "Modelo\tPeriodo\tEstado\tAbre\tCierra"
     invoices: Facturas
+    integrity_warning: "%{count} fila(s) locales no se pueden descifrar bajo la clave maestra actual; ejecuta 'aeat config doctor' para detalle."
+    warning:
+      estimacion_objetiva_unset: "El perfil no declara si tributa IRPF en estimacion objetiva. El modelo 131 puede aplicarse o no en consecuencia."
+      intracomunitario_unset: "El perfil no declara si realiza operaciones intracomunitarias. El modelo 349 puede aplicarse o no en consecuencia."
+      iva_regime_unset: "El perfil no declara su regimen IVA. El calendario asume regimen general; los modelos 303 y 390 pueden no corresponder."
+      retencion_arrendamientos_unset: "El perfil no declara si paga alquileres con retencion. El modelo 115 puede aplicarse o no en consecuencia."
+      retencion_profesionales_unset: "El perfil no declara si paga a profesionales con retencion. El modelo 111 puede aplicarse o no en consecuencia."
     period: Periodo
     period_help: Periodo fiscal a revisar (por ejemplo, 2026-Q1)
     profile: Perfil
@@ -652,20 +572,15 @@ cli:
     verbose_help: Mostrar logs internos informativos en stderr
     version_command_help: Mostrar la versión del paquete y el resumen del registro
     version_help: Mostrar la versión del paquete y el resumen del registro
-  sanitize:
-    app_help: Gestión de la sanitización y anonimización de datos
-    labels:
-      available: Disponible
-    status_help: Mostrar el estado de la sanitización del entorno
   setup:
     app_help: Preparar el perfil local y la autenticación necesarios para usar la
       aplicación
     auth:
       app_help: Configurar y comprobar la autenticación de AEAT
       configure:
-        file_help: Ruta del certificado cuando el proveedor lo requiera
+        file_help: "Ruta absoluta o relativa al archivo de certificado P12/PFX cuando el proveedor lo requiera. Ejemplo: --file /ruta/al/certificado.p12."
         help: Configurar el proveedor de autenticación
-        provider_help: Proveedor de autenticación a usar
+        provider_help: "Proveedor de autenticacion. Ejecuta 'aeat setup auth providers' para listar los proveedores soportados (certificate, clave_movil)."
       login:
         help: Iniciar la sesión local de autenticación configurada
       logout:
@@ -712,10 +627,10 @@ cli:
       unknown: Desconocido
       valid: Válido
     init:
-      activity_help: Actividad económica principal
+      activity_help: "Actividad economica principal del autonomo. Texto libre o codigo IAE/CNAE. Ejemplo: 'Servicios profesionales de informatica' o '6201'."
       help: Crear o activar un perfil de contribuyente
-      name_help: Nombre del perfil local
-      tax_id_help: NIF/NIE/CIF del contribuyente
+      name_help: "Nombre local para distinguir este perfil de otros (no se envia a la AEAT). Ejemplo: 'cliente-acme' o 'mi-perfil'."
+      tax_id_help: "Identificador fiscal espanol del contribuyente. Formato: 8 digitos + letra (NIF), letra + 7 digitos + letra (NIE), o letra + 7 digitos + digito (CIF). Ejemplo: 12345678Z."
     labels:
       'no': 'no'
       unset: sin valor

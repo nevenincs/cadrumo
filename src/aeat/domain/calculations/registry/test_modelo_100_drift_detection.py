@@ -173,7 +173,15 @@ def test_no_orphan_parameters_in_any_revision() -> None:
 #: preserved on disk so future formula work can land without
 #: re-entering authoritative bracket values.
 _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
-    f"renta-{year}-escala-estatal-base-general" for year in (2022, 2023, 2024, 2025)
+    {
+        "renta-2025-ric-reduccion-rate-maximo",
+        "renta-2025-ric-materializacion-plazo-anos",
+        "renta-2025-ric-mantenimiento-plazo-anos",
+        "renta-2025-zec-tipo-gravamen-reducido",
+        "renta-2025-estimacion-objetiva-reduccion-general-rate",
+        "renta-2025-estimacion-objetiva-indice-corrector-empresas-pequena-dimension-rate",
+        "renta-2025-atribucion-rentas-rate-pass-through",
+    }
 )
 
 
@@ -240,6 +248,9 @@ def _collect_parameter_refs(expression, accumulator: set[str]) -> None:
     parameter = getattr(expression, "parameter", None)
     if parameter is not None:
         accumulator.add(parameter)
+    dispatch_table = getattr(expression, "dispatch_table", None)
+    if dispatch_table:
+        accumulator.update(dispatch_table.values())
     args = getattr(expression, "args", None)
     if args:
         for arg in args:

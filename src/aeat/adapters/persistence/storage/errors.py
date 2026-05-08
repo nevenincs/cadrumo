@@ -47,6 +47,24 @@ class DecryptionError(EncryptionError):
     """Raised when AEAD decryption fails (tag mismatch, malformed input)."""
 
 
+class SecureObjectUnreadableError(DecryptionError):
+    """Raised when one stored secure object cannot be decrypted under the current master key.
+
+    Distinct from the generic :class:`DecryptionError` so iterator-shaped
+    consumers can surface a structured per-row failure (namespace, row id,
+    underlying cause) without aborting the iteration. The plaintext bound
+    to such a row is cryptographically unrecoverable from this process: the
+    master key under which it was sealed is no longer available.
+    """
+
+    def __init__(self, namespace: str, row_id: int, *, cause: BaseException | None = None) -> None:
+        message = f"secure object {namespace}/#{row_id} cannot be decrypted under the current master key"
+        super().__init__(message)
+        self.namespace = namespace
+        self.row_id = row_id
+        self.__cause__ = cause
+
+
 class KeyDerivationError(EncryptionError):
     """Raised when a key-derivation step fails."""
 

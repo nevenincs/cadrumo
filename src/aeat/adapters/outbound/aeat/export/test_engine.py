@@ -7,12 +7,14 @@ these tests pin that contract structurally.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
 
+from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....application.auth import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings
 from .....domain.submission import (
@@ -31,6 +33,18 @@ from . import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
+
+
+@pytest.fixture(autouse=True)
+def _secure_database(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Run historical-record tests against a per-test secure-object database."""
+
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
+    try:
+        yield
+    finally:
+        dispose_engine()
 
 
 @dataclass
@@ -133,7 +147,7 @@ class TestHistoricalRecords:
         """Assert ``load_submission`` round-trips a previously persisted encrypted record."""
         engine = _build_engine(tmp_path)
         filing = _historical_filing(submission_id=make_submission_id("draft-1", 1))
-        SubmissionRepository(store_dir=tmp_path / "submissions").save(filing)
+        SubmissionRepository().save(filing)
         assert engine.load_submission(filing.submission_id) == filing
 
     def test_load_submission_rejects_traversal_id(self, tmp_path: Path) -> None:
@@ -147,7 +161,7 @@ class TestHistoricalRecords:
         engine = _build_engine(tmp_path)
         first = _historical_filing(submission_id="sub-1", modelo="130")
         second = _historical_filing(submission_id="sub-2", modelo="303")
-        repository = SubmissionRepository(store_dir=tmp_path / "submissions")
+        repository = SubmissionRepository()
         for filing in (first, second):
             repository.save(filing)
         assert engine.list_submissions(modelo="130") == (first,)

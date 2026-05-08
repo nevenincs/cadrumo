@@ -25,7 +25,6 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-import unicodedata
 from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -62,6 +61,7 @@ from .....domain.calculations.registry import (
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
 from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
+from ._adapter_utils import normalize_response_text
 from ._auth_state import storage_state_for_session
 from ._errors import JustificanteFetchError, SedeNavigationError, SedeParseError
 from ._schema import (
@@ -666,7 +666,7 @@ def _listbox_action_indexes(listbox) -> dict[str, int] | None:
     if not headers:
         return None
     for index, header in enumerate(headers):
-        label = _normalize_header_label(header.get_text(" ", strip=True))
+        label = normalize_response_text(header.get_text(" ", strip=True))
         if "justificante" in label:
             indexes["justificante"] = index
         elif "fichero presentado" in label or ("descarga" in label and "fichero" in label):
@@ -674,12 +674,6 @@ def _listbox_action_indexes(listbox) -> dict[str, int] | None:
         elif "copia" in label and "declaracion" in label:
             indexes["declaration_pdf"] = index
     return indexes
-
-
-def _normalize_header_label(value: str) -> str:
-    decomposed = unicodedata.normalize("NFKD", value)
-    ascii_text = "".join(char for char in decomposed if not unicodedata.combining(char))
-    return re.sub(r"\s+", " ", ascii_text).strip().lower()
 
 
 def _cell_text(cell_texts: list[str], index: int | None) -> str | None:

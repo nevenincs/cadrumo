@@ -38,17 +38,47 @@ def test_setup_status_with_complete_profile_points_to_auth_configuration() -> No
         {
             "tax.id": "12345678Z",
             "activity": "design",
+            "iva.regime": "general",
         },
     )
 
     report = build_setup_status(state)
 
     assert report.profile_ready is True
+    assert report.identity_ready is True
+    assert report.enrolment_ready is True
     assert report.missing_required == ()
-    assert report.profile_present_keys == 2
+    assert report.missing_enrolment == ()
+    assert report.profile_present_keys == 3
     assert report.profile_total_keys > report.profile_present_keys
     assert report.auth_provider == ""
     assert report.next_action == "aeat setup auth configure --provider certificate --file PATH"
+
+
+def test_setup_status_with_identity_only_remains_not_ready_until_enrolment_declared() -> None:
+    """A profile carrying just the required identity keys must NOT report ready.
+
+    The contract: ``profile_ready`` is the AND of identity readiness
+    (tax.id, activity) and enrolment readiness (iva.regime). Until both
+    axes are satisfied, the operator cannot file any modelo, so the
+    boolean must NOT report ready.
+    """
+    state = set_profile_values(
+        UserCliState(),
+        "operator",
+        {
+            "tax.id": "12345678Z",
+            "activity": "design",
+        },
+    )
+
+    report = build_setup_status(state)
+
+    assert report.identity_ready is True
+    assert report.enrolment_ready is False
+    assert report.profile_ready is False
+    assert report.missing_enrolment == ("iva.regime",)
+    assert report.next_action == "aeat setup profile set iva.regime general"
 
 
 def test_setup_status_with_provider_points_to_login_until_session_ready() -> None:
@@ -58,6 +88,7 @@ def test_setup_status_with_provider_points_to_login_until_session_ready() -> Non
         {
             "tax.id": "12345678Z",
             "activity": "design",
+            "iva.regime": "general",
         },
     )
     state = update_auth(state, provider="clave_movil")
@@ -76,6 +107,7 @@ def test_setup_status_with_verified_session_points_to_app_overview() -> None:
         {
             "tax.id": "12345678Z",
             "activity": "design",
+            "iva.regime": "general",
         },
     )
     state = update_auth(state, provider="clave_movil")

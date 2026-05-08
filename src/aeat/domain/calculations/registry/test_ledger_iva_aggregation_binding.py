@@ -20,9 +20,15 @@ from aeat.domain.calculations.registry import (
     DataBindingDefinition,
     IvaLedgerObservation,
     ModeloRevision,
+    RegistryCalculationResult,
+    RegistryFilingObservation,
     RegistryValidationError,
+    ValidatedRegistryAuthority,
+    calculate_registry_snapshot,
     load_registry_tree,
+    resolve_bound_casilla_inputs,
     resolve_ledger_iva_aggregation_binding_values,
+    resolve_previous_filing_binding_values,
     validate_ledger_iva_aggregation_binding_definition,
 )
 from aeat.domain.vat import (
@@ -39,6 +45,11 @@ def _modelo_303_revision() -> ModeloRevision:
     modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     modelo = next(item for item in modelos if item.id == "303")
     return modelo.revisions["2009-y-siguientes"]
+
+
+@lru_cache(maxsize=1)
+def _registry_authority() -> ValidatedRegistryAuthority:
+    return ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
 
 
 def _binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> DataBindingDefinition:
@@ -76,6 +87,55 @@ def _observation(
 
 def _revision_with_bindings(*bindings: DataBindingDefinition) -> ModeloRevision:
     return _modelo_303_revision().model_copy(update={"bindings": bindings})
+
+
+def _calculate_303_from_observations(
+    *,
+    filing_year: int,
+    period: str,
+    observations: tuple[IvaLedgerObservation, ...],
+) -> RegistryCalculationResult:
+    snapshot = _registry_authority().snapshot("303", filing_year=filing_year, period=period)
+    binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
+    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    return calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": observations[-1].transaction_date},
+    )
+
+
+def _calculate_390_from_observations_and_303_filings(
+    *,
+    filing_year: int,
+    observations: tuple[IvaLedgerObservation, ...],
+    quarterly_results: dict[str, RegistryCalculationResult],
+) -> RegistryCalculationResult:
+    snapshot = _registry_authority().snapshot("390", filing_year=filing_year, period="0A")
+    ledger_binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
+    previous_filing_values = resolve_previous_filing_binding_values(
+        snapshot.revision,
+        (
+            RegistryFilingObservation(
+                modelo="303",
+                filing_year=filing_year,
+                period=period,
+                casilla_values=result.values,
+            )
+            for period, result in quarterly_results.items()
+        ),
+        filing_year=filing_year,
+        period="0A",
+    )
+    binding_values = {**ledger_binding_values, **previous_filing_values}
+    inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    return calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(filing_year, 12, 31)},
+    )
 
 
 def test_validate_accepts_canonical_iva_repercutido_binding() -> None:
@@ -227,6 +287,74 @@ def test_resolve_handles_multiple_bindings_independently() -> None:
         "modelo-303-iva-repercutido-general-cuota": Decimal("210"),
         "modelo-303-iva-soportado-interiores-cuota": Decimal("63"),
     }
+
+
+def test_modelo_390_annual_iva_totals_reconcile_with_four_registry_calculated_modelo_303_filings() -> None:
+    quarterly_observations = {
+        "1T": (
+            _observation(ledger_id="q1-output", txn_date=date(2025, 2, 15), iva=Decimal("210.00")),
+            _observation(
+                ledger_id="q1-input",
+                txn_date=date(2025, 3, 1),
+                flow=IvaFlowDirection.SOPORTADO,
+                iva=Decimal("42.00"),
+            ),
+        ),
+        "2T": (
+            _observation(ledger_id="q2-output", txn_date=date(2025, 5, 10), iva=Decimal("105.00")),
+            _observation(
+                ledger_id="q2-input",
+                txn_date=date(2025, 6, 20),
+                flow=IvaFlowDirection.SOPORTADO,
+                iva=Decimal("21.00"),
+            ),
+        ),
+        "3T": (
+            _observation(
+                ledger_id="q3-output-reduced",
+                txn_date=date(2025, 8, 12),
+                category=VATCategory.DOMESTIC_REDUCED_10,
+                rate_kind=VATRateKind.REDUCED,
+                iva=Decimal("50.00"),
+            ),
+        ),
+        "4T": (
+            _observation(
+                ledger_id="q4-output-reverse-charge",
+                txn_date=date(2025, 11, 4),
+                category=VATCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+                flow=IvaFlowDirection.AUTOREPERCUTIDO,
+                iva=Decimal("84.00"),
+            ),
+        ),
+    }
+    quarterly_results = {
+        period: _calculate_303_from_observations(
+            filing_year=2025,
+            period=period,
+            observations=observations,
+        )
+        for period, observations in quarterly_observations.items()
+    }
+    annual_result = _calculate_390_from_observations_and_303_filings(
+        filing_year=2025,
+        observations=tuple(row for rows in quarterly_observations.values() for row in rows),
+        quarterly_results=quarterly_results,
+    )
+
+    chain_pairs = (
+        ("iva.cuota-devengada-total", "iva.anual.cuota-devengada-total", "iva.anual.reconciliacion.devengada-303"),
+        ("iva.cuota-deducible-total", "iva.anual.cuota-deducible-total", "iva.anual.reconciliacion.deducible-303"),
+        (
+            "iva.resultado-regimen-general",
+            "iva.anual.resultado-regimen-general",
+            "iva.anual.reconciliacion.resultado-303",
+        ),
+    )
+    for periodic_casilla, annual_casilla, reconciliation_casilla in chain_pairs:
+        periodic_total = sum((result.values[periodic_casilla] for result in quarterly_results.values()), Decimal("0"))
+        assert annual_result.values[annual_casilla] == periodic_total
+        assert annual_result.values[reconciliation_casilla] == periodic_total
 
 
 def test_iva_ledger_observation_is_strict_and_frozen() -> None:

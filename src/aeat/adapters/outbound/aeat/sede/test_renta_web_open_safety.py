@@ -17,6 +17,7 @@ import re
 import pytest
 
 from .....core.paths import PROJECT_ROOT
+from .....domain.calculations.registry import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
 from ._renta_web_open_safety import (
     ALLOWED_CLICK_OVERRIDES,
     FORBIDDEN_CLICK_TOKENS,
@@ -26,6 +27,21 @@ from ._renta_web_open_safety import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
+
+def test_click_tokens_include_canonical_write_verb_tokens() -> None:
+    """The click-time denylist MUST cover every canonical write-verb token.
+
+    Both the URL/method guard in ``_remote_state_guard._FORBIDDEN_TOKENS``
+    and this click-time denylist derive from
+    ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS``. If a future refactor accidentally
+    drops the canonical core from the click set, the safety net silently
+    weakens — this regression test breaks the build first.
+    """
+
+    missing = AEAT_WRITE_FORBIDDEN_VERB_TOKENS - FORBIDDEN_CLICK_TOKENS
+    assert not missing, f"FORBIDDEN_CLICK_TOKENS is missing canonical write verbs: {sorted(missing)}"
+
 
 _SEDE_DIR = PROJECT_ROOT / "src" / "aeat" / "adapters" / "outbound" / "aeat" / "sede"
 _DRIVER_FILE = _SEDE_DIR / "_renta_web_open.py"

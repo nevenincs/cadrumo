@@ -144,7 +144,7 @@ def build_provider(kind: AuthProviderKind, settings: Settings) -> AuthProvider:
             settings=settings,
             browser_session_factory=default_browser_session_factory,
         )
-    except NotImplementedError as exc:
+    except ValueError as exc:
         raise ProviderUnavailableError(str(exc)) from exc
 
 

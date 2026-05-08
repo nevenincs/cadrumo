@@ -18,10 +18,20 @@ six-state enum. The typed query record
 
 The aggregator is pure: no I/O, no mutation. The CLI wires it to the
 operator's active profile and the parsed ``--from`` / ``--to`` dates.
+
+When the caller supplies ``raw_values`` (the operator's user_cli
+profile values mapping), the aggregator additionally detects which
+deadline-engine-consumed keys are unset and surfaces a typed
+``CalendarWarning`` per missing key plus a ``CalendarCompleteness``
+breakdown listing computable / under-default modelos. This closes
+UX-008 from the 2026-05-08 CLI gap audit recompile: the engine no
+longer silently computes obligations from its defaults without
+flagging that the operator never declared the gating field.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from enum import StrEnum
 from types import MappingProxyType
@@ -169,6 +179,61 @@ class OverviewCalendarEntry(BaseModel):
         return self
 
 
+class CalendarWarning(BaseModel):
+    """One under-specified-profile warning attached to a calendar query.
+
+    Surfaces when a deadline-engine-consumed profile key is unset in
+    the operator's user_cli state. The engine has already returned a
+    schedule under default values for that key, so the calendar IS
+    computable -- but the operator must verify the default matches
+    their actual regime / enrolment. The audit captured this as
+    UX-008 ("calendar silently omits modelos when profile facts are
+    absent"); the practical effect is "calendar computed under
+    defaults the operator never confirmed".
+
+    Attributes:
+        code: Stable warning identifier (e.g.
+            ``profile.iva_regime_unset``).
+        message: Translation key the renderer feeds through ``tr``.
+        fix_command: Concrete shell command the operator can run to
+            address the warning (e.g.
+            ``aeat setup profile set iva.regime general``).
+        affected_modelos: Tuple of modelo identifiers whose
+            applicability rule reads the missing key.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    code: str = Field(min_length=1, max_length=128)
+    message: str = Field(min_length=1, max_length=128)
+    fix_command: str = Field(min_length=1, max_length=256)
+    affected_modelos: tuple[str, ...] = Field(default=())
+
+
+class CalendarCompleteness(BaseModel):
+    """Breakdown of which modelos are computed under explicit values vs defaults.
+
+    Attributes:
+        explicitly_set_keys: Profile keys the operator declared and
+            whose values the engine read.
+        defaulted_keys: Profile keys the operator left unset; the
+            engine fell back to its built-in defaults for these.
+        computable_modelos: Modelos that appear in the returned
+            schedule under the resolved (possibly defaulted) values.
+        defaulted_modelos: Subset of ``computable_modelos`` whose
+            applicability rule depends on at least one defaulted
+            key. The operator may want to re-run the calendar after
+            confirming the regime.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    explicitly_set_keys: tuple[str, ...] = Field(default=())
+    defaulted_keys: tuple[str, ...] = Field(default=())
+    computable_modelos: tuple[str, ...] = Field(default=())
+    defaulted_modelos: tuple[str, ...] = Field(default=())
+
+
 class OverviewCalendar(BaseModel):
     """Result of an ``aeat app overview status --calendar`` query.
 
@@ -180,6 +245,12 @@ class OverviewCalendar(BaseModel):
             uses, so the CLI table is deterministic.
         generated_at: UTC timestamp of when the aggregator ran. The
             only non-deterministic field.
+        warnings: Tuple of :class:`CalendarWarning` rows for every
+            under-specified profile key the engine relied on a default
+            for. Empty when the operator declared every gating key.
+        completeness: Per-key / per-modelo breakdown of explicit vs
+            defaulted resolution. Always present; carries empty
+            tuples when no ``raw_values`` was supplied at build time.
     """
 
     model_config = _STRICT_FROZEN
@@ -187,6 +258,8 @@ class OverviewCalendar(BaseModel):
     range: OverviewCalendarRange
     entries: tuple[OverviewCalendarEntry, ...]
     generated_at: datetime
+    warnings: tuple[CalendarWarning, ...] = Field(default=())
+    completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
 
 
 def _entry_intersects_range(
@@ -197,12 +270,84 @@ def _entry_intersects_range(
     return obligation.closes_on >= calendar_range.from_date and obligation.opens_on <= calendar_range.to_date
 
 
+_GATING_FIELDS: MappingProxyType[str, tuple[tuple[str, ...], str, str]] = MappingProxyType(
+    {
+        "iva.regime": (
+            ("303", "390"),
+            "cli.overview.warning.iva_regime_unset",
+            "aeat setup profile set iva.regime general",
+        ),
+        "does_intracomunitario": (
+            ("349",),
+            "cli.overview.warning.intracomunitario_unset",
+            "aeat setup profile set does_intracomunitario true",
+        ),
+        "pays_professionals_with_retencion": (
+            ("111",),
+            "cli.overview.warning.retencion_profesionales_unset",
+            "aeat setup profile set pays_professionals_with_retencion true",
+        ),
+        "pays_rent_with_retencion": (
+            ("115",),
+            "cli.overview.warning.retencion_arrendamientos_unset",
+            "aeat setup profile set pays_rent_with_retencion true",
+        ),
+        "uses_objective_estimation_irpf": (
+            ("131",),
+            "cli.overview.warning.estimacion_objetiva_unset",
+            "aeat setup profile set uses_objective_estimation_irpf true",
+        ),
+    }
+)
+"""Profile keys the deadline engine reads when classifying applicability,
+mapped to ``(affected_modelos, message_key, fix_command)``. The list is the
+audit-named subset; future engine extensions can add rows here without
+changing the warning-rendering plumbing."""
+
+
+def _build_completeness_and_warnings(
+    raw_values: Mapping[str, object] | None,
+    entries: tuple[OverviewCalendarEntry, ...],
+) -> tuple[CalendarCompleteness, tuple[CalendarWarning, ...]]:
+    """Inspect the raw profile values and compute warnings + completeness."""
+    if raw_values is None:
+        return CalendarCompleteness(), ()
+    explicitly_set: list[str] = []
+    defaulted: list[str] = []
+    warnings: list[CalendarWarning] = []
+    defaulted_modelos: set[str] = set()
+    for key, (affected_modelos, message_key, fix_command) in _GATING_FIELDS.items():
+        raw = raw_values.get(key)
+        if raw is not None and str(raw).strip():
+            explicitly_set.append(key)
+            continue
+        defaulted.append(key)
+        warnings.append(
+            CalendarWarning(
+                code=key,
+                message=message_key,
+                fix_command=fix_command,
+                affected_modelos=affected_modelos,
+            )
+        )
+        defaulted_modelos.update(affected_modelos)
+    computable_modelos = tuple(sorted({entry.modelo for entry in entries}))
+    completeness = CalendarCompleteness(
+        explicitly_set_keys=tuple(explicitly_set),
+        defaulted_keys=tuple(defaulted),
+        computable_modelos=computable_modelos,
+        defaulted_modelos=tuple(sorted(defaulted_modelos & set(computable_modelos))),
+    )
+    return completeness, tuple(warnings)
+
+
 def build_overview_calendar(
     profile: AutonomoProfile,
     calendar_range: OverviewCalendarRange,
     *,
     today: date,
     engine: DeadlineEngine | None = None,
+    raw_values: Mapping[str, object] | None = None,
 ) -> OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
 
@@ -251,14 +396,20 @@ def build_overview_calendar(
             )
 
     entries.sort(key=lambda entry: (entry.closes_on, entry.modelo, entry.period))
+    entries_tuple = tuple(entries)
+    completeness, warnings = _build_completeness_and_warnings(raw_values, entries_tuple)
     return OverviewCalendar(
         range=calendar_range,
-        entries=tuple(entries),
+        entries=entries_tuple,
         generated_at=datetime.now(UTC),
+        warnings=warnings,
+        completeness=completeness,
     )
 
 
 __all__ = [
+    "CalendarCompleteness",
+    "CalendarWarning",
     "OverviewCalendar",
     "OverviewCalendarEntry",
     "OverviewCalendarRange",

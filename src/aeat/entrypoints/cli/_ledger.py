@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -17,6 +16,7 @@ from ...adapters.inbound.financial.providers import (
     XlsxProvider,
     detect_provider,
 )
+from ...adapters.inbound.pdf._utils import sha256_file
 from ...application.review import EditParseError, FilterParseError, LedgerEditSpec, LedgerReviewFilterSpec
 from ...application.user_cli import (
     LedgerSplit,
@@ -206,7 +206,7 @@ def _build_source_verification(*, source: Path | None, verify: bool) -> dict[str
     resolved = source.resolve()
     if not resolved.exists() or not resolved.is_file():
         raise _bad(tr("cli.ledger.errors.source_not_found").format(source=source))
-    digest = hashlib.sha256(resolved.read_bytes()).hexdigest()
+    digest = sha256_file(resolved)
     return {"requested": True, "path": str(resolved), "sha256": digest}
 
 

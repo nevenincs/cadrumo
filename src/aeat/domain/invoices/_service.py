@@ -1,21 +1,17 @@
-"""Service helpers for invoice catalogues and bidirectional transaction linking.
+"""Service helpers for invoice catalogues.
 
 Exposes pure-function service operations over an
 :class:`~aeat.domain.invoices.InvoiceCatalogue`: lookup
 (:func:`find_invoice`, :func:`find_unmatched`), in-memory linking
 (:func:`link_transaction`), reconciliation suggestions
-(:func:`suggest_reconciliations`), bidirectional consistency checks
-(:func:`verify_link_consistency`), and the persistence-level
-bidirectional linker :func:`link_transaction_bidirectional` that
-coordinates writes across the invoice and
-:mod:`aeat.domain.transactions` catalogues.
+(:func:`suggest_reconciliations`), and bidirectional consistency checks
+(:func:`verify_link_consistency`). Persisted cross-catalogue workflows
+belong in :mod:`aeat.application.invoices`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from decimal import Decimal
-from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
@@ -23,10 +19,6 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 from ...core.logging import get_logger
 from ..transactions import (
     TransactionCatalogue,
-    TransactionError,
-)
-from ..transactions import (
-    link_invoice as _transactions_link_invoice,
 )
 from ._enums import InvoiceKind
 from ._errors import (
@@ -280,77 +272,6 @@ def verify_link_consistency(
             len(inconsistencies),
         )
     return tuple(inconsistencies)
-
-
-def link_transaction_bidirectional(
-    invoices_dir: Path,
-    transactions_dir: Path,
-    invoice_id: str,
-    transaction_id: str,
-    *,
-    rollback_temp_writer: Callable[[Path, bytes], object] | None = None,
-) -> tuple[InvoiceCatalogue, TransactionCatalogue]:
-    """Update both catalogues so they cite each other.
-
-    Loads both catalogues via their respective repositories, computes
-    both updates in memory, then writes the invoice catalogue followed
-    by the transaction catalogue. Both writes go through the
-    secure storage backend at FINANCIAL class. The path arguments are
-    accepted only to preserve the service boundary shape used by older
-    callers; catalogue storage no longer depends on caller-selected
-    directories.
-
-    Args:
-        invoices_dir: Ignored; invoice data is loaded from the secure backend.
-        transactions_dir: Ignored; transaction data is loaded from the secure backend.
-        invoice_id: Invoice identifier to update.
-        transaction_id: Transaction identifier to update.
-
-    Returns:
-        The freshly written pair of catalogues.
-
-    Raises:
-        :exc:`InvoiceNotFoundError`: If ``invoice_id`` is missing.
-        :exc:`InvoiceLinkError`: If linking fails on either side for a
-            typed reason.
-    """
-    from ..transactions._repository import TransactionCatalogueRepository
-    from ._repository import InvoiceCatalogueRepository
-
-    del invoices_dir, transactions_dir, rollback_temp_writer
-    _LOGGER.debug("bidirectional link: invoice=%s transaction=%s", invoice_id, transaction_id)
-    invoice_repo = InvoiceCatalogueRepository()
-    transaction_repo = TransactionCatalogueRepository()
-
-    invoice_catalogue = invoice_repo.load()
-    transaction_catalogue = transaction_repo.load()
-
-    updated_invoices = link_transaction(invoice_catalogue, invoice_id, transaction_id)
-
-    try:
-        updated_transactions = _transactions_link_invoice(
-            transaction_catalogue, _match_transaction_id(transaction_catalogue, transaction_id), invoice_id
-        )
-    except TransactionError as exc:
-        raise InvoiceLinkError(f"could not link transaction {transaction_id} to invoice {invoice_id}") from exc
-
-    invoice_repo.save(updated_invoices)
-    _LOGGER.info("linked invoice=%s to transaction=%s", invoice_id, transaction_id)
-    try:
-        transaction_repo.save(updated_transactions)
-    except TransactionError as exc:
-        raise InvoiceLinkError(f"transaction save failed for {transaction_id}") from exc
-    return updated_invoices, updated_transactions
-
-
-def _match_transaction_id(catalogue: TransactionCatalogue, transaction_id: str) -> str:
-    """Return the canonical transaction ID from a catalogue, raising if absent."""
-    if transaction_id in catalogue:
-        return transaction_id
-    normalized = transaction_id.strip().lower()
-    if normalized in catalogue:
-        return normalized
-    raise InvoiceLinkError(f"transaction not found in catalogue: {transaction_id}")
 
 
 def _replace_invoice(catalogue: InvoiceCatalogue, invoice: Invoice) -> InvoiceCatalogue:

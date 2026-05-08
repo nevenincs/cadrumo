@@ -2,10 +2,10 @@
 
 Drives the root ``aeat`` Typer app via :class:`typer.testing.CliRunner`
 against per-test ``tmp_path`` directories wired through
-``AEAT_DRAFTS_DIR``, ``AEAT_SUBMISSIONS_DIR``,
-``AEAT_FINANCIAL_TXS_DIR``, and ``AEAT_DEFAULT_PROFILE_PATH``. Profile
-and submission fixtures round-trip through the real encrypted
-persistence layer rather than the production master key.
+``AEAT_DRAFTS_DIR``, ``AEAT_FINANCIAL_TXS_DIR``, and
+``AEAT_DEFAULT_PROFILE_PATH``. Profile and submission fixtures
+round-trip through the real encrypted persistence layer rather than the
+production master key.
 """
 
 from __future__ import annotations
@@ -17,9 +17,13 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from ....adapters.persistence.storage import SensitivityClass
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.filing import FilingBuilderError, FilingOperatorProfile, build_draft, build_runtime_schema_provider
+from ....application.setup._env_writer import _PROFILE_NAMESPACE, _PROFILE_VERSION, _profile_object_key
 from ....core.config import PROJECT_ROOT
 from ....domain.deadlines import AutonomoProfile, IVARegime
+from ....domain.filing import FilingAmendmentRepository, FilingDraftRepository
 from ....domain.submission import SubmissionAttempt, SubmissionRepository, SubmissionStatus, SubmittedFiling
 from . import app
 
@@ -57,7 +61,7 @@ def _write_inputs(tmp_path: Path) -> Path:
 
 
 def _write_submitted_filing(
-    submissions_dir: Path,
+    _submissions_dir: Path,
     *,
     modelo: str,
     period: str,
@@ -85,14 +89,24 @@ def _write_submitted_filing(
             ),
         ),
     )
-    SubmissionRepository(store_dir=submissions_dir).save(filing)
+    SubmissionRepository().save(filing)
     return filing
 
 
 def _single_draft_path(drafts_dir: Path) -> Path:
-    drafts = list(drafts_dir.glob("*.envelope.json"))
-    assert len(drafts) == 1
-    return drafts[0]
+    del drafts_dir
+    repository = FilingDraftRepository()
+    draft_ids = repository.list_draft_ids()
+    assert len(draft_ids) == 1
+    return repository.envelope_path_for(draft_ids[0])
+
+
+def _draft_count() -> int:
+    return len(FilingDraftRepository().list_draft_ids())
+
+
+def _amendment_count() -> int:
+    return len(FilingAmendmentRepository().list_amendment_ids())
 
 
 @pytest.fixture
@@ -123,15 +137,6 @@ def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 @pytest.fixture
 def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    from datetime import UTC, datetime
-
-    from ....adapters.persistence.storage import (
-        Envelope,
-        SensitivityClass,
-        save_encrypted_envelope,
-    )
-    from ....adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
-
     profile = AutonomoProfile(
         tax_id="00000000T",
         iva_regime=IVARegime.GENERAL,
@@ -141,17 +146,13 @@ def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         bienes_extranjero_above_threshold=False,
     )
     target = tmp_path / "profile.json"
-    envelope = Envelope[AutonomoProfile](
-        schema_version=1,
-        written_at=datetime.now(UTC),
+    SecureObjectRepository().save(
+        namespace=_PROFILE_NAMESPACE,
+        object_key=_profile_object_key(target),
         classification=SensitivityClass.IDENTITY,
-        payload=profile,
-    )
-    save_encrypted_envelope(
-        envelope,
-        target,
-        master_key_provider=_resolve_master_key_provider(),
-        hkdf_context=b"aeat.application.setup.profile.v1",
+        schema_version=_PROFILE_VERSION,
+        written_at=datetime.now(UTC),
+        payload=profile.model_dump_json().encode("utf-8"),
     )
     monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", str(target))
     return target
@@ -186,9 +187,9 @@ class TestFilingCLI:
         )
         assert result.exit_code == 0, result.output
         assert f"registry:{modelo}:" in result.output
-        assert _single_draft_path(drafts_dir).exists()
+        assert _single_draft_path(drafts_dir).name
 
-    def test_build_writes_draft_to_disk(self, tmp_path: Path, drafts_dir: Path) -> None:
+    def test_build_persists_draft_in_secure_backend(self, tmp_path: Path, drafts_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
         modelo = _registry_modelo_calculable_without_inputs()
         result = runner.invoke(
@@ -207,7 +208,7 @@ class TestFilingCLI:
         )
         assert result.exit_code == 0, result.output
         assert f"registry:{modelo}:" in result.output
-        assert _single_draft_path(drafts_dir).exists()
+        assert _single_draft_path(drafts_dir).name
 
     def test_show_and_validate_round_trip(self, tmp_path: Path, drafts_dir: Path, transactions_dir: Path) -> None:
         inputs = _write_inputs(tmp_path)
@@ -407,5 +408,5 @@ class TestFilingCLI:
         )
 
         assert result.exit_code == 0, result.output
-        assert len(list(drafts_dir.glob("*.envelope.json"))) == 2
-        assert (submissions_dir / "amendments").exists()
+        assert _draft_count() == 2
+        assert _amendment_count() == 1

@@ -65,18 +65,9 @@ _console = Console()
 _logger = get_logger(__name__)
 
 
-def _drafts_dir() -> Path:
-    """Return the configured drafts directory, creating it if missing."""
-    settings = load_settings()
-    path = Path(settings.aeat_drafts_dir)
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
 def _load_submission_record(submission_id: str) -> SubmittedFiling:
     """Read an encrypted persisted submission record for amendment assembly."""
-    settings = load_settings()
-    repository = SubmissionRepository(store_dir=settings.aeat_submissions_dir)
+    repository = SubmissionRepository()
     try:
         loaded = repository.load(submission_id)
     except ValueError as exc:
@@ -133,14 +124,14 @@ def _load_inputs(path: Path) -> dict[str, object]:
 
 
 def _draft_repository():  # type: ignore[no-untyped-def]
-    """Return a FilingDraftRepository bound to the configured drafts dir.
+    """Return the SQL-backed FilingDraftRepository.
 
     Imports are deferred to avoid pulling aeat.adapters.persistence.storage (and Alembic
     plugin discovery) into CLI commands that never persist a draft.
     """
     from ....domain.filing._repository import FilingDraftRepository
 
-    return FilingDraftRepository(store_dir=_drafts_dir())
+    return FilingDraftRepository()
 
 
 def _load_draft(path: Path) -> FilingDraft:
@@ -583,7 +574,6 @@ def import_(
 def _handle_justificante_import(from_justificante: Path) -> None:
     """Dispatch the justificante import path."""
     _logger.info("filing import: importing from justificante %s", from_justificante)
-    settings = load_settings()
     try:
         result = import_filing_from_justificante(
             from_justificante,
@@ -600,7 +590,7 @@ def _handle_justificante_import(from_justificante: Path) -> None:
     _save_draft(result.draft)
     from ....domain.submission._repository import SubmissionRepository
 
-    submission_repository = SubmissionRepository(store_dir=settings.aeat_submissions_dir)
+    submission_repository = SubmissionRepository()
     submission_repository.save(result.submission)
     submission_repository.envelope_path_for(result.submission.submission_id)
     _logger.info(

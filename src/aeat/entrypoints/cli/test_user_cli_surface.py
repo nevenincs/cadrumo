@@ -906,7 +906,7 @@ def test_profile_validate_blocks_when_required_missing(
     assert "tax.id" in payload["missing_required"]
 
 
-def test_operator_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
+def test_operator_n26_modelo_303_tape_builds_registry_draft_from_invoices(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -932,8 +932,6 @@ def test_operator_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
         ),
         encoding="utf-8",
     )
-    export_path = tmp_path / "modelo-303-2027-q2.txt"
-
     commands = [
         ["setup", "init", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"],
         ["setup", "auth", "configure", "--provider", "clave_movil"],
@@ -988,6 +986,371 @@ def test_operator_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
     assert _invoke(["app", "invoice", "match", "--period", period]).exit_code == 0
 
     calculated = _invoke(["--format", "json", "app", "declaration", "calculate", "--modelo", "303", "--period", period])
-    assert calculated.exit_code != 0
-    assert "not present in the calculation registry" in calculated.output
-    assert not export_path.exists()
+    assert calculated.exit_code == 0, calculated.output
+    payload = json.loads(_json_output(calculated))
+    values = {value["casilla_id"]: value for value in payload["draft"]["values"]}
+    assert payload["draft"]["modelo"] == "303"
+    assert payload["draft"]["period"] == "2027Q2"
+    assert payload["draft"]["schema_version"] == "registry:303:2009-y-siguientes"
+    assert values["iva.repercutido.general"]["value"] == "21.00"
+    assert values["iva.cuota-devengada-total"]["value"] == "21.00"
+    assert values["iva.resultado-regimen-general"]["value"] == "21.00"
+    assert payload["summary"]["next_action"] == "resolve-blockers"
+
+
+def test_setup_profile_list_keys_includes_iva_regime_and_engine_axes(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """The IVA, IRPF, and modelo enrolment keys the deadline engine reads must be settable.
+
+    Pre-W2, ``aeat setup profile list-keys`` only listed 22 RENTA-shaped
+    personal-identity keys, so users could not set the regime values
+    the deadline engine consumed -- ``aeat setup profile set
+    iva.regime general`` rejected the key. This test guards the
+    extension: every engine-consumed axis (iva.regime, iva.roi_enrolled,
+    does_intracomunitario, has_employees, ...) appears in list-keys
+    output.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    keys_result = _invoke(["--format", "json", "setup", "profile", "list-keys"])
+    assert keys_result.exit_code == 0, keys_result.output
+    keys_payload = json.loads(_json_output(keys_result))
+    listed = {entry["key"] for entry in keys_payload["keys"]}
+    expected = {
+        "iva.regime",
+        "iva.roi_enrolled",
+        "iva.oss_enrolled",
+        "iva.intracommunity_operations_exceed_50000_eur",
+        "does_intracomunitario",
+        "has_employees",
+        "uses_objective_estimation_irpf",
+        "third_party_transactions_above_347_threshold",
+        "bienes_extranjero_above_threshold",
+    }
+    missing = expected - listed
+    assert not missing, f"engine-consumed keys missing from list-keys: {missing}"
+
+
+def test_setup_profile_set_iva_regime_round_trips_to_deadline_engine(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Setting ``iva.regime general`` must reach the deadline engine as IVARegime.GENERAL.
+
+    Round-trip: ``setup profile set iva.regime general`` -> stored in
+    user_cli state -> ``_profile_to_autonomo`` -> ``IVARegime.GENERAL``.
+    The case-insensitive parser also accepts ``GENERAL``,
+    ``simplificado``, etc.
+    """
+    from aeat.application.user_cli import state_repository
+    from aeat.domain.deadlines import IVARegime, autonomo_profile_from_mapping
+
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    set_result = _invoke(["setup", "profile", "set", "iva.regime", "general"])
+    assert set_result.exit_code == 0, set_result.output
+
+    state = state_repository().load()
+    record = state.active_profile_record()
+    assert record is not None
+    profile = autonomo_profile_from_mapping(record.values, tax_id_default="00000000T")
+    assert profile.iva_regime is IVARegime.GENERAL
+
+
+def test_setup_profile_set_does_intracomunitario_round_trips_underscore_form(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Underscored keys must survive the user-cli store and surface to the engine.
+
+    The engine reads ``does_intracomunitario`` as a literal key. The
+    user-cli normaliser preserves underscores so the stored form
+    matches the engine lookup; this test pins the round-trip.
+    """
+    from aeat.application.user_cli import state_repository
+    from aeat.domain.deadlines import autonomo_profile_from_mapping
+
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    set_result = _invoke(["setup", "profile", "set", "does_intracomunitario", "true"])
+    assert set_result.exit_code == 0, set_result.output
+
+    get_result = _invoke(["--format", "json", "setup", "profile", "get", "does_intracomunitario"])
+    assert get_result.exit_code == 0, get_result.output
+    get_payload = json.loads(_json_output(get_result))
+    assert get_payload["value"] == "true"
+
+    state = state_repository().load()
+    record = state.active_profile_record()
+    assert record is not None
+    profile = autonomo_profile_from_mapping(record.values, tax_id_default="00000000T")
+    assert profile.does_intracomunitario is True
+
+
+def test_declaration_calculate_accepts_binding_assignment(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """``--binding KEY=VALUE`` must inject the value into the calculate inputs.
+
+    Without ``--binding``, ``aeat app declaration calculate --modelo 130
+    --period 2026Q1`` rejects with a missing-binding error because the
+    pago-fraccionado bracket per RD 439/2007 art. 110 needs the prior
+    year's net income from economic activity. With the binding
+    supplied, calculate succeeds, blockers drop to zero, and the next
+    action becomes ``approve`` rather than ``resolve-blockers``.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    without = _invoke(["app", "declaration", "calculate", "--modelo", "130", "--period", "2026Q1"])
+    assert without.exit_code != 0
+    assert "previous_year_economic_activity_net_income" in without.output
+
+    with_binding = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "declaration",
+            "calculate",
+            "--modelo",
+            "130",
+            "--period",
+            "2026Q1",
+            "--binding",
+            "irpf.previous_year_economic_activity_net_income=13000",
+        ]
+    )
+    assert with_binding.exit_code == 0, with_binding.output
+    payload = json.loads(_json_output(with_binding))
+    assert payload["summary"]["blocker_count"] == 0
+    assert payload["summary"]["next_action"] in {"approve", "review", "export"}
+
+
+def test_declaration_calculate_rejects_malformed_binding(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Malformed ``--binding`` arguments must raise the typed CLI usage error.
+
+    Two failure modes:
+    - missing ``=``: the parser cannot split the assignment.
+    - non-decimal value: the parser cannot coerce the value.
+
+    Both must exit non-zero with an i18n-rendered message; no traceback,
+    no silent acceptance, no calculate run.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    no_equals = _invoke(
+        [
+            "app",
+            "declaration",
+            "calculate",
+            "--modelo",
+            "130",
+            "--period",
+            "2026Q1",
+            "--binding",
+            "noequals",
+        ]
+    )
+    assert no_equals.exit_code != 0
+    assert "noequals" in no_equals.output
+    assert "Traceback" not in no_equals.output
+
+    bad_value = _invoke(
+        [
+            "app",
+            "declaration",
+            "calculate",
+            "--modelo",
+            "130",
+            "--period",
+            "2026Q1",
+            "--binding",
+            "key=not_a_number",
+        ]
+    )
+    assert bad_value.exit_code != 0
+    assert "not_a_number" in bad_value.output
+    assert "Traceback" not in bad_value.output
+
+
+@pytest.mark.parametrize("verb", ["validate", "preview"])
+def test_declaration_verbs_accept_modelo_period_selector(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    verb: str,
+) -> None:
+    """Every declaration verb must resolve a draft from ``(--modelo, --period)``.
+
+    Pre-W4, only ``status`` and ``review`` accepted the
+    ``(--modelo, --period)`` selector; ``approve``, ``validate``,
+    ``preview``, ``export``, and ``edit`` required ``--id``. The
+    operator could not chain ``calculate`` -> ``validate`` without
+    capturing the draft id manually. This test pins the unified
+    selector contract on the read-only verbs (validate and preview),
+    which are safe to call against an uncommitted draft.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    calc = _invoke(
+        [
+            "app",
+            "declaration",
+            "calculate",
+            "--modelo",
+            "130",
+            "--period",
+            "2026Q1",
+            "--binding",
+            "irpf.previous_year_economic_activity_net_income=13000",
+        ]
+    )
+    assert calc.exit_code == 0, calc.output
+
+    invoked = _invoke(["app", "declaration", verb, "--modelo", "130", "--period", "2026Q1"])
+    assert invoked.exit_code == 0, f"verb={verb} output={invoked.output}"
+    assert "No such option" not in invoked.output
+
+
+@pytest.mark.parametrize("verb", ["approve", "validate", "preview"])
+def test_declaration_verbs_reject_ambiguous_selector(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    verb: str,
+) -> None:
+    """Passing both ``--id`` and ``--modelo``/``--period`` must raise the typed error.
+
+    Guards against silent precedence: the unified selector contract
+    rejects ambiguous combinations with the i18n'd
+    ``draft_selector_ambiguous`` message rather than picking one form
+    and ignoring the other.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    extra: list[str] = []
+    if verb == "approve":
+        extra = ["--by", "tester", "--reason", "test"]
+
+    result = _invoke(
+        [
+            "app",
+            "declaration",
+            verb,
+            "--id",
+            "abc",
+            "--modelo",
+            "303",
+            "--period",
+            "2026Q1",
+            *extra,
+        ]
+    )
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+
+
+def _normalise_help_output(raw: str) -> str:
+    import re
+
+    # Strip Unicode box-drawing chars Typer/Click renders around help cells,
+    # then collapse all whitespace runs into single spaces so the wrapped
+    # help text reads as one continuous string.
+    stripped = re.sub(r"[─-╿]", " ", raw)
+    return re.sub(r"\s+", " ", stripped)
+
+
+def test_root_help_exposes_shell_completion_options() -> None:
+    """``aeat --help`` must expose Typer's completion install/show options (UX-013).
+
+    The audit's UX-013 listed shell completion as a separate feature
+    request. Typer ships the install/show completion flags out of the
+    box once ``add_completion=True`` is set on the root app. This test
+    pins that wiring so the completion surface cannot regress.
+    """
+    result = _invoke(["--help"])
+    assert result.exit_code == 0, result.output
+    output = _normalise_help_output(result.output)
+    assert "--install-completion" in output, output
+    assert "--show-completion" in output, output
+
+
+def test_setup_init_help_carries_examples_and_format_hints() -> None:
+    """``aeat setup init --help`` must surface format hints and examples (UX-004).
+
+    The audit (UX-004) flagged the ``--name``, ``--activity``, and
+    ``--tax-id`` help strings as surface-only one-liners with no
+    format hint, no example, and no discovery pointer. After uplift,
+    each flag's help text carries an ``Ejemplo:`` (in the default
+    Spanish locale) and the tax-id help mentions the NIF / NIE / CIF
+    canonical formats explicitly.
+    """
+    result = _invoke(["setup", "init", "--help"])
+    assert result.exit_code == 0, result.output
+    output = _normalise_help_output(result.output)
+    assert "Ejemplo:" in output, output
+    assert "12345678Z" in output, output
+    assert "IAE/CNAE" in output or "CNAE" in output, output
+
+
+def test_setup_auth_configure_help_points_at_providers_command() -> None:
+    """``aeat setup auth configure --help`` must reference the discovery command (UX-004).
+
+    The audit flagged ``--provider`` as accepting free TEXT without a
+    pointer to ``aeat setup auth providers`` for valid values. The
+    uplifted help text MUST reference the discovery command so the
+    operator can list supported providers without external docs.
+    """
+    result = _invoke(["setup", "auth", "configure", "--help"])
+    assert result.exit_code == 0, result.output
+    output = _normalise_help_output(result.output)
+    assert "aeat setup auth providers" in output, output
+    assert "certificate" in output, output
+    assert "clave_movil" in output, output
+
+
+def test_declaration_calculate_enumerates_blockers_with_runnable_next_action(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Calculate output must enumerate blocker rows and a copy-paste next-action.
+
+    UX-021: the previous output reported only an aggregate count
+    ``Bloqueos: 2`` plus the recipe token ``Siguiente: resolve-blockers``,
+    leaving the operator no path to act. Now each blocker renders on
+    its own line as ``blocker\\tcasilla.<id>\\t<message>`` and the
+    Siguiente line carries a runnable command parameterised on the
+    current modelo and period.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    calc = _invoke(["app", "declaration", "calculate", "--modelo", "303", "--period", "2026Q1"])
+    assert calc.exit_code == 0, calc.output
+    blocker_lines = [line for line in calc.output.splitlines() if line.startswith("blocker\t")]
+    assert blocker_lines, f"expected at least one blocker line; got: {calc.output}"
+    next_line = next(
+        (line for line in calc.output.splitlines() if "aeat app declaration" in line),
+        None,
+    )
+    assert next_line is not None, calc.output
+    assert "--modelo 303" in next_line and "--period 2026Q1" in next_line

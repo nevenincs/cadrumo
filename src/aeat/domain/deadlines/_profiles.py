@@ -113,4 +113,5 @@ def _iva_regime_value(
     raw = values.get(key)
     if raw is None or str(raw).strip() == "":
         return default
-    return IVARegime(str(raw).strip())
+    canonical = str(raw).strip().upper().replace("-", "_")
+    return IVARegime(canonical)

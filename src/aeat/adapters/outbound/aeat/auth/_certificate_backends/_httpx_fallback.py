@@ -43,9 +43,9 @@ class HttpxFallbackBackend(_CertBackend):
             context: Ignored.
 
         Raises:
-            NotImplementedError: Always.
+            RuntimeError: Always.
         """
-        raise NotImplementedError(
+        raise RuntimeError(
             "HTTPX_FALLBACK has no browser path; use PLAYWRIGHT_CONTEXT "
             "for interactive sessions. HTTPX_FALLBACK is verify-only."
         )

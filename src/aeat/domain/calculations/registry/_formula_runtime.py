@@ -50,15 +50,25 @@ def calculate_registry_snapshot(
     inputs: Mapping[str, Decimal],
     date_context: Mapping[str, date],
     binding_values: Mapping[str, Decimal] | None = None,
+    enum_binding_values: Mapping[str, str] | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
 ) -> RegistryCalculationResult:
-    """Evaluate all computed formulas in a validated registry snapshot."""
+    """Evaluate all computed formulas in a validated registry snapshot.
+
+    ``enum_binding_values`` carries string-valued bindings (typically
+    profile-sourced enums like ``CCAA``) that the
+    :func:`lookup_bracket_by_ccaa` op routes against. They are kept in
+    a separate mapping from ``binding_values`` so the Decimal-only
+    contract on numeric bindings stays intact.
+    """
 
     _reject_non_decimal(inputs, "input")
     resolved_date_context = dict(date_context)
     resolved_date_context.setdefault("filing_period", date(snapshot.filing_year, 12, 31))
     resolved_bindings = binding_values or {}
     _reject_non_decimal(resolved_bindings, "binding")
+    resolved_enum_bindings = enum_binding_values or {}
+    _reject_non_string(resolved_enum_bindings, "enum_binding")
     resolved_relations = relation_values or {}
     _reject_non_decimal(resolved_relations, "relation")
 
@@ -93,6 +103,7 @@ def calculate_registry_snapshot(
                 relation_values=resolved_relations,
                 operand_refs=operand_refs,
                 operand_values=operand_values,
+                enum_binding_values=resolved_enum_bindings,
             )
             value = _apply_rounding(value, formula.rounding)
             values[target] = value
@@ -148,7 +159,9 @@ def _evaluate_expression(
     relation_values: Mapping[str, Decimal],
     operand_refs: list[str],
     operand_values: list[Decimal],
+    enum_binding_values: Mapping[str, str] | None = None,
 ) -> Decimal:
+    resolved_enum_bindings: Mapping[str, str] = enum_binding_values or {}
     if expression.op is None:
         return _evaluate_leaf(
             expression,
@@ -186,8 +199,59 @@ def _evaluate_expression(
             relation_values=relation_values,
             operand_refs=operand_refs,
             operand_values=operand_values,
+            enum_binding_values=resolved_enum_bindings,
         )
         operand_refs.append(bracket_arg.parameter)
+        result = _resolve_bracket(bracket_param, base, date_context)
+        operand_values.append(result)
+        return result
+    if op == "lookup_bracket_by_ccaa":
+        if len(expression.args) != 3:
+            raise RegistryValidationError("formula op 'lookup_bracket_by_ccaa' expects 3 args")
+        binding_arg = expression.args[1]
+        dispatch_arg = expression.args[2]
+        if binding_arg.binding is None:
+            raise RegistryValidationError(
+                "formula op 'lookup_bracket_by_ccaa' requires args[1] to be a binding leaf"
+            )
+        if dispatch_arg.dispatch_table is None:
+            raise RegistryValidationError(
+                "formula op 'lookup_bracket_by_ccaa' requires args[2] to be a dispatch_table leaf"
+            )
+        if binding_arg.binding not in resolved_enum_bindings:
+            raise RegistryValidationError(
+                f"enum binding {binding_arg.binding!r} has no supplied value; "
+                f"required by lookup_bracket_by_ccaa"
+            )
+        dispatch_key = resolved_enum_bindings[binding_arg.binding]
+        dispatch_table = dispatch_arg.dispatch_table
+        if dispatch_key not in dispatch_table:
+            raise RegistryValidationError(
+                f"lookup_bracket_by_ccaa dispatch_table is missing CCAA {dispatch_key!r} "
+                f"(declared keys: {sorted(dispatch_table)})"
+            )
+        bracket_param_id = dispatch_table[dispatch_key]
+        bracket_param = parameters.get(bracket_param_id)
+        if bracket_param is None:
+            raise RegistryValidationError(f"parameter {bracket_param_id!r} not registered")
+        if bracket_param.data_type != "bracket_table":
+            raise RegistryValidationError(
+                f"parameter {bracket_param_id!r} must declare data_type='bracket_table' "
+                f"to be used by lookup_bracket_by_ccaa"
+            )
+        base = _evaluate_expression(
+            expression.args[0],
+            values=values,
+            binding_values=binding_values,
+            parameters=parameters,
+            date_context=date_context,
+            relation_values=relation_values,
+            operand_refs=operand_refs,
+            operand_values=operand_values,
+            enum_binding_values=resolved_enum_bindings,
+        )
+        operand_refs.append(binding_arg.binding)
+        operand_refs.append(bracket_param_id)
         result = _resolve_bracket(bracket_param, base, date_context)
         operand_values.append(result)
         return result
@@ -201,6 +265,7 @@ def _evaluate_expression(
             relation_values=relation_values,
             operand_refs=operand_refs,
             operand_values=operand_values,
+            enum_binding_values=resolved_enum_bindings,
         )
         for arg in expression.args
     ]
@@ -381,6 +446,12 @@ def _reject_non_decimal(values: Mapping[str, Decimal], label: str) -> None:
     for key, value in values.items():
         if isinstance(value, bool) or not isinstance(value, Decimal):
             raise RegistryValidationError(f"{label} {key!r} must be a Decimal")
+
+
+def _reject_non_string(values: Mapping[str, str], label: str) -> None:
+    for key, value in values.items():
+        if not isinstance(value, str) or not value:
+            raise RegistryValidationError(f"{label} {key!r} must be a non-empty string")
 
 
 def _reject_unknown_external_values(values: Mapping[str, Decimal], known_ids: set[str], label: str) -> None:

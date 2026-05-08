@@ -1,9 +1,8 @@
 """Shared filing-CLI test fixtures.
 
-Installs an :class:`EphemeralMasterKeyProvider` for every test that
-hits the CLI's ciphertext-at-rest persistence path so the
-:class:`FilingDraftRepository` round-trips against a real on-disk
-secret store rather than the production master key.
+Installs an isolated SQL secure-object backend and
+:class:`EphemeralMasterKeyProvider` for every test that hits the CLI's
+ciphertext-at-rest persistence path.
 """
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+def _patch_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     from ....adapters.persistence.storage import (
         EncryptedBlobStore,
         EphemeralMasterKeyProvider,
@@ -23,7 +22,10 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
         override_master_key_provider,
         override_secret_store,
     )
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
 
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
     provider = EphemeralMasterKeyProvider()
     blob_store = EncryptedBlobStore(
         root_dir=tmp_path / "blobs",
@@ -41,13 +43,4 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
-
-
-@pytest.fixture(autouse=True)
-def _force_english_output(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Pin CLI output to English so test assertions stay readable.
-
-    The production default is ``es``; this fixture only affects
-    test output, not runtime behaviour.
-    """
-    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
+        dispose_engine()

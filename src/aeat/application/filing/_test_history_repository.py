@@ -7,21 +7,12 @@ isolation guarantees.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_master_key_provider,
-    override_secret_store,
-)
 from ...adapters.persistence.storage.errors import ClassificationError
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...domain._identifiers import ModeloIdentifier
 from ._history_models import FilingHistory, FilingHistoryEntry
@@ -44,59 +35,30 @@ def _make_history(*, modelo: str = "130", n_entries: int = 2) -> FilingHistory:
     return FilingHistory(entries=entries)
 
 
-@pytest.fixture
-def store_dir(tmp_path: Path) -> Path:
-    return tmp_path / "history-store"
-
-
-@pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
-    override_secret_store(secret_store)
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        override_secret_store(None)
-        dispose_engine()
-
-
 def _database_bytes(tmp_path: Path) -> bytes:
     return (tmp_path / "aeat.db").read_bytes()
 
 
 class TestEmptyState:
-    def test_load_returns_none_when_absent(self, store_dir: Path) -> None:
-        repo = FilingHistoryRepository(store_dir=store_dir)
+    def test_load_returns_none_when_absent(self) -> None:
+        repo = FilingHistoryRepository()
         assert repo.load("130") is None
 
-    def test_object_marker_identifies_secure_backend(self, store_dir: Path) -> None:
-        repo = FilingHistoryRepository(store_dir=store_dir)
+    def test_object_marker_identifies_secure_backend(self) -> None:
+        repo = FilingHistoryRepository()
         assert repo.envelope_path_for("130").as_posix().endswith("aeat.application.filing.history/130")
 
 
 class TestSaveLoad:
-    def test_round_trip(self, store_dir: Path) -> None:
-        repo = FilingHistoryRepository(store_dir=store_dir)
+    def test_round_trip(self) -> None:
+        repo = FilingHistoryRepository()
         history = _make_history(modelo="130")
         repo.save("130", history)
-        loaded = FilingHistoryRepository(store_dir=store_dir).load("130")
+        loaded = FilingHistoryRepository().load("130")
         assert loaded == history
 
-    def test_save_idempotent(self, store_dir: Path) -> None:
-        repo = FilingHistoryRepository(store_dir=store_dir)
+    def test_save_idempotent(self) -> None:
+        repo = FilingHistoryRepository()
         history = _make_history(modelo="130")
         repo.save("130", history)
         repo.save("130", history)
@@ -104,14 +66,14 @@ class TestSaveLoad:
 
 
 class TestListIter:
-    def test_list_modelos_sorted(self, store_dir: Path) -> None:
-        repo = FilingHistoryRepository(store_dir=store_dir)
+    def test_list_modelos_sorted(self) -> None:
+        repo = FilingHistoryRepository()
         repo.save("303", _make_history(modelo="303"))
         repo.save("130", _make_history(modelo="130"))
         assert repo.list_modelos() == ("130", "303")
 
-    def test_iter_histories_yields_tuples(self, store_dir: Path) -> None:
-        repo = FilingHistoryRepository(store_dir=store_dir)
+    def test_iter_histories_yields_tuples(self) -> None:
+        repo = FilingHistoryRepository()
         h130 = _make_history(modelo="130")
         h303 = _make_history(modelo="303")
         repo.save("130", h130)
@@ -121,20 +83,20 @@ class TestListIter:
 
 
 class TestDelete:
-    def test_delete_removes(self, store_dir: Path) -> None:
-        repo = FilingHistoryRepository(store_dir=store_dir)
+    def test_delete_removes(self) -> None:
+        repo = FilingHistoryRepository()
         repo.save("130", _make_history(modelo="130"))
         assert repo.delete("130") is True
         assert repo.load("130") is None
 
-    def test_delete_missing_returns_false(self, store_dir: Path) -> None:
-        repo = FilingHistoryRepository(store_dir=store_dir)
+    def test_delete_missing_returns_false(self) -> None:
+        repo = FilingHistoryRepository()
         assert repo.delete("nonexistent") is False
 
 
 class TestClassificationGate:
-    def test_database_payload_is_encrypted_audit_data(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = FilingHistoryRepository(store_dir=store_dir)
+    def test_database_payload_is_encrypted_audit_data(self, tmp_path: Path) -> None:
+        repo = FilingHistoryRepository()
         repo.save("130", _make_history(modelo="130"))
         raw = _database_bytes(tmp_path)
         assert b"secure_objects" in raw
@@ -142,7 +104,7 @@ class TestClassificationGate:
         assert b"ACCEPTED" not in raw
         assert b"130" not in raw
 
-    def test_foreign_class_object_refused(self, store_dir: Path) -> None:
+    def test_foreign_class_object_refused(self) -> None:
         from ...adapters.persistence.storage import Envelope, SensitivityClass
 
         history = _make_history(modelo="130")
@@ -152,7 +114,7 @@ class TestClassificationGate:
             classification=SensitivityClass.OPERATIONAL,
             payload=history,
         )
-        repo = FilingHistoryRepository(store_dir=store_dir)
+        repo = FilingHistoryRepository()
         SecureObjectRepository().save(
             namespace="aeat.application.filing.history",
             object_key="130",
@@ -170,7 +132,19 @@ class TestUnsafeModelo:
         "bad",
         ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
     )
-    def test_unsafe_modelo_rejected(self, store_dir: Path, bad: str) -> None:
-        repo = FilingHistoryRepository(store_dir=store_dir)
+    def test_unsafe_modelo_rejected(self, bad: str) -> None:
+        repo = FilingHistoryRepository()
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)
+
+
+class TestPerModeloLockIsolation:
+    def test_lock_target_per_modelo(self) -> None:
+        repo = FilingHistoryRepository()
+        a = repo.lock_target_for("130")
+        b = repo.lock_target_for("303")
+        assert a != b
+        assert a.parent == b.parent
+        assert a.parent == repo.store_dir
+        assert a.as_posix().endswith("aeat.application.filing.history/130.lock")
+        assert b.as_posix().endswith("aeat.application.filing.history/303.lock")

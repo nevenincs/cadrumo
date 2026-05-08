@@ -150,3 +150,73 @@ def test_directory_mode_rejects_no_revisions(tmp_path: Path) -> None:
     (target / "manifest.toml").write_text('[modelo]\nid = "999"\nlabel = "test"\n', encoding="utf-8")
     with pytest.raises(RegistryLoadError, match="no revisions found"):
         load_modelo_directory(target)
+
+
+def test_modelo_100_does_not_coexist_in_both_layouts() -> None:
+    """**HARD INVARIANT**: modelo 100 must live in exactly one layout.
+
+    modelo 100 is stored in directory mode at
+    ``registry/aeat/modelos/100/``. The single-file
+    ``registry/aeat/modelos/100.toml`` must NOT coexist alongside it.
+
+    The runtime loader rejects dual layouts at load time, but git
+    accepts re-introduction of ``100.toml`` silently because main
+    does not track that path. This test is the static safety net:
+    it fails loudly if the dual layout is ever introduced.
+
+    Recovery procedure when this test fires:
+      1. Run ``scripts/split_modelo_100.py`` to migrate the
+         re-introduced ``100.toml`` content into the directory
+         layout, preserving any local edits.
+      2. Verify the round-trip equivalence test still passes for
+         the single-file modelos used as the migration-safety
+         reference (130, 184, 190, 193, 303, 390).
+      3. Delete ``100.toml`` and commit the merged directory state.
+    """
+
+    single_file = PROJECT_ROOT / "registry" / "aeat" / "modelos" / "100.toml"
+    directory = PROJECT_ROOT / "registry" / "aeat" / "modelos" / "100"
+    if single_file.is_file() and directory.is_dir():
+        raise AssertionError(
+            "modelo 100 exists in BOTH single-file and directory layouts:\n"
+            f"  - {single_file}\n"
+            f"  - {directory}/manifest.toml\n"
+            "This is forbidden — the loader rejects dual layouts at "
+            "load time. An in-flight agent likely re-introduced "
+            "100.toml from a pre-migration checkout. Run "
+            "scripts/split_modelo_100.py to merge the re-introduced "
+            "content into the directory layout, then delete 100.toml."
+        )
+
+
+def test_modelo_100_directory_layout_loads_with_expected_revisions() -> None:
+    """Schema-level integrity check on the live modelo 100 directory.
+
+    Loads ``registry/aeat/modelos/100/`` via the directory loader and
+    asserts the in-memory ``ModeloDefinition`` shape matches the
+    expected revision set. This catches:
+      - A revision file accidentally deleted
+      - A revision file's content corrupted to the point that pydantic
+        validation drops it
+      - A new revision added without an ADR / planning document
+        (forces a deliberate update to this expectation)
+      - Manifest.toml's [modelo] table corrupted
+
+    The expected set lists the revisions present in the directory
+    today. Future revisions (e.g. when AEAT publishes the 2026 form)
+    update this list as part of the same commit that adds the new
+    revision file under ``revisions/``.
+    """
+
+    directory = PROJECT_ROOT / "registry" / "aeat" / "modelos" / "100"
+    if not (directory / "manifest.toml").is_file():
+        pytest.skip("modelo 100 not in directory layout")
+    modelo = load_modelo_directory(directory)
+    assert modelo.id == "100"
+    expected_revisions = {"2020", "2021", "2022", "2023", "2024", "2025"}
+    actual_revisions = set(modelo.revisions)
+    assert actual_revisions == expected_revisions, (
+        f"modelo 100 revision set drift: expected {sorted(expected_revisions)!r}, "
+        f"got {sorted(actual_revisions)!r}. If this is a deliberate addition "
+        f"(new fiscal year revision), update the expected set in this test."
+    )

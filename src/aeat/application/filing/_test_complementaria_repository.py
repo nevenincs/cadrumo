@@ -8,22 +8,13 @@ per-amendment lock isolation of
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_master_key_provider,
-    override_secret_store,
-)
 from ...adapters.persistence.storage.errors import ClassificationError
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...domain.filing._amendment import (
     AmendmentKind,
@@ -85,61 +76,32 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> FilingAmendment:
     )
 
 
-@pytest.fixture
-def store_dir(tmp_path: Path) -> Path:
-    return tmp_path / "amendments-store"
-
-
-@pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
-    override_secret_store(secret_store)
-    try:
-        yield
-    finally:
-        override_master_key_provider(None)
-        override_secret_store(None)
-        dispose_engine()
-
-
 def _database_bytes(tmp_path: Path) -> bytes:
     return (tmp_path / "aeat.db").read_bytes()
 
 
 class TestEmptyState:
-    def test_load_returns_none_when_absent(self, store_dir: Path) -> None:
-        repo = FilingAmendmentRepository(store_dir=store_dir)
+    def test_load_returns_none_when_absent(self) -> None:
+        repo = FilingAmendmentRepository()
         assert repo.load("missing-id") is None
 
-    def test_object_marker_identifies_secure_backend(self, store_dir: Path) -> None:
-        repo = FilingAmendmentRepository(store_dir=store_dir)
+    def test_object_marker_identifies_secure_backend(self) -> None:
+        repo = FilingAmendmentRepository()
         assert repo.envelope_path_for("xyz").as_posix().endswith("aeat.domain.filing.amendments/xyz")
 
 
 class TestSaveLoad:
-    def test_round_trip(self, store_dir: Path) -> None:
-        repo = FilingAmendmentRepository(store_dir=store_dir)
+    def test_round_trip(self) -> None:
+        repo = FilingAmendmentRepository()
         amendment = _make_amendment()
         repo.save(amendment)
-        loaded = FilingAmendmentRepository(store_dir=store_dir).load(amendment.amendment_id)
+        loaded = FilingAmendmentRepository().load(amendment.amendment_id)
         assert loaded == amendment
 
 
 class TestListIter:
-    def test_list_and_iter(self, store_dir: Path) -> None:
-        repo = FilingAmendmentRepository(store_dir=store_dir)
+    def test_list_and_iter(self) -> None:
+        repo = FilingAmendmentRepository()
         a1 = _make_amendment(amendment_id="amend-a")
         a2 = _make_amendment(amendment_id="amend-b")
         repo.save(a1)
@@ -151,21 +113,21 @@ class TestListIter:
 
 
 class TestDelete:
-    def test_delete_removes(self, store_dir: Path) -> None:
-        repo = FilingAmendmentRepository(store_dir=store_dir)
+    def test_delete_removes(self) -> None:
+        repo = FilingAmendmentRepository()
         amendment = _make_amendment()
         repo.save(amendment)
         assert repo.delete(amendment.amendment_id) is True
         assert repo.load(amendment.amendment_id) is None
 
-    def test_delete_missing_returns_false(self, store_dir: Path) -> None:
-        repo = FilingAmendmentRepository(store_dir=store_dir)
+    def test_delete_missing_returns_false(self) -> None:
+        repo = FilingAmendmentRepository()
         assert repo.delete("nope") is False
 
 
 class TestClassificationGate:
-    def test_database_payload_is_encrypted_audit_data(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = FilingAmendmentRepository(store_dir=store_dir)
+    def test_database_payload_is_encrypted_audit_data(self, tmp_path: Path) -> None:
+        repo = FilingAmendmentRepository()
         amendment = _make_amendment()
         repo.save(amendment)
         raw = _database_bytes(tmp_path)
@@ -174,7 +136,7 @@ class TestClassificationGate:
         assert b"Test correction" not in raw
         assert amendment.amendment_id.encode("utf-8") not in raw
 
-    def test_foreign_class_object_refused(self, store_dir: Path) -> None:
+    def test_foreign_class_object_refused(self) -> None:
         from ...adapters.persistence.storage import Envelope, SensitivityClass
 
         amendment = _make_amendment()
@@ -184,7 +146,7 @@ class TestClassificationGate:
             classification=SensitivityClass.OPERATIONAL,
             payload=amendment,
         )
-        repo = FilingAmendmentRepository(store_dir=store_dir)
+        repo = FilingAmendmentRepository()
         SecureObjectRepository().save(
             namespace="aeat.domain.filing.amendments",
             object_key=amendment.amendment_id,
@@ -202,7 +164,7 @@ class TestUnsafeAmendmentIds:
         "bad",
         ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
     )
-    def test_unsafe_id_rejected(self, store_dir: Path, bad: str) -> None:
-        repo = FilingAmendmentRepository(store_dir=store_dir)
+    def test_unsafe_id_rejected(self, bad: str) -> None:
+        repo = FilingAmendmentRepository()
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)

@@ -44,6 +44,7 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     period: str = Field(min_length=1)
     inputs: dict[str, Decimal] = Field(default_factory=dict)
     binding_values: dict[str, Decimal] = Field(default_factory=dict)
+    enum_binding_values: dict[str, str] = Field(default_factory=dict)
     relation_values: dict[str, Decimal] = Field(default_factory=dict)
     date_context: dict[str, date] = Field(default_factory=dict)
     expected_outputs: tuple[RegistryScenarioExpectedOutput, ...] = Field(min_length=1)
@@ -112,6 +113,7 @@ def run_registry_calculation_scenario(
         inputs=scenario.inputs,
         date_context=scenario.date_context,
         binding_values=scenario.binding_values,
+        enum_binding_values=scenario.enum_binding_values,
         relation_values=scenario.relation_values,
     )
     entries_by_target = {entry.target: entry for entry in calculation.entries}

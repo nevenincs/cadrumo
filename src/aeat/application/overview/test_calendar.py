@@ -254,3 +254,68 @@ def test_build_is_idempotent_modulo_generated_at() -> None:
     b = build_overview_calendar(profile, rng, today=today)
     assert a.entries == b.entries
     assert a.range == b.range
+
+
+def test_calendar_omits_warnings_when_raw_values_not_supplied() -> None:
+    """Without raw_values the aggregator returns no warnings or completeness rows.
+
+    Existing callers that build the calendar from a fully-resolved
+    ``AutonomoProfile`` without surfacing the user_cli raw mapping
+    must not see new warning behaviour. The empty defaults on
+    OverviewCalendar.warnings / completeness preserve backwards
+    compatibility for those callers.
+    """
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    today = date(2026, 4, 1)
+    cal = build_overview_calendar(_profile(), rng, today=today)
+    assert cal.warnings == ()
+    assert cal.completeness.explicitly_set_keys == ()
+    assert cal.completeness.defaulted_keys == ()
+
+
+def test_calendar_emits_warning_when_iva_regime_unset() -> None:
+    """A profile with no iva.regime declared must produce a typed warning.
+
+    UX-008 root cause: the deadline engine's modelo-applicability
+    rules silently default to GENERAL when iva.regime is absent. The
+    operator who pulled the calendar got 303/390 entries computed
+    under those defaults but no signal that the regime was assumed.
+    The new contract: when raw_values omits iva.regime, the
+    aggregator emits a CalendarWarning whose code names the missing
+    key, fix_command supplies the literal aeat setup profile set
+    command, and affected_modelos lists 303/390.
+    """
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    today = date(2026, 4, 1)
+    raw = {"tax.id": "X1234567L", "activity": "design"}
+    cal = build_overview_calendar(_profile(), rng, today=today, raw_values=raw)
+    iva_warnings = [w for w in cal.warnings if w.code == "iva.regime"]
+    assert len(iva_warnings) == 1
+    warning = iva_warnings[0]
+    assert "303" in warning.affected_modelos
+    assert "390" in warning.affected_modelos
+    assert "aeat setup profile set iva.regime" in warning.fix_command
+
+
+def test_calendar_completeness_lists_uncomputable_with_reason() -> None:
+    """``CalendarCompleteness`` must enumerate explicit vs defaulted keys.
+
+    With only ``iva.regime`` declared, the completeness payload must
+    list it under explicitly_set_keys and the remaining gating keys
+    (does_intracomunitario, pays_professionals_with_retencion,
+    pays_rent_with_retencion, uses_objective_estimation_irpf) under
+    defaulted_keys.
+    """
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
+    today = date(2026, 4, 1)
+    raw = {
+        "tax.id": "X1234567L",
+        "activity": "design",
+        "iva.regime": "general",
+    }
+    cal = build_overview_calendar(_profile(), rng, today=today, raw_values=raw)
+    assert "iva.regime" in cal.completeness.explicitly_set_keys
+    assert "does_intracomunitario" in cal.completeness.defaulted_keys
+    assert "pays_professionals_with_retencion" in cal.completeness.defaulted_keys
+    assert "pays_rent_with_retencion" in cal.completeness.defaulted_keys
+    assert "uses_objective_estimation_irpf" in cal.completeness.defaulted_keys

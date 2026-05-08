@@ -27,8 +27,7 @@ _AMENDMENT_NAMESPACE = "aeat.domain.filing.amendments"
 class FilingAmendmentRepository:
     """Repository over encrypted SQL-backed filing amendments."""
 
-    def __init__(self, *, store_dir: Path | None = None) -> None:
-        del store_dir
+    def __init__(self) -> None:
         self._objects = SecureObjectRepository()
 
     @property

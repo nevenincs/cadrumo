@@ -78,6 +78,7 @@ FormulaOperator = Literal[
     "if_then_else",
     "lookup_parameter",
     "lookup_bracket",
+    "lookup_bracket_by_ccaa",
     "previous_period_value",
     "previous_period_sum",
     "cross_model_sum",
@@ -646,6 +647,7 @@ class FormulaExpression(RegistryModel):
     parameter: ParameterId | None = None
     relation: RelationId | None = None
     literal: DecimalValue | None = None
+    dispatch_table: Mapping[str, ParameterId] | None = None
 
     @model_validator(mode="after")
     def _validate_expression(self) -> FormulaExpression:
@@ -655,12 +657,15 @@ class FormulaExpression(RegistryModel):
             self.parameter is not None,
             self.relation is not None,
             self.literal is not None,
+            self.dispatch_table is not None,
         ]
         if self.op is None:
             if self.args:
                 raise ValueError("formula leaf must not declare args")
             if sum(populated_leaves) != 1:
                 raise ValueError("formula leaf must declare exactly one source")
+            if self.dispatch_table is not None and not self.dispatch_table:
+                raise ValueError("dispatch_table leaf must declare at least one entry")
             return self
         if sum(populated_leaves):
             raise ValueError("formula operator must not declare leaf sources")

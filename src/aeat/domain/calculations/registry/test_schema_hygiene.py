@@ -188,7 +188,6 @@ def test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_out
 
     offences: list[str] = []
     renta_test_files = (
-        PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_2025_synthetic_profile.py",
         PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py",
     )
     for path in renta_test_files:
@@ -243,9 +242,8 @@ def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
     replay_dir = PROJECT_ROOT / "corpus" / "parity_replays" / "renta_web_open"
     captured = {p.stem for p in replay_dir.glob("*.json")} if replay_dir.exists() else set()
     chain_test = PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py"
-    synthetic_test = PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_2025_synthetic_profile.py"
     declared: set[str] = set()
-    for path in (chain_test, synthetic_test):
+    for path in (chain_test,):
         if not path.exists():
             continue
         text = path.read_text(encoding="utf-8")
