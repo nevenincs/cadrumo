@@ -44,13 +44,3 @@ def _patch_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterat
         override_master_key_provider(None)
         override_secret_store(None)
         dispose_engine()
-
-
-@pytest.fixture(autouse=True)
-def _force_english_output(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Pin CLI output to English so test assertions stay readable.
-
-    The production default is ``es``; this fixture only affects
-    test output, not runtime behaviour.
-    """
-    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")

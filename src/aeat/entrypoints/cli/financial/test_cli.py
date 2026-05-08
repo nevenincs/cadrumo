@@ -20,16 +20,6 @@ _RUNNER = CliRunner()
 _FIXTURES = Path(__file__).resolve().parents[5] / "tests" / "fixtures" / "financial"
 
 
-@pytest.fixture(autouse=True)
-def _force_english_output(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Pin CLI output to English so assertions stay readable.
-
-    The production default is ``es``; this fixture only affects test
-    output, not runtime behaviour.
-    """
-    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
-
-
 def test_financial_ingest_json_stream() -> None:
     """``aeat financial ingest --output-json`` emits one JSON line per record."""
     result = _RUNNER.invoke(
