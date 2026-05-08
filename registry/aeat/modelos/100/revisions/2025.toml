@@ -3558,6 +3558,7 @@ legal_refs = [
     "ley-35-2006:art-87",
     "ley-35-2006:art-88",
     "ley-35-2006:art-89",
+    "ley-35-2006:art-91",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -5897,7 +5898,7 @@ expression = { op = "sum", args = [
     { casilla = "0269" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-50"]
+legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-91"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
