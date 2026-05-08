@@ -94,6 +94,7 @@ def test_root_surface_contains_setup_and_app_only() -> None:
 
     assert result.exit_code == 0, result.output
     assert "setup" in result.output
+    assert "config" in result.output
     assert "app" in result.output
     assert "--version" in result.output
     assert "--quiet" in result.output
@@ -119,6 +120,7 @@ def test_root_no_args_renders_help_successfully() -> None:
 
     assert result.exit_code == 0, result.output
     assert "setup" in result.output
+    assert "config" in result.output
     assert "app" in result.output
     assert "--version" in result.output
     assert "Quickstart: aeat setup init --name NAME --tax-id NIF" in result.output
@@ -139,6 +141,7 @@ def test_removed_developer_commands_are_not_registered() -> None:
         ["filing", "--help"],
         ["bootstrap", "--help"],
         ["doctor", "--help"],
+        ["config", "doctor-logs", "--help"],
         ["auth", "--help"],
         ["app", "declarations", "--help"],
         ["app", "workspaces", "--help"],
@@ -150,6 +153,27 @@ def test_removed_developer_commands_are_not_registered() -> None:
     for command in removed_commands:
         result = _invoke(command)
         assert result.exit_code != 0, command
+
+
+def test_config_doctor_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    root_doctor = _invoke(["doctor", "--help"])
+    help_result = _invoke(["config", "doctor", "--help"])
+    text_result = _invoke(["config", "doctor"])
+    json_result = _invoke(["--format", "json", "config", "doctor"])
+    logs_result = _invoke(["config", "doctor", "logs", "--lines", "0"])
+
+    assert root_doctor.exit_code != 0
+    assert help_result.exit_code == 0, help_result.output
+    assert text_result.exit_code == 0, text_result.output
+    assert "Overall\t" in text_result.output
+    assert "registry.load" in text_result.output
+    payload = json.loads(_json_output(json_result))
+    assert payload["registry"]["available"] is True
+    assert "registry.load" in {check["name"] for check in payload["checks"]}
+    assert logs_result.exit_code == 0, logs_result.output
+    assert "path\t" in logs_result.output
 
 
 def test_version_surfaces_render_backend_registry_summary() -> None:

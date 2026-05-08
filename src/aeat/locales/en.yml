@@ -82,6 +82,12 @@ cli:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
       period_empty: Tax period cannot be empty
       period_unrecognised: Unrecognized period
+  config:
+    app_help: Manage local configuration and diagnostics
+    doctor:
+      help: Diagnose local configuration, registry, profile, auth, and logs
+      logs_help: Show the log file path and recent lines
+      logs_lines_help: Number of recent log lines to show
   data:
     app_help: Management of tax data and records
     ledgers:

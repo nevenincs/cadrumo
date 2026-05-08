@@ -100,7 +100,7 @@ Each execution step must record:
 | Filing calculation/review/export | `src/aeat/application/filing`, `src/aeat/application/review`, `src/aeat/domain/filing` | `src/aeat/entrypoints/cli/_declaration.py` | Missing binding/preflight/fix suggestions must be backend-owned. |
 | Registry/modelo introspection | `src/aeat/domain/calculations/registry`, new registry query API | app modelo/config/registry surfaces | CLI must not read TOML directly. |
 | Error and output contracts | `src/aeat/core/errors`, `src/aeat/entrypoints/cli/_errors.py`, output models | All CLI modules | Structured error/fix rendering is shared infrastructure. |
-| Diagnostics and logs | `src/aeat/core.logging`, application diagnostics service | root `doctor` surface | `doctor` composes typed backend diagnostics. |
+| Diagnostics and logs | `src/aeat/core.logging`, application diagnostics service | `config doctor` surface | `config doctor` composes typed backend diagnostics. |
 
 ## Waves
 
@@ -132,7 +132,7 @@ Each execution step must record:
 
 | Done | audit_id | Severity | Surfaces | Required action ids | Primary owner route | Verification gate |
 |---|---|---|---|---|---|---|
-| [ ] | UX-001 | HIGH | `aeat`, missing `aeat doctor` | A1, A2 | diagnostics backend plus root CLI | Missing dependency is rendered as structured diagnostic, not traceback. |
+| [ ] | UX-001 | HIGH | `aeat`, missing `aeat config doctor` | A1, A2 | diagnostics backend plus config CLI | Missing dependency is rendered as structured diagnostic, not traceback. |
 | [ ] | UX-002 | HIGH | `aeat --version` | A3 | root CLI plus registry summary backend | `aeat --version`, `aeat -V`, and `aeat version` return version and registry summary. |
 | [ ] | UX-003 | HIGH | missing `aeat init`, setup/profile help ordering | A4, A5, A6 | onboarding backend plus root/setup CLI | Help and command tree expose workflow order and root quickstart. |
 | [ ] | UX-004 | HIGH | setup init/auth configure help | A7, A8 | command metadata/query backends plus setup CLI | Help output includes examples, format hints, and discovery pointers. |
@@ -145,7 +145,7 @@ Each execution step must record:
 | [ ] | UX-011 | LOW | auth reset, profile show, setup reset | A23, A24, A14 | auth/profile/setup backends plus setup CLI | Language, reset, and all-key display behavior are consistent. |
 | [ ] | UX-012 | HIGH | unknown keys, calculate missing bindings, all failures | A25, A26 | error/fix backend plus all CLI modules | Errors include code, suggestion, concrete fix, and learning pointer. |
 | [ ] | UX-013 | MEDIUM | format/provider/kind help | A27, A28, A29 | catalogue/topic/completion backends plus CLI | Flag catalogues, topic docs, and completion match accepted values. |
-| [ ] | UX-014 | HIGH | missing `aeat doctor` | A1, A30 | diagnostics backend plus root CLI | Doctor reports env, registry, profile, auth, data, network, logs. |
+| [ ] | UX-014 | HIGH | missing `aeat config doctor` | A1, A30 | diagnostics backend plus config CLI | Doctor reports env, registry, profile, auth, data, network, logs. |
 | [ ] | UX-015 | HIGH | missing help/topic system | A31, A32 | topic catalogue backend plus root CLI | `aeat topic` and `aeat help <topic>` expose conceptual docs. |
 | [ ] | UX-016 | MEDIUM | missing `aeat config` | A33, A34 | config/profile backend plus config CLI | Config list/get/set/unset/configurations route through backend. |
 | [ ] | UX-017 | HIGH | missing modelo introspection | A35, A36 | registry query backend plus app modelo CLI | Modelos, casillas, bindings, formulas available through backend API and CLI. |
@@ -154,8 +154,8 @@ Each execution step must record:
 
 | Done | action_id | Issue | Verb | Action | Wave | Backend owner | CLI owner | Verification | Review gate | Commit policy |
 |---|---|---|---|---|---|---|---|---|---|---|
-| [ ] | A1 | UX-001, UX-014 | ADD | Add `aeat doctor` command. | W7 | diagnostics service | root CLI | Real doctor run reports typed sections. | Review doctor owns no diagnostics logic. | Commit doctor backend before CLI if large. |
-| [ ] | A2 | UX-001 | WRAP | Wrap CLI entry point import errors with one-line diagnostic pointing to doctor. | W6 | error boundary/diagnostics | root CLI | Import-error scenario emits no traceback. | Review boundary does not swallow developer diagnostics in debug. | Commit with error-boundary tests. |
+| [ ] | A1 | UX-001, UX-014 | ADD | Add `aeat config doctor` command. | W7 | diagnostics service | config CLI | Real doctor run reports typed sections. | Review doctor owns no diagnostics logic. | Commit doctor backend before CLI if large. |
+| [ ] | A2 | UX-001 | WRAP | Wrap CLI entry point import errors with one-line diagnostic pointing to `aeat config doctor`. | W6 | error boundary/diagnostics | root CLI | Import-error scenario emits no traceback. | Review boundary does not swallow developer diagnostics in debug. | Commit with error-boundary tests. |
 | [x] | A3 | UX-002 | ADD | Add `--version`, `-V`, and `aeat version`. | W7 | registry/package summary API | root CLI | Version output includes package and registry summary. | Review no direct TOML counting in CLI. | Commit as small root slice. |
 | [ ] | A4 | UX-003 | ADD | Add root `aeat init` onboarding wizard. | W7 | onboarding/profile/auth backend | root CLI | Non-interactive and interactive paths write through backend. | Review no profile/auth business logic in CLI. | Commit backend and CLI separately if needed. |
 | [ ] | A5 | UX-003 | REORDER | Group setup subcommands by workflow phase. | W7 | command metadata if needed | setup CLI | Help output matches workflow order. | Review no behavior hidden by help grouping. | Commit with help tests. |
@@ -183,7 +183,7 @@ Each execution step must record:
 | [x] | A27 | UX-013 | FIX | Fix invoice `--kind` help or accepted values. | W6 | invoice import backend if value set changes | invoice CLI | Help and accepted values agree. | Review no backwards alias unless approved. | Commit small invoice help/value slice. |
 | [ ] | A28 | UX-013 | ADD | Add topic pages for formats, providers, regimens. | W6 | topic/catalogue backend | topic/help CLI | Topics render from backend catalogue. | Documentation review required. | Commit docs/topic backend. |
 | [ ] | A29 | UX-013 | ADD | Add shell completion command. | W7 | completion metadata if needed | root CLI | Completion output generated for shells. | Review no command tree drift. | Commit completion slice. |
-| [ ] | A30 | UX-014 | ADD | Doctor covers env, registry, profile, auth, data, network. | W7 | diagnostics backend | root CLI | Doctor JSON and text include all sections. | Review diagnostics do not mutate unless `--fix`. | Commit with A1 if same implementation. |
+| [ ] | A30 | UX-014 | ADD | `config doctor` covers env, registry, profile, auth, data, network. | W7 | diagnostics backend | config CLI | Doctor JSON and text include all sections. | Review diagnostics do not mutate unless `--fix`. | Commit with A1 if same implementation. |
 | [ ] | A31 | UX-015 | ADD | Add `aeat topic` and `aeat help <topic>`. | W7 | topic backend | root CLI | Topic list and topic detail render. | Review content source is backend/docs, not CLI literals. | Commit topic surface. |
 | [ ] | A32 | UX-015 | AUTHOR | Author initial conceptual topics. | W7 | documentation/topic backend | topic CLI | Required topics exist and are discoverable. | Documentation Researcher/Author/Editor review. | Commit docs slice. |
 | [ ] | A33 | UX-016 | ADD | Add `aeat config` family. | W4/W7 | config/profile backend | config CLI | Config commands operate through backend. | Review no setup compatibility alias unless explicitly approved. | Commit backend then facade. |
@@ -202,6 +202,7 @@ Each execution step must record:
 | [ ] | DISCOVERED-005 | CLI structured error boundary | `src/aeat/entrypoints/cli/_errors.py` defines a structured boundary, but the root app does not call `decorate_typer_app`. | Wire a single root-level error boundary or document why specific commands must opt out; add regression tests for unknown backend errors and typed errors. | W6 | A command raising an `AeatError` renders through the shared error contract. | Review ensures Click/Typer control-flow still propagates correctly. |
 | [x] | DISCOVERED-006 | `aeat setup status` readiness and next-action logic | Live handler computes profile readiness, auth readiness, and next action in CLI code. | Move readiness and next-action computation into backend/application services before extending status behavior. | W2/W4/W5 | Tests prove backend returns readiness/next-action and CLI only renders it. | Review checks CLI does not own status business rules. |
 | [ ] | DISCOVERED-007 | Filing input aggregation in CLI common helpers | `_aggregate_filing_inputs` currently returns an empty dictionary from the CLI helper layer. | Replace with backend aggregation/preflight API before declaration calculate/modelo binding hardening. | W2/W5 | Modelo calculation tests prove required bindings are supplied or reported by backend preflight. | Review treats placeholder aggregation as a blocker for closing UX-012 and UX-017. |
+| [x] | DISCOVERED-008 | Doctor command placement | The accepted product direction moved diagnostics under the config facade instead of the root command namespace. | Implement diagnostics as `aeat config doctor`; keep root `aeat doctor` unregistered. | W7 | Root help lists `config`, `aeat config doctor` runs text/JSON, and `aeat doctor` fails. | Review ensures diagnostics are backend-owned and the root surface remains focused. |
 
 ## Wave Task Checklists
 

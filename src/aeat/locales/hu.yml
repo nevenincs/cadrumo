@@ -91,6 +91,12 @@ cli:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
       period_empty: Az adózási időszak nem lehet üres
       period_unrecognised: Ismeretlen időszak
+  config:
+    app_help: Helyi konfiguráció és diagnosztika kezelése
+    doctor:
+      help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
+      logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
+      logs_lines_help: Megjelenítendő friss naplósorok száma
   data:
     app_help: Adóadatok és nyilvántartások kezelése
     ledgers:
