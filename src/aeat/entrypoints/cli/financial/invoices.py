@@ -5,6 +5,12 @@ Surfaces the :mod:`aeat.application.invoices` and
 ``link``, ``reconcile``, ``verify``, ``unmatched``) so operators can
 inspect the invoice catalogue, link invoices to transactions
 bidirectionally, and reconcile unmatched records.
+
+Cross-process movement of the invoice catalogue (backup, restore,
+migration to another machine) is served by ``aeat archive export`` and
+``aeat archive import``: those verbs walk every registered namespace
+including ``aeat.domain.invoices`` and round-trip a portable JSON
+bundle against the encrypted SQL backend.
 """
 
 from __future__ import annotations

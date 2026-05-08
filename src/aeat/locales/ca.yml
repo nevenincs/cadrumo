@@ -1,3 +1,8 @@
+access_gate:
+  errors:
+    default_translatable: l'enviament en directe a l'AEAT està permanentment prohibit;
+      utilitza generar → verificar → exportar i puja el fitxer tu mateix al portal
+      de l'AEAT
 aggregation:
   models:
     t_944805: Format de període no vàlid. Useu YYYY, YYYY-Qn o YYYY-MM.

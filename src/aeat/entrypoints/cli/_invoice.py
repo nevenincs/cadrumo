@@ -172,7 +172,7 @@ def invoice_review(
                     elif rate_decimal is not None and base is not None:
                         iva = (base * rate_decimal).quantize(Decimal("0.01"))
 
-                payload = {
+                single_payload: dict[str, object] = {
                     "id": inv.invoice_id,
                     "kind": inv.kind.value,
                     "issued_at": inv.issued_at.isoformat() if inv.issued_at else None,
@@ -185,7 +185,7 @@ def invoice_review(
                 payment_id = review.fields.get("payment.id", "-") if review else "-"
                 _emit(
                     ctx,
-                    payload,
+                    single_payload,
                     [
                         f"{tr('cli.invoice.labels.id')}\t{inv.invoice_id}",
                         f"{tr('cli.invoice.labels.kind')}\t{inv.kind.value}",
@@ -196,7 +196,7 @@ def invoice_review(
                 )
                 return
         raise _bad(tr("cli.invoice.errors.invoice_not_found", id=invoice_id))
-    payload = {"rows": []}
+    list_rows: list[dict[str, object]] = []
     for inv in invoices:
         review = state.invoice_reviews.get(inv.invoice_id)
         base = inv.base_total
@@ -218,7 +218,7 @@ def invoice_review(
                 iva = (base * rate_decimal).quantize(Decimal("0.01"))
 
         status = _invoice_row_status(inv, state)
-        payload["rows"].append(
+        list_rows.append(
             {
                 "id": inv.invoice_id,
                 "kind": inv.kind.value,
@@ -237,12 +237,12 @@ def invoice_review(
         f"{tr('cli.invoice.labels.iva')}\t"
         f"{tr('cli.invoice.labels.status')}"
     ]
-    for row in payload["rows"]:
-        lines.append(f"{row['id'][:12]}\t{row['kind']}\t{row['base']}\t{row['iva']}\t{row['status']}")
+    for row in list_rows:
+        lines.append(f"{str(row['id'])[:12]}\t{row['kind']}\t{row['base']}\t{row['iva']}\t{row['status']}")
 
     if not invoices:
         lines.append(tr("cli.invoice.review.no_invoices"))
-    _emit(ctx, payload, lines)
+    _emit(ctx, {"rows": list_rows}, lines)
 
 
 def _invoice_row_status(inv: Invoice, state: UserCliState) -> str:

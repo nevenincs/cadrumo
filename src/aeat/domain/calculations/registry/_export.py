@@ -4,22 +4,21 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
-from typing import Literal, cast
+from typing import cast
 
 from ._errors import RegistryValidationError
 from ._schema import (
     DataBindingDefinition,
+    ExportDataType,
     ExportFieldDefinition,
+    ExportJustification,
     ExportLayoutDefinition,
+    ExportPadding,
     ExportRecordDefinition,
     ModeloRevision,
     RegistryModel,
     RegistrySnapshot,
 )
-
-_BindingExportDataType = Literal["text", "integer", "decimal", "money", "date", "boolean"]
-_ExportPadding = Literal["left_zero", "left_space", "right_space", "none"]
-_ExportJustification = Literal["left", "right", "none"]
 
 
 class ResolvedExportLayout(RegistryModel):
@@ -211,20 +210,20 @@ def _selector_int(binding: DataBindingDefinition, key: str) -> int:
     return int(value)
 
 
-def _binding_data_type(binding: DataBindingDefinition, value: object) -> _BindingExportDataType:
+def _binding_data_type(binding: DataBindingDefinition, value: object) -> ExportDataType:
     allowed = {"text", "integer", "decimal", "money", "date", "boolean"}
     if not isinstance(value, str) or value not in allowed:
         raise RegistryValidationError(f"binding {binding.id!r} selector data_type is not exportable")
-    return cast(_BindingExportDataType, value)
+    return cast(ExportDataType, value)
 
 
-def _padding_for_binding_data_type(data_type: _BindingExportDataType) -> _ExportPadding:
+def _padding_for_binding_data_type(data_type: ExportDataType) -> ExportPadding:
     if data_type in {"money", "integer", "decimal"}:
         return "left_zero"
     return "right_space"
 
 
-def _justification_for_binding_data_type(data_type: _BindingExportDataType) -> _ExportJustification:
+def _justification_for_binding_data_type(data_type: ExportDataType) -> ExportJustification:
     if data_type in {"money", "integer", "decimal"}:
         return "right"
     return "left"

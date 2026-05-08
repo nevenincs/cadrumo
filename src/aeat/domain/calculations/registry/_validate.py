@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from functools import lru_cache
 from graphlib import CycleError, TopologicalSorter
 from importlib import import_module
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from ._bindings import (
     validate_invoice_binding_definition,
@@ -18,17 +19,36 @@ from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._runtime_graph import expression_casilla_refs
 from ._schema import (
+    AlgorithmBindingDefinition,
+    AlgorithmProviderDefinition,
+    ApplicationLinkDefinition,
+    CasillaDefinition,
+    ConstructDefinition,
     DataBindingDefinition,
+    DateAxis,
     DatedValue,
+    DeadlineWindowDefinition,
+    DependencyClassificationDefinition,
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
     ExtractionProfileDefinition,
+    FilingScheduleDefinition,
+    FormulaDefinition,
     FormulaExpression,
     LegalReference,
+    LiveCrossReferenceDecision,
     ModeloDefinition,
     ModeloRevision,
+    ParameterDefinition,
     PeriodSelector,
     RegistryCatalogues,
+    RelationDefinition,
     SourceCitation,
     SourceReference,
+    SupportRemovalDecisionDefinition,
+    VerificationExpectationDefinition,
+    WorkbookParityReference,
 )
 from ._sources import verify_source_catalogue
 from ._text import normalise_corpus_text
@@ -51,10 +71,153 @@ def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     return {"record", "offset", "length", "data_type"}.issubset(binding.selector)
 
 
+@dataclass(frozen=True)
+class _RevisionInventory:
+    """Pre-computed indexes of every per-aspect collection on a revision.
+
+    Centralises the by-id maps, id sets, and derived sets that
+    :meth:`RegistryValidator._validate_revision` and its per-aspect
+    delegates would otherwise re-derive from
+    :class:`ModeloRevision` over and over. The fields mirror the
+    aspect names declared on :class:`ModeloRevision` 1:1; new aspects
+    must be added here.
+    """
+
+    casilla_by_id: Mapping[str, CasillaDefinition]
+    formula_by_id: Mapping[str, FormulaDefinition]
+    binding_by_id: Mapping[str, DataBindingDefinition]
+    relation_by_id: Mapping[str, RelationDefinition]
+    parameter_by_id: Mapping[str, ParameterDefinition]
+    provider_by_id: Mapping[str, AlgorithmProviderDefinition]
+    algorithm_binding_by_id: Mapping[str, AlgorithmBindingDefinition]
+    export_layout_by_id: Mapping[str, ExportLayoutDefinition]
+    extraction_profile_by_id: Mapping[str, ExtractionProfileDefinition]
+    cross_reference_by_id: Mapping[str, LiveCrossReferenceDecision]
+    workbook_parity_by_id: Mapping[str, WorkbookParityReference]
+    verification_expectation_by_id: Mapping[str, VerificationExpectationDefinition]
+    application_link_by_id: Mapping[str, ApplicationLinkDefinition]
+    deadline_window_by_id: Mapping[str, DeadlineWindowDefinition]
+    filing_schedule_by_id: Mapping[str, FilingScheduleDefinition]
+    support_removal_decision_by_id: Mapping[str, SupportRemovalDecisionDefinition]
+    construct_by_id: Mapping[str, ConstructDefinition]
+    dependency_classification_by_id: Mapping[str, DependencyClassificationDefinition]
+    export_field_ids: frozenset[str]
+    exported_casillas: frozenset[str]
+
+
+def _collect_revision_inventory(revision: ModeloRevision) -> _RevisionInventory:
+    """Build a :class:`_RevisionInventory` from one revision in one pass."""
+    return _RevisionInventory(
+        casilla_by_id={c.id: c for c in revision.casillas},
+        formula_by_id={f.id: f for f in revision.formulas},
+        binding_by_id={b.id: b for b in revision.bindings},
+        relation_by_id={r.id: r for r in revision.relations},
+        parameter_by_id={p.id: p for p in revision.parameters},
+        provider_by_id={p.id: p for p in revision.algorithm_providers},
+        algorithm_binding_by_id={b.id: b for b in revision.algorithm_bindings},
+        export_layout_by_id={layout.id: layout for layout in revision.export_layouts},
+        extraction_profile_by_id={p.id: p for p in revision.extraction_profiles},
+        cross_reference_by_id={x.id: x for x in revision.live_cross_references},
+        workbook_parity_by_id={w.id: w for w in revision.workbook_parity_refs},
+        verification_expectation_by_id={e.id: e for e in revision.verification_expectations},
+        application_link_by_id={a.id: a for a in revision.application_links},
+        deadline_window_by_id={w.id: w for w in revision.deadline_windows},
+        filing_schedule_by_id={s.id: s for s in revision.filing_schedules},
+        support_removal_decision_by_id={d.id: d for d in revision.support_removal_decisions},
+        construct_by_id={c.id: c for c in revision.constructs},
+        dependency_classification_by_id={c.id: c for c in revision.dependency_classifications},
+        export_field_ids=frozenset(
+            field.id
+            for layout in revision.export_layouts
+            for record in layout.records
+            for field in record.fields
+        ),
+        exported_casillas=frozenset(
+            field.casilla
+            for layout in revision.export_layouts
+            for record in layout.records
+            for field in record.fields
+            if field.casilla is not None
+        ),
+    )
+
+
+# Stable order of aspects whose duplicate-id checks share identical
+# wording; keeping the order in one place lets _validate_revision
+# iterate the table without inlining 18 copies of the same loop.
+_REVISION_ASPECT_LABELS: tuple[tuple[str, str], ...] = (
+    ("casilla_by_id", "casilla"),
+    ("formula_by_id", "formula"),
+    ("binding_by_id", "binding"),
+    ("relation_by_id", "relation"),
+    ("parameter_by_id", "parameter"),
+    ("provider_by_id", "algorithm provider"),
+    ("algorithm_binding_by_id", "algorithm binding"),
+    ("export_layout_by_id", "export layout"),
+    ("extraction_profile_by_id", "extraction profile"),
+    ("cross_reference_by_id", "cross-reference"),
+    ("workbook_parity_by_id", "workbook parity reference"),
+    ("verification_expectation_by_id", "verification expectation"),
+    ("application_link_by_id", "application link"),
+    ("deadline_window_by_id", "deadline window"),
+    ("filing_schedule_by_id", "filing schedule"),
+    ("support_removal_decision_by_id", "support removal decision"),
+    ("construct_by_id", "construct"),
+    ("dependency_classification_by_id", "dependency classification"),
+)
+
+
+def _aspect_id_lists(
+    revision: ModeloRevision,
+) -> tuple[tuple[str, list[str]], ...]:
+    """Return (label, ids) pairs in the order :data:`_REVISION_ASPECT_LABELS` declares.
+
+    The ids are taken from the live :class:`ModeloRevision` collections
+    rather than from the inventory so that order-sensitive duplicate
+    detection sees the same ordering as the source declaration.
+    """
+    return (
+        ("casilla", [c.id for c in revision.casillas]),
+        ("formula", [f.id for f in revision.formulas]),
+        ("binding", [b.id for b in revision.bindings]),
+        ("relation", [r.id for r in revision.relations]),
+        ("parameter", [p.id for p in revision.parameters]),
+        ("algorithm provider", [p.id for p in revision.algorithm_providers]),
+        ("algorithm binding", [b.id for b in revision.algorithm_bindings]),
+        ("export layout", [layout.id for layout in revision.export_layouts]),
+        ("extraction profile", [p.id for p in revision.extraction_profiles]),
+        ("cross-reference", [x.id for x in revision.live_cross_references]),
+        ("workbook parity reference", [w.id for w in revision.workbook_parity_refs]),
+        ("verification expectation", [e.id for e in revision.verification_expectations]),
+        ("application link", [a.id for a in revision.application_links]),
+        ("deadline window", [w.id for w in revision.deadline_windows]),
+        ("filing schedule", [s.id for s in revision.filing_schedules]),
+        ("support removal decision", [d.id for d in revision.support_removal_decisions]),
+        ("construct", [c.id for c in revision.constructs]),
+        ("dependency classification", [c.id for c in revision.dependency_classifications]),
+    )
+
+
+def _check_revision_id_uniqueness(prefix: str, revision: ModeloRevision) -> list[str]:
+    """Return one failure per duplicate id (per-kind and across-kinds)."""
+    failures: list[str] = []
+    aspect_ids = _aspect_id_lists(revision)
+    for kind, ids in aspect_ids:
+        for duplicate in sorted(_duplicates(ids)):
+            failures.append(f"{prefix}: duplicate {kind} id {duplicate!r}")
+
+    primary_ids: list[str] = []
+    for _, ids in aspect_ids:
+        primary_ids.extend(ids)
+    for duplicate in sorted(_duplicates(primary_ids)):
+        failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
+    return failures
+
+
 @lru_cache(maxsize=16)
 def _extract_pdf_text(path: Path) -> str:
     try:
-        import pypdfium2 as pdfium
+        pdfium: Any = import_module("pypdfium2")
     except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
         raise OSError("pypdfium2 is required to validate manual PDF citations") from exc
     try:
@@ -162,114 +325,112 @@ class RegistryValidator:
         failures.extend(self._missing_refs(prefix, "revision", revision.legal_refs, self._legal, "legal"))
         failures.extend(self._missing_refs(prefix, "revision", revision.source_refs, self._sources, "source"))
 
-        casilla_ids = [casilla.id for casilla in revision.casillas]
-        formula_ids = [formula.id for formula in revision.formulas]
-        binding_ids = [binding.id for binding in revision.bindings]
-        relation_ids = [relation.id for relation in revision.relations]
-        parameter_ids = [parameter.id for parameter in revision.parameters]
-        provider_ids = [provider.id for provider in revision.algorithm_providers]
-        algorithm_binding_ids = [binding.id for binding in revision.algorithm_bindings]
-        export_layout_ids = [layout.id for layout in revision.export_layouts]
-        extraction_profile_ids = [profile.id for profile in revision.extraction_profiles]
-        cross_reference_ids = [cross_reference.id for cross_reference in revision.live_cross_references]
-        workbook_parity_ids = [workbook.id for workbook in revision.workbook_parity_refs]
-        verification_expectation_ids = [expectation.id for expectation in revision.verification_expectations]
-        application_link_ids = [link.id for link in revision.application_links]
-        deadline_window_ids = [window.id for window in revision.deadline_windows]
-        filing_schedule_ids = [schedule.id for schedule in revision.filing_schedules]
-        support_removal_decision_ids = [decision.id for decision in revision.support_removal_decisions]
-        construct_ids = [construct.id for construct in revision.constructs]
-        dependency_classification_ids = [classification.id for classification in revision.dependency_classifications]
-        if not workbook_parity_ids:
+        if not revision.workbook_parity_refs:
             failures.append(f"{prefix}: revision must declare official workbook parity coverage")
-        for kind, ids in (
-            ("casilla", casilla_ids),
-            ("formula", formula_ids),
-            ("binding", binding_ids),
-            ("relation", relation_ids),
-            ("parameter", parameter_ids),
-            ("algorithm provider", provider_ids),
-            ("algorithm binding", algorithm_binding_ids),
-            ("export layout", export_layout_ids),
-            ("extraction profile", extraction_profile_ids),
-            ("cross-reference", cross_reference_ids),
-            ("workbook parity reference", workbook_parity_ids),
-            ("verification expectation", verification_expectation_ids),
-            ("application link", application_link_ids),
-            ("deadline window", deadline_window_ids),
-            ("filing schedule", filing_schedule_ids),
-            ("support removal decision", support_removal_decision_ids),
-            ("construct", construct_ids),
-            ("dependency classification", dependency_classification_ids),
-        ):
-            for duplicate in sorted(_duplicates(ids)):
-                failures.append(f"{prefix}: duplicate {kind} id {duplicate!r}")
+        failures.extend(_check_revision_id_uniqueness(prefix, revision))
 
-        primary_ids = (
-            casilla_ids
-            + formula_ids
-            + binding_ids
-            + relation_ids
-            + parameter_ids
-            + algorithm_binding_ids
-            + export_layout_ids
-            + extraction_profile_ids
-            + cross_reference_ids
-            + workbook_parity_ids
-            + verification_expectation_ids
-            + application_link_ids
-            + deadline_window_ids
-            + filing_schedule_ids
-            + support_removal_decision_ids
-            + construct_ids
-            + dependency_classification_ids
-        )
-        for duplicate in sorted(_duplicates(primary_ids)):
-            failures.append(f"{prefix}: duplicate registry id {duplicate!r}")
+        inventory = _collect_revision_inventory(revision)
+        failures.extend(self._dispatch_per_aspect_validators(prefix, revision, inventory))
+        failures.extend(self._dispatch_revision_closures(prefix, revision, inventory))
+        return failures
 
-        casilla_by_id = {casilla.id: casilla for casilla in revision.casillas}
-        formula_by_id = {formula.id: formula for formula in revision.formulas}
-        binding_by_id = {binding.id: binding for binding in revision.bindings}
-        relation_by_id = {relation.id: relation for relation in revision.relations}
-        parameter_by_id = {parameter.id: parameter for parameter in revision.parameters}
-        provider_by_id = {provider.id: provider for provider in revision.algorithm_providers}
-        algorithm_binding_by_id = {binding.id: binding for binding in revision.algorithm_bindings}
-        export_layout_by_id = {layout.id: layout for layout in revision.export_layouts}
-        extraction_profile_by_id = {profile.id: profile for profile in revision.extraction_profiles}
-        cross_reference_by_id = {
-            cross_reference.id: cross_reference for cross_reference in revision.live_cross_references
-        }
-        workbook_parity_by_id = {workbook.id: workbook for workbook in revision.workbook_parity_refs}
-        verification_expectation_by_id = {
-            expectation.id: expectation for expectation in revision.verification_expectations
-        }
-        application_link_by_id = {link.id: link for link in revision.application_links}
-        deadline_window_by_id = {window.id: window for window in revision.deadline_windows}
-        filing_schedule_by_id = {schedule.id: schedule for schedule in revision.filing_schedules}
-        support_removal_decision_by_id = {decision.id: decision for decision in revision.support_removal_decisions}
-        construct_by_id = {construct.id: construct for construct in revision.constructs}
-        dependency_classification_by_id = {
-            classification.id: classification for classification in revision.dependency_classifications
-        }
-
-        casillas = set(casilla_by_id)
-        formulas = {formula.id: formula for formula in revision.formulas}
-        bindings = set(binding_by_id)
-        relations = set(relation_by_id)
-        parameters = set(parameter_by_id)
-        providers = set(provider_by_id)
+    def _dispatch_per_aspect_validators(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+        inventory: _RevisionInventory,
+    ) -> list[str]:
+        """Run every per-aspect validator over ``revision`` in declared order."""
+        casillas = set(inventory.casilla_by_id)
+        formulas = inventory.formula_by_id
+        bindings = set(inventory.binding_by_id)
+        relations = set(inventory.relation_by_id)
+        parameters = set(inventory.parameter_by_id)
+        providers = set(inventory.provider_by_id)
         resolvable_values = casillas | bindings | relations | parameters
-        export_field_ids = {
-            field.id for layout in revision.export_layouts for record in layout.records for field in record.fields
-        }
-        exported_casillas = {
-            field.casilla
-            for layout in revision.export_layouts
-            for record in layout.records
-            for field in record.fields
-            if field.casilla is not None
-        }
 
+        failures: list[str] = []
+        failures.extend(
+            self._validate_revision_casillas(
+                prefix, revision, casillas, formulas, bindings, set(inventory.export_field_ids)
+            )
+        )
+        failures.extend(self._validate_revision_formulas(prefix, revision, casillas, bindings, parameters, relations))
+        failures.extend(self._validate_revision_parameters(prefix, revision))
+        failures.extend(self._validate_revision_bindings(prefix, revision))
+        failures.extend(self._validate_revision_relations(prefix, revision, bindings, inventory.binding_by_id))
+        failures.extend(
+            self._validate_revision_dependency_classifications(
+                prefix, revision, inventory.construct_by_id, inventory.relation_by_id
+            )
+        )
+        failures.extend(self._validate_revision_filing_schedules(prefix, revision))
+        failures.extend(self._validate_revision_algorithm_providers(prefix, revision))
+        failures.extend(
+            self._validate_revision_algorithm_bindings(
+                prefix, revision, providers, casillas, resolvable_values, parameters
+            )
+        )
+        failures.extend(
+            self._validate_revision_export_layouts(prefix, revision, casillas, inventory.casilla_by_id, bindings)
+        )
+        failures.extend(
+            self._validate_revision_extraction_profiles(prefix, revision, casillas, set(inventory.exported_casillas))
+        )
+        failures.extend(self._validate_revision_live_cross_references(prefix, revision))
+        failures.extend(self._validate_revision_workbook_parity_refs(prefix, revision))
+        failures.extend(self._validate_revision_verification_expectations(prefix, revision, casillas))
+        failures.extend(self._validate_revision_application_links(prefix, revision))
+        failures.extend(self._validate_revision_deadline_windows(prefix, revision))
+        return failures
+
+    def _dispatch_revision_closures(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+        inventory: _RevisionInventory,
+    ) -> list[str]:
+        """Run the cross-aspect closure validator with all the by-id maps."""
+        return self._validate_revision_closures(
+            prefix,
+            revision,
+            list(inventory.export_layout_by_id),
+            list(inventory.extraction_profile_by_id),
+            list(inventory.cross_reference_by_id),
+            list(inventory.workbook_parity_by_id),
+            list(inventory.verification_expectation_by_id),
+            list(inventory.application_link_by_id),
+            list(inventory.deadline_window_by_id),
+            list(inventory.filing_schedule_by_id),
+            inventory.casilla_by_id,
+            inventory.formula_by_id,
+            inventory.parameter_by_id,
+            inventory.binding_by_id,
+            inventory.provider_by_id,
+            inventory.algorithm_binding_by_id,
+            inventory.relation_by_id,
+            inventory.export_layout_by_id,
+            inventory.extraction_profile_by_id,
+            inventory.cross_reference_by_id,
+            inventory.workbook_parity_by_id,
+            inventory.verification_expectation_by_id,
+            inventory.application_link_by_id,
+            inventory.deadline_window_by_id,
+            inventory.filing_schedule_by_id,
+            inventory.support_removal_decision_by_id,
+            inventory.dependency_classification_by_id,
+        )
+
+    def _validate_revision_casillas(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+        casillas: set[str],
+        formulas: Mapping[str, FormulaDefinition],
+        bindings: set[str],
+        export_field_ids: set[str],
+    ) -> list[str]:
+        failures: list[str] = []
         for casilla in revision.casillas:
             failures.extend(
                 self._missing_refs(prefix, f"casilla {casilla.id}", casilla.legal_refs, self._legal, "legal")
@@ -277,23 +438,62 @@ class RegistryValidator:
             failures.extend(
                 self._missing_refs(prefix, f"casilla {casilla.id}", casilla.source_refs, self._sources, "source")
             )
-            if casilla.formula is not None and casilla.formula not in formulas:
-                failures.append(f"{prefix}: casilla {casilla.id!r} references unknown formula {casilla.formula!r}")
-            if (
-                casilla.formula is not None
-                and casilla.formula in formulas
-                and formulas[casilla.formula].target != casilla.id
-            ):
-                failures.append(
-                    f"{prefix}: casilla {casilla.id!r} references formula {casilla.formula!r} "
-                    f"targeting {formulas[casilla.formula].target!r}"
-                )
-            if casilla.binding is not None and casilla.binding not in bindings:
-                failures.append(f"{prefix}: casilla {casilla.id!r} references unknown binding {casilla.binding!r}")
-            for export_ref in casilla.export_refs:
-                if export_ref not in export_field_ids:
-                    failures.append(f"{prefix}: casilla {casilla.id!r} references unknown export field {export_ref!r}")
+            failures.extend(RegistryValidator._validate_casilla_formula(prefix, casilla, formulas))
+            failures.extend(RegistryValidator._validate_casilla_binding(prefix, casilla, bindings))
+            failures.extend(RegistryValidator._validate_casilla_export_refs(prefix, casilla, export_field_ids))
 
+        return failures
+
+    @staticmethod
+    def _validate_casilla_formula(
+        prefix: str,
+        casilla: CasillaDefinition,
+        formulas: Mapping[str, FormulaDefinition],
+    ) -> list[str]:
+        if casilla.formula is None:
+            return []
+        formula = formulas.get(casilla.formula)
+        if formula is None:
+            return [f"{prefix}: casilla {casilla.id!r} references unknown formula {casilla.formula!r}"]
+        if formula.target != casilla.id:
+            return [
+                f"{prefix}: casilla {casilla.id!r} references formula {casilla.formula!r} "
+                f"targeting {formula.target!r}"
+            ]
+        return []
+
+    @staticmethod
+    def _validate_casilla_binding(
+        prefix: str,
+        casilla: CasillaDefinition,
+        bindings: set[str],
+    ) -> list[str]:
+        if casilla.binding is not None and casilla.binding not in bindings:
+            return [f"{prefix}: casilla {casilla.id!r} references unknown binding {casilla.binding!r}"]
+        return []
+
+    @staticmethod
+    def _validate_casilla_export_refs(
+        prefix: str,
+        casilla: CasillaDefinition,
+        export_field_ids: set[str],
+    ) -> list[str]:
+        return [
+            f"{prefix}: casilla {casilla.id!r} references unknown export field {export_ref!r}"
+            for export_ref in casilla.export_refs
+            if export_ref not in export_field_ids
+        ]
+
+    def _validate_revision_formulas(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+        casillas: set[str],
+        bindings: set[str],
+        parameters: set[str],
+        relations: set[str],
+    ) -> list[str]:
+        failures: list[str] = []
         for formula in revision.formulas:
             failures.extend(
                 self._missing_refs(prefix, f"formula {formula.id}", formula.legal_refs, self._legal, "legal")
@@ -336,6 +536,14 @@ class RegistryValidator:
         for target in sorted(_duplicates([formula.target for formula in revision.formulas])):
             failures.append(f"{prefix}: duplicate formula target {target!r}")
 
+        return failures
+
+    def _validate_revision_parameters(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+    ) -> list[str]:
+        failures: list[str] = []
         for parameter in revision.parameters:
             failures.extend(
                 self._missing_refs(prefix, f"parameter {parameter.id}", parameter.legal_refs, self._legal, "legal")
@@ -365,6 +573,14 @@ class RegistryValidator:
             )
             failures.extend(self._validate_dated_values(prefix, parameter.id, parameter.values))
 
+        return failures
+
+    def _validate_revision_bindings(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+    ) -> list[str]:
+        failures: list[str] = []
         for binding in revision.bindings:
             failures.extend(
                 self._missing_refs(prefix, f"binding {binding.id}", binding.legal_refs, self._legal, "legal")
@@ -416,6 +632,16 @@ class RegistryValidator:
                 except RegistryValidationError as exc:
                     failures.append(f"{prefix}: {exc}")
 
+        return failures
+
+    def _validate_revision_relations(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+        bindings: set[str],
+        binding_by_id: Mapping[str, DataBindingDefinition],
+    ) -> list[str]:
+        failures: list[str] = []
         for relation in revision.relations:
             failures.extend(
                 self._missing_refs(prefix, f"relation {relation.id}", relation.legal_refs, self._legal, "legal")
@@ -448,6 +674,16 @@ class RegistryValidator:
                     f"{unknown_target_periods!r}"
                 )
 
+        return failures
+
+    def _validate_revision_dependency_classifications(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+        construct_by_id: Mapping[str, ConstructDefinition],
+        relation_by_id: Mapping[str, RelationDefinition],
+    ) -> list[str]:
+        failures: list[str] = []
         for classification in revision.dependency_classifications:
             failures.extend(
                 self._missing_refs(
@@ -467,46 +703,96 @@ class RegistryValidator:
                     "source",
                 )
             )
-            for construct_id in classification.target_constructs:
-                construct = construct_by_id.get(construct_id)
-                if construct is None:
-                    failures.append(
-                        f"{prefix}: dependency classification {classification.id!r} references unknown construct "
-                        f"{construct_id!r}"
-                    )
-                    continue
-                if classification.id not in construct.dependency_classifications:
-                    failures.append(
-                        f"{prefix}: dependency classification {classification.id!r} targets construct "
-                        f"{construct_id!r} but the construct does not list it"
-                    )
-            for relation_id in classification.relation_refs:
-                relation = relation_by_id.get(relation_id)
-                if relation is None:
-                    failures.append(
-                        f"{prefix}: dependency classification {classification.id!r} references unknown relation "
-                        f"{relation_id!r}"
-                    )
-                    continue
-                if relation.source_modelo != classification.source_modelo:
-                    failures.append(
-                        f"{prefix}: dependency classification {classification.id!r} source_modelo "
-                        f"{classification.source_modelo!r} does not match relation {relation_id!r} source_modelo "
-                        f"{relation.source_modelo!r}"
-                    )
-                missing_legal_refs = sorted(set(relation.legal_refs).difference(classification.legal_refs))
-                if missing_legal_refs:
-                    failures.append(
-                        f"{prefix}: dependency classification {classification.id!r} relation {relation_id!r} "
-                        f"does not include relation legal refs {missing_legal_refs!r}"
-                    )
-                missing_source_refs = sorted(set(relation.source_refs).difference(classification.source_refs))
-                if missing_source_refs:
-                    failures.append(
-                        f"{prefix}: dependency classification {classification.id!r} relation {relation_id!r} "
-                        f"does not include relation source refs {missing_source_refs!r}"
-                    )
+            failures.extend(
+                RegistryValidator._validate_classification_constructs(prefix, classification, construct_by_id)
+            )
+            failures.extend(
+                RegistryValidator._validate_classification_relations(prefix, classification, relation_by_id)
+            )
+        failures.extend(RegistryValidator._validate_dependency_classification_source_coverage(prefix, revision))
+        return failures
 
+    @staticmethod
+    def _validate_classification_constructs(
+        prefix: str,
+        classification: DependencyClassificationDefinition,
+        construct_by_id: Mapping[str, ConstructDefinition],
+    ) -> list[str]:
+        failures: list[str] = []
+        for construct_id in classification.target_constructs:
+            construct = construct_by_id.get(construct_id)
+            if construct is None:
+                failures.append(
+                    f"{prefix}: dependency classification {classification.id!r} references unknown construct "
+                    f"{construct_id!r}"
+                )
+                continue
+            if classification.id not in construct.dependency_classifications:
+                failures.append(
+                    f"{prefix}: dependency classification {classification.id!r} targets construct "
+                    f"{construct_id!r} but the construct does not list it"
+                )
+        return failures
+
+    @staticmethod
+    def _validate_classification_relations(
+        prefix: str,
+        classification: DependencyClassificationDefinition,
+        relation_by_id: Mapping[str, RelationDefinition],
+    ) -> list[str]:
+        failures: list[str] = []
+        for relation_id in classification.relation_refs:
+            relation = relation_by_id.get(relation_id)
+            if relation is None:
+                failures.append(
+                    f"{prefix}: dependency classification {classification.id!r} references unknown relation "
+                    f"{relation_id!r}"
+                )
+                continue
+            if relation.source_modelo != classification.source_modelo:
+                failures.append(
+                    f"{prefix}: dependency classification {classification.id!r} source_modelo "
+                    f"{classification.source_modelo!r} does not match relation {relation_id!r} source_modelo "
+                    f"{relation.source_modelo!r}"
+                )
+            failures.extend(
+                RegistryValidator._validate_classification_relation_authority(
+                    prefix,
+                    classification,
+                    relation_id,
+                    relation,
+                )
+            )
+        return failures
+
+    @staticmethod
+    def _validate_classification_relation_authority(
+        prefix: str,
+        classification: DependencyClassificationDefinition,
+        relation_id: str,
+        relation: RelationDefinition,
+    ) -> list[str]:
+        failures: list[str] = []
+        missing_legal_refs = sorted(set(relation.legal_refs).difference(classification.legal_refs))
+        if missing_legal_refs:
+            failures.append(
+                f"{prefix}: dependency classification {classification.id!r} relation {relation_id!r} "
+                f"does not include relation legal refs {missing_legal_refs!r}"
+            )
+        missing_source_refs = sorted(set(relation.source_refs).difference(classification.source_refs))
+        if missing_source_refs:
+            failures.append(
+                f"{prefix}: dependency classification {classification.id!r} relation {relation_id!r} "
+                f"does not include relation source refs {missing_source_refs!r}"
+            )
+        return failures
+
+    @staticmethod
+    def _validate_dependency_classification_source_coverage(
+        prefix: str,
+        revision: ModeloRevision,
+    ) -> list[str]:
+        failures: list[str] = []
         for duplicate in sorted(_duplicates([item.source_modelo for item in revision.dependency_classifications])):
             failures.append(f"{prefix}: duplicate dependency classification source modelo {duplicate!r}")
         classifications_by_source = {
@@ -531,7 +817,14 @@ class RegistryValidator:
                     f"{prefix}: dependency classification {classification.id!r} does not cover relation refs "
                     f"{missing_relation_refs!r}"
                 )
+        return failures
 
+    def _validate_revision_filing_schedules(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+    ) -> list[str]:
+        failures: list[str] = []
         selector_periods = set(revision.period_selector.periods)
         for schedule in revision.filing_schedules:
             failures.extend(
@@ -568,6 +861,14 @@ class RegistryValidator:
                     )
                 )
 
+        return failures
+
+    def _validate_revision_algorithm_providers(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+    ) -> list[str]:
+        failures: list[str] = []
         for provider in revision.algorithm_providers:
             failures.extend(
                 self._missing_refs(
@@ -588,6 +889,18 @@ class RegistryValidator:
                 )
             )
 
+        return failures
+
+    def _validate_revision_algorithm_bindings(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+        providers: set[str],
+        casillas: set[str],
+        resolvable_values: set[str],
+        parameters: set[str],
+    ) -> list[str]:
+        failures: list[str] = []
         for algorithm_binding in revision.algorithm_bindings:
             failures.extend(
                 self._missing_refs(
@@ -607,107 +920,225 @@ class RegistryValidator:
                     "source",
                 )
             )
-            if algorithm_binding.provider not in providers:
-                failures.append(
-                    f"{prefix}: algorithm binding {algorithm_binding.id!r} references unknown provider "
-                    f"{algorithm_binding.provider!r}"
+            failures.extend(
+                RegistryValidator._validate_algorithm_binding_provider_and_target(
+                    prefix,
+                    algorithm_binding,
+                    providers,
+                    casillas,
                 )
-            if algorithm_binding.target not in casillas:
-                failures.append(
-                    f"{prefix}: algorithm binding {algorithm_binding.id!r} targets unknown casilla "
-                    f"{algorithm_binding.target!r}"
-                )
-            for input_name, input_value in algorithm_binding.inputs.items():
-                if input_value not in resolvable_values:
-                    failures.append(
-                        f"{prefix}: algorithm binding {algorithm_binding.id!r} input {input_name!r} "
-                        f"references unknown value {input_value!r}"
-                    )
-            for output_name, output_value in algorithm_binding.outputs.items():
-                if output_value not in casillas:
-                    failures.append(
-                        f"{prefix}: algorithm binding {algorithm_binding.id!r} output {output_name!r} "
-                        f"references unknown casilla {output_value!r}"
-                    )
-            for constant in algorithm_binding.constants:
-                if constant not in parameters:
-                    failures.append(
-                        f"{prefix}: algorithm binding {algorithm_binding.id!r} references unknown constant {constant!r}"
-                    )
+            )
+            failures.extend(
+                RegistryValidator._validate_algorithm_binding_inputs(prefix, algorithm_binding, resolvable_values)
+            )
+            failures.extend(RegistryValidator._validate_algorithm_binding_outputs(prefix, algorithm_binding, casillas))
+            failures.extend(
+                RegistryValidator._validate_algorithm_binding_constants(prefix, algorithm_binding, parameters)
+            )
 
+        return failures
+
+    @staticmethod
+    def _validate_algorithm_binding_provider_and_target(
+        prefix: str,
+        algorithm_binding: AlgorithmBindingDefinition,
+        providers: set[str],
+        casillas: set[str],
+    ) -> list[str]:
+        failures: list[str] = []
+        if algorithm_binding.provider not in providers:
+            failures.append(
+                f"{prefix}: algorithm binding {algorithm_binding.id!r} references unknown provider "
+                f"{algorithm_binding.provider!r}"
+            )
+        if algorithm_binding.target not in casillas:
+            failures.append(
+                f"{prefix}: algorithm binding {algorithm_binding.id!r} targets unknown casilla "
+                f"{algorithm_binding.target!r}"
+            )
+        return failures
+
+    @staticmethod
+    def _validate_algorithm_binding_inputs(
+        prefix: str,
+        algorithm_binding: AlgorithmBindingDefinition,
+        resolvable_values: set[str],
+    ) -> list[str]:
+        return [
+            f"{prefix}: algorithm binding {algorithm_binding.id!r} input {input_name!r} "
+            f"references unknown value {input_value!r}"
+            for input_name, input_value in algorithm_binding.inputs.items()
+            if input_value not in resolvable_values
+        ]
+
+    @staticmethod
+    def _validate_algorithm_binding_outputs(
+        prefix: str,
+        algorithm_binding: AlgorithmBindingDefinition,
+        casillas: set[str],
+    ) -> list[str]:
+        return [
+            f"{prefix}: algorithm binding {algorithm_binding.id!r} output {output_name!r} "
+            f"references unknown casilla {output_value!r}"
+            for output_name, output_value in algorithm_binding.outputs.items()
+            if output_value not in casillas
+        ]
+
+    @staticmethod
+    def _validate_algorithm_binding_constants(
+        prefix: str,
+        algorithm_binding: AlgorithmBindingDefinition,
+        parameters: set[str],
+    ) -> list[str]:
+        return [
+            f"{prefix}: algorithm binding {algorithm_binding.id!r} references unknown constant {constant!r}"
+            for constant in algorithm_binding.constants
+            if constant not in parameters
+        ]
+
+    def _validate_revision_export_layouts(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+        casillas: set[str],
+        casilla_by_id: Mapping[str, CasillaDefinition],
+        bindings: set[str],
+    ) -> list[str]:
+        failures: list[str] = []
         for layout in revision.export_layouts:
-            failures.extend(self._missing_refs(prefix, f"export {layout.id}", layout.legal_refs, self._legal, "legal"))
-            failures.extend(
-                self._missing_refs(prefix, f"export {layout.id}", layout.source_refs, self._sources, "source")
-            )
-            failures.extend(
-                self._require_source_tier(prefix, f"export {layout.id}", layout.source_refs, "layout_authority")
-            )
+            failures.extend(self._validate_export_layout_refs(prefix, layout))
             for record in layout.records:
-                if record.binding_record is not None:
-                    matching_bindings = [
-                        binding
-                        for binding in revision.bindings
-                        if binding.selector.get("record") == record.binding_record
-                    ]
-                    if not matching_bindings:
-                        failures.append(
-                            f"{prefix}: export record {record.id!r} derives fields from unknown binding record "
-                            f"{record.binding_record!r}"
-                        )
-                    for binding in matching_bindings:
-                        # Row-producer bindings (aggregation.op == "rows") source their
-                        # byte coordinates from explicit export-field offsets, not from
-                        # the binding selector itself.
-                        if binding.aggregation is not None and binding.aggregation.get("op") == "rows":
-                            continue
-                        missing_selector_keys = sorted(
-                            key for key in ("offset", "length", "data_type") if key not in binding.selector
-                        )
-                        if missing_selector_keys:
-                            failures.append(
-                                f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "
-                                f"{missing_selector_keys!r}"
-                            )
-                if (
-                    record.repeat == "binding_rows"
-                    and not any(field.kind == "binding" for field in record.fields)
-                    and record.binding_record is None
-                ):
-                    failures.append(
-                        f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields"
-                    )
-                if record.requires_positive_casilla is not None and record.requires_positive_casilla not in casillas:
-                    failures.append(
-                        f"{prefix}: export record {record.id!r} requires unknown positive casilla "
-                        f"{record.requires_positive_casilla!r}"
-                    )
-                for field in record.fields:
-                    failures.extend(
-                        self._missing_refs(prefix, f"export field {field.id}", field.legal_refs, self._legal, "legal")
-                    )
-                    failures.extend(
-                        self._missing_refs(
-                            prefix, f"export field {field.id}", field.source_refs, self._sources, "source"
-                        )
-                    )
-                    if field.casilla is not None and field.casilla not in casillas:
-                        failures.append(
-                            f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla!r}"
-                        )
-                    if (
-                        field.casilla is not None
-                        and field.casilla in casilla_by_id
-                        and field.id not in casilla_by_id[field.casilla].export_refs
-                    ):
-                        failures.append(
-                            f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla!r}"
-                        )
-                    if field.binding is not None and field.binding not in bindings:
-                        failures.append(
-                            f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}"
-                        )
+                failures.extend(
+                    self._validate_export_record(prefix, record, revision, casillas, casilla_by_id, bindings)
+                )
 
+        return failures
+
+    def _validate_export_layout_refs(self, prefix: str, layout: ExportLayoutDefinition) -> list[str]:
+        failures: list[str] = []
+        failures.extend(self._missing_refs(prefix, f"export {layout.id}", layout.legal_refs, self._legal, "legal"))
+        failures.extend(self._missing_refs(prefix, f"export {layout.id}", layout.source_refs, self._sources, "source"))
+        failures.extend(
+            self._require_source_tier(prefix, f"export {layout.id}", layout.source_refs, "layout_authority")
+        )
+        return failures
+
+    def _validate_export_record(
+        self,
+        prefix: str,
+        record: ExportRecordDefinition,
+        revision: ModeloRevision,
+        casillas: set[str],
+        casilla_by_id: Mapping[str, CasillaDefinition],
+        bindings: set[str],
+    ) -> list[str]:
+        failures: list[str] = []
+        failures.extend(self._validate_export_record_binding(prefix, record, revision))
+        if (
+            record.repeat == "binding_rows"
+            and not any(field.kind == "binding" for field in record.fields)
+            and record.binding_record is None
+        ):
+            failures.append(f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields")
+        if record.requires_positive_casilla is not None and record.requires_positive_casilla not in casillas:
+            failures.append(
+                f"{prefix}: export record {record.id!r} requires unknown positive casilla "
+                f"{record.requires_positive_casilla!r}"
+            )
+        for field in record.fields:
+            failures.extend(self._validate_export_field(prefix, field, casillas, casilla_by_id, bindings))
+        return failures
+
+    @staticmethod
+    def _validate_export_record_binding(
+        prefix: str,
+        record: ExportRecordDefinition,
+        revision: ModeloRevision,
+    ) -> list[str]:
+        if record.binding_record is None:
+            return []
+        failures: list[str] = []
+        matching_bindings = [
+            binding for binding in revision.bindings if binding.selector.get("record") == record.binding_record
+        ]
+        if not matching_bindings:
+            failures.append(
+                f"{prefix}: export record {record.id!r} derives fields from unknown binding record "
+                f"{record.binding_record!r}"
+            )
+        for binding in matching_bindings:
+            if binding.aggregation is not None and binding.aggregation.get("op") == "rows":
+                continue
+            missing_selector_keys = sorted(
+                key for key in ("offset", "length", "data_type") if key not in binding.selector
+            )
+            if missing_selector_keys:
+                failures.append(
+                    f"{prefix}: export record {record.id!r} binding {binding.id!r} lacks selector keys "
+                    f"{missing_selector_keys!r}"
+                )
+        return failures
+
+    def _validate_export_field(
+        self,
+        prefix: str,
+        field: ExportFieldDefinition,
+        casillas: set[str],
+        casilla_by_id: Mapping[str, CasillaDefinition],
+        bindings: set[str],
+    ) -> list[str]:
+        failures: list[str] = []
+        failures.extend(self._missing_refs(prefix, f"export field {field.id}", field.legal_refs, self._legal, "legal"))
+        failures.extend(
+            self._missing_refs(prefix, f"export field {field.id}", field.source_refs, self._sources, "source")
+        )
+        failures.extend(RegistryValidator._validate_export_field_casilla(prefix, field, casillas))
+        failures.extend(RegistryValidator._validate_export_field_reverse_ref(prefix, field, casilla_by_id))
+        failures.extend(RegistryValidator._validate_export_field_binding(prefix, field, bindings))
+        return failures
+
+    @staticmethod
+    def _validate_export_field_casilla(
+        prefix: str,
+        field: ExportFieldDefinition,
+        casillas: set[str],
+    ) -> list[str]:
+        if field.casilla is not None and field.casilla not in casillas:
+            return [f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla!r}"]
+        return []
+
+    @staticmethod
+    def _validate_export_field_reverse_ref(
+        prefix: str,
+        field: ExportFieldDefinition,
+        casilla_by_id: Mapping[str, CasillaDefinition],
+    ) -> list[str]:
+        if (
+            field.casilla is not None
+            and field.casilla in casilla_by_id
+            and field.id not in casilla_by_id[field.casilla].export_refs
+        ):
+            return [f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla!r}"]
+        return []
+
+    @staticmethod
+    def _validate_export_field_binding(
+        prefix: str,
+        field: ExportFieldDefinition,
+        bindings: set[str],
+    ) -> list[str]:
+        if field.binding is not None and field.binding not in bindings:
+            return [f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}"]
+        return []
+
+    def _validate_revision_extraction_profiles(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+        casillas: set[str],
+        exported_casillas: set[str],
+    ) -> list[str]:
+        failures: list[str] = []
         for profile in revision.extraction_profiles:
             failures.extend(
                 self._missing_refs(prefix, f"extraction profile {profile.id}", profile.legal_refs, self._legal, "legal")
@@ -732,6 +1163,14 @@ class RegistryValidator:
                     )
             failures.extend(self._validate_extraction_profile_artefacts(prefix, profile))
 
+        return failures
+
+    def _validate_revision_live_cross_references(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+    ) -> list[str]:
+        failures: list[str] = []
         oracle_bindings: dict[str, str] = {}
         for cross_reference in revision.live_cross_references:
             failures.extend(
@@ -767,6 +1206,14 @@ class RegistryValidator:
                 else:
                     oracle_bindings[cross_reference.oracle_id] = cross_reference.id
 
+        return failures
+
+    def _validate_revision_workbook_parity_refs(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+    ) -> list[str]:
+        failures: list[str] = []
         for workbook in revision.workbook_parity_refs:
             failures.extend(
                 self._missing_refs(prefix, f"workbook parity {workbook.id}", workbook.legal_refs, self._legal, "legal")
@@ -793,6 +1240,15 @@ class RegistryValidator:
                         "executable parity evidence source"
                     )
 
+        return failures
+
+    def _validate_revision_verification_expectations(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+        casillas: set[str],
+    ) -> list[str]:
+        failures: list[str] = []
         for expectation in revision.verification_expectations:
             failures.extend(
                 self._missing_refs(
@@ -830,6 +1286,14 @@ class RegistryValidator:
                         f"{total_kind!r} must be one of computed_casillas"
                     )
 
+        return failures
+
+    def _validate_revision_application_links(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+    ) -> list[str]:
+        failures: list[str] = []
         for link in revision.application_links:
             failures.extend(
                 self._missing_refs(prefix, f"application link {link.id}", link.legal_refs, self._legal, "legal")
@@ -838,6 +1302,14 @@ class RegistryValidator:
                 self._missing_refs(prefix, f"application link {link.id}", link.source_refs, self._sources, "source")
             )
 
+        return failures
+
+    def _validate_revision_deadline_windows(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+    ) -> list[str]:
+        failures: list[str] = []
         for window in revision.deadline_windows:
             failures.extend(
                 self._missing_refs(prefix, f"deadline window {window.id}", window.legal_refs, self._legal, "legal")
@@ -865,6 +1337,39 @@ class RegistryValidator:
                     )
                 )
 
+        return failures
+
+    def _validate_revision_closures(
+        self,
+        prefix: str,
+        revision: ModeloRevision,
+        export_layout_ids: list[str],
+        extraction_profile_ids: list[str],
+        cross_reference_ids: list[str],
+        workbook_parity_ids: list[str],
+        verification_expectation_ids: list[str],
+        application_link_ids: list[str],
+        deadline_window_ids: list[str],
+        filing_schedule_ids: list[str],
+        casilla_by_id: Mapping[str, CasillaDefinition],
+        formula_by_id: Mapping[str, FormulaDefinition],
+        parameter_by_id: Mapping[str, ParameterDefinition],
+        binding_by_id: Mapping[str, DataBindingDefinition],
+        provider_by_id: Mapping[str, AlgorithmProviderDefinition],
+        algorithm_binding_by_id: Mapping[str, AlgorithmBindingDefinition],
+        relation_by_id: Mapping[str, RelationDefinition],
+        export_layout_by_id: Mapping[str, ExportLayoutDefinition],
+        extraction_profile_by_id: Mapping[str, ExtractionProfileDefinition],
+        cross_reference_by_id: Mapping[str, LiveCrossReferenceDecision],
+        workbook_parity_by_id: Mapping[str, WorkbookParityReference],
+        verification_expectation_by_id: Mapping[str, VerificationExpectationDefinition],
+        application_link_by_id: Mapping[str, ApplicationLinkDefinition],
+        deadline_window_by_id: Mapping[str, DeadlineWindowDefinition],
+        filing_schedule_by_id: Mapping[str, FilingScheduleDefinition],
+        support_removal_decision_by_id: Mapping[str, SupportRemovalDecisionDefinition],
+        dependency_classification_by_id: Mapping[str, DependencyClassificationDefinition],
+    ) -> list[str]:
+        failures: list[str] = []
         failures.extend(
             self._validate_support_removal_decisions(
                 prefix,
@@ -944,56 +1449,85 @@ class RegistryValidator:
             for revision in modelo.revisions.values():
                 prefix = f"modelo {modelo.id} revision {revision.id}"
                 for relation in revision.relations:
-                    relation_scope = f"{prefix}: relation {relation.id!r}"
-                    source_modelo = modelos_by_id.get(relation.source_modelo)
-                    if source_modelo is None:
-                        failures.append(f"{relation_scope} references unknown source modelo {relation.source_modelo!r}")
-                        continue
-                    if not relation.source_periods:
-                        failures.append(f"{relation_scope} must declare source periods")
-                    if not relation.target_periods:
-                        failures.append(f"{relation_scope} must declare target periods")
-                    aggregation = relation.aggregation or {"op": "copy"}
-                    op = aggregation.get("op")
-                    if op not in {"copy", "sum"}:
-                        failures.append(f"{relation_scope} uses unsupported aggregation op {op!r}")
-                    source_revisions, selector_failures = RegistryValidator._select_relation_source_revisions(
-                        source_modelo,
-                        relation.source_revision_selector,
-                    )
-                    failures.extend(f"{relation_scope} {failure}" for failure in selector_failures)
-                    if not source_revisions:
-                        failures.append(
-                            f"{relation_scope} selector {dict(relation.source_revision_selector)!r} "
-                            f"matches no source revisions in modelo {source_modelo.id}"
-                        )
-                        continue
-                    for source_revision in source_revisions:
-                        source_scope = f"{relation_scope} source revision {source_revision.id!r}"
-                        source_values = RegistryValidator._revision_output_ids(source_revision)
-                        if relation.source_output not in source_values:
-                            failures.append(f"{source_scope} has no source output {relation.source_output!r}")
-                        unknown_source_periods = sorted(
-                            set(relation.source_periods).difference(source_revision.period_selector.periods)
-                        )
-                        if unknown_source_periods:
-                            failures.append(
-                                f"{source_scope} does not support source periods {unknown_source_periods!r}"
-                            )
                     failures.extend(
-                        RegistryValidator._validate_source_year_coverage(
-                            relation_scope,
-                            target_selector=revision.period_selector,
-                            source_revisions=source_revisions,
-                            source_periods=relation.source_periods,
-                            filing_year_delta=RegistryValidator._relation_filing_year_delta(
-                                relation.source_revision_selector
-                            ),
-                            fixed_source_year=RegistryValidator._relation_fixed_source_year(
-                                relation.source_revision_selector
-                            ),
+                        RegistryValidator._validate_relation_closure_relation(
+                            prefix,
+                            revision.period_selector,
+                            relation,
+                            modelos_by_id,
                         )
                     )
+        return failures
+
+    @staticmethod
+    def _validate_relation_closure_relation(
+        prefix: str,
+        target_selector: PeriodSelector,
+        relation: RelationDefinition,
+        modelos_by_id: Mapping[str, ModeloDefinition],
+    ) -> list[str]:
+        failures: list[str] = []
+        relation_scope = f"{prefix}: relation {relation.id!r}"
+        source_modelo = modelos_by_id.get(relation.source_modelo)
+        if source_modelo is None:
+            return [f"{relation_scope} references unknown source modelo {relation.source_modelo!r}"]
+        failures.extend(RegistryValidator._validate_relation_period_shape(relation_scope, relation))
+        source_revisions, selector_failures = RegistryValidator._select_relation_source_revisions(
+            source_modelo,
+            relation.source_revision_selector,
+        )
+        failures.extend(f"{relation_scope} {failure}" for failure in selector_failures)
+        if not source_revisions:
+            failures.append(
+                f"{relation_scope} selector {dict(relation.source_revision_selector)!r} "
+                f"matches no source revisions in modelo {source_modelo.id}"
+            )
+            return failures
+        for source_revision in source_revisions:
+            failures.extend(
+                RegistryValidator._validate_relation_source_revision(relation_scope, relation, source_revision)
+            )
+        failures.extend(
+            RegistryValidator._validate_source_year_coverage(
+                relation_scope,
+                target_selector=target_selector,
+                source_revisions=source_revisions,
+                source_periods=relation.source_periods,
+                filing_year_delta=RegistryValidator._relation_filing_year_delta(relation.source_revision_selector),
+                fixed_source_year=RegistryValidator._relation_fixed_source_year(relation.source_revision_selector),
+            )
+        )
+        return failures
+
+    @staticmethod
+    def _validate_relation_period_shape(scope: str, relation: RelationDefinition) -> list[str]:
+        failures: list[str] = []
+        if not relation.source_periods:
+            failures.append(f"{scope} must declare source periods")
+        if not relation.target_periods:
+            failures.append(f"{scope} must declare target periods")
+        aggregation = relation.aggregation or {"op": "copy"}
+        op = aggregation.get("op")
+        if op not in {"copy", "sum"}:
+            failures.append(f"{scope} uses unsupported aggregation op {op!r}")
+        return failures
+
+    @staticmethod
+    def _validate_relation_source_revision(
+        relation_scope: str,
+        relation: RelationDefinition,
+        source_revision: ModeloRevision,
+    ) -> list[str]:
+        failures: list[str] = []
+        source_scope = f"{relation_scope} source revision {source_revision.id!r}"
+        source_values = RegistryValidator._revision_output_ids(source_revision)
+        if relation.source_output not in source_values:
+            failures.append(f"{source_scope} has no source output {relation.source_output!r}")
+        unknown_source_periods = sorted(
+            set(relation.source_periods).difference(source_revision.period_selector.periods)
+        )
+        if unknown_source_periods:
+            failures.append(f"{source_scope} does not support source periods {unknown_source_periods!r}")
         return failures
 
     @staticmethod
@@ -1008,47 +1542,61 @@ class RegistryValidator:
                 for binding in revision.bindings:
                     if binding.source != "previous_filing":
                         continue
-                    binding_scope = f"{prefix}: binding {binding.id!r}"
-                    source_modelo_id = binding.selector.get("source_modelo")
-                    if not isinstance(source_modelo_id, str):
-                        failures.append(f"{binding_scope} must declare string selector source_modelo")
-                        continue
-                    source_modelo = modelos_by_id.get(source_modelo_id)
-                    if source_modelo is None:
-                        failures.append(f"{binding_scope} references unknown source modelo {source_modelo_id!r}")
-                        continue
-
-                    source_periods = RegistryValidator._binding_source_periods(binding)
-                    matching_revisions = tuple(
-                        source_revision
-                        for source_revision in source_modelo.revisions.values()
-                        if not source_periods
-                        or set(source_periods).issubset(set(source_revision.period_selector.periods))
+                    failures.extend(
+                        RegistryValidator._validate_previous_filing_binding(prefix, binding, modelos_by_id)
                     )
-                    if not matching_revisions:
-                        failures.append(
-                            f"{binding_scope} matches no source revisions in modelo {source_modelo.id} "
-                            f"for periods {source_periods!r}"
-                        )
-                        continue
-
-                    source_outputs = RegistryValidator._binding_source_outputs(binding)
-                    if not source_outputs:
-                        continue
-
-                    revision_outputs = set().union(
-                        *(
-                            RegistryValidator._revision_output_ids(source_revision)
-                            for source_revision in matching_revisions
-                        )
-                    )
-                    for source_output in source_outputs:
-                        if source_output not in revision_outputs:
-                            failures.append(
-                                f"{binding_scope} source output {source_output!r} is not defined by any "
-                                f"period-compatible {source_modelo.id} revision"
-                            )
         return failures
+
+    @staticmethod
+    def _validate_previous_filing_binding(
+        prefix: str,
+        binding: DataBindingDefinition,
+        modelos_by_id: Mapping[str, ModeloDefinition],
+    ) -> list[str]:
+        binding_scope = f"{prefix}: binding {binding.id!r}"
+        source_modelo_id = binding.selector.get("source_modelo")
+        if not isinstance(source_modelo_id, str):
+            return [f"{binding_scope} must declare string selector source_modelo"]
+        source_modelo = modelos_by_id.get(source_modelo_id)
+        if source_modelo is None:
+            return [f"{binding_scope} references unknown source modelo {source_modelo_id!r}"]
+        source_periods = RegistryValidator._binding_source_periods(binding)
+        matching_revisions = tuple(
+            source_revision
+            for source_revision in source_modelo.revisions.values()
+            if not source_periods or set(source_periods).issubset(set(source_revision.period_selector.periods))
+        )
+        if not matching_revisions:
+            return [
+                f"{binding_scope} matches no source revisions in modelo {source_modelo.id} "
+                f"for periods {source_periods!r}"
+            ]
+        return RegistryValidator._validate_previous_filing_outputs(
+            binding_scope,
+            binding,
+            source_modelo,
+            matching_revisions,
+        )
+
+    @staticmethod
+    def _validate_previous_filing_outputs(
+        binding_scope: str,
+        binding: DataBindingDefinition,
+        source_modelo: ModeloDefinition,
+        matching_revisions: tuple[ModeloRevision, ...],
+    ) -> list[str]:
+        source_outputs = RegistryValidator._binding_source_outputs(binding)
+        if not source_outputs:
+            return []
+        revision_outputs = set().union(
+            *(RegistryValidator._revision_output_ids(source_revision) for source_revision in matching_revisions)
+        )
+        return [
+            f"{binding_scope} source output {source_output!r} is not defined by any "
+            f"period-compatible {source_modelo.id} revision"
+            for source_output in source_outputs
+            if source_output not in revision_outputs
+        ]
 
     @staticmethod
     def _binding_source_periods(binding: DataBindingDefinition) -> tuple[str, ...]:
@@ -1082,42 +1630,133 @@ class RegistryValidator:
         modelo: ModeloDefinition,
         selector: Mapping[str, str | int],
     ) -> tuple[tuple[ModeloRevision, ...], list[str]]:
+        revision_id, year, year_from, year_to, failures = RegistryValidator._relation_source_selector_values(selector)
+        selected = tuple(
+            revision
+            for revision in modelo.revisions.values()
+            if RegistryValidator._relation_source_revision_matches(
+                revision,
+                revision_id=revision_id,
+                year=year,
+                year_from=year_from,
+                year_to=year_to,
+            )
+        )
+        return selected, failures
+
+    @staticmethod
+    def _relation_source_selector_values(
+        selector: Mapping[str, str | int],
+    ) -> tuple[str | None, int | None, int | None, int | None, list[str]]:
         allowed = {"revision", "revision_id", "year", "year_from", "year_to", "filing_year_delta"}
         failures = [f"selector uses unknown key {key!r}" for key in sorted(set(selector).difference(allowed))]
-        revision_id = selector.get("revision_id", selector.get("revision"))
-        year = selector.get("year")
-        year_from = selector.get("year_from")
-        year_to = selector.get("year_to")
+        raw_revision_id = selector.get("revision_id", selector.get("revision"))
+        raw_year = selector.get("year")
+        raw_year_from = selector.get("year_from")
+        raw_year_to = selector.get("year_to")
 
-        if revision_id is not None and not isinstance(revision_id, str):
-            failures.append("selector revision_id must be a string")
-        for key, value in (("year", year), ("year_from", year_from), ("year_to", year_to)):
+        failures.extend(RegistryValidator._validate_relation_source_revision_id(raw_revision_id))
+        failures.extend(
+            RegistryValidator._validate_relation_source_year_types(
+                raw_year=raw_year,
+                raw_year_from=raw_year_from,
+                raw_year_to=raw_year_to,
+                raw_delta=selector.get("filing_year_delta"),
+            )
+        )
+        failures.extend(
+            RegistryValidator._validate_relation_source_year_shape(
+                raw_year=raw_year,
+                raw_year_from=raw_year_from,
+                raw_year_to=raw_year_to,
+            )
+        )
+
+        revision_id = raw_revision_id if isinstance(raw_revision_id, str) else None
+        year = raw_year if isinstance(raw_year, int) else None
+        year_from = raw_year_from if isinstance(raw_year_from, int) else None
+        year_to = raw_year_to if isinstance(raw_year_to, int) else None
+        return revision_id, year, year_from, year_to, failures
+
+    @staticmethod
+    def _validate_relation_source_revision_id(value: str | int | None) -> list[str]:
+        if value is not None and not isinstance(value, str):
+            return ["selector revision_id must be a string"]
+        return []
+
+    @staticmethod
+    def _validate_relation_source_year_types(
+        *,
+        raw_year: str | int | None,
+        raw_year_from: str | int | None,
+        raw_year_to: str | int | None,
+        raw_delta: str | int | None,
+    ) -> list[str]:
+        failures: list[str] = []
+        for key, value in (("year", raw_year), ("year_from", raw_year_from), ("year_to", raw_year_to)):
             if value is not None and not isinstance(value, int):
                 failures.append(f"selector {key} must be an integer")
-        delta = selector.get("filing_year_delta")
-        if delta is not None and not isinstance(delta, int):
+        if raw_delta is not None and not isinstance(raw_delta, int):
             failures.append("selector filing_year_delta must be an integer")
-        if year is not None and (year_from is not None or year_to is not None):
-            failures.append("selector must use year or year_from/year_to, not both")
-        if year_to is not None and year_from is None:
-            failures.append("selector year_to requires year_from")
-        if isinstance(year_from, int) and isinstance(year_to, int) and year_to < year_from:
-            failures.append("selector year_to must be on or after year_from")
+        return failures
 
-        selected: list[ModeloRevision] = []
-        for revision in modelo.revisions.values():
-            if isinstance(revision_id, str) and revision.id != revision_id:
-                continue
-            if isinstance(year, int) and not revision.period_selector.includes_year(year):
-                continue
-            if isinstance(year_from, int) and not RegistryValidator._revision_intersects_year_range(
-                revision,
-                year_from=year_from,
-                year_to=year_to if isinstance(year_to, int) else None,
-            ):
-                continue
-            selected.append(revision)
-        return tuple(selected), failures
+    @staticmethod
+    def _validate_relation_source_year_shape(
+        *,
+        raw_year: str | int | None,
+        raw_year_from: str | int | None,
+        raw_year_to: str | int | None,
+    ) -> list[str]:
+        failures: list[str] = []
+        if raw_year is not None:
+            failures.extend(RegistryValidator._validate_relation_source_year_is_exclusive(raw_year_from, raw_year_to))
+        failures.extend(RegistryValidator._validate_relation_source_year_to_has_start(raw_year_from, raw_year_to))
+        failures.extend(RegistryValidator._validate_relation_source_year_order(raw_year_from, raw_year_to))
+        return failures
+
+    @staticmethod
+    def _validate_relation_source_year_is_exclusive(
+        raw_year_from: str | int | None,
+        raw_year_to: str | int | None,
+    ) -> list[str]:
+        if raw_year_from is not None or raw_year_to is not None:
+            return ["selector must use year or year_from/year_to, not both"]
+        return []
+
+    @staticmethod
+    def _validate_relation_source_year_to_has_start(
+        raw_year_from: str | int | None,
+        raw_year_to: str | int | None,
+    ) -> list[str]:
+        if raw_year_to is not None and raw_year_from is None:
+            return ["selector year_to requires year_from"]
+        return []
+
+    @staticmethod
+    def _validate_relation_source_year_order(
+        raw_year_from: str | int | None,
+        raw_year_to: str | int | None,
+    ) -> list[str]:
+        if isinstance(raw_year_from, int) and isinstance(raw_year_to, int) and raw_year_to < raw_year_from:
+            return ["selector year_to must be on or after year_from"]
+        return []
+
+    @staticmethod
+    def _relation_source_revision_matches(
+        revision: ModeloRevision,
+        *,
+        revision_id: str | None,
+        year: int | None,
+        year_from: int | None,
+        year_to: int | None,
+    ) -> bool:
+        if revision_id is not None and revision.id != revision_id:
+            return False
+        if year is not None and not revision.period_selector.includes_year(year):
+            return False
+        if year_from is None:
+            return True
+        return RegistryValidator._revision_intersects_year_range(revision, year_from=year_from, year_to=year_to)
 
     @staticmethod
     def _relation_filing_year_delta(selector: Mapping[str, str | int]) -> int:
@@ -1243,7 +1882,7 @@ class RegistryValidator:
     @staticmethod
     def _validate_dated_values(scope: str, parameter_id: str, values: Iterable[DatedValue]) -> list[str]:
         failures: list[str] = []
-        by_axis: dict[str, list[DatedValue]] = {}
+        by_axis: dict[DateAxis, list[DatedValue]] = {}
         for value in values:
             axis = value.date_axis
             by_axis.setdefault(axis, []).append(value)
@@ -1273,23 +1912,25 @@ class RegistryValidator:
 
     @staticmethod
     def _validate_application_link_closure(scope: str, revision: ModeloRevision) -> list[str]:
-        failures: list[str] = []
         surfaces = {link.surface for link in revision.application_links}
-        if revision.formulas and "calculation" not in surfaces:
-            failures.append(f"{scope}: formulas require a calculation application link")
-        if revision.extraction_profiles and "extractor" not in surfaces:
-            failures.append(f"{scope}: extraction profiles require an extractor application link")
-        if revision.export_layouts and "export" not in surfaces:
-            failures.append(f"{scope}: export layouts require an export application link")
-        if revision.verification_expectations and "verification" not in surfaces:
-            failures.append(f"{scope}: verification expectations require a verification application link")
-        if revision.casillas and "filing" not in surfaces:
-            failures.append(f"{scope}: filing-grade casillas require a filing application link")
-        if revision.live_cross_references and "portal" not in surfaces:
-            failures.append(f"{scope}: live/static cross-references require a portal application link")
-        if revision.deadline_windows and "deadline" not in surfaces:
-            failures.append(f"{scope}: deadline windows require a deadline application link")
-        return failures
+        required = (
+            (revision.formulas, "calculation", "formulas require a calculation application link"),
+            (revision.extraction_profiles, "extractor", "extraction profiles require an extractor application link"),
+            (revision.export_layouts, "export", "export layouts require an export application link"),
+            (
+                revision.verification_expectations,
+                "verification",
+                "verification expectations require a verification application link",
+            ),
+            (revision.casillas, "filing", "filing-grade casillas require a filing application link"),
+            (
+                revision.live_cross_references,
+                "portal",
+                "live/static cross-references require a portal application link",
+            ),
+            (revision.deadline_windows, "deadline", "deadline windows require a deadline application link"),
+        )
+        return [f"{scope}: {message}" for items, surface, message in required if items and surface not in surfaces]
 
     @staticmethod
     def _validate_reconciliation_total_closure(scope: str, revision: ModeloRevision) -> list[str]:

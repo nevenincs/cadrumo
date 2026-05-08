@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
@@ -734,13 +735,16 @@ class ParameterDefinition(RegistryModel):
             if self.bracket_axis is None:
                 raise ValueError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
             sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
-            for prev, current in zip(sorted_brackets, sorted_brackets[1:], strict=False):
-                if prev.valid_from == current.valid_from and prev.upper_bound is not None:
-                    if current.lower_bound < prev.upper_bound:
-                        raise ValueError(
-                            f"parameter {self.id!r} brackets {prev.lower_bound}-{prev.upper_bound} "
-                            f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
-                        )
+            for prev, current in itertools.pairwise(sorted_brackets):
+                if (
+                    prev.valid_from == current.valid_from
+                    and prev.upper_bound is not None
+                    and current.lower_bound < prev.upper_bound
+                ):
+                    raise ValueError(
+                        f"parameter {self.id!r} brackets {prev.lower_bound}-{prev.upper_bound} "
+                        f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
+                    )
         else:
             if self.brackets:
                 raise ValueError(
@@ -872,6 +876,16 @@ class RelationDefinition(RegistryModel):
         return self
 
 
+ExportDataType = Literal["text", "integer", "decimal", "money", "date", "boolean"]
+"""Data-type tag emitted by export layouts and binding-derived field projection."""
+
+ExportPadding = Literal["left_zero", "left_space", "right_space", "none"]
+"""Padding rule for fixed-width export fields."""
+
+ExportJustification = Literal["left", "right", "none"]
+"""Justification rule for fixed-width export fields."""
+
+
 class ExportFieldDefinition(RegistryModel):
     id: ExportFieldId
     offset: int | None = Field(default=None, ge=0)
@@ -883,10 +897,10 @@ class ExportFieldDefinition(RegistryModel):
     header_key: str | None = None
     draft_attribute: Literal["modelo", "period", "profile_tax_id", "filing_year", "period_code"] | None = None
     computed_key: Literal["envelope_closing_tag"] | None = None
-    data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
+    data_type: ExportDataType
     required: bool
-    padding: Literal["left_zero", "left_space", "right_space", "none"]
-    justification: Literal["left", "right", "none"]
+    padding: ExportPadding
+    justification: ExportJustification
     date_format: str | None = None
     signed: bool
     legal_refs: LegalRefs

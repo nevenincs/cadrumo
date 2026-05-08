@@ -180,26 +180,47 @@ def test_set_ratio_tolerates_trailing_whitespace() -> None:
     assert "0.21" in result.output
 
 
-def test_corrupt_file_surfaces_error_not_silent_empty(
+def test_corrupt_object_surfaces_error_not_silent_empty(
     _isolate_usage_ratios_path: Path,
 ) -> None:
-    """A hand-edited corrupt file surfaces an error rather than silently resetting the profile.
+    """A corrupt secure-object envelope surfaces an error rather than silently resetting the profile.
 
     Defense-in-depth pin: if ``_load_profile`` ever started swallowing
     :exc:`aeat.domain.usage_ratios.UsageRatioError`, prior ratios could
     be silently wiped by a subsequent save. Both ``ratios list`` and
-    ``set-ratio`` on a corrupt file must exit non-zero.
+    ``set-ratio`` on a corrupt object must exit non-zero, and the
+    corrupt bytes must still be in the backend (the CLI did not
+    silently overwrite them with a fresh valid profile).
     """
-    _isolate_usage_ratios_path.write_text("{ not json", encoding="utf-8")
+    from datetime import UTC, datetime
+
+    from ....adapters.persistence.storage import SensitivityClass
+    from ....adapters.persistence.storage.sql import SecureObjectRepository
+
+    repo = SecureObjectRepository()
+    repo.save(
+        namespace="aeat.domain.usage_ratios",
+        object_key="profile",
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        payload=b"{ not json",
+    )
+
     list_result = _invoke("ratios", "list")
     assert list_result.exit_code == 2, list_result.output
     assert "usage-ratio profile" in list_result.output
 
     set_result = _invoke("set-ratio", "suministros_home_office_luz", "0.5")
     assert set_result.exit_code == 2, set_result.output
-    # operator's corrupt bytes must still be on disk — the CLI did not silently
-    # overwrite them with a fresh valid profile.
-    assert _isolate_usage_ratios_path.read_text(encoding="utf-8") == "{ not json"
+    record = repo.load(
+        "aeat.domain.usage_ratios",
+        "profile",
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=1,
+    )
+    assert record is not None
+    assert record.payload == b"{ not json"
 
 
 def test_format_decimal_zero_is_exact_not_substring_match(
@@ -309,9 +330,12 @@ def test_set_ratio_rejects_spanish_locale_comma_decimal() -> None:
 
 def test_operator_success_moment_end_to_end(_isolate_usage_ratios_path: Path) -> None:
     """End-to-end: setting the home-office alias to 0.21 lists every member with 0.21 beside the statutory 0.3."""
+    from ....adapters.persistence.storage.sql import SecureObjectRepository
+
     set_result = _invoke("set-ratio", "home_office_area", "0.21")
     assert set_result.exit_code == 0, set_result.output
-    assert _isolate_usage_ratios_path.exists()
+    # Profile persists in the encrypted SQL backend, not on disk.
+    assert SecureObjectRepository().exists("aeat.domain.usage_ratios", "profile")
 
     list_result = _invoke("ratios", "list")
     assert list_result.exit_code == 0, list_result.output

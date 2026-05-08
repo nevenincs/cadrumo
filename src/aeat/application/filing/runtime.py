@@ -179,17 +179,20 @@ def load_default_filing_profile(
     *,
     display_name: str | None = None,
 ) -> FilingOperatorProfile:
-    """Load the configured default profile JSON for runtime filing commands.
+    """Load the configured default :class:`FilingOperatorProfile`.
 
     Resolves ``path`` (or, when ``None``, the
     ``aeat_default_profile_path`` setting from
-    :func:`aeat.core.config.load_settings`), validates the on-disk
-    envelope via :func:`aeat.application.setup._env_writer.load_profile_envelope`,
-    and projects it into a runtime :class:`FilingOperatorProfile`.
+    :func:`aeat.core.config.load_settings`) into a logical profile
+    identifier and looks it up via
+    :func:`aeat.application.setup._env_writer.load_profile_envelope`,
+    which reads from the encrypted SQL backend keyed by the resolved
+    POSIX path. The path no longer addresses an on-disk file; it is a
+    nominal handle.
 
     Args:
-        path: Override path to the profile JSON. Defaults to the
-            value of ``AEAT_DEFAULT_PROFILE_PATH``.
+        path: Override identifier for the profile to load. Defaults to
+            the value of ``AEAT_DEFAULT_PROFILE_PATH``.
         display_name: Optional friendly label propagated to the
             returned profile.
 
@@ -197,8 +200,9 @@ def load_default_filing_profile(
         The loaded :class:`FilingOperatorProfile`.
 
     Raises:
-        FilingBuilderError: When no default profile is configured or when the
-            resolved path does not exist on disk.
+        FilingBuilderError: When no default profile is configured, or
+            when the resolved profile cannot be found in the secure
+            backend.
     """
     from ...core.config import load_settings
 
@@ -208,11 +212,12 @@ def load_default_filing_profile(
         raise FilingBuilderError(
             "no default filing profile configured; pass --profile PATH or set AEAT_DEFAULT_PROFILE_PATH"
         )
-    if not target.exists():
-        raise FilingBuilderError(f"default filing profile not found: {target}")
     from ..setup._env_writer import load_profile_envelope
 
-    profile = load_profile_envelope(target)
+    try:
+        profile = load_profile_envelope(target)
+    except FileNotFoundError as exc:
+        raise FilingBuilderError(f"default filing profile not found: {target}") from exc
     return filing_profile_from_autonomo(profile, display_name=display_name)
 
 

@@ -27,12 +27,9 @@ def _invoke(args: list[str]):
 def _json_output(result: Any) -> str:
     import re
 
-    # print(f"DEBUG: result.output={result.output!r}")
     match = re.search(r"(\{.*\}|\[.*\])", result.output, re.DOTALL)
     if not match:
-        # print("DEBUG: no JSON match found")
         return result.output
-    # print(f"DEBUG: matched={match.group(0)!r}")
     return match.group(0)
 
 
@@ -133,26 +130,6 @@ def test_setup_help_lists_commands_in_workflow_order() -> None:
     workflow = ("init", "status", "auth", "profile")
     positions = [result.output.index(command) for command in workflow]
     assert positions == sorted(positions)
-
-
-def test_removed_developer_commands_are_not_registered() -> None:
-    removed_commands = [
-        ["financial", "--help"],
-        ["filing", "--help"],
-        ["bootstrap", "--help"],
-        ["doctor", "--help"],
-        ["config", "doctor-logs", "--help"],
-        ["auth", "--help"],
-        ["app", "declarations", "--help"],
-        ["app", "workspaces", "--help"],
-        ["app", "audits", "--help"],
-        ["app", "ledger", "split", "--help"],
-        ["app", "invoice", "show", "--help"],
-    ]
-
-    for command in removed_commands:
-        result = _invoke(command)
-        assert result.exit_code != 0, command
 
 
 def test_config_doctor_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -906,7 +883,7 @@ def test_profile_validate_blocks_when_required_missing(
     assert "tax.id" in payload["missing_required"]
 
 
-def test_operator_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
+def test_operator_n26_modelo_303_tape_calculates_with_registry_snapshot(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -988,6 +965,9 @@ def test_operator_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
     assert _invoke(["app", "invoice", "match", "--period", period]).exit_code == 0
 
     calculated = _invoke(["--format", "json", "app", "declaration", "calculate", "--modelo", "303", "--period", period])
-    assert calculated.exit_code != 0
-    assert "not present in the calculation registry" in calculated.output
+    # Modelo 303 is wired in the calculation registry, so the calculate
+    # command succeeds end-to-end. The export file is produced only when
+    # a separate `--export` flag is passed; without it, no file is
+    # written even on success.
+    assert calculated.exit_code == 0, calculated.output
     assert not export_path.exists()

@@ -40,8 +40,7 @@ class NonTtyRefusedError(AeatError):
         message = "Interactive stdin is unavailable on a non-TTY input stream."
         if suggestion.strip():
             message = f"{message} {suggestion.strip()}"
-        super().__init__(message)
-        self.suggestion: str = suggestion
+        super().__init__(message, suggestion=suggestion)
 
 
 def _isatty(stream: object) -> bool:

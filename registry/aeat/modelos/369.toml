@@ -224,6 +224,38 @@ requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1", "ley-37-1992:art-163-octiesdecies"]
 source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
 
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-exterior".application_links]]
+id = "modelo-369-exterior-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
 [[revisions."esquema-exterior".filing_schedules]]
 id = "modelo-369-exterior-trimestral"
 period_kind = "quarterly"
@@ -324,6 +356,10 @@ application_links = [
     "modelo-369-exterior-verification",
     "modelo-369-exterior-deadline",
     "modelo-369-exterior-calculation",
+    "modelo-369-exterior-review",
+    "modelo-369-exterior-approval",
+    "modelo-369-exterior-reconciliation",
+    "modelo-369-exterior-workflow",
 ]
 filing_schedules = ["modelo-369-exterior-trimestral"]
 deadline_windows = [
@@ -578,6 +614,38 @@ requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1", "ley-37-1992:art-163-unvicies"]
 source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
 
+[[revisions."esquema-union".application_links]]
+id = "modelo-369-union-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".application_links]]
+id = "modelo-369-union-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".application_links]]
+id = "modelo-369-union-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-union".application_links]]
+id = "modelo-369-union-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
 [[revisions."esquema-union".filing_schedules]]
 id = "modelo-369-union-trimestral"
 period_kind = "quarterly"
@@ -684,6 +752,10 @@ application_links = [
     "modelo-369-union-verification",
     "modelo-369-union-deadline",
     "modelo-369-union-calculation",
+    "modelo-369-union-review",
+    "modelo-369-union-approval",
+    "modelo-369-union-reconciliation",
+    "modelo-369-union-workflow",
 ]
 filing_schedules = ["modelo-369-union-trimestral"]
 deadline_windows = [
@@ -888,6 +960,38 @@ requires_snapshot = true
 legal_refs = ["orden-hac-610-2021:art-1", "ley-37-1992:art-163-quinvicies"]
 source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
 
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-review"
+surface = "review"
+consumer = "aeat.application.filing.review"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-approval"
+surface = "approval"
+consumer = "aeat.application.workflow.approval"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-reconciliation"
+surface = "reconciliation"
+consumer = "aeat.application.reconciliation"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
+[[revisions."esquema-importacion".application_links]]
+id = "modelo-369-importacion-workflow"
+surface = "workflow"
+consumer = "aeat.application.workflow"
+requires_snapshot = true
+legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021", "boe-modelo-369-2021-form"]
+
 [[revisions."esquema-importacion".filing_schedules]]
 id = "modelo-369-importacion-mensual"
 period_kind = "monthly"
@@ -978,6 +1082,10 @@ application_links = [
     "modelo-369-importacion-verification",
     "modelo-369-importacion-deadline",
     "modelo-369-importacion-calculation",
+    "modelo-369-importacion-review",
+    "modelo-369-importacion-approval",
+    "modelo-369-importacion-reconciliation",
+    "modelo-369-importacion-workflow",
 ]
 filing_schedules = ["modelo-369-importacion-mensual"]
 deadline_windows = [

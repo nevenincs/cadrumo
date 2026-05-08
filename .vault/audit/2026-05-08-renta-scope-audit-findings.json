@@ -203,8 +203,8 @@
   },
   "layer4": {
     "catalogued_count": 119,
-    "cited_count": 39,
-    "catalogued_but_uncited_count": 80,
+    "cited_count": 41,
+    "catalogued_but_uncited_count": 78,
     "cited_but_uncatalogued_count": 0,
     "top_cited": [
       [
@@ -273,8 +273,6 @@
       "ley-27-2014:art-18",
       "ley-27-2014:art-40",
       "ley-27-2014:art-41",
-      "ley-35-2006:art-82",
-      "ley-35-2006:art-83",
       "ley-37-1992:art-161",
       "ley-37-1992:art-163-octiesdecies",
       "ley-37-1992:art-163-quinvicies",
@@ -288,16 +286,16 @@
       "orden-eha-3012-2008:art-1",
       "orden-eha-3012-2008:art-10",
       "orden-eha-3111-2009:art-1",
-      "orden-eha-3111-2009:art-8"
+      "orden-eha-3111-2009:art-8",
+      "orden-eha-3434-2007:art-1",
+      "orden-eha-3434-2007:art-2"
     ],
     "uncatalogued_articles": [],
     "renta_scoped_catalogued_count": 66,
-    "renta_scoped_cited_count": 39,
-    "renta_scoped_uncited_count": 27,
-    "renta_scoped_coverage_pct": 59.09090909090909,
+    "renta_scoped_cited_count": 41,
+    "renta_scoped_uncited_count": 25,
+    "renta_scoped_coverage_pct": 62.121212121212125,
     "renta_scoped_uncited_articles": [
-      "ley-35-2006:art-82",
-      "ley-35-2006:art-83",
       "orden-eha-3435-2007:anexo-ii",
       "orden-eha-672-2007:art-1",
       "orden-hac-1155-2020:art-4",

@@ -158,7 +158,7 @@ def test_registry_verify_cli_fails_fast_on_missing_corpus_source(tmp_path) -> No
     )
 
     assert result.exit_code != 0
-    assert "missing corpus file" in str(result.exception)
+    assert "cannot be read" in result.output
 
 
 def test_registry_workbook_verify_cli_reports_json_from_official_corpus() -> None:

@@ -245,19 +245,22 @@ def get_error_exit_code(category: ErrorCategory) -> int:
 
 
 def resolve_error_message(error: BaseException, code: ErrorCode | None = None) -> str:
-    """Resolve the user-facing message for ``error``."""
+    """Resolve the user-facing message for ``error``.
+
+    ``translated_message`` is a translation key (e.g.
+    ``"profile.errors.not_configured"``) by convention; it is rendered
+    through the i18n backend, which falls back to the key itself if no
+    matching translation exists.
+    """
 
     resolved_code = code or get_registered_error_code(error)
-    translated_message = getattr(error, "translated_message", None)
-    if isinstance(translated_message, str) and translated_message:
-        return translated_message
-    if error.args and isinstance(error.args[0], str) and error.args[0]:
-        return error.args[0]
-
-    # Use the i18n backend to resolve the key.
-    # To avoid circular imports, we resolve the language locally.
     from ...entrypoints.cli._i18n import tr
 
+    translated_message = getattr(error, "translated_message", None)
+    if isinstance(translated_message, str) and translated_message:
+        return tr(translated_message)
+    if error.args and isinstance(error.args[0], str) and error.args[0]:
+        return error.args[0]
     return tr(resolved_code.message_key)
 
 

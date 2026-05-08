@@ -34,7 +34,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+def _patch_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    dispose_engine()
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     blob_store = EncryptedBlobStore(
@@ -52,11 +56,19 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
+        dispose_engine()
 
 
 @pytest.fixture()
 def profile_path(tmp_path: Path) -> Path:
-    from ....adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    """Persist an :class:`AutonomoProfile` through the SQL secure-object backend.
+
+    The setup-profile namespace is path-keyed: the natural object key
+    is the resolved POSIX path, so we write under that key and return
+    the same path. ``AEAT_DEFAULT_PROFILE_PATH``-style consumers reach
+    the same SQL row.
+    """
+    from ....adapters.persistence.storage.sql import SecureObjectRepository
 
     profile = AutonomoProfile(
         tax_id="X1234567L",
@@ -67,17 +79,13 @@ def profile_path(tmp_path: Path) -> Path:
         bienes_extranjero_above_threshold=False,
     )
     path = tmp_path / "profile.json"
-    envelope = Envelope[AutonomoProfile](
+    SecureObjectRepository().save(
+        namespace="aeat.application.setup.profile",
+        object_key=path.expanduser().resolve().as_posix(),
+        classification=SensitivityClass.IDENTITY,
         schema_version=1,
         written_at=datetime.now(UTC),
-        classification=SensitivityClass.IDENTITY,
-        payload=profile,
-    )
-    save_encrypted_envelope(
-        envelope,
-        path,
-        master_key_provider=_resolve_master_key_provider(),
-        hkdf_context=b"aeat.application.setup.profile.v1",
+        payload=profile.model_dump_json().encode("utf-8"),
     )
     return path
 

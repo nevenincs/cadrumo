@@ -1,3 +1,8 @@
+access_gate:
+  errors:
+    default_translatable: el envío en vivo a la AEAT está permanentemente prohibido;
+      usa producir → verificar → exportar y sube el archivo tú mismo en el portal
+      de la AEAT
 aggregation:
   models:
     t_944805: Periodo no valido. Usa YYYY-Qn
