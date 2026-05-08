@@ -9,6 +9,7 @@ a deliberately-isolated declarative base so we never touch the live
 
 from __future__ import annotations
 
+import logging
 import secrets
 from collections.abc import Iterator
 
@@ -207,6 +208,21 @@ class TestHashedLookup:
         a = HashedLookup.compute("alpha")
         b = HashedLookup.compute("beta")
         assert a != b
+
+    def test_short_plaintext_digest_does_not_emit_runtime_warning(self, caplog: pytest.LogCaptureFixture) -> None:
+        caplog.set_level(
+            logging.WARNING,
+            logger="aeat.adapters.persistence.storage.crypto._encrypted_columns",
+        )
+
+        digest = HashedLookup.compute("alpha")
+
+        assert len(digest) == 32
+        assert not [
+            record
+            for record in caplog.records
+            if record.name == "aeat.adapters.persistence.storage.crypto._encrypted_columns"
+        ]
 
     def test_round_trip_via_sqlalchemy(self, session: Session) -> None:
         row = _CryptoRow(lookup_key="natural-key-1")
