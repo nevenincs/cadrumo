@@ -16,8 +16,11 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from ....domain.profile import TaxResidenceProfile
-from ....domain.profile._errors import ProfileNotConfiguredError, TaxResidenceProfileError
+from ....domain.profile import (
+    ProfileNotConfiguredError,
+    TaxResidenceProfile,
+    TaxResidenceProfileError,
+)
 from ..storage import SensitivityClass
 from ..storage.sql import SecureObjectRepository
 
@@ -63,7 +66,7 @@ def load_json(path: Path | None = None) -> dict[str, object] | None:
         Parsed JSON object, or ``None`` when the file does not exist.
 
     Raises:
-        :exc:`aeat.domain.profile._errors.TaxResidenceProfileError`: When the
+        :exc:`aeat.domain.profile.TaxResidenceProfileError`: When the
             file cannot be read, contains invalid JSON, is not an object, or
             carries an unsupported schema version.
     """
@@ -100,7 +103,7 @@ def save_json(payload: Mapping[str, object], path: Path | None = None) -> None:
             :func:`default_path`.
 
     Raises:
-        :exc:`aeat.domain.profile._errors.TaxResidenceProfileError`: When the
+        :exc:`aeat.domain.profile.TaxResidenceProfileError`: When the
             payload cannot be serialized or the file cannot be written.
     """
 
@@ -127,7 +130,7 @@ def clear_json(path: Path | None = None) -> None:
             :func:`default_path`.
 
     Raises:
-        :exc:`aeat.domain.profile._errors.TaxResidenceProfileError`: When the
+        :exc:`aeat.domain.profile.TaxResidenceProfileError`: When the
             file exists but cannot be removed.
     """
 
@@ -150,7 +153,7 @@ def load_tax_residence(path: object | None = None) -> TaxResidenceProfile | None
         when no profile file exists.
 
     Raises:
-        :exc:`aeat.domain.profile._errors.TaxResidenceProfileError`: When the
+        :exc:`aeat.domain.profile.TaxResidenceProfileError`: When the
             file content fails pydantic validation.
     """
 
@@ -173,9 +176,9 @@ def require_tax_residence(path: object | None = None) -> TaxResidenceProfile:
         Validated :class:`aeat.domain.profile.TaxResidenceProfile`.
 
     Raises:
-        :exc:`aeat.domain.profile._errors.ProfileNotConfiguredError`: When
+        :exc:`aeat.domain.profile.ProfileNotConfiguredError`: When
             no profile file exists.
-        :exc:`aeat.domain.profile._errors.TaxResidenceProfileError`: When
+        :exc:`aeat.domain.profile.TaxResidenceProfileError`: When
             the file content fails pydantic validation.
     """
 
@@ -193,7 +196,7 @@ def save_tax_residence(residence: TaxResidenceProfile, path: object | None = Non
         path: Override for the profile file path.
 
     Raises:
-        :exc:`aeat.domain.profile._errors.TaxResidenceProfileError`: When the
+        :exc:`aeat.domain.profile.TaxResidenceProfileError`: When the
             file cannot be written.
     """
 
