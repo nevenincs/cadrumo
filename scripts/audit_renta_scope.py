@@ -646,7 +646,6 @@ _RENTA_ARCHETYPES: tuple[tuple[str, str, tuple[str, ...]], ...] = (
 
 
 _RENTA_TEST_FILES = (
-    "src/aeat/domain/calculations/registry/test_renta_2025_synthetic_profile.py",
     "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py",
     "src/aeat/domain/calculations/registry/test_renta_cuota_chain_contract.py",
     "src/aeat/domain/calculations/registry/test_modelo_100_drift_detection.py",
@@ -728,7 +727,6 @@ def layer8_test_honesty_inventory() -> dict:
 def layer7_scenario_coverage() -> dict:
     """Inspect test files for synthetic-profile scenarios; map to archetypes."""
     test_files = [
-        PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_2025_synthetic_profile.py",
         PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py",
         PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_registry_scenarios.py",
     ]
