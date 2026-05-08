@@ -16,8 +16,8 @@ from ...application.auth import AuthProviderListing
 from ...application.user_cli import UserCliState, state_repository
 from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry import (
+    ModeloRevision,
     ValidatedRegistryAuthority,
-    resolve_bound_casilla_inputs,
     resolve_ledger_renta_expense_aggregation_binding_values,
 )
 from ...domain.deadlines import AutonomoProfile, autonomo_profile_from_mapping
@@ -222,7 +222,18 @@ def _aggregate_renta_filing_inputs(
         snapshot.revision,
         aggregation.observations,
     )
-    return dict(resolve_bound_casilla_inputs(snapshot.revision, binding_values))
+    return _bound_inputs_from_available_bindings(snapshot.revision, binding_values)
+
+
+def _bound_inputs_from_available_bindings(
+    revision: ModeloRevision,
+    binding_values: dict[str, Decimal],
+) -> dict[str, object]:
+    return {
+        casilla.id: binding_values[casilla.binding]
+        for casilla in revision.casillas
+        if casilla.input_kind == "bound" and casilla.binding is not None and casilla.binding in binding_values
+    }
 
 
 def _annual_filing_year(period: str) -> int | None:
