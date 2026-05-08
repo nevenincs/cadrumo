@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from itertools import pairwise
 from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
@@ -734,13 +735,16 @@ class ParameterDefinition(RegistryModel):
             if self.bracket_axis is None:
                 raise ValueError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
             sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
-            for prev, current in zip(sorted_brackets, sorted_brackets[1:], strict=False):
-                if prev.valid_from == current.valid_from and prev.upper_bound is not None:
-                    if current.lower_bound < prev.upper_bound:
-                        raise ValueError(
-                            f"parameter {self.id!r} brackets {prev.lower_bound}-{prev.upper_bound} "
-                            f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
-                        )
+            for prev, current in pairwise(sorted_brackets):
+                if (
+                    prev.valid_from == current.valid_from
+                    and prev.upper_bound is not None
+                    and current.lower_bound < prev.upper_bound
+                ):
+                    raise ValueError(
+                        f"parameter {self.id!r} brackets {prev.lower_bound}-{prev.upper_bound} "
+                        f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
+                    )
         else:
             if self.brackets:
                 raise ValueError(

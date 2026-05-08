@@ -9,6 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...renta import RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS, RentaDeductibleExpenseObservation
 from ...vat import (
     EUMemberState,
     InvoiceDirection,
@@ -16,7 +17,6 @@ from ...vat import (
     TransactionKind,
     VATRateKind,
 )
-from ...renta import RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS, RentaDeductibleExpenseObservation
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -1159,8 +1159,7 @@ def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBi
     op = str((binding.aggregation or {}).get("op", "sum"))
     if op != "sum":
         raise RegistryValidationError(
-            f"binding {binding.id!r} ledger_renta_expense_aggregation supports only "
-            f"aggregation op 'sum', got {op!r}"
+            f"binding {binding.id!r} ledger_renta_expense_aggregation supports only aggregation op 'sum', got {op!r}"
         )
     if selector.fact != "deductible_amount_sum":
         raise RegistryValidationError(
