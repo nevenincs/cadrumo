@@ -65,14 +65,6 @@ _console = Console()
 _logger = get_logger(__name__)
 
 
-def _drafts_dir() -> Path:
-    """Return the configured drafts directory, creating it if missing."""
-    settings = load_settings()
-    path = Path(settings.aeat_drafts_dir)
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
 def _load_submission_record(submission_id: str) -> SubmittedFiling:
     """Read an encrypted persisted submission record for amendment assembly."""
     repository = SubmissionRepository()
@@ -132,14 +124,14 @@ def _load_inputs(path: Path) -> dict[str, object]:
 
 
 def _draft_repository():  # type: ignore[no-untyped-def]
-    """Return a FilingDraftRepository bound to the configured drafts dir.
+    """Return the SQL-backed FilingDraftRepository.
 
     Imports are deferred to avoid pulling aeat.adapters.persistence.storage (and Alembic
     plugin discovery) into CLI commands that never persist a draft.
     """
     from ....domain.filing._repository import FilingDraftRepository
 
-    return FilingDraftRepository(store_dir=_drafts_dir())
+    return FilingDraftRepository()
 
 
 def _load_draft(path: Path) -> FilingDraft:

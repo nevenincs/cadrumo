@@ -165,9 +165,7 @@ def _invoice_repo() -> InvoiceCatalogueRepository:
 
 
 def _draft_repo() -> FilingDraftRepository:
-    from ...core.config import load_settings
-
-    return FilingDraftRepository(store_dir=Path(load_settings().aeat_drafts_dir).resolve())
+    return FilingDraftRepository()
 
 
 def _load_transactions() -> TransactionCatalogue:
