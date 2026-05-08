@@ -648,11 +648,6 @@ cli:
     verbose_help: Show internal informational logs on stderr
     version_command_help: Show package version and registry summary
     version_help: Show package version and registry summary
-  sanitize:
-    app_help: Data sanitization and anonymization management
-    labels:
-      available: Available
-    status_help: Show the environment sanitization status
   setup:
     app_help: Prepare the local profile and authentication needed to use the app
     auth:

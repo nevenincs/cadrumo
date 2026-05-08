@@ -654,11 +654,6 @@ cli:
     verbose_help: Mostrar logs interns informatius a stderr
     version_command_help: Mostrar la versió del paquet i el resum del registre
     version_help: Mostrar la versió del paquet i el resum del registre
-  sanitize:
-    app_help: Gestió de la sanetització i anonimització de dades
-    labels:
-      available: Disponible
-    status_help: Mostrar l'estat de la sanetització de l'entorn
   setup:
     app_help: Preparar el perfil local i l'autenticació necessaris per usar l'aplicació
     auth:
