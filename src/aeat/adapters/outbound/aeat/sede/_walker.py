@@ -19,8 +19,10 @@ from __future__ import annotations
 
 import contextlib
 import hashlib
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .....core.config import Settings
 from .....core.logging import get_logger
@@ -45,6 +47,42 @@ _SEDE_BASE = "https://www6.agenciatributaria.gob.es"
 _RESUMEN_URL = f"{_SEDE_BASE}/wlpl/TEWV-CORE/ResumenVlt"
 _EXPAND_TIMEOUT_MS = 10_000
 _NAVIGATION_TIMEOUT_MS = 30_000
+
+
+@asynccontextmanager
+async def _open_browser_page(
+    session: AeatSession,
+    settings: Settings,
+) -> AsyncIterator[tuple[Any, Any]]:
+    """Yield ``(context, page)`` for a fresh authenticated Playwright session.
+
+    Centralises the open / null-guard / context.close / browser.close
+    nesting that every public ``_walker`` function needs to drive a
+    sede page. The caller decides what to do with the page (warm-up
+    goto, target navigation, request.get, etc.) and the context manager
+    cleans up on exit even if the body raises.
+
+    Raises:
+        SedeNavigationError: When the session has no persisted auth
+            state (the operator has not run ``aeat setup auth login``).
+    """
+
+    storage_state = storage_state_for_session(session)
+    if session.storage_state_path is None:
+        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat setup auth login` first")
+    browser_session = await default_browser_session_factory(settings)
+    try:
+        context = await browser_session.create_context(storage_state=storage_state)
+        try:
+            page = await context.new_page()
+            yield context, page
+        finally:
+            try:
+                await context.close()
+            except Exception as exc:
+                log.debug("sede walker: context.close suppressed: %s", exc)
+    finally:
+        await browser_session.close()
 
 
 async def walk_expedientes_tree(
@@ -78,39 +116,23 @@ async def walk_expedientes_tree(
         SedeParseError: If the ResumenVlt page cannot be parsed.
     """
     settings = settings or Settings()
-    storage_state = storage_state_for_session(session)
-    storage_state_path = session.storage_state_path
-    if storage_state_path is None:
-        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat setup auth login` first")
-
-    browser_session = await default_browser_session_factory(settings)
-    try:
-        context = await browser_session.create_context(storage_state=storage_state)
+    async with _open_browser_page(session, settings) as (_context, page):
         try:
-            page = await context.new_page()
-            try:
-                await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
-            except PlaywrightError as exc:
-                raise SedeNavigationError(f"goto {_RESUMEN_URL!r} failed: {exc}") from exc
+            await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+        except PlaywrightError as exc:
+            raise SedeNavigationError(f"goto {_RESUMEN_URL!r} failed: {exc}") from exc
 
-            await _expand_matching_branches(page, modelo=modelo)
-            html = await _snapshot_html(page)
-            expedientes = parse_resumen_tree(html, base_url=_SEDE_BASE)
-            if modelo is not None:
-                expedientes = tuple(e for e in expedientes if e.modelo == modelo)
-            log.info(
-                "walk_expedientes_tree: found %d expediente(s) modelo=%s",
-                len(expedientes),
-                modelo,
-            )
-            return expedientes
-        finally:
-            try:
-                await context.close()
-            except Exception as _exc:
-                log.debug("walk_expedientes_tree: context.close suppressed: %s", _exc)
-    finally:
-        await browser_session.close()
+        await _expand_matching_branches(page, modelo=modelo)
+        html = await _snapshot_html(page)
+        expedientes = parse_resumen_tree(html, base_url=_SEDE_BASE)
+        if modelo is not None:
+            expedientes = tuple(e for e in expedientes if e.modelo == modelo)
+        log.info(
+            "walk_expedientes_tree: found %d expediente(s) modelo=%s",
+            len(expedientes),
+            modelo,
+        )
+        return expedientes
 
 
 async def resolve_justificante_ref(
@@ -136,48 +158,32 @@ async def resolve_justificante_ref(
         SedeParseError: If the detail HTML does not expose a CSV link.
     """
     settings = settings or Settings()
-    storage_state = storage_state_for_session(session)
-    storage_state_path = session.storage_state_path
-    if storage_state_path is None:
-        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat setup auth login` first")
-
     detail_url = str(expediente.detail_url)
-    browser_session = await default_browser_session_factory(settings)
-    try:
-        context = await browser_session.create_context(storage_state=storage_state)
+    async with _open_browser_page(session, settings) as (_context, page):
+        # Warm the session on ResumenVlt so AEAT's redirect chain
+        # sees the origin cookie; navigating straight to the
+        # per-year endpoint without this is fine when cookies are
+        # fresh but fails intermittently after idle periods.
         try:
-            # Warm the session on ResumenVlt so AEAT's redirect chain
-            # sees the origin cookie; navigating straight to the
-            # per-year endpoint without this is fine when cookies are
-            # fresh but fails intermittently after idle periods.
-            page = await context.new_page()
-            try:
-                await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
-            except Exception as _exc:
-                log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc)
-            try:
-                await page.goto(detail_url, wait_until="domcontentloaded")
-            except PlaywrightError as exc:
-                raise SedeNavigationError(f"goto expediente detail {detail_url!r} failed: {exc}") from exc
-            html = await page.content()
-            ref = parse_expediente_detail(
-                html,
-                expediente_id=expediente.expediente_id,
-                base_url=_SEDE_BASE,
-            )
-            log.info(
-                "resolve_justificante_ref: resolved CSV=%s expediente=%s",
-                ref.csv,
-                expediente.expediente_id,
-            )
-            return ref
-        finally:
-            try:
-                await context.close()
-            except Exception as _exc:
-                log.debug("resolve_justificante_ref: context.close suppressed: %s", _exc)
-    finally:
-        await browser_session.close()
+            await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+        except Exception as _exc:
+            log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc)
+        try:
+            await page.goto(detail_url, wait_until="domcontentloaded")
+        except PlaywrightError as exc:
+            raise SedeNavigationError(f"goto expediente detail {detail_url!r} failed: {exc}") from exc
+        html = await page.content()
+        ref = parse_expediente_detail(
+            html,
+            expediente_id=expediente.expediente_id,
+            base_url=_SEDE_BASE,
+        )
+        log.info(
+            "resolve_justificante_ref: resolved CSV=%s expediente=%s",
+            ref.csv,
+            expediente.expediente_id,
+        )
+        return ref
 
 
 async def capture_justificante(
@@ -206,63 +212,47 @@ async def capture_justificante(
         JustificanteFetchError: On PDF download failures.
     """
     settings = settings or Settings()
-    storage_state = storage_state_for_session(session)
-    storage_state_path = session.storage_state_path
-    if storage_state_path is None:
-        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat setup auth login` first")
-
     detail_url = str(expediente.detail_url)
-    browser_session = await default_browser_session_factory(settings)
-    try:
-        context = await browser_session.create_context(storage_state=storage_state)
+    async with _open_browser_page(session, settings) as (context, page):
         try:
-            page = await context.new_page()
-            try:
-                await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
-            except Exception as _exc:
-                log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc)
-            try:
-                await page.goto(detail_url, wait_until="domcontentloaded")
-            except PlaywrightError as exc:
-                raise SedeNavigationError(f"goto expediente detail {detail_url!r} failed: {exc}") from exc
-            detail_html = await page.content()
-            ref = parse_expediente_detail(
-                detail_html,
-                expediente_id=expediente.expediente_id,
-                base_url=_SEDE_BASE,
-            )
+            await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+        except Exception as _exc:
+            log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc)
+        try:
+            await page.goto(detail_url, wait_until="domcontentloaded")
+        except PlaywrightError as exc:
+            raise SedeNavigationError(f"goto expediente detail {detail_url!r} failed: {exc}") from exc
+        detail_html = await page.content()
+        ref = parse_expediente_detail(
+            detail_html,
+            expediente_id=expediente.expediente_id,
+            base_url=_SEDE_BASE,
+        )
 
-            pdf_response = await context.request.get(str(ref.pdf_url))
-            if not (200 <= pdf_response.status < 300):
-                raise JustificanteFetchError(f"pdf fetch for CSV={ref.csv!r} returned HTTP {pdf_response.status}")
-            content_type = pdf_response.headers.get("content-type", "")
-            body = await pdf_response.body()
-            if not body:
-                raise JustificanteFetchError(f"empty PDF body for CSV={ref.csv!r}")
-            if "pdf" not in content_type.lower():
-                raise JustificanteFetchError(f"unexpected content-type {content_type!r} for CSV={ref.csv!r}")
-            sha256 = hashlib.sha256(body).hexdigest()
-            log.info(
-                "capture_justificante: captured PDF expediente=%s CSV=%s size=%d sha256=%s",
-                expediente.expediente_id,
-                ref.csv,
-                len(body),
-                sha256[:16],
-            )
-            return SedeCapture(
-                expediente=expediente,
-                ref=ref,
-                pdf_bytes=body,
-                pdf_sha256=sha256,
-                captured_at=datetime.now(UTC),
-            )
-        finally:
-            try:
-                await context.close()
-            except Exception as _exc:
-                log.debug("capture_justificante: context.close suppressed: %s", _exc)
-    finally:
-        await browser_session.close()
+        pdf_response = await context.request.get(str(ref.pdf_url))
+        if not (200 <= pdf_response.status < 300):
+            raise JustificanteFetchError(f"pdf fetch for CSV={ref.csv!r} returned HTTP {pdf_response.status}")
+        content_type = pdf_response.headers.get("content-type", "")
+        body = await pdf_response.body()
+        if not body:
+            raise JustificanteFetchError(f"empty PDF body for CSV={ref.csv!r}")
+        if "pdf" not in content_type.lower():
+            raise JustificanteFetchError(f"unexpected content-type {content_type!r} for CSV={ref.csv!r}")
+        sha256 = hashlib.sha256(body).hexdigest()
+        log.info(
+            "capture_justificante: captured PDF expediente=%s CSV=%s size=%d sha256=%s",
+            expediente.expediente_id,
+            ref.csv,
+            len(body),
+            sha256[:16],
+        )
+        return SedeCapture(
+            expediente=expediente,
+            ref=ref,
+            pdf_bytes=body,
+            pdf_sha256=sha256,
+            captured_at=datetime.now(UTC),
+        )
 
 
 async def find_expediente(
