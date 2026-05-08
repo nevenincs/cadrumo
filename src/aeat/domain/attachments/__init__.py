@@ -6,11 +6,9 @@ metadata blobs) wrapped as immutable manifests linked to transactions
 and/or invoices. The link makes every casilla value the project justifies
 traceable back to physical evidence.
 
-Domain models, errors, and the on-disk repository live here. Orchestration
-helpers — :func:`aeat.application.attachments.add_attachment`,
-:func:`aeat.application.attachments.list_attachments`,
-:func:`aeat.application.attachments.load_attachment` — live in
-:mod:`aeat.application.attachments`.
+Domain models, errors, and the on-disk repository live here, alongside
+the orchestration helpers :func:`add_attachment`, :func:`list_attachments`,
+and :func:`load_attachment` exported from :mod:`._service`.
 
 The exported surface comprises :class:`Attachment`, :class:`AttachmentCatalogue`,
 :class:`AttachmentStore`, the :class:`AttachmentKind` and :class:`AttachmentSource`
