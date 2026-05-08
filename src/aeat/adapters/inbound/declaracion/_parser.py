@@ -18,6 +18,7 @@ from ....domain.calculations.registry import (
 )
 from ..pdf import ExtractedCasilla
 from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
+from ..pdf._utils import sha256_file
 from ._detect import detect_template_revision, detect_template_revision_from_pages
 from ._errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parsers import extract_pages_text, extract_pages_text_from_bytes
@@ -90,7 +91,7 @@ def parse_declaracion(
     return _parse_declaracion_pages(
         pages=pages,
         source_path=path.resolve(),
-        source_pdf_sha256=sha256(path.read_bytes()).hexdigest(),
+        source_pdf_sha256=sha256_file(path),
         modelo_override=modelo_override,
         template_revision_override=template_revision_override,
         año_override=año_override,

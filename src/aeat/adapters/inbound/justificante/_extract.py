@@ -15,7 +15,6 @@ preserve the receipt precision; never floats.
 
 from __future__ import annotations
 
-import hashlib
 import re
 import unicodedata
 from datetime import UTC, datetime
@@ -27,6 +26,7 @@ from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 from ....core.logging import get_logger
 from ....domain.justificante._errors import JustificanteCsvNotFoundError, JustificanteParseError
 from ....domain.justificante._schema import Justificante
+from ..pdf._utils import sha256_file
 
 _logger = get_logger(__name__)
 
@@ -267,15 +267,6 @@ def _parse_datetime(raw: str) -> datetime:
     raise JustificanteParseError(f"unrecognised datetime literal: {raw!r}")
 
 
-def _sha256_file(path: Path) -> str:
-    """Return the lowercase hex sha-256 of the bytes at ``path``."""
-    h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(65536), b""):
-            h.update(chunk)
-    return h.hexdigest()
-
-
 def _require(match: re.Match[str] | None, field: str) -> str:
     """Return ``match.group(1)`` or raise a parse error naming ``field``."""
     if match is None:
@@ -387,7 +378,7 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
     except ValidationError as exc:
         raise JustificanteParseError(f"invalid verification URL in {pdf_path}: {verification_url_raw!r}") from exc
 
-    sha256 = _sha256_file(pdf_path)
+    sha256 = sha256_file(pdf_path)
     parsed_at = datetime.now(tz=UTC)
 
     try:

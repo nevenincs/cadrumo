@@ -42,6 +42,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ._errors import PdfFilingImportError
+from ._utils import sha256_file
 
 SCRUB_VERSION = "1.0.0"
 
@@ -242,23 +243,14 @@ def compute_sidecar(
 ) -> ScrubSidecar:
     """Build a :class:`ScrubSidecar` describing one scrub run."""
     return ScrubSidecar(
-        original_sha256=_sha256_file(original_path),
-        scrubbed_sha256=_sha256_file(scrubbed_path),
+        original_sha256=sha256_file(original_path),
+        scrubbed_sha256=sha256_file(scrubbed_path),
         scrub_version=SCRUB_VERSION,
         scrubbed_at=datetime.now(tz=UTC),
         fields_touched=fields_touched,
         consent_revocable_until=consent_revocable_until,
         original_filename=original_path.name,
     )
-
-
-def _sha256_file(path: Path) -> str:
-    """Return the lowercase hex sha-256 of ``path``'s bytes."""
-    h = hashlib.sha256()
-    with path.open("rb") as fh:
-        for chunk in iter(lambda: fh.read(65536), b""):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 __all__ = [
