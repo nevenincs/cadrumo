@@ -36,7 +36,6 @@ from ._classification import (
     classify_vat,
 )
 from ._corpus import load_vat_rules_from_manual
-from ._lookup import cite, lookup_rate
 from ._flow import (
     DEDUCIBLE_FLOW_DIRECTIONS,
     DEVENGADA_FLOW_DIRECTIONS,
@@ -47,6 +46,7 @@ from ._flow import (
     is_devengada_flow,
     settlement_sides_for_flow,
 )
+from ._lookup import cite, lookup_rate
 from ._oss import (
     REGIME_PERIODICITY,
     DeductionScope,
@@ -55,12 +55,12 @@ from ._oss import (
     RegimePeriodicity,
     regime_allows_deduction,
 )
+from ._rates import VAT_RATE_TABLE
 from ._recargo_equivalencia import (
     LIVA_ART_161_RECARGO,
     LivaArt161RecargoRates,
     recargo_rate_for,
 )
-from ._rates import VAT_RATE_TABLE
 from ._schema import (
     EUMemberState,
     VATCatalogue,
@@ -86,6 +86,7 @@ from .errors import (
 __all__ = [
     "DEDUCIBLE_FLOW_DIRECTIONS",
     "DEVENGADA_FLOW_DIRECTIONS",
+    "LIVA_ART_161_RECARGO",
     "REGIME_PERIODICITY",
     "VAT_CATALOGUES_BY_YEAR",
     "VAT_RATE_TABLE",
@@ -98,7 +99,6 @@ __all__ = [
     "IssuerResidency",
     "IvaFlowDirection",
     "IvaSettlementSide",
-    "LIVA_ART_161_RECARGO",
     "LivaArt161RecargoRates",
     "OssIossRegime",
     "RegimePeriodicity",

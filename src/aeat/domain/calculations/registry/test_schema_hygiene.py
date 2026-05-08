@@ -336,15 +336,10 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
     metrics_path = PROJECT_ROOT / ".vault" / "audit" / "renta-formula-oracle-coverage.txt"
     metrics_path.parent.mkdir(parents=True, exist_ok=True)
     metrics_path.write_text(
-        "formula_targets_total: {total}\n"
-        "formula_targets_grounded: {grounded}\n"
-        "formula_targets_ungrounded: {ungrounded}\n"
-        "coverage_pct: {pct:.1f}\n".format(
-            total=len(formula_targets),
-            grounded=len(grounded),
-            ungrounded=len(ungrounded),
-            pct=(100.0 * len(grounded) / len(formula_targets)) if formula_targets else 0.0,
-        ),
+        f"formula_targets_total: {len(formula_targets)}\n"
+        f"formula_targets_grounded: {len(grounded)}\n"
+        f"formula_targets_ungrounded: {len(ungrounded)}\n"
+        f"coverage_pct: {(100.0 * len(grounded) / len(formula_targets)) if formula_targets else 0.0:.1f}\n",
         encoding="utf-8",
     )
     # Soft gate during scaffolding: only fail when payloads exist AND targets are
