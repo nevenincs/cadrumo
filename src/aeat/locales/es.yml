@@ -660,11 +660,6 @@ cli:
     verbose_help: Mostrar logs internos informativos en stderr
     version_command_help: Mostrar la versión del paquete y el resumen del registro
     version_help: Mostrar la versión del paquete y el resumen del registro
-  sanitize:
-    app_help: Gestión de la sanitización y anonimización de datos
-    labels:
-      available: Disponible
-    status_help: Mostrar el estado de la sanitización del entorno
   setup:
     app_help: Preparar el perfil local y la autenticación necesarios para usar la
       aplicación

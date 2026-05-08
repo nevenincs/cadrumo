@@ -667,11 +667,6 @@ cli:
     verbose_help: Belső információs naplók megjelenítése stderr-en
     version_command_help: Csomagverzió és regiszter-összefoglaló megjelenítése
     version_help: Csomagverzió és regiszter-összefoglaló megjelenítése
-  sanitize:
-    app_help: Adattisztítás és anonimizálás kezelése
-    labels:
-      available: Elérhető
-    status_help: A környezet tisztítási állapotának megjelenítése
   setup:
     app_help: A használathoz szükséges helyi profil és hitelesítés előkészítése
     auth:
