@@ -1768,8 +1768,9 @@ id = "1577"
 number = "1577"
 label = "Rendimiento neto de actividad economica atribuido por entidades en regimen de atribucion de rentas"
 section = ["rendimientos_actividades_economicas"]
-input_kind = "informational"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+input_kind = "bound"
+binding = "renta-2025-modelo-184-atribucion-actividades-economicas"
+legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".workbook_parity_refs]]
@@ -2337,6 +2338,12 @@ legal_refs = [
     "orden-eha-3435-2007:anexo-ii",
     "orden-hac-56-2024:art-1",
     "orden-hfp-1284-2023:art-7",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-87",
+    "ley-35-2006:art-88",
+    "ley-35-2006:art-89",
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
@@ -2354,6 +2361,7 @@ bindings = [
     "renta-2025-modelo-130-pagos-fraccionados",
     "renta-2025-modelo-131-pagos-fraccionados",
     "renta-2025-modelo-180-retenciones-anuales",
+    "renta-2025-modelo-184-atribucion-actividades-economicas",
     "renta-2025-modelo-190-retenciones-anuales",
     "renta-2025-modelo-193-retenciones-anuales",
 ]
@@ -2365,6 +2373,7 @@ relations = [
     "renta-2025-rel-130-pagos-fraccionados",
     "renta-2025-rel-131-pagos-fraccionados",
     "renta-2025-rel-180-retenciones-anuales",
+    "renta-2025-rel-184-atribucion-actividades-economicas",
     "renta-2025-rel-190-retenciones-anuales",
     "renta-2025-rel-193-retenciones-anuales",
 ]
@@ -2375,6 +2384,7 @@ dependency_classifications = [
     "renta-2025-dep-130",
     "renta-2025-dep-131",
     "renta-2025-dep-180",
+    "renta-2025-dep-184",
     "renta-2025-dep-190",
     "renta-2025-dep-193",
     "renta-2025-dep-303",
@@ -2666,6 +2676,12 @@ legal_refs = [
     "rd-439-2007:art-110",
     "orden-hac-277-2026:art-3",
     "orden-eha-672-2007:art-1",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-87",
+    "ley-35-2006:art-88",
+    "ley-35-2006:art-89",
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
@@ -2681,6 +2697,7 @@ bindings = [
     "renta-2025-ledger-expense-0203-deductible",
     "renta-2025-modelo-130-pagos-fraccionados",
     "renta-2025-modelo-131-pagos-fraccionados",
+    "renta-2025-modelo-184-atribucion-actividades-economicas",
 ]
 parameters = [
     "renta-2025-estimacion-directa-simplificada-gastos-dificil-justificacion-rate",
@@ -2763,10 +2780,12 @@ formulas = [
 relations = [
     "renta-2025-rel-130-pagos-fraccionados",
     "renta-2025-rel-131-pagos-fraccionados",
+    "renta-2025-rel-184-atribucion-actividades-economicas",
 ]
 dependency_classifications = [
     "renta-2025-dep-130",
     "renta-2025-dep-131",
+    "renta-2025-dep-184",
     "renta-2025-dep-303",
     "renta-2025-dep-390",
     "renta-2025-dep-347",
@@ -2830,6 +2849,15 @@ target_constructs = ["renta-dependent-modelos", "renta-payments-retentions", "re
 relation_refs = ["renta-2025-rel-180-retenciones-anuales"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-184"
+source_modelo = "184"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-dependent-modelos", "renta-economic-activities"]
+relation_refs = ["renta-2025-rel-184-atribucion-actividades-economicas"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".dependency_classifications]]
 id = "renta-2025-dep-190"
@@ -6852,6 +6880,18 @@ source_ref = "boe-modelo-100-2025-form"
 required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
 
 [[revisions."2025".bindings]]
+id = "renta-2025-modelo-184-atribucion-actividades-economicas"
+source = "previous_filing"
+selector = { source_modelo = "184", source_output = "tipo2.renta-atribuible-importe", relation = "atribucion-actividades-economicas" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["atribución de rentas"]
+
+[[revisions."2025".bindings]]
 id = "renta-2025-modelo-190-retenciones-anuales"
 source = "previous_filing"
 selector = { source_modelo = "190", source_output = "decl.retenciones-total", relation = "resumen-anual-trabajo-actividades-premios" }
@@ -6979,6 +7019,21 @@ target_periods = ["0A"]
 aggregation = { op = "copy" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".relations]]
+id = "renta-2025-rel-184-atribucion-actividades-economicas"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "184"
+source_revision_selector = { year = 2025 }
+source_output = "tipo2.renta-atribuible-importe"
+target_binding = "renta-2025-modelo-184-atribucion-actividades-economicas"
+period_alignment = { source_periods = "annual_summary", target_period = "0A" }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".relations]]
 id = "renta-2025-rel-190-retenciones-anuales"
