@@ -10,7 +10,7 @@ from ._base import (
     UnsupportedFinancialSourceError,
 )
 from ._csv import CsvProvider
-from ._detection import detect_provider
+from ._detection import detect_provider, provider_for_extension
 from ._ofx import OfxProvider
 from ._pdf_n26 import PdfN26Provider
 from ._xlsx import XlsxProvider
@@ -26,4 +26,5 @@ __all__ = [
     "UnsupportedFinancialSourceError",
     "XlsxProvider",
     "detect_provider",
+    "provider_for_extension",
 ]

@@ -20,7 +20,7 @@ import typer
 from pydantic import ValidationError
 
 from ....adapters.inbound.financial._decimal import canonical_decimal
-from ....adapters.inbound.financial.providers import CsvProvider, OfxProvider, XlsxProvider, detect_provider
+from ....adapters.inbound.financial.providers import detect_provider, provider_for_extension
 from ....adapters.inbound.financial.providers._base import FinancialProviderError
 from ....domain.categories import CATEGORY_PROFILES_2025, ProportionalityKind, SpendingCategory
 from ....domain.transactions import (
@@ -895,7 +895,7 @@ def _build_catalogue(source: Path) -> TransactionCatalogue:
     suffix = source.suffix.lower()
     if suffix in {".ndjson", ".jsonl"}:
         return _build_catalogue_from_ndjson(source)
-    provider = detect_provider(source) or _fallback_provider_for_build(source)
+    provider = detect_provider(source) or provider_for_extension(source)
     if provider is None:
         raise TransactionError(
             f"unable to determine how to build a catalogue from {source.resolve()}; "
@@ -991,18 +991,3 @@ def _catalogue_from_raw_transactions(rows: list[RawTransaction] | tuple[RawTrans
         return TransactionCatalogue.from_transactions(transactions)
     except (ValueError, ValidationError) as exc:
         raise TransactionError(f"unable to build transaction catalogue from the supplied rows: {exc}") from exc
-
-
-def _fallback_provider_for_build(source: Path):
-    """Mirror the ingest command's extension fallback for build-from-source.
-
-    Returns ``None`` when no extension-based fallback is available.
-    """
-    suffix = source.suffix.lower()
-    if suffix in {".csv", ".txt"}:
-        return CsvProvider()
-    if suffix == ".xlsx":
-        return XlsxProvider()
-    if suffix in {".ofx", ".qfx"}:
-        return OfxProvider()
-    return None
