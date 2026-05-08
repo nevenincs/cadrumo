@@ -371,6 +371,35 @@ def _qualifies_for_tier_60_rehab(
     return 0 <= delta_days <= rehab_lookback_days
 
 
+def _resolve_tier_reduccion_rate(period_year: int, tier_id: str) -> Decimal:
+    """Read a LIRPF art. 23.2 tier reducción rate from the registry parameter.
+
+    ``tier_id`` is one of ``"tier-50"``, ``"tier-60"``, ``"tier-70"``,
+    ``"tier-90"``. Falls back to the documented module-level rate when the
+    registry lookup raises (e.g. unregistered period_year).
+    """
+    from aeat.domain.calculations.registry import RegistryValidationError, read_parameter
+
+    try:
+        return read_parameter(
+            "100",
+            str(period_year),
+            f"renta-{period_year}-rental-reduccion-rate-{tier_id}",
+            date_context={"filing_period": date(period_year, 12, 31)},
+        )
+    except RegistryValidationError:
+        _logger.debug(
+            "rental tier rate %s: registry lookup failed for period_year=%d; fallback to module constant",
+            tier_id, period_year,
+        )
+        return {
+            "tier-50": Decimal("0.50"),
+            "tier-60": Decimal("0.60"),
+            "tier-70": Decimal("0.70"),
+            "tier-90": Decimal("0.90"),
+        }[tier_id]
+
+
 def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
     """Read the joven-tenant age range (min, max) from registry parameters.
 
