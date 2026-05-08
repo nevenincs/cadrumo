@@ -742,26 +742,32 @@ def _aggregate_invoice_binding(
         # registros de tipo 2 con clave de operación, posición 133, igual a
         # 'E', 'M', 'H', 'T', 'A', 'S', 'I', 'R', 'D' o 'C'."
         if selector.rectification_scope == "only_rectifications":
-            keys = {
-                (
-                    observation.party_tax_id,
-                    observation.country_code,
-                    observation.intracommunity_clave,
-                    observation.rectified_year,
-                    observation.rectified_period,
+            return Decimal(
+                len(
+                    {
+                        (
+                            observation.party_tax_id,
+                            observation.country_code,
+                            observation.intracommunity_clave,
+                            observation.rectified_year,
+                            observation.rectified_period,
+                        )
+                        for observation in observations
+                    }
                 )
-                for observation in observations
-            }
-        else:
-            keys = {
-                (
-                    observation.party_tax_id,
-                    observation.country_code,
-                    observation.intracommunity_clave,
-                )
-                for observation in observations
-            }
-        return Decimal(len(keys))
+            )
+        return Decimal(
+            len(
+                {
+                    (
+                        observation.party_tax_id,
+                        observation.country_code,
+                        observation.intracommunity_clave,
+                    )
+                    for observation in observations
+                }
+            )
+        )
     if selector.fact == "base_sum":
         if op != "sum":
             raise RegistryValidationError(f"binding {binding.id!r} fact 'base_sum' requires aggregation op 'sum'")
