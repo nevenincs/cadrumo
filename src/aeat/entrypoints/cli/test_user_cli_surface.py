@@ -1267,3 +1267,32 @@ def test_declaration_verbs_reject_ambiguous_selector(
     )
     assert result.exit_code != 0
     assert "Traceback" not in result.output
+
+
+def test_declaration_calculate_enumerates_blockers_with_runnable_next_action(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Calculate output must enumerate blocker rows and a copy-paste next-action.
+
+    UX-021: the previous output reported only an aggregate count
+    ``Bloqueos: 2`` plus the recipe token ``Siguiente: resolve-blockers``,
+    leaving the operator no path to act. Now each blocker renders on
+    its own line as ``blocker\\tcasilla.<id>\\t<message>`` and the
+    Siguiente line carries a runnable command parameterised on the
+    current modelo and period.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    calc = _invoke(["app", "declaration", "calculate", "--modelo", "303", "--period", "2026Q1"])
+    assert calc.exit_code == 0, calc.output
+    blocker_lines = [line for line in calc.output.splitlines() if line.startswith("blocker\t")]
+    assert blocker_lines, f"expected at least one blocker line; got: {calc.output}"
+    next_line = next(
+        (line for line in calc.output.splitlines() if "aeat app declaration" in line),
+        None,
+    )
+    assert next_line is not None, calc.output
+    assert "--modelo 303" in next_line and "--period 2026Q1" in next_line
