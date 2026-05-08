@@ -16,6 +16,7 @@ from ...vat import (
     TransactionKind,
     VATRateKind,
 )
+from ...renta import RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS, RentaDeductibleExpenseObservation
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -36,10 +37,12 @@ __all__ = [
     "resolve_invoice_binding_values",
     "resolve_ledger_iva_aggregation_binding_values",
     "resolve_ledger_oss_aggregation_binding_values",
+    "resolve_ledger_renta_expense_aggregation_binding_values",
     "resolve_previous_filing_binding_values",
     "validate_invoice_binding_definition",
     "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding_definition",
+    "validate_ledger_renta_expense_aggregation_binding_definition",
 ]
 
 _InvoiceGrouping = Literal["operator_clave", "operator_clave_period"]
@@ -1107,4 +1110,83 @@ def resolve_ledger_iva_aggregation_binding_values(
         else:
             total = sum((observation.base_amount for observation in matched), Decimal("0"))
         resolved[binding.id] = total
+    return resolved
+
+
+# ---------------------------------------------------------------------------
+# Ledger Renta deductible-expense aggregation source bindings.
+#
+# These bindings consume first-slice Modelo 100 expense observations produced
+# by the ledger/Renta aggregation layer. They deliberately aggregate already
+# evaluated deductible amounts, so proportionality, legal category eligibility,
+# invoice reconciliation, and period/date filtering stay outside the registry
+# formula runtime.
+# ---------------------------------------------------------------------------
+
+
+class _RentaLedgerExpenseSelector(BaseModel):
+    """Validated form of a ledger_renta_expense_aggregation binding selector."""
+
+    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+
+    modelo: Literal["100"] = "100"
+    period: Literal["0A"] = "0A"
+    target_casilla: str = Field(min_length=4, max_length=4)
+    fact: Literal["deductible_amount_sum"] = "deductible_amount_sum"
+
+
+def _renta_ledger_expense_selector(binding: DataBindingDefinition) -> _RentaLedgerExpenseSelector:
+    try:
+        return _RentaLedgerExpenseSelector.model_validate(dict(binding.selector))
+    except (ValueError, TypeError) as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed ledger_renta_expense_aggregation selector"
+        ) from exc
+
+
+def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
+    """Validate a ``ledger_renta_expense_aggregation`` binding definition."""
+
+    if binding.source != "ledger_renta_expense_aggregation":
+        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_expense_aggregation source")
+    selector = _renta_ledger_expense_selector(binding)
+    allowed_casillas = set(RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.values())
+    if selector.target_casilla not in allowed_casillas:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} target_casilla {selector.target_casilla!r} "
+            "is outside the first Modelo 100 Renta ledger expense slice"
+        )
+    op = str((binding.aggregation or {}).get("op", "sum"))
+    if op != "sum":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} ledger_renta_expense_aggregation supports only "
+            f"aggregation op 'sum', got {op!r}"
+        )
+    if selector.fact != "deductible_amount_sum":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} ledger_renta_expense_aggregation supports only "
+            f"fact 'deductible_amount_sum', got {selector.fact!r}"
+        )
+
+
+def resolve_ledger_renta_expense_aggregation_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[RentaDeductibleExpenseObservation],
+) -> dict[str, Decimal]:
+    """Resolve every ``ledger_renta_expense_aggregation`` binding on ``revision``."""
+
+    available = tuple(observations)
+    resolved: dict[str, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source != "ledger_renta_expense_aggregation":
+            continue
+        selector = _renta_ledger_expense_selector(binding)
+        matched = [
+            observation
+            for observation in available
+            if observation.modelo == selector.modelo
+            and observation.period == selector.period
+            and observation.target_casilla == selector.target_casilla
+        ]
+        resolved[binding.id] = sum((observation.deductible_amount for observation in matched), Decimal("0"))
     return resolved

@@ -11,6 +11,8 @@ related:
   - '[[2026-05-08-ledger-renta-pipeline-phase2-contract-decisions-adr]]'
   - '[[2026-05-08-ledger-renta-pipeline-phase2-step1]]'
   - '[[2026-05-08-ledger-renta-pipeline-phase3-step1]]'
+  - '[[2026-05-08-ledger-renta-pipeline-phase4-review]]'
+  - '[[2026-05-08-ledger-renta-pipeline-phase4-step1]]'
   - '[[2026-05-08-ledger-renta-pipeline-plan]]'
   - '[[2026-05-08-ledger-renta-pipeline-reference]]'
   - '[[2026-05-08-ledger-renta-pipeline-research]]'
@@ -30,6 +32,7 @@ Auto-generated index of all documents tagged with `#ledger-renta-pipeline`.
 ### audit
 
 - `2026-05-08-ledger-renta-pipeline-audit` - `ledger-renta-pipeline` audit: `phase3-code-review`
+- `2026-05-08-ledger-renta-pipeline-phase4-review` - `ledger-renta-pipeline` Code Review
 
 ### exec
 
@@ -37,6 +40,7 @@ Auto-generated index of all documents tagged with `#ledger-renta-pipeline`.
 - `2026-05-08-ledger-renta-pipeline-phase1-step1` - `ledger-renta-pipeline` `phase1-step1-modeller-input-inventory` `phase1-step1-modeller-input-inventory`
 - `2026-05-08-ledger-renta-pipeline-phase2-step1` - `ledger-renta-pipeline` `phase2-step1-contract-decisions` `phase2-step1-contract-decisions`
 - `2026-05-08-ledger-renta-pipeline-phase3-step1` - `ledger-renta-pipeline` `phase3-step1-deductibility-models` `phase3-step1-deductibility-models`
+- `2026-05-08-ledger-renta-pipeline-phase4-step1` - `ledger-renta-pipeline` `phase4-repository-backed-aggregation` `phase4-step1`
 
 ### plan
 

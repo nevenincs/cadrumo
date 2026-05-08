@@ -103,6 +103,10 @@ edge-case coverage.
      category, proportionality, and legal provenance fields.
 
 - Phase 4: Repository-backed aggregation
+
+  Status: completed on 2026-05-08. Execution recorded in
+  `2026-05-08-ledger-renta-pipeline-phase4-step1`.
+
   1. Load real transaction and invoice catalogues for the filing
      period.
   1. Apply date and period filters.

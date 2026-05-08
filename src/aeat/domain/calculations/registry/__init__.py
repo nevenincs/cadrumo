@@ -17,10 +17,12 @@ from ._bindings import (
     resolve_invoice_binding_values,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_oss_aggregation_binding_values,
+    resolve_ledger_renta_expense_aggregation_binding_values,
     resolve_previous_filing_binding_values,
     validate_invoice_binding_definition,
     validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
+    validate_ledger_renta_expense_aggregation_binding_definition,
 )
 from ._constructs import ResolvedConstruct, ResolvedConstructMember, resolve_construct, resolve_revision_constructs
 from ._coverage import (
@@ -347,6 +349,7 @@ __all__ = [
     "resolve_invoice_binding_values",
     "resolve_ledger_iva_aggregation_binding_values",
     "resolve_ledger_oss_aggregation_binding_values",
+    "resolve_ledger_renta_expense_aggregation_binding_values",
     "resolve_previous_filing_binding_values",
     "resolve_relation_values",
     "resolve_relation_values_from_observations",
@@ -361,6 +364,7 @@ __all__ = [
     "validate_invoice_binding_definition",
     "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding_definition",
+    "validate_ledger_renta_expense_aggregation_binding_definition",
     "verify_legal_catalogue",
     "verify_legal_reference",
     "verify_source_catalogue",
