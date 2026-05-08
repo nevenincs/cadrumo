@@ -12,6 +12,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.rental._aggregates import (
@@ -36,13 +37,11 @@ def _load_irpf_toml() -> dict[str, dict[str, dict[str, str]]]:
 def test_lirpf_art_85_parameters_match_registry_toml_values() -> None:
     raw = _load_irpf_toml()["parameters"]
 
-    assert (
-        LIRPF_ART_85_IMPUTACION.recent_revision_rate
-        == Decimal(raw["lirpf-art-85:imputacion-rate-recent-revision"]["value"])
+    assert LIRPF_ART_85_IMPUTACION.recent_revision_rate == Decimal(
+        raw["lirpf-art-85:imputacion-rate-recent-revision"]["value"]
     )
-    assert (
-        LIRPF_ART_85_IMPUTACION.old_or_no_revision_rate
-        == Decimal(raw["lirpf-art-85:imputacion-rate-old-or-no-revision"]["value"])
+    assert LIRPF_ART_85_IMPUTACION.old_or_no_revision_rate == Decimal(
+        raw["lirpf-art-85:imputacion-rate-old-or-no-revision"]["value"]
     )
     assert LIRPF_ART_85_IMPUTACION.catastral_revision_lookback_years == int(
         raw["lirpf-art-85:catastral-revision-lookback-years"]["value"]
@@ -74,7 +73,7 @@ def test_legal_section_carries_lirpf_art_85_citation_with_required_text() -> Non
     art_85 = legal.get("ley-35-2006:art-85")
     assert art_85 is not None, "registry/aeat/legal/irpf.toml must declare ley-35-2006:art-85"
 
-    required_text = art_85.get("required_text", [])
+    required_text: list[str] = list(art_85.get("required_text", []))
     expected_substrings = (
         "Imputación de rentas inmobiliarias",
         "2 por ciento al valor catastral",
@@ -88,7 +87,7 @@ def test_legal_section_carries_lirpf_art_85_citation_with_required_text() -> Non
 
 
 def test_lirpf_art_85_parameter_record_is_frozen() -> None:
-    with pytest.raises(Exception):  # noqa: PT011 — pydantic ValidationError on frozen mutation
+    with pytest.raises(ValidationError):
         LIRPF_ART_85_IMPUTACION.recent_revision_rate = Decimal("0.05")  # type: ignore[misc]
 
 
@@ -102,7 +101,7 @@ def test_lirpf_art_85_corpus_excerpt_is_present() -> None:
 
 
 def test_loader_record_validates_inputs_in_pydantic_strict_mode() -> None:
-    with pytest.raises(Exception):  # noqa: PT011
+    with pytest.raises(ValidationError):
         LirpfArt85ImputacionParameters(
             recent_revision_rate=Decimal("1.5"),
             old_or_no_revision_rate=Decimal("0.02"),
