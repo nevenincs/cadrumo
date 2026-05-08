@@ -26,11 +26,11 @@ import pytest
 
 from aeat.adapters.outbound.aeat.browser import default_browser_session_factory
 from aeat.adapters.outbound.aeat.sede._groi_check import (
-    AEAT_GROI_URL,
     GroiSedeDriver,
     extract_verdict_from_response_text,
 )
 from aeat.core.config import Settings
+from aeat.domain.calculations.registry._groi_oracle import AEAT_GROI_URL
 from aeat.entrypoints.cli._live import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]

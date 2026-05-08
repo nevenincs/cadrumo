@@ -24,9 +24,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from re import compile
 from typing import Any, Literal, cast
-from unicodedata import category, normalize
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -44,16 +42,43 @@ from .....domain.calculations.registry._aeat_nif_iva_oracle import (
 )
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory
+from ._adapter_utils import (
+    first_visible_locator,
+    normalize_response_text,
+    registry_failure_message,
+)
 from ._browser_stage import build_playwright_stage_runner
-from ._errors import SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
+from ._errors import SedeError, SedeFailureMode, SedeNavigationError
 
 logger = get_logger(__name__)
+_NIF_IVA_SHAPE_SUGGESTION = "Re-run the live oracle after checking whether AEAT changed the NIF-IVA form shape."
 _playwright_stage = build_playwright_stage_runner(
     surface_label="NIF-IVA",
     log_prefix="nif iva",
-    shape_suggestion="Re-run the live oracle after checking whether AEAT changed the NIF-IVA form shape.",
+    shape_suggestion=_NIF_IVA_SHAPE_SUGGESTION,
     logger=logger,
 )
+
+
+async def _locate(
+    page: Any,
+    selectors: tuple[str, ...],
+    *,
+    stage: str,
+    description: str,
+    timeout_ms: int,
+) -> Any:
+    return await first_visible_locator(
+        page,
+        selectors,
+        stage=stage,
+        description=description,
+        timeout_ms=timeout_ms,
+        probe_timeout_ms=_SELECTOR_PROBE_TIMEOUT_MS,
+        surface_label="NIF-IVA",
+        shape_suggestion=_NIF_IVA_SHAPE_SUGGESTION,
+    )
+
 
 # Default timeout per Playwright stage (milliseconds). Each navigation +
 # form-fill + result-scrape stage gets this budget; the live driver runs
@@ -92,7 +117,6 @@ _SUBMIT_SELECTORS: tuple[str, ...] = (
     'input[type="submit"]',
     'input[type="button"]',
 )
-_WHITESPACE_RE = compile(r"\s+")
 
 
 class NifIvaCheckObservation(BaseModel):
@@ -165,7 +189,7 @@ class NifIvaCheckSedeDriver:
         try:
             return asyncio.run(self.collect_async(payload, expected=expected, timeout_ms=timeout_ms))
         except (SedeError, SiteHealthError, BrowserError) as exc:
-            raise RegistryValidationError(_registry_failure_message(exc)) from exc
+            raise RegistryValidationError(registry_failure_message(exc)) from exc
 
     def collect_observation(
         self,
@@ -310,14 +334,14 @@ async def collect_nif_iva_check_observations(
 async def _open_nif_iva_form(page: Any, *, timeout_ms: int) -> None:
     """Wait for the country and VAT-number controls to become interactive."""
 
-    await _first_visible_locator(
+    await _locate(
         page,
         _COUNTRY_SELECTORS,
         stage="open-nif-iva-form:country",
         description="NIF-IVA country-code control",
         timeout_ms=timeout_ms,
     )
-    await _first_visible_locator(
+    await _locate(
         page,
         _VAT_NUMBER_SELECTORS,
         stage="open-nif-iva-form:vat-number",
@@ -379,7 +403,7 @@ def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "inva
     ``válido`` so phrases like ``no válido`` cannot be misclassified.
     """
 
-    normalized = _normalize_response_text(body_text)
+    normalized = normalize_response_text(body_text)
     if not normalized:
         return "unknown"
     negative_markers = (
@@ -409,7 +433,7 @@ def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "inva
 
 
 async def _select_country_code(page: Any, country_code: str, *, timeout_ms: int) -> None:
-    locator = await _first_visible_locator(
+    locator = await _locate(
         page,
         _COUNTRY_SELECTORS,
         stage="check-nif:country",
@@ -431,7 +455,7 @@ async def _select_country_code(page: Any, country_code: str, *, timeout_ms: int)
 
 
 async def _fill_vat_number(page: Any, vat_number: str, *, timeout_ms: int) -> None:
-    locator = await _first_visible_locator(
+    locator = await _locate(
         page,
         _VAT_NUMBER_SELECTORS,
         stage="check-nif:vat-number",
@@ -448,7 +472,7 @@ async def _fill_vat_number(page: Any, vat_number: str, *, timeout_ms: int) -> No
 
 
 async def _click_query_button(page: Any, *, timeout_ms: int) -> None:
-    locator = await _first_visible_locator(
+    locator = await _locate(
         page,
         _SUBMIT_SELECTORS,
         stage="check-nif:submit",
@@ -456,30 +480,6 @@ async def _click_query_button(page: Any, *, timeout_ms: int) -> None:
         timeout_ms=timeout_ms,
     )
     await _click_expected(locator, stage="check-nif:submit", description="NIF-IVA query button", timeout_ms=timeout_ms)
-
-
-async def _first_visible_locator(
-    page: Any,
-    selectors: tuple[str, ...],
-    *,
-    stage: str,
-    description: str,
-    timeout_ms: int,
-) -> Any:
-    probe_timeout = min(timeout_ms, _SELECTOR_PROBE_TIMEOUT_MS)
-    for selector in selectors:
-        locator = page.locator(selector).first
-        try:
-            await locator.wait_for(state="visible", timeout=probe_timeout)
-        except (PlaywrightError, PlaywrightTimeoutError):
-            continue
-        return locator
-    raise SedeParseError(
-        f"NIF-IVA expected page element was not visible: {description}",
-        failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-        context={"stage": stage, "expected": description, "timeout_ms": timeout_ms},
-        suggestion="Re-run the live oracle after checking whether AEAT changed the NIF-IVA form shape.",
-    )
 
 
 async def _fill_expected(locator: Any, value: str, *, stage: str, description: str, timeout_ms: int) -> None:
@@ -510,23 +510,6 @@ def _split_vies_nif(nif: str) -> tuple[str, str]:
     if not vat_number:
         raise RegistryValidationError(f"NIF-IVA value {nif!r} must include a VAT number after the country code")
     return normalized_nif[:2], vat_number
-
-
-def _normalize_response_text(text: str) -> str:
-    without_accents = "".join(ch for ch in normalize("NFKD", text) if category(ch) != "Mn")
-    return _WHITESPACE_RE.sub(" ", without_accents.casefold()).strip()
-
-
-def _registry_failure_message(exc: BaseException) -> str:
-    context = getattr(exc, "context", None)
-    if not isinstance(context, Mapping) or not context:
-        return str(exc)
-    failure_mode = context.get("failure_mode")
-    if failure_mode is None and "state" in context:
-        failure_mode = f"site_health:{context['state']}"
-    if failure_mode is None:
-        return str(exc)
-    return f"{exc} (failure_mode={failure_mode})"
 
 
 __all__ = [
