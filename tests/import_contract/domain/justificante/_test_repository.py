@@ -47,11 +47,6 @@ def _make_justificante(tmp_path: Path, *, csv: str = "ABCD1234EFGH5678") -> Just
     )
 
 
-@pytest.fixture
-def store_dir(tmp_path: Path) -> Path:
-    return tmp_path / "justificantes-store"
-
-
 @pytest.fixture(autouse=True)
 def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     dispose_engine()
@@ -81,25 +76,25 @@ def _database_bytes(tmp_path: Path) -> bytes:
 
 
 class TestEmptyState:
-    def test_load_returns_none_when_absent(self, store_dir: Path) -> None:
-        repo = JustificanteRepository(store_dir=store_dir)
+    def test_load_returns_none_when_absent(self) -> None:
+        repo = JustificanteRepository()
         assert repo.load("DOESNOTEXIST") is None
 
-    def test_object_marker_identifies_secure_backend(self, store_dir: Path) -> None:
-        repo = JustificanteRepository(store_dir=store_dir)
+    def test_object_marker_identifies_secure_backend(self) -> None:
+        repo = JustificanteRepository()
         assert repo.envelope_path_for("CSV1234").as_posix().endswith("aeat.domain.justificante.metadata/CSV1234")
 
 
 class TestSaveLoad:
-    def test_round_trip(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = JustificanteRepository(store_dir=store_dir)
+    def test_round_trip(self, tmp_path: Path) -> None:
+        repo = JustificanteRepository()
         record = _make_justificante(tmp_path)
         repo.save(record)
-        loaded = JustificanteRepository(store_dir=store_dir).load(record.csv)
+        loaded = JustificanteRepository().load(record.csv)
         assert loaded == record
 
-    def test_save_idempotent(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = JustificanteRepository(store_dir=store_dir)
+    def test_save_idempotent(self, tmp_path: Path) -> None:
+        repo = JustificanteRepository()
         record = _make_justificante(tmp_path)
         repo.save(record)
         repo.save(record)
@@ -107,8 +102,8 @@ class TestSaveLoad:
 
 
 class TestListIter:
-    def test_list_and_iter(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = JustificanteRepository(store_dir=store_dir)
+    def test_list_and_iter(self, tmp_path: Path) -> None:
+        repo = JustificanteRepository()
         a = _make_justificante(tmp_path, csv="AAAA1111BBBB2222")
         b = _make_justificante(tmp_path, csv="CCCC3333DDDD4444")
         repo.save(a)
@@ -119,21 +114,21 @@ class TestListIter:
 
 
 class TestDelete:
-    def test_delete_removes(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = JustificanteRepository(store_dir=store_dir)
+    def test_delete_removes(self, tmp_path: Path) -> None:
+        repo = JustificanteRepository()
         record = _make_justificante(tmp_path)
         repo.save(record)
         assert repo.delete(record.csv) is True
         assert repo.load(record.csv) is None
 
-    def test_delete_missing_returns_false(self, store_dir: Path) -> None:
-        repo = JustificanteRepository(store_dir=store_dir)
+    def test_delete_missing_returns_false(self) -> None:
+        repo = JustificanteRepository()
         assert repo.delete("MISSING1234") is False
 
 
 class TestClassificationGate:
-    def test_database_payload_is_encrypted_audit_data(self, store_dir: Path, tmp_path: Path) -> None:
-        repo = JustificanteRepository(store_dir=store_dir)
+    def test_database_payload_is_encrypted_audit_data(self, tmp_path: Path) -> None:
+        repo = JustificanteRepository()
         record = _make_justificante(tmp_path)
         repo.save(record)
         raw = _database_bytes(tmp_path)
@@ -142,7 +137,7 @@ class TestClassificationGate:
         assert b"00000000T" not in raw
         assert b"10.00" not in raw
 
-    def test_foreign_class_object_refused(self, store_dir: Path, tmp_path: Path) -> None:
+    def test_foreign_class_object_refused(self, tmp_path: Path) -> None:
         from aeat.adapters.persistence.storage import Envelope, SensitivityClass
 
         record = _make_justificante(tmp_path)
@@ -152,7 +147,7 @@ class TestClassificationGate:
             classification=SensitivityClass.OPERATIONAL,
             payload=record,
         )
-        repo = JustificanteRepository(store_dir=store_dir)
+        repo = JustificanteRepository()
         SecureObjectRepository().save(
             namespace="aeat.domain.justificante.metadata",
             object_key=record.csv,
@@ -170,7 +165,7 @@ class TestUnsafeCsv:
         "bad",
         ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
     )
-    def test_unsafe_csv_rejected(self, store_dir: Path, bad: str) -> None:
-        repo = JustificanteRepository(store_dir=store_dir)
+    def test_unsafe_csv_rejected(self, bad: str) -> None:
+        repo = JustificanteRepository()
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)
