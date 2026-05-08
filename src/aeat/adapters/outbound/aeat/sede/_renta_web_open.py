@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Mapping
+from collections.abc import Mapping
 from re import compile
 from typing import Any, Literal, cast
 
@@ -19,13 +19,20 @@ from .....domain.calculations.registry import (
     RentaWebOpenSyntheticProfile,
     parse_renta_web_open_live_payload,
 )
-from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory
-from ._errors import SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
+from ._adapter_utils import registry_failure_message
+from ._browser_stage import build_playwright_stage_runner
+from ._errors import SedeError, SedeFailureMode, SedeNavigationError
 from ._renta_web_open_safety import assert_click_target_safe, install_page_safety_net
 
 _SPANISH_AMOUNT_RE = compile(r"[-+]?\d{1,3}(?:\.\d{3})*,\d{2}|[-+]?\d+(?:[.,]\d+)?")
 logger = get_logger(__name__)
+_playwright_stage = build_playwright_stage_runner(
+    surface_label="Renta WEB Open",
+    log_prefix="renta web open",
+    shape_suggestion="Re-run the live oracle after checking whether AEAT changed the Renta WEB Open page shape.",
+    logger=logger,
+)
 
 
 class RentaWebOpenSedeDriver:
@@ -65,7 +72,7 @@ class RentaWebOpenSedeDriver:
         try:
             return asyncio.run(self.collect_observation_async(payload, expected=expected))
         except (SedeError, SiteHealthError, BrowserError) as exc:
-            raise RegistryValidationError(_registry_failure_message(exc)) from exc
+            raise RegistryValidationError(registry_failure_message(exc)) from exc
 
     async def collect_observation_async(
         self,
@@ -264,73 +271,6 @@ async def _expect_visible(locator: Any, *, stage: str, description: str, timeout
         timeout_ms=timeout_ms,
         timeout_is_shape_change=True,
     )
-
-
-async def _playwright_stage[T](
-    operation: Awaitable[T],
-    *,
-    stage: str,
-    description: str,
-    timeout_ms: int,
-    timeout_is_shape_change: bool = False,
-) -> T:
-    try:
-        return await operation
-    except PlaywrightTimeoutError as exc:
-        if timeout_is_shape_change:
-            logger.error(
-                "renta web open expected element missing failure_mode=%s stage=%s description=%s timeout_ms=%s",
-                SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-                stage,
-                description,
-                timeout_ms,
-                exc_info=True,
-            )
-            raise SedeParseError(
-                f"Renta WEB Open expected page element was not visible: {description}",
-                failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-                context={"stage": stage, "expected": description, "timeout_ms": timeout_ms},
-                suggestion="Re-run the live oracle after checking whether AEAT changed the Renta WEB Open page shape.",
-            ) from exc
-        logger.error(
-            "renta web open playwright stage timed out failure_mode=%s stage=%s description=%s timeout_ms=%s",
-            SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            stage,
-            description,
-            timeout_ms,
-            exc_info=True,
-        )
-        raise SedeNavigationError(
-            f"Renta WEB Open browser stage timed out: {description}",
-            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context={"stage": stage, "description": description, "timeout_ms": timeout_ms},
-        ) from exc
-    except PlaywrightError as exc:
-        logger.error(
-            "renta web open playwright stage failed failure_mode=%s stage=%s description=%s exc_type=%s",
-            SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            stage,
-            description,
-            type(exc).__name__,
-            exc_info=True,
-        )
-        raise SedeNavigationError(
-            f"Renta WEB Open browser stage failed: {description}",
-            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            context={"stage": stage, "description": description, "cause_type": type(exc).__name__},
-        ) from exc
-
-
-def _registry_failure_message(exc: BaseException) -> str:
-    context = getattr(exc, "context", None)
-    if not isinstance(context, Mapping) or not context:
-        return str(exc)
-    failure_mode = context.get("failure_mode")
-    if failure_mode is None and "state" in context:
-        failure_mode = f"site_health:{context['state']}"
-    if failure_mode is None:
-        return str(exc)
-    return f"{exc} (failure_mode={failure_mode})"
 
 
 def _normalize_summary_text(value: str) -> str:
