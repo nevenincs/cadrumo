@@ -38,9 +38,16 @@ def utc_now() -> datetime:
 
 
 def _normalise_key(value: str) -> str:
-    """Return a compact dot-key used by setup/edit commands."""
+    """Return the canonical key form used by setup/edit commands.
 
-    return value.strip().lower().replace("-", ".").replace("_", ".")
+    Strips surrounding whitespace, lowercases, and folds dashes into
+    dots. Underscores are preserved verbatim so registry-canonical
+    keys (e.g. ``does_intracomunitario`` and ``iva.roi_enrolled``)
+    survive the round-trip through the user-cli store and reach the
+    deadline engine, which looks values up by exact key.
+    """
+
+    return value.strip().lower().replace("-", ".")
 
 
 class WorkflowEvent(BaseModel):

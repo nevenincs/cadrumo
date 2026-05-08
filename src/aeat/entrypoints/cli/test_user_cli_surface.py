@@ -906,7 +906,7 @@ def test_profile_validate_blocks_when_required_missing(
     assert "tax.id" in payload["missing_required"]
 
 
-def test_operator_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
+def test_operator_n26_modelo_303_tape_builds_registry_draft_from_invoices(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -932,8 +932,6 @@ def test_operator_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
         ),
         encoding="utf-8",
     )
-    export_path = tmp_path / "modelo-303-2027-q2.txt"
-
     commands = [
         ["setup", "init", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"],
         ["setup", "auth", "configure", "--provider", "clave_movil"],
@@ -988,6 +986,111 @@ def test_operator_n26_modelo_303_tape_fails_closed_without_registry_snapshot(
     assert _invoke(["app", "invoice", "match", "--period", period]).exit_code == 0
 
     calculated = _invoke(["--format", "json", "app", "declaration", "calculate", "--modelo", "303", "--period", period])
-    assert calculated.exit_code != 0
-    assert "not present in the calculation registry" in calculated.output
-    assert not export_path.exists()
+    assert calculated.exit_code == 0, calculated.output
+    payload = json.loads(_json_output(calculated))
+    values = {value["casilla_id"]: value for value in payload["draft"]["values"]}
+    assert payload["draft"]["modelo"] == "303"
+    assert payload["draft"]["period"] == "2027Q2"
+    assert payload["draft"]["schema_version"] == "registry:303:2009-y-siguientes"
+    assert values["iva.repercutido.general"]["value"] == "21.00"
+    assert values["iva.cuota-devengada-total"]["value"] == "21.00"
+    assert values["iva.resultado-regimen-general"]["value"] == "21.00"
+    assert payload["summary"]["next_action"] == "resolve-blockers"
+
+
+def test_setup_profile_list_keys_includes_iva_regime_and_engine_axes(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """The IVA, IRPF, and modelo enrolment keys the deadline engine reads must be settable.
+
+    Pre-W2, ``aeat setup profile list-keys`` only listed 22 RENTA-shaped
+    personal-identity keys, so users could not set the regime values
+    the deadline engine consumed -- ``aeat setup profile set
+    iva.regime general`` rejected the key. This test guards the
+    extension: every engine-consumed axis (iva.regime, iva.roi_enrolled,
+    does_intracomunitario, has_employees, ...) appears in list-keys
+    output.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    keys_result = _invoke(["--format", "json", "setup", "profile", "list-keys"])
+    assert keys_result.exit_code == 0, keys_result.output
+    keys_payload = json.loads(_json_output(keys_result))
+    listed = {entry["key"] for entry in keys_payload["keys"]}
+    expected = {
+        "iva.regime",
+        "iva.roi_enrolled",
+        "iva.oss_enrolled",
+        "iva.intracommunity_operations_exceed_50000_eur",
+        "does_intracomunitario",
+        "has_employees",
+        "uses_objective_estimation_irpf",
+        "third_party_transactions_above_347_threshold",
+        "bienes_extranjero_above_threshold",
+    }
+    missing = expected - listed
+    assert not missing, f"engine-consumed keys missing from list-keys: {missing}"
+
+
+def test_setup_profile_set_iva_regime_round_trips_to_deadline_engine(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Setting ``iva.regime general`` must reach the deadline engine as IVARegime.GENERAL.
+
+    Round-trip: ``setup profile set iva.regime general`` -> stored in
+    user_cli state -> ``_profile_to_autonomo`` -> ``IVARegime.GENERAL``.
+    The case-insensitive parser also accepts ``GENERAL``,
+    ``simplificado``, etc.
+    """
+    from aeat.application.user_cli import state_repository
+    from aeat.domain.deadlines import IVARegime, autonomo_profile_from_mapping
+
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    set_result = _invoke(["setup", "profile", "set", "iva.regime", "general"])
+    assert set_result.exit_code == 0, set_result.output
+
+    state = state_repository().load()
+    record = state.active_profile_record()
+    assert record is not None
+    profile = autonomo_profile_from_mapping(record.values, tax_id_default="00000000T")
+    assert profile.iva_regime is IVARegime.GENERAL
+
+
+def test_setup_profile_set_does_intracomunitario_round_trips_underscore_form(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Underscored keys must survive the user-cli store and surface to the engine.
+
+    The engine reads ``does_intracomunitario`` as a literal key. The
+    user-cli normaliser previously folded ``_`` to ``.`` so the stored
+    form ``does.intracomunitario`` never matched the engine lookup. The
+    fix preserves underscores; this test pins the round-trip.
+    """
+    from aeat.application.user_cli import state_repository
+    from aeat.domain.deadlines import autonomo_profile_from_mapping
+
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    set_result = _invoke(["setup", "profile", "set", "does_intracomunitario", "true"])
+    assert set_result.exit_code == 0, set_result.output
+
+    get_result = _invoke(["--format", "json", "setup", "profile", "get", "does_intracomunitario"])
+    assert get_result.exit_code == 0, get_result.output
+    get_payload = json.loads(_json_output(get_result))
+    assert get_payload["value"] == "true"
+
+    state = state_repository().load()
+    record = state.active_profile_record()
+    assert record is not None
+    profile = autonomo_profile_from_mapping(record.values, tax_id_default="00000000T")
+    assert profile.does_intracomunitario is True
