@@ -58,11 +58,9 @@ def _base_2025_inputs() -> dict[str, Decimal]:
         "0517": Decimal("0"),
         "0518": Decimal("0"),
         "0505": Decimal("0"),
-        # 0528 and 0530 are now computed via lookup_bracket against
-        # parameter renta-2025-escala-estatal-base-general; they
-        # cannot be supplied as inputs.
-        "0529": Decimal("0"),
-        "0531": Decimal("0"),
+        # 0528, 0529, 0530, and 0531 are now computed via lookup_bracket
+        # / lookup_bracket_by_ccaa against the state and Madrid autonomic
+        # bracket parameters; they cannot be supplied as inputs.
         "0540": Decimal("0"),
         "0541": Decimal("0"),
         "0544": Decimal("0"),
@@ -97,6 +95,7 @@ def _scenario_2025(scenario_id: str, overrides: dict[str, Decimal], expected: tu
         period="0A",
         inputs=inputs,
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
         expected_outputs=expected,
     )
@@ -170,12 +169,12 @@ def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> No
     """0435 = 0432 - 0433 where 0433 is the AEAT-positive cap on the G/P loss."""
     # AEAT convention (per 2025 record-design dictionary HSALDO3 entry):
     # 0421 = max(0, 0419 - 0418) — positive magnitude of the net G/P loss balance
-    # 0433 = min(0421, 25% × 0432) — capped portion that integrates into the base
+    # 0433 = min(0421, 25% of 0432) — capped portion that integrates into the base
     # 0435 = 0432 - 0433 — base imponible general after subtracting the cap
     # Inputs: 1585 = 5000 propagates through 1607 → 0419 → 0421 → 0433.
     #   1607 = sum(1585) = 5000 → 0419 = sum(1607, 0307) = 5000
     #   0421 = max(0, 0419 - 0418) = 5000
-    #   0433 = min(0421, 25% × 0432) = min(5000, 7500) = 5000
+    #   0433 = min(0421, 25% of 0432) = min(5000, 7500) = 5000
     # Expected: 0435 = 30000 - 5000 = 25000.
     scenario = _scenario_2025(
         "base-imponible-with-negative-capital-gains",
