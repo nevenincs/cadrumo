@@ -44,11 +44,13 @@
   [42] text='Contacta con nosotros' disabled=None
   [43] text='Ayuda' disabled=None
   [44] text='Enlaces de interés' disabled=None
+  [45] text='' disabled=None
+  [46] text='' disabled=None
 
 === <a> link elements ===
   [0] text='Saltar al contenido principal' href='#acc-main'
   [1] text='Logotipo del Gobierno de España\nLogotipo de la Agencia Tributaria\nSede electrónica' href='https://sede.agenciatributaria.gob.es/Sede/inicio.html'
-  [2] text='08/05/2026 06:56:54\nHora oficial' href='https://sede.agenciatributaria.gob.es/Sede/Calendario_fecha_y_hora_oficial.html'
+  [2] text='08/05/2026 07:52:26\nHora oficial' href='https://sede.agenciatributaria.gob.es/Sede/Calendario_fecha_y_hora_oficial.html'
   [3] text='ÁREA PERSONAL' href='https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html'
   [4] text='Cambiar                                    usuario representado' href=''
   [5] text='Área personal' href='https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html'
@@ -90,6 +92,7 @@
   [41] text='Punto de Acceso GeneralSe abre en ventana nueva' href='https://administracion.gob.es/'
   [42] text='Portal de la transparenciaSe abre en ventana nueva' href='https://transparencia.gob.es'
   [43] text='Otros enlaces de interés' href='https://sede.agenciatributaria.gob.es/Sede/enlaces-interes.html'
+  [44] text='' href=None
 
 === ZK-shape elements with click handlers ===
 
@@ -112,3 +115,7 @@
   -- .z-menuitem (0 found) --
 
   -- .z-listitem (0 found) --
+
+=== input elements (dialog textboxes etc.) ===
+
+=== visible dialogs / modals ===
