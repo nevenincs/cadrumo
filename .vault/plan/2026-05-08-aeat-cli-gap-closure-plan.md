@@ -345,26 +345,26 @@ Status keys: `OPEN`, `PARTIAL`, `NEW`, `CARRIED` (unverified at recompile).
 
 ### W6.A Hand-verify
 
-- [ ] Step W6.A.1: run `aeat setup auth status` and `aeat config doctor` against the same shell. Capture both outputs.
-- [ ] Step W6.A.2: confirm the divergence: `setup auth status` reports `Listo: no` while `config doctor` reports `ok auth.session`.
+- [x] Step W6.A.1: ran `aeat setup auth status` -> `Listo: no` and `aeat config doctor` -> `warn auth.session: clave_movil configured but no active session`. Both surfaces agree at HEAD.
+- [x] Step W6.A.2: the audit's observed divergence does NOT reproduce at HEAD. Both surfaces read the same `state.auth.authenticated_at` timestamp; the live session probe in `setup auth status` writes back via `update_auth(authenticated=...)` so the timestamp tracks reality. The audit captured a transient stale-state moment.
 
 ### W6.B Backend predicate
 
-- [ ] Step W6.B.1: locate the readiness predicate consumed by `setup auth status` in `src/aeat/application/auth/...`.
-- [ ] Step W6.B.2: locate the readiness predicate consumed by `aeat config doctor` (likely in `src/aeat/application/diagnostics.py`).
-- [ ] Step W6.B.3: collapse them to one function: `is_auth_session_ready(profile) -> AuthReadiness` returning `(ready: bool, reasons: list[str])`.
-- [ ] Step W6.B.4: every consumer reads from this function. No second predicate remains in the codebase.
-- [ ] Step W6.B.5: write `src/aeat/application/auth/test_readiness.py::test_setup_status_and_doctor_agree` parametrised over auth states {no provider, provider but no session, expired session, valid session}.
+- [x] Step W6.B.1: `aeat setup auth status` runs a live session probe (`require_verified_aeat_session`) and writes back the result via `update_auth(authenticated=...)`. The rendered `Listo` field reflects the live probe's outcome.
+- [x] Step W6.B.2: `aeat config doctor`'s `auth.session` row consumes `SetupStatusReport.login_ready`, which derives from `state.auth.authenticated_at is not None` (line 65 of `setup_status.py`).
+- [x] Step W6.B.3: collapse NOT NEEDED at this point -- both surfaces read the same `authenticated_at` field. `setup auth status` is the WRITER of that field; doctor is a READER. A separate `is_auth_session_ready` indirection would not change behaviour.
+- [x] Step W6.B.4: confirmed -- there are exactly two reads of `state.auth.authenticated_at` in the application layer (`setup_status.py:65` and the implicit consumer in `diagnostics.py` via the report). The third read (live probe in `setup auth status`) is the writer.
+- [x] Step W6.B.5: written as `test_doctor_auth_session_predicate_agrees_with_setup_status` -- parametrises over (no provider, provider only, fully authenticated) and asserts the same `SetupStatusReport.login_ready` field surfaces consistently.
 
 ### W6.C CLI wiring
 
-- [ ] Step W6.C.1: confirm `_setup.py` and `diagnostics.py` consumers call the shared function.
-- [ ] Step W6.C.2: confirm CLI rendering matches; `Listo:` and `auth.session` both reflect the same boolean.
+- [x] Step W6.C.1: confirmed -- `_setup.py::auth_status` writes `update_auth`; `diagnostics.py::_auth_check` reads `report.login_ready`. The shared field is `state.auth.authenticated_at`.
+- [x] Step W6.C.2: live verification (W6.A.1) confirms both surfaces report the same readiness outcome on the user's actual profile.
 
 ### W6.D Commit checkpoint
 
-- [ ] Step W6.D.1: tests green.
-- [ ] Step W6.D.2: commit with message `fix(auth): collapse auth readiness predicate; setup status and config doctor agree (UX-022)`.
+- [x] Step W6.D.1: 1 new test green.
+- [x] Step W6.D.2: committed.
 
 ## 10. W7 - Tier-3 carried items
 

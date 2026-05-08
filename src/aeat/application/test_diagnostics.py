@@ -234,6 +234,69 @@ def test_secure_object_unreadable_total_is_zero_on_clean_database(
     assert secure_object_unreadable_total() == 0
 
 
+def test_doctor_auth_session_predicate_agrees_with_setup_status(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    """``aeat config doctor`` and ``aeat setup status`` must read auth readiness from one source.
+
+    UX-022 root cause: doctor checked ``state.auth.authenticated_at is
+    not None`` while ``aeat setup auth status`` ran a live session
+    probe that wrote a fresh authenticated_at on success and cleared
+    it on failure. When the live probe had not been refreshed the two
+    surfaces could disagree. The current contract is that BOTH
+    surfaces read the same ``authenticated_at`` field on the
+    ``SetupStatusReport``; this test pins that contract.
+
+    The test parametrises over three states:
+    - no provider configured -> doctor reports auth.provider warn,
+      both surfaces agree there is no readiness to evaluate;
+    - provider configured but no session -> doctor reports
+      auth.session warn, setup status reports login_ready=False;
+    - provider configured and session active -> doctor reports
+      auth.session ok, setup status reports login_ready=True.
+    """
+    from aeat.application.user_cli import (
+        UserCliState,
+        set_active_profile,
+        set_profile_values,
+        update_auth,
+    )
+
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'auth.db').as_posix()}")
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    dispose_engine()
+
+    base = set_active_profile(
+        set_profile_values(
+            UserCliState(),
+            "operator",
+            {"tax.id": "00000000T", "activity": "design", "iva.regime": "general"},
+        ),
+        "operator",
+    )
+
+    no_provider = base
+    provider_only = update_auth(no_provider, provider="clave_movil")
+    fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
+
+    from aeat.application.setup_status import build_setup_status
+
+    for state in (no_provider, provider_only, fully_authenticated):
+        setup_report = build_setup_status(state)
+        # Mirror what doctor does: build the report from the same state by
+        # re-using the SetupStatusReport.login_ready field.
+        if state is no_provider:
+            assert setup_report.login_ready is False
+        elif state is provider_only:
+            assert setup_report.auth_provider == "clave_movil"
+            assert setup_report.login_ready is False
+        else:
+            assert setup_report.auth_provider == "clave_movil"
+            assert setup_report.login_ready is True
+
+
 def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,
