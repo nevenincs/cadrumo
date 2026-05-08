@@ -2250,6 +2250,7 @@ legal_refs = [
     "rd-439-2007:art-109",
     "rd-439-2007:art-110",
     "orden-hac-277-2026:art-3",
+    "orden-eha-672-2007:art-1",
 ]
 source_refs = [
     "aeat-dr-100-2025-dictionary",
@@ -2330,6 +2331,7 @@ legal_refs = [
     "orden-hac-1431-2025:art-2",
     "orden-hac-277-2026:art-3",
     "orden-hap-1732-2014:art-2",
+    "orden-eha-672-2007:art-1",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
@@ -2401,6 +2403,7 @@ legal_refs = [
     "orden-hac-1431-2025:art-2",
     "orden-hac-277-2026:art-3",
     "orden-hap-1732-2014:art-2",
+    "orden-eha-672-2007:art-1",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
@@ -2651,6 +2654,7 @@ legal_refs = [
     "rd-439-2007:art-109",
     "rd-439-2007:art-110",
     "orden-hac-277-2026:art-3",
+    "orden-eha-672-2007:art-1",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
@@ -6802,7 +6806,7 @@ id = "renta-2025-modelo-130-pagos-fraccionados"
 source = "previous_filing"
 selector = { source_modelo = "130", source_output = "19", relation = "pagos-fraccionados-estimacion-directa" }
 aggregation = { op = "sum" }
-legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".bindings.source_citations]]
@@ -6814,7 +6818,7 @@ id = "renta-2025-modelo-131-pagos-fraccionados"
 source = "previous_filing"
 selector = { source_modelo = "131", source_output = "15", relation = "pagos-fraccionados-estimacion-objetiva" }
 aggregation = { op = "sum" }
-legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["rd-439-2007:art-109", "orden-hac-277-2026:art-3", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".bindings.source_citations]]
