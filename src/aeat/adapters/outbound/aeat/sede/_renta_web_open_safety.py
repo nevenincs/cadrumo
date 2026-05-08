@@ -79,6 +79,14 @@ FORBIDDEN_CLICK_TOKENS: frozenset[str] = frozenset(
         # Pre-presentation verification surfaces (TGVI etc.)
         "tgvi",
         "transmitir lote",
+        # Validar is the AEAT pre-presentation correctness check. The
+        # read-only driver never needs to invoke it — observed values
+        # are surfaced by the form widgets directly. Denying Validar
+        # is defense-in-depth: a click could trigger validation-state
+        # mutations or queue side effects we don't want to exercise.
+        "validar",
+        "validacion",
+        "validación",
     }
 )
 

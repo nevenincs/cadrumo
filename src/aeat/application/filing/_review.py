@@ -14,12 +14,12 @@ import hashlib
 import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
-from decimal import Decimal
 from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
 
 from ...core.logging import get_logger
+from ...domain._identifiers import canonical_decimal_string
 from ...domain.categories import CATEGORY_PROFILES_2025, CategoryProfile, SpendingCategory
 from ...domain.filing import (
     CasillaSchemaProvider,
@@ -510,7 +510,9 @@ def _transaction_catalogue_fingerprint(catalogue: TransactionCatalogue) -> str:
 def _normalize_transaction(transaction: Transaction) -> dict[str, str | None]:
     return {
         "business_classification": transaction.business_classification.value,
-        "business_pct": _canonical_decimal(transaction.business_pct),
+        "business_pct": (
+            canonical_decimal_string(transaction.business_pct) if transaction.business_pct is not None else None
+        ),
         "category_id": transaction.category_id,
         "direction": transaction.direction.value,
         "invoice_id": transaction.invoice_id,
@@ -562,11 +564,3 @@ def _canonical_json_bytes(payload: object) -> bytes:
         separators=(",", ":"),
         sort_keys=True,
     ).encode("utf-8")
-
-
-def _canonical_decimal(value: Decimal | None) -> str | None:
-    if value is None:
-        return None
-    if value.is_zero():
-        return "0"
-    return format(value.normalize(), "f")

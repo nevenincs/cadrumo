@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any, cast
-from pathlib import Path
 
 import pytest
 
@@ -69,8 +68,8 @@ def _render_a11y_node(node: dict, depth: int = 0, lines: list[str] | None = None
 async def _capture_resumen_dom() -> tuple[str, str]:
     from ._renta_web_open import (
         _click_expected,
-        _fill_identification_profile,
         _expect_visible,
+        _fill_identification_profile,
     )
     from ._renta_web_open_safety import install_page_safety_net
 
@@ -88,7 +87,9 @@ async def _capture_resumen_dom() -> tuple[str, str]:
 
         new_decl = page.locator(".z-window-modal button").filter(has_text="Nueva declaración")
         await _click_expected(
-            new_decl, stage="explore:start", description="Nueva declaración",
+            new_decl,
+            stage="explore:start",
+            description="Nueva declaración",
             timeout_ms=payload.timeout_ms,
         )
         await _fill_identification_profile(page, payload.profile, timeout_ms=payload.timeout_ms)
@@ -100,7 +101,8 @@ async def _capture_resumen_dom() -> tuple[str, str]:
         )
         await _expect_visible(
             page.get_by_text("Resumen de declaraciones"),
-            stage="explore:wait-summary", description="Resumen de declaraciones",
+            stage="explore:wait-summary",
+            description="Resumen de declaraciones",
             timeout_ms=payload.timeout_ms,
         )
         # The Resumen page already carries the editable form. Two
@@ -116,9 +118,12 @@ async def _capture_resumen_dom() -> tuple[str, str]:
             # Safety: the button label "Buscar casilla" doesn't trip the
             # forbidden-tokens denylist (no presentar/firmar/pagar/etc).
             from ._renta_web_open_safety import assert_click_target_safe
+
             await assert_click_target_safe(
-                buscar_btn, stage="explore:buscar-casilla-safety",
-                description="Buscar casilla", timeout_ms=15_000,
+                buscar_btn,
+                stage="explore:buscar-casilla-safety",
+                description="Buscar casilla",
+                timeout_ms=15_000,
             )
             await buscar_btn.click(timeout=15_000)
             # Allow dialog to render.
@@ -126,6 +131,27 @@ async def _capture_resumen_dom() -> tuple[str, str]:
         except Exception as exc:
             # Soft-fail — DOM will still capture without dialog.
             print(f"explore: buscar casilla unreachable: {type(exc).__name__}: {exc}")
+
+        # Also drive "Apartados declaración" — the section navigator.
+        # The a11y walker confirmed:
+        #   <button title='Apartados declaración' cls='z-button'>
+        # Clicking it opens a tree/list of declaration sections; this is
+        # the navigation primitive the driver will use to reach individual
+        # casillas section-by-section. Capture the dialog structure so the
+        # next driver iteration can wire selector overrides.
+        apartados_btn = page.locator("button[title='Apartados declaración']").first
+        try:
+            await apartados_btn.wait_for(state="visible", timeout=15_000)
+            await assert_click_target_safe(
+                apartados_btn,
+                stage="explore:apartados-safety",
+                description="Apartados declaración",
+                timeout_ms=15_000,
+            )
+            await apartados_btn.click(timeout=15_000)
+            await page.wait_for_timeout(2_500)
+        except Exception as exc:
+            print(f"explore: apartados unreachable: {type(exc).__name__}: {exc}")
 
         # Capture full HTML + a button/link inventory.
         html_content = await page.content()

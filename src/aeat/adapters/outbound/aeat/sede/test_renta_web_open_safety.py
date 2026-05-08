@@ -46,9 +46,23 @@ def test_forbidden_token_set_carries_every_high_risk_action() -> None:
         "tgvi",
         "anular",
         "modificar",
+        # Pre-presentation validation surface — denied as defense-in-depth
+        # (the read-only driver never needs to click Validar).
+        "validar",
     }
     for token in required:
         assert token in FORBIDDEN_CLICK_TOKENS, f"required forbidden token {token!r} missing"
+
+
+def test_validar_button_label_is_blocked_by_safety_guard() -> None:
+    """The 'Validar' button surfaces on the live Resumen toolbar (button
+    [12] in the latest button inventory). The driver never needs to click
+    it — the registry's typed bindings + parity oracle do all validation.
+    Locking it as forbidden prevents accidental clicks from triggering
+    AEAT-side validation state changes."""
+    assert _matches_forbidden_token(_normalise("Validar")) is not None
+    assert _matches_forbidden_token(_normalise("Validación")) is not None
+    assert _matches_forbidden_token(_normalise("VALIDAR DECLARACIÓN")) is not None
 
 
 def test_normalise_folds_accents_and_lowercases() -> None:
@@ -68,8 +82,11 @@ def test_matches_forbidden_token_catches_substring_in_button_label() -> None:
     assert _matches_forbidden_token(_normalise("Continuar con la declaración")) is None
     assert _matches_forbidden_token(_normalise("Apartados declaración")) is None
     assert _matches_forbidden_token(_normalise("Buscar casilla")) is None
-    assert _matches_forbidden_token(_normalise("Validar")) is None
+    # Validar moved to the denylist as defense-in-depth — see
+    # ``test_validar_button_label_is_blocked_by_safety_guard``.
     assert _matches_forbidden_token(_normalise("Ver datos fiscales")) is None
+    assert _matches_forbidden_token(_normalise("Vista previa")) is None
+    assert _matches_forbidden_token(_normalise("Notas")) is None
     assert _matches_forbidden_token(_normalise("Aceptar")) is None  # identification only
 
 
