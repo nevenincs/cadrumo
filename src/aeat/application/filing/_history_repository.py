@@ -27,8 +27,7 @@ _HISTORY_NAMESPACE = "aeat.application.filing.history"
 class FilingHistoryRepository:
     """Repository over encrypted SQL-backed filing history records."""
 
-    def __init__(self, *, store_dir: Path | None = None) -> None:
-        del store_dir
+    def __init__(self) -> None:
         self._objects = SecureObjectRepository()
 
     @property
