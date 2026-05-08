@@ -384,7 +384,7 @@ def test_httpx_fallback_preload_raises_not_implemented(
         backend=CertificateBackend.HTTPX_FALLBACK,
     )
     loaded = load_certificate(bundle)
-    with pytest.raises(NotImplementedError, match="HTTPX_FALLBACK has no browser path"):
+    with pytest.raises(RuntimeError, match="HTTPX_FALLBACK has no browser path"):
         HttpxFallbackBackend().preload(loaded, object())
 
 
