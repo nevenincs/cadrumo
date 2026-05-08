@@ -70,6 +70,23 @@ class SecureObjectUnreadable(BaseModel):
 SecureObjectListItem = SecureObjectRecord | SecureObjectUnreadable
 
 
+class SecureObjectNamespaceIntegrity(BaseModel):
+    """Per-namespace decryptability counts for the integrity diagnostic.
+
+    Unlike :class:`SecureObjectListItem`, this report answers only the
+    crypto-layer question ``can the payload be decrypted under the current
+    master key`` -- classification and schema-version contracts are
+    intentionally ignored. Used by ``aeat config doctor`` to surface rows
+    sealed under a rotated master key.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    namespace: str = Field(min_length=1)
+    readable: int = Field(ge=0)
+    unreadable: int = Field(ge=0)
+
+
 class SecureObjectRepository:
     """Repository over encrypted byte objects stored in the primary database."""
 
@@ -108,6 +125,53 @@ class SecureObjectRepository:
                 )
             ).scalar_one_or_none()
             return row_id is not None
+
+    def list_namespaces(self) -> tuple[str, ...]:
+        """Return the distinct namespaces present in ``secure_objects`` sorted.
+
+        Used by the integrity diagnostic so consumers do not have to
+        hardcode the namespace list (which drifts as new domain
+        repositories register their own namespaces).
+        """
+        with session_scope(self._engine) as session:
+            rows = (
+                session.execute(
+                    select(_orm.SecureObjectRow.namespace).distinct().order_by(_orm.SecureObjectRow.namespace)
+                )
+                .scalars()
+                .all()
+            )
+        return tuple(rows)
+
+    def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
+        """Count decryptable vs undecryptable rows in ``namespace``.
+
+        This method answers a strictly crypto-layer question -- can the
+        ``payload`` ciphertext be unwrapped under the current master key
+        -- and intentionally bypasses the classification and
+        schema-version contracts that consumer reads enforce. Used by
+        ``aeat config doctor`` to surface namespaces holding rows from a
+        prior keychain master-key generation.
+        """
+        readable = 0
+        unreadable = 0
+        with session_scope(self._engine) as session:
+            stmt = text("SELECT payload FROM secure_objects WHERE namespace = :namespace").bindparams(
+                bindparam("namespace", value=namespace)
+            )
+            rows = session.execute(stmt).all()
+        for raw in rows:
+            try:
+                decrypt_encrypted_bytes_column(bytes(raw.payload))
+            except DecryptionError:
+                unreadable += 1
+            else:
+                readable += 1
+        return SecureObjectNamespaceIntegrity(
+            namespace=namespace,
+            readable=readable,
+            unreadable=unreadable,
+        )
 
     def list_keys(self, namespace: str) -> tuple[str, ...]:
         """Return stored lookup digests under ``namespace`` as hex strings.
