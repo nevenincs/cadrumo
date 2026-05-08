@@ -56,7 +56,6 @@ ADR_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.application.filing",
     "aeat.application.transactions",
     "aeat.application.invoices",
-    "aeat.application.attachments",
     "aeat.application.aggregation",
     "aeat.application.workflow",
     "aeat.application.setup",
