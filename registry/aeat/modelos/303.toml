@@ -224,7 +224,7 @@ expression = { op = "add", args = [
     { casilla = "iva.autorepercutido.intracomunitaria" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3786-2008:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
 [[revisions."2009-y-siguientes".formulas.source_citations]]
@@ -503,6 +503,8 @@ legal_refs = [
     "orden-eha-3786-2008:art-7",
     "ley-37-1992:art-84",
     "ley-37-1992:art-88",
+    "ley-37-1992:art-90",
+    "ley-37-1992:art-91",
     "ley-37-1992:art-92",
 ]
 source_refs = [
