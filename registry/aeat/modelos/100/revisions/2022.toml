@@ -262,6 +262,8 @@ formulas = [
     "renta-2022-base-imponible-del-ahorro",
     "renta-2022-base-liquidable-general",
     "renta-2022-base-liquidable-del-ahorro",
+    "renta-2022-cuota-escala-estatal-sobre-base-liquidable-general",
+    "renta-2022-cuota-escala-estatal-sobre-minimo-personal-familiar",
     "renta-2022-cuota-base-liquidable-general-estatal",
     "renta-2022-cuota-base-liquidable-general-autonomica",
     "renta-2022-cuota-integra-estatal",

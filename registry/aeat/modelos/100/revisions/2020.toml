@@ -235,6 +235,8 @@ formulas = [
     "renta-2020-base-imponible-del-ahorro",
     "renta-2020-base-liquidable-general",
     "renta-2020-base-liquidable-del-ahorro",
+    "renta-2020-cuota-escala-estatal-sobre-base-liquidable-general",
+    "renta-2020-cuota-escala-estatal-sobre-minimo-personal-familiar",
     "renta-2020-cuota-base-liquidable-general-estatal",
     "renta-2020-cuota-base-liquidable-general-autonomica",
     "renta-2020-cuota-integra-estatal",

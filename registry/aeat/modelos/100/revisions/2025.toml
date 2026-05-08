@@ -2087,6 +2087,8 @@ formulas = [
     "renta-2025-base-liquidable-general",
     "renta-2025-cuota-base-liquidable-general-autonomica",
     "renta-2025-cuota-base-liquidable-general-estatal",
+    "renta-2025-cuota-escala-estatal-sobre-base-liquidable-general",
+    "renta-2025-cuota-escala-estatal-sobre-minimo-personal-familiar",
     "renta-2025-cuota-integra-autonomica",
     "renta-2025-cuota-integra-estatal",
     "renta-2025-cuota-liquida-autonomica",
