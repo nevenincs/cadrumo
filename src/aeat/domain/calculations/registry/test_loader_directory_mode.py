@@ -1,0 +1,154 @@
+"""Equivalence tests for the directory-mode modelo loader.
+
+The single-file ``modelos/<id>.toml`` layout and the directory-mode
+``modelos/<id>/{manifest.toml, revisions/*.toml}`` layout must produce
+byte-identical ``ModeloDefinition`` objects from the same TOML data.
+
+This is the safety net for the segmentation migration: by exercising
+the round trip
+``load_modelo_file(file) == load_modelo_directory(dir-built-from-file)``
+on every realistic shape (multi-revision, single-revision, with /
+without manifest-level metadata), the migration of any modelo from
+single-file to directory layout can be done without behavioral risk.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from aeat.core.paths import PROJECT_ROOT
+
+from ._loader import load_modelo_directory, load_modelo_file
+from ._errors import RegistryLoadError
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+
+def _build_directory_layout(
+    target_dir: Path,
+    *,
+    manifest_text: str,
+    revision_files: dict[str, str],
+) -> None:
+    """Materialise a directory-mode modelo at ``target_dir``."""
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+    (target_dir / "manifest.toml").write_text(manifest_text, encoding="utf-8")
+    revisions_dir = target_dir / "revisions"
+    revisions_dir.mkdir(exist_ok=True)
+    for filename, content in revision_files.items():
+        (revisions_dir / filename).write_text(content, encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    "modelo_filename",
+    ["130.toml", "184.toml", "190.toml", "193.toml", "303.toml", "390.toml"],
+)
+def test_directory_mode_round_trip_matches_single_file_for_real_modelo(
+    tmp_path: Path, modelo_filename: str
+) -> None:
+    """Existing single-file modelos load byte-identically in directory mode.
+
+    For each real modelo TOML in registry/aeat/modelos/, this test:
+      1. Reads the file's text.
+      2. Splits it into manifest (everything before the first
+         [revisions table) + a single revisions/single.toml.
+      3. Builds a directory-mode layout in tmp_path.
+      4. Asserts ``load_modelo_directory(tmp_dir) ==
+         load_modelo_file(original)``.
+
+    Equivalence is at the ``ModeloDefinition`` level — pydantic
+    structural equality. Any divergence between the two loaders is a
+    blocker for migrating modelos to directory mode.
+    """
+
+    single_file_path = PROJECT_ROOT / "registry" / "aeat" / "modelos" / modelo_filename
+    if not single_file_path.is_file():
+        pytest.skip(f"{modelo_filename} not present")
+    expected = load_modelo_file(single_file_path)
+
+    text = single_file_path.read_text(encoding="utf-8")
+    manifest_lines: list[str] = []
+    revision_lines: list[str] = []
+    in_revision = False
+    for line in text.splitlines(keepends=True):
+        stripped = line.strip()
+        if (stripped.startswith("[revisions") or stripped.startswith("[[revisions")):
+            in_revision = True
+        if in_revision:
+            revision_lines.append(line)
+        else:
+            manifest_lines.append(line)
+
+    target = tmp_path / "modelo_dir"
+    _build_directory_layout(
+        target,
+        manifest_text="".join(manifest_lines),
+        revision_files={"all.toml": "".join(revision_lines)},
+    )
+    actual = load_modelo_directory(target)
+    assert actual == expected
+
+
+def test_directory_mode_rejects_manifest_with_revisions_table(tmp_path: Path) -> None:
+    """The manifest must not declare [revisions] — that lives in revisions/*.toml."""
+
+    target = tmp_path / "bad_manifest"
+    target.mkdir()
+    (target / "manifest.toml").write_text(
+        '[modelo]\nid = "999"\nlabel = "test"\n[revisions."2025"]\n',
+        encoding="utf-8",
+    )
+    (target / "revisions").mkdir()
+    with pytest.raises(RegistryLoadError, match="manifest must not declare \\[revisions\\]"):
+        load_modelo_directory(target)
+
+
+def test_directory_mode_rejects_revision_file_with_modelo_table(tmp_path: Path) -> None:
+    """A revision file must not redeclare [modelo] — that's manifest-only."""
+
+    target = tmp_path / "bad_revision"
+    target.mkdir()
+    (target / "manifest.toml").write_text('[modelo]\nid = "999"\nlabel = "test"\n', encoding="utf-8")
+    (target / "revisions").mkdir()
+    (target / "revisions" / "2025.toml").write_text(
+        '[modelo]\nid = "999"\n[revisions."2025"]\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(RegistryLoadError, match="must not declare \\[modelo\\]"):
+        load_modelo_directory(target)
+
+
+def test_directory_mode_rejects_duplicate_revision_ids_across_files(tmp_path: Path) -> None:
+    """Two revision files cannot both declare the same revision id."""
+
+    target = tmp_path / "duplicate_rev"
+    target.mkdir()
+    (target / "manifest.toml").write_text('[modelo]\nid = "999"\nlabel = "test"\n', encoding="utf-8")
+    (target / "revisions").mkdir()
+    rev_text = '[revisions."2025"]\n[[revisions."2025".casillas]]\nid = "0001"\n'
+    (target / "revisions" / "a.toml").write_text(rev_text, encoding="utf-8")
+    (target / "revisions" / "b.toml").write_text(rev_text, encoding="utf-8")
+    with pytest.raises(RegistryLoadError, match="already declared in another revisions"):
+        load_modelo_directory(target)
+
+
+def test_directory_mode_rejects_missing_manifest(tmp_path: Path) -> None:
+    """Directory-mode requires manifest.toml at the root of the modelo dir."""
+
+    target = tmp_path / "no_manifest"
+    target.mkdir()
+    with pytest.raises(RegistryLoadError, match="missing manifest.toml"):
+        load_modelo_directory(target)
+
+
+def test_directory_mode_rejects_no_revisions(tmp_path: Path) -> None:
+    """A directory-mode modelo must have at least one revision file."""
+
+    target = tmp_path / "no_revs"
+    target.mkdir()
+    (target / "manifest.toml").write_text('[modelo]\nid = "999"\nlabel = "test"\n', encoding="utf-8")
+    with pytest.raises(RegistryLoadError, match="no revisions found"):
+        load_modelo_directory(target)
