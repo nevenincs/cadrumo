@@ -74,7 +74,7 @@ _KNOWN_FINDINGS: tuple[BoundaryFinding, ...] = (
     BoundaryFinding(
         row_id="CLI-003",
         source="src/aeat/entrypoints/cli/_invoice.py",
-        symbols=("invoice_import", "_parse_invoice_payload", "invoice_review"),
+        symbols=("invoice_import", "invoice_review"),
         backend_gap="API-003",
         owner="application.invoices",
     ),
