@@ -708,6 +708,81 @@ valid_from = 2025-01-01
 valid_to = 2025-12-31
 
 [[revisions."2025".parameters]]
+id = "renta-2025-escala-autonomica-cataluna-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Comunidad Autónoma de Cataluña", "escala autonómica"]
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12500.00"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "12500.00"
+upper_bound = "22000.00"
+fixed_addition = "1187.50"
+marginal_rate = "0.125"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "22000.00"
+upper_bound = "33000.00"
+fixed_addition = "2375.00"
+marginal_rate = "0.16"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "33000.00"
+upper_bound = "53000.00"
+fixed_addition = "4135.00"
+marginal_rate = "0.19"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "53000.00"
+upper_bound = "90000.00"
+fixed_addition = "7935.00"
+marginal_rate = "0.215"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "90000.00"
+upper_bound = "120000.00"
+fixed_addition = "15890.00"
+marginal_rate = "0.235"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "120000.00"
+upper_bound = "175000.00"
+fixed_addition = "22940.00"
+marginal_rate = "0.245"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.brackets]]
+lower_bound = "175000.00"
+fixed_addition = "36415.00"
+marginal_rate = "0.255"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters]]
 id = "renta-2025-escala-autonomica-madrid-base-general"
 data_type = "bracket_table"
 unit = "EUR"
@@ -5811,7 +5886,7 @@ target = "0529"
 expression = { op = "lookup_bracket_by_ccaa", args = [
     { casilla = "0505" },
     { binding = "renta-2025-profile-tax-residence-ccaa" },
-    { dispatch_table = { andalucia = "renta-2025-escala-autonomica-andalucia-base-general", aragon = "renta-2025-escala-autonomica-aragon-base-general", asturias = "renta-2025-escala-autonomica-asturias-base-general", baleares = "renta-2025-escala-autonomica-baleares-base-general", canarias = "renta-2025-escala-autonomica-canarias-base-general", cantabria = "renta-2025-escala-autonomica-cantabria-base-general", castilla_la_mancha = "renta-2025-escala-autonomica-castilla-la-mancha-base-general", castilla_y_leon = "renta-2025-escala-autonomica-castilla-y-leon-base-general", madrid = "renta-2025-escala-autonomica-madrid-base-general" } },
+    { dispatch_table = { andalucia = "renta-2025-escala-autonomica-andalucia-base-general", aragon = "renta-2025-escala-autonomica-aragon-base-general", asturias = "renta-2025-escala-autonomica-asturias-base-general", baleares = "renta-2025-escala-autonomica-baleares-base-general", canarias = "renta-2025-escala-autonomica-canarias-base-general", cantabria = "renta-2025-escala-autonomica-cantabria-base-general", castilla_la_mancha = "renta-2025-escala-autonomica-castilla-la-mancha-base-general", castilla_y_leon = "renta-2025-escala-autonomica-castilla-y-leon-base-general", cataluna = "renta-2025-escala-autonomica-cataluna-base-general", madrid = "renta-2025-escala-autonomica-madrid-base-general" } },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-74", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
@@ -5827,7 +5902,7 @@ target = "0531"
 expression = { op = "lookup_bracket_by_ccaa", args = [
     { casilla = "0521" },
     { binding = "renta-2025-profile-tax-residence-ccaa" },
-    { dispatch_table = { andalucia = "renta-2025-escala-autonomica-andalucia-base-general", aragon = "renta-2025-escala-autonomica-aragon-base-general", asturias = "renta-2025-escala-autonomica-asturias-base-general", baleares = "renta-2025-escala-autonomica-baleares-base-general", canarias = "renta-2025-escala-autonomica-canarias-base-general", cantabria = "renta-2025-escala-autonomica-cantabria-base-general", castilla_la_mancha = "renta-2025-escala-autonomica-castilla-la-mancha-base-general", castilla_y_leon = "renta-2025-escala-autonomica-castilla-y-leon-base-general", madrid = "renta-2025-escala-autonomica-madrid-base-general" } },
+    { dispatch_table = { andalucia = "renta-2025-escala-autonomica-andalucia-base-general", aragon = "renta-2025-escala-autonomica-aragon-base-general", asturias = "renta-2025-escala-autonomica-asturias-base-general", baleares = "renta-2025-escala-autonomica-baleares-base-general", canarias = "renta-2025-escala-autonomica-canarias-base-general", cantabria = "renta-2025-escala-autonomica-cantabria-base-general", castilla_la_mancha = "renta-2025-escala-autonomica-castilla-la-mancha-base-general", castilla_y_leon = "renta-2025-escala-autonomica-castilla-y-leon-base-general", cataluna = "renta-2025-escala-autonomica-cataluna-base-general", madrid = "renta-2025-escala-autonomica-madrid-base-general" } },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-74", "ley-35-2006:art-75", "orden-hac-277-2026:art-3"]
@@ -10126,7 +10201,9 @@ id = "0420"
 number = "0420"
 label = "Si la diferencia ( [0418] - [0419]  ) es positiva"
 section = ["resultados", "integracion_res", "gp_patrimoniales_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+input_kind = "computed"
+formula = "renta-2025-ganancias-patrimoniales-base-general-saldo-positivo"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-50", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -10134,7 +10211,9 @@ id = "0421"
 number = "0421"
 label = "Si la diferencia ( [0418] - [0419] ) es negativa"
 section = ["resultados", "integracion_res", "gp_patrimoniales_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+input_kind = "computed"
+formula = "renta-2025-ganancias-patrimoniales-base-general-saldo-negativo"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-50", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -10158,7 +10237,9 @@ id = "0424"
 number = "0424"
 label = "Si la diferencia ( [0422] - [0423] ) es positiva"
 section = ["resultados", "integracion_res", "gp_patrimoniales_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+input_kind = "computed"
+formula = "renta-2025-ganancias-patrimoniales-base-ahorro-saldo-positivo"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-49", "ley-35-2006:art-50", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -10166,7 +10247,9 @@ id = "0425"
 number = "0425"
 label = "Si la diferencia ( [0422] - [0423] ) es negativa"
 section = ["resultados", "integracion_res", "gp_patrimoniales_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+input_kind = "computed"
+formula = "renta-2025-ganancias-patrimoniales-base-ahorro-saldo-negativo"
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-49", "ley-35-2006:art-50", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
