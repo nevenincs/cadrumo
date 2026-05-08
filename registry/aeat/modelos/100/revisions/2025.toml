@@ -3423,6 +3423,12 @@ legal_refs = [
     "ley-35-2006:art-33",
     "ley-35-2006:art-34",
     "ley-35-2006:art-37",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-87",
+    "ley-35-2006:art-88",
+    "ley-35-2006:art-89",
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-3",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -5353,7 +5359,7 @@ expression = { op = "sum", args = [
     { casilla = "1575" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-3"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
