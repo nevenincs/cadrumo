@@ -1,20 +1,19 @@
 from __future__ import annotations
 
 import contextlib
-import json as _json
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Any
 
 import typer
 
+from ...application.invoices import import_invoices_from_path
 from ...application.review import EditParseError, FilterParseError, InvoiceEditSpec, InvoiceReviewFilterSpec
 from ...application.user_cli import (
     UserCliState,
     state_repository,
     update_invoice_review,
 )
-from ...domain.invoices import Invoice, InvoiceCatalogue
+from ...domain.invoices import Invoice
 from ._common import (
     _bad,
     _canonical_period,
@@ -47,88 +46,31 @@ def invoice_import(
     kind_normalised = kind.strip().upper()
     if kind_normalised not in {"ISSUED", "RECEIVED"}:
         raise _bad(tr("cli.invoice.errors.invalid_kind"))
-    raw = path.read_text(encoding="utf-8")
-    rows = _parse_invoice_payload(raw, kind_normalised)
+    result = import_invoices_from_path(path, kind=kind_normalised, dry_run=dry_run, repository=_invoice_repo())
     if dry_run:
         _emit(
             ctx,
-            {"rows": len(rows), "dry_run": True},
+            {"rows": result.rows, "dry_run": True},
             [
-                f"{tr('cli.invoice.labels.rows')}\t{len(rows)}",
+                f"{tr('cli.invoice.labels.rows')}\t{result.rows}",
                 f"{tr('cli.invoice.labels.dry_run')}\t{tr('cli.invoice.labels.yes')}",
             ],
         )
         return
-    repo = _invoice_repo()
-    catalogue = repo.load()
-    existing = dict(catalogue.invoices)
-    imported = 0
-    skipped = 0
-    for entry in rows:
-        if entry.invoice_id in existing:
-            skipped += 1
-            continue
-        existing[entry.invoice_id] = entry
-        imported += 1
-    repo.save(InvoiceCatalogue.model_validate({"invoices": existing}))
     payload = {
-        "rows": len(rows),
-        "imported": imported,
-        "skipped": skipped,
+        "rows": result.rows,
+        "imported": result.imported,
+        "skipped": result.skipped,
     }
     _emit(
         ctx,
         payload,
         [
-            f"{tr('cli.invoice.labels.rows')}\t{len(rows)}",
-            f"{tr('cli.invoice.labels.imported')}\t{imported}",
-            f"{tr('cli.invoice.labels.skipped')}\t{skipped}",
+            f"{tr('cli.invoice.labels.rows')}\t{result.rows}",
+            f"{tr('cli.invoice.labels.imported')}\t{result.imported}",
+            f"{tr('cli.invoice.labels.skipped')}\t{result.skipped}",
         ],
     )
-
-
-def _parse_invoice_payload(raw: str, kind: str) -> tuple[Any, ...]:
-    candidates: list[dict[str, Any]] = []
-    raw_stripped = raw.lstrip()
-    if raw_stripped.startswith("[") or raw_stripped.startswith("{"):
-        decoded = _json.loads(raw)
-        candidates = decoded if isinstance(decoded, list) else [decoded]
-    else:
-        import csv
-
-        reader = csv.DictReader(raw.splitlines())
-        candidates = [dict(row) for row in reader]
-    invoices: list[Invoice] = []
-    for candidate in candidates:
-        candidate.setdefault("kind", kind)
-        if "kind" in candidate and isinstance(candidate["kind"], str):
-            candidate["kind"] = candidate["kind"].upper()
-
-        candidate.setdefault("currency", "EUR")
-        candidate.setdefault("counterparty_country", "ES")
-        candidate.setdefault("payment_status", "PAID")
-        if "counterparty_name" not in candidate:
-            candidate["counterparty_name"] = candidate.get("counterparty_tax_id", "Unknown")
-
-        if "lines" not in candidate and "base_total" in candidate and "iva_rate" in candidate:
-            base = Decimal(candidate["base_total"])
-            rate_raw = str(candidate["iva_rate"])
-            rate = {"21": "RATE_21", "10": "RATE_10", "4": "RATE_4", "0": "RATE_0"}.get(rate_raw, rate_raw)
-            iva_amount = Decimal(candidate.get("iva_total", "0"))
-            candidate["lines"] = [
-                {
-                    "description": "Imported invoice line",
-                    "quantity": "1",
-                    "unit_price": str(base),
-                    "subtotal": str(base),
-                    "iva_rate": rate,
-                    "iva_amount": str(iva_amount),
-                }
-            ]
-            candidate.pop("iva_rate", None)
-
-        invoices.append(Invoice.model_validate(candidate))
-    return tuple(invoices)
 
 
 @app.command("review", help=tr("cli.invoice.review.help"))

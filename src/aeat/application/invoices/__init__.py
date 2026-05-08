@@ -29,14 +29,24 @@ from ...domain.invoices._service import (
     suggest_reconciliations,
     verify_link_consistency,
 )
+from ._importing import (
+    InvoiceImportResult,
+    import_invoices_from_path,
+    merge_invoice_import,
+    parse_invoice_payload,
+)
 
 __all__ = [
+    "InvoiceImportResult",
     "LinkInconsistency",
     "ReconciliationSuggestion",
     "find_invoice",
     "find_unmatched",
+    "import_invoices_from_path",
     "link_transaction",
     "link_transaction_bidirectional",
+    "merge_invoice_import",
+    "parse_invoice_payload",
     "suggest_reconciliations",
     "verify_link_consistency",
 ]
