@@ -30,45 +30,6 @@ categories:
   test_profile:
     display_label_851219: Megjelenítési címke 851219
 cli:
-  attachments:
-    add_help: Hozzáadás egy justificante (nyugta) vagy melléklet
-    add_kind_help: Melléklet típusa (pl. számla, justificante (nyugta), szerződés)
-    add_link_invoice_help: A justificante (nyugta) hozzákapcsolása egy létező számla
-      azonosítójához
-    add_link_tx_help: A justificante (nyugta) hozzákapcsolása egy banki tranzakció
-      azonosítójához
-    add_metadata_help: Egyéni metaadatok (kulcs=érték) hozzáadása a justificante (nyugta)
-      fájlhoz
-    add_mime_type_help: MIME-típus kényszerítése a justificante (nyugta) fájlhoz
-    add_notes_help: Jegyzetek vagy megjegyzések hozzáadása a justificante (nyugta)
-      fájlhoz
-    add_path_help: A hozzáadni kívánt justificante (nyugta) fájl helyi útvonala
-    add_source_help: A justificante (nyugta) forrása vagy eredete (pl. e-mail, szkennelés,
-      portál)
-    add_source_ref_help: A justificante (nyugta) forráshivatkozása (pl. e-mail Message-ID,
-      URL, azonosító)
-    app_help: Justificantes (nyugták) és mellékletek kezelése (hozzáadás, listázás,
-      megtekintés)
-    errors:
-      duplicate_metadata_key: 'A justificante (nyugta) metaadat kulcs duplikálva van:
-        {key}'
-      empty_metadata_key: A justificante (nyugta) metaadat kulcs nem lehet üres
-      empty_metadata_value: A justificante (nyugta) metaadat érték nem lehet üres
-      empty_mime_type: A justificante (nyugta) MIME-típus nem lehet üres
-      empty_source_reference: A justificante (nyugta) forráshivatkozása nem lehet
-        üres
-      invalid_metadata_format: Érvénytelen justificante (nyugta) metaadat formátum.
-        Kulcs=érték formátumúnak kell lennie
-    list:
-      no_attachments: Nem találhatók justificantes (nyugták) vagy mellékletek
-    list_header: Justificantes (nyugták) és mellékletek
-    list_help: A regisztrált justificantes (nyugták) és mellékletek listázása
-    list_kind_filter_help: Justificantes (nyugták) szűrése típus szerint (pl. számla,
-      jegy, szerződés)
-    list_linked_to_help: Egy adott azonosítóhoz (tranzakcióhoz vagy számlához) kapcsolódó
-      justificantes (nyugták) szűrése
-    show_help: Egy justificante (nyugta) részleteinek és metaadatainak megjelenítése
-    show_id_help: A megjelenítendő justificante (nyugta) azonosítója
   browser:
     app_help: Böngésző automatizálási feladatok kezelése (Playwright)
     health:
@@ -80,12 +41,6 @@ cli:
       none: Nincs
       retry_after_seconds: Újrapróbálkozás ennyi másodperc után
       state: Működési állapot
-  categories:
-    app_help: Az AEAT eljárási kategóriák kezelése
-    id_help: A kategória egyedi azonosítója
-    list_help: Az összes elérhető eljárási kategória listázása
-    show_help: Egy adott kategória részleteinek megjelenítése
-    year_help: Adóév
   common:
     errors:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
@@ -531,63 +486,6 @@ cli:
       id_help: A felülvizsgálandó adott bejegyzés azonosítója
       no_rows: Nincsenek felülvizsgálatra váró naplóbejegyzések
       verbose_help: Részletes információk megjelenítése a felülvizsgálat során
-  llm:
-    app_help: Nagy nyelvi modell (LLM) segédprogramok
-    cache_app_help: LLM válasz-gyorsítótár kezelése
-    cache_prune_help: Régi LLM gyorsítótár-bejegyzések törlése
-    cache_stats_help: LLM gyorsítótár-használati statisztikák megjelenítése
-    complete_help: Válasz generálása a megadott szöveg kiegészítésével
-    context_help: További kontextus hozzáadása az LLM kéréshez
-    errors:
-      invalid_input: Érvénytelen LLM bemenet
-      missing_variable: Egy szükséges változó hiányzik a prompt sablonból
-    from_help: A fordítás vagy feldolgozás forrásnyelve
-    input_help: Bemeneti szöveg az LLM-mel való feldolgozáshoz
-    labels:
-      removed_cache_files: Törölt gyorsítótár-fájlok
-    language_help: Célnyelv vagy elsődleges nyelv a kimenethez
-    prompt_id_help: A használandó prompt azonosítója
-    since_help: Kezdő dátum szűréshez vagy lekérdezéshez (ÉÉÉÉ-HH-NN)
-    text_help: Az LLM által elemzendő vagy feldolgozandó szöveg
-    to_help: A fordítás célnyelve
-    translate_help: Szöveg fordítása egyik nyelvről a másikra LLM használatával
-    until_help: Záró dátum szűréshez vagy lekérdezéshez (ÉÉÉÉ-HH-NN)
-    usage_help: LLM tokenhasználat és költségek megjelenítése
-  normatives:
-    app_help: Adózási szabályozások és kötelezettségek lekérdezése
-    errors:
-      load_failed: A normatív adatbázis betöltése sikertelen
-    headers:
-      citation: Jogi hivatkozás
-      code: Kód
-      level: Szint
-      message: Üzenet
-      numero: Szám
-      reference_id: Referencia azonosító
-      titulo: Cím
-    labels:
-      articles: Cikkek
-      articulos: Cikkek
-      boe_id: BOE azonosító
-      boe_url: BOE URL
-      found: Találat
-      id: Azonosító
-      kind: Típus
-      last_reviewed_at: Utolsó felülvizsgálat ideje
-      no_articulos: Nincsenek elérhető cikkek
-      number: Szám
-      published_at: Közzététel dátuma
-      reviewed_by: Felülvizsgálta
-      short_title: Rövid cím
-      tags: Címkék
-    list_help: Adózási szabályozások listázása és szűrése
-    list_tag_help: Szabályozások szűrése címke szerint (pl. iva, irpf)
-    show_help: Egy adott szabályozás részleteinek megjelenítése
-    show_ref_id_help: A megjelenítendő szabályozás referencia azonosítója
-    success:
-      clean: Normatívák tisztítása befejeződött
-      verification_results: Ellenőrzés eredményei
-    verify_help: Szabályozások integritásának és érvényességének ellenőrzése
   overview:
     app_help: Az aktuális adózási munkaterület áttekintése
     calendar_help: Kötelezettségi naptár megjelenítése dátumtartományra

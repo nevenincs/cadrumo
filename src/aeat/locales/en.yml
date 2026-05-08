@@ -25,41 +25,6 @@ categories:
   test_profile:
     display_label_851219: Display label 851219
 cli:
-  attachments:
-    add_help: Add a justificante (receipt) or attachment
-    add_kind_help: Type of attachment (e.g. invoice, justificante (receipt), contract)
-    add_link_invoice_help: Link the justificante (receipt) to an existing invoice
-      ID
-    add_link_tx_help: Link the justificante (receipt) to a bank transaction ID
-    add_metadata_help: Add custom metadata (key=value) to the justificante (receipt)
-    add_mime_type_help: Force a specific MIME type for the justificante (receipt)
-    add_notes_help: Add notes or observations to the justificante (receipt)
-    add_path_help: Local path to the justificante (receipt) file to add
-    add_source_help: Origin or source of the justificante (receipt) (e.g. email, scan,
-      portal)
-    add_source_ref_help: Source reference of the justificante (receipt) (e.g. email
-      Message-ID, URL, locator)
-    app_help: Management of justificantes (receipts) and attachments (add, list, view)
-    errors:
-      duplicate_metadata_key: 'The justificante (receipt) metadata key is duplicated:
-        {key}'
-      empty_metadata_key: The justificante (receipt) metadata key cannot be empty
-      empty_metadata_value: The justificante (receipt) metadata value cannot be empty
-      empty_mime_type: The justificante (receipt) MIME type cannot be empty
-      empty_source_reference: The justificante (receipt) source reference cannot be
-        empty
-      invalid_metadata_format: Invalid justificante (receipt) metadata format. Must
-        be key=value
-    list:
-      no_attachments: No justificantes (receipts) or attachments found
-    list_header: Justificantes (receipts) and attachments
-    list_help: List registered justificantes (receipts) and attachments
-    list_kind_filter_help: Filter justificantes (receipts) by kind (e.g. invoice,
-      ticket, contract)
-    list_linked_to_help: Filter justificantes (receipts) linked to a specific ID (transaction
-      or invoice)
-    show_help: Show details and metadata for a justificante (receipt)
-    show_id_help: Identifier of the justificante (receipt) to show
   browser:
     app_help: Browser automation management (Playwright)
     health:
@@ -71,12 +36,6 @@ cli:
       none: None
       retry_after_seconds: Retry after (seconds)
       state: Operational State
-  categories:
-    app_help: Management of AEAT procedure categories
-    id_help: Unique identifier of the category
-    list_help: List all available procedure categories
-    show_help: Show details of a specific category
-    year_help: Fiscal year
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
@@ -514,63 +473,6 @@ cli:
       id_help: Identifier of the specific entry to review
       no_rows: No ledger entries pending review
       verbose_help: Show detailed information during review
-  llm:
-    app_help: Large Language Model (LLM) utilities
-    cache_app_help: Management of LLM response cache
-    cache_prune_help: Clean up old LLM cache entries
-    cache_stats_help: Show LLM cache usage statistics
-    complete_help: Generate a response by completing the provided text
-    context_help: Add additional context for the LLM request
-    errors:
-      invalid_input: Invalid LLM input
-      missing_variable: A required variable is missing in the prompt template
-    from_help: Source language for translation or processing
-    input_help: Input text to process with the LLM
-    labels:
-      removed_cache_files: Removed cache files
-    language_help: Target or primary language for the output
-    prompt_id_help: Identifier of the prompt to use
-    since_help: Start date for filtering or querying (YYYY-MM-DD)
-    text_help: Text to be analyzed or processed by the LLM
-    to_help: Target language for translation
-    translate_help: Translate a text from one language to another using LLM
-    until_help: End date for filtering or querying (YYYY-MM-DD)
-    usage_help: Show LLM token usage and costs
-  normatives:
-    app_help: Query tax regulations and obligations
-    errors:
-      load_failed: Failed to load normative database
-    headers:
-      citation: Legal citation
-      code: Code
-      level: Level
-      message: Message
-      numero: Number
-      reference_id: Reference ID
-      titulo: Title
-    labels:
-      articles: Articles
-      articulos: Articles
-      boe_id: BOE ID
-      boe_url: BOE URL
-      found: Found
-      id: ID
-      kind: Type
-      last_reviewed_at: Last reviewed at
-      no_articulos: No articles available
-      number: Number
-      published_at: Published at
-      reviewed_by: Reviewed by
-      short_title: Short title
-      tags: Tags
-    list_help: List and filter tax regulations
-    list_tag_help: Filter regulations by tag (e.g., iva, irpf)
-    show_help: Show details of a specific regulation
-    show_ref_id_help: Reference ID of the regulation to show
-    success:
-      clean: Normative cleanup completed
-      verification_results: Verification results
-    verify_help: Verify integrity and validity of regulations
   overview:
     app_help: Review the current filing workspace
     calendar_help: Show the obligations calendar for a date range

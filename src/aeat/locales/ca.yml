@@ -28,38 +28,6 @@ categories:
   test_profile:
     display_label_851219: Etiqueta de visualització 851219
 cli:
-  attachments:
-    add_help: Afegir un justificant o fitxer adjunt
-    add_kind_help: Tipus de fitxer adjunt (ex. factura, justificant, contracte)
-    add_link_invoice_help: Vincular el justificant a un ID de factura existent
-    add_link_tx_help: Vincular el justificant a un ID de transacció bancària
-    add_metadata_help: Afegir metadades personalitzades (clau=valor) al justificant
-    add_mime_type_help: Forçar un tipus MIME específic per al justificant
-    add_notes_help: Afegir notes o observacions al justificant
-    add_path_help: Ruta local del fitxer justificant a afegir
-    add_source_help: Origen o font del justificant (ex. correu, escàner, portal)
-    add_source_ref_help: Referència d'origen del justificant (ex. Message-ID de correu,
-      URL, localitzador)
-    app_help: Gestió de justificants i fitxers adjunts (afegir, llistar, visualitzar)
-    errors:
-      duplicate_metadata_key: 'La clau de metadades del justificant està duplicada:
-        {key}'
-      empty_metadata_key: La clau de metadades del justificant no pot estar buida
-      empty_metadata_value: El valor de metadades del justificant no pot estar buit
-      empty_mime_type: El tipus MIME del justificant no pot estar buit
-      empty_source_reference: La referència d'origen del justificant no pot estar
-        buida
-      invalid_metadata_format: Format de metadades del justificant no vàlid. Ha de
-        ser clau=valor
-    list:
-      no_attachments: No s'han trobat justificants o fitxers adjunts
-    list_header: Justificants i fitxers adjunts
-    list_help: Llistar els justificants i fitxers adjunts registrats
-    list_kind_filter_help: Filtrar justificants per tipus (ex. factura, tiquet, contracte)
-    list_linked_to_help: Filtrar justificants vinculats a un ID específic (transacció
-      o factura)
-    show_help: Mostrar els detalls i metadades d'un justificant
-    show_id_help: Identificador del justificant a mostrar
   browser:
     app_help: Gestió de l'automatització del navegador (Playwright)
     health:
@@ -71,12 +39,6 @@ cli:
       none: Cap
       retry_after_seconds: Reintentar després (segons)
       state: Estat operatiu
-  categories:
-    app_help: Gestió de categories de tràmits de l'AEAT
-    id_help: Identificador únic de la categoria
-    list_help: Llistar totes les categories de tràmits disponibles
-    show_help: Mostrar detalls d'una categoria específica
-    year_help: Exercici fiscal
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
@@ -518,63 +480,6 @@ cli:
       id_help: Identificador de l'entrada específica a revisar
       no_rows: No hi ha entrades del llibre pendents de revisió
       verbose_help: Mostrar informació detallada durant la revisió
-  llm:
-    app_help: Utilitats de models de llenguatge (LLM)
-    cache_app_help: Gestió de la memòria cau de respostes de LLM
-    cache_prune_help: Netejar entrades antigues de la memòria cau de LLM
-    cache_stats_help: Mostrar estadístiques d'ús de la memòria cau de LLM
-    complete_help: Generar una resposta completant el text proporcionat
-    context_help: Afegir context addicional per a la sol·licitud al LLM
-    errors:
-      invalid_input: Entrada per al LLM no vàlida
-      missing_variable: Falta una variable requerida en la plantilla del prompt
-    from_help: Idioma d'origen per a la traducció o el processament
-    input_help: Text d'entrada per processar amb el LLM
-    labels:
-      removed_cache_files: Arxius de memòria cau eliminats
-    language_help: Idioma de destinació o principal per a la sortida
-    prompt_id_help: Identificador del prompt a utilitzar
-    since_help: Data d'inici per filtrar o consultar (AAAA-MM-DD)
-    text_help: Text a analitzar o processar pel LLM
-    to_help: Idioma de destinació per a la traducció
-    translate_help: Traduir un text d'un idioma a un altre usant LLM
-    until_help: Data de fi per filtrar o consultar (AAAA-MM-DD)
-    usage_help: Mostrar l'ús de tokens i costos de LLM
-  normatives:
-    app_help: Consultar normativa i obligacions fiscals
-    errors:
-      load_failed: Fallada en carregar la base de dades normativa
-    headers:
-      citation: Cita legal
-      code: Codi
-      level: Nivell
-      message: Missatge
-      numero: Número
-      reference_id: ID de referència
-      titulo: Títol
-    labels:
-      articles: Articles
-      articulos: Articles
-      boe_id: ID BOE
-      boe_url: URL del BOE
-      found: Trobat
-      id: ID
-      kind: Tipus
-      last_reviewed_at: Última revisió
-      no_articulos: No hi ha articles disponibles
-      number: Número
-      published_at: Publicat el
-      reviewed_by: Revisat per
-      short_title: Títol curt
-      tags: Etiquetes
-    list_help: Llistar i filtrar normatives fiscals
-    list_tag_help: Filtrar normatives per etiqueta (ex. iva, irpf)
-    show_help: Mostrar detalls d'una normativa específica
-    show_ref_id_help: ID de referència de la normativa a mostrar
-    success:
-      clean: Neteja de normatives completada
-      verification_results: Resultats de verificació
-    verify_help: Verificar integritat i validesa de normatives
   overview:
     app_help: Revisar l'estat actual de l'espai de treball fiscal
     calendar_help: Mostrar el calendari d'obligacions per a un rang de dates
