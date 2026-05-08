@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from . import calculate_registry_snapshot
+from . import RegistryCalculationResult, calculate_registry_snapshot
 from ._authority import ValidatedRegistryAuthority
 from ._bindings import RegistryFilingObservation, resolve_previous_filing_binding_values
 from ._relations import (
@@ -224,6 +224,56 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         "renta-2025-rel-130-pagos-fraccionados",
         "renta-2025-rel-131-pagos-fraccionados",
     )
+
+
+def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_registry_results(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    filing_year = 2025
+    modelo_130_results = {}
+    for period, inputs in {
+        "1T": {"01": Decimal("10000"), "02": Decimal("3000"), "06": Decimal("100")},
+        "2T": {"01": Decimal("16000"), "02": Decimal("6000"), "05": Decimal("500"), "06": Decimal("250")},
+        "3T": {"01": Decimal("22000"), "02": Decimal("9000"), "05": Decimal("1100"), "06": Decimal("450")},
+        "4T": {"01": Decimal("28000"), "02": Decimal("12000"), "05": Decimal("1800"), "06": Decimal("650")},
+    }.items():
+        modelo_130_results[period] = calculate_registry_snapshot(
+            registry_snapshot("130", filing_year, period),
+            inputs=inputs,
+            binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("13000")},
+            date_context={"filing_period": _modelo_130_filing_date(filing_year, period)},
+        )
+
+    snapshot = registry_snapshot("100", filing_year, "0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
+    observations = _observations_from_requirements(
+        requirements,
+        lambda requirement, period_index: _renta_relation_observed_value_from_modelo_130_results(
+            requirement,
+            period_index,
+            modelo_130_results,
+        ),
+    )
+    relation_values = resolve_relation_values_from_observations(
+        snapshot.revision,
+        observations,
+        filing_year=filing_year,
+        period="0A",
+    )
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={},
+        date_context={"filing_period": date(filing_year, 12, 31)},
+        relation_values=relation_values,
+        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+    )
+
+    periodic_total = sum(
+        (calculation.values["19"] for calculation in modelo_130_results.values()),
+        Decimal("0"),
+    )
+    assert relation_values["renta-2025-rel-130-pagos-fraccionados"] == periodic_total
+    assert result.values["0604"] == periodic_total
 
 
 @pytest.mark.parametrize(
@@ -505,6 +555,29 @@ def _renta_relation_observed_value(requirement: RegistryRelationSourceRequiremen
     if relation_id == "renta-2025-rel-193-retenciones-anuales":
         return Decimal("50")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
+
+
+def _renta_relation_observed_value_from_modelo_130_results(
+    requirement: RegistryRelationSourceRequirement,
+    period_index: int,
+    modelo_130_results: dict[str, RegistryCalculationResult],
+) -> Decimal:
+    relation_id = requirement.relation_ids[0]
+    if relation_id == "renta-2025-rel-130-pagos-fraccionados":
+        period = ("1T", "2T", "3T", "4T")[period_index]
+        return modelo_130_results[period].values["19"]
+    if relation_id == "renta-2025-rel-131-pagos-fraccionados":
+        return Decimal("0")
+    return Decimal("0")
+
+
+def _modelo_130_filing_date(filing_year: int, period: str) -> date:
+    return {
+        "1T": date(filing_year, 4, 20),
+        "2T": date(filing_year, 7, 20),
+        "3T": date(filing_year, 10, 20),
+        "4T": date(filing_year + 1, 1, 20),
+    }[period]
 
 
 def _modelo_130_inputs() -> dict[str, Decimal]:
