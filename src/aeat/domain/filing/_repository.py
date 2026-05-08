@@ -27,13 +27,12 @@ _DRAFT_NAMESPACE = "aeat.domain.filing.drafts"
 class FilingDraftRepository:
     """Repository over encrypted SQL-backed filing drafts."""
 
-    def __init__(self, *, store_dir: Path | None = None) -> None:
-        del store_dir
+    def __init__(self) -> None:
         self._objects = SecureObjectRepository()
 
     @property
     def store_dir(self) -> Path:
-        """Return a logical backend marker for legacy diagnostics."""
+        """Return a logical backend marker for diagnostics."""
 
         return Path("db://secure_objects") / _DRAFT_NAMESPACE
 
