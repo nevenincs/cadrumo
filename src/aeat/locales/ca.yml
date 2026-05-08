@@ -481,14 +481,22 @@ cli:
       no_rows: No hi ha entrades del llibre pendents de revisió
       verbose_help: Mostrar informació detallada durant la revisió
   overview:
+    allow_incomplete_help: "Permet el calendari amb valors per defecte quan falten claus de regim al perfil. Sense aquesta opcio el calendari es refusa si hi ha advertencies."
     app_help: Revisar l'estat actual de l'espai de treball fiscal
     calendar_help: Mostrar el calendari d'obligacions per a un rang de dates
+    calendar_refused_incomplete: "El perfil no declara les claus: %{keys}. Executeu 'aeat setup profile set <clau> <valor>' o useu --allow-incomplete per veure el calendari calculat amb valors per defecte."
     calendar_requires_dates: Useu --from i --to quan consulteu el calendari
     drafts: Esborranys
     from_help: Data inicial del calendari (AAAA-MM-DD)
     header: "Model\tPeríode\tEstat\tObre\tTanca"
     invoices: Factures
     integrity_warning: "%{count} fila(es) locals no es poden desxifrar amb la clau mestra actual; executeu 'aeat config doctor' per al detall."
+    warning:
+      estimacion_objetiva_unset: "El perfil no declara si tributa IRPF en estimacio objectiva. El model 131 pot aplicar-se o no en consequencia."
+      intracomunitario_unset: "El perfil no declara si fa operacions intracomunitaries. El model 349 pot aplicar-se o no en consequencia."
+      iva_regime_unset: "El perfil no declara el seu regim IVA. El calendari assumeix regim general; els models 303 i 390 poden no correspondre."
+      retencion_arrendamientos_unset: "El perfil no declara si paga lloguers amb retencio. El model 115 pot aplicar-se o no en consequencia."
+      retencion_profesionales_unset: "El perfil no declara si paga a professionals amb retencio. El model 111 pot aplicar-se o no en consequencia."
     period: Període
     period_help: Període fiscal a revisar (per exemple, 2026-Q1)
     profile: Perfil

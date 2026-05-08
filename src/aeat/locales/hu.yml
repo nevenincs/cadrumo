@@ -487,14 +487,22 @@ cli:
       no_rows: Nincsenek felülvizsgálatra váró naplóbejegyzések
       verbose_help: Részletes információk megjelenítése a felülvizsgálat során
   overview:
+    allow_incomplete_help: "Engedélyezi a naptárt alapértelmezett értékekkel, ha a profil nem deklarálja a regim kulcsokat. E nélkül a naptár elutasításra kerül, ha figyelmeztetések vannak."
     app_help: Az aktuális adózási munkaterület áttekintése
     calendar_help: Kötelezettségi naptár megjelenítése dátumtartományra
+    calendar_refused_incomplete: "A profil nem deklarálja ezeket a kulcsokat: %{keys}. Futtasd: 'aeat setup profile set <kulcs> <érték>' vagy add meg --allow-incomplete a naptár alapértelmezett értékekkel történő számításához."
     calendar_requires_dates: Naptárhoz használja a --from és --to opciókat
     drafts: Tervezetek
     from_help: Naptár kezdő dátuma (YYYY-MM-DD)
     header: "Modell\tIdőszak\tÁllapot\tNyit\tZár"
     invoices: Számlák
     integrity_warning: "%{count} helyi sor nem dekódolható az aktuális főkulccsal; futtasd: 'aeat config doctor' a részletekért."
+    warning:
+      estimacion_objetiva_unset: "A profil nem deklarálja, hogy IRPF estimacion objetiva alkalmazandó-e. A 131-es modell ennek megfelelően lehet alkalmazható vagy sem."
+      intracomunitario_unset: "A profil nem deklarálja a közösségi műveleteket. A 349-es modell ennek megfelelően lehet alkalmazható vagy sem."
+      iva_regime_unset: "A profil nem deklarálja az IVA rezsimet. A naptár regim general-t feltételez; a 303-as és 390-es modellek lehet, hogy nem alkalmazandók."
+      retencion_arrendamientos_unset: "A profil nem deklarálja, hogy bérleti díjat retencion-nal fizet-e. A 115-ös modell ennek megfelelően lehet alkalmazható vagy sem."
+      retencion_profesionales_unset: "A profil nem deklarálja, hogy szakembereknek retencion-nal fizet-e. A 111-es modell ennek megfelelően lehet alkalmazható vagy sem."
     period: Időszak
     period_help: Ellenőrizendő adózási időszak (például 2026-Q1)
     profile: Profil
