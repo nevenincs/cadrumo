@@ -964,6 +964,71 @@ def render_markdown(findings: dict) -> str:
                 lines.append(f"- `{binding_id}` — {status}")
     lines.append("")
 
+    # Layer 2 — Citation phrase coverage
+    if "layer2" in findings:
+        l2 = findings["layer2"]
+        lines.append("## Layer 2 — Citation phrase coverage (HTML/text corpora)\n")
+        lines.append(f"- **Formulas inspected**: {l2['formula_count']}")
+        lines.append(f"- **Citation phrases checked**: {l2['phrase_count']}")
+        lines.append(f"- **Phrases matched**: {l2['phrases_matched']}")
+        lines.append(f"- **Phrases missed**: {l2['phrases_missed']}")
+        lines.append(f"- **Coverage**: {l2['coverage_pct']:.1f}%")
+        lines.append(f"- **Misalignments**: {l2['misalignment_count']}")
+        if l2.get("misalignments"):
+            lines.append("\n### Sample misalignments\n")
+            for m in l2["misalignments"][:5]:
+                lines.append(f"- `{m.get('formula_id', '?')}` → {m.get('kind', '?')}")
+        lines.append("")
+
+    # Layer 5 — Cross-modelo relation closed-loop
+    if "layer5" in findings:
+        l5 = findings["layer5"]
+        lines.append("## Layer 5 — Cross-modelo relation closed-loop\n")
+        lines.append(f"- **Total relations**: {l5['relations_total']}")
+        lines.append(f"- **Closed-loop**: {l5['closed_loop']}")
+        lines.append(f"- **Open-loop**: {l5['open_loop']}")
+        lines.append(f"- **Coverage**: {l5['coverage_pct']:.1f}%")
+        if l5.get("misalignments"):
+            lines.append("\n### Open-loop relations\n")
+            for m in l5["misalignments"][:10]:
+                lines.append(f"- `{m.get('relation_id', '?')}` → {m.get('kind', '?')}")
+        lines.append("")
+
+    # Layer 6 — External-surface registration
+    if "layer6" in findings:
+        l6 = findings["layer6"]
+        lines.append("## Layer 6 — External-surface registration\n")
+        lines.append(f"- **Total surfaces**: {l6['total_surfaces']}")
+        lines.append(f"- **Guarded (policy attached)**: {l6['guarded_count']}")
+        lines.append(f"- **Synthetic-data allowed**: {l6['synthetic_data_allowed_count']}")
+        lines.append(f"- **Auth required**: {l6['auth_required_count']}")
+        lines.append("\n### Surfaces per revision\n")
+        for rev_id, count in sorted(l6.get("surfaces_per_revision", {}).items()):
+            lines.append(f"- {rev_id}: {count} surface(s)")
+        lines.append("")
+
+    # Layer 10 — Rental pipeline regression
+    if "layer10" in findings:
+        l10 = findings["layer10"]
+        lines.append("## Layer 10 — Rental pipeline regression\n")
+        lines.append(
+            f"- **Rental parameters total**: {l10['params_present_total']} / {l10['params_total']} "
+            f"({l10['params_coverage_pct']:.1f}%)"
+        )
+        lines.append("\n### Per-revision rental casilla counts\n")
+        lines.append("| Revision | Rental casillas | Manual | Bound | Computed | Params present |")
+        lines.append("|---|---:|---:|---:|---:|---:|")
+        for rev_id, info in sorted((l10.get("revisions") or {}).items()):
+            kind = info.get("kind_distribution", {})
+            lines.append(
+                f"| {rev_id} | {info['rental_casilla_count']} | "
+                f"{kind.get('manual', 0)} | {kind.get('bound', 0)} | "
+                f"{kind.get('computed', 0)} | "
+                f"{len(info.get('rental_params_present', []))} / "
+                f"{len(l10.get('expected_params_per_revision', ()))} |"
+            )
+        lines.append("")
+
     # Honest summary
     rev2025 = findings["layer1"].get("2025", {})
     total_cas = rev2025.get("total_casillas", 0)
