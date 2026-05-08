@@ -27,8 +27,7 @@ _JUSTIFICANTE_NAMESPACE = "aeat.domain.justificante.metadata"
 class JustificanteRepository:
     """Repository over encrypted SQL-backed justificante metadata."""
 
-    def __init__(self, *, store_dir: Path | None = None) -> None:
-        del store_dir
+    def __init__(self) -> None:
         self._objects = SecureObjectRepository()
 
     @property
