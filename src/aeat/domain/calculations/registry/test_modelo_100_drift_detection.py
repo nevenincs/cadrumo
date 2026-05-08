@@ -173,7 +173,7 @@ def test_no_orphan_parameters_in_any_revision() -> None:
 #: preserved on disk so future formula work can land without
 #: re-entering authoritative bracket values.
 _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
-    f"renta-{year}-escala-estatal-base-general" for year in (2022, 2023, 2024, 2025)
+    f"renta-{year}-escala-estatal-base-general" for year in (2023, 2024, 2025)
 )
 
 

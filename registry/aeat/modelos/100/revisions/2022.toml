@@ -3245,6 +3245,36 @@ source_ref = "lirpf-cuota-chain-authority"
 required_text = ["base liquidable del ahorro", "remanente"]
 
 [[revisions."2022".formulas]]
+id = "renta-2022-cuota-escala-estatal-sobre-base-liquidable-general"
+target = "0528"
+expression = { op = "lookup_bracket", args = [
+    { casilla = "0505" },
+    { parameter = "renta-2022-escala-estatal-base-general" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["escala general", "base liquidable general"]
+
+[[revisions."2022".formulas]]
+id = "renta-2022-cuota-escala-estatal-sobre-minimo-personal-familiar"
+target = "0530"
+expression = { op = "lookup_bracket", args = [
+    { casilla = "0521" },
+    { parameter = "renta-2022-escala-estatal-base-general" },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-63", "ley-35-2006:art-67"]
+source_refs = ["lirpf-cuota-chain-authority"]
+
+[[revisions."2022".formulas.source_citations]]
+source_ref = "lirpf-cuota-chain-authority"
+required_text = ["escala general", "mínimo personal"]
+
+[[revisions."2022".formulas]]
 id = "renta-2022-cuota-base-liquidable-general-estatal"
 target = "0532"
 expression = { op = "subtract", args = [
@@ -18682,4 +18712,3 @@ source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary
 # money, X/FEC -> text, LGC/S_N -> boolean, N102 -> decimal, SEQ -> integer).
 # Existing hand-authored casillas in this revision are preserved.
 # ===========================================================================
-
