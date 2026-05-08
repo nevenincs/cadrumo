@@ -23,6 +23,7 @@ from . import _declaration, _invoice, _ledger, _overview, _setup, registry
 from ._common import _FORMAT_TEXT
 from ._errors import decorate_typer_app
 from ._i18n import tr
+from ._log_levels import apply_to_root_logger, resolve_log_level
 
 # ---------------------------------------------------------------------
 # Root app + callback
@@ -53,8 +54,12 @@ def _root(
         "--format",
         help=tr("cli.root.format_help"),
     ),
+    quiet: bool = typer.Option(False, "--quiet", help=tr("cli.root.quiet_help")),
+    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.root.verbose_help")),
+    debug: bool = typer.Option(False, "--debug", help=tr("cli.root.debug_help")),
 ) -> None:
     """Capture root-level CLI flags into the Typer context."""
+    apply_to_root_logger(resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
     if version:
         typer.echo(render_cli_version_text(build_cli_version_report()))
         raise typer.Exit()

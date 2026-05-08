@@ -647,7 +647,10 @@ cli:
       Spanyol adóbevallási segéd
 
       Quickstart: aeat setup init --name NAME --tax-id NIF
+    debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     format_help: A parancseredmények kimeneti formátuma
+    quiet_help: Csak hibák megjelenítése stderr-en
+    verbose_help: Belső információs naplók megjelenítése stderr-en
     version_command_help: Csomagverzió és regiszter-összefoglaló megjelenítése
     version_help: Csomagverzió és regiszter-összefoglaló megjelenítése
   sanitize:
