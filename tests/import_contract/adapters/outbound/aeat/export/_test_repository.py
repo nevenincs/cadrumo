@@ -16,6 +16,8 @@ from aeat.adapters.persistence.storage import (
     override_secret_store,
 )
 from aeat.adapters.persistence.storage.errors import ClassificationError
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.domain.submission import (
     SubmissionAttempt,
     SubmissionStatus,
@@ -55,13 +57,10 @@ def _make_filing(
     )
 
 
-@pytest.fixture
-def store_dir(tmp_path: Path) -> Path:
-    return tmp_path / "submissions-store"
-
-
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    dispose_engine()
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     blob_store = EncryptedBlobStore(
@@ -79,34 +78,39 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
     finally:
         override_master_key_provider(None)
         override_secret_store(None)
+        dispose_engine()
+
+
+def _database_bytes(tmp_path: Path) -> bytes:
+    return (tmp_path / "aeat.db").read_bytes()
 
 
 class TestEmptyState:
-    def test_load_returns_none_when_absent(self, store_dir: Path) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
+    def test_load_returns_none_when_absent(self) -> None:
+        repo = SubmissionRepository()
         assert repo.load("missing-id") is None
 
-    def test_envelope_path_is_under_store_dir(self, store_dir: Path) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
-        assert repo.envelope_path_for("abc123") == store_dir / "abc123.envelope.json"
+    def test_object_marker_identifies_secure_backend(self) -> None:
+        repo = SubmissionRepository()
+        assert repo.envelope_path_for("abc123").as_posix().endswith("aeat.domain.submission.records/abc123")
 
-    def test_list_submission_ids_empty(self, store_dir: Path) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
+    def test_list_submission_ids_empty(self) -> None:
+        repo = SubmissionRepository()
         assert repo.list_submission_ids() == ()
 
 
 class TestSaveLoad:
-    def test_round_trip_preserves_payload(self, store_dir: Path) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
+    def test_round_trip_preserves_payload(self) -> None:
+        repo = SubmissionRepository()
         filing = _make_filing()
         repo.save(filing)
 
-        repo_b = SubmissionRepository(store_dir=store_dir)
+        repo_b = SubmissionRepository()
         loaded = repo_b.load(filing.submission_id)
         assert loaded == filing
 
-    def test_save_is_idempotent(self, store_dir: Path) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
+    def test_save_is_idempotent(self) -> None:
+        repo = SubmissionRepository()
         filing = _make_filing()
         repo.save(filing)
         repo.save(filing)
@@ -114,8 +118,8 @@ class TestSaveLoad:
 
 
 class TestListAndIter:
-    def test_list_returns_persisted_ids_sorted(self, store_dir: Path) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
+    def test_list_returns_persisted_ids_sorted(self) -> None:
+        repo = SubmissionRepository()
         f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
         f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
         repo.save(f1)
@@ -124,8 +128,8 @@ class TestListAndIter:
         assert set(ids) == {f1.submission_id, f2.submission_id}
         assert ids == tuple(sorted(ids))
 
-    def test_iter_submissions_yields_payloads(self, store_dir: Path) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
+    def test_iter_submissions_yields_payloads(self) -> None:
+        repo = SubmissionRepository()
         f1 = _make_filing(draft_id="d-1", attempt_ordinal=1)
         f2 = _make_filing(draft_id="d-2", attempt_ordinal=1)
         repo.save(f1)
@@ -136,31 +140,32 @@ class TestListAndIter:
 
 
 class TestDelete:
-    def test_delete_removes_envelope(self, store_dir: Path) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
+    def test_delete_removes_object(self) -> None:
+        repo = SubmissionRepository()
         filing = _make_filing()
         repo.save(filing)
         assert repo.delete(filing.submission_id) is True
         assert repo.load(filing.submission_id) is None
 
-    def test_delete_missing_returns_false(self, store_dir: Path) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
+    def test_delete_missing_returns_false(self) -> None:
+        repo = SubmissionRepository()
         assert repo.delete("never-existed") is False
 
 
 class TestClassificationGate:
-    def test_envelope_records_audit_class(self, store_dir: Path) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
+    def test_database_payload_is_encrypted_audit_data(self, tmp_path: Path) -> None:
+        repo = SubmissionRepository()
         filing = _make_filing()
         repo.save(filing)
-        envelope_text = repo.envelope_path_for(filing.submission_id).read_text(encoding="utf-8")
-        assert '"classification":"audit"' in envelope_text
+        raw = _database_bytes(tmp_path)
+        assert b"secure_objects" in raw
+        assert b"00000000T" not in raw
+        assert filing.submission_id.encode("utf-8") not in raw
+        assert repo.load(filing.submission_id) == filing
 
-    def test_foreign_class_envelope_refused(self, store_dir: Path) -> None:
-        from aeat.adapters.persistence.storage import Envelope, SensitivityClass, save_encrypted_envelope
-        from aeat.adapters.persistence.storage.crypto._encrypted_columns import _resolve_master_key_provider
+    def test_foreign_class_object_refused(self) -> None:
+        from aeat.adapters.persistence.storage import Envelope, SensitivityClass
 
-        store_dir.mkdir(parents=True, exist_ok=True)
         filing = _make_filing()
         bad = Envelope[SubmittedFiling](
             schema_version=1,
@@ -168,12 +173,14 @@ class TestClassificationGate:
             classification=SensitivityClass.OPERATIONAL,
             payload=filing,
         )
-        repo = SubmissionRepository(store_dir=store_dir)
-        save_encrypted_envelope(
-            bad,
-            repo.envelope_path_for(filing.submission_id),
-            master_key_provider=_resolve_master_key_provider(),
-            hkdf_context=b"aeat.adapters.outbound.aeat.export.filing.v1",
+        repo = SubmissionRepository()
+        SecureObjectRepository().save(
+            namespace="aeat.domain.submission.records",
+            object_key=filing.submission_id,
+            classification=SensitivityClass.OPERATIONAL,
+            schema_version=1,
+            written_at=bad.written_at,
+            payload=bad.model_dump_json().encode("utf-8"),
         )
         with pytest.raises(ClassificationError):
             repo.load(filing.submission_id)
@@ -184,17 +191,19 @@ class TestUnsafeSubmissionIds:
         "bad",
         ["", "..", ".", ".hidden", "../escape", "a/b", "a\\b"],
     )
-    def test_unsafe_id_rejected(self, store_dir: Path, bad: str) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
+    def test_unsafe_id_rejected(self, bad: str) -> None:
+        repo = SubmissionRepository()
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)
 
 
 class TestPerSubmissionLockIsolation:
-    def test_lock_target_per_submission(self, store_dir: Path) -> None:
-        repo = SubmissionRepository(store_dir=store_dir)
+    def test_lock_target_per_submission(self) -> None:
+        repo = SubmissionRepository()
         a = repo.lock_target_for("sub-a")
         b = repo.lock_target_for("sub-b")
         assert a != b
-        assert a.parent == store_dir
-        assert b.parent == store_dir
+        assert a.parent == b.parent
+        assert a.parent == repo.store_dir
+        assert a.as_posix().endswith("aeat.domain.submission.records/sub-a.lock")
+        assert b.as_posix().endswith("aeat.domain.submission.records/sub-b.lock")
