@@ -50,6 +50,15 @@ from ._projection import (
     project_invoice_review,
     project_invoice_reviews,
 )
+from ._queries import (
+    InvoiceListRow,
+    get_invoice_from_repository,
+    list_invoice_repository_rows,
+    list_invoice_rows,
+    list_unmatched_invoice_repository_rows,
+    list_unmatched_invoice_rows,
+    verify_invoice_repository_links,
+)
 from ._reconciliation import (
     InvoiceReconciliationResult,
     ReconciliationSkippedSuggestion,
@@ -59,6 +68,7 @@ from ._reconciliation import (
 
 __all__ = [
     "InvoiceImportResult",
+    "InvoiceListRow",
     "InvoiceMatchProjection",
     "InvoiceReconciliationResult",
     "InvoiceReviewProjection",
@@ -69,6 +79,7 @@ __all__ = [
     "apply_manual_invoice_match",
     "find_invoice",
     "find_unmatched",
+    "get_invoice_from_repository",
     "import_invoices_from_path",
     "invoice_display_amounts",
     "invoice_review_status",
@@ -76,6 +87,10 @@ __all__ = [
     "link_invoice_transaction_repositories",
     "link_transaction",
     "link_transaction_bidirectional",
+    "list_invoice_repository_rows",
+    "list_invoice_rows",
+    "list_unmatched_invoice_repository_rows",
+    "list_unmatched_invoice_rows",
     "merge_invoice_import",
     "parse_invoice_payload",
     "project_invoice_payment_matches",
@@ -84,5 +99,6 @@ __all__ = [
     "reconcile_invoice_catalogues",
     "reconcile_invoice_repositories",
     "suggest_reconciliations",
+    "verify_invoice_repository_links",
     "verify_link_consistency",
 ]
