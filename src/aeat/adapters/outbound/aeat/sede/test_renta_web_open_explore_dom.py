@@ -2,12 +2,16 @@
 
 Per the standing rule (extend the driver to support full open-simulator
 scenarios), this opt-in test drives the existing identification flow and
-then dumps the post-identification Resumen page's HTML + button/link
-inventory to ``.vault/audit/renta-web-open-resumen-dom.html`` and
-``.vault/audit/renta-web-open-resumen-buttons.txt``.
+then dumps:
+  - ``.vault/audit/renta-web-open-resumen-dom.html`` — full HTML
+  - ``.vault/audit/renta-web-open-resumen-buttons.txt`` — DOM-visible
+    inventory (buttons, links, inputs, dialogs)
+  - ``.vault/audit/renta-web-open-resumen-a11y-tree.txt`` — accessibility
+    tree, captures ZK-virtualised widgets the HTML may not surface
 
-The captured DOM is the input to the deeper-form driver extension —
-without these selectors, per-scenario casilla overrides can't be wired.
+The accessibility-tree dump is the workaround for ZK lazy rendering: the
+Buscar casilla dialog opens as a virtual widget that doesn't appear in
+``page.content()`` but DOES appear in the accessibility tree.
 """
 
 from __future__ import annotations
@@ -28,6 +32,38 @@ pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 _DOM_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-dom.html"
 _BUTTONS_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-buttons.txt"
+_A11Y_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-a11y-tree.txt"
+
+
+def _render_a11y_node(node: dict, depth: int = 0, lines: list[str] | None = None) -> list[str]:
+    """Walk an accessibility-tree node and emit one line per descendant.
+
+    Surfaces role + name + value + checked/expanded state for every node
+    that has a name. Indented by tree depth.
+    """
+    if lines is None:
+        lines = []
+    if not isinstance(node, dict):
+        return lines
+    role = node.get("role", "(no-role)")
+    name = node.get("name", "")
+    value = node.get("value", "")
+    checked = node.get("checked")
+    expanded = node.get("expanded")
+    extras = []
+    if value:
+        extras.append(f"value={value!r}")
+    if checked is not None:
+        extras.append(f"checked={checked!r}")
+    if expanded is not None:
+        extras.append(f"expanded={expanded!r}")
+    if name or role not in ("none", "(no-role)"):
+        prefix = "  " * depth
+        extras_str = (" " + " ".join(extras)) if extras else ""
+        lines.append(f"{prefix}[{role}] {name!r}{extras_str}")
+    for child in node.get("children", []) or []:
+        _render_a11y_node(child, depth + 1, lines)
+    return lines
 
 
 async def _capture_resumen_dom() -> tuple[str, str]:
@@ -157,7 +193,57 @@ async def _capture_resumen_dom() -> tuple[str, str]:
                     text = "(unreadable)"
                 if visible:
                     button_inventory_lines.append(f"  {cls}[{idx}] visible text-preview={text!r}")
-        return html_content, "\n".join(button_inventory_lines)
+        # Page-evaluate DOM walk: enumerate every element with role,
+        # aria-label, title, or ZK-class attributes, including across
+        # shadow roots. Captures the Buscar casilla dialog widgets that
+        # ZK lazy-loads outside the main page.content() snapshot.
+        a11y_lines: list[str] = []
+        try:
+            elements = await page.evaluate(
+                """
+                () => {
+                  const out = [];
+                  function walk(root, depth) {
+                    if (!root) return;
+                    const all = root.querySelectorAll('*');
+                    for (const el of all) {
+                      const role = el.getAttribute('role');
+                      const aria = el.getAttribute('aria-label');
+                      const title = el.getAttribute('title');
+                      const cls = (el.className && typeof el.className === 'string') ? el.className : '';
+                      const isZk = /\\bz-(window|popup|textbox|decimalbox|doublebox|combobox|button|toolbarbutton|menuitem|listitem)\\b/.test(cls);
+                      if (role || aria || title || isZk) {
+                        const text = (el.innerText || '').slice(0, 80).replace(/\\s+/g, ' ').trim();
+                        out.push({
+                          role: role || '',
+                          aria: aria || '',
+                          title: title || '',
+                          cls: cls.slice(0, 60),
+                          text: text,
+                          tag: el.tagName.toLowerCase(),
+                          visible: !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length),
+                        });
+                      }
+                      if (el.shadowRoot) walk(el.shadowRoot, depth + 1);
+                    }
+                  }
+                  walk(document, 0);
+                  return out;
+                }
+                """
+            )
+            for entry in elements[:400]:
+                if not entry.get("visible"):
+                    continue
+                a11y_lines.append(
+                    f"<{entry['tag']}> "
+                    f"role={entry['role']!r} aria={entry['aria']!r} "
+                    f"title={entry['title']!r} cls={entry['cls']!r} "
+                    f"text={entry['text']!r}"
+                )
+        except Exception as exc:
+            a11y_lines = [f"(page.evaluate walk failed: {type(exc).__name__}: {exc})"]
+        return html_content, "\n".join(button_inventory_lines), "\n".join(a11y_lines)
     finally:
         if context is not None:
             await context.close()
@@ -171,9 +257,10 @@ def test_explore_renta_web_open_resumen_dom() -> None:
     extending the driver to support deeper form navigation.
     """
     requires_live_enabled()
-    html, buttons = asyncio.run(_capture_resumen_dom())
+    html, buttons, a11y = asyncio.run(_capture_resumen_dom())
     _DOM_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     _DOM_OUTPUT.write_text(html, encoding="utf-8")
     _BUTTONS_OUTPUT.write_text(buttons, encoding="utf-8")
+    _A11Y_OUTPUT.write_text(a11y, encoding="utf-8")
     assert len(html) > 0
     assert "Resumen" in html or "resumen" in html.lower()
