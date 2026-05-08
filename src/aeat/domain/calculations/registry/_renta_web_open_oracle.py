@@ -47,11 +47,28 @@ class RentaWebOpenSyntheticProfile(RentaWebOpenModel):
 
 
 class RentaWebOpenLivePayload(RentaWebOpenModel):
-    """Payload for a Renta WEB Open parity run."""
+    """Payload for a Renta WEB Open parity run.
+
+    ``casilla_overrides`` lets a per-scenario capture fill specific casilla
+    inputs (e.g. 0528=5000 for the cuota-integra scenario) before scraping
+    the summary. The driver navigates from the post-identification Resumen
+    page into the editable form (Tu Declaración), applies overrides, then
+    returns to the summary to scrape outputs. The map is keyed by casilla
+    number (e.g. "0528") with string-formatted Decimal values
+    (e.g. "5000.00") which the driver fills as-is into the form fields.
+    Empty mapping → driver stays on the identification path (baseline mode).
+
+    ``scrape_casillas`` declares which casilla numbers (in addition to the
+    summary labels) the capture should record. The driver searches the
+    editable form for these casilla ids and emits matched values into the
+    observation under their casilla numbers.
+    """
 
     profile: RentaWebOpenSyntheticProfile = Field(default_factory=RentaWebOpenSyntheticProfile)
     app_url: AnyUrl = RENTA_WEB_OPEN_APP_URL
     timeout_ms: int = Field(default=60_000, ge=1_000, le=180_000)
+    casilla_overrides: dict[str, str] = Field(default_factory=dict)
+    scrape_casillas: tuple[str, ...] = Field(default_factory=tuple)
 
 
 class RentaWebOpenObservation(RentaWebOpenModel):
