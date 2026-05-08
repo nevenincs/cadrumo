@@ -17,15 +17,14 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.adapters.outbound.aeat.sede._groi_check import (
-    AEAT_GROI_URL,
     DEFAULT_GROI_TIMEOUT_MS,
-    GROI_ORACLE_ID,
     GroiNifVerdict,
     GroiResult,
     GroiSedeDriver,
     extract_verdict_from_response_text,
 )
 from aeat.domain.calculations.registry import RegistryValidationError
+from aeat.domain.calculations.registry._groi_oracle import AEAT_GROI_URL, GROI_ORACLE_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

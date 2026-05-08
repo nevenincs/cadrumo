@@ -37,11 +37,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from re import compile
 from typing import Any, Literal, cast
-from unicodedata import category, normalize
 
-from pydantic import AnyUrl, BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
@@ -51,19 +49,17 @@ from .....domain.calculations.registry import (
     RegistryValidationError,
     RemoteOperation,
 )
-from .._playwright import PlaywrightError, PlaywrightTimeoutError
+from .....domain.calculations.registry._groi_oracle import AEAT_GROI_URL
 from ..browser import BrowserError, default_browser_session_factory
+from ._adapter_utils import (
+    first_visible_locator,
+    normalize_response_text,
+    registry_failure_message,
+)
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
 
 logger = get_logger(__name__)
-
-GROI_ORACLE_ID = "aeat-groi-spanish-roi-checker"
-
-# AEAT hosts the GROI servlet on www2. The host-pinning suffix
-# ``agenciatributaria.gob.es`` already covers it; no allow-list expansion
-# required. URL captured from live navigation 2026-05-07.
-AEAT_GROI_URL = AnyUrl("https://www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet")
 
 DEFAULT_GROI_TIMEOUT_MS: int = 30_000
 _SELECTOR_PROBE_TIMEOUT_MS: int = 2_500
@@ -81,14 +77,34 @@ _SUBMIT_SELECTORS: tuple[str, ...] = (
     'input[type="submit"][value="Enviar"]',
 )
 
-_WHITESPACE_RE = compile(r"\s+")
+_GROI_SHAPE_SUGGESTION = "Re-run the live oracle after checking whether AEAT changed the GROI form shape."
 
 _playwright_stage = build_playwright_stage_runner(
     surface_label="GROI",
     log_prefix="groi",
-    shape_suggestion="Re-run the live oracle after checking whether AEAT changed the GROI form shape.",
+    shape_suggestion=_GROI_SHAPE_SUGGESTION,
     logger=logger,
 )
+
+
+async def _locate(
+    page: Any,
+    selectors: tuple[str, ...],
+    *,
+    stage: str,
+    description: str,
+    timeout_ms: int,
+) -> Any:
+    return await first_visible_locator(
+        page,
+        selectors,
+        stage=stage,
+        description=description,
+        timeout_ms=timeout_ms,
+        probe_timeout_ms=_SELECTOR_PROBE_TIMEOUT_MS,
+        surface_label="GROI",
+        shape_suggestion=_GROI_SHAPE_SUGGESTION,
+    )
 
 
 class GroiNifVerdict(BaseModel):
@@ -160,7 +176,7 @@ class GroiSedeDriver:
         try:
             return asyncio.run(self.collect_async(payload, expected=expected, timeout_ms=timeout_ms))
         except (SedeError, SiteHealthError, BrowserError) as exc:
-            raise RegistryValidationError(_registry_failure_message(exc)) from exc
+            raise RegistryValidationError(registry_failure_message(exc)) from exc
 
     async def collect_async(
         self,
@@ -272,14 +288,14 @@ async def _open_groi_form(page: Any, *, timeout_ms: int) -> None:
     masquerading under the same URL), the driver refuses to submit.
     """
 
-    await _first_visible_locator(
+    await _locate(
         page,
         _NIF_INPUT_SELECTORS,
         stage="open-groi-form:nif",
         description="GROI NIF input",
         timeout_ms=timeout_ms,
     )
-    await _first_visible_locator(
+    await _locate(
         page,
         _SUBMIT_SELECTORS,
         stage="open-groi-form:submit",
@@ -331,7 +347,7 @@ async def _check_single_nif(
 ) -> Literal["valid", "invalid", "unknown"]:
     """Fill the form with one NIF, submit, scrape the rendered verdict."""
 
-    nif_input = await _first_visible_locator(
+    nif_input = await _locate(
         page,
         _NIF_INPUT_SELECTORS,
         stage=f"check-nif-{nif}:nif",
@@ -345,7 +361,7 @@ async def _check_single_nif(
         timeout_ms=timeout_ms,
         timeout_is_shape_change=True,
     )
-    submit = await _first_visible_locator(
+    submit = await _locate(
         page,
         _SUBMIT_SELECTORS,
         stage=f"check-nif-{nif}:submit",
@@ -382,7 +398,7 @@ def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "inva
     rejection cannot be misclassified by a generic positive token.
     """
 
-    normalized = _normalize_response_text(body_text)
+    normalized = normalize_response_text(body_text)
     if not normalized:
         return "unknown"
     negative_markers = (
@@ -405,56 +421,8 @@ def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "inva
     return "unknown"
 
 
-async def _first_visible_locator(
-    page: Any,
-    selectors: tuple[str, ...],
-    *,
-    stage: str,
-    description: str,
-    timeout_ms: int,
-) -> Any:
-    probe_timeout = min(timeout_ms, _SELECTOR_PROBE_TIMEOUT_MS)
-    for selector in selectors:
-        locator = page.locator(selector).first
-        try:
-            await locator.wait_for(state="visible", timeout=probe_timeout)
-        except (PlaywrightError, PlaywrightTimeoutError):
-            continue
-        return locator
-    raise SedeParseError(
-        f"GROI expected page element was not visible: {description}",
-        failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-        context={"stage": stage, "expected": description, "timeout_ms": timeout_ms},
-        suggestion="Re-run the live oracle after checking whether AEAT changed the GROI form shape.",
-    )
-
-
-def _normalize_response_text(text: str) -> str:
-    """Lowercase + strip diacritics + collapse whitespace for marker matching."""
-
-    if not text:
-        return ""
-    decomposed = normalize("NFKD", text)
-    stripped = "".join(ch for ch in decomposed if not category(ch).startswith("M"))
-    return _WHITESPACE_RE.sub(" ", stripped.lower()).strip()
-
-
-def _registry_failure_message(exc: BaseException) -> str:
-    context = getattr(exc, "context", None)
-    if not isinstance(context, Mapping) or not context:
-        return str(exc)
-    failure_mode = context.get("failure_mode")
-    if failure_mode is None and "state" in context:
-        failure_mode = f"site_health:{context['state']}"
-    if failure_mode is None:
-        return str(exc)
-    return f"{exc} (failure_mode={failure_mode})"
-
-
 __all__ = [
-    "AEAT_GROI_URL",
     "DEFAULT_GROI_TIMEOUT_MS",
-    "GROI_ORACLE_ID",
     "GroiNifVerdict",
     "GroiResult",
     "GroiSedeDriver",
