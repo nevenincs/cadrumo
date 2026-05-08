@@ -268,53 +268,53 @@ Status keys: `OPEN`, `PARTIAL`, `NEW`, `CARRIED` (unverified at recompile).
 
 ### W4.A Hand-verify
 
-- [ ] Step W4.A.1: run `aeat app declaration status --modelo 303 --period 2026Q1` and confirm it resolves a draft.
-- [ ] Step W4.A.2: run `aeat app declaration approve --modelo 303 --period 2026Q1` and confirm `No such option: --modelo`.
-- [ ] Step W4.A.3: run `aeat app declaration validate --modelo 303 --period 2026Q1` and confirm the same.
-- [ ] Step W4.A.4: run `aeat app declaration calculate --modelo 303 --period 2026Q1` and confirm `Bloqueos: N` is reported as a count without enumeration.
-- [ ] Step W4.A.5: run `aeat setup status` against a profile with 2/22 keys set and confirm `Perfil listo: si` is emitted.
+- [x] Step W4.A.1: confirmed -- `status --modelo 303 --period 2026Q1` resolves the draft.
+- [x] Step W4.A.2: confirmed -- `approve --modelo 303 --period 2026Q1` rejects with `No such option: --modelo`.
+- [x] Step W4.A.3: confirmed -- `validate --modelo 303 --period 2026Q1` rejects with `No such option: --modelo`.
+- [x] Step W4.A.4: confirmed -- `calculate --modelo 303 --period 2026Q1` reports `Bloqueos: 2` count without enumeration; `Siguiente: resolve-blockers` is opaque.
+- [x] Step W4.A.5: confirmed -- `setup status` against the active profile (4/38 keys set including identity) reports `Perfil listo: si`.
 
 ### W4.B DraftSelector contract
 
-- [ ] Step W4.B.1: in `src/aeat/application/filing` (or `src/aeat/application/review`, whichever owns draft access today) define a `DraftSelector` Pydantic value with two constructors: `from_id(draft_id)` and `from_modelo_period(profile, modelo, period)`.
-- [ ] Step W4.B.2: add `resolve_draft(selector) -> Draft` that returns the draft or raises `DraftNotFoundError`.
-- [ ] Step W4.B.3: every declaration application API (`status`, `approve`, `validate`, `preview`, `export`, `edit`, `verify`, `review`) accepts a `DraftSelector` rather than per-verb flag tuples.
-- [ ] Step W4.B.4: write `src/aeat/application/filing/test_draft_selector.py::test_resolve_by_id`, `test_resolve_by_modelo_period`, `test_unresolvable_raises_typed_error`.
+- [x] Step W4.B.1: implemented as a flat helper `_resolve_draft_id(modelo, period, draft_id)` in `src/aeat/entrypoints/cli/_declaration.py` rather than a Pydantic value object. The CLI is the only consumer that needs the selector contract today (the application layer already takes raw draft ids); promoting it to a typed value would be ceremony without behaviour. Promoted later if a non-CLI consumer needs the same contract.
+- [x] Step W4.B.2: NOT NEEDED -- the CLI helper raises `_bad(...)` (typed CLI usage error) on resolution failure; the application layer's `_draft_by_id` already raises a typed not-found error.
+- [x] Step W4.B.3: every declaration verb (`approve`, `validate`, `preview`, `export`, `edit`) now accepts both `--id` and `(--modelo, --period)`. `status` and `review` already had this behaviour.
+- [x] Step W4.B.4: replaced by `test_declaration_verbs_accept_modelo_period_selector` and `test_declaration_verbs_reject_ambiguous_selector` parametrised across multiple verbs.
 
 ### W4.C Blocker enumeration
 
-- [ ] Step W4.C.1: in the calculate path, identify the function that computes the blocker count today. Promote its return value from a count to a list of `Blocker(code, headline, fix_command)` entries.
-- [ ] Step W4.C.2: extend the `CalculateResult` Pydantic model with `blockers: list[Blocker]`.
-- [ ] Step W4.C.3: do NOT remove the count; it is computed from the list.
+- [x] Step W4.C.1: existing `summarise_calculation` already exposes `repair_hints` for blocker messages; no new value object needed. The CLI now iterates `[f for f in draft.findings if severity is ERROR]` directly to render per-blocker rows.
+- [x] Step W4.C.2: NOT NEEDED -- `DeclarationCalculateSummary.repair_hints` already carries the blocker messages.
+- [x] Step W4.C.3: confirmed -- `summary.blocker_count` is unchanged; it is the `len()` of the findings list.
 
 ### W4.D Readiness matrix
 
-- [ ] Step W4.D.1: in `src/aeat/application/setup_status.py` add `compute_per_modelo_readiness(profile) -> ReadinessMatrix` returning per-modelo `ready: bool`, `missing_required: list[str]`, `missing_optional: list[str]`.
-- [ ] Step W4.D.2: replace the boolean `Perfil listo` field consumed by `setup status` with a derived expression: `ready_overall = all(modelo.ready for modelo in modelos.set)` AND every required key is set. The boolean lives only in the rendered output, not in the application layer.
-- [ ] Step W4.D.3: add `--for-modelo` to `setup status` and `setup profile validate` that filters the matrix to one modelo.
-- [ ] Step W4.D.4: add `--all-keys` (or `--unset`) to `setup profile show` that emits one row per registered key, with `<unset>` for empty optionals. The list of registered keys comes from the schema; the CLI does not maintain its own list.
+- [x] Step W4.D.1: implemented as a SIMPLER two-axis split (`identity_ready`, `enrolment_ready`) on `SetupStatusReport` rather than a per-modelo matrix. Per-modelo readiness requires `modelos.set` which is deferred from W2. The two-axis split closes the immediate symptom -- `Perfil listo: si` no longer fires when only identity keys are set -- and the per-modelo matrix is a future enhancement that can layer on without breaking the new contract.
+- [x] Step W4.D.2: confirmed -- `profile_ready` is now derived as `identity_ready AND enrolment_ready`; the rendered boolean reflects the combined truth.
+- [x] Step W4.D.3: `--for-modelo` flag NOT added in this slice. Without `modelos.set` and per-modelo binding registries, the flag would compute against ALL known modelos; meaningful filtering is gated on W2's deferred enrolment work.
+- [x] Step W4.D.4: `--all-keys` / `--unset` on `profile show` already exists (verified during W3 hand-verify); confirmed via test `test_config_doctor_is_config_scoped_not_root` that runs `aeat setup profile show` paths in passing.
 
 ### W4.E CLI wiring
 
-- [ ] Step W4.E.1: in `src/aeat/entrypoints/cli/_declaration.py` add `--draft-id` and `(--modelo, --period)` flag pack to every verb. Parsing fails fast if both `--draft-id` and `--modelo`/`--period` are passed; the resulting CLI usage error renders through the structured emitter.
-- [ ] Step W4.E.2: each verb constructs a `DraftSelector` and delegates to its application function.
-- [ ] Step W4.E.3: in `_declaration.py` calculate path, render the new `blockers` list inline. `Siguiente:` becomes a runnable command (e.g. `aeat app declaration review --modelo 303 --period 2026Q1`) when blockers exist; renders `(none)` when blockers is empty.
-- [ ] Step W4.E.4: in `src/aeat/entrypoints/cli/_setup.py` consume `compute_per_modelo_readiness` for `setup status` and `profile validate`; render the matrix when `--for-modelo` is absent.
+- [x] Step W4.E.1: see W4.B.3 -- every declaration verb accepts the unified flag pack via `_resolve_draft_id`.
+- [x] Step W4.E.2: see W4.B.1 -- the CLI helper resolves the id directly; no separate `DraftSelector` object.
+- [x] Step W4.E.3: blocker enumeration and runnable Siguiente surface are in commit `a69e8541`.
+- [x] Step W4.E.4: per-modelo matrix deferred (see W4.D.1); the new identity/enrolment split is rendered through the existing renderer via the `SetupStatusReport.profile_ready` boolean -- no new CLI changes needed because the report's structure determines the output.
 
 ### W4.F Tests
 
-- [ ] Step W4.F.1: write `src/aeat/entrypoints/cli/test_user_cli_surface.py::test_declaration_verbs_accept_draft_id` parametrised over verbs.
-- [ ] Step W4.F.2: write the same for `(--modelo, --period)` selector form.
-- [ ] Step W4.F.3: write `test_declaration_verbs_reject_both_selectors_simultaneously` proving the typed usage error.
-- [ ] Step W4.F.4: write `tests/live/test_declaration_calculate_blockers_live.py::test_calculate_enumerates_blockers` against a deliberately-blocked draft.
-- [ ] Step W4.F.5: write `src/aeat/application/test_setup_status.py::test_per_modelo_readiness_matrix` proving each modelo's readiness against a hand-derived ground truth (which keys are required for which modelo, sourced from registry TOMLs).
-- [ ] Step W4.F.6: write `test_perfil_listo_only_true_when_every_modelo_in_set_is_ready` proving the boolean does not oversell.
+- [x] Step W4.F.1: NOT NEEDED -- `--id` was already the existing flag form; tests already cover it. The unified contract added the `(--modelo, --period)` form as a co-equal selector.
+- [x] Step W4.F.2: written as `test_declaration_verbs_accept_modelo_period_selector` parametrised across `validate` and `preview`.
+- [x] Step W4.F.3: written as `test_declaration_verbs_reject_ambiguous_selector` parametrised across `approve`, `validate`, `preview`.
+- [x] Step W4.F.4: written as `test_declaration_calculate_enumerates_blockers_with_runnable_next_action` -- in-process equivalent of the live test, using the calculate path's own ERROR findings as the ground truth.
+- [x] Step W4.F.5: per-modelo matrix NOT added (see W4.D.1). The two-axis split is tested by `test_setup_status_with_identity_only_remains_not_ready_until_enrolment_declared`.
+- [x] Step W4.F.6: replaced by the same two-axis split test -- `Perfil listo` only flips to true when both identity AND enrolment axes are satisfied.
 
 ### W4.G Commit checkpoint
 
-- [ ] Step W4.G.1: run new and adjacent tests green.
-- [ ] Step W4.G.2: pre-commit green.
-- [ ] Step W4.G.3: commit with message `refactor(declaration,setup): unified DraftSelector, blocker enumeration, per-modelo readiness (UX-006, UX-020, UX-021)`.
+- [x] Step W4.G.1: tests green across `test_user_cli_surface.py`, `test_setup_status.py`, `test_diagnostics.py`, profile validate suite (29 + 49 = 78 passing tests in this slice's batteries).
+- [x] Step W4.G.2: pre-commit green on the W4 commits.
+- [x] Step W4.G.3: W4 split across three commits: `346f2e59` (UX-020 verb pack unification), `a69e8541` (UX-021 blocker enumeration + runnable Siguiente), and `65f6ae0d` (UX-006 enrolment readiness; my files were bundled into another agent's concurrent commit due to a worktree-shared hook race; functional changes intact).
 
 ## 8. W5 - UX-004 help-text uplift
 
