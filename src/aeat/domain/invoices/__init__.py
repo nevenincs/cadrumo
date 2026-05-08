@@ -27,7 +27,6 @@ from ._service import (
     LinkInconsistency,
     ReconciliationSuggestion,
     link_transaction,
-    link_transaction_bidirectional,
     suggest_reconciliations,
     verify_link_consistency,
 )
@@ -53,7 +52,6 @@ __all__ = [
     "derive_invoice_id",
     "invoice_line_to_iva_observation",
     "link_transaction",
-    "link_transaction_bidirectional",
     "suggest_reconciliations",
     "verify_link_consistency",
 ]
