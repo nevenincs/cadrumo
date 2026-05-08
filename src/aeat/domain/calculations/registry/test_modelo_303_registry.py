@@ -8,8 +8,7 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from . import RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
-from ._schema import ModeloDefinition
+from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -63,9 +62,7 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
 
 def test_modelo_303_snapshot_carries_legal_authority_and_record_design() -> None:
     modelo, catalogues = _load_modelo_303()
-    snapshot = build_snapshot(
-        modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="1T"
-    )
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="1T")
 
     assert "orden-eha-3786-2008:art-1" in snapshot.legal
     assert "orden-eha-3786-2008:art-7" in snapshot.legal
@@ -148,11 +145,7 @@ def test_modelo_303_declares_iva_repercutido_soportado_autorepercutido_bindings(
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2009-y-siguientes"]
 
-    iva_bindings = {
-        binding.id: binding
-        for binding in revision.bindings
-        if binding.source == "ledger_iva_aggregation"
-    }
+    iva_bindings = {binding.id: binding for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert "modelo-303-iva-repercutido-general-cuota" in iva_bindings
     assert "modelo-303-iva-repercutido-reducido-cuota" in iva_bindings
     assert "modelo-303-iva-repercutido-super-reducido-cuota" in iva_bindings
@@ -166,7 +159,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
     ledger_iva_aggregation runtime resolver."""
     from decimal import Decimal
 
-    from aeat.domain.calculations.registry._bindings import (
+    from aeat.domain.calculations.registry import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
@@ -242,9 +235,7 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
     binding so downstream consumers see a complete construct envelope."""
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2009-y-siguientes"]
-    construct = next(
-        c for c in revision.constructs if c.id == "modelo-303-iva-autoliquidacion"
-    )
+    construct = next(c for c in revision.constructs if c.id == "modelo-303-iva-autoliquidacion")
     assert "modelo-303-iva-repercutido-general-cuota" in construct.bindings
     assert "modelo-303-iva-repercutido-reducido-cuota" in construct.bindings
     assert "modelo-303-iva-repercutido-super-reducido-cuota" in construct.bindings

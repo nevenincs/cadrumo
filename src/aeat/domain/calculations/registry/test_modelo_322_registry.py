@@ -8,8 +8,7 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from . import RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
-from ._schema import ModeloDefinition
+from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -93,9 +92,7 @@ def test_modelo_322_live_cross_references_forbid_writes() -> None:
     filed_ref = cross_refs["modelo-322-filed-declarations-read"]
     assert filed_ref.requires_authentication is True
     assert filed_ref.requires_aeat_authorization is True
-    assert {"presentation", "signing", "amendment", "payment"}.issubset(
-        set(filed_ref.forbidden_actions)
-    )
+    assert {"presentation", "signing", "amendment", "payment"}.issubset(set(filed_ref.forbidden_actions))
 
 
 def test_modelo_322_filing_schedule_is_monthly() -> None:
@@ -119,11 +116,7 @@ def test_modelo_322_declares_iva_aggregation_bindings_for_all_three_flow_directi
     Modelo 303, scoped to the individual group entity."""
     modelo, _ = _load_modelo_322()
     revision = modelo.revisions["2008-y-siguientes"]
-    iva_bindings = {
-        binding.id: binding
-        for binding in revision.bindings
-        if binding.source == "ledger_iva_aggregation"
-    }
+    iva_bindings = {binding.id: binding for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert "modelo-322-iva-repercutido-general-cuota" in iva_bindings
     assert "modelo-322-iva-repercutido-reducido-cuota" in iva_bindings
     assert "modelo-322-iva-repercutido-super-reducido-cuota" in iva_bindings
@@ -134,7 +127,7 @@ def test_modelo_322_declares_iva_aggregation_bindings_for_all_three_flow_directi
 def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
     from decimal import Decimal
 
-    from aeat.domain.calculations.registry._bindings import (
+    from aeat.domain.calculations.registry import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )

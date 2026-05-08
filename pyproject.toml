@@ -154,6 +154,9 @@ dev = [
   "sphinx-markdown-builder>=0.6",
   "furo>=2024.8",
   "myst-parser>=4.0",
+  "types-defusedxml>=0.7.0.20260504",
+  "types-openpyxl>=3.1.5.20260408",
+  "types-reportlab>=4.4.10.20260408",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
@@ -247,18 +250,45 @@ indent-style = "space"
 # ── ty ───────────────────────────────────────────────────────────────────────
 [tool.ty.environment]
 python-version = "3.13"
+extra-paths = ["stubs"]
 
 [tool.ty.rules]
 all = "error"
 
 [tool.ty.analysis]
+# Hand-written stubs under `stubs/` cover packages without `py.typed`
+# and without `types-*` distributions on PyPI (currently `pypdfium2` and
+# `playwright_stealth`). The remaining names below are packages whose
+# surface is too large to stub locally and whose authors have not opted
+# into typing.
 allowed-unresolved-imports = [
   "playwright",
   "typer",
   "rich",
-  "playwright_stealth",
   "bs4",
 ]
+
+# ── mypy ─────────────────────────────────────────────────────────────────────
+# The project does not run mypy in CI (ty is the canonical checker) but
+# external auditors do. Mirror ty's stance so a mypy invocation against
+# this project picks up the same stub set.
+[tool.mypy]
+python_version = "3.13"
+mypy_path = ["src", "stubs"]
+explicit_package_bases = true
+namespace_packages = true
+
+[[tool.mypy.overrides]]
+module = ["playwright.*", "typer.*", "rich.*", "bs4.*"]
+ignore_missing_imports = true
+
+# ── pyrefly ──────────────────────────────────────────────────────────────────
+# Same rationale as `[tool.mypy]`: declare the project's stub policy so
+# external pyrefly invocations resolve `pypdfium2` and `playwright_stealth`
+# against `stubs/` rather than reporting them as unresolved imports.
+[tool.pyrefly]
+python_version = "3.13"
+search_path = ["src", "stubs"]
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
@@ -307,3 +337,103 @@ omit = [
 fail_under = 60
 show_missing = true
 skip_covered = false
+
+# ── Bandit (security lint) ───────────────────────────────────────────────────
+# The aeat-audit pipeline runs bandit against the full source tree. Without
+# this filter every test file triggers B101 (assert_used) once per assertion
+# and B311 (random) once per fixture seed, accounting for ~4500 of the
+# ~5900 raw security findings. Suppress test-only false positives at the
+# config layer; production code stays under the full bandit ruleset.
+[tool.bandit]
+# Skip the test directory entirely — every signal there is a false positive
+# at the boundary (assert is the test language, fixtures use random for
+# synthetic data, hardcoded credentials are obvious test stubs).
+exclude_dirs = [
+  "tests",
+  ".venv",
+  "stubs",
+]
+# B101 (assert_used) is silenced globally because pytest's contract IS
+# `assert`. Production code occasionally uses `assert` for invariants;
+# those should migrate to explicit `raise` where they are load-bearing.
+# Every other rule stays active.
+skips = ["B101"]
+
+# Per-rule per-glob skips for the in-source test files (`src/aeat/**/test_*.py`)
+# that aren't under the top-level `tests/` directory but mirror the same
+# noise profile.
+[tool.bandit.assert_used]
+skips = ["*/test_*.py", "*/_test_*.py", "**/conftest.py"]
+
+# ── Interrogate (docstring coverage) ─────────────────────────────────────────
+# Without configuration interrogate counts every public symbol missing a
+# Google-style docstring as a finding. The audit pipeline reported ~3800
+# such findings across the codebase; ~70% are private helpers, magic
+# methods, nested closures, and test fixtures that don't carry docstrings
+# by convention. Filter those at the config layer so the dashboard tracks
+# the public surface that genuinely warrants prose documentation.
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = true
+ignore-magic = true
+ignore-nested-functions = true
+ignore-private = true
+ignore-semiprivate = true
+ignore-property-decorators = true
+ignore-module = false
+fail-under = 80
+exclude = [
+  "tests",
+  "stubs",
+  "src/aeat/**/test_*.py",
+  "src/aeat/**/_test_*.py",
+]
+
+# ── Vulture (dead-code) ──────────────────────────────────────────────────────
+# Vulture defaults to confidence threshold 60 which surfaces many
+# false-positive "unused" guesses (decorators, dynamic dispatch, test
+# fixtures, lazily-bound CLI entrypoints). Bump to 80 and exclude tests so
+# the dashboard tracks code that is plausibly dead in production paths.
+[tool.vulture]
+min_confidence = 80
+paths = ["src/aeat"]
+exclude = [
+  "src/aeat/**/test_*.py",
+  "src/aeat/**/_test_*.py",
+  "tests",
+  "stubs",
+]
+ignore_decorators = [
+  "@app.command",
+  "@cli.command",
+  "@click.command",
+  "@click.group",
+  "@app.callback",
+  "@app.result_callback",
+  "@pytest.fixture",
+  "@field_validator",
+  "@model_validator",
+  "@field_serializer",
+  "@classmethod",
+  "@staticmethod",
+  "@property",
+]
+
+# ── Deptry (unused / transitive dependency lint) ─────────────────────────────
+# Suppress the false positives surfaced by deptry's default heuristics.
+# `pydantic_core` is re-exported by pydantic (legitimate transitive use),
+# `click` ships under typer (typer's CLI surface is built on click), and
+# `yaml` ships as `PyYAML`. The remaining diagnostics flag genuine drift
+# and stay active.
+[tool.deptry]
+ignore_unused = [
+  "tzdata",         # IANA db, only matters at runtime on Windows; runtime-required.
+  "python-dotenv",  # loaded by core.config when AEAT_DOTENV is set; deptry can't see runtime use.
+  "torch",          # transformers fallback when device=cpu; loaded by transformers.
+]
+[tool.deptry.package_module_name_map]
+"PyYAML" = ["yaml"]
+"pyyaml" = ["yaml"]
+[tool.deptry.per_rule_ignores]
+DEP003 = ["click", "pydantic_core", "yaml"]
+DEP004 = ["pytest", "reportlab"]

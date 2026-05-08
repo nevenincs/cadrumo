@@ -13,12 +13,10 @@ driver source files and assert structural invariants.
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
 
 from .....core.paths import PROJECT_ROOT
-
 from ._renta_web_open_safety import (
     ALLOWED_CLICK_OVERRIDES,
     FORBIDDEN_CLICK_TOKENS,
@@ -46,9 +44,23 @@ def test_forbidden_token_set_carries_every_high_risk_action() -> None:
         "tgvi",
         "anular",
         "modificar",
+        # Pre-presentation validation surface — denied as defense-in-depth
+        # (the read-only driver never needs to click Validar).
+        "validar",
     }
     for token in required:
         assert token in FORBIDDEN_CLICK_TOKENS, f"required forbidden token {token!r} missing"
+
+
+def test_validar_button_label_is_blocked_by_safety_guard() -> None:
+    """The 'Validar' button surfaces on the live Resumen toolbar (button
+    [12] in the latest button inventory). The driver never needs to click
+    it — the registry's typed bindings + parity oracle do all validation.
+    Locking it as forbidden prevents accidental clicks from triggering
+    AEAT-side validation state changes."""
+    assert _matches_forbidden_token(_normalise("Validar")) is not None
+    assert _matches_forbidden_token(_normalise("Validación")) is not None
+    assert _matches_forbidden_token(_normalise("VALIDAR DECLARACIÓN")) is not None
 
 
 def test_normalise_folds_accents_and_lowercases() -> None:
@@ -68,14 +80,17 @@ def test_matches_forbidden_token_catches_substring_in_button_label() -> None:
     assert _matches_forbidden_token(_normalise("Continuar con la declaración")) is None
     assert _matches_forbidden_token(_normalise("Apartados declaración")) is None
     assert _matches_forbidden_token(_normalise("Buscar casilla")) is None
-    assert _matches_forbidden_token(_normalise("Validar")) is None
+    # Validar moved to the denylist as defense-in-depth — see
+    # ``test_validar_button_label_is_blocked_by_safety_guard``.
     assert _matches_forbidden_token(_normalise("Ver datos fiscales")) is None
+    assert _matches_forbidden_token(_normalise("Vista previa")) is None
+    assert _matches_forbidden_token(_normalise("Notas")) is None
     assert _matches_forbidden_token(_normalise("Aceptar")) is None  # identification only
 
 
 def test_allowed_click_overrides_is_empty_by_default() -> None:
     """No overrides should ship by default. Adding one requires audit."""
-    assert ALLOWED_CLICK_OVERRIDES == frozenset()
+    assert frozenset() == ALLOWED_CLICK_OVERRIDES
 
 
 def test_forbidden_url_fragments_cover_filing_endpoints() -> None:
@@ -94,17 +109,13 @@ def test_driver_routes_every_click_through_assert_click_target_safe() -> None:
     site).
     """
     text = _DRIVER_FILE.read_text(encoding="utf-8")
-    raw_clicks = [
-        m for m in re.finditer(r"\.click\(", text)
-    ]
-    canonical_click_site = re.search(
-        r"async def _click_expected\b", text
-    )
+    raw_clicks = [m for m in re.finditer(r"\.click\(", text)]
+    canonical_click_site = re.search(r"async def _click_expected\b", text)
     assert canonical_click_site is not None, "_click_expected wrapper missing — safety guard cannot enforce"
     # Find the boundaries of _click_expected: everything inside its body
     # is the canonical click site. Other occurrences are forbidden.
     body_start = canonical_click_site.start()
-    next_def = re.search(r"\nasync def \w+|\ndef \w+", text[body_start + 10:])
+    next_def = re.search(r"\nasync def \w+|\ndef \w+", text[body_start + 10 :])
     body_end = body_start + 10 + (next_def.start() if next_def else len(text))
     # Each raw click must be inside the canonical body window.
     forbidden_sites: list[str] = []
@@ -113,8 +124,7 @@ def test_driver_routes_every_click_through_assert_click_target_safe() -> None:
             line = text.count("\n", 0, m.start()) + 1
             forbidden_sites.append(f"line {line}: raw .click( at offset {m.start()}")
     assert not forbidden_sites, (
-        "raw locator.click() found outside _click_expected — SAFETY VIOLATION:\n  "
-        + "\n  ".join(forbidden_sites)
+        "raw locator.click() found outside _click_expected — SAFETY VIOLATION:\n  " + "\n  ".join(forbidden_sites)
     )
 
 
@@ -122,9 +132,7 @@ def test_driver_imports_safety_module() -> None:
     """The driver source must import the safety module — refactors that
     drop the import would silently disable the click-time guard."""
     text = _DRIVER_FILE.read_text(encoding="utf-8")
-    assert "from ._renta_web_open_safety import" in text, (
-        "driver missing safety-module import — safety guard disabled"
-    )
+    assert "from ._renta_web_open_safety import" in text, "driver missing safety-module import — safety guard disabled"
     assert "assert_click_target_safe" in text
     assert "install_page_safety_net" in text
 
@@ -138,7 +146,7 @@ def test_click_expected_calls_assert_click_target_safe_before_click() -> None:
     text = _DRIVER_FILE.read_text(encoding="utf-8")
     body_start = text.find("async def _click_expected")
     assert body_start >= 0
-    next_def = re.search(r"\nasync def \w+|\ndef \w+", text[body_start + 10:])
+    next_def = re.search(r"\nasync def \w+|\ndef \w+", text[body_start + 10 :])
     body_end = body_start + 10 + (next_def.start() if next_def else len(text))
     body = text[body_start:body_end]
     safety_pos = body.find("assert_click_target_safe")

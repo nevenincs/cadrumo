@@ -8,8 +8,7 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from . import RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
-from ._schema import ModeloDefinition
+from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -43,9 +42,7 @@ def test_modelo_309_revision_uses_ad_hoc_period_selector() -> None:
 
 def test_modelo_309_snapshot_builds_for_ad_hoc_period() -> None:
     modelo, catalogues = _load_modelo_309()
-    snapshot = build_snapshot(
-        modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="AD-HOC"
-    )
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="AD-HOC")
     assert snapshot.revision.id == "2004-y-siguientes"
     assert "orden-hac-3625-2003:apartado-1" in snapshot.legal
     assert "orden-hac-3625-2003:apartado-3" in snapshot.legal
@@ -66,9 +63,7 @@ def test_modelo_309_live_cross_references_forbid_writes() -> None:
     filed_ref = cross_refs["modelo-309-filed-declarations-read"]
     assert filed_ref.requires_authentication is True
     assert filed_ref.requires_aeat_authorization is True
-    assert {"presentation", "signing", "amendment", "payment"}.issubset(
-        set(filed_ref.forbidden_actions)
-    )
+    assert {"presentation", "signing", "amendment", "payment"}.issubset(set(filed_ref.forbidden_actions))
 
 
 def test_modelo_309_construct_links_workbook_parity() -> None:
@@ -85,11 +80,7 @@ def test_modelo_309_declares_autorepercutido_and_recargo_soportado_bindings() ->
     nuevos) and recargo de equivalencia retailers' devoluciones."""
     modelo, _ = _load_modelo_309()
     revision = modelo.revisions["2004-y-siguientes"]
-    iva_binding_ids = {
-        binding.id
-        for binding in revision.bindings
-        if binding.source == "ledger_iva_aggregation"
-    }
+    iva_binding_ids = {binding.id for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert iva_binding_ids == {
         "modelo-309-iva-autorepercutido-intracomunitaria-cuota",
         "modelo-309-iva-soportado-recargo-equivalencia-cuota",
@@ -99,7 +90,7 @@ def test_modelo_309_declares_autorepercutido_and_recargo_soportado_bindings() ->
 def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None:
     from decimal import Decimal
 
-    from aeat.domain.calculations.registry._bindings import (
+    from aeat.domain.calculations.registry import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )

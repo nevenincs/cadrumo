@@ -8,8 +8,7 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from . import RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
-from ._schema import ModeloDefinition
+from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -59,9 +58,7 @@ def test_modelo_390_snapshot_builds_for_each_published_filing_year() -> None:
 
 def test_modelo_390_snapshot_carries_legal_authority_and_record_design() -> None:
     modelo, catalogues = _load_modelo_390()
-    snapshot = build_snapshot(
-        modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A"
-    )
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
     assert "orden-eha-3111-2009:art-1" in snapshot.legal
     assert "orden-eha-3111-2009:art-8" in snapshot.legal
     assert snapshot.legal["orden-eha-3111-2009:art-8"].article == "8"
@@ -123,11 +120,7 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
     full ejercicio rather than per quarter."""
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]
-    iva_binding_ids = {
-        binding.id
-        for binding in revision.bindings
-        if binding.source == "ledger_iva_aggregation"
-    }
+    iva_binding_ids = {binding.id for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert iva_binding_ids == {
         "modelo-390-iva-repercutido-general-cuota",
         "modelo-390-iva-repercutido-reducido-cuota",
@@ -140,7 +133,7 @@ def test_modelo_390_declares_iva_aggregation_bindings_for_annual_resumen() -> No
 def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations() -> None:
     from decimal import Decimal
 
-    from aeat.domain.calculations.registry._bindings import (
+    from aeat.domain.calculations.registry import (
         IvaLedgerObservation,
         resolve_ledger_iva_aggregation_binding_values,
     )
@@ -163,6 +156,4 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations()
         for idx, amount in enumerate(quarterly_iva_amounts, start=1)
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result["modelo-390-iva-repercutido-general-cuota"] == sum(
-        quarterly_iva_amounts, Decimal("0")
-    )
+    assert result["modelo-390-iva-repercutido-general-cuota"] == sum(quarterly_iva_amounts, Decimal("0"))

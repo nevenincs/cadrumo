@@ -18,12 +18,12 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from ._live_parity import (
+    _COMPATIBLE_SURFACE_PAIRS,
     LiveParityCatalogue,
     OracleSurfaceKind,
     ParityResult,
     audit_oracle_bindings,
 )
-from ._live_parity import _COMPATIBLE_SURFACE_PAIRS
 from ._loader import load_registry_tree
 from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 from ._schema import ModeloDefinition

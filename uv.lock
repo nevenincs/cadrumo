@@ -83,6 +83,9 @@ dev = [
     { name = "syrupy" },
     { name = "time-machine" },
     { name = "ty" },
+    { name = "types-defusedxml" },
+    { name = "types-openpyxl" },
+    { name = "types-reportlab" },
     { name = "vaultspec-core" },
     { name = "vaultspec-rag" },
 ]
@@ -141,6 +144,9 @@ dev = [
     { name = "syrupy", specifier = ">=4.7.0" },
     { name = "time-machine", specifier = ">=2.16.0" },
     { name = "ty", specifier = ">=0.0.1a1" },
+    { name = "types-defusedxml", specifier = ">=0.7.0.20260504" },
+    { name = "types-openpyxl", specifier = ">=3.1.5.20260408" },
+    { name = "types-reportlab", specifier = ">=4.4.10.20260408" },
     { name = "vaultspec-core", specifier = ">=0.1.14" },
     { name = "vaultspec-rag", specifier = ">=0.2.3" },
 ]
@@ -3195,6 +3201,33 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e4/51/9aed62104cea109b820bbd6c14245af756112017d309da813ef107d42e7e/typer-0.25.1.tar.gz", hash = "sha256:9616eb8853a09ffeabab1698952f33c6f29ffdbceb4eaeecf571880e8d7664cc", size = 122276, upload-time = "2026-04-30T19:32:16.964Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3f/f9/2b3ff4e56e5fa7debfaf9eb135d0da96f3e9a1d5b27222223c7296336e5f/typer-0.25.1-py3-none-any.whl", hash = "sha256:75caa44ed46a03fb2dab8808753ffacdbfea88495e74c85a28c5eefcf5f39c89", size = 58409, upload-time = "2026-04-30T19:32:18.271Z" },
+]
+
+[[package]]
+name = "types-defusedxml"
+version = "0.7.0.20260504"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/d2/4553c8fa9cdebfe1e84b950cf790a4d2376a97fa016e43f7c65323fa6c7d/types_defusedxml-0.7.0.20260504.tar.gz", hash = "sha256:2ab2828a3f97111ba1c16cee273ad4124a831fc9198c41bf8368ff6ea48ad300", size = 10729, upload-time = "2026-05-04T05:22:50.192Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bf/2d/8a4b5ba1d732b8bc691f0efbb1c6f77cb5f6f473b2afe181d83d910773c5/types_defusedxml-0.7.0.20260504-py3-none-any.whl", hash = "sha256:a959e3a0a43b93e464bd625d91ec9193a2703ddc10443bdd627792485fae0b10", size = 13467, upload-time = "2026-05-04T05:22:49.319Z" },
+]
+
+[[package]]
+name = "types-openpyxl"
+version = "3.1.5.20260508"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/0b/25/86379c5b2d83235984b2514168bf1c04deb54adbb9e0ab0a2abc3809dfa2/types_openpyxl-3.1.5.20260508.tar.gz", hash = "sha256:34f5c6398f9066bdad309661f300590fdd090846f76164002110a97327173d3d", size = 101398, upload-time = "2026-05-08T04:48:22.161Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/05/82/19cdc3d26f18c0848ad53ccc216e8bdcdd60a3c22c60cd47499f8e2dcd2d/types_openpyxl-3.1.5.20260508-py3-none-any.whl", hash = "sha256:603e41a524bb4f34e2ccfee63f5fe1f166d75387d36b1060183242f0958ec539", size = 165593, upload-time = "2026-05-08T04:48:20.834Z" },
+]
+
+[[package]]
+name = "types-reportlab"
+version = "4.4.10.20260508"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ea/ef/38984f8fbfa4155e53a2a2b4fa2705d3be4028e8115c4e89d4845756c25c/types_reportlab-4.4.10.20260508.tar.gz", hash = "sha256:14d4e74140c29962d4f6b6b2923ea0742833c1e87b5872d414dcb96e838d58b9", size = 71744, upload-time = "2026-05-08T04:48:50.976Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8a/bc/4f7f7e821073d08ad8744aa941f7c3178f7674bdac994e66ed7d30a1859b/types_reportlab-4.4.10.20260508-py3-none-any.whl", hash = "sha256:9cfc21998ff6b7991ff077c9b9ba5ebf2f520eeaff2fbf58f0f7cae7d686d8ee", size = 112743, upload-time = "2026-05-08T04:48:50.024Z" },
 ]
 
 [[package]]

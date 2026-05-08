@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import date
-from decimal import Decimal
-
 import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from . import RegistryValidator, build_snapshot, calculate_registry_snapshot, load_registry_tree
+from . import RegistryValidator, build_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -79,5 +76,3 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
     }
     assert required_surfaces <= set(linked_by_surface)
     assert all(link.requires_snapshot for link in linked_by_surface.values())
-
-

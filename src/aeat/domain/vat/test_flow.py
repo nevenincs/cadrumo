@@ -118,14 +118,8 @@ def test_iva_flow_legal_articles_carry_required_text_quotes() -> None:
         data = tomllib.load(handle)
     legal = data["legal"]
     assert any("Sujetos pasivos" in entry for entry in legal["ley-37-1992:art-84"]["required_text"])
-    assert any(
-        "Repercusión del impuesto" in entry
-        for entry in legal["ley-37-1992:art-88"]["required_text"]
-    )
-    assert any(
-        "Cuotas tributarias deducibles" in entry
-        for entry in legal["ley-37-1992:art-92"]["required_text"]
-    )
+    assert any("Repercusión del impuesto" in entry for entry in legal["ley-37-1992:art-88"]["required_text"])
+    assert any("Cuotas tributarias deducibles" in entry for entry in legal["ley-37-1992:art-92"]["required_text"])
 
 
 def test_iva_flow_corpus_excerpts_present_with_boe_quotes() -> None:
@@ -197,18 +191,16 @@ def test_autorepercutido_flow_contributes_to_both_sides() -> None:
     from aeat.domain.vat import IvaSettlementSide, settlement_sides_for_flow
 
     sides = settlement_sides_for_flow(IvaFlowDirection.AUTOREPERCUTIDO)
-    assert sides == frozenset(
-        {IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}
-    )
+    assert sides == frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE})
 
 
 def test_devengada_flow_directions_set_matches_devengada_predicate() -> None:
     from aeat.domain.vat import DEVENGADA_FLOW_DIRECTIONS, is_devengada_flow
 
-    assert DEVENGADA_FLOW_DIRECTIONS == {
+    assert {
         IvaFlowDirection.REPERCUTIDO,
         IvaFlowDirection.AUTOREPERCUTIDO,
-    }
+    } == DEVENGADA_FLOW_DIRECTIONS
     for flow in IvaFlowDirection:
         assert is_devengada_flow(flow) == (flow in DEVENGADA_FLOW_DIRECTIONS)
 
@@ -216,10 +208,10 @@ def test_devengada_flow_directions_set_matches_devengada_predicate() -> None:
 def test_deducible_flow_directions_set_matches_deducible_predicate() -> None:
     from aeat.domain.vat import DEDUCIBLE_FLOW_DIRECTIONS, is_deducible_flow
 
-    assert DEDUCIBLE_FLOW_DIRECTIONS == {
+    assert {
         IvaFlowDirection.SOPORTADO,
         IvaFlowDirection.AUTOREPERCUTIDO,
-    }
+    } == DEDUCIBLE_FLOW_DIRECTIONS
     for flow in IvaFlowDirection:
         assert is_deducible_flow(flow) == (flow in DEDUCIBLE_FLOW_DIRECTIONS)
 
@@ -233,9 +225,7 @@ def test_devengada_and_deducible_flow_sets_intersect_at_autorepercutido() -> Non
         DEVENGADA_FLOW_DIRECTIONS,
     )
 
-    assert DEVENGADA_FLOW_DIRECTIONS & DEDUCIBLE_FLOW_DIRECTIONS == frozenset(
-        {IvaFlowDirection.AUTOREPERCUTIDO}
-    )
+    assert frozenset({IvaFlowDirection.AUTOREPERCUTIDO}) == DEVENGADA_FLOW_DIRECTIONS & DEDUCIBLE_FLOW_DIRECTIONS
 
 
 def test_devengada_and_deducible_flow_sets_union_to_full_flow_taxonomy() -> None:
@@ -246,7 +236,7 @@ def test_devengada_and_deducible_flow_sets_union_to_full_flow_taxonomy() -> None
         DEVENGADA_FLOW_DIRECTIONS,
     )
 
-    assert DEVENGADA_FLOW_DIRECTIONS | DEDUCIBLE_FLOW_DIRECTIONS == set(IvaFlowDirection)
+    assert set(IvaFlowDirection) == DEVENGADA_FLOW_DIRECTIONS | DEDUCIBLE_FLOW_DIRECTIONS
 
 
 def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
@@ -277,9 +267,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     # Each ledger_iva_aggregation binding declares its flow direction in
     # the selector. Collect the flow directions of all bindings whose
     # cuota contributes to cuota-devengada-total via the formula.
-    devengada_formula = next(
-        f for f in revision.formulas if f.id == "modelo-303-iva-cuota-devengada-total"
-    )
+    devengada_formula = next(f for f in revision.formulas if f.id == "modelo-303-iva-cuota-devengada-total")
     casilla_to_binding = {c.id: c.binding for c in revision.casillas if c.binding}
     binding_flows: set[IvaFlowDirection] = set()
     # Walk the formula expression to find casilla operands

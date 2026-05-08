@@ -144,19 +144,37 @@ def _draft_repository():  # type: ignore[no-untyped-def]
 
 
 def _load_draft(path: Path) -> FilingDraft:
-    """Load and parse a draft from a ciphertext envelope file."""
-    if not path.exists():
-        raise typer.BadParameter(tr("cli.filing.errors.draft_not_found", path=path))
-    if not path.name.endswith(".envelope.json"):
-        raise typer.BadParameter(
-            tr("cli.filing.errors.invalid_draft_extension", path=path),
-        )
+    """Load a persisted draft, given a draft id or a logical envelope path.
+
+    The filing draft repository persists every draft as an encrypted
+    object in the SQL backend. ``envelope_path_for(draft_id)`` returns
+    a logical ``db://`` path whose final segment IS the draft id; this
+    helper accepts that logical path, the bare draft id, or a legacy
+    on-disk ``<draft_id>.envelope.json`` filename.
+
+    Raises:
+        :exc:`typer.BadParameter`: If no draft matches the resolved id
+            in the secure-object backend.
+    """
     repository = _draft_repository()
-    draft_id = path.name[: -len(".envelope.json")]
+    draft_id = _draft_id_from_argument(path)
     loaded = repository.load(draft_id)
     if loaded is None:
         raise typer.BadParameter(tr("cli.filing.errors.failed_to_load_draft", path=path))
     return loaded
+
+
+def _draft_id_from_argument(path: Path) -> str:
+    """Return the draft id encoded in a CLI ``Path`` argument.
+
+    Accepts a logical SQL path (final segment is the id), a legacy
+    ``<draft_id>.envelope.json`` filename (strip the suffix), or the
+    bare draft id wrapped in a Path (use as-is).
+    """
+    name = path.name
+    if name.endswith(".envelope.json"):
+        return name[: -len(".envelope.json")]
+    return name
 
 
 def _refresh_persisted_draft(path: Path, draft: FilingDraft | None = None) -> FilingDraft:

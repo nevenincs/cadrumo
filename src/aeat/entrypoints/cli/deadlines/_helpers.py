@@ -53,21 +53,23 @@ def load_profile(path: Path) -> AutonomoProfile:
     record is always ciphertext.
 
     Args:
-        path: Path to the setup-profile envelope file.
+        path: Logical handle for the setup-profile entry. The path's
+            resolved POSIX form is used as the SQL secure-object key;
+            the on-disk file does not need to exist.
 
     Returns:
         The validated profile.
 
     Raises:
-        ProfileError: If the file does not exist or its contents are
-            not a valid profile envelope.
+        ProfileError: If no profile envelope is registered under the
+            logical handle, or its contents are not a valid profile.
     """
-    if not path.exists():
-        raise ProfileError(f"profile file not found: {path}")
     from ....application.setup._env_writer import load_profile_envelope
 
     try:
         return load_profile_envelope(path)
+    except FileNotFoundError as exc:
+        raise ProfileError(f"profile file not found: {path}") from exc
     except (OSError, ValueError, AeatError) as exc:  # pragma: no cover - defensive: covered by tests
         _logger.error("load_profile: failed to load profile envelope at %s", path, exc_info=True)
         raise ProfileError(f"invalid profile envelope at {path}: {exc}") from exc

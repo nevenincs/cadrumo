@@ -22,7 +22,7 @@ from typing import Any
 import typer
 
 from ...application.diagnostics import build_cli_version_report, render_cli_version_text
-from . import _config
+from . import _archive, _config
 from ._common import _FORMAT_TEXT
 from ._errors import decorate_typer_app, write_stderr
 from ._i18n import tr
@@ -187,6 +187,7 @@ if _setup_import_error is None:
 else:
     app.add_typer(_import_failure_surface("setup", _setup_import_error), name="setup")
 app.add_typer(_config.app, name="config")
+app.add_typer(_archive.app, name="archive")
 if _app_import_error is None:
     app.add_typer(app_app, name="app")
 else:
