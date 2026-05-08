@@ -458,7 +458,7 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
         "renta-work-income": {"111", "190"},
         "renta-real-estate-capital": {"115", "180"},
         "renta-movable-capital": {"123", "193"},
-        "renta-economic-activities": {"130", "131"},
+        "renta-economic-activities": {"130", "131", "184"},
     }
 
 
