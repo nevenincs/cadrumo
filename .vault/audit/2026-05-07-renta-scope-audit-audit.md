@@ -404,6 +404,75 @@ prerequisites and acceptance tests.
   to `.vault/audit/renta-web-open-replay-coverage.txt` and
   `.vault/audit/renta-formula-oracle-coverage.txt`.
 
+### Rental → registry decoupling delivered 2026-05-08
+
+- All 5 BOE-published rental constants migrated to registry parameters:
+  - `rental-prior-rent-rebaja-threshold` (5%) — commit `c1f3af6e`
+  - `rental-rehab-lookback-days` (730) — commit `a40db610`
+  - `rental-joven-tenant-age-min/max` (18/35) — commit `a40db610`
+  - `rental-ejercicio-amendment-year` (2024 per Ley 12/2023) — commit
+    `5fff80f6`
+  - `rental-reduccion-rate-tier-50/60/70/90` (4 BOE rates per Ley 12/2023)
+    — commit `ce542bd8`
+- Consumer-side: `_qualifies_for_tier_60_rehab`,
+  `_qualifies_for_tier_70_b_1`, `resolve_reduccion`, and
+  `_resolve_tier_reduccion_rate` thread registry-read values through
+  the resolver chain. Module-level constants kept as documented
+  fallbacks.
+- 148 integration tests pass (rental + threshold + bracket + escala
+  parity).
+
+### Audit driver hardening delivered 2026-05-08
+
+- Layer 2 — per-formula citation phrase coverage (commit `3897ad72`).
+  906 formulas, 1690 phrases checked (HTML/text corpora), 100.0%
+  coverage, 0 misalignments. PDF corpora skipped (handled by runtime).
+- Layer 4 — Renta-scoped catalogue drift metric (commit `02a507a8`).
+  Distinguishes Modelo 100's owned catalogue scope (irpf.toml +
+  atribucion-rentas.toml = 66 articles) from cross-modelo cataloguing.
+  Renta-scoped coverage: 59.1% (39 cited / 66 catalogued).
+- Layer 5 — cross-modelo relation closed-loop validation (commit
+  `550d37bb`). 9 / 9 cross-modelo relations closed-loop = 100%.
+  Aggregate logical ids ("decl.retenciones-total") recognized.
+- Layer 6 — external-surface registration audit (commit `550d37bb`).
+  7 surfaces inventoried, 7/7 guarded with policy IDs.
+- Layer 10 — rental pipeline regression sweep (commit `4be55d9c`).
+  9 expected rental parameters × 6 ejercicios = 54/54 = 100%.
+
+### Estatal IRPF escala progresiva delivered 2026-05-08
+
+- 2025 escala estatal as `bracket_table` parameter — commit `35b2c5c0`
+  (6 brackets: 9.5/12/15/18.5/22.5/24.5%)
+- 2024-2021 escala estatal backport — commit `ac5872e2` (4 ejercicios
+  × 6 brackets each, post-Ley 11/2020 stabilized shape)
+- 2020 escala estatal — commit `86e0c617` (5-bracket pre-amendment
+  shape, no 24.5% top tier)
+- 30 multi-year integration tests cover bracket resolution at break-
+  points (zero, 12,450, 30,000, 500,000) for every backported year.
+
+### Total commits this session: 18
+
+- `c7a4c999` Plan refresh (grounding-framework backends + Phase H6)
+- `08dee4a0` Saldos cap chain 0433/0446 + 0435 sign migration
+- `6f3555fe` Oracle linkage scaffold + hygiene gate
+- `db912803` Cuota chain percent formulas (0550/0551/0560/0561/0562/0563)
+- `b741bd68` Live capture entrypoint
+- `5369b78c` `read_parameter` public API
+- `3e09e5a8` `lookup_bracket` runtime op + BracketEntry schema
+- `71d3e0a9` Per-formula oracle gate hygiene
+- `c1f3af6e` Rental rebaja threshold parameter
+- `35b2c5c0` 2025 estatal escala + tier-resolver migration repair
+- `ac5872e2` 2024-2021 estatal escala backport
+- `86e0c617` 2020 estatal escala (pre-amendment shape)
+- `bb39896a` art-68.4 Ceuta/Melilla citation
+- `5fff80f6` Amendment year migration
+- `a40db610` Rehab lookback + joven-tenant age migration
+- `ce542bd8` 4 tier reduccion rate migration
+- `3897ad72` Audit Layer 2
+- `550d37bb` Audit Layer 5 + 6
+- `4be55d9c` Audit Layer 10
+- `02a507a8` Layer 4 Renta-scoped drift
+
 ### Mini-model formula slices
 
 5. **MM-1: Anexo B autonomic deductions (482 casillas, 17 CCAA)** —
