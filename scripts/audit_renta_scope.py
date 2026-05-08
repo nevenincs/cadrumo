@@ -208,6 +208,115 @@ def layer3_mini_model_coverage(modelo: dict, target_revision: str = "2025") -> d
     return summary
 
 
+def _load_source_catalogue() -> dict[str, dict]:
+    """Map source_ref -> {corpus_path, ...} from registry/aeat/legal/*.toml."""
+    sources: dict[str, dict] = {}
+    for path in LEGAL_DIR.rglob("*.toml"):
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        for entry_id, payload in (data.get("sources") or {}).items():
+            sources[entry_id] = payload
+    return sources
+
+
+def _normalise_corpus_text(text: str) -> str:
+    """Same normalisation the registry validator uses for citation checks."""
+    import html as _html
+    import re as _re
+    import unicodedata as _ud
+
+    decoded = _html.unescape(text).replace("\xa0", " ")
+    without_tags = _re.sub(r"<[^>]+>", " ", decoded)
+    without_marks = "".join(c for c in _ud.normalize("NFKD", without_tags) if not _ud.combining(c))
+    return _re.sub(r"\s+", " ", without_marks).strip().lower()
+
+
+def layer2_citation_phrase_coverage(modelo: dict) -> dict:
+    """For every formula's source_citations[].required_text, verify the
+    phrase exists in the cited corpus file (matches the runtime validator).
+
+    Persists per-formula misalignments so the audit driver surfaces them.
+    """
+    sources = _load_source_catalogue()
+    corpus_cache: dict[str, str] = {}
+    misalignments: list[dict] = []
+    formula_count = 0
+    citation_count = 0
+    phrase_count = 0
+    matched_count = 0
+    missed_count = 0
+
+    for rev_id, rev in modelo.get("revisions", {}).items():
+        if not isinstance(rev, dict):
+            continue
+        for formula in rev.get("formulas", []) or []:
+            formula_count += 1
+            for citation in formula.get("source_citations", []) or []:
+                citation_count += 1
+                source_ref = citation.get("source_ref")
+                source = sources.get(source_ref)
+                if source is None:
+                    misalignments.append({
+                        "revision": rev_id,
+                        "formula_id": formula.get("id", "(unknown)"),
+                        "source_ref": source_ref,
+                        "kind": "source_unregistered",
+                    })
+                    continue
+                corpus_path = source.get("corpus_path")
+                if corpus_path is None:
+                    continue
+                # PDF corpora need pdfplumber-based extraction; the audit-script
+                # layer skips them. The runtime validator handles PDF citations
+                # via its own extraction pipeline; layer2 covers HTML / plain-text
+                # corpora only.
+                if corpus_path.lower().endswith((".pdf",)):
+                    continue
+                cache_key = corpus_path
+                if cache_key not in corpus_cache:
+                    full_path = PROJECT_ROOT / corpus_path
+                    if not full_path.exists():
+                        corpus_cache[cache_key] = ""
+                        misalignments.append({
+                            "revision": rev_id,
+                            "formula_id": formula.get("id", "(unknown)"),
+                            "source_ref": source_ref,
+                            "corpus_path": corpus_path,
+                            "kind": "corpus_missing",
+                        })
+                        continue
+                    corpus_cache[cache_key] = _normalise_corpus_text(
+                        full_path.read_text(encoding="utf-8", errors="replace")
+                    )
+                normalised_text = corpus_cache[cache_key]
+                if not normalised_text:
+                    continue
+                for phrase in citation.get("required_text", []) or []:
+                    phrase_count += 1
+                    if _normalise_corpus_text(phrase) in normalised_text:
+                        matched_count += 1
+                    else:
+                        missed_count += 1
+                        misalignments.append({
+                            "revision": rev_id,
+                            "formula_id": formula.get("id", "(unknown)"),
+                            "source_ref": source_ref,
+                            "corpus_path": corpus_path,
+                            "phrase": phrase,
+                            "kind": "phrase_missing",
+                        })
+
+    return {
+        "formula_count": formula_count,
+        "citation_count": citation_count,
+        "phrase_count": phrase_count,
+        "phrases_matched": matched_count,
+        "phrases_missed": missed_count,
+        "coverage_pct": (100.0 * matched_count / phrase_count) if phrase_count else 100.0,
+        "misalignments": misalignments[:100],
+        "misalignment_count": len(misalignments),
+    }
+
+
 def layer4_legal_grounding(modelo: dict) -> dict:
     """Which legal_refs are cited, which catalogue entries are orphaned."""
     catalogued_legal, _ = _load_legal_catalogue()
@@ -640,6 +749,7 @@ def main() -> int:
         "audit_date": str(date.today()),
         "modelo": "100",
         "layer1": layer1_casilla_inventory(modelo),
+        "layer2": layer2_citation_phrase_coverage(modelo),
         "layer3": layer3_mini_model_coverage(modelo, "2025"),
         "layer4": layer4_legal_grounding(modelo),
         "layer7": layer7_scenario_coverage(),
