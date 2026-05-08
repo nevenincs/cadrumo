@@ -180,6 +180,7 @@ _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
         "renta-2025-zec-tipo-gravamen-reducido",
         "renta-2025-estimacion-objetiva-reduccion-general-rate",
         "renta-2025-estimacion-objetiva-indice-corrector-empresas-pequena-dimension-rate",
+        "renta-2025-atribucion-rentas-rate-pass-through",
     }
 )
 
