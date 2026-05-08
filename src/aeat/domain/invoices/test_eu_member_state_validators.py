@@ -1,8 +1,7 @@
 """Tests for the registry-grounded EU member state validators.
 
-Closes the M-2 audit teardown: country code validation now anchors
-to :class:`aeat.domain.vat.EUMemberState` rather than to a hand-
-maintained list, and the new
+Country code validation anchors to :class:`aeat.domain.vat.EUMemberState`
+rather than a hand-maintained list, and the
 :func:`assert_eu_member_state_code` helper rejects non-EU codes for
 callers (e.g. Modelo 369 binding selectors) that need an EU-only
 boundary.
@@ -25,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 def test_eu_member_state_codes_match_substrate_enum_27_states() -> None:
     expected = {member.value.upper() for member in EUMemberState}
-    assert EU_MEMBER_STATE_CODES == expected
+    assert expected == EU_MEMBER_STATE_CODES
     assert len(EU_MEMBER_STATE_CODES) == 27
 
 

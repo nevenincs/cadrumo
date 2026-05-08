@@ -11,6 +11,7 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from ._citation_blocklist import _KNOWN_BAD_CITATIONS, find_known_bad
+from ._coverage import audit_registry_model_law_coverage
 from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._loader import load_registry_tree
@@ -36,6 +37,21 @@ def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
     verify_source_catalogue(PROJECT_ROOT, catalogues.sources)
     validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)
     validator.validate_registry(modelos)
+
+
+def test_committed_registry_tree_has_required_model_law_coverage() -> None:
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+
+    audit = audit_registry_model_law_coverage(modelos, catalogues, source_root=PROJECT_ROOT)
+
+    assert audit.ok
+    assert audit.required_gate_failures == ()
+    assert len(audit.ledgers) == sum(len(modelo.revisions) for modelo in modelos)
+    for ledger in audit.ledgers:
+        gates = {gate.tier: gate for gate in ledger.gates}
+        assert gates["legal_authority"].status == "satisfied", ledger
+        assert gates["official_source_guidance"].status == "satisfied", ledger
+        assert gates["layout_authority"].status == "satisfied", ledger
 
 
 def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:

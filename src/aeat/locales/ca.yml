@@ -82,6 +82,12 @@ cli:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
       period_empty: El periode fiscal no pot estar buit
       period_unrecognised: Període no reconegut
+  config:
+    app_help: Gestionar configuració local i diagnòstics
+    doctor:
+      help: Diagnosticar configuració local, registre, perfil, autenticació i logs
+      logs_help: Mostrar la ruta del fitxer de logs i les línies recents
+      logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
   data:
     app_help: Gestió de dades i registres fiscals
     ledgers:
@@ -419,7 +425,7 @@ cli:
     import:
       dry_run_help: Executar en mode de prova (sense desar canvis)
       help: Importar factures des de fonts externes (p. ex., PDF, Excel)
-      kind_help: Tipus de factures a importar (emeses o rebudes)
+      kind_help: Tipus de factures a importar. Valors acceptats issued o received
       path_help: Ruta a l'arxiu o directori amb les factures
     labels:
       base: Base Imposable
@@ -630,8 +636,16 @@ cli:
     year_help: Exercici fiscal a consultar o processar
   root:
     app_app_help: Espai de treball fiscal per a llibres, factures i declaracions
-    app_help: Assistent per preparar declaracions tributàries espanyoles
+    app_help: |-
+      Assistent per preparar declaracions tributàries espanyoles
+
+      Quickstart: aeat setup init --name NAME --tax-id NIF
+    debug_help: Mostrar logs interns de depuració a stderr
     format_help: Format de sortida per als resultats de l'ordre
+    quiet_help: Mostrar només errors a stderr
+    verbose_help: Mostrar logs interns informatius a stderr
+    version_command_help: Mostrar la versió del paquet i el resum del registre
+    version_help: Mostrar la versió del paquet i el resum del registre
   sanitize:
     app_help: Gestió de la sanetització i anonimització de dades
     labels:
@@ -651,6 +665,13 @@ cli:
         help: Tancar la sessió local d'autenticació
       providers:
         help: Llistar proveïdors d'autenticació disponibles
+      reset:
+        all_help: Eliminar tant l'estat de sessió persistit com el bloqueig
+          d'adquisició
+        help: Restablir sessions d'autenticació persistides o bloquejos
+          d'adquisició
+        locks_help: Eliminar el bloqueig d'adquisició del proveïdor
+        sessions_help: Eliminar l'estat de sessió persistit del proveïdor
       status:
         help: Mostrar el proveïdor configurat i l'estat de sessió
       whoami:
@@ -659,12 +680,15 @@ cli:
       certificate_file_required: El proveïdor certificate requereix --file
       file_not_found: No s'ha trobat el fitxer {file}
       not_configured: Configureu un proveïdor abans d'iniciar sessió
+      reset_scope_required: 'Trieu almenys un abast de restabliment: --sessions,
+        --locks o --all.'
       unknown_profile_key: 'Clau de perfil desconeguda: {key}'
       unknown_provider: 'Proveïdor d''autenticació desconegut: {provider}'
     headers:
       active: Actiu
       auth_provider: Proveïdor d'autenticació
       authenticated_at: Autenticat el
+      completeness: Completesa
       description: Descripció
       id: ID
       key: Clau
@@ -699,6 +723,8 @@ cli:
       set_key_help: Clau de perfil a modificar
       set_value_help: Valor que es desarà
       show_help: Mostrar les dades del perfil actiu
+      show_all_keys_help: Mostrar totes les claus de perfil, inclosos els valors no configurats
+      show_unset_help: Mostrar totes les claus de perfil amb <unset> per als valors buits
       unset_help: Esborrar un valor del perfil
       unset_key_help: Clau de perfil a esborrar
       use_help: Activar un perfil local

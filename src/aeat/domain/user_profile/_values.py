@@ -1,0 +1,192 @@
+"""Strict Pydantic value records for centralized user profiles."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from enum import StrEnum
+from typing import Annotated
+from uuid import uuid4
+
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+_ProfileId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=96, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]*$"),
+]
+_SnapshotId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=128, pattern=r"^[A-Za-z0-9][A-Za-z0-9_.:-]*$"),
+]
+_FieldPath = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=3,
+        max_length=192,
+        pattern=r"^[a-z][a-z0-9_]*(?:\.(?:[0-9]+|[a-z][a-z0-9_]*))+$",
+    ),
+]
+_DisplayName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
+_Source = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
+
+type ProfileFactValue = str | bool | int | Decimal | date | None
+
+
+class UserProfileStatus(StrEnum):
+    """Lifecycle status for a live profile root."""
+
+    ACTIVE = "active"
+    TOMBSTONED = "tombstoned"
+
+
+def utc_now() -> datetime:
+    """Return a timezone-aware UTC timestamp."""
+
+    return datetime.now(tz=UTC)
+
+
+def new_profile_snapshot_id(profile_id: str, *, created_at: datetime | None = None) -> str:
+    """Create a deterministic-shape but unique snapshot id."""
+
+    instant = created_at or utc_now()
+    return f"{profile_id}:{instant.strftime('%Y%m%dT%H%M%S%fZ')}:{uuid4().hex}"
+
+
+class UserProfileFact(BaseModel):
+    """One effective-dated user-profile fact."""
+
+    model_config = _STRICT_FROZEN
+
+    path: _FieldPath
+    value: ProfileFactValue
+    source: _Source = "manual_cli"
+    valid_from: date | None = None
+    valid_to: date | None = None
+
+    @model_validator(mode="after")
+    def _validate_window(self) -> UserProfileFact:
+        if self.valid_from is not None and self.valid_to is not None and self.valid_from > self.valid_to:
+            raise ValueError(f"{self.path}: valid_from is after valid_to")
+        return self
+
+
+class UserProfileRecord(BaseModel):
+    """Live secure user-profile aggregate before persistence encoding."""
+
+    model_config = _STRICT_FROZEN
+
+    schema_id: str = "aeat.user_profile"
+    schema_version: int = Field(default=1, ge=1)
+    profile_id: _ProfileId
+    display_name: _DisplayName
+    status: UserProfileStatus = UserProfileStatus.ACTIVE
+    facts: tuple[UserProfileFact, ...] = Field(default=())
+    created_at: datetime = Field(default_factory=utc_now)
+    updated_at: datetime = Field(default_factory=utc_now)
+    removed_at: datetime | None = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _parse_status(cls, value: object) -> object:
+        if isinstance(value, UserProfileStatus):
+            return value
+        if isinstance(value, str):
+            return UserProfileStatus(value)
+        return value
+
+    @model_validator(mode="after")
+    def _validate_lifecycle(self) -> UserProfileRecord:
+        if self.created_at > self.updated_at:
+            raise ValueError("created_at must be before or equal to updated_at")
+        if self.status is UserProfileStatus.ACTIVE and self.removed_at is not None:
+            raise ValueError("active profiles must not carry removed_at")
+        if self.status is UserProfileStatus.TOMBSTONED and self.removed_at is None:
+            raise ValueError("tombstoned profiles must carry removed_at")
+        return self
+
+    def tombstone(self, *, removed_at: datetime | None = None) -> UserProfileRecord:
+        """Return a tombstoned copy of the live profile root."""
+
+        instant = removed_at or utc_now()
+        return self.model_copy(
+            update={
+                "status": UserProfileStatus.TOMBSTONED,
+                "updated_at": instant,
+                "removed_at": instant,
+            }
+        )
+
+
+class UserProfileSnapshot(BaseModel):
+    """Immutable filing/export profile snapshot."""
+
+    model_config = _STRICT_FROZEN
+
+    snapshot_id: _SnapshotId
+    profile_id: _ProfileId
+    schema_id: str = "aeat.user_profile"
+    schema_version: int = Field(ge=1)
+    created_at: datetime = Field(default_factory=utc_now)
+    facts: tuple[UserProfileFact, ...]
+    canonical_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+    @classmethod
+    def from_profile(
+        cls,
+        profile: UserProfileRecord,
+        *,
+        snapshot_id: str | None = None,
+        created_at: datetime | None = None,
+    ) -> UserProfileSnapshot:
+        """Create an immutable snapshot from a live profile record."""
+
+        if profile.status is not UserProfileStatus.ACTIVE:
+            raise ValueError("cannot snapshot a tombstoned profile")
+        instant = created_at or utc_now()
+        facts = tuple(
+            sorted(
+                profile.facts,
+                key=lambda fact: (
+                    fact.path,
+                    fact.valid_from or date.min,
+                    fact.valid_to or date.max,
+                    _canonical_payload(fact.model_dump(mode="json")),
+                ),
+            )
+        )
+        payload = _canonical_payload(
+            {
+                "schema_id": profile.schema_id,
+                "schema_version": profile.schema_version,
+                "profile_id": profile.profile_id,
+                "facts": [fact.model_dump(mode="json") for fact in facts],
+            }
+        )
+        digest = hashlib.sha256(payload).hexdigest()
+        return cls(
+            snapshot_id=snapshot_id or new_profile_snapshot_id(profile.profile_id, created_at=instant),
+            profile_id=profile.profile_id,
+            schema_id=profile.schema_id,
+            schema_version=profile.schema_version,
+            created_at=instant,
+            facts=facts,
+            canonical_hash=digest,
+        )
+
+
+class UserProfilePortableExport(BaseModel):
+    """User-directed portable profile export payload."""
+
+    model_config = _STRICT_FROZEN
+
+    exported_at: datetime = Field(default_factory=utc_now)
+    profile: UserProfileRecord
+
+
+def _canonical_payload(payload: object) -> bytes:
+    return json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")

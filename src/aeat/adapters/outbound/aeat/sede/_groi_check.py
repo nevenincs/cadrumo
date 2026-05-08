@@ -46,9 +46,11 @@ from pydantic import AnyUrl, BaseModel, ConfigDict, Field
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.logging import get_logger
-from .....domain.calculations.registry._errors import RegistryValidationError
-from .....domain.calculations.registry._groi_oracle import GroiObservation
-from .....domain.calculations.registry._remote_state_guard import RemoteOperation
+from .....domain.calculations.registry import (
+    GroiObservation,
+    RegistryValidationError,
+    RemoteOperation,
+)
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory
 from ._browser_stage import build_playwright_stage_runner

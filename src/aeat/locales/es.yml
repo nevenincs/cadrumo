@@ -84,6 +84,12 @@ cli:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
       period_empty: El periodo fiscal no puede estar vacío
       period_unrecognised: Periodo no reconocido
+  config:
+    app_help: Gestionar configuración local y diagnósticos
+    doctor:
+      help: Diagnosticar configuración local, registro, perfil, autenticación y logs
+      logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
+      logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
   data:
     app_help: Gestión de datos y registros fiscales
     ledgers:
@@ -422,7 +428,8 @@ cli:
     import:
       dry_run_help: Ejecutar en modo de prueba (sin guardar cambios)
       help: Importar facturas desde fuentes externas (p. ej., PDF, Excel)
-      kind_help: Tipo de facturas a importar (emitidas o recibidas)
+      kind_help: Tipo de facturas a importar. Valores aceptados issued (emitidas)
+        o received (recibidas)
       path_help: Ruta al archivo o directorio con las facturas
     labels:
       base: Base Imponible
@@ -635,8 +642,16 @@ cli:
     year_help: Ejercicio fiscal a consultar o procesar
   root:
     app_app_help: Espacio de trabajo fiscal para libros, facturas y declaraciones
-    app_help: Asistente para preparar declaraciones tributarias españolas
+    app_help: |-
+      Asistente para preparar declaraciones tributarias españolas
+
+      Quickstart: aeat setup init --name NAME --tax-id NIF
+    debug_help: Mostrar logs internos de depuración en stderr
     format_help: Formato de salida para los resultados del comando
+    quiet_help: Mostrar solo errores en stderr
+    verbose_help: Mostrar logs internos informativos en stderr
+    version_command_help: Mostrar la versión del paquete y el resumen del registro
+    version_help: Mostrar la versión del paquete y el resumen del registro
   sanitize:
     app_help: Gestión de la sanitización y anonimización de datos
     labels:
@@ -657,6 +672,13 @@ cli:
         help: Cerrar la sesión local de autenticación
       providers:
         help: Listar proveedores de autenticación disponibles
+      reset:
+        all_help: Eliminar tanto el estado de sesión persistido como el bloqueo
+          de adquisición
+        help: Restablecer sesiones de autenticación persistidas o bloqueos de
+          adquisición
+        locks_help: Eliminar el bloqueo de adquisición del proveedor
+        sessions_help: Eliminar el estado de sesión persistido del proveedor
       status:
         help: Mostrar el proveedor configurado y el estado de sesión
       whoami:
@@ -665,12 +687,15 @@ cli:
       certificate_file_required: El proveedor certificate requiere --file
       file_not_found: No se ha encontrado el archivo {file}
       not_configured: Configure un proveedor antes de iniciar sesión
+      reset_scope_required: 'Elija al menos un alcance de restablecimiento: --sessions,
+        --locks o --all.'
       unknown_profile_key: 'Clave de perfil desconocida: {key}'
       unknown_provider: 'Proveedor de autenticación desconocido: {provider}'
     headers:
       active: Activo
       auth_provider: Proveedor de autenticación
       authenticated_at: Autenticado el
+      completeness: Completitud
       description: Descripción
       id: ID
       key: Clave
@@ -705,6 +730,8 @@ cli:
       set_key_help: Clave de perfil a modificar
       set_value_help: Valor que se guardará
       show_help: Mostrar los datos del perfil activo
+      show_all_keys_help: Mostrar todas las claves de perfil, incluidas las no configuradas
+      show_unset_help: Mostrar todas las claves de perfil con <unset> para valores vacíos
       unset_help: Borrar un valor del perfil
       unset_key_help: Clave de perfil a borrar
       use_help: Activar un perfil local

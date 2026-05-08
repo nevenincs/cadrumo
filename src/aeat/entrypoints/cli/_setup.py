@@ -16,7 +16,8 @@ from ...application.auth import (
     inspect_auth_acquisition_lock,
     require_verified_aeat_session,
 )
-from ...application.profile import validate_profile
+from ...application.profile import list_profile_value_rows, validate_profile
+from ...application.setup_status import build_setup_status
 from ...application.user_cli import (
     clear_profile_values,
     set_active_profile,
@@ -96,33 +97,16 @@ def setup_init(
 @app.command("status", help=tr("cli.setup.status.help"))
 def setup_status(ctx: typer.Context) -> None:
     """Show profile, auth, and validation readiness."""
-    current = _state()
-    record = current.active_profile_record()
-    profile_ready = False
-    missing_required: list[str] = []
-    if record is not None:
-        result = validate_profile(record.values)
-        profile_ready = result.valid
-        missing_required = list(result.missing_required)
-    auth_provider = current.auth.provider or ""
-    login_ready = current.auth.authenticated_at is not None
-    if record is None:
-        next_action = "aeat setup init --name NAME"
-    elif missing_required:
-        next_action = f"aeat setup profile set {missing_required[0]} VALUE"
-    elif not auth_provider:
-        next_action = "aeat setup auth configure --provider certificate --file PATH"
-    elif not login_ready:
-        next_action = "aeat setup auth login"
-    else:
-        next_action = "aeat app overview status"
+    report = build_setup_status(_state())
     payload = {
-        "active_profile": current.active_profile,
-        "profile_ready": profile_ready,
-        "missing_required": missing_required,
-        "auth_provider": auth_provider,
-        "login_ready": login_ready,
-        "next_action": next_action,
+        "active_profile": report.active_profile,
+        "profile_ready": report.profile_ready,
+        "missing_required": list(report.missing_required),
+        "profile_present_keys": report.profile_present_keys,
+        "profile_total_keys": report.profile_total_keys,
+        "auth_provider": report.auth_provider,
+        "login_ready": report.login_ready,
+        "next_action": report.next_action,
     }
     yes_label = tr("cli.setup.labels.yes")
     no_label = tr("cli.setup.labels.no")
@@ -130,12 +114,13 @@ def setup_status(ctx: typer.Context) -> None:
         ctx,
         payload,
         [
-            f"{tr('cli.setup.headers.profile')}\t{current.active_profile or ''}",
-            f"{tr('cli.setup.headers.profile_ready')}\t{yes_label if profile_ready else no_label}",
-            f"{tr('cli.setup.headers.missing')}\t{', '.join(missing_required) or '-'}",
-            f"{tr('cli.setup.headers.auth_provider')}\t{auth_provider}",
-            f"{tr('cli.setup.headers.login_ready')}\t{yes_label if login_ready else no_label}",
-            f"{tr('cli.setup.headers.next')}\t{next_action}",
+            f"{tr('cli.setup.headers.profile')}\t{report.active_profile or ''}",
+            f"{tr('cli.setup.headers.profile_ready')}\t{yes_label if report.profile_ready else no_label}",
+            f"{tr('cli.setup.headers.missing')}\t{', '.join(report.missing_required) or '-'}",
+            f"{tr('cli.setup.headers.completeness')}\t{report.profile_present_keys}/{report.profile_total_keys}",
+            f"{tr('cli.setup.headers.auth_provider')}\t{report.auth_provider}",
+            f"{tr('cli.setup.headers.login_ready')}\t{yes_label if report.login_ready else no_label}",
+            f"{tr('cli.setup.headers.next')}\t{report.next_action}",
         ],
     )
 
@@ -293,12 +278,12 @@ def auth_status(ctx: typer.Context) -> None:
     )
 
 
-@auth_app.command("reset", help="Reset persisted auth sessions and/or acquisition locks.")
+@auth_app.command("reset", help=tr("cli.setup.auth.reset.help"))
 def auth_reset(
     ctx: typer.Context,
-    sessions: bool = typer.Option(False, "--sessions", help="Remove persisted auth session state for the provider."),
-    locks: bool = typer.Option(False, "--locks", help="Remove the provider acquisition lock."),
-    all_: bool = typer.Option(False, "--all", help="Remove both persisted auth session state and acquisition lock."),
+    sessions: bool = typer.Option(False, "--sessions", help=tr("cli.setup.auth.reset.sessions_help")),
+    locks: bool = typer.Option(False, "--locks", help=tr("cli.setup.auth.reset.locks_help")),
+    all_: bool = typer.Option(False, "--all", help=tr("cli.setup.auth.reset.all_help")),
 ) -> None:
     """Manually clear local auth recovery state after a crash or broken login attempt."""
 
@@ -312,7 +297,7 @@ def auth_reset(
     reset_sessions = sessions or all_
     reset_locks = locks or all_
     if not reset_sessions and not reset_locks:
-        raise _bad("Choose at least one reset scope: --sessions, --locks, or --all.")
+        raise _bad(tr("cli.setup.errors.reset_scope_required"))
 
     record = current.active_profile_record()
     profile_tax_id = record.values.get("tax.id") if record is not None else None
@@ -440,13 +425,22 @@ def profile_use(
 
 
 @profile_app.command("show", help=tr("cli.setup.profile.show_help"))
-def profile_show(ctx: typer.Context) -> None:
+def profile_show(
+    ctx: typer.Context,
+    all_keys: bool = typer.Option(False, "--all-keys", help=tr("cli.setup.profile.show_all_keys_help")),
+    unset: bool = typer.Option(False, "--unset", help=tr("cli.setup.profile.show_unset_help")),
+) -> None:
     state, name = _active_profile_or_exit(ctx)
     record = state.active_profile_record()
     assert record is not None
-    payload = {"active_profile": name, "values": record.values}
+    rows = list_profile_value_rows(record.values, include_unset=all_keys or unset)
+    payload = {
+        "active_profile": name,
+        "values": {row.key: row.value for row in rows if row.is_set and row.value is not None},
+        "rows": rows,
+    }
     lines: list[str] = [f"{tr('cli.setup.headers.profile')}\t{name}"]
-    lines.extend(f"{key}\t{value}" for key, value in sorted(record.values.items()))
+    lines.extend(f"{row.key}\t{row.value if row.value is not None else '<unset>'}" for row in rows)
     _emit(ctx, payload, lines)
 
 
@@ -524,6 +518,8 @@ def profile_validate(ctx: typer.Context) -> None:
             "present_required": [],
             "present_optional": [],
             "unknown_keys": [],
+            "present_keys": 0,
+            "total_keys": len(list_profile_value_rows({}, include_unset=True)),
         }
         _emit(
             ctx,
@@ -531,6 +527,7 @@ def profile_validate(ctx: typer.Context) -> None:
             [
                 f"{tr('cli.setup.headers.valid')}\t{tr('cli.setup.labels.no')}",
                 f"{tr('cli.setup.headers.missing')}\tprofile",
+                f"{tr('cli.setup.headers.completeness')}\t0/{payload['total_keys']}",
             ],
         )
         _exit(2)
@@ -543,9 +540,12 @@ def profile_validate(ctx: typer.Context) -> None:
         "present_required": list(result.present_required),
         "present_optional": list(result.present_optional),
         "unknown_keys": list(result.unknown_keys),
+        "present_keys": result.present_keys,
+        "total_keys": result.total_keys,
     }
     lines: list[str] = [
-        f"{tr('cli.setup.headers.valid')}\t{tr('cli.setup.labels.yes') if result.valid else tr('cli.setup.labels.no')}"
+        f"{tr('cli.setup.headers.valid')}\t{tr('cli.setup.labels.yes') if result.valid else tr('cli.setup.labels.no')}",
+        f"{tr('cli.setup.headers.completeness')}\t{result.present_keys}/{result.total_keys}",
     ]
     if result.missing_required:
         lines.append(f"{tr('cli.setup.headers.missing')}\t{', '.join(result.missing_required)}")

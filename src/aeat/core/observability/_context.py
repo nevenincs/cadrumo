@@ -18,7 +18,7 @@ import os
 import uuid
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from contextvars import ContextVar, Token
+from contextvars import ContextVar
 from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict
@@ -241,8 +241,8 @@ def run_context(
     # previous context's run_id (or an empty one) — the sink's run_id
     # filter drops them, but the semantics are cleaner when the var is
     # bound first.
-    run_token: Token[RunContextInfo | None] = RUN_CONTEXT_VAR.set(info)
-    step_token: Token[str | None] = STEP_CONTEXT_VAR.set(info.initial_step_id)
+    run_token = RUN_CONTEXT_VAR.set(info)
+    step_token = STEP_CONTEXT_VAR.set(info.initial_step_id)
     root_logger.addHandler(sink)
     # Pessimistic default: only flip to OK once the yielded body returns
     # cleanly. If STEP_START itself raises, or the yield is never reached,

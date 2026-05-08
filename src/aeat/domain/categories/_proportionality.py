@@ -22,7 +22,7 @@ from ...core.i18n import Translatable as tr  # noqa: N813
 class _ProportionalityStrictFrozenModel(BaseModel):
     """Shared strict immutable boundary model."""
 
-    model_config = ConfigDict(strict=True, frozen=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class CategoryCitationSource(StrEnum):

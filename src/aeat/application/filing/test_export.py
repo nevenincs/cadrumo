@@ -23,6 +23,7 @@ from . import (
     export_draft,
     verify_export,
 )
+from .runtime import RegistrySchemaProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -30,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _HEX_DIGEST = "a" * 64
 _EXPORT_PATH = Path("exports/m130-2026Q1.txt")
 _OTHER_EXPORT_PATH = Path("exports/x.txt")
-_SCHEMA_PROVIDER_CACHE: dict[tuple[int | None, str | None, tuple[str, ...]], object] = {}
+_SCHEMA_PROVIDER_CACHE: dict[tuple[int | None, str | None, tuple[str, ...]], RegistrySchemaProvider] = {}
 
 
 def _narrative() -> str:
@@ -43,7 +44,7 @@ def _schema_provider(
     filing_year: int | None = None,
     period: str | None = None,
     modelos: tuple[str, ...] = ("130",),
-):
+) -> RegistrySchemaProvider:
     """Return a real registry schema provider, cached per period selector."""
     selected_modelos = tuple(sorted(modelos))
     key = (filing_year, period, selected_modelos)

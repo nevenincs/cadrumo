@@ -80,6 +80,8 @@ class FilingIVAProfile(BaseModel):
 
     model_config = _STRICT_FROZEN
 
+    roi_enrolled: bool = False
+    oss_enrolled: bool = False
     intracommunity_operations_exceed_50000_eur: bool = False
 
 

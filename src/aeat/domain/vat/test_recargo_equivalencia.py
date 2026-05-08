@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.vat import (
@@ -27,22 +28,10 @@ def _load_recargo_toml() -> dict[str, dict[str, dict[str, str]]]:
 
 def test_recargo_rates_match_registry_toml_values() -> None:
     raw = _load_recargo_toml()["parameters"]
-    assert (
-        LIVA_ART_161_RECARGO.general_rate
-        == Decimal(raw["liva-art-161:recargo-rate-general"]["value"])
-    )
-    assert (
-        LIVA_ART_161_RECARGO.reducido_rate
-        == Decimal(raw["liva-art-161:recargo-rate-reducido"]["value"])
-    )
-    assert (
-        LIVA_ART_161_RECARGO.super_reducido_rate
-        == Decimal(raw["liva-art-161:recargo-rate-super-reducido"]["value"])
-    )
-    assert (
-        LIVA_ART_161_RECARGO.tabaco_rate
-        == Decimal(raw["liva-art-161:recargo-rate-tabaco"]["value"])
-    )
+    assert LIVA_ART_161_RECARGO.general_rate == Decimal(raw["liva-art-161:recargo-rate-general"]["value"])
+    assert LIVA_ART_161_RECARGO.reducido_rate == Decimal(raw["liva-art-161:recargo-rate-reducido"]["value"])
+    assert LIVA_ART_161_RECARGO.super_reducido_rate == Decimal(raw["liva-art-161:recargo-rate-super-reducido"]["value"])
+    assert LIVA_ART_161_RECARGO.tabaco_rate == Decimal(raw["liva-art-161:recargo-rate-tabaco"]["value"])
 
 
 def test_recargo_rates_match_liva_art_161_boe_text() -> None:
@@ -62,20 +51,16 @@ def test_recargo_parameters_each_cite_liva_art_161() -> None:
         "liva-art-161:recargo-rate-tabaco",
     ):
         legal_refs = raw[parameter_id].get("legal_refs")
-        assert legal_refs == ["ley-37-1992:art-161"], (
-            f"{parameter_id} must cite ley-37-1992:art-161"
-        )
+        assert legal_refs == ["ley-37-1992:art-161"], f"{parameter_id} must cite ley-37-1992:art-161"
 
 
 def test_recargo_legal_section_carries_required_text_from_boe() -> None:
     legal = _load_recargo_toml()["legal"]
     art_161 = legal.get("ley-37-1992:art-161")
     assert art_161 is not None
-    required_text = art_161.get("required_text", [])
+    required_text: list[str] = list(art_161.get("required_text", []))
     for needle in ("5,2 por ciento", "1,4 por ciento", "0,50 por ciento", "1,75 por ciento"):
-        assert any(needle in entry for entry in required_text), (
-            f"required_text must mention {needle!r}"
-        )
+        assert any(needle in entry for entry in required_text), f"required_text must mention {needle!r}"
 
 
 def test_recargo_corpus_excerpt_present_with_boe_quotes() -> None:
@@ -90,7 +75,7 @@ def test_recargo_corpus_excerpt_present_with_boe_quotes() -> None:
 
 
 def test_recargo_record_is_frozen() -> None:
-    with pytest.raises(Exception):  # noqa: PT011
+    with pytest.raises(ValidationError):
         LIVA_ART_161_RECARGO.general_rate = Decimal("0.999")  # type: ignore[misc]
 
 
@@ -117,7 +102,7 @@ def test_recargo_rate_for_exempt_returns_none() -> None:
 
 
 def test_recargo_record_validates_inputs_in_strict_mode() -> None:
-    with pytest.raises(Exception):  # noqa: PT011
+    with pytest.raises(ValidationError):
         LivaArt161RecargoRates(
             general_rate=Decimal("1.5"),  # > 1 violates Field constraint
             reducido_rate=Decimal("0.014"),

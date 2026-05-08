@@ -266,10 +266,9 @@ def test_invoice_iva_category_rejects_unknown_string() -> None:
 def test_iva_rate_percentage_is_resolved_against_centralized_vat_substrate() -> None:
     """iva_rate_percentage must derive its values from registry/aeat/vat/rates.toml.
 
-    Confirms the V-1 audit finding teardown: the helper no longer carries
-    a hardcoded ``RATE_21 -> 0.21`` literal. Every numeric slot is
-    resolved against :func:`aeat.domain.vat.lookup_rate` for Spain at
-    a given date.
+    The helper carries no hardcoded ``RATE_21 -> 0.21`` literal; every
+    numeric slot is resolved against :func:`aeat.domain.vat.lookup_rate`
+    for Spain at a given date.
     """
     from aeat.domain.invoices._enums import iva_rate_percentage
     from aeat.domain.vat import EUMemberState, VATRateKind, lookup_rate

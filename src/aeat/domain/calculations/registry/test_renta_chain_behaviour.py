@@ -45,7 +45,6 @@ def _base_2025_inputs() -> dict[str, Decimal]:
         "0429": Decimal("0"),
         # 0424 is now computed via the ganancias-patrimoniales saldo formula
         # (max(0422-0423, 0)) and cannot be supplied as input.
-        "0433": Decimal("0"),
         "0461": Decimal("0"),
         "0501": Decimal("0"),
         "0506": Decimal("0"),
@@ -66,27 +65,16 @@ def _base_2025_inputs() -> dict[str, Decimal]:
         "0540": Decimal("0"),
         "0541": Decimal("0"),
         "0544": Decimal("0"),
-        "0547": Decimal("0"),
-        "0548": Decimal("0"),
         "0549": Decimal("0"),
-        "0550": Decimal("0"),
-        "0551": Decimal("0"),
-        "0552": Decimal("0"),
-        "0553": Decimal("0"),
         "0554": Decimal("0"),
         "0555": Decimal("0"),
         "0556": Decimal("0"),
         "0557": Decimal("0"),
         "0558": Decimal("0"),
         "0559": Decimal("0"),
-        "0560": Decimal("0"),
-        "0561": Decimal("0"),
-        "0562": Decimal("0"),
-        "0563": Decimal("0"),
         "0564": Decimal("0"),
         "0565": Decimal("0"),
         "0566": Decimal("0"),
-        "0567": Decimal("0"),
         "0584": Decimal("0"),
         "0568": Decimal("0"),
         "0569": Decimal("0"),
@@ -184,10 +172,10 @@ def test_cuota_liquida_estatal_subtracts_state_side_deduction_columns() -> None:
             "0528": Decimal("5000.00"),  # produces 0545 = 5000 + 0540 = 5000
             "0530": Decimal("0"),
             "0540": Decimal("0"),
-            "0547": Decimal("100.00"),   # vivienda habitual estatal
+            "0698": Decimal("100.00"),   # actividades económicas (formula 0547 = 0698 + 0702 + 0704)
             "0549": Decimal("200.00"),   # nueva creación
-            "0552": Decimal("300.00"),   # donativos estatal
-            "0560": Decimal("400.00"),   # Ceuta/Melilla estatal
+            "0722": Decimal("600.00"),   # donativos importes (formula 0552 = 50% × (0722+0723+0724+0725))
+            "0727": Decimal("800.00"),   # Ceuta/Melilla source (formula 0560 = 50% × 0727)
         },
         expected=(
             RegistryScenarioExpectedOutput(target="0545", value=Decimal("5000.00")),
@@ -238,16 +226,24 @@ def test_cuota_liquida_total_sums_estatal_plus_autonomica() -> None:
 
 
 def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> None:
-    """0435 = 0432 + 0433 — when 0433 is negative, base imponible is reduced."""
+    """0435 = 0432 - 0433 where 0433 is the AEAT-positive cap on the G/P loss."""
+    # AEAT convention (per 2025 record-design dictionary HSALDO3 entry):
+    # 0421 = max(0, 0419 - 0418) — positive magnitude of the net G/P loss balance
+    # 0433 = min(0421, 25% × 0432) — capped portion that integrates into the base
+    # 0435 = 0432 - 0433 — base imponible general after subtracting the cap
+    # Inputs: 1585 = 5000 propagates through 1607 → 0419 → 0421 → 0433.
+    #   1607 = sum(1585) = 5000 → 0419 = sum(1607, 0307) = 5000
+    #   0421 = max(0, 0419 - 0418) = 5000
+    #   0433 = min(0421, 25% × 0432) = min(5000, 7500) = 5000
+    # Expected: 0435 = 30000 - 5000 = 25000.
     scenario = _scenario_2025(
         "base-imponible-with-negative-capital-gains",
         overrides={
             "0003": Decimal("30000.00"),  # trabajo income → propagates to 0025 → 0432
-            "0433": Decimal("-5000.00"),  # saldo neto negativo G/P 2025 (limited)
+            "1585": Decimal("5000.00"),   # G/P pérdidas → 1607 → 0419 → 0421 → 0433 cap
         },
         expected=(
             RegistryScenarioExpectedOutput(target="0432", value=Decimal("30000.00")),
-            # 0435 = 0432 + 0433 = 30000 + (-5000) = 25000
             RegistryScenarioExpectedOutput(target="0435", value=Decimal("25000.00"), operand_refs=("0432", "0433")),
         ),
     )

@@ -48,7 +48,6 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
             # Income side
             "0003": Decimal("30000.00"),
             # Saldo G/P 2025 negativo
-            "0433": Decimal("0"),
             # Capital mobiliario ahorro saldo positivo (0424 is now computed
             # from 0422-0423 via the saldo formula and cannot be supplied)
             "0429": Decimal("0"),
@@ -82,27 +81,16 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
             "0541": Decimal("0"),
             # Deduction columns (state and autonomic) — none
             "0544": Decimal("0"),
-            "0547": Decimal("0"),
-            "0548": Decimal("0"),
             "0549": Decimal("0"),
-            "0550": Decimal("0"),
-            "0551": Decimal("0"),
-            "0552": Decimal("0"),
-            "0553": Decimal("0"),
             "0554": Decimal("0"),
             "0555": Decimal("0"),
             "0556": Decimal("0"),
             "0557": Decimal("0"),
             "0558": Decimal("0"),
             "0559": Decimal("0"),
-            "0560": Decimal("0"),
-            "0561": Decimal("0"),
-            "0562": Decimal("0"),
-            "0563": Decimal("0"),
             "0564": Decimal("0"),
             "0565": Decimal("0"),
             "0566": Decimal("0"),
-            "0567": Decimal("0"),
             "0584": Decimal("0"),
             # Increment + perdida-derecho regularization columns
             "0568": Decimal("0"),
@@ -171,7 +159,11 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
             RegistryScenarioExpectedOutput(
                 target="0460",
                 value=Decimal("0.00"),
-                operand_refs=("0429", "0424"),
+                operand_refs=(
+                    "0424", "0429",
+                    "0436", "0439", "0440", "0441", "0442", "0443", "0444", "0445", "0447",
+                    "0446", "0449", "0450", "0451", "0452", "0453", "0454", "0455", "0448",
+                ),
             ),
             RegistryScenarioExpectedOutput(
                 target="0500",
@@ -246,12 +238,12 @@ def _employee_full_chain_scenario() -> RegistryCalculationScenario:
             RegistryScenarioExpectedOutput(
                 target="0585",
                 value=Decimal("5936.38"),
-                operand_refs=("0570", "0568", "0572", "0574"),
+                operand_refs=("0570", "0568", "0582", "0572", "0573", "0574", "0576"),
             ),
             RegistryScenarioExpectedOutput(
                 target="0586",
                 value=Decimal("5936.38"),
-                operand_refs=("0571", "0569", "0577", "0579"),
+                operand_refs=("0571", "0569", "0583", "0577", "0578", "0579", "0581", "0504"),
             ),
             # Cuota líquida total (existing formula at 0587)
             RegistryScenarioExpectedOutput(
@@ -293,7 +285,6 @@ def _employee_scenario_for_revision(revision: str) -> RegistryCalculationScenari
     """
     base_inputs: dict[str, Decimal] = {
         "0003": Decimal("30000.00"),
-        "0433": Decimal("0"),
         "0429": Decimal("0"),
         "0424": Decimal("0"),
         "0461": Decimal("0"),
@@ -309,14 +300,12 @@ def _employee_scenario_for_revision(revision: str) -> RegistryCalculationScenari
         "0528": Decimal("6200.00"), "0529": Decimal("6200.00"),
         "0530": Decimal("263.62"), "0531": Decimal("263.62"),
         "0540": Decimal("0"), "0541": Decimal("0"),
-        "0544": Decimal("0"), "0547": Decimal("0"), "0548": Decimal("0"),
-        "0549": Decimal("0"), "0550": Decimal("0"), "0551": Decimal("0"),
-        "0552": Decimal("0"), "0553": Decimal("0"), "0554": Decimal("0"),
-        "0555": Decimal("0"), "0556": Decimal("0"), "0557": Decimal("0"),
-        "0558": Decimal("0"), "0559": Decimal("0"), "0560": Decimal("0"),
-        "0561": Decimal("0"), "0562": Decimal("0"), "0563": Decimal("0"),
-        "0564": Decimal("0"), "0565": Decimal("0"), "0566": Decimal("0"),
-        "0567": Decimal("0"), "0584": Decimal("0"),
+        "0544": Decimal("0"),
+        "0549": Decimal("0"),
+        "0554": Decimal("0"), "0555": Decimal("0"), "0556": Decimal("0"),
+        "0557": Decimal("0"), "0558": Decimal("0"), "0559": Decimal("0"),
+        "0564": Decimal("0"), "0565": Decimal("0"),
+        "0566": Decimal("0"), "0584": Decimal("0"),
         "0568": Decimal("0"), "0569": Decimal("0"),
         "0572": Decimal("0"), "0574": Decimal("0"),
         "0577": Decimal("0"), "0579": Decimal("0"),

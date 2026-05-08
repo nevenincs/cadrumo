@@ -9,10 +9,11 @@ from typing import Any
 import pytest
 from typer.testing import CliRunner
 
+from aeat.application.diagnostics import build_cli_version_report
 from aeat.domain.invoices import InvoiceCatalogueRepository
 from aeat.domain.transactions import TransactionCatalogueRepository
 
-from . import app
+from . import _import_failure_surface, _startup_import_error_text, app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -93,7 +94,14 @@ def test_root_surface_contains_setup_and_app_only() -> None:
 
     assert result.exit_code == 0, result.output
     assert "setup" in result.output
+    assert "config" in result.output
     assert "app" in result.output
+    assert "--version" in result.output
+    assert "--quiet" in result.output
+    assert "--verbose" in result.output
+    assert "--debug" in result.output
+    assert "-V" in result.output
+    assert "version" in result.output
     for removed_command in (
         "auth",
         "financial",
@@ -107,12 +115,33 @@ def test_root_surface_contains_setup_and_app_only() -> None:
         assert removed_command not in result.output
 
 
+def test_root_no_args_renders_help_successfully() -> None:
+    result = _invoke([])
+
+    assert result.exit_code == 0, result.output
+    assert "setup" in result.output
+    assert "config" in result.output
+    assert "app" in result.output
+    assert "--version" in result.output
+    assert "Quickstart: aeat setup init --name NAME --tax-id NIF" in result.output
+
+
+def test_setup_help_lists_commands_in_workflow_order() -> None:
+    result = _invoke(["setup", "--help"])
+
+    assert result.exit_code == 0, result.output
+    workflow = ("init", "status", "auth", "profile")
+    positions = [result.output.index(command) for command in workflow]
+    assert positions == sorted(positions)
+
+
 def test_removed_developer_commands_are_not_registered() -> None:
     removed_commands = [
         ["financial", "--help"],
         ["filing", "--help"],
         ["bootstrap", "--help"],
         ["doctor", "--help"],
+        ["config", "doctor-logs", "--help"],
         ["auth", "--help"],
         ["app", "declarations", "--help"],
         ["app", "workspaces", "--help"],
@@ -126,11 +155,73 @@ def test_removed_developer_commands_are_not_registered() -> None:
         assert result.exit_code != 0, command
 
 
+def test_config_doctor_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    root_doctor = _invoke(["doctor", "--help"])
+    help_result = _invoke(["config", "doctor", "--help"])
+    text_result = _invoke(["config", "doctor"])
+    json_result = _invoke(["--format", "json", "config", "doctor"])
+    logs_result = _invoke(["config", "doctor", "logs", "--lines", "0"])
+
+    assert root_doctor.exit_code != 0
+    assert help_result.exit_code == 0, help_result.output
+    assert text_result.exit_code == 0, text_result.output
+    assert "Overall\t" in text_result.output
+    assert "registry.load" in text_result.output
+    payload = json.loads(_json_output(json_result))
+    assert payload["registry"]["available"] is True
+    assert "registry.load" in {check["name"] for check in payload["checks"]}
+    assert logs_result.exit_code == 0, logs_result.output
+    assert "path\t" in logs_result.output
+
+
+def test_startup_import_failure_points_to_config_doctor_without_traceback() -> None:
+    error = ModuleNotFoundError("No module named 'xlrd'", name="xlrd")
+
+    assert _startup_import_error_text(error) == (
+        "Cannot start AEAT command surface: missing dependency 'xlrd'.\nRun: aeat config doctor\n"
+    )
+    result = _RUNNER.invoke(_import_failure_surface("app", error), [])
+
+    assert result.exit_code == 1, result.output
+    assert "missing dependency 'xlrd'" in result.output
+    assert "aeat config doctor" in result.output
+    assert "Traceback" not in result.output
+
+
+def test_version_surfaces_render_backend_registry_summary() -> None:
+    report = build_cli_version_report()
+    assert report.registry.available
+
+    for command in (["--version"], ["-V"], ["version"]):
+        result = _invoke(command)
+
+        assert result.exit_code == 0, result.output
+        assert f"aeat {report.package_version}" in result.output
+        assert f"{report.registry.modelo_count} modelos" in result.output
+        assert f"{report.registry.casilla_count} casillas" in result.output
+        assert f"{report.registry.formula_count} formulas" in result.output
+
+
+def test_version_command_can_emit_typed_json_report() -> None:
+    expected = build_cli_version_report()
+
+    result = _invoke(["--format", "json", "version"])
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(_json_output(result))
+    assert payload["package_name"] == "aeat"
+    assert payload["package_version"] == expected.package_version
+    assert payload["registry"]["available"] is True
+    assert payload["registry"]["modelo_count"] == expected.registry.modelo_count
+
+
 def test_app_surface_uses_singular_user_domains() -> None:
     result = _invoke(["app", "--help"])
 
     assert result.exit_code == 0, result.output
-    for command in ("overview", "ledger", "invoice", "declaration", "registry"):
+    for command in ("overview", "ledger", "invoice", "declaration", "modelo", "registry"):
         assert command in result.output
     for removed_command in ("declarations", "workspaces", "audits", "transactions", "imports"):
         assert removed_command not in result.output
@@ -142,6 +233,37 @@ def test_registry_verification_gate_is_registered_under_app_surface() -> None:
     assert result.exit_code == 0, result.output
     assert "--registry-root" in result.output
     assert "--source-root" in result.output
+
+
+def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
+    listed = _invoke(["--format", "json", "app", "modelo", "list", "--year", "2026"])
+    described = _invoke(["--format", "json", "app", "modelo", "describe", "303", "--period", "2026Q1"])
+    casillas = _invoke(
+        ["--format", "json", "app", "modelo", "casillas", "303", "--period", "2026Q1", "--input-kind", "computed"]
+    )
+    bindings = _invoke(["--format", "json", "app", "modelo", "bindings", "130", "--period", "2026Q1"])
+    formulas = _invoke(["--format", "json", "app", "modelo", "formulas", "303", "--period", "2026Q1"])
+
+    assert listed.exit_code == 0, listed.output
+    assert described.exit_code == 0, described.output
+    assert casillas.exit_code == 0, casillas.output
+    assert bindings.exit_code == 0, bindings.output
+    assert formulas.exit_code == 0, formulas.output
+    listed_payload = json.loads(_json_output(listed))
+    described_payload = json.loads(_json_output(described))
+    casilla_payload = json.loads(_json_output(casillas))
+    binding_payload = json.loads(_json_output(bindings))
+    formula_payload = json.loads(_json_output(formulas))
+    assert "303" in {row["code"] for row in listed_payload["modelos"]}
+    assert described_payload["code"] == "303"
+    assert described_payload["period"] == "1T"
+    assert casilla_payload["rows"]
+    assert {row["input_kind"] for row in casilla_payload["rows"]} == {"computed"}
+    assert any(
+        row["binding_id"] == "irpf.previous_year_economic_activity_net_income" for row in binding_payload["rows"]
+    )
+    assert {row["source"] for row in binding_payload["rows"]} == {"previous_filing"}
+    assert any(row["input_casillas"] or row["input_bindings"] for row in formula_payload["rows"])
 
 
 def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
@@ -234,6 +356,26 @@ def test_auth_configure_lists_only_supported_provider_ids(monkeypatch: pytest.Mo
     assert "clave_movil" in configure.output
     assert unsupported_spelling.exit_code != 0
     assert unsupported.exit_code != 0
+
+
+def test_setup_auth_reset_help_uses_locale_backed_spanish_copy() -> None:
+    result = _invoke(["setup", "auth", "reset", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "Restablecer sesiones de autenticación persistidas" in result.output
+    assert "Remove persisted" not in result.output
+    assert "--sessions" in result.output
+    assert "--locks" in result.output
+    assert "--all" in result.output
+
+
+def test_invoice_import_kind_help_lists_accepted_cli_values() -> None:
+    result = _invoke(["app", "invoice", "import", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "issued" in result.output
+    assert "received" in result.output
+    assert "emitidas o recibidas" not in result.output
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -431,8 +573,13 @@ def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.
 
     assert setup.exit_code == 0, setup.output
     assert overview.exit_code == 0, overview.output
-    assert json.loads(_json_output(setup))["profile_ready"] is False
+    setup_payload = json.loads(_json_output(setup))
+    assert setup_payload["profile_ready"] is False
+    assert setup_payload["profile_present_keys"] == 0
+    assert setup_payload["profile_total_keys"] > 0
     assert json.loads(_json_output(overview))["transactions"] == 0
+    assert "hashed_lookup.compute" not in setup.output
+    assert "hashed_lookup.compute" not in overview.output
 
 
 def test_invoice_import_edit_review_round_trip(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -544,6 +691,45 @@ def test_profile_set_requires_active_profile(monkeypatch: pytest.MonkeyPatch, tm
     assert "aeat setup init --name NAME" in result.output
 
 
+def test_root_error_boundary_renders_auth_session_errors_without_traceback(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    init = _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z"])
+    configure = _invoke(["setup", "auth", "configure", "--provider", "clave_movil"])
+    result = _invoke(["setup", "auth", "whoami"])
+
+    assert init.exit_code == 0, init.output
+    assert configure.exit_code == 0, configure.output
+    assert result.exit_code == 3, result.output
+    assert "AUTH:" in result.output
+    assert "aeat setup auth login" in result.output
+    assert "Traceback" not in result.output
+    assert "AuthSessionUnavailableError" not in result.output
+
+
+def test_root_error_boundary_honours_global_json_format(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    init = _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z"])
+    configure = _invoke(["setup", "auth", "configure", "--provider", "clave_movil"])
+    result = _invoke(["--format", "json", "setup", "auth", "whoami"])
+
+    assert init.exit_code == 0, init.output
+    assert configure.exit_code == 0, configure.output
+    assert result.exit_code == 3, result.output
+    payload = json.loads(_json_output(result))["error"]
+    assert payload["category"] == "AUTH"
+    assert payload["code"] == "AUTH_CLI_AUTH_SESSION_UNAVAILABLE"
+    assert payload["suggestion"] == "aeat setup auth login"
+    assert "Traceback" not in result.output
+
+
 def test_profile_keys_match_domain_registry_names() -> None:
     result = _invoke(["setup", "profile", "list-keys"])
 
@@ -609,6 +795,84 @@ def test_profile_validate_routes_through_application_layer(
     # decision without re-deriving it.
     assert "tax.id" in payload["present_required"]
     assert "activity" in payload["present_required"]
+    assert payload["present_keys"] == 2
+    assert payload["total_keys"] > payload["present_keys"]
+
+
+def test_profile_validate_text_shows_schema_completeness(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    init = _invoke(
+        [
+            "setup",
+            "init",
+            "--name",
+            "operator",
+            "--activity",
+            "design",
+            "--tax-id",
+            "12345678Z",
+        ]
+    )
+    result = _invoke(["setup", "profile", "validate"])
+
+    assert init.exit_code == 0, init.output
+    assert result.exit_code == 0, result.output
+    assert "\t2/" in result.output
+    assert "Completeness" in result.output or "Completitud" in result.output
+
+
+def test_profile_show_all_keys_surfaces_unset_schema_rows(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    init = _invoke(
+        [
+            "setup",
+            "init",
+            "--name",
+            "operator",
+            "--activity",
+            "design",
+            "--tax-id",
+            "12345678Z",
+        ]
+    )
+    default_show = _invoke(["setup", "profile", "show"])
+    all_keys = _invoke(["setup", "profile", "show", "--all-keys"])
+
+    assert init.exit_code == 0, init.output
+    assert default_show.exit_code == 0, default_show.output
+    assert all_keys.exit_code == 0, all_keys.output
+    assert "tax.id\t12345678Z" in default_show.output
+    assert "address.postcode" not in default_show.output
+    assert "address.postcode\t<unset>" in all_keys.output
+    assert "--all-keys" in _invoke(["setup", "profile", "show", "--help"]).output
+    assert "--unset" in _invoke(["setup", "profile", "show", "--help"]).output
+
+
+def test_profile_show_all_keys_json_uses_typed_rows(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    init = _invoke(["setup", "init", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"])
+    result = _invoke(["--format", "json", "setup", "profile", "show", "--all-keys"])
+
+    assert init.exit_code == 0, init.output
+    assert result.exit_code == 0, result.output
+    payload = json.loads(_json_output(result))
+    rows = {row["key"]: row for row in payload["rows"]}
+    assert rows["tax.id"]["is_set"] is True
+    assert rows["tax.id"]["value"] == "12345678Z"
+    assert rows["address.postcode"]["is_set"] is False
+    assert rows["address.postcode"]["value"] is None
 
 
 def test_profile_validate_blocks_when_required_missing(

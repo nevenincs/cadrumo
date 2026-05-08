@@ -683,7 +683,7 @@ def _build_operator_clave_period_rows(
 class _OperatorClaveAccumulator(BaseModel):
     """Mutable accumulator for operator_clave row aggregation."""
 
-    model_config = ConfigDict(strict=True)
+    model_config = ConfigDict(strict=True, extra="forbid")
 
     country_code: str
     party_tax_id: str
@@ -695,7 +695,7 @@ class _OperatorClaveAccumulator(BaseModel):
 class _OperatorClavePeriodAccumulator(BaseModel):
     """Mutable accumulator for operator_clave_period row aggregation."""
 
-    model_config = ConfigDict(strict=True)
+    model_config = ConfigDict(strict=True, extra="forbid")
 
     country_code: str
     party_tax_id: str
@@ -742,26 +742,32 @@ def _aggregate_invoice_binding(
         # registros de tipo 2 con clave de operación, posición 133, igual a
         # 'E', 'M', 'H', 'T', 'A', 'S', 'I', 'R', 'D' o 'C'."
         if selector.rectification_scope == "only_rectifications":
-            keys = {
-                (
-                    observation.party_tax_id,
-                    observation.country_code,
-                    observation.intracommunity_clave,
-                    observation.rectified_year,
-                    observation.rectified_period,
+            return Decimal(
+                len(
+                    {
+                        (
+                            observation.party_tax_id,
+                            observation.country_code,
+                            observation.intracommunity_clave,
+                            observation.rectified_year,
+                            observation.rectified_period,
+                        )
+                        for observation in observations
+                    }
                 )
-                for observation in observations
-            }
-        else:
-            keys = {
-                (
-                    observation.party_tax_id,
-                    observation.country_code,
-                    observation.intracommunity_clave,
-                )
-                for observation in observations
-            }
-        return Decimal(len(keys))
+            )
+        return Decimal(
+            len(
+                {
+                    (
+                        observation.party_tax_id,
+                        observation.country_code,
+                        observation.intracommunity_clave,
+                    )
+                    for observation in observations
+                }
+            )
+        )
     if selector.fact == "base_sum":
         if op != "sum":
             raise RegistryValidationError(f"binding {binding.id!r} fact 'base_sum' requires aggregation op 'sum'")
@@ -780,7 +786,6 @@ def _aggregate_invoice_binding(
             total += observation.base_amount - previous
         return total
     raise RegistryValidationError(f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}")
-
 
 
 # ---------------------------------------------------------------------------
@@ -868,9 +873,7 @@ def _ledger_oss_selector(binding: DataBindingDefinition) -> _OssIossLedgerSelect
     try:
         return _OssIossLedgerSelector.model_validate(dict(binding.selector))
     except (ValueError, TypeError) as exc:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed ledger_oss_aggregation selector"
-        ) from exc
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_oss_aggregation selector") from exc
 
 
 def validate_ledger_oss_aggregation_binding_definition(
@@ -885,17 +888,14 @@ def validate_ledger_oss_aggregation_binding_definition(
             inconsistent with the declared fact.
     """
     if binding.source != "ledger_oss_aggregation":
-        raise RegistryValidationError(
-            f"binding {binding.id!r} is not a ledger_oss_aggregation source"
-        )
+        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_oss_aggregation source")
     selector = _ledger_oss_selector(binding)
 
     if binding.aggregation is not None:
         op = str(binding.aggregation.get("op", "sum"))
         if op != "sum":
             raise RegistryValidationError(
-                f"binding {binding.id!r} ledger_oss_aggregation supports only "
-                f"aggregation op 'sum', got {op!r}"
+                f"binding {binding.id!r} ledger_oss_aggregation supports only aggregation op 'sum', got {op!r}"
             )
 
     if selector.fact not in {"iva_amount_sum", "base_amount_sum"}:
@@ -950,7 +950,6 @@ def resolve_ledger_oss_aggregation_binding_values(
             total = sum((observation.base_amount for observation in matched), Decimal("0"))
         resolved[binding.id] = total
     return resolved
-
 
 
 # ---------------------------------------------------------------------------
@@ -1037,9 +1036,7 @@ def _iva_ledger_selector(binding: DataBindingDefinition) -> _IvaLedgerSelector:
     try:
         return _IvaLedgerSelector.model_validate(dict(binding.selector))
     except (ValueError, TypeError) as exc:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed ledger_iva_aggregation selector"
-        ) from exc
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_iva_aggregation selector") from exc
 
 
 def validate_ledger_iva_aggregation_binding_definition(
@@ -1054,17 +1051,14 @@ def validate_ledger_iva_aggregation_binding_definition(
             the binding source is not "ledger_iva_aggregation".
     """
     if binding.source != "ledger_iva_aggregation":
-        raise RegistryValidationError(
-            f"binding {binding.id!r} is not a ledger_iva_aggregation source"
-        )
+        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_iva_aggregation source")
     selector = _iva_ledger_selector(binding)
 
     if binding.aggregation is not None:
         op = str(binding.aggregation.get("op", "sum"))
         if op != "sum":
             raise RegistryValidationError(
-                f"binding {binding.id!r} ledger_iva_aggregation supports only "
-                f"aggregation op 'sum', got {op!r}"
+                f"binding {binding.id!r} ledger_iva_aggregation supports only aggregation op 'sum', got {op!r}"
             )
 
     if selector.fact not in {"iva_amount_sum", "base_amount_sum"}:

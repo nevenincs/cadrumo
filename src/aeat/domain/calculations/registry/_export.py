@@ -76,10 +76,10 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
         return ()
     bindings_by_record: dict[str, list[DataBindingDefinition]] = {}
     for binding in revision.bindings:
-        record = binding.selector.get("record")
-        if not isinstance(record, str):
+        binding_record_id = binding.selector.get("record")
+        if not isinstance(binding_record_id, str):
             continue
-        bindings_by_record.setdefault(record, []).append(binding)
+        bindings_by_record.setdefault(binding_record_id, []).append(binding)
 
     resolved_layouts: list[ExportLayoutDefinition] = []
     for layout in revision.export_layouts:

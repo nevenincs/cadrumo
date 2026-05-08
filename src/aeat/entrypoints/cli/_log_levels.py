@@ -45,9 +45,9 @@ class LogLevel(StrEnum):
     DEBUG = "debug"
 
 
-_PYTHON_LOG_LEVEL_BY_CLI_LEVEL: dict[LogLevel, int] = {
+_STDERR_LOG_LEVEL_BY_CLI_LEVEL: dict[LogLevel, int] = {
     LogLevel.QUIET: logging.ERROR,
-    LogLevel.DEFAULT: logging.WARNING,
+    LogLevel.DEFAULT: logging.ERROR,
     LogLevel.VERBOSE: logging.INFO,
     LogLevel.DEBUG: logging.DEBUG,
 }
@@ -115,11 +115,14 @@ def apply_to_root_logger(level: LogLevel) -> None:
     """
 
     aeat_logging.configure_logging()
-    python_level = _PYTHON_LOG_LEVEL_BY_CLI_LEVEL[level]
+    stderr_level = _STDERR_LOG_LEVEL_BY_CLI_LEVEL[level]
     root_logger = logging.getLogger()
-    root_logger.setLevel(python_level)
+    root_logger.setLevel(logging.DEBUG)
     for handler in root_logger.handlers:
-        handler.setLevel(python_level)
+        if isinstance(handler, logging.FileHandler):
+            handler.setLevel(logging.DEBUG)
+        else:
+            handler.setLevel(stderr_level)
 
 
 __all__ = ["LogLevel", "LogLevelResolutionError", "apply_to_root_logger", "resolve_log_level"]

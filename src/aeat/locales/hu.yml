@@ -91,6 +91,12 @@ cli:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
       period_empty: Az adózási időszak nem lehet üres
       period_unrecognised: Ismeretlen időszak
+  config:
+    app_help: Helyi konfiguráció és diagnosztika kezelése
+    doctor:
+      help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
+      logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
+      logs_lines_help: Megjelenítendő friss naplósorok száma
   data:
     app_help: Adóadatok és nyilvántartások kezelése
     ledgers:
@@ -430,7 +436,8 @@ cli:
     import:
       dry_run_help: Futtatás próba üzemmódban (mentés nélkül)
       help: Számlák importálása külső forrásokból (pl. PDF, Excel)
-      kind_help: Importálandó számlák típusa (kiállított vagy befogadott)
+      kind_help: Importálandó számlák típusa. Elfogadott értékek issued vagy
+        received
       path_help: A számlákat tartalmazó fájl vagy könyvtár útvonala
     labels:
       base: Adóalap
@@ -642,8 +649,16 @@ cli:
     year_help: Lekérdezendő vagy feldolgozandó adóév
   root:
     app_app_help: Adózási munkaterület könyveléshez, számlákhoz és bevallásokhoz
-    app_help: Spanyol adóbevallási segéd
+    app_help: |-
+      Spanyol adóbevallási segéd
+
+      Quickstart: aeat setup init --name NAME --tax-id NIF
+    debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     format_help: A parancseredmények kimeneti formátuma
+    quiet_help: Csak hibák megjelenítése stderr-en
+    verbose_help: Belső információs naplók megjelenítése stderr-en
+    version_command_help: Csomagverzió és regiszter-összefoglaló megjelenítése
+    version_help: Csomagverzió és regiszter-összefoglaló megjelenítése
   sanitize:
     app_help: Adattisztítás és anonimizálás kezelése
     labels:
@@ -663,6 +678,12 @@ cli:
         help: A helyi hitelesítési munkamenet lezárása
       providers:
         help: Elérhető hitelesítési szolgáltatók listázása
+      reset:
+        all_help: A mentett munkamenetállapot és a megszerzési zárolás eltávolítása
+        help: Mentett hitelesítési munkamenetek vagy megszerzési zárolások
+          visszaállítása
+        locks_help: A szolgáltató megszerzési zárolásának eltávolítása
+        sessions_help: A szolgáltató mentett munkamenetállapotának eltávolítása
       status:
         help: Beállított szolgáltató és munkamenet állapotának megjelenítése
       whoami:
@@ -671,12 +692,15 @@ cli:
       certificate_file_required: A certificate szolgáltatóhoz --file szükséges
       file_not_found: 'A fájl nem található: {file}'
       not_configured: Bejelentkezés előtt állítson be szolgáltatót
+      reset_scope_required: 'Válasszon legalább egy visszaállítási hatókört: --sessions,
+        --locks vagy --all.'
       unknown_profile_key: 'Ismeretlen profilkulcs: {key}'
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: {provider}'
     headers:
       active: Aktív
       auth_provider: Hitelesítési szolgáltató
       authenticated_at: Hitelesítve
+      completeness: Teljesség
       description: Leírás
       id: ID
       key: Kulcs
@@ -711,6 +735,8 @@ cli:
       set_key_help: Módosítandó profilkulcs
       set_value_help: Mentendő érték
       show_help: Aktív profil értékeinek megjelenítése
+      show_all_keys_help: Minden profilkulcs megjelenítése, a be nem állított értékekkel együtt
+      show_unset_help: Minden profilkulcs megjelenítése <unset> jelöléssel az üres értékekhez
       unset_help: Egy profilérték törlése
       unset_key_help: Törlendő profilkulcs
       use_help: Helyi profil aktiválása

@@ -76,6 +76,7 @@ FormulaOperator = Literal[
     "copy",
     "if_then_else",
     "lookup_parameter",
+    "lookup_bracket",
     "previous_period_value",
     "previous_period_sum",
     "cross_model_sum",
@@ -252,6 +253,18 @@ class ExtractionProfileDefinition(RegistryModel):
         return value
 
 
+ProfileFactValue = bool | int | str
+
+
+class ProfilePredicateDefinition(RegistryModel):
+    field: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_.-]*$")
+    op: Literal["equals", "not_equals"]
+    value: ProfileFactValue
+    explanation: str = Field(min_length=1)
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+
 class LiveCrossReferenceDecision(RegistryModel):
     id: CrossReferenceId
     evidence_tier: EvidenceTier
@@ -260,6 +273,7 @@ class LiveCrossReferenceDecision(RegistryModel):
         "integration_test_service",
         "public_read_surface",
         "authenticated_read_surface",
+        "authenticated_simulator",
         "static_official_documentation",
     ]
     guard_policy_id: str
@@ -278,6 +292,15 @@ class LiveCrossReferenceDecision(RegistryModel):
     # registry-load time, so the registry remains loadable when adapters
     # are imported lazily.
     oracle_id: str | None = Field(default=None, min_length=1, max_length=128)
+    # Optional applicability gate: when non-empty the cross-reference is
+    # only applicable to a taxpayer profile whose values satisfy these
+    # predicates under the chosen mode. An empty tuple (the default) means
+    # the cross-reference is unconditionally applicable, preserving the
+    # behaviour of every binding declared before this field existed. Used
+    # to gate optional surfaces (GROI / IXVI for ROI-enrolled subjects,
+    # OSS bindings for OSS-enrolled subjects, etc.).
+    applicability_condition_mode: Literal["all", "any"] = "all"
+    applicability_predicates: tuple[ProfilePredicateDefinition, ...] = ()
 
     @field_validator("oracle_id")
     @classmethod
@@ -301,7 +324,7 @@ class LiveCrossReferenceDecision(RegistryModel):
     @model_validator(mode="after")
     def _validate_cross_reference(self) -> LiveCrossReferenceDecision:
         if (
-            self.surface in {"open_simulator", "integration_test_service"}
+            self.surface in {"open_simulator", "integration_test_service", "authenticated_simulator"}
             and self.evidence_tier != "executable_parity_evidence"
         ):
             raise ValueError(f"cross-reference {self.id!r} live surface requires executable parity evidence")
@@ -313,7 +336,13 @@ class LiveCrossReferenceDecision(RegistryModel):
             raise ValueError(f"cross-reference {self.id!r} static documentation is not executable parity evidence")
         if (
             self.surface
-            in {"open_simulator", "integration_test_service", "public_read_surface", "authenticated_read_surface"}
+            in {
+                "open_simulator",
+                "integration_test_service",
+                "public_read_surface",
+                "authenticated_read_surface",
+                "authenticated_simulator",
+            }
             and not self.allowed_hosts
         ):
             raise ValueError(f"cross-reference {self.id!r} must declare allowed_hosts")
@@ -325,6 +354,8 @@ class LiveCrossReferenceDecision(RegistryModel):
             raise ValueError(f"cross-reference {self.id!r} authenticated read surface must require authentication")
         if self.surface == "authenticated_read_surface" and not self.requires_aeat_authorization:
             raise ValueError(f"cross-reference {self.id!r} authenticated read surface must require authorization")
+        if self.surface == "authenticated_simulator" and not self.requires_authentication:
+            raise ValueError(f"cross-reference {self.id!r} authenticated simulator must require authentication")
         if self.surface in {"public_read_surface", "authenticated_read_surface"} and self.synthetic_data_allowed:
             raise ValueError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
         if self.surface == "static_official_documentation" and self.synthetic_data_allowed:
@@ -338,6 +369,23 @@ class LiveCrossReferenceDecision(RegistryModel):
                 "OPTIONS",
             }:
                 raise ValueError(f"cross-reference {self.id!r} read surface method {method!r} is not read-only")
+            # authenticated_simulator declares the AEAT-prescribed query
+            # method (POST is the GROI / IXVI form-submit mechanism). The
+            # remote-state guard's HTTP-method check stays strict for
+            # ``kind="http"`` operations; only the cross-reference's
+            # allowed_methods declaration is widened.
+            if self.surface == "authenticated_simulator" and method not in {
+                "GET",
+                "HEAD",
+                "OPTIONS",
+                "POST",
+            }:
+                raise ValueError(
+                    f"cross-reference {self.id!r} authenticated simulator method "
+                    f"{method!r} not in (GET, HEAD, OPTIONS, POST)"
+                )
+        if self.applicability_condition_mode == "any" and not self.applicability_predicates:
+            raise ValueError(f"cross-reference {self.id!r} any-mode requires applicability predicates")
         return self
 
 
@@ -538,18 +586,6 @@ class DependencyClassificationDefinition(RegistryModel):
         return self
 
 
-ProfileFactValue = bool | int | str
-
-
-class ProfilePredicateDefinition(RegistryModel):
-    field: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z_][A-Za-z0-9_.-]*$")
-    op: Literal["equals", "not_equals"]
-    value: ProfileFactValue
-    explanation: str = Field(min_length=1)
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-
-
 class DeadlineApplicabilityCondition(ProfilePredicateDefinition):
     pass
 
@@ -645,14 +681,76 @@ class DatedValue(RegistryModel):
         return self
 
 
+class BracketEntry(RegistryModel):
+    """One row of a piecewise-linear bracket schedule (e.g. an IRPF escala).
+
+    Each entry encodes a half-open base-amount interval ``[lower_bound, upper_bound]``
+    plus the cuota previously accumulated up to ``lower_bound`` (``fixed_addition``)
+    and the marginal rate applied to the slice above ``lower_bound``. A ``None``
+    ``upper_bound`` declares the open-ended top bracket.
+
+    Cuota for a base amount ``base`` resolved by `lookup_bracket`:
+        cuota = fixed_addition + marginal_rate * (base - lower_bound)
+    """
+
+    lower_bound: DecimalValue
+    upper_bound: DecimalValue | None = None
+    fixed_addition: DecimalValue
+    marginal_rate: DecimalValue
+    valid_from: date
+    valid_to: date | None = None
+
+    @model_validator(mode="after")
+    def _validate_bracket(self) -> BracketEntry:
+        if self.upper_bound is not None and self.upper_bound < self.lower_bound:
+            raise ValueError("bracket upper_bound must be on or after lower_bound")
+        if self.valid_to is not None and self.valid_to < self.valid_from:
+            raise ValueError("bracket valid_to must be on or after valid_from")
+        if self.lower_bound < Decimal("0"):
+            raise ValueError("bracket lower_bound must be non-negative")
+        if self.marginal_rate < Decimal("0"):
+            raise ValueError("bracket marginal_rate must be non-negative")
+        return self
+
+
 class ParameterDefinition(RegistryModel):
     id: ParameterId
-    data_type: Literal["decimal", "money", "integer", "ratio", "text", "boolean"]
+    data_type: Literal["decimal", "money", "integer", "ratio", "text", "boolean", "bracket_table"]
     unit: str
     values: tuple[DatedValue, ...] = Field(default_factory=tuple)
+    brackets: tuple[BracketEntry, ...] = Field(default_factory=tuple)
+    bracket_axis: DateAxis | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
+
+    @model_validator(mode="after")
+    def _validate_bracket_table(self) -> ParameterDefinition:
+        if self.data_type == "bracket_table":
+            if not self.brackets:
+                raise ValueError(f"parameter {self.id!r} declares bracket_table but has no brackets")
+            if self.values:
+                raise ValueError(f"parameter {self.id!r} cannot mix bracket_table and dated values")
+            if self.bracket_axis is None:
+                raise ValueError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
+            sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
+            for prev, current in zip(sorted_brackets, sorted_brackets[1:], strict=False):
+                if prev.valid_from == current.valid_from and prev.upper_bound is not None:
+                    if current.lower_bound < prev.upper_bound:
+                        raise ValueError(
+                            f"parameter {self.id!r} brackets {prev.lower_bound}-{prev.upper_bound} "
+                            f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
+                        )
+        else:
+            if self.brackets:
+                raise ValueError(
+                    f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'"
+                )
+            if self.bracket_axis is not None:
+                raise ValueError(
+                    f"parameter {self.id!r} declares bracket_axis but is not a bracket_table"
+                )
+        return self
 
 
 class DataBindingDefinition(RegistryModel):

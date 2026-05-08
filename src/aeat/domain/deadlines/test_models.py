@@ -109,6 +109,8 @@ class TestAutonomoProfile:
                 "has.employees": "true",
                 "pays.rent.with.retencion": "yes",
                 "does.intracomunitario": "1",
+                "iva.roi_enrolled": "true",
+                "iva.oss_enrolled": "false",
                 "iva.intracommunity_operations_exceed_50000_eur": "true",
                 "enrollment.large_company": "true",
                 "enrollment.public_administration_budget_gt_6000000": "false",
@@ -121,7 +123,11 @@ class TestAutonomoProfile:
         assert profile.has_employees is True
         assert profile.pays_rent_with_retencion is True
         assert profile.does_intracomunitario is True
-        assert profile.iva == FilingIVAProfile(intracommunity_operations_exceed_50000_eur=True)
+        assert profile.iva == FilingIVAProfile(
+            roi_enrolled=True,
+            oss_enrolled=False,
+            intracommunity_operations_exceed_50000_eur=True,
+        )
         assert profile.enrollment == FilingEnrollment(large_company=True)
 
     def test_mapping_projection_rejects_unknown_boolean_tokens(self) -> None:

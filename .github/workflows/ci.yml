@@ -67,6 +67,16 @@ jobs:
       - name: Typecheck
         run: just typecheck
 
+      - name: Registry verify
+        run: uv run --no-sync aeat app registry verify --json
+
+      - name: Audit oracle bindings
+        # Fails the workflow if any cross-reference declares an
+        # oracle_id that doesn't match the registered oracle's
+        # surface_kind. To fix locally, run:
+        #   uv run --no-sync aeat app registry audit-oracles
+        run: uv run --no-sync aeat app registry audit-oracles --json
+
       - name: Test (unit)
         run: uv run pytest --junitxml=junit.xml
         # AEAT_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.

@@ -341,17 +341,17 @@ def refresh_review_status(
         or draft.approved_by is None
         or draft.review_checksum is None
     ):
-        cleared: dict[str, object] = _review_metadata_reset()
-        cleared["status"] = derive_validation_status(draft.findings)
-        if any(getattr(draft, key) != value for key, value in cleared.items()):
-            cleared["updated_at"] = timestamp
+        incomplete_reset = _review_metadata_reset()
+        incomplete_reset["status"] = derive_validation_status(draft.findings)
+        if any(getattr(draft, key) != value for key, value in incomplete_reset.items()):
+            incomplete_reset["updated_at"] = timestamp
             _logger.warning(
                 "refresh: incomplete approval metadata cleared draft_id=%s modelo=%s period=%s",
                 draft.draft_id,
                 draft.modelo,
                 draft.period,
             )
-            return draft.model_copy(update=cleared)
+            return draft.model_copy(update=incomplete_reset)
         return draft
 
     reasons = approval_stale_reasons(

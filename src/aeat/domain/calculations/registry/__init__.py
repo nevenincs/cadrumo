@@ -23,7 +23,13 @@ from ._bindings import (
     validate_ledger_oss_aggregation_binding_definition,
 )
 from ._constructs import ResolvedConstruct, ResolvedConstructMember, resolve_construct, resolve_revision_constructs
-from ._coverage import EvidenceTierCoverageGate, ModelLawCoverageLedger, build_model_law_coverage_ledger
+from ._coverage import (
+    EvidenceTierCoverageGate,
+    ModelLawCoverageLedger,
+    RegistryCoverageAudit,
+    audit_registry_model_law_coverage,
+    build_model_law_coverage_ledger,
+)
 from ._errors import RegistryError, RegistryLoadError, RegistrySnapshotError, RegistryValidationError
 from ._export import (
     ResolvedExportLayout,
@@ -32,8 +38,36 @@ from ._export import (
     resolve_export_layout,
 )
 from ._export_parse import ParsedExportFieldValue, ParsedExportPayload, parse_export_payload
-from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
+from ._formula_runtime import (
+    RegistryCalculationEntry,
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
+    read_parameter,
+)
+from ._groi_oracle import (
+    AEAT_GROI_URL,
+    GROI_ORACLE_ID,
+    GroiDriver,
+    GroiObservation,
+    GroiOracle,
+    GroiReplayDriver,
+)
 from ._legal import verify_legal_catalogue, verify_legal_reference
+from ._live_parity import (
+    CrossReferenceApplicability,
+    CrossReferenceApplicabilityDeclaration,
+    LiveParityCatalogue,
+    LiveParityOracle,
+    OracleEnvironment,
+    OracleSurfaceKind,
+    ParityFieldComparison,
+    ParityResult,
+    ParityVerdict,
+    collect_applicability_declarations,
+    collect_orphan_oracle_ids,
+    evaluate_cross_reference_applicability,
+    resolve_cross_reference_oracle,
+)
 from ._loader import load_catalogue_file, load_modelo_file, load_registry_tree
 from ._parity_tapes import (
     ParityScenario,
@@ -46,6 +80,19 @@ from ._parity_tapes import (
     run_parity_scenario,
     save_parity_scenario,
     save_parity_tape,
+)
+from ._queries import (
+    ModeloBindingRow,
+    ModeloBindingsReport,
+    ModeloCasillaRow,
+    ModeloCasillasReport,
+    ModeloDescribeReport,
+    ModeloFormulaRow,
+    ModeloFormulasReport,
+    ModeloListReport,
+    ModeloListRow,
+    RegistryQueryService,
+    parse_modelo_period,
 )
 from ._record_design import (
     RecordDesignField,
@@ -61,6 +108,7 @@ from ._relations import (
     resolve_relation_values_from_observations,
 )
 from ._remote_state_guard import (
+    AEAT_WRITE_FORBIDDEN_ACTIONS,
     RemoteOperation,
     RemoteStateGuardPolicy,
     RemoteStateGuardResult,
@@ -84,6 +132,7 @@ from ._runtime_graph import expression_casilla_refs
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
 from ._schema import (
     ApplicationLinkDefinition,
+    BracketEntry,
     CasillaDefinition,
     ConstructDefinition,
     DataBindingDefinition,
@@ -143,11 +192,17 @@ from ._workbook_parity import (
 )
 
 __all__ = [
+    "AEAT_GROI_URL",
+    "AEAT_WRITE_FORBIDDEN_ACTIONS",
+    "GROI_ORACLE_ID",
     "RENTA_WEB_OPEN_APP_URL",
     "RENTA_WEB_OPEN_LANDING_URL",
     "ApplicationLinkDefinition",
+    "BracketEntry",
     "CasillaDefinition",
     "ConstructDefinition",
+    "CrossReferenceApplicability",
+    "CrossReferenceApplicabilityDeclaration",
     "DataBindingDefinition",
     "DeadlineApplicabilityCondition",
     "DeadlineWindowDefinition",
@@ -161,19 +216,39 @@ __all__ = [
     "FilingScheduleDefinition",
     "FormulaDefinition",
     "FormulaExpression",
+    "GroiDriver",
+    "GroiObservation",
+    "GroiOracle",
+    "GroiReplayDriver",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
     "IvaLedgerObservation",
     "LegalReference",
     "LiveCrossReferenceDecision",
+    "LiveParityCatalogue",
+    "LiveParityOracle",
     "ModelLawCoverageLedger",
+    "ModeloBindingRow",
+    "ModeloBindingsReport",
+    "ModeloCasillaRow",
+    "ModeloCasillasReport",
     "ModeloDefinition",
+    "ModeloDescribeReport",
+    "ModeloFormulaRow",
+    "ModeloFormulasReport",
+    "ModeloListReport",
+    "ModeloListRow",
     "ModeloRevision",
+    "OracleEnvironment",
+    "OracleSurfaceKind",
     "OssIossLedgerObservation",
     "ParameterDefinition",
+    "ParityFieldComparison",
+    "ParityResult",
     "ParityScenario",
     "ParityTape",
     "ParityTapeReplayReport",
+    "ParityVerdict",
     "ParsedExportFieldValue",
     "ParsedExportPayload",
     "ProfilePredicateDefinition",
@@ -182,10 +257,12 @@ __all__ = [
     "RegistryCalculationEntry",
     "RegistryCalculationResult",
     "RegistryCatalogues",
+    "RegistryCoverageAudit",
     "RegistryError",
     "RegistryFilingObservation",
     "RegistryFilingObservationRequirement",
     "RegistryLoadError",
+    "RegistryQueryService",
     "RegistrySnapshot",
     "RegistrySnapshotError",
     "RegistryValidationError",
@@ -222,9 +299,12 @@ __all__ = [
     "assert_formula_workbook_runner_ready",
     "assert_remote_operation_allowed",
     "assert_workbook_scan_clean",
+    "audit_registry_model_law_coverage",
     "build_model_law_coverage_ledger",
     "build_snapshot",
     "calculate_registry_snapshot",
+    "collect_applicability_declarations",
+    "collect_orphan_oracle_ids",
     "compare_registry_to_workbook",
     "convert_binary_xls_with_libreoffice",
     "converted_binary_xls_with_libreoffice",
@@ -232,6 +312,7 @@ __all__ = [
     "detect_workbook_runner",
     "discover_workbooks",
     "equivalent_renta_web_open_value",
+    "evaluate_cross_reference_applicability",
     "evaluate_profile_conditions",
     "evaluate_remote_operation",
     "export_fields_for_casilla",
@@ -249,15 +330,18 @@ __all__ = [
     "load_parity_tape",
     "load_registry_tree",
     "parse_export_payload",
+    "parse_modelo_period",
     "parse_renta_web_open_live_payload",
     "parse_workbook_cell_ref",
     "previous_filing_observation_requirements",
     "profile_condition_matches",
+    "read_parameter",
     "relation_source_requirements",
     "remote_state_policy_from_cross_reference",
     "replay_parity_tape",
     "resolve_bound_casilla_inputs",
     "resolve_construct",
+    "resolve_cross_reference_oracle",
     "resolve_export_layout",
     "resolve_invoice_binding_row_values",
     "resolve_invoice_binding_values",

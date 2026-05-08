@@ -9,8 +9,7 @@ single closed-membership convention for substrate axes.
 
 Per the calculation-truth-registry ADR, every Renta domain field that
 classifies "what kind of X is this?" must use one of these closed enums
-rather than a free-form ``str | None``. The Renta scope audit
-(2026-05-07) lists this as Substrate-S1.
+rather than a free-form ``str | None``.
 """
 
 from __future__ import annotations

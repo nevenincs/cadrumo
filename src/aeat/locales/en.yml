@@ -82,6 +82,12 @@ cli:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
       period_empty: Tax period cannot be empty
       period_unrecognised: Unrecognized period
+  config:
+    app_help: Manage local configuration and diagnostics
+    doctor:
+      help: Diagnose local configuration, registry, profile, auth, and logs
+      logs_help: Show the log file path and recent lines
+      logs_lines_help: Number of recent log lines to show
   data:
     app_help: Management of tax data and records
     ledgers:
@@ -416,7 +422,7 @@ cli:
     import:
       dry_run_help: Run in dry-run mode (without saving changes)
       help: Import invoices from external sources (e.g., PDF, Excel)
-      kind_help: Type of invoices to import (emitted or received)
+      kind_help: Type of invoices to import. Accepted values issued or received
       path_help: Path to the file or directory containing invoices
     labels:
       base: Taxable Base
@@ -624,8 +630,16 @@ cli:
     year_help: Fiscal year to query or process
   root:
     app_app_help: Tax workspaces for ledgers, invoices, and declarations
-    app_help: Spanish tax filing assistant
+    app_help: |-
+      Spanish tax filing assistant
+
+      Quickstart: aeat setup init --name NAME --tax-id NIF
+    debug_help: Show internal debug logs on stderr
     format_help: Output format for command results
+    quiet_help: Show only errors on stderr
+    verbose_help: Show internal informational logs on stderr
+    version_command_help: Show package version and registry summary
+    version_help: Show package version and registry summary
   sanitize:
     app_help: Data sanitization and anonymization management
     labels:
@@ -645,6 +659,11 @@ cli:
         help: End the local authentication session
       providers:
         help: List available authentication providers
+      reset:
+        all_help: Remove both persisted session state and the acquisition lock
+        help: Reset persisted authentication sessions or acquisition locks
+        locks_help: Remove the provider acquisition lock
+        sessions_help: Remove persisted session state for the provider
       status:
         help: Show the configured provider and session state
       whoami:
@@ -653,12 +672,15 @@ cli:
       certificate_file_required: The certificate provider requires --file
       file_not_found: 'File not found: {file}'
       not_configured: Configure a provider before logging in
+      reset_scope_required: 'Choose at least one reset scope: --sessions, --locks,
+        or --all.'
       unknown_profile_key: 'Unknown profile key: {key}'
       unknown_provider: 'Unknown authentication provider: {provider}'
     headers:
       active: Active
       auth_provider: Authentication provider
       authenticated_at: Authenticated at
+      completeness: Completeness
       description: Description
       id: ID
       key: Key
@@ -693,6 +715,8 @@ cli:
       set_key_help: Profile key to change
       set_value_help: Value to save
       show_help: Show the active profile values
+      show_all_keys_help: Show every profile key, including unset values
+      show_unset_help: Show every profile key with <unset> for empty values
       unset_help: Clear one profile value
       unset_key_help: Profile key to clear
       use_help: Activate a local profile

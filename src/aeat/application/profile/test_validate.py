@@ -13,6 +13,7 @@ from ...domain.profile import (
 )
 from . import (
     list_profile_key_records,
+    list_profile_value_rows,
     validate_profile,
 )
 
@@ -39,6 +40,8 @@ def test_empty_values_returns_invalid_with_every_required_missing() -> None:
     assert result.present_required == ()
     assert result.present_optional == ()
     assert result.unknown_keys == ()
+    assert result.present_keys == 0
+    assert result.total_keys == len(PROFILE_KEYS)
 
 
 def test_all_required_filled_returns_valid() -> None:
@@ -47,6 +50,7 @@ def test_all_required_filled_returns_valid() -> None:
     assert result.missing_required == ()
     expected_present = tuple(entry.key for entry in required_profile_keys())
     assert result.present_required == expected_present
+    assert result.present_keys == len(required_profile_keys())
 
 
 def test_blank_required_value_counts_as_missing() -> None:
@@ -170,3 +174,22 @@ def test_list_profile_key_records_returns_a_non_empty_typed_tuple() -> None:
     assert isinstance(records, tuple)
     assert len(records) > 0
     assert all(isinstance(entry, ProfileKey) for entry in records)
+
+
+def test_profile_value_rows_default_to_set_schema_keys_only() -> None:
+    rows = list_profile_value_rows({"tax.id": "12345678Z", "activity": "design"})
+
+    assert tuple(row.key for row in rows) == ("tax.id", "activity")
+    assert all(row.is_set for row in rows)
+    assert rows[0].value == "12345678Z"
+
+
+def test_profile_value_rows_can_include_unset_registry_keys() -> None:
+    rows = list_profile_value_rows({"tax.id": "12345678Z"}, include_unset=True)
+
+    by_key = {row.key: row for row in rows}
+    assert tuple(by_key) == tuple(entry.key for entry in PROFILE_KEYS)
+    assert by_key["tax.id"].is_set is True
+    assert by_key["tax.id"].value == "12345678Z"
+    assert by_key["activity"].is_set is False
+    assert by_key["activity"].value is None

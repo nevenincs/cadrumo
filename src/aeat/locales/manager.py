@@ -84,7 +84,7 @@ class LocaleManager:
                 existing_flat[key] = key  # Default to its own dot-notated path
 
         # 2. Rebuild the nested structure from scratch to prune extras and ensure type safety
-        new_data = {}
+        new_data: dict[str, Any] = {}
         for key in sorted(keys):
             parts = key.split(".")
             curr = new_data

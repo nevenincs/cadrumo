@@ -41,13 +41,8 @@ from typing import Any
 from sqlalchemy import LargeBinary
 from sqlalchemy.types import TypeDecorator
 
-from .....core.logging import get_logger
 from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
-
-_log = get_logger(__name__)
-_LOW_ENTROPY_LENGTH_THRESHOLD = 12  # sec-M-4: warn below this byte-length
-_low_entropy_warning_emitted = False
 
 _AAD_STRING = b"aeat.column.encrypted_string.v1"
 _AAD_BYTES = b"aeat.column.encrypted_bytes.v1"
@@ -238,12 +233,6 @@ class HashedLookup(TypeDecorator[bytes]):
     def compute(cls, plaintext: str) -> bytes:
         """Compute the HMAC-SHA256 digest of ``plaintext``.
 
-        Emits a one-shot WARNING (sec-M-4) when ``plaintext`` is
-        shorter than 12 bytes — short plaintexts are vulnerable to
-        frequency-analysis attacks against the deterministic digest
-        column. The warning is suppressed for the rest of the process
-        lifetime so high-volume call sites do not spam the log.
-
         Args:
             plaintext: The natural-key string to digest.
 
@@ -252,15 +241,6 @@ class HashedLookup(TypeDecorator[bytes]):
         """
         if not isinstance(plaintext, str):
             raise TypeError(f"HashedLookup.compute expects str; got {type(plaintext).__name__}")
-        global _low_entropy_warning_emitted
-        if len(plaintext.encode("utf-8")) < _LOW_ENTROPY_LENGTH_THRESHOLD and not _low_entropy_warning_emitted:
-            _log.warning(
-                "hashed_lookup.compute called on a plaintext shorter than %d bytes; "
-                "short plaintexts are vulnerable to frequency analysis on the "
-                "deterministic digest column (logged once per process)",
-                _LOW_ENTROPY_LENGTH_THRESHOLD,
-            )
-            _low_entropy_warning_emitted = True
         key = _resolve_master_key()
         sub_key = cls._derive_lookup_key(key)
         return hmac.new(sub_key, plaintext.encode("utf-8"), hashlib.sha256).digest()

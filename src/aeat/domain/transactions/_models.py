@@ -27,6 +27,7 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator, model_validator
 
+from .._identifiers import canonical_decimal_string
 from ._enums import BusinessClassification, TransactionDirection
 from ._raw_transaction import RawTransaction
 
@@ -46,7 +47,7 @@ def derive_transaction_id(raw: RawTransaction) -> str:
     effective_value_date = raw.value_date or raw.booked_date
     payload = json.dumps(
         {
-            "amount": _canonical_decimal(raw.amount),
+            "amount": canonical_decimal_string(raw.amount),
             "narrative": raw.description,
             "provider_id": raw.transaction_id,
             "value_date": effective_value_date.isoformat(),
@@ -56,13 +57,6 @@ def derive_transaction_id(raw: RawTransaction) -> str:
         sort_keys=True,
     )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-
-def _canonical_decimal(value: Decimal) -> str:
-    """Render a ``Decimal`` into a stable fixed-point string."""
-    if value.is_zero():
-        return "0"
-    return format(value.normalize(), "f")
 
 
 def _json_default(value: Any) -> str:

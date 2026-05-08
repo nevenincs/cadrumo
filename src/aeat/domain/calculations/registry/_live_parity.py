@@ -37,11 +37,14 @@ from ._remote_state_guard import (
     assert_remote_operation_allowed,
     evaluate_remote_operation,
 )
+from ._schedules import profile_condition_matches
 
 if TYPE_CHECKING:
-    from ._schema import ModeloDefinition
+    from ._schema import LiveCrossReferenceDecision, ModeloDefinition
 
 __all__ = [
+    "CrossReferenceApplicability",
+    "CrossReferenceApplicabilityDeclaration",
     "LiveParityCatalogue",
     "LiveParityOracle",
     "OracleEnvironment",
@@ -52,6 +55,9 @@ __all__ = [
     "audit_oracle_bindings",
     "audit_registry_oracle_bindings",
     "build_planned_operations",
+    "collect_applicability_declarations",
+    "collect_orphan_oracle_ids",
+    "evaluate_cross_reference_applicability",
     "pre_flight_oracle_operations",
     "resolve_cross_reference_oracle",
 ]
@@ -79,6 +85,11 @@ _COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
         ("public_read_surface", "vat_id_check"),
         ("public_read_surface", "file_validator"),
         ("authenticated_read_surface", "pre_filing_validator"),
+        # AEAT VAT-ID consult surfaces (GROI today, IXVI under cert auth) are
+        # callable verification surfaces gated on cl@ve-movil / certificate.
+        # The pair is added per the authenticated-synthetic-surface-taxonomy
+        # ADR (2026-05-07).
+        ("authenticated_simulator", "vat_id_check"),
     }
 )
 
@@ -354,12 +365,67 @@ def assert_oracle_operations_allowed(
             ) from exc
 
 
+class CrossReferenceApplicability(_ParityModel):
+    """Profile-applicability outcome for one live cross-reference decision.
+
+    The model is the typed signal callers consume to decide whether to
+    invoke a cross-reference at all. ``applicable=True`` with no
+    predicates declared is the default backwards-compatible case (every
+    binding declared before the applicability gate landed).
+    """
+
+    cross_reference_id: str = Field(min_length=1, max_length=128)
+    applicable: bool
+    matched_explanations: tuple[str, ...] = ()
+    unmet_predicate_fields: tuple[str, ...] = ()
+
+
+def evaluate_cross_reference_applicability(
+    decision: LiveCrossReferenceDecision,
+    profile_facts: Mapping[str, object] | object,
+) -> CrossReferenceApplicability:
+    """Evaluate a cross-reference's applicability against a profile.
+
+    Returns a typed :class:`CrossReferenceApplicability` rather than a
+    bare bool so callers (resolver, audit, live tests) consume a
+    single shape. The function is profile-state evaluation only; it
+    performs no network or catalogue lookup.
+
+    A decision with no applicability_predicates is unconditionally
+    applicable (backwards-compat). When predicates are declared, mode
+    governs combination: ``all`` requires every predicate to match;
+    ``any`` requires at least one match.
+    """
+
+    if not decision.applicability_predicates:
+        return CrossReferenceApplicability(
+            cross_reference_id=decision.id,
+            applicable=True,
+        )
+    matched: list[str] = []
+    unmet: list[str] = []
+    for predicate in decision.applicability_predicates:
+        if profile_condition_matches(predicate, profile_facts):
+            matched.append(predicate.explanation)
+        else:
+            unmet.append(predicate.field)
+    applicable = not unmet if decision.applicability_condition_mode == "all" else bool(matched)
+    return CrossReferenceApplicability(
+        cross_reference_id=decision.id,
+        applicable=applicable,
+        matched_explanations=tuple(matched),
+        unmet_predicate_fields=tuple(unmet),
+    )
+
+
 def resolve_cross_reference_oracle(
     *,
     cross_reference_id: str,
     oracle_id: str | None,
     catalogue: LiveParityCatalogue,
     environment: OracleEnvironment = "production",
+    decision: LiveCrossReferenceDecision | None = None,
+    profile_facts: Mapping[str, object] | object | None = None,
 ) -> LiveParityOracle:
     """Resolve a cross-reference's bound oracle through the catalogue.
 
@@ -372,10 +438,26 @@ def resolve_cross_reference_oracle(
     references with no oracle are not resolved here; their absence is a
     distinct case from "binding present but unresolvable" and the caller
     handles it before delegating.
+
+    Optional applicability gate: when both ``decision`` and
+    ``profile_facts`` are supplied, ``evaluate_cross_reference_applicability``
+    runs first and the resolver raises a typed
+    :class:`RegistryValidationError` naming the unmet predicate fields if
+    the binding is not applicable to the profile. Callers that don't
+    thread profile facts (legacy adapters, the audit) keep the old
+    catalogue-only resolution path by omitting both arguments.
     """
 
     if oracle_id is None:
         raise RegistryValidationError(f"cross-reference {cross_reference_id!r} has no oracle binding to resolve")
+    if decision is not None and profile_facts is not None:
+        applicability = evaluate_cross_reference_applicability(decision, profile_facts)
+        if not applicability.applicable:
+            unmet = ", ".join(applicability.unmet_predicate_fields) or "<unmet>"
+            raise RegistryValidationError(
+                f"cross-reference {cross_reference_id!r} is not applicable to the supplied "
+                f"profile: unmet predicate fields ({unmet})"
+            )
     try:
         return catalogue.lookup(oracle_id, environment=environment)
     except RegistryValidationError as exc:
@@ -426,6 +508,82 @@ def audit_oracle_bindings(
                     f"compatible with oracle {oracle_id!r} surface_kind {oracle.surface_kind!r}"
                 )
     return tuple(failures)
+
+
+class CrossReferenceApplicabilityDeclaration(_ParityModel):
+    """A registry-declared applicability shape for one cross-reference.
+
+    The model is a structural read of the registry data — the audit
+    surface emits this so CI / dashboards can see which bindings are
+    profile-gated without re-evaluating any predicate. Decoupled from
+    :class:`CrossReferenceApplicability` (the run-time evaluation
+    result).
+    """
+
+    modelo_id: str = Field(min_length=1, max_length=128)
+    revision_id: str = Field(min_length=1, max_length=128)
+    cross_reference_id: str = Field(min_length=1, max_length=128)
+    applicability_condition_mode: Literal["all", "any"]
+    predicate_fields: tuple[str, ...]
+
+
+def collect_applicability_declarations(
+    modelos: Iterable[ModeloDefinition],
+) -> tuple[CrossReferenceApplicabilityDeclaration, ...]:
+    """Surface every cross-reference that declares applicability predicates.
+
+    Pure registry-data introspection: never reads profile facts, never
+    invokes the evaluator. Cross-references with no predicates are
+    omitted (the unconditionally-applicable default). Order is
+    ``(modelo_id, revision_id, cross_reference_id)`` for deterministic
+    audit output.
+    """
+
+    declarations: list[CrossReferenceApplicabilityDeclaration] = []
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            for cross_reference in revision.live_cross_references:
+                if not cross_reference.applicability_predicates:
+                    continue
+                declarations.append(
+                    CrossReferenceApplicabilityDeclaration(
+                        modelo_id=modelo.id,
+                        revision_id=revision.id,
+                        cross_reference_id=cross_reference.id,
+                        applicability_condition_mode=cross_reference.applicability_condition_mode,
+                        predicate_fields=tuple(
+                            predicate.field for predicate in cross_reference.applicability_predicates
+                        ),
+                    )
+                )
+    return tuple(declarations)
+
+
+def collect_orphan_oracle_ids(
+    modelos: Iterable[ModeloDefinition],
+    catalogue: LiveParityCatalogue,
+) -> tuple[str, ...]:
+    """Return catalogue oracle ids that no cross-reference binds.
+
+    A registered-but-unused oracle indicates one of:
+    - the oracle was registered for a future binding still in flight,
+    - a cross-reference's oracle_id was renamed without updating the
+      catalogue,
+    - the binding was retired but the catalogue registration stayed.
+
+    The audit surfaces the set so CI / dashboards can flag drift.
+    Order is the catalogue's lexicographic order for deterministic
+    output.
+    """
+
+    bound: set[str] = set()
+    modelo_tuple = tuple(modelos)
+    for modelo in modelo_tuple:
+        for revision in modelo.revisions.values():
+            for cross_reference in revision.live_cross_references:
+                if cross_reference.oracle_id is not None:
+                    bound.add(cross_reference.oracle_id)
+    return tuple(sorted(set(catalogue.ids()) - bound))
 
 
 def audit_registry_oracle_bindings(

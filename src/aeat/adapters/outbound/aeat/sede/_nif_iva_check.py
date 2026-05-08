@@ -33,13 +33,15 @@ from pydantic import BaseModel, ConfigDict, Field
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.logging import get_logger
+from .....domain.calculations.registry import (
+    RegistryValidationError,
+    RemoteOperation,
+)
 from .....domain.calculations.registry._aeat_nif_iva_oracle import (
     AEAT_NIF_IVA_ENTRY_URL,
     AEAT_NIF_IVA_VERIFICATION_URL,
     AeatNifIvaObservation,
 )
-from .....domain.calculations.registry._errors import RegistryValidationError
-from .....domain.calculations.registry._remote_state_guard import RemoteOperation
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory
 from ._browser_stage import build_playwright_stage_runner
