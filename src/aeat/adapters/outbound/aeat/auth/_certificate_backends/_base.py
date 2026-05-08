@@ -15,6 +15,17 @@ if TYPE_CHECKING:
     from ..certificate import HandshakeResult, LoadedCertificate
 
 
+CERTIFICATE_CONTEXT_MARKER = "_aeat_certificate_thumbprint"
+"""Attribute name a Playwright context carries after certificate provisioning.
+
+The certificate provisioner (``CertificateContextProvisioner.annotate_context``)
+stamps the context with this attribute set to the loaded certificate's
+thumbprint. The Playwright backend reads it during ``preload`` to verify
+the context was provisioned correctly. Both producer and consumer share
+this single source of truth.
+"""
+
+
 class _CertBackend(ABC):
     """Contract every cert backend must satisfy.
 
