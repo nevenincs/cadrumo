@@ -44,6 +44,17 @@ _BASELINE_EXPECTED: dict[str, Decimal] = {
     "Cuota diferencial": Decimal("0.00"),
 }
 
+# Maps the user-readable labels Renta WEB Open displays to the registry's
+# canonical casilla-number identifiers. Used to dual-key the persisted
+# replay payloads so the audit gates (which scan for casilla-id keys)
+# resolve coverage correctly without requiring label-aware lookups.
+_LABEL_TO_CASILLA: dict[str, str] = {
+    "Resultado de la declaración": "0670",
+    "Cuota diferencial": "0610",
+    "Mínimo personal y familiar. Parte estatal": "0519",
+    "Mínimo personal y familiar. Parte autonómica": "0520",
+}
+
 
 async def _capture_baseline_observation() -> tuple[str, dict[str, str]]:
     payload = RentaWebOpenLivePayload(timeout_ms=90_000).model_dump_json().encode("utf-8")
@@ -68,9 +79,29 @@ def test_capture_baseline_employee_replay_payload() -> None:
 
     _REPLAY_DIR.mkdir(parents=True, exist_ok=True)
     payload_path = _REPLAY_DIR / "modelo-100-2025-employee-default-minimo.json"
+    # Dual-key the payload: one block keyed by AEAT-readable labels (used by
+    # the oracle's `_compare_expected_field`) and one block keyed by registry
+    # casilla numbers (used by the per-formula coverage gate in
+    # test_schema_hygiene). The label-block carries the live Renta WEB Open
+    # observation; the casilla-block translates each label into its canonical
+    # casilla id via _LABEL_TO_CASILLA so audit metrics surface coverage at
+    # the registry level.
+    expected_by_label = {label: str(value) for label, value in _BASELINE_EXPECTED.items()}
+    expected_by_casilla = {
+        _LABEL_TO_CASILLA[label]: str(value)
+        for label, value in _BASELINE_EXPECTED.items()
+        if label in _LABEL_TO_CASILLA
+    }
+    observed_by_casilla = {
+        _LABEL_TO_CASILLA[label]: value
+        for label, value in observed.items()
+        if label in _LABEL_TO_CASILLA
+    }
     document = {
-        "expected": {label: str(value) for label, value in _BASELINE_EXPECTED.items()},
+        "expected": expected_by_label,
         "observed": observed,
+        "expected_by_casilla": expected_by_casilla,
+        "observed_by_casilla": observed_by_casilla,
         "raw_evidence_locator": locator,
     }
     payload_path.write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8")

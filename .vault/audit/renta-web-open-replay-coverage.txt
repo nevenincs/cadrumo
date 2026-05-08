@@ -1,7 +1,7 @@
 scenarios_total: 9
-scenarios_with_payload: 0
-scenarios_uncovered: 9
-coverage_pct: 0.0
+scenarios_with_payload: 1
+scenarios_uncovered: 8
+coverage_pct: 11.1
 uncovered_ids:
   - base-imponible-with-negative-capital-gains
   - base-liquidable-with-reductions
@@ -11,4 +11,3 @@ uncovered_ids:
   - cuota-liquida-total-from-both-halves
   - minimo-aggregation-estatal
   - minimo-clip-to-base-liquidable
-  - modelo-100-2025-employee-default-minimo
