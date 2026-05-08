@@ -133,6 +133,7 @@ cli:
       at_least_one_edit: At least one field must be edited
       binding_assignment: "Invalid --binding assignment: %{value}. Use the form KEY=VALUE (e.g. irpf.previous_year_economic_activity_net_income=13000)."
       binding_value_not_decimal: "The --binding value %{value} is not a decimal number."
+      draft_selector_ambiguous: "Use either --id or (--modelo + --period); not both."
       file_not_found: Declaration file not found
       filter_parse_error: Error parsing the filter
       missing_id_or_period_modelo: ID or (period + tax form) must be provided
