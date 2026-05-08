@@ -3,7 +3,8 @@ tags:
   - '#plan'
   - '#audit-concerns-2026-05'
 date: '2026-05-08'
-related: []
+related:
+  - "[[2026-05-08-renta-cuota-integra-state-scale-plan]]"
 ---
 
 # `audit-concerns-2026-05` tracking plan
@@ -13,6 +14,17 @@ external `aeat-audit` metaproject run against rev `b01f7c6` of branch
 `chore-476-restructure-execution`. Severity histogram for that run:
 0 critical, 386 high, 446 medium, 6 284 low, 18 526 info; zero
 broken architecture (`import-linter`) contracts.
+
+> **Update 2026-05-08 (post-execution):** the renta-cuota-integra
+> state-scale stream that the audit's allow-listed orphan parameters
+> pointed at has been closed by a separate plan and ADR; see the
+> `[[2026-05-08-renta-cuota-integra-state-scale-plan]]` related entry.
+> Across six Modelo 100 ejercicios (2020-2025) the IRPF state-scale
+> bracket parameter is now consumed by an `op = "lookup_bracket"`
+> formula at casillas 0528 and 0530, the construct ownership lists
+> include the new formula ids, and the orphan-detection allow-list is
+> empty. Workbook parity, drift-detection, and chain-behaviour gates
+> all pass for the wired chain.
 
 This plan is the in-repo mirror of the auditor's brief. The
 auditor-side artefacts live outside this repo at
