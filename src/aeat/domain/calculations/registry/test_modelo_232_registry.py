@@ -184,8 +184,9 @@ def test_modelo_232_workflow_surfaces_are_snapshot_gated_and_construct_scoped() 
         construct = revision.constructs[0]
         linked_by_surface = {link.surface: link for link in revision.application_links}
         assert required_surfaces <= set(linked_by_surface), revision.id
-        for surface in required_surfaces:
-            link = linked_by_surface[surface]
+        for link in revision.application_links:
+            if link.surface not in required_surfaces:
+                continue
             assert link.requires_snapshot is True
             assert link.id in construct.application_links
 
