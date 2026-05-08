@@ -38,7 +38,7 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-_REVIEW_ITEM_ADAPTER = TypeAdapter(ReviewItem)
+_REVIEW_ITEM_ADAPTER: TypeAdapter[ReviewItem] = TypeAdapter(ReviewItem)
 
 
 def _summary(text: str = "demo") -> tr:
