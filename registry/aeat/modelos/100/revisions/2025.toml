@@ -2336,6 +2336,7 @@ legal_refs = [
     "orden-eha-672-2007:art-1",
     "orden-eha-3435-2007:anexo-ii",
     "orden-hac-56-2024:art-1",
+    "orden-hfp-1284-2023:art-7",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
@@ -2410,6 +2411,7 @@ legal_refs = [
     "orden-eha-672-2007:art-1",
     "orden-eha-3435-2007:anexo-ii",
     "orden-hac-56-2024:art-1",
+    "orden-hfp-1284-2023:art-7",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
@@ -2536,6 +2538,7 @@ legal_refs = [
     "rd-439-2007:art-109",
     "orden-hac-277-2026:art-3",
     "orden-hap-1732-2014:art-2",
+    "orden-hfp-1284-2023:art-7",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
@@ -3324,6 +3327,8 @@ legal_refs = [
     "ley-35-2006:art-82",
     "ley-35-2006:art-83",
     "ley-35-2006:art-99",
+    "real-decreto-ley-4-2024:art-3",
+    "real-decreto-ley-13-2025:art-2",
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
@@ -3544,7 +3549,7 @@ id = "renta-2025-deduccion-ceuta-melilla-estatal-50-porciento"
 target = "0560"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-67"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-67", "real-decreto-ley-4-2024:art-3", "real-decreto-ley-13-2025:art-2"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -3556,7 +3561,7 @@ id = "renta-2025-deduccion-ceuta-melilla-autonomica-50-porciento"
 target = "0561"
 expression = { op = "percent", args = [{ casilla = "0727" }, { literal = "50" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-77"]
+legal_refs = ["ley-35-2006:art-68", "ley-35-2006:art-68.4", "ley-35-2006:art-77", "real-decreto-ley-4-2024:art-3", "real-decreto-ley-13-2025:art-2"]
 source_refs = ["lirpf-cuota-chain-authority"]
 
 [[revisions."2025".formulas.source_citations]]
@@ -6838,7 +6843,7 @@ id = "renta-2025-modelo-180-retenciones-anuales"
 source = "previous_filing"
 selector = { source_modelo = "180", source_output = "decl.retenciones-total", relation = "resumen-anual-arrendamientos-urbanos" }
 aggregation = { op = "copy" }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3", "orden-hap-1732-2014:art-2"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".bindings.source_citations]]
