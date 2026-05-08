@@ -24,7 +24,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 def test_eu_member_state_codes_match_substrate_enum_27_states() -> None:
     expected = {member.value.upper() for member in EUMemberState}
-    assert EU_MEMBER_STATE_CODES == expected
+    assert expected == EU_MEMBER_STATE_CODES
     assert len(EU_MEMBER_STATE_CODES) == 27
 
 
