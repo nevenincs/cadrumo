@@ -67,15 +67,29 @@ async def _capture_resumen_dom() -> tuple[str, str]:
             stage="explore:wait-summary", description="Resumen de declaraciones",
             timeout_ms=payload.timeout_ms,
         )
-        # Click "Buscar casilla" and capture the resulting dialog DOM.
-        await _click_expected(
-            page.get_by_role("button", name="Buscar casilla"),
-            stage="explore:open-buscar-casilla",
-            description="Buscar casilla button",
-            timeout_ms=payload.timeout_ms,
-        )
-        # Wait briefly for the dialog to render.
-        await page.wait_for_timeout(2000)
+        # The Resumen page already carries the editable form. Two
+        # navigation primitives are visible:
+        #   - "Buscar casilla" (toolbar button [10] in prior inventory)
+        #     opens a dialog where you type a casilla number.
+        #   - "Apartados declaración" opens the section navigator.
+        # Try Buscar casilla via filtered locator (more robust than
+        # get_by_role which timed out previously).
+        buscar_btn = page.locator("button").filter(has_text="Buscar casilla").first
+        try:
+            await buscar_btn.wait_for(state="visible", timeout=15_000)
+            # Safety: the button label "Buscar casilla" doesn't trip the
+            # forbidden-tokens denylist (no presentar/firmar/pagar/etc).
+            from ._renta_web_open_safety import assert_click_target_safe
+            await assert_click_target_safe(
+                buscar_btn, stage="explore:buscar-casilla-safety",
+                description="Buscar casilla", timeout_ms=15_000,
+            )
+            await buscar_btn.click(timeout=15_000)
+            # Allow dialog to render.
+            await page.wait_for_timeout(2_000)
+        except Exception as exc:
+            # Soft-fail — DOM will still capture without dialog.
+            print(f"explore: buscar casilla unreachable: {type(exc).__name__}: {exc}")
 
         # Capture full HTML + a button/link inventory.
         html_content = await page.content()
