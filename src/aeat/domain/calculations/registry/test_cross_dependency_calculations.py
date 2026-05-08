@@ -205,7 +205,10 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         inputs={},
         date_context={"filing_period": date(2025, 12, 31)},
         relation_values=relation_values,
-        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        binding_values={
+            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        },
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
     )
 
     assert set(relation_values) == {
@@ -216,6 +219,7 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         "renta-2025-rel-130-pagos-fraccionados",
         "renta-2025-rel-131-pagos-fraccionados",
         "renta-2025-rel-180-retenciones-anuales",
+        "renta-2025-rel-184-atribucion-actividades-economicas",
         "renta-2025-rel-190-retenciones-anuales",
         "renta-2025-rel-193-retenciones-anuales",
     }
@@ -266,6 +270,7 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
         date_context={"filing_period": date(filing_year, 12, 31)},
         relation_values=relation_values,
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
     )
 
     periodic_total = sum(
@@ -554,6 +559,8 @@ def _renta_relation_observed_value(requirement: RegistryRelationSourceRequiremen
         return Decimal("40")
     if relation_id == "renta-2025-rel-193-retenciones-anuales":
         return Decimal("50")
+    if relation_id == "renta-2025-rel-184-atribucion-actividades-economicas":
+        return Decimal("60")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
 
 
