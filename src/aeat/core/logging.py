@@ -15,8 +15,10 @@ from __future__ import annotations
 
 import logging
 import logging.config
+import os
 import re
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any, cast
 
 _CONFIGURED = False
@@ -66,6 +68,8 @@ _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
 _LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
 _PERCENT_PLACEHOLDER_VALUE_RE = re.compile(r"^%[-#+ 0-9.]*[a-zA-Z]$")
 _PERCENT_PLACEHOLDER_RE = re.compile(r"(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>%[-#+ 0-9.]*[a-zA-Z])")
+_DEFAULT_LOG_DIR = Path.home() / ".config" / "aeat" / "logs"
+_DEFAULT_LOG_FILE_NAME = "aeat.log"
 
 
 def _normalise_key(key: str) -> str:
@@ -230,11 +234,21 @@ class _DropRunEventFilter(logging.Filter):
         return getattr(record, "run_event", None) is None
 
 
+def default_log_file_path() -> Path:
+    """Return the file path for non-interactive project logs."""
+
+    raw_dir = os.environ.get("AEAT_LOG_DIR")
+    log_dir = Path(raw_dir).expanduser() if raw_dir else _DEFAULT_LOG_DIR
+    return log_dir / _DEFAULT_LOG_FILE_NAME
+
+
 def configure_logging() -> None:
     """Configures the project-wide logging defaults."""
     global _CONFIGURED
     if _CONFIGURED:
         return
+    log_file = default_log_file_path()
+    log_file.parent.mkdir(parents=True, exist_ok=True)
 
     logging.config.dictConfig(
         {
@@ -247,17 +261,25 @@ def configure_logging() -> None:
                 "drop_run_event": {"()": f"{__name__}._DropRunEventFilter"},
             },
             "handlers": {
-                "default": {
-                    "level": "INFO",
+                "stderr": {
+                    "level": "ERROR",
                     "formatter": "standard",
                     "class": "logging.StreamHandler",
                     "stream": "ext://sys.stderr",
                     "filters": ["drop_run_event"],
                 },
+                "file": {
+                    "level": "DEBUG",
+                    "formatter": "standard",
+                    "class": "logging.FileHandler",
+                    "filename": str(log_file),
+                    "encoding": "utf-8",
+                    "filters": ["drop_run_event"],
+                },
             },
             "root": {
-                "handlers": ["default"],
-                "level": "INFO",
+                "handlers": ["stderr", "file"],
+                "level": "DEBUG",
             },
             "loggers": {
                 "alembic.runtime.plugins": {
