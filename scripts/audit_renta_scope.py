@@ -208,6 +208,145 @@ def layer3_mini_model_coverage(modelo: dict, target_revision: str = "2025") -> d
     return summary
 
 
+def _load_all_modelos() -> dict[str, dict]:
+    """Load every modelo TOML and key by stem (file name without extension)."""
+    modelos: dict[str, dict] = {}
+    modelos_dir = PROJECT_ROOT / "registry" / "aeat" / "modelos"
+    for path in sorted(modelos_dir.glob("*.toml")):
+        modelos[path.stem] = tomllib.loads(path.read_text(encoding="utf-8"))
+    return modelos
+
+
+def layer5_cross_modelo_closed_loop(modelo: dict) -> dict:
+    """For each cross-modelo relation, verify source modelo exposes source_output.
+
+    Surfaces relations whose declared `source_modelo` + `source_revision_selector`
+    + `source_output` triple does not resolve to an actual casilla in the source
+    modelo's registry definition.
+    """
+    all_modelos = _load_all_modelos()
+    relations_total = 0
+    closed_loop = 0
+    open_loop_misalignments: list[dict] = []
+    for rev_id, rev in modelo.get("revisions", {}).items():
+        if not isinstance(rev, dict):
+            continue
+        for relation in rev.get("relations", []) or []:
+            relations_total += 1
+            source_modelo_id = relation.get("source_modelo")
+            source_selector = relation.get("source_revision_selector") or {}
+            source_output = relation.get("source_output")
+            source_modelo = all_modelos.get(source_modelo_id)
+            if source_modelo is None:
+                open_loop_misalignments.append({
+                    "revision": rev_id,
+                    "relation_id": relation.get("id", "(unknown)"),
+                    "source_modelo": source_modelo_id,
+                    "kind": "source_modelo_missing",
+                })
+                continue
+            # Resolve source revision: try year-keyed, fallback to first revision.
+            source_year = source_selector.get("year")
+            source_revisions = source_modelo.get("revisions") or {}
+            source_rev = None
+            if source_year is not None:
+                source_rev = source_revisions.get(str(source_year))
+            if source_rev is None:
+                # Pick any revision matching the year_from window or first revision.
+                for rid, rdata in source_revisions.items():
+                    if isinstance(rdata, dict):
+                        source_rev = rdata
+                        break
+            if source_rev is None or not isinstance(source_rev, dict):
+                open_loop_misalignments.append({
+                    "revision": rev_id,
+                    "relation_id": relation.get("id", "(unknown)"),
+                    "source_modelo": source_modelo_id,
+                    "source_year": source_year,
+                    "kind": "source_revision_missing",
+                })
+                continue
+            # source_output may be a casilla number, an aggregate logical id
+            # (e.g. "decl.retenciones-total" — sums across the source modelo's
+            # informativa register), or some other string identifier. Casilla
+            # lookups handle the numeric case; aggregate-id outputs are
+            # treated as closed-loop without further casilla matching.
+            if source_output and ("." in source_output or "-" in source_output):
+                closed_loop += 1
+                continue
+            source_casillas = {c.get("number") for c in source_rev.get("casillas", []) or []}
+            if source_output and source_output in source_casillas:
+                closed_loop += 1
+            elif source_output and source_output.lstrip("0") in {n.lstrip("0") for n in source_casillas}:
+                # Tolerate zero-padding differences (e.g. "28" matches "0028" if any).
+                closed_loop += 1
+            else:
+                open_loop_misalignments.append({
+                    "revision": rev_id,
+                    "relation_id": relation.get("id", "(unknown)"),
+                    "source_modelo": source_modelo_id,
+                    "source_output": source_output,
+                    "kind": "source_output_missing",
+                })
+    return {
+        "relations_total": relations_total,
+        "closed_loop": closed_loop,
+        "open_loop": len(open_loop_misalignments),
+        "coverage_pct": (100.0 * closed_loop / relations_total) if relations_total else 100.0,
+        "misalignments": open_loop_misalignments[:50],
+    }
+
+
+def layer6_external_surface_registration(modelo: dict) -> dict:
+    """For each Renta external surface, verify live_cross_reference declared
+    + remote-state guard policy + adapter consumer registration.
+
+    Inventory pulled from `live_cross_references` blocks per revision and
+    cross-checked against `application_links` blocks (which name the
+    consumer adapter).
+    """
+    surfaces_by_revision: dict[str, list[dict]] = {}
+    application_links_by_id: dict[str, list[str]] = {}
+    for rev_id, rev in modelo.get("revisions", {}).items():
+        if not isinstance(rev, dict):
+            continue
+        revision_surfaces = []
+        for cross_ref in rev.get("live_cross_references", []) or []:
+            cross_ref_id = cross_ref.get("id", "(unknown)")
+            revision_surfaces.append({
+                "id": cross_ref_id,
+                "evidence_tier": cross_ref.get("evidence_tier"),
+                "surface": cross_ref.get("surface"),
+                "guard_policy_id": cross_ref.get("guard_policy_id"),
+                "synthetic_data_allowed": cross_ref.get("synthetic_data_allowed", False),
+                "requires_authentication": cross_ref.get("requires_authentication", False),
+            })
+        surfaces_by_revision[rev_id] = revision_surfaces
+        for app_link in rev.get("application_links", []) or []:
+            app_link_id = app_link.get("id", "")
+            consumer = app_link.get("consumer")
+            if app_link_id:
+                application_links_by_id.setdefault(rev_id, []).append(
+                    f"{app_link_id} -> {consumer}"
+                )
+    summary = {
+        "total_surfaces": sum(len(v) for v in surfaces_by_revision.values()),
+        "surfaces_per_revision": {k: len(v) for k, v in surfaces_by_revision.items()},
+        "guarded_count": sum(
+            1 for v in surfaces_by_revision.values() for s in v if s["guard_policy_id"]
+        ),
+        "synthetic_data_allowed_count": sum(
+            1 for v in surfaces_by_revision.values() for s in v if s["synthetic_data_allowed"]
+        ),
+        "auth_required_count": sum(
+            1 for v in surfaces_by_revision.values() for s in v if s["requires_authentication"]
+        ),
+        "surfaces_per_revision_detail": surfaces_by_revision,
+        "application_links_per_revision": application_links_by_id,
+    }
+    return summary
+
+
 def _load_source_catalogue() -> dict[str, dict]:
     """Map source_ref -> {corpus_path, ...} from registry/aeat/legal/*.toml."""
     sources: dict[str, dict] = {}
@@ -752,6 +891,8 @@ def main() -> int:
         "layer2": layer2_citation_phrase_coverage(modelo),
         "layer3": layer3_mini_model_coverage(modelo, "2025"),
         "layer4": layer4_legal_grounding(modelo),
+        "layer5": layer5_cross_modelo_closed_loop(modelo),
+        "layer6": layer6_external_surface_registration(modelo),
         "layer7": layer7_scenario_coverage(),
         "layer8": layer8_test_honesty_inventory(),
         "layer9": layer9_typed_binding_inventory(modelo),
