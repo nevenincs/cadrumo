@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import date
 from typing import Annotated, Literal
 
@@ -9,6 +10,7 @@ import typer
 
 from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
+from ...domain.calculations.registry._errors import RegistrySnapshotError
 from ._common import _emit, _parse_iso_date
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
@@ -20,12 +22,28 @@ app = typer.Typer(
 )
 
 
+def _run_query[T](call: Callable[[], T]) -> T:
+    """Run a registry-query call and translate user-input errors to clean CLI failures.
+
+    ``RegistryQueryService`` raises :exc:`ValueError` from ``parse_modelo_period``
+    on a malformed ``--period`` arg and :exc:`RegistrySnapshotError` from the
+    authority on unknown modelo / unresolved revision. Both are user-input
+    errors at the CLI boundary; surfacing them as ``typer.BadParameter``
+    keeps the operator-facing experience clean rather than printing a
+    traceback.
+    """
+    try:
+        return call()
+    except (ValueError, RegistrySnapshotError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
 @app.command("list")
 def list_modelos(
     ctx: typer.Context,
     year: Annotated[int | None, typer.Option("--year", help="Filter modelos covering this filing year.")] = None,
 ) -> None:
-    report = _service().list_modelos(year=year)
+    report = _run_query(lambda: _service().list_modelos(year=year))
     _emit(
         ctx,
         report,
@@ -46,7 +64,7 @@ def describe_modelo(
     period: Annotated[str | None, typer.Option("--period", help="Filing period, for example 2026Q1.")] = None,
     as_of: Annotated[str | None, typer.Option("--as-of", help="Revision date selector in YYYY-MM-DD format.")] = None,
 ) -> None:
-    report = _service().describe_modelo(modelo, period=period, as_of=_as_of(as_of))
+    report = _run_query(lambda: _service().describe_modelo(modelo, period=period, as_of=_as_of(as_of)))
     _emit(
         ctx,
         report,
@@ -77,12 +95,14 @@ def casillas(
     ] = None,
     required: Annotated[bool, typer.Option("--required", help="Show only required casillas.")] = False,
 ) -> None:
-    report = _service().casillas(
-        modelo,
-        period=period,
-        as_of=_as_of(as_of),
-        input_kind=input_kind,
-        required=True if required else None,
+    report = _run_query(
+        lambda: _service().casillas(
+            modelo,
+            period=period,
+            as_of=_as_of(as_of),
+            input_kind=input_kind,
+            required=True if required else None,
+        )
     )
     _emit(
         ctx,
@@ -104,7 +124,7 @@ def bindings(
     period: Annotated[str | None, typer.Option("--period", help="Filing period, for example 2026Q1.")] = None,
     as_of: Annotated[str | None, typer.Option("--as-of", help="Revision date selector in YYYY-MM-DD format.")] = None,
 ) -> None:
-    report = _service().bindings(modelo, period=period, as_of=_as_of(as_of))
+    report = _run_query(lambda: _service().bindings(modelo, period=period, as_of=_as_of(as_of)))
     _emit(
         ctx,
         report,
@@ -122,7 +142,7 @@ def formulas(
     period: Annotated[str | None, typer.Option("--period", help="Filing period, for example 2026Q1.")] = None,
     as_of: Annotated[str | None, typer.Option("--as-of", help="Revision date selector in YYYY-MM-DD format.")] = None,
 ) -> None:
-    report = _service().formulas(modelo, period=period, as_of=_as_of(as_of))
+    report = _run_query(lambda: _service().formulas(modelo, period=period, as_of=_as_of(as_of)))
     _emit(
         ctx,
         report,
