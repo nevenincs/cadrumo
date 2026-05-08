@@ -65,7 +65,7 @@ app = typer.Typer(
     help=tr("cli.root.app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
-    add_completion=False,
+    add_completion=True,
 )
 
 
