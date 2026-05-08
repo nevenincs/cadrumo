@@ -49,15 +49,30 @@ The plan is grounded in `2026-05-08-cli-backend-boundary-reference` and
 <!-- IMPORTANT: This document must be updated between execution runs to
      track progress. -->
 
+## Backend Owner Matrix
+
+| Row | Owner | Backend gap | Status |
+|---|---|---|---|
+| CLI-001 | `application.filing` | API-005 | tracked-current-violation |
+| CLI-002 | `application.transactions` | API-001 | tracked-current-violation |
+| CLI-003 | `application.invoices` | API-003 | tracked-current-violation |
+| CLI-004 | `application.profile` | API-004 | tracked-current-violation |
+| CLI-005 | `application.transactions` | API-002 | tracked-current-violation |
+| CLI-006 | `application.invoices` | API-003 | tracked-current-violation |
+| CLI-007 | `application.filing` | API-005 | tracked-current-violation |
+| CLI-008 | `application.overview` | API-008 | tracked-current-violation |
+| CLI-009 | `application.registry` | API-006 | tracked-current-violation |
+| CLI-010 | `application.inventory` | API-007 | tracked-current-violation |
+
 ## Wave 0: Contract Freeze And Audit Harness
 
 | Task | Status | Tracks | Work |
 |---|---|---|---|
-| W0-T1 | pending | all rows | Define the CLI boundary contract in code-review terms: Typer binding, option parsing, rendering, and error translation only. |
+| W0-T1 | completed | all rows | Define the CLI boundary contract in code-review terms: Typer binding, option parsing, rendering, and error translation only. |
 | W0-T2 | pending | TEST-001 to TEST-008 | Reclassify CLI tests as rendering or error-translation tests unless they verify behavior through application-layer APIs. |
 | W0-T3 | pending | TEST-003, TEST-004 | Mark calculation-contract tests for no-tautology review before migration. |
-| W0-T4 | pending | API-001 to API-008 | Create row-level backend API backlog entries before changing CLI behavior. |
-| W0-T5 | pending | all rows | Add an audit checklist that every later wave updates with row status and evidence anchors. |
+| W0-T4 | completed | API-001 to API-008 | Create row-level backend API backlog entries before changing CLI behavior. |
+| W0-T5 | in-progress | all rows | Add an audit checklist that every later wave updates with row status and evidence anchors. |
 
 Gate after Wave 0: code review verifies every tracked row has a target owner,
 status, severity, and test migration path. Audit review verifies no row uses
