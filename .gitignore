@@ -193,6 +193,11 @@ cython_debug/
 # Ruff stuff:
 .ruff_cache/
 
+# Complexity / type-checker caches used by the audit pipeline
+.complexipy_cache/
+.ty_cache/
+.pyrefly_cache/
+
 # PyPI configuration file
 .pypirc
 
