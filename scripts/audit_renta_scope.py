@@ -50,6 +50,25 @@ def _load_legal_catalogue() -> tuple[set[str], set[str]]:
     return legal_ids, source_ids
 
 
+# Modelo 100's owned catalogue scope. Articles outside this scope are
+# legitimately catalogued for OTHER modelos (IS / IVA / foreign-assets /
+# operaciones-terceros) and their absence from Modelo 100 citations is
+# not drift.
+_RENTA_OWNED_CATALOGUE_FILES = ("irpf.toml", "atribucion-rentas.toml")
+
+
+def _load_renta_scoped_legal_catalogue() -> set[str]:
+    """Articles catalogued in IRPF / atribución-rentas TOML files only."""
+    scoped: set[str] = set()
+    for path in LEGAL_DIR.rglob("*.toml"):
+        if path.name not in _RENTA_OWNED_CATALOGUE_FILES:
+            continue
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        for entry_id, _payload in (data.get("legal") or {}).items():
+            scoped.add(entry_id)
+    return scoped
+
+
 def _collect_expression_refs(
     expression: object,
     casillas: set[str],
@@ -527,8 +546,16 @@ def layer2_citation_phrase_coverage(modelo: dict) -> dict:
 
 
 def layer4_legal_grounding(modelo: dict) -> dict:
-    """Which legal_refs are cited, which catalogue entries are orphaned."""
+    """Which legal_refs are cited, which catalogue entries are orphaned.
+
+    Reports both the global view (all 119 articles registered across
+    legal/) AND the Renta-scoped view (only articles catalogued under
+    `_RENTA_OWNED_CATALOGUE_FILES`). The scoped view is the canonical
+    drift metric for Modelo 100 — articles owned by IS/IVA/IAE/foreign-
+    assets catalogues belong to OTHER modelos and aren't Modelo 100 drift.
+    """
     catalogued_legal, _ = _load_legal_catalogue()
+    renta_scoped_catalogue = _load_renta_scoped_legal_catalogue()
     cited_legal: Counter = Counter()
     for rev_id, rev in modelo.get("revisions", {}).items():
         if not isinstance(rev, dict):
@@ -540,6 +567,8 @@ def layer4_legal_grounding(modelo: dict) -> dict:
     cited_set = set(cited_legal.keys())
     catalogued_but_uncited = sorted(catalogued_legal - cited_set)
     cited_but_uncatalogued = sorted(cited_set - catalogued_legal)
+    renta_scoped_uncited = sorted(renta_scoped_catalogue - cited_set)
+    renta_scoped_cited = sorted(renta_scoped_catalogue & cited_set)
     return {
         "catalogued_count": len(catalogued_legal),
         "cited_count": len(cited_set),
@@ -548,6 +577,14 @@ def layer4_legal_grounding(modelo: dict) -> dict:
         "top_cited": cited_legal.most_common(15),
         "uncited_articles": catalogued_but_uncited[:20],
         "uncatalogued_articles": cited_but_uncatalogued[:20],
+        # Renta-scoped drift (the canonical Modelo 100 drift metric)
+        "renta_scoped_catalogued_count": len(renta_scoped_catalogue),
+        "renta_scoped_cited_count": len(renta_scoped_cited),
+        "renta_scoped_uncited_count": len(renta_scoped_uncited),
+        "renta_scoped_coverage_pct": (
+            100.0 * len(renta_scoped_cited) / len(renta_scoped_catalogue)
+        ) if renta_scoped_catalogue else 100.0,
+        "renta_scoped_uncited_articles": renta_scoped_uncited,
     }
 
 
