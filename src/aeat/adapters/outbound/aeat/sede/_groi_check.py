@@ -161,7 +161,10 @@ class GroiSedeDriver:
             RemoteOperation(kind="http", method="GET", url=AEAT_GROI_URL),
             RemoteOperation(kind="browser_action", action="open-groi-form"),
         ]
-        for nif in sorted(str(key) for key in expected):
+        # Normalise to match GroiOracle._expected_values so the operation
+        # labels the guard pre-flight sees (driverless oracle path) match
+        # what the live driver emits.
+        for nif in sorted(str(key).strip().upper() for key in expected):
             operations.append(RemoteOperation(kind="browser_action", action=f"check-nif-{nif}"))
         operations.append(RemoteOperation(kind="browser_action", action="discard-session"))
         return tuple(operations)
