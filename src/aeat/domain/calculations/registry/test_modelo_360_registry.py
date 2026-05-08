@@ -57,9 +57,7 @@ def test_modelo_360_september_30_deadline_matches_orden_eha_789_2010_art_4() -> 
 
 def test_modelo_360_snapshot_builds_for_ad_hoc_period() -> None:
     modelo, catalogues = _load_modelo_360()
-    snapshot = build_snapshot(
-        modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="AD-HOC"
-    )
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="AD-HOC")
     assert snapshot.revision.id == "2010-y-siguientes"
     assert "orden-eha-789-2010:art-1" in snapshot.legal
 

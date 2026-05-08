@@ -65,5 +65,3 @@ def test_modelo_131_validated_snapshot_owns_workflow_surfaces(
     }
     assert set(linked_by_surface) >= required_surfaces
     assert all(link.requires_snapshot for link in linked_by_surface.values())
-
-

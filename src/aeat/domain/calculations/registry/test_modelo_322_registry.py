@@ -92,9 +92,7 @@ def test_modelo_322_live_cross_references_forbid_writes() -> None:
     filed_ref = cross_refs["modelo-322-filed-declarations-read"]
     assert filed_ref.requires_authentication is True
     assert filed_ref.requires_aeat_authorization is True
-    assert {"presentation", "signing", "amendment", "payment"}.issubset(
-        set(filed_ref.forbidden_actions)
-    )
+    assert {"presentation", "signing", "amendment", "payment"}.issubset(set(filed_ref.forbidden_actions))
 
 
 def test_modelo_322_filing_schedule_is_monthly() -> None:
@@ -118,11 +116,7 @@ def test_modelo_322_declares_iva_aggregation_bindings_for_all_three_flow_directi
     Modelo 303, scoped to the individual group entity."""
     modelo, _ = _load_modelo_322()
     revision = modelo.revisions["2008-y-siguientes"]
-    iva_bindings = {
-        binding.id: binding
-        for binding in revision.bindings
-        if binding.source == "ledger_iva_aggregation"
-    }
+    iva_bindings = {binding.id: binding for binding in revision.bindings if binding.source == "ledger_iva_aggregation"}
     assert "modelo-322-iva-repercutido-general-cuota" in iva_bindings
     assert "modelo-322-iva-repercutido-reducido-cuota" in iva_bindings
     assert "modelo-322-iva-repercutido-super-reducido-cuota" in iva_bindings

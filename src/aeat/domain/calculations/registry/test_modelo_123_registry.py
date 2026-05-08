@@ -76,5 +76,3 @@ def test_modelo_123_validated_snapshot_owns_workflow_surfaces(
     }
     assert required_surfaces <= set(linked_by_surface)
     assert all(link.requires_snapshot for link in linked_by_surface.values())
-
-

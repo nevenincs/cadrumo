@@ -80,8 +80,7 @@ async def _snapshot_zk_layer(page: Any, label: str) -> str:
         except Exception:
             title = placeholder = input_type = name = value = "?"
         lines.append(
-            f"  [{idx}] type={input_type!r} title={title!r} "
-            f"placeholder={placeholder!r} name={name!r} value={value!r}"
+            f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}"
         )
     lines.append("\n--- frames present at snapshot time ---")
     try:
@@ -188,7 +187,7 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             await mostrar_btn.click(timeout=10_000)
             await page.wait_for_timeout(1_500)
         except Exception as exc:
-            print(f"explore: Mostrar opciones unreachable: {type(exc).__name__}: {exc}")
+            print(f"explore: Mostrar opciones unreachable: {type(exc).__name__}: {exc}")  # noqa: T201
 
         buscar_btn = page.locator("button").filter(has_text="Buscar casilla").first
         try:
@@ -207,10 +206,9 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             buscar_dialog_snapshot = await _snapshot_zk_layer(page, "buscar-casilla")
         except Exception as exc:
             # Soft-fail — DOM will still capture without dialog.
-            print(f"explore: buscar casilla unreachable: {type(exc).__name__}: {exc}")
+            print(f"explore: buscar casilla unreachable: {type(exc).__name__}: {exc}")  # noqa: T201
             buscar_dialog_snapshot = (
-                f"=== ZK layer snapshot: buscar-casilla ===\n"
-                f"(unreachable: {type(exc).__name__}: {exc})"
+                f"=== ZK layer snapshot: buscar-casilla ===\n(unreachable: {type(exc).__name__}: {exc})"
             )
 
         # Note: dialogs cannot be dismissed via the textual "Cancelar"
@@ -242,10 +240,9 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             await page.wait_for_timeout(2_500)
             apartados_dialog_snapshot = await _snapshot_zk_layer(page, "apartados")
         except Exception as exc:
-            print(f"explore: apartados unreachable: {type(exc).__name__}: {exc}")
+            print(f"explore: apartados unreachable: {type(exc).__name__}: {exc}")  # noqa: T201
             apartados_dialog_snapshot = (
-                f"=== ZK layer snapshot: apartados ===\n"
-                f"(unreachable: {type(exc).__name__}: {exc})"
+                f"=== ZK layer snapshot: apartados ===\n(unreachable: {type(exc).__name__}: {exc})"
             )
 
         # Capture full HTML + a button/link inventory.
@@ -300,7 +297,7 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             except Exception:
                 title = placeholder = input_type = name = value = "?"
             button_inventory_lines.append(
-                f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}"
+                f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}"  # noqa: E501
             )
         button_inventory_lines.append("\n=== visible dialogs / modals ===")
         for cls in (".z-window", ".z-window-modal", "[role='dialog']"):
@@ -332,7 +329,9 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
                       const aria = el.getAttribute('aria-label');
                       const title = el.getAttribute('title');
                       const cls = (el.className && typeof el.className === 'string') ? el.className : '';
-                      const isZk = /\\bz-(window|popup|textbox|decimalbox|doublebox|combobox|button|toolbarbutton|menuitem|listitem)\\b/.test(cls);
+                      const _zkRe1 = /\\bz-(window|popup|textbox|decimalbox|doublebox|combobox)\\b/;
+                      const _zkRe2 = /\\bz-(button|toolbarbutton|menuitem|listitem)\\b/;
+                      const isZk = _zkRe1.test(cls) || _zkRe2.test(cls);
                       if (role || aria || title || isZk) {
                         const text = (el.innerText || '').slice(0, 80).replace(/\\s+/g, ' ').trim();
                         out.push({

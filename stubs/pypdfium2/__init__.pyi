@@ -1,10 +1,12 @@
 """Minimal type stubs for ``pypdfium2`` covering the surface used in this repo.
 
-The runtime package does not ship ``py.typed``. We stub only the symbols
-``aeat.domain.calculations.registry._record_design`` calls; expand this
-file when new call sites are added.
+The runtime package does not ship ``py.typed``. Stubs cover the symbols
+called from ``aeat.domain.calculations.registry._record_design`` and
+``aeat.domain.calculations.registry._validate``; expand this file when
+new call sites are added.
 """
 
+import os
 from collections.abc import Iterator
 
 class _TextPage:
@@ -16,6 +18,8 @@ class _Page:
     def close(self) -> None: ...
 
 class PdfDocument:
-    def __init__(self, source: bytes | str) -> None: ...
+    def __init__(self, source: bytes | str | os.PathLike[str]) -> None: ...
     def __iter__(self) -> Iterator[_Page]: ...
+    def __len__(self) -> int: ...
+    def __getitem__(self, index: int) -> _Page: ...
     def close(self) -> None: ...

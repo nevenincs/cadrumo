@@ -210,12 +210,8 @@ def test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_out
             # Detect zero-only patterns
             input_decimals = re.findall(r'Decimal\("([^"]+)"\)', inputs_text)
             output_values = re.findall(r'value\s*=\s*Decimal\("([^"]+)"\)', expected_text)
-            input_only_zero = bool(input_decimals) and all(
-                d in ("0", "0.0", "0.00") for d in input_decimals
-            )
-            output_only_zero = bool(output_values) and all(
-                v in ("0", "0.0", "0.00") for v in output_values
-            )
+            input_only_zero = bool(input_decimals) and all(d in ("0", "0.0", "0.00") for d in input_decimals)
+            output_only_zero = bool(output_values) and all(v in ("0", "0.0", "0.00") for v in output_values)
             # A scenario is vacuous if BOTH all inputs are zero AND all expected outputs are zero
             if input_only_zero and output_only_zero:
                 # Try to extract scenario id for the offence message
@@ -282,8 +278,7 @@ def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
     if captured and uncovered and coverage_ratio >= 0.8:
         raise AssertionError(
             "Renta chain scenarios without Renta WEB Open replay payload "
-            "(capture via AEAT_LIVE_TESTS_ENABLED=1):\n  "
-            + "\n  ".join(uncovered)
+            "(capture via AEAT_LIVE_TESTS_ENABLED=1):\n  " + "\n  ".join(uncovered)
         )
 
 
@@ -320,9 +315,7 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
             for key in ("expected_by_casilla", "observed_by_casilla"):
                 section = document.get(key) or {}
                 if isinstance(section, dict):
-                    captured_targets.update(
-                        k for k in section if isinstance(k, str) and k.isdigit()
-                    )
+                    captured_targets.update(k for k in section if isinstance(k, str) and k.isdigit())
     modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     formula_targets: set[str] = set()
     for modelo in modelos:
@@ -347,8 +340,7 @@ def test_every_modelo_100_formula_target_has_oracle_grounded_scenario_coverage()
     # capture set covers the cuota chain (#81 follow-up).
     if captured_targets and not grounded:
         raise AssertionError(
-            "Renta WEB Open replay payloads exist but cover zero formula targets — "
-            "payload schema mismatch?"
+            "Renta WEB Open replay payloads exist but cover zero formula targets — payload schema mismatch?"
         )
 
 
@@ -377,7 +369,6 @@ def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
                 for suffix, expected_enum in bridges_by_suffix.items():
                     if binding.id.endswith(suffix) and binding.typed_enum != expected_enum:
                         offences.append(
-                            f"binding {binding.id!r} expected typed_enum={expected_enum!r}, "
-                            f"got {binding.typed_enum!r}"
+                            f"binding {binding.id!r} expected typed_enum={expected_enum!r}, got {binding.typed_enum!r}"
                         )
     assert not offences, "Renta typed-binding gate violations:\n  " + "\n  ".join(offences)

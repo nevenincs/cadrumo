@@ -57,9 +57,7 @@ def test_modelo_308_snapshot_builds_for_recent_filing_years() -> None:
 
 def test_modelo_308_snapshot_carries_legal_authority() -> None:
     modelo, catalogues = _load_modelo_308()
-    snapshot = build_snapshot(
-        modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="AD-HOC"
-    )
+    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="AD-HOC")
     assert "orden-eha-3786-2008:art-2" in snapshot.legal
     assert "orden-eha-3786-2008:art-11" in snapshot.legal
     assert snapshot.legal["orden-eha-3786-2008:art-11"].article == "11"
@@ -89,9 +87,7 @@ def test_modelo_308_live_cross_references_forbid_writes() -> None:
     assert filed_ref.requires_authentication is True
     assert filed_ref.requires_aeat_authorization is True
     assert set(filed_ref.allowed_methods) == {"GET", "HEAD", "OPTIONS"}
-    assert {"presentation", "signing", "amendment", "payment"}.issubset(
-        set(filed_ref.forbidden_actions)
-    )
+    assert {"presentation", "signing", "amendment", "payment"}.issubset(set(filed_ref.forbidden_actions))
 
 
 def test_modelo_308_construct_links_filing_workbook_parity() -> None:

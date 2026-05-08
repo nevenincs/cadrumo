@@ -258,9 +258,7 @@ class TestHashedPassthroughAdapters:
         # JSON re-encoding may differ in whitespace; compare structurally.
         import json as _json
 
-        assert _json.loads(record_back.payload.decode("utf-8")) == _json.loads(
-            original_payload.decode("utf-8")
-        )
+        assert _json.loads(record_back.payload.decode("utf-8")) == _json.loads(original_payload.decode("utf-8"))
 
 
 class TestFilingHistoryAdapter:
