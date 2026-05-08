@@ -1269,6 +1269,50 @@ def test_declaration_verbs_reject_ambiguous_selector(
     assert "Traceback" not in result.output
 
 
+def _normalise_help_output(raw: str) -> str:
+    import re
+
+    # Strip Unicode box-drawing chars Typer/Click renders around help cells,
+    # then collapse all whitespace runs into single spaces so the wrapped
+    # help text reads as one continuous string.
+    stripped = re.sub(r"[─-╿]", " ", raw)
+    return re.sub(r"\s+", " ", stripped)
+
+
+def test_setup_init_help_carries_examples_and_format_hints() -> None:
+    """``aeat setup init --help`` must surface format hints and examples (UX-004).
+
+    The audit (UX-004) flagged the ``--name``, ``--activity``, and
+    ``--tax-id`` help strings as surface-only one-liners with no
+    format hint, no example, and no discovery pointer. After uplift,
+    each flag's help text carries an ``Ejemplo:`` (in the default
+    Spanish locale) and the tax-id help mentions the NIF / NIE / CIF
+    canonical formats explicitly.
+    """
+    result = _invoke(["setup", "init", "--help"])
+    assert result.exit_code == 0, result.output
+    output = _normalise_help_output(result.output)
+    assert "Ejemplo:" in output, output
+    assert "12345678Z" in output, output
+    assert "IAE/CNAE" in output or "CNAE" in output, output
+
+
+def test_setup_auth_configure_help_points_at_providers_command() -> None:
+    """``aeat setup auth configure --help`` must reference the discovery command (UX-004).
+
+    The audit flagged ``--provider`` as accepting free TEXT without a
+    pointer to ``aeat setup auth providers`` for valid values. The
+    uplifted help text MUST reference the discovery command so the
+    operator can list supported providers without external docs.
+    """
+    result = _invoke(["setup", "auth", "configure", "--help"])
+    assert result.exit_code == 0, result.output
+    output = _normalise_help_output(result.output)
+    assert "aeat setup auth providers" in output, output
+    assert "certificate" in output, output
+    assert "clave_movil" in output, output
+
+
 def test_declaration_calculate_enumerates_blockers_with_runnable_next_action(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

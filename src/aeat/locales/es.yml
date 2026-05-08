@@ -671,9 +671,9 @@ cli:
     auth:
       app_help: Configurar y comprobar la autenticación de AEAT
       configure:
-        file_help: Ruta del certificado cuando el proveedor lo requiera
+        file_help: "Ruta absoluta o relativa al archivo de certificado P12/PFX cuando el proveedor lo requiera. Ejemplo: --file /ruta/al/certificado.p12."
         help: Configurar el proveedor de autenticación
-        provider_help: Proveedor de autenticación a usar
+        provider_help: "Proveedor de autenticacion. Ejecuta 'aeat setup auth providers' para listar los proveedores soportados (certificate, clave_movil)."
       login:
         help: Iniciar la sesión local de autenticación configurada
       logout:
@@ -720,10 +720,10 @@ cli:
       unknown: Desconocido
       valid: Válido
     init:
-      activity_help: Actividad económica principal
+      activity_help: "Actividad economica principal del autonomo. Texto libre o codigo IAE/CNAE. Ejemplo: 'Servicios profesionales de informatica' o '6201'."
       help: Crear o activar un perfil de contribuyente
-      name_help: Nombre del perfil local
-      tax_id_help: NIF/NIE/CIF del contribuyente
+      name_help: "Nombre local para distinguir este perfil de otros (no se envia a la AEAT). Ejemplo: 'cliente-acme' o 'mi-perfil'."
+      tax_id_help: "Identificador fiscal espanol del contribuyente. Formato: 8 digitos + letra (NIF), letra + 7 digitos + letra (NIE), o letra + 7 digitos + digito (CIF). Ejemplo: 12345678Z."
     labels:
       'no': 'no'
       unset: sin valor
