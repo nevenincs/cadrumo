@@ -35,6 +35,11 @@ from ._importing import (
     merge_invoice_import,
     parse_invoice_payload,
 )
+from ._linking import (
+    InvoiceTransactionLinkResult,
+    link_invoice_transaction_catalogues,
+    link_invoice_transaction_repositories,
+)
 from ._projection import (
     InvoiceMatchProjection,
     InvoiceReviewProjection,
@@ -57,6 +62,7 @@ __all__ = [
     "InvoiceMatchProjection",
     "InvoiceReconciliationResult",
     "InvoiceReviewProjection",
+    "InvoiceTransactionLinkResult",
     "LinkInconsistency",
     "ReconciliationSkippedSuggestion",
     "ReconciliationSuggestion",
@@ -66,6 +72,8 @@ __all__ = [
     "import_invoices_from_path",
     "invoice_display_amounts",
     "invoice_review_status",
+    "link_invoice_transaction_catalogues",
+    "link_invoice_transaction_repositories",
     "link_transaction",
     "link_transaction_bidirectional",
     "merge_invoice_import",

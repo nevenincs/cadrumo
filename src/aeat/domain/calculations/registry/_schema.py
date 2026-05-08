@@ -747,9 +747,7 @@ class ParameterDefinition(RegistryModel):
                     f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'"
                 )
             if self.bracket_axis is not None:
-                raise ValueError(
-                    f"parameter {self.id!r} declares bracket_axis but is not a bracket_table"
-                )
+                raise ValueError(f"parameter {self.id!r} declares bracket_axis but is not a bracket_table")
         return self
 
 
@@ -766,6 +764,7 @@ class DataBindingDefinition(RegistryModel):
         "manual_input",
         "ledger_oss_aggregation",
         "ledger_iva_aggregation",
+        "ledger_renta_expense_aggregation",
     ]
     selector: Mapping[str, str | int | DecimalValue | bool | tuple[str, ...]]
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
@@ -790,9 +789,9 @@ class CasillaDefinition(RegistryModel):
     number: str
     label: str
     section: tuple[str, ...]
-    data_type: Literal["decimal", "money", "integer", "ratio", "text", "boolean"]
-    required: bool
-    input_kind: Literal["manual", "bound", "computed", "informational"]
+    data_type: Literal["decimal", "money", "integer", "ratio", "text", "boolean"] = "money"
+    required: bool = False
+    input_kind: Literal["manual", "bound", "computed", "informational"] = "manual"
     formula: FormulaId | None = None
     binding: BindingId | None = None
     validation_refs: tuple[str, ...] = ()

@@ -107,6 +107,122 @@ def _coerce_date(value: Any) -> date:
     raise TypeError("expected a date or ISO-8601 string")
 
 
+def _normalise_invoice_enum_fields(payload: dict[str, Any]) -> dict[str, Any]:
+    if "kind" in payload and isinstance(payload["kind"], str):
+        payload["kind"] = InvoiceKind(payload["kind"])
+    if "payment_status" in payload and isinstance(payload["payment_status"], str):
+        payload["payment_status"] = PaymentStatus(payload["payment_status"])
+    if "iva_category" in payload and isinstance(payload["iva_category"], str):
+        stripped = payload["iva_category"].strip()
+        payload["iva_category"] = VATCategory(stripped) if stripped else None
+    return payload
+
+
+def _normalise_invoice_string_fields(payload: dict[str, Any]) -> dict[str, Any]:
+    if "invoice_number" in payload and isinstance(payload["invoice_number"], str):
+        payload["invoice_number"] = payload["invoice_number"].strip().upper()
+    if "counterparty_name" in payload and isinstance(payload["counterparty_name"], str):
+        payload["counterparty_name"] = payload["counterparty_name"].strip()
+    if "notes" in payload and isinstance(payload["notes"], str):
+        payload["notes"] = payload["notes"].strip()
+    return payload
+
+
+def _normalise_invoice_dates(payload: dict[str, Any]) -> dict[str, Any]:
+    if "issued_at" in payload:
+        payload["issued_at"] = _coerce_date(payload["issued_at"])
+    return payload
+
+
+def _normalise_invoice_counterparty(payload: dict[str, Any]) -> dict[str, Any]:
+    if "counterparty_country" in payload and isinstance(payload["counterparty_country"], str):
+        payload["counterparty_country"] = validate_country_code(payload["counterparty_country"])
+    if "counterparty_tax_id" in payload and isinstance(payload["counterparty_tax_id"], str):
+        tax_id_raw = payload["counterparty_tax_id"].strip().upper()
+        country = payload.get("counterparty_country")
+        if isinstance(country, str) and country == "ES":
+            payload["counterparty_tax_id"] = validate_spanish_tax_id(tax_id_raw)
+        elif isinstance(country, str):
+            payload["counterparty_tax_id"] = validate_vat_number(tax_id_raw, country)
+        else:
+            payload["counterparty_tax_id"] = tax_id_raw
+    return payload
+
+
+def _normalise_invoice_currency(payload: dict[str, Any]) -> dict[str, Any]:
+    if "currency" in payload and isinstance(payload["currency"], str):
+        currency_value = payload["currency"].strip().upper()
+        if len(currency_value) != 3 or not currency_value.isalpha():
+            raise ValueError("currency must be a three-letter ISO 4217 code")
+        payload["currency"] = currency_value
+    return payload
+
+
+def _normalise_invoice_monetary_fields(payload: dict[str, Any]) -> dict[str, Any]:
+    for key in ("grand_total", "base_total", "iva_total"):
+        if key in payload:
+            payload[key] = _coerce_decimal(payload[key])
+    for key in ("retention_rate", "retention_amount"):
+        if key in payload and payload[key] is not None:
+            payload[key] = _coerce_decimal(payload[key])
+    return payload
+
+
+_INVOICE_ID_REQUIRED_FIELDS = frozenset(
+    {
+        "kind",
+        "invoice_number",
+        "issued_at",
+        "counterparty_tax_id",
+        "currency",
+        "grand_total",
+    }
+)
+
+
+def _derive_invoice_id_when_complete(payload: dict[str, Any]) -> dict[str, Any]:
+    if not _INVOICE_ID_REQUIRED_FIELDS.issubset(payload):
+        return payload
+    derived = derive_invoice_id(
+        kind=payload["kind"],
+        invoice_number=payload["invoice_number"],
+        issued_at=payload["issued_at"],
+        counterparty_tax_id=payload["counterparty_tax_id"],
+        currency=payload["currency"],
+        grand_total=payload["grand_total"],
+    )
+    existing = payload.get("invoice_id")
+    if existing is not None and str(existing).strip().lower() != derived:
+        raise ValueError("invoice_id must match the stable hash derived from identity fields")
+    payload["invoice_id"] = derived
+    return payload
+
+
+def _normalise_invoice_collections(payload: dict[str, Any]) -> dict[str, Any]:
+    if "linked_transaction_ids" in payload:
+        payload["linked_transaction_ids"] = _normalise_linked_transaction_ids(payload["linked_transaction_ids"])
+    if (
+        "lines" in payload
+        and isinstance(payload["lines"], Sequence)
+        and not isinstance(payload["lines"], str | bytes)
+    ):
+        payload["lines"] = tuple(payload["lines"])
+    return payload
+
+
+def _normalise_invoice_payment_id(payload: dict[str, Any]) -> dict[str, Any]:
+    if "payment_id" not in payload or not isinstance(payload["payment_id"], str):
+        return payload
+    normalized = payload["payment_id"].strip().lower()
+    if not normalized:
+        payload["payment_id"] = None
+        return payload
+    if not _is_hex_digest(normalized, length=_HEX_TRANSACTION_ID_LENGTH):
+        raise ValueError("payment_id must be a 64-character lowercase hex digest")
+    payload["payment_id"] = normalized
+    return payload
+
+
 class InvoiceLine(BaseModel):
     """Immutable line item on an invoice."""
 
@@ -218,98 +334,15 @@ class Invoice(BaseModel):
         if not isinstance(data, Mapping):
             return data
         payload = dict(data)
-
-        if "kind" in payload and isinstance(payload["kind"], str):
-            payload["kind"] = InvoiceKind(payload["kind"])
-        if "payment_status" in payload and isinstance(payload["payment_status"], str):
-            payload["payment_status"] = PaymentStatus(payload["payment_status"])
-
-        if "invoice_number" in payload and isinstance(payload["invoice_number"], str):
-            payload["invoice_number"] = payload["invoice_number"].strip().upper()
-
-        if "issued_at" in payload:
-            payload["issued_at"] = _coerce_date(payload["issued_at"])
-
-        if "counterparty_name" in payload and isinstance(payload["counterparty_name"], str):
-            payload["counterparty_name"] = payload["counterparty_name"].strip()
-
-        if "counterparty_country" in payload and isinstance(payload["counterparty_country"], str):
-            payload["counterparty_country"] = validate_country_code(payload["counterparty_country"])
-
-        if "counterparty_tax_id" in payload and isinstance(payload["counterparty_tax_id"], str):
-            tax_id_raw = payload["counterparty_tax_id"].strip().upper()
-            country = payload.get("counterparty_country")
-            if isinstance(country, str) and country == "ES":
-                payload["counterparty_tax_id"] = validate_spanish_tax_id(tax_id_raw)
-            elif isinstance(country, str):
-                payload["counterparty_tax_id"] = validate_vat_number(tax_id_raw, country)
-            else:
-                payload["counterparty_tax_id"] = tax_id_raw
-
-        if "currency" in payload and isinstance(payload["currency"], str):
-            currency_value = payload["currency"].strip().upper()
-            if len(currency_value) != 3 or not currency_value.isalpha():
-                raise ValueError("currency must be a three-letter ISO 4217 code")
-            payload["currency"] = currency_value
-
-        if "grand_total" in payload:
-            payload["grand_total"] = _coerce_decimal(payload["grand_total"])
-        if "base_total" in payload:
-            payload["base_total"] = _coerce_decimal(payload["base_total"])
-        if "iva_total" in payload:
-            payload["iva_total"] = _coerce_decimal(payload["iva_total"])
-
-        required_for_hash = {
-            "kind",
-            "invoice_number",
-            "issued_at",
-            "counterparty_tax_id",
-            "currency",
-            "grand_total",
-        }
-        if required_for_hash.issubset(payload):
-            derived = derive_invoice_id(
-                kind=payload["kind"],
-                invoice_number=payload["invoice_number"],
-                issued_at=payload["issued_at"],
-                counterparty_tax_id=payload["counterparty_tax_id"],
-                currency=payload["currency"],
-                grand_total=payload["grand_total"],
-            )
-            existing = payload.get("invoice_id")
-            if existing is not None and str(existing).strip().lower() != derived:
-                raise ValueError("invoice_id must match the stable hash derived from identity fields")
-            payload["invoice_id"] = derived
-
-        if "linked_transaction_ids" in payload:
-            payload["linked_transaction_ids"] = _normalise_linked_transaction_ids(payload["linked_transaction_ids"])
-
-        if "notes" in payload and isinstance(payload["notes"], str):
-            payload["notes"] = payload["notes"].strip()
-
-        if "retention_rate" in payload and payload["retention_rate"] is not None:
-            payload["retention_rate"] = _coerce_decimal(payload["retention_rate"])
-        if "retention_amount" in payload and payload["retention_amount"] is not None:
-            payload["retention_amount"] = _coerce_decimal(payload["retention_amount"])
-        if "iva_category" in payload and isinstance(payload["iva_category"], str):
-            stripped = payload["iva_category"].strip()
-            payload["iva_category"] = VATCategory(stripped) if stripped else None
-        if "payment_id" in payload and isinstance(payload["payment_id"], str):
-            normalized_payment_id = payload["payment_id"].strip().lower()
-            if normalized_payment_id:
-                if not _is_hex_digest(normalized_payment_id, length=_HEX_TRANSACTION_ID_LENGTH):
-                    raise ValueError("payment_id must be a 64-character lowercase hex digest")
-                payload["payment_id"] = normalized_payment_id
-            else:
-                payload["payment_id"] = None
-
-        if (
-            "lines" in payload
-            and isinstance(payload["lines"], Sequence)
-            and not isinstance(payload["lines"], str | bytes)
-        ):
-            payload["lines"] = tuple(payload["lines"])
-
+        payload = _normalise_invoice_enum_fields(payload)
+        payload = _normalise_invoice_string_fields(payload)
+        payload = _normalise_invoice_dates(payload)
+        payload = _normalise_invoice_counterparty(payload)
+        payload = _normalise_invoice_currency(payload)
+        payload = _normalise_invoice_monetary_fields(payload)
+        payload = _derive_invoice_id_when_complete(payload)
+        payload = _normalise_invoice_collections(payload)
+        payload = _normalise_invoice_payment_id(payload)
         return payload
 
     @field_validator("base_total", "iva_total", "grand_total")
