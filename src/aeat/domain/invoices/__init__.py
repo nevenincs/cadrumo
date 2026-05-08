@@ -8,11 +8,6 @@ reach into the private underscore modules inside this package.
 from __future__ import annotations
 
 from ._enums import InvoiceKind, IvaRate, PaymentStatus
-from ._iva_classification import (
-    IvaInvoiceClassification,
-    classify_invoice_line_for_iva,
-    invoice_line_to_iva_observation,
-)
 from ._errors import (
     InvoiceCatalogueError,
     InvoiceError,
@@ -20,6 +15,11 @@ from ._errors import (
     InvoiceLinkInconsistencyError,
     InvoiceNotFoundError,
     InvoicePersistenceError,
+)
+from ._iva_classification import (
+    IvaInvoiceClassification,
+    classify_invoice_line_for_iva,
+    invoice_line_to_iva_observation,
 )
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 from ._repository import InvoiceCatalogueRepository

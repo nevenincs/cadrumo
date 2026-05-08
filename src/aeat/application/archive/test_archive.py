@@ -196,7 +196,8 @@ class TestHashedPassthroughAdapters:
     """
 
     def test_path_keyed_setup_profile_round_trip(self) -> None:
-        from datetime import UTC, datetime as _dt
+        from datetime import UTC
+        from datetime import datetime as _dt
 
         from ...core.classification import SensitivityClass
 
@@ -266,7 +267,8 @@ class TestFilingHistoryAdapter:
     """The filing-history adapter survives a save -> archive -> restore loop."""
 
     def test_filing_history_round_trip(self) -> None:
-        from datetime import UTC, datetime as _dt
+        from datetime import UTC
+        from datetime import datetime as _dt
 
         from ...application.filing._history_models import FilingHistory, FilingHistoryEntry
         from ...application.filing._history_repository import FilingHistoryRepository

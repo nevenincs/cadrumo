@@ -22,10 +22,10 @@ from decimal import Decimal
 
 import pytest
 
+from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.calculations.registry import RegistryValidationError
 from aeat.domain.calculations.registry._formula_runtime import _resolve_bracket
 from aeat.domain.calculations.registry._loader import load_registry_tree
-from aeat.core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

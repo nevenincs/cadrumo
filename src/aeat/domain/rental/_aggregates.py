@@ -26,6 +26,7 @@ from ._amortization_ledger import compute_amortization_for_year
 from ._enums import UseType
 from ._errors import RentalAggregationError
 from ._expense_rollup import CarryForwardEntry, compute_gastos_for_year
+from ._imputacion_parameters import LIRPF_ART_85_IMPUTACION
 from ._models import RentalContract, RentalFinca
 from ._repository import (
     RentalAmortizationLedgerRepository,
@@ -35,8 +36,6 @@ from ._repository import (
     RentalIncomeRepository,
 )
 from ._tier_resolver import TierResolution, resolve_reduccion
-
-from ._imputacion_parameters import LIRPF_ART_85_IMPUTACION
 
 _log = get_logger(__name__)
 _CENT = Decimal("0.01")

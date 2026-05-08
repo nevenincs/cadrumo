@@ -13,12 +13,10 @@ driver source files and assert structural invariants.
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 import pytest
 
 from .....core.paths import PROJECT_ROOT
-
 from ._renta_web_open_safety import (
     ALLOWED_CLICK_OVERRIDES,
     FORBIDDEN_CLICK_TOKENS,
@@ -92,7 +90,7 @@ def test_matches_forbidden_token_catches_substring_in_button_label() -> None:
 
 def test_allowed_click_overrides_is_empty_by_default() -> None:
     """No overrides should ship by default. Adding one requires audit."""
-    assert ALLOWED_CLICK_OVERRIDES == frozenset()
+    assert frozenset() == ALLOWED_CLICK_OVERRIDES
 
 
 def test_forbidden_url_fragments_cover_filing_endpoints() -> None:

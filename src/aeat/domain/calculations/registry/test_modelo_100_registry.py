@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
-from datetime import date
 from decimal import Decimal
 from typing import Any, cast
 
@@ -15,18 +14,16 @@ from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.profile import PROFILE_KEYS, TaxResidenceProfile
 from aeat.domain.profile.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
+from . import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshotError, RegistryValidationError
 from ._constructs import resolve_construct, resolve_revision_constructs
-from . import RegistrySnapshotError, RegistryValidationError
 from ._export import resolve_export_layout
 from ._export_parse import parse_export_payload
-from ._formula_runtime import calculate_registry_snapshot
 from ._loader import load_registry_tree
 from ._remote_state_guard import (
     RemoteOperation,
     assert_remote_operation_allowed,
     remote_state_policy_from_cross_reference,
 )
-from . import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from ._snapshot import build_snapshot
 from ._validate import RegistryValidator
 

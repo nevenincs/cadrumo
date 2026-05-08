@@ -205,10 +205,10 @@ def test_autorepercutido_flow_contributes_to_both_sides() -> None:
 def test_devengada_flow_directions_set_matches_devengada_predicate() -> None:
     from aeat.domain.vat import DEVENGADA_FLOW_DIRECTIONS, is_devengada_flow
 
-    assert DEVENGADA_FLOW_DIRECTIONS == {
+    assert {
         IvaFlowDirection.REPERCUTIDO,
         IvaFlowDirection.AUTOREPERCUTIDO,
-    }
+    } == DEVENGADA_FLOW_DIRECTIONS
     for flow in IvaFlowDirection:
         assert is_devengada_flow(flow) == (flow in DEVENGADA_FLOW_DIRECTIONS)
 
@@ -216,10 +216,10 @@ def test_devengada_flow_directions_set_matches_devengada_predicate() -> None:
 def test_deducible_flow_directions_set_matches_deducible_predicate() -> None:
     from aeat.domain.vat import DEDUCIBLE_FLOW_DIRECTIONS, is_deducible_flow
 
-    assert DEDUCIBLE_FLOW_DIRECTIONS == {
+    assert {
         IvaFlowDirection.SOPORTADO,
         IvaFlowDirection.AUTOREPERCUTIDO,
-    }
+    } == DEDUCIBLE_FLOW_DIRECTIONS
     for flow in IvaFlowDirection:
         assert is_deducible_flow(flow) == (flow in DEDUCIBLE_FLOW_DIRECTIONS)
 
@@ -233,9 +233,9 @@ def test_devengada_and_deducible_flow_sets_intersect_at_autorepercutido() -> Non
         DEVENGADA_FLOW_DIRECTIONS,
     )
 
-    assert DEVENGADA_FLOW_DIRECTIONS & DEDUCIBLE_FLOW_DIRECTIONS == frozenset(
+    assert frozenset(
         {IvaFlowDirection.AUTOREPERCUTIDO}
-    )
+    ) == DEVENGADA_FLOW_DIRECTIONS & DEDUCIBLE_FLOW_DIRECTIONS
 
 
 def test_devengada_and_deducible_flow_sets_union_to_full_flow_taxonomy() -> None:
@@ -246,7 +246,7 @@ def test_devengada_and_deducible_flow_sets_union_to_full_flow_taxonomy() -> None
         DEVENGADA_FLOW_DIRECTIONS,
     )
 
-    assert DEVENGADA_FLOW_DIRECTIONS | DEDUCIBLE_FLOW_DIRECTIONS == set(IvaFlowDirection)
+    assert set(IvaFlowDirection) == DEVENGADA_FLOW_DIRECTIONS | DEDUCIBLE_FLOW_DIRECTIONS
 
 
 def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
