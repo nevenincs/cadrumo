@@ -128,3 +128,52 @@ The audit enumerates 64 user-facing or user-visible surfaces:
   assertions and test-only shortcut layers are not acceptable closure evidence.
 - Every implementation slice requires a code review pass before it is treated as
   closed.
+
+## Recompile (2026-05-08)
+
+The CLI was re-driven against the worktree at rev `d0132eb5`. The drift since
+the prior pass is substantial: seven HIGH findings have closed, two are
+partial, three remain open, and four new findings are introduced.
+
+### Closed since the prior pass
+
+| audit_id | Status | Evidence at rev `d0132eb5` |
+|---|---|---|
+| UX-002 | CLOSED | `aeat --version` returns version plus 25 modelos / 14948 casillas / 1027 formulas summary. `aeat version` subcommand also exists. |
+| UX-005 | CLOSED | No `WARNING` line printed on any of the 12 commands re-probed. Logs route to user log file. `--quiet`, `--verbose`, `--debug` global flags present. |
+| UX-009 | CLOSED | `aeat setup status` emits `Siguiente: aeat app overview status`. `aeat app declaration calculate` emits `Siguiente: resolve-blockers`. The `Siguiente` line is wired across the surfaces UX-009 named. |
+| UX-014 | CLOSED | `aeat config doctor` exists and returns a structured 7-row check list with overall verdict. |
+| UX-016 | CLOSED (namespace) | `aeat config` family namespace wired; only `doctor` verb present so far; the wider `list/get/set/unset/configurations` shape is still future work. |
+| UX-017 | CLOSED | `aeat app modelo {list,describe,casillas,bindings,formulas}` all present and return rich tabular data. |
+| UX-018 | CLOSED | Two-step calculate then status across separate shell invocations resolves the same draft id. Drafts persist across CLI invocations. |
+
+### Partial
+
+- UX-003: A6 (root quickstart line) is shipped. A4 (interactive `aeat init` at root) and A5 (workflow-phase reorder of `aeat setup` subcommands) remain open.
+- UX-006: `aeat setup status` now emits `Completitud: N/22` alongside `Falta: -` and `Perfil listo: si`. The completeness ratio is real progress; the boolean `Perfil listo: si` still oversells readiness when only a small subset of keys are set.
+
+### Still open
+
+| audit_id | Severity | Current evidence |
+|---|---|---|
+| UX-007 | HIGH | `aeat setup profile list-keys` returns 22 personal-identity keys. Direct probe `aeat setup profile set iva.regime general` returns `Clave de perfil desconocida: iva.regime`. PROFILE_KEYS still does not represent IVA, IRPF, modelo enrolment, regime, SII, Verifactu, intracomunitario axes. |
+| UX-012 | HIGH | `aeat app declaration calculate --modelo 130 --period 2026Q1` still returns `binding 'irpf.previous_year_economic_activity_net_income' has no supplied value`. `aeat app modelo bindings 130 --period 2026Q1` reveals the binding is sourced from `previous_filing` but `declaration calculate` still has no `--binding KEY=VALUE` flag and the error is not rewritten with a fix pointer. |
+| UX-004 | HIGH | `aeat setup init --help` still emits surface-only flag descriptions. No examples, no format hints, no valid-value pointers. |
+| UX-001, UX-010, UX-011, UX-013, UX-015 | UNVERIFIED | Not re-probed at rev `d0132eb5`. Status carried over from prior pass. |
+
+### New findings
+
+| audit_id | Severity | Headline | Surfaces |
+|---|---|---|---|
+| UX-019 | HIGH (REGRESSION) | AES-256-GCM tag verification failure on read paths. | `aeat app overview status`, `overview status --calendar`, `declaration review`. |
+| UX-020 | MEDIUM | Declaration verbs have inconsistent flag surfaces. `status` accepts `(--modelo, --period)`; `approve` and `validate` reject those flags. | `aeat app declaration status`, `approve`, `validate`. |
+| UX-021 | MEDIUM | Blockers enumerated by count only. `Bloqueos: 2` is opaque; `Siguiente: resolve-blockers` is a recipe token, not a runnable command, and the natural follow-up `declaration review` is currently broken by UX-019. | `aeat app declaration calculate`, `declaration status`. |
+| UX-022 | LOW | Auth-readiness diverges between `setup auth status` (reports `Listo: no`) and `config doctor` (reports `ok auth.session`). Two readiness predicates in the same backend. | `aeat setup auth status`, `aeat config doctor`. |
+
+UX-019 is the new load-bearing finding. Ship it before any remaining UX-001 to UX-018 polish, because it currently breaks the most basic CLI surface (`aeat app overview status`) regardless of what other work has landed.
+
+### Updated reading order
+
+- Tier 1 (backend-first): UX-019 (read-path integrity regression), UX-007 (regime keys), UX-012 (M130 binding supplier surface).
+- Tier 2 (CLI-shape): UX-020 (verb flag-surface inconsistency), UX-021 (blocker enumeration), UX-004 (help-text uplift), UX-006 (boolean `Perfil listo` oversells).
+- Tier 3 (low / unverified): UX-001, UX-010, UX-011, UX-013, UX-015, UX-022.
