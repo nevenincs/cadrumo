@@ -29,13 +29,45 @@ from datetime import date
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-TOML_PATH = PROJECT_ROOT / "registry" / "aeat" / "modelos" / "100.toml"
+MODELOS_DIR = PROJECT_ROOT / "registry" / "aeat" / "modelos"
+TOML_PATH = MODELOS_DIR / "100.toml"
+TOML_DIR = MODELOS_DIR / "100"
 LEGAL_DIR = PROJECT_ROOT / "registry" / "aeat" / "legal"
 OUTPUT_DIR = PROJECT_ROOT / ".vault" / "audit"
 
 
 def _load_modelo() -> dict:
-    return tomllib.loads(TOML_PATH.read_text(encoding="utf-8"))
+    """Load modelo 100 from either single-file or directory layout.
+
+    Mirrors `aeat.domain.calculations.registry._loader.load_modelo_directory`
+    semantics (manifest.toml + revisions/*.toml merged) but stays
+    dict-shaped so the audit pipeline can keep using `modelo['revisions']`
+    et al. without depending on the strict pydantic schema.
+    """
+    if TOML_PATH.is_file():
+        return tomllib.loads(TOML_PATH.read_text(encoding="utf-8"))
+    if not (TOML_DIR / "manifest.toml").is_file():
+        raise FileNotFoundError(
+            f"modelo 100 not found at {TOML_PATH} (single-file) "
+            f"or {TOML_DIR}/manifest.toml (directory mode)"
+        )
+    merged = tomllib.loads((TOML_DIR / "manifest.toml").read_text(encoding="utf-8"))
+    if "revisions" in merged:
+        raise ValueError(f"{TOML_DIR}/manifest.toml must not declare [revisions]")
+    revisions: dict = {}
+    revisions_dir = TOML_DIR / "revisions"
+    for path in sorted(revisions_dir.glob("*.toml")):
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        if "modelo" in data:
+            raise ValueError(f"{path}: revision file must not declare [modelo]")
+        for rev_id, rev in (data.get("revisions") or {}).items():
+            if rev_id in revisions:
+                raise ValueError(
+                    f"{path}: revision {rev_id!r} already declared in another revisions/*.toml"
+                )
+            revisions[rev_id] = rev
+    merged["revisions"] = revisions
+    return merged
 
 
 def _load_legal_catalogue() -> tuple[set[str], set[str]]:
