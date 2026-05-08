@@ -45,12 +45,20 @@ from ._projection import (
     project_invoice_review,
     project_invoice_reviews,
 )
+from ._reconciliation import (
+    InvoiceReconciliationResult,
+    ReconciliationSkippedSuggestion,
+    reconcile_invoice_catalogues,
+    reconcile_invoice_repositories,
+)
 
 __all__ = [
     "InvoiceImportResult",
     "InvoiceMatchProjection",
+    "InvoiceReconciliationResult",
     "InvoiceReviewProjection",
     "LinkInconsistency",
+    "ReconciliationSkippedSuggestion",
     "ReconciliationSuggestion",
     "apply_manual_invoice_match",
     "find_invoice",
@@ -65,6 +73,8 @@ __all__ = [
     "project_invoice_payment_matches",
     "project_invoice_review",
     "project_invoice_reviews",
+    "reconcile_invoice_catalogues",
+    "reconcile_invoice_repositories",
     "suggest_reconciliations",
     "verify_link_consistency",
 ]

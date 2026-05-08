@@ -19,9 +19,8 @@ from ....application.invoices import (
     ReconciliationSuggestion,
     find_invoice,
     find_unmatched,
-    link_transaction,
     link_transaction_bidirectional,
-    suggest_reconciliations,
+    reconcile_invoice_repositories,
     verify_link_consistency,
 )
 from ....domain.invoices import (
@@ -33,10 +32,8 @@ from ....domain.invoices import (
 from ....domain.transactions import (
     TransactionCatalogue,
     TransactionError,
-    link_invoice,
 )
 from .._i18n import tr
-from ._catalogue import catalogue_repository as _transaction_catalogue_repository
 
 app = typer.Typer(
     name="invoices",
@@ -164,75 +161,40 @@ def reconcile_cmd(
 ) -> None:
     """Print reconciliation suggestions and optionally apply them.
 
-    Runs :func:`aeat.application.invoices.suggest_reconciliations` over
-    the invoice and transaction catalogues. When ``--apply`` is set,
-    every accepted suggestion is folded into in-memory copies of both
-    catalogues; the two catalogues are then saved once at the end via
-    their respective repositories. This mirrors the canonical atomic-save
-    pattern used elsewhere in the repository (vs. one round-trip per
-    suggestion).
+    Delegates suggestion generation, optional bidirectional linking, and
+    persistence to :func:`aeat.application.invoices.reconcile_invoice_repositories`.
 
     Args:
-        apply: When ``True``, persist each accepted suggestion via
-            :func:`aeat.application.invoices.link_transaction` and
-            :func:`aeat.domain.transactions.link_invoice` before saving.
+        apply: When ``True``, request persisted bidirectional links from
+            the backend service.
 
     Raises:
-        :exc:`typer.Exit`: With exit code ``2`` when the final
-            atomic save fails.
+        :exc:`typer.Exit`: With exit code ``2`` when the backend
+            reconciliation service rejects the request.
     """
-    invoices = _load_invoice_catalogue_or_empty()
-    transactions = _load_transaction_catalogue_or_empty()
-    suggestions = suggest_reconciliations(invoices, transactions)
+    try:
+        result = reconcile_invoice_repositories(apply=apply)
+    except (InvoiceError, TransactionError) as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+    suggestions = result.suggestions
     if not suggestions:
         typer.echo(tr("cli.financial.invoices.no_suggestions"))
         return
     _print_suggestions(suggestions)
     if not apply:
         return
-    applied = 0
-    pending_invoices = invoices
-    pending_transactions = transactions
-    dirty = False
-    for suggestion in suggestions:
-        try:
-            updated_invoices = link_transaction(
-                pending_invoices,
-                suggestion.invoice_id,
-                suggestion.transaction_id,
-            )
-            updated_transactions = link_invoice(
-                pending_transactions,
-                suggestion.transaction_id,
-                suggestion.invoice_id,
-            )
-        except (InvoiceError, TransactionError) as exc:
-            typer.echo(
-                tr(
-                    "cli.financial.invoices.errors.skipped_suggestion",
-                    invoice=suggestion.invoice_id,
-                    transaction=suggestion.transaction_id,
-                    exc=str(exc),
-                ),
-                err=True,
-            )
-            continue
-        pending_invoices = updated_invoices
-        pending_transactions = updated_transactions
-        dirty = True
-        applied += 1
-
-    if dirty:
-        try:
-            _invoice_catalogue_repository().save(pending_invoices)
-            _transaction_catalogue_repository().save(pending_transactions)
-        except (InvoiceError, TransactionError) as exc:
-            typer.echo(
-                tr("cli.financial.invoices.errors.final_save_failed", exc=str(exc)),
-                err=True,
-            )
-            raise typer.Exit(code=2) from exc
-    typer.echo(tr("cli.financial.invoices.labels.applied", applied=applied, total=len(suggestions)))
+    for skipped in result.skipped:
+        typer.echo(
+            tr(
+                "cli.financial.invoices.errors.skipped_suggestion",
+                invoice=skipped.invoice_id,
+                transaction=skipped.transaction_id,
+                exc=skipped.reason,
+            ),
+            err=True,
+        )
+    typer.echo(tr("cli.financial.invoices.labels.applied", applied=result.applied, total=len(suggestions)))
 
 
 @app.command(
