@@ -82,7 +82,7 @@ def test_registry_scenario_requires_declared_revision_to_match_snapshot() -> Non
 
 def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-normal-direct-estimation-payments",
+        id="modelo-100-2025-employee-trabajo-estimacion-directa-normal-autonomo-payments",
         modelo="100",
         revision="2025",
         filing_year=2025,
@@ -179,7 +179,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
 
 def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-simplified-direct-estimation-statutory-cap",
+        id="modelo-100-2025-estimacion-directa-simplificada-statutory-cap",
         modelo="100",
         revision="2025",
         filing_year=2025,
@@ -221,7 +221,7 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
 
 def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-simplified-direct-estimation-negative-base",
+        id="modelo-100-2025-estimacion-directa-simplificada-negative-base",
         modelo="100",
         revision="2025",
         filing_year=2025,
@@ -262,7 +262,7 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
 
 def _real_estate_capital_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-real-estate-capital-rollup",
+        id="modelo-100-2025-real-estate-rental-alquiler-inmobiliario-capital-rollup",
         modelo="100",
         revision="2025",
         filing_year=2025,
@@ -377,7 +377,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
 
 def _final_settlement_scenario() -> RegistryCalculationScenario:
     return RegistryCalculationScenario(
-        id="modelo-100-2025-final-settlement-rollup",
+        id="modelo-100-2025-final-settlement-ganancias-patrimoniales-ccaa-rollup",
         modelo="100",
         revision="2025",
         filing_year=2025,
