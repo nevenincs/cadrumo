@@ -4,6 +4,7 @@ from datetime import date as _date
 
 import typer
 
+from ...application.diagnostics import secure_object_unreadable_total
 from ...application.overview import (
     OverviewCalendar,
     OverviewCalendarRange,
@@ -82,19 +83,20 @@ def overview_status(
             lines.append(f"{d.modelo}\t{d.draft_id}\t{d.status.value}")
         _emit(ctx, payload, lines)
         return
+    unreadable = secure_object_unreadable_total()
     payload = {
         "active_profile": current.active_profile,
         "transactions": len(transactions.transactions),
         "invoices": len(invoices),
         "drafts": len(drafts),
+        "unreadable_rows": unreadable,
     }
-    _emit(
-        ctx,
-        payload,
-        [
-            f"{tr('cli.overview.profile')}\t{current.active_profile or ''}",
-            f"{tr('cli.overview.transactions')}\t{len(transactions.transactions)}",
-            f"{tr('cli.overview.invoices')}\t{len(invoices)}",
-            f"{tr('cli.overview.drafts')}\t{len(drafts)}",
-        ],
-    )
+    lines = [
+        f"{tr('cli.overview.profile')}\t{current.active_profile or ''}",
+        f"{tr('cli.overview.transactions')}\t{len(transactions.transactions)}",
+        f"{tr('cli.overview.invoices')}\t{len(invoices)}",
+        f"{tr('cli.overview.drafts')}\t{len(drafts)}",
+    ]
+    if unreadable > 0:
+        lines.append(tr("cli.overview.integrity_warning", count=unreadable))
+    _emit(ctx, payload, lines)

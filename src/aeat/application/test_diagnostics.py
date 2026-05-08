@@ -17,7 +17,11 @@ from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRep
 from aeat.core.classification import SensitivityClass
 from aeat.core.config import Settings
 
-from .diagnostics import build_config_doctor_report, render_config_doctor_text
+from .diagnostics import (
+    build_config_doctor_report,
+    render_config_doctor_text,
+    secure_object_unreadable_total,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -162,3 +166,68 @@ def test_secure_objects_integrity_check_reports_ok_on_clean_database(
     integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
     assert integrity_check.status == "ok"
     assert report.secure_objects.unreadable_total == 0
+
+
+def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    """The helper consumed by overview status returns the aggregate count.
+
+    Seeds rows under master key K1, rotates to K2, and asserts the
+    aggregate matches the per-namespace probe. Used by
+    ``aeat app overview status`` to render an inline warning footer
+    pointing the operator at ``aeat config doctor``.
+    """
+    db_path = tmp_path / "agg.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    dispose_engine()
+
+    key_old = EphemeralMasterKeyProvider()
+    key_new = EphemeralMasterKeyProvider()
+
+    override_master_key_provider(key_old)
+    engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine_old)
+    try:
+        repo_old = SecureObjectRepository(engine=engine_old)
+        for namespace, key, payload in (
+            ("aeat.test.agg.alpha", "alpha-1", b"alpha-1"),
+            ("aeat.test.agg.alpha", "alpha-2", b"alpha-2"),
+            ("aeat.test.agg.beta", "beta-1", b"beta-1"),
+        ):
+            repo_old.save(
+                namespace=namespace,
+                object_key=key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=payload,
+            )
+    finally:
+        engine_old.dispose()
+
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    override_master_key_provider(key_new)
+    dispose_engine()
+    try:
+        total = secure_object_unreadable_total()
+        assert total >= 3, f"expected at least three unreadable rows; got {total}"
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
+
+
+def test_secure_object_unreadable_total_is_zero_on_clean_database(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    """Aggregate returns zero when no namespace has unreadable rows."""
+    db_path = tmp_path / "agg-clean.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    dispose_engine()
+
+    assert secure_object_unreadable_total() == 0
