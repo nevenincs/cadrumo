@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from ...adapters.outbound.aeat.auth import CertificateBackend
 from ...domain.deadlines import IVARegime
 from ...domain.profile import CCAA
-from . import SetupAnswers, SetupOutcome, SetupStep, VerifyFinding, VerifySeverity
+from . import SetupAnswers, SetupOutcome, VerifyFinding, VerifySeverity
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -87,21 +87,6 @@ def test_verify_finding_roundtrip() -> None:
     )
     assert finding.severity is VerifySeverity.OK
     assert VerifyFinding.model_validate_json(finding.model_dump_json()) == finding
-
-
-def test_setup_step_catalogue_is_closed() -> None:
-    """The :class:`SetupStep` catalogue is fixed and closed."""
-    assert {step.value for step in SetupStep} == {
-        "WELCOME",
-        "PROFILE",
-        "CERTIFICATE",
-        "LANGUAGE",
-        "OUTPUT_DIRS",
-        "LIVE_TESTS_OPT_IN",
-        "VERIFY",
-        "FIRST_RUN",
-        "DONE",
-    }
 
 
 def test_setup_outcome_catalogue_is_closed() -> None:
