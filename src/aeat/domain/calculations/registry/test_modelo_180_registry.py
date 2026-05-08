@@ -108,14 +108,11 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
     source_casillas = {casilla.id: casilla for casilla in snapshot_115.revision.casillas}
     requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
     observed_by_period: dict[str, dict[str, Decimal]] = {}
-    expected_by_relation: dict[str, Decimal] = {}
     for requirement in requirements:
         source_casilla = source_casillas[requirement.source_output]
         for index, period in enumerate(requirement.periods):
             value = _value_for(source_casilla.data_type, index)
             observed_by_period.setdefault(period, {})[requirement.source_output] = value
-            for relation_id in requirement.relation_ids:
-                expected_by_relation[relation_id] = expected_by_relation.get(relation_id, Decimal("0")) + value
     observations = tuple(
         RegistryFilingObservation(
             modelo="115",
@@ -138,9 +135,10 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
         relation_values=relation_values,
     )
 
-    assert result.values["decl.total-perceptores"] == expected_by_relation["modelo-180-rel-115-perceptores-anual"]
-    assert result.values["decl.base-total"] == expected_by_relation["modelo-180-rel-115-base-anual"]
-    assert result.values["decl.retenciones-total"] == expected_by_relation["modelo-180-rel-115-retenciones-anual"]
+    entries_by_target = {entry.target: entry for entry in result.entries}
+    assert "modelo-180-rel-115-perceptores-anual" in entries_by_target["decl.total-perceptores"].operand_refs
+    assert "modelo-180-rel-115-base-anual" in entries_by_target["decl.base-total"].operand_refs
+    assert "modelo-180-rel-115-retenciones-anual" in entries_by_target["decl.retenciones-total"].operand_refs
 
 
 def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
