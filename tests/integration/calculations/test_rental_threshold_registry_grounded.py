@@ -24,7 +24,9 @@ import pytest
 
 from aeat.domain.calculations.registry import read_parameter
 from aeat.domain.rental._tier_resolver import (
+    DEFAULT_EJERCICIO_AMENDMENT_YEAR,
     PRIOR_RENT_REBAJA_THRESHOLD,
+    _resolve_ejercicio_amendment_year,
     _resolve_prior_rent_rebaja_threshold,
 )
 
@@ -55,3 +57,26 @@ def test_resolver_threshold_helper_falls_back_to_constant_for_unregistered_year(
     value = _resolve_prior_rent_rebaja_threshold(1999)
     assert value == PRIOR_RENT_REBAJA_THRESHOLD
     assert value == Decimal("0.05")
+
+
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+def test_amendment_year_parameter_registered_for_every_ejercicio(year: int) -> None:
+    value = read_parameter(
+        "100",
+        str(year),
+        f"renta-{year}-rental-ejercicio-amendment-year",
+        date_context={"filing_period": date(year, 12, 31)},
+    )
+    assert value == Decimal("2024")
+
+
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+def test_resolver_amendment_year_helper_returns_registry_value(year: int) -> None:
+    value = _resolve_ejercicio_amendment_year(year)
+    assert value == 2024
+    assert value == DEFAULT_EJERCICIO_AMENDMENT_YEAR
+
+
+def test_resolver_amendment_year_helper_falls_back_for_unregistered_year() -> None:
+    value = _resolve_ejercicio_amendment_year(1999)
+    assert value == DEFAULT_EJERCICIO_AMENDMENT_YEAR
