@@ -1094,3 +1094,97 @@ def test_setup_profile_set_does_intracomunitario_round_trips_underscore_form(
     assert record is not None
     profile = autonomo_profile_from_mapping(record.values, tax_id_default="00000000T")
     assert profile.does_intracomunitario is True
+
+
+def test_declaration_calculate_accepts_binding_assignment(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """``--binding KEY=VALUE`` must inject the value into the calculate inputs.
+
+    Without ``--binding``, ``aeat app declaration calculate --modelo 130
+    --period 2026Q1`` rejects with a missing-binding error because the
+    pago-fraccionado bracket per RD 439/2007 art. 110 needs the prior
+    year's net income from economic activity. With the binding
+    supplied, calculate succeeds, blockers drop to zero, and the next
+    action becomes ``approve`` rather than ``resolve-blockers``.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    without = _invoke(["app", "declaration", "calculate", "--modelo", "130", "--period", "2026Q1"])
+    assert without.exit_code != 0
+    assert "previous_year_economic_activity_net_income" in without.output
+
+    with_binding = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "declaration",
+            "calculate",
+            "--modelo",
+            "130",
+            "--period",
+            "2026Q1",
+            "--binding",
+            "irpf.previous_year_economic_activity_net_income=13000",
+        ]
+    )
+    assert with_binding.exit_code == 0, with_binding.output
+    payload = json.loads(_json_output(with_binding))
+    assert payload["summary"]["blocker_count"] == 0
+    assert payload["summary"]["next_action"] in {"approve", "review", "export"}
+
+
+def test_declaration_calculate_rejects_malformed_binding(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Malformed ``--binding`` arguments must raise the typed CLI usage error.
+
+    Two failure modes:
+    - missing ``=``: the parser cannot split the assignment.
+    - non-decimal value: the parser cannot coerce the value.
+
+    Both must exit non-zero with an i18n-rendered message; no traceback,
+    no silent acceptance, no calculate run.
+    """
+    _isolate_user_cli(monkeypatch, tmp_path)
+    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
+    assert init_result.exit_code == 0, init_result.output
+
+    no_equals = _invoke(
+        [
+            "app",
+            "declaration",
+            "calculate",
+            "--modelo",
+            "130",
+            "--period",
+            "2026Q1",
+            "--binding",
+            "noequals",
+        ]
+    )
+    assert no_equals.exit_code != 0
+    assert "noequals" in no_equals.output
+    assert "Traceback" not in no_equals.output
+
+    bad_value = _invoke(
+        [
+            "app",
+            "declaration",
+            "calculate",
+            "--modelo",
+            "130",
+            "--period",
+            "2026Q1",
+            "--binding",
+            "key=not_a_number",
+        ]
+    )
+    assert bad_value.exit_code != 0
+    assert "not_a_number" in bad_value.output
+    assert "Traceback" not in bad_value.output

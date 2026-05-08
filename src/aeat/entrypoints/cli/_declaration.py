@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 import typer
@@ -53,11 +54,46 @@ app = typer.Typer(
 )
 
 
+def _parse_binding_assignment(raw: str) -> tuple[str, Decimal]:
+    """Parse one ``KEY=VALUE`` token from ``--binding`` into a typed pair.
+
+    Args:
+        raw: The exact string the operator passed after ``--binding``.
+
+    Returns:
+        A two-tuple ``(key, value)`` where ``key`` is the binding's
+        canonical id and ``value`` is a :class:`Decimal`.
+
+    Raises:
+        typer.BadParameter (via :func:`_bad`): If the assignment is
+            malformed (no ``=``, blank key, blank value) or the value
+            does not parse as a decimal number.
+    """
+
+    if "=" not in raw:
+        raise _bad(tr("cli.declaration.errors.binding_assignment", value=raw))
+    key, value = raw.split("=", 1)
+    key = key.strip()
+    value = value.strip()
+    if not key or not value:
+        raise _bad(tr("cli.declaration.errors.binding_assignment", value=raw))
+    try:
+        decimal_value = Decimal(value)
+    except InvalidOperation as exc:
+        raise _bad(tr("cli.declaration.errors.binding_value_not_decimal", value=value)) from exc
+    return key, decimal_value
+
+
 @app.command("calculate", help=tr("cli.declaration.calculate_help"))
 def declaration_calculate(
     ctx: typer.Context,
     period: str = typer.Option(..., "--period", help=tr("cli.declaration.opts.period")),
     modelo: str = typer.Option(..., "--modelo", help=tr("cli.declaration.opts.modelo")),
+    binding: list[str] = typer.Option(
+        [],
+        "--binding",
+        help=tr("cli.declaration.opts.binding"),
+    ),
 ) -> None:
     canonical_period = _canonical_period(period)
     canonical_modelo = modelo.strip()
@@ -72,7 +108,10 @@ def declaration_calculate(
         tax_id=tax_id,
         display_name=state.active_profile or "operator",
     )
-    inputs = _aggregate_filing_inputs(canonical_modelo, canonical_period, state)
+    inputs = dict(_aggregate_filing_inputs(canonical_modelo, canonical_period, state))
+    for raw_binding in binding:
+        key, value = _parse_binding_assignment(raw_binding)
+        inputs[key] = value
     try:
         schema_provider = build_runtime_schema_provider(modelos=(canonical_modelo,))
         draft = build_draft(
