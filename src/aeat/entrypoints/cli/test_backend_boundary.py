@@ -1,8 +1,8 @@
 """Audit the CLI/backend boundary rollout inventory.
 
-These tests do not bless the current CLI-owned business logic. They make the
-known violations explicit so each rollout wave can remove one row at a time
-without losing track of the backend API that must replace it.
+These tests do not bless CLI-owned business logic. They make every tracked
+boundary row explicit so each rollout wave can remove or downgrade one row at
+a time without losing the backend API that owns the behavior.
 """
 
 from __future__ import annotations
