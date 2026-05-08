@@ -1,8 +1,9 @@
-"""Shared validating identifiers for domain boundary records."""
+"""Shared validating identifiers and identifier-derivation primitives for domain boundary records."""
 
 from __future__ import annotations
 
 import re
+from decimal import Decimal
 from typing import Any
 
 from pydantic import GetCoreSchemaHandler
@@ -31,3 +32,18 @@ class ModeloIdentifier(str):
             cls,
             core_schema.str_schema(pattern=_MODELO_RE.pattern),
         )
+
+
+def canonical_decimal_string(value: Decimal) -> str:
+    """Render a :class:`Decimal` into a stable fixed-point string for hashing.
+
+    Used by domain ``derive_*_id`` helpers to canonicalise monetary fields
+    before they enter a SHA-256 hash payload, so two semantically equal
+    amounts (``Decimal("10")`` vs ``Decimal("10.00")``) hash to the same
+    identifier. Zero collapses to ``"0"`` regardless of input precision;
+    non-zero values are normalised (trailing zeros removed) and formatted
+    without exponent notation.
+    """
+    if value.is_zero():
+        return "0"
+    return format(value.normalize(), "f")
