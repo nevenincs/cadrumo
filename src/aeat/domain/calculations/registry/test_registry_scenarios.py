@@ -151,7 +151,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
                 target="0604",
                 value=Decimal("100.00"),
                 operand_refs=("renta-2025-rel-130-pagos-fraccionados", "renta-2025-rel-131-pagos-fraccionados"),
-                legal_refs=("rd-439-2007:art-109", "orden-hac-277-2026:art-3"),
+                legal_refs=("rd-439-2007:art-109", "rd-439-2007:art-110", "orden-hac-277-2026:art-3"),
             ),
             RegistryScenarioExpectedOutput(
                 target="0609",
@@ -359,7 +359,12 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
                 target="0598",
                 value=Decimal("800.00"),
                 operand_refs=("0153",),
-                legal_refs=("ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"),
+                legal_refs=(
+                    "ley-35-2006:art-99",
+                    "rd-439-2007:art-100",
+                    "rd-439-2007:art-109",
+                    "orden-hac-277-2026:art-3",
+                ),
                 source_refs=(
                     "aeat-dr-100-2025-dictionary",
                     "aeat-renta-2025-manual-parte1",
