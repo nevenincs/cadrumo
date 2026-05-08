@@ -17,6 +17,7 @@ Buscar casilla dialog opens as a virtual widget that doesn't appear in
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from typing import Any, cast
 
 import pytest
@@ -32,6 +33,64 @@ pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 _DOM_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-dom.html"
 _BUTTONS_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-buttons.txt"
 _A11Y_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-a11y-tree.txt"
+_BUSCAR_DIALOG_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-buscar-dialog.txt"
+_APARTADOS_DIALOG_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-apartados-dialog.txt"
+
+
+async def _snapshot_zk_layer(page: Any, label: str) -> str:
+    """Snapshot ZK dialog/popup state immediately after a dialog opens.
+
+    Dumps every visible ZK window / popup / [role=dialog] container's
+    inner HTML (truncated), every visible input's title/placeholder/type,
+    and every frame URL. Run AT the moment a dialog is open — closing
+    the dialog (e.g. by clicking another button) loses the snapshot.
+    """
+    lines: list[str] = [f"=== ZK layer snapshot: {label} ==="]
+    for selector in (".z-window", ".z-window-modal", ".z-popup", "[role='dialog']"):
+        try:
+            elements = await page.locator(selector).all()
+        except Exception as exc:
+            lines.append(f"  selector {selector!r} error: {type(exc).__name__}: {exc}")
+            continue
+        for idx, el in enumerate(elements[:6]):
+            try:
+                visible = await el.is_visible()
+            except Exception:
+                visible = False
+            if not visible:
+                continue
+            try:
+                html = await el.inner_html(timeout=2_000)
+            except Exception:
+                html = "(unreadable)"
+            lines.append(f"-- {selector}[{idx}] visible inner_html (first 8K chars):")
+            lines.append(html[:8_000])
+            lines.append("")
+    lines.append("\n--- inputs visible at snapshot time ---")
+    try:
+        inputs = await page.locator("input:visible").all()
+    except Exception:
+        inputs = []
+    for idx, inp in enumerate(inputs[:60]):
+        try:
+            title = await inp.get_attribute("title")
+            placeholder = await inp.get_attribute("placeholder")
+            input_type = await inp.get_attribute("type")
+            name = await inp.get_attribute("name")
+            value = await inp.input_value(timeout=500)
+        except Exception:
+            title = placeholder = input_type = name = value = "?"
+        lines.append(
+            f"  [{idx}] type={input_type!r} title={title!r} "
+            f"placeholder={placeholder!r} name={name!r} value={value!r}"
+        )
+    lines.append("\n--- frames present at snapshot time ---")
+    try:
+        for frame in page.frames:
+            lines.append(f"  url={frame.url!r}")
+    except Exception as exc:
+        lines.append(f"  (frame enumeration failed: {type(exc).__name__}: {exc})")
+    return "\n".join(lines)
 
 
 def _render_a11y_node(node: dict, depth: int = 0, lines: list[str] | None = None) -> list[str]:
@@ -65,13 +124,16 @@ def _render_a11y_node(node: dict, depth: int = 0, lines: list[str] | None = None
     return lines
 
 
-async def _capture_resumen_dom() -> tuple[str, str]:
+async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
     from ._renta_web_open import (
         _click_expected,
         _expect_visible,
         _fill_identification_profile,
     )
-    from ._renta_web_open_safety import install_page_safety_net
+    from ._renta_web_open_safety import (
+        assert_click_target_safe,
+        install_page_safety_net,
+    )
 
     payload = RentaWebOpenLivePayload(timeout_ms=120_000)
     browser_session = await default_browser_session_factory(Settings())
@@ -112,13 +174,28 @@ async def _capture_resumen_dom() -> tuple[str, str]:
         #   - "Apartados declaración" opens the section navigator.
         # Try Buscar casilla via filtered locator (more robust than
         # get_by_role which timed out previously).
+        # Buscar casilla lives on the secondary toolbar row that's hidden by
+        # default — "Mostrar opciones" expands it. Click that first so the
+        # subsequent Buscar locator resolves to a visible element.
+        try:
+            mostrar_btn = page.locator("button[title='Mostrar opciones']").first
+            await mostrar_btn.wait_for(state="visible", timeout=10_000)
+            await assert_click_target_safe(
+                mostrar_btn,
+                stage="explore:mostrar-opciones-safety",
+                description="Mostrar opciones (toolbar expander)",
+                timeout_ms=10_000,
+            )
+            await mostrar_btn.click(timeout=10_000)
+            await page.wait_for_timeout(1_500)
+        except Exception as exc:
+            print(f"explore: Mostrar opciones unreachable: {type(exc).__name__}: {exc}")
+
         buscar_btn = page.locator("button").filter(has_text="Buscar casilla").first
         try:
             await buscar_btn.wait_for(state="visible", timeout=15_000)
             # Safety: the button label "Buscar casilla" doesn't trip the
             # forbidden-tokens denylist (no presentar/firmar/pagar/etc).
-            from ._renta_web_open_safety import assert_click_target_safe
-
             await assert_click_target_safe(
                 buscar_btn,
                 stage="explore:buscar-casilla-safety",
@@ -128,9 +205,23 @@ async def _capture_resumen_dom() -> tuple[str, str]:
             await buscar_btn.click(timeout=15_000)
             # Allow dialog to render.
             await page.wait_for_timeout(2_000)
+            buscar_dialog_snapshot = await _snapshot_zk_layer(page, "buscar-casilla")
         except Exception as exc:
             # Soft-fail — DOM will still capture without dialog.
             print(f"explore: buscar casilla unreachable: {type(exc).__name__}: {exc}")
+            buscar_dialog_snapshot = (
+                f"=== ZK layer snapshot: buscar-casilla ===\n"
+                f"(unreachable: {type(exc).__name__}: {exc})"
+            )
+
+        # Note: dialogs cannot be dismissed via the textual "Cancelar"
+        # button because the safety guard intentionally denies "cancelar"
+        # (state-mutating action in main-app context). The driver should
+        # dismiss via the dialog's X-close icon (`.z-window-icon-close` or
+        # equivalent), or via ZK JS API. For this exploration test we
+        # leave the Buscar dialog open after capture — the Apartados
+        # snapshot below will fail (modal interception), which is fine
+        # because the Buscar dialog DOM capture is the primary deliverable.
 
         # Also drive "Apartados declaración" — the section navigator.
         # The a11y walker confirmed:
@@ -150,8 +241,13 @@ async def _capture_resumen_dom() -> tuple[str, str]:
             )
             await apartados_btn.click(timeout=15_000)
             await page.wait_for_timeout(2_500)
+            apartados_dialog_snapshot = await _snapshot_zk_layer(page, "apartados")
         except Exception as exc:
             print(f"explore: apartados unreachable: {type(exc).__name__}: {exc}")
+            apartados_dialog_snapshot = (
+                f"=== ZK layer snapshot: apartados ===\n"
+                f"(unreachable: {type(exc).__name__}: {exc})"
+            )
 
         # Capture full HTML + a button/link inventory.
         html_content = await page.content()
@@ -269,7 +365,13 @@ async def _capture_resumen_dom() -> tuple[str, str]:
                 )
         except Exception as exc:
             a11y_lines = [f"(page.evaluate walk failed: {type(exc).__name__}: {exc})"]
-        return html_content, "\n".join(button_inventory_lines), "\n".join(a11y_lines)
+        return (
+            html_content,
+            "\n".join(button_inventory_lines),
+            "\n".join(a11y_lines),
+            buscar_dialog_snapshot,
+            apartados_dialog_snapshot,
+        )
     finally:
         if context is not None:
             await context.close()
@@ -283,10 +385,12 @@ def test_explore_renta_web_open_resumen_dom() -> None:
     extending the driver to support deeper form navigation.
     """
     requires_live_enabled()
-    html, buttons, a11y = asyncio.run(_capture_resumen_dom())
+    html, buttons, a11y, buscar_dialog, apartados_dialog = asyncio.run(_capture_resumen_dom())
     _DOM_OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     _DOM_OUTPUT.write_text(html, encoding="utf-8")
     _BUTTONS_OUTPUT.write_text(buttons, encoding="utf-8")
     _A11Y_OUTPUT.write_text(a11y, encoding="utf-8")
+    _BUSCAR_DIALOG_OUTPUT.write_text(buscar_dialog, encoding="utf-8")
+    _APARTADOS_DIALOG_OUTPUT.write_text(apartados_dialog, encoding="utf-8")
     assert len(html) > 0
     assert "Resumen" in html or "resumen" in html.lower()
