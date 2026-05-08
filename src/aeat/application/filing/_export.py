@@ -32,6 +32,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ...adapters.inbound.pdf._utils import sha256_file
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
     ExportFieldDefinition,
@@ -245,7 +246,7 @@ def verify_export(
     if draft.schema_version != subview.schema_version:
         raise ValueError("declaration verify requires a draft built from the active registry snapshot")
     if not subview.export_layout_ids:
-        digest = hashlib.sha256(file_path.read_bytes()).hexdigest() if file_path.exists() else None
+        digest = sha256_file(file_path) if file_path.exists() else None
         return DeclarationVerifyResult(
             draft_id=draft.draft_id,
             file_path=file_path,
