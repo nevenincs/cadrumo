@@ -172,7 +172,14 @@ def test_no_orphan_parameters_in_any_revision() -> None:
 #: work must clear before this allow-list shrinks. The data is
 #: preserved on disk so future formula work can land without
 #: re-entering authoritative bracket values.
-_PRE_STAGED_PARAMETERS: frozenset[str] = frozenset()
+_PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
+    {
+        "renta-2025-ric-reduccion-rate-maximo",
+        "renta-2025-ric-materializacion-plazo-anos",
+        "renta-2025-ric-mantenimiento-plazo-anos",
+        "renta-2025-zec-tipo-gravamen-reducido",
+    }
+)
 
 
 def test_every_relation_references_an_existing_target_binding() -> None:
