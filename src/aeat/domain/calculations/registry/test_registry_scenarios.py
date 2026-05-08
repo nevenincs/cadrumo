@@ -113,6 +113,7 @@ def _normal_direct_estimation_payments_scenario() -> RegistryCalculationScenario
             "0606": Decimal("13.00"),
         },
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("45.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("55.00"),
@@ -185,6 +186,7 @@ def _simplified_direct_estimation_cap_scenario() -> RegistryCalculationScenario:
         period="0A",
         inputs={"0171": Decimal("100000.00")},
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
@@ -226,6 +228,7 @@ def _negative_simplified_base_scenario() -> RegistryCalculationScenario:
         period="0A",
         inputs={"0171": Decimal("100.00"), "0181": Decimal("500.00")},
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
@@ -289,6 +292,7 @@ def _real_estate_capital_scenario() -> RegistryCalculationScenario:
             "0153": Decimal("800.00"),
         },
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("0.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("0.00"),
@@ -412,6 +416,7 @@ def _final_settlement_scenario() -> RegistryCalculationScenario:
             "0669": Decimal("150.00"),
         },
         binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={
             "renta-2025-rel-130-pagos-fraccionados": Decimal("600.00"),
             "renta-2025-rel-131-pagos-fraccionados": Decimal("400.00"),

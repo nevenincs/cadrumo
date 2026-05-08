@@ -238,6 +238,9 @@ def _collect_parameter_refs(expression, accumulator: set[str]) -> None:
     parameter = getattr(expression, "parameter", None)
     if parameter is not None:
         accumulator.add(parameter)
+    dispatch_table = getattr(expression, "dispatch_table", None)
+    if dispatch_table:
+        accumulator.update(dispatch_table.values())
     args = getattr(expression, "args", None)
     if args:
         for arg in args:
