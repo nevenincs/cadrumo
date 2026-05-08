@@ -58,11 +58,10 @@ def test_setup_status_with_complete_profile_points_to_auth_configuration() -> No
 def test_setup_status_with_identity_only_remains_not_ready_until_enrolment_declared() -> None:
     """A profile carrying just the required identity keys must NOT report ready.
 
-    UX-006 root cause: ``profile_ready`` previously returned ``True`` as
-    soon as ``tax.id`` and ``activity`` were set, even though the
-    deadline engine could not compute IVA obligations without an IVA
-    regime declaration. The new contract gates ``profile_ready`` on
-    BOTH identity and enrolment readiness.
+    The contract: ``profile_ready`` is the AND of identity readiness
+    (tax.id, activity) and enrolment readiness (iva.regime). Until both
+    axes are satisfied, the operator cannot file any modelo, so the
+    boolean must NOT report ready.
     """
     state = set_profile_values(
         UserCliState(),
