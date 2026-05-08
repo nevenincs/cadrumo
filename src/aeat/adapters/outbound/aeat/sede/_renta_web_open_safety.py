@@ -36,59 +36,47 @@ import contextlib
 from typing import Any
 
 from .....core.logging import get_logger
+from .....domain.calculations.registry import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
 from ._errors import SedeFailureMode, SedeNavigationError
 
 logger = get_logger(__name__)
 
 
-# Forbidden Spanish-language click targets. Any locator whose visible text
-# contains one of these tokens (case-insensitive, accent-insensitive) is
-# blocked before the click. Keep aligned with
-# ``AEAT_WRITE_FORBIDDEN_ACTIONS`` and ``_FORBIDDEN_TOKENS`` in the
-# domain remote-state guard.
-FORBIDDEN_CLICK_TOKENS: frozenset[str] = frozenset(
+# Click-time-only extensions to the canonical write-action verb token set.
+# The base ``AEAT_WRITE_FORBIDDEN_VERB_TOKENS`` (declared in the domain
+# remote-state guard) is the universal source of truth for write-action
+# verbs and is shared with the URL/method guard. The tokens listed here
+# cover surface-specific cases that only appear in button text:
+#   - accented Spanish variants kept as readable source documentation
+#     even though _normalise() folds them to the unaccented base form;
+#   - the noun ``firma`` (button labels like "Firma electrónica");
+#   - additional Spanish persistence/payment verbs that surface only as
+#     button labels (``almacenar``, ``ingresar``);
+#   - multi-word click targets (``transmitir lote``);
+#   - the AEAT pre-presentation Validar surface — read-only drivers
+#     never invoke it because observed values surface from form widgets
+#     directly, but a stray click could trigger validation-state
+#     mutations or queue side effects we don't want to exercise.
+_CLICK_ONLY_FORBIDDEN_TOKENS: frozenset[str] = frozenset(
     {
-        # Direct submission verbs
-        "presentar",
-        "presentacion",
         "presentación",
-        "enviar",
         "envío",
-        "transmitir",
-        "transmision",
         "transmisión",
-        "submit",
-        # Signing
-        "firmar",
         "firma",
-        "sign",
-        # Persistence
-        "guardar",
-        "save",
         "almacenar",
-        # Payment
-        "pagar",
-        "payment",
-        "domiciliar",
         "ingresar",
-        # Modification of state
-        "modificar",
-        "anular",
-        "cancelar",
-        "subsanar",
-        # Pre-presentation verification surfaces (TGVI etc.)
-        "tgvi",
         "transmitir lote",
-        # Validar is the AEAT pre-presentation correctness check. The
-        # read-only driver never needs to invoke it — observed values
-        # are surfaced by the form widgets directly. Denying Validar
-        # is defense-in-depth: a click could trigger validation-state
-        # mutations or queue side effects we don't want to exercise.
         "validar",
         "validacion",
         "validación",
     }
 )
+
+# Forbidden Spanish-language click targets. Any locator whose visible text
+# contains one of these tokens (case-insensitive, accent-insensitive) is
+# blocked before the click. The set is the canonical write-verb tokens
+# from the domain remote-state guard PLUS click-time-only extensions.
+FORBIDDEN_CLICK_TOKENS: frozenset[str] = AEAT_WRITE_FORBIDDEN_VERB_TOKENS | _CLICK_ONLY_FORBIDDEN_TOKENS
 
 # Forbidden URL path fragments (case-insensitive).
 FORBIDDEN_URL_FRAGMENTS: frozenset[str] = frozenset(
