@@ -25,6 +25,7 @@ from ....adapters.inbound.financial.providers._base import FinancialProviderErro
 from ....domain.categories import CATEGORY_PROFILES_2025, ProportionalityKind, SpendingCategory
 from ....domain.transactions import (
     BusinessClassification,
+    LLMClassifier,
     LLMClassifierError,
     ModelTier,
     RawTransaction,
@@ -450,45 +451,19 @@ def classify_llm_cmd(
     """
     import time
 
-    if all_pending and transaction_id is not None:
-        typer.echo(
-            tr("cli.txs.classify_llm.errors.exclusive_all_id"),
-            err=True,
-        )
-        raise typer.Exit(code=2)
-    if not all_pending and transaction_id is None:
-        typer.echo(
-            tr("cli.txs.classify_llm.errors.missing_target"),
-            err=True,
-        )
-        raise typer.Exit(code=2)
-    if max_total_seconds is not None and max_total_seconds <= 0:
-        typer.echo(
-            tr("cli.txs.classify_llm.errors.invalid_max_seconds"),
-            err=True,
-        )
-        raise typer.Exit(code=2)
-    resolved_pct_override: Decimal | None
-    try:
-        resolved_pct_override = _parse_pct_override(pct_override)
-    except ValueError as exc:
-        typer.echo(str(exc), err=True)
-        raise typer.Exit(code=2) from exc
-    try:
-        resolved_tier = _parse_tier(tier)
-    except ValueError as exc:
-        typer.echo(str(exc), err=True)
-        raise typer.Exit(code=2) from exc
-    try:
-        classifier = resolve_classifier(
-            provider,
-            alias=model_alias,
-            model=model,
-            minimum_tier=resolved_tier,
-        )
-    except LLMClassifierError as exc:
-        typer.echo(str(exc), err=True)
-        raise typer.Exit(code=2) from exc
+    _validate_classify_inputs(
+        all_pending=all_pending,
+        transaction_id=transaction_id,
+        max_total_seconds=max_total_seconds,
+    )
+    resolved_pct_override = _resolve_pct_override_or_exit(pct_override)
+    resolved_tier = _resolve_tier_or_exit(tier)
+    classifier = _resolve_classifier_or_exit(
+        provider,
+        alias=model_alias,
+        model=model,
+        minimum_tier=resolved_tier,
+    )
 
     repo = catalogue_repository()
     catalogue = load_catalogue_required()
@@ -582,6 +557,62 @@ def classify_llm_cmd(
     )
     if failures and successes == 0:
         raise typer.Exit(code=2)
+
+
+def _validate_classify_inputs(
+    *,
+    all_pending: bool,
+    transaction_id: str | None,
+    max_total_seconds: float | None,
+) -> None:
+    """Reject mutually-exclusive or invalid ``classify-llm`` option combinations."""
+    if all_pending and transaction_id is not None:
+        typer.echo(tr("cli.txs.classify_llm.errors.exclusive_all_id"), err=True)
+        raise typer.Exit(code=2)
+    if not all_pending and transaction_id is None:
+        typer.echo(tr("cli.txs.classify_llm.errors.missing_target"), err=True)
+        raise typer.Exit(code=2)
+    if max_total_seconds is not None and max_total_seconds <= 0:
+        typer.echo(tr("cli.txs.classify_llm.errors.invalid_max_seconds"), err=True)
+        raise typer.Exit(code=2)
+
+
+def _resolve_pct_override_or_exit(raw: str | None) -> Decimal | None:
+    """Wrap :func:`_parse_pct_override` with the CLI's exit-code-2 protocol."""
+    try:
+        return _parse_pct_override(raw)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+
+
+def _resolve_tier_or_exit(raw: str | None) -> ModelTier:
+    """Wrap :func:`_parse_tier` with the CLI's exit-code-2 protocol."""
+    try:
+        return _parse_tier(raw)
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
+
+
+def _resolve_classifier_or_exit(
+    provider: str,
+    *,
+    alias: str | None,
+    model: str | None,
+    minimum_tier: ModelTier,
+) -> LLMClassifier:
+    """Wrap :func:`resolve_classifier` with the CLI's exit-code-2 protocol."""
+    try:
+        return resolve_classifier(
+            provider,
+            alias=alias,
+            model=model,
+            minimum_tier=minimum_tier,
+        )
+    except LLMClassifierError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=2) from exc
 
 
 def _parse_pct_override(raw: str | None) -> Decimal | None:

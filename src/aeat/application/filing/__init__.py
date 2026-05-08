@@ -222,6 +222,8 @@ _ANNUAL_PERIOD_RE = re.compile(r"^(?P<year>\d{4})A$")
 
 
 def _registry_period(period: str) -> tuple[int, str]:
+    if re.fullmatch(r"\d{4}", period):
+        return int(period), "0A"
     if match := _QUARTER_PERIOD_RE.fullmatch(period):
         return int(match.group("year")), f"{match.group('quarter')}T"
     if match := _MONTH_PERIOD_RE.fullmatch(period):
