@@ -1376,6 +1376,63 @@ required_text = [
     "rentas",
 ]
 
+[legal."ley-19-1994:art-27"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-19-1994.json#art-27"
+document_id = "BOE-A-1994-15794"
+article = "27"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a27"
+published_at = 1994-07-07
+effective_from = 1994-07-08
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Reserva para Inversiones en Canarias (RIC): permite a personas físicas con domicilio fiscal en Canarias o con establecimiento permanente en Canarias reducir hasta el 80 por ciento del rendimiento neto de explotación destinado a una reserva con cargo a beneficios, materializable en inversiones cualificadas en el plazo de tres años y mantenidas durante un mínimo de cinco años. Base legal de las casillas RIC en Modelo 100 (Anexo C — secciones reserva_inversiones_canarias_res)."
+required_text = [
+    "Reserva para Inversiones en Canarias",
+    "rendimiento neto",
+]
+
+[legal."ley-19-1994:art-43"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-19-1994.json#art-43"
+document_id = "BOE-A-1994-15794"
+article = "43"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a43"
+published_at = 1994-07-07
+effective_from = 1994-07-08
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Ámbito de aplicación de la Zona Especial Canaria (ZEC): define el ámbito territorial (archipiélago canario) y subjetivo (entidades de nueva creación, sucursales de extranjeras, entidades preexistentes que cumplan condiciones de empleo, inversión inicial y actividad exclusivamente ZEC). Foundation article para las casillas de imputación de rentas de socios/partícipes ZEC en Modelo 100."
+required_text = [
+    "Zona Especial Canaria",
+    "ámbito",
+]
+
+[legal."ley-19-1994:art-50"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-19-1994.json#art-50"
+document_id = "BOE-A-1994-15794"
+article = "50"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a50"
+published_at = 1994-07-07
+effective_from = 1994-07-08
+review_status = "reviewed"
+reviewed_at = 2026-05-08
+reviewed_by = "wgergely"
+notes = "Tipo de gravamen reducido del 4 por ciento aplicable a las entidades ZEC sobre la parte de la base imponible derivada de operaciones realizadas material y efectivamente en el ámbito ZEC, hasta los límites por trabajadores. Para socios IRPF la renta atribuida se imputa conforme al régimen ZEC."
+required_text = [
+    "tipo de gravamen",
+    "Zona Especial Canaria",
+]
+
 [legal."ley-35-2006:art-49"]
 evidence_tier = "legal_authority"
 authority = "boe"
