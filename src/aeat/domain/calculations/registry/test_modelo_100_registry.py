@@ -182,8 +182,19 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     }
     assert set(dependencies.bindings) == filed_dependency_bindings
     assert set(dependencies.relations) == {relation.id for relation in snapshot.revision.relations}
-    assert set(payments_retentions.bindings) == filed_dependency_bindings
-    assert set(payments_retentions.relations) == {relation.id for relation in snapshot.revision.relations}
+    # payments_retentions covers retention + pagos-a-cuenta filings only.
+    # The modelo-184 atribución binding is a previous_filing source but
+    # belongs to economic-activities (income attribution semantics), not
+    # to payments-retentions. Filter atribución bindings out of the
+    # payments-retentions equivalence assertion.
+    payments_retention_bindings = {
+        b for b in filed_dependency_bindings if "atribucion" not in b
+    }
+    assert set(payments_retentions.bindings) == payments_retention_bindings
+    payments_retention_relations = {
+        r.id for r in snapshot.revision.relations if "atribucion" not in r.id
+    }
+    assert set(payments_retentions.relations) == payments_retention_relations
     assert "renta-2025-modelo-100-estimacion-directa-es-normal" in economic_activities.bindings
     assert {"1479", "1553", "1577"}.issubset(economic_activities.casillas)
     assert set(source_foundation.workbook_parity_refs) == set(snapshot.workbook_parity_refs)
