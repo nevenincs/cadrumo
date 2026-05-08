@@ -48,6 +48,26 @@ class SecureObjectRepository:
             ).scalar_one_or_none()
             return row_id is not None
 
+    def exists_by_raw_key(self, namespace: str, hashed_object_key: bytes) -> bool:
+        """Return whether ``namespace`` carries a row with this raw HMAC digest.
+
+        Used by the archive restore pipeline when the natural key was
+        not present in the source bundle (path-keyed namespaces). Same
+        master-key constraint as :meth:`save_with_raw_key`.
+        """
+        if len(hashed_object_key) != 32:
+            raise ValueError(
+                f"hashed_object_key must be 32 bytes; got {len(hashed_object_key)}",
+            )
+        with session_scope(self._engine) as session:
+            row_id = session.execute(
+                select(_orm.SecureObjectRow.id).where(
+                    _orm.SecureObjectRow.namespace == namespace,
+                    _orm.SecureObjectRow.object_key == hashed_object_key,
+                )
+            ).scalar_one_or_none()
+            return row_id is not None
+
     def list_keys(self, namespace: str) -> tuple[str, ...]:
         """Return stored lookup digests under ``namespace`` as hex strings.
 
@@ -124,19 +144,90 @@ class SecureObjectRepository:
         written_at: datetime,
         payload: bytes,
     ) -> None:
-        """Encrypt and upsert one byte payload."""
+        """Encrypt and upsert one byte payload keyed by a natural string id.
 
+        The natural ``object_key`` is HMAC-digested at the column
+        boundary. To upsert against a pre-computed digest (e.g. when
+        restoring an archive bundle whose natural key was lost in the
+        original HMAC), use :meth:`save_with_raw_key` instead.
+        """
+        self._save_internal(
+            namespace=namespace,
+            key=object_key,
+            classification=classification,
+            schema_version=schema_version,
+            written_at=written_at,
+            payload=payload,
+        )
+
+    def save_with_raw_key(
+        self,
+        *,
+        namespace: str,
+        hashed_object_key: bytes,
+        classification: SensitivityClass,
+        schema_version: int,
+        written_at: datetime,
+        payload: bytes,
+    ) -> None:
+        """Encrypt and upsert one byte payload keyed by a pre-computed digest.
+
+        The 32-byte ``hashed_object_key`` is passed straight through
+        the :class:`HashedLookup` column without re-hashing. Used by
+        the archive restore path to round-trip rows whose natural key
+        is not present in the bundle (e.g. the path-keyed setup-profile
+        and inventory namespaces).
+
+        Args:
+            namespace: The :class:`SecureObjectRepository` namespace.
+            hashed_object_key: 32 raw HMAC-SHA256 bytes (the digest
+                produced by :meth:`HashedLookup.compute` under the
+                same master key the row was originally written with).
+            classification: Sensitivity class to upsert at.
+            schema_version: Envelope schema version captured on the row.
+            written_at: Timezone-aware datetime captured on the row.
+            payload: Plaintext envelope bytes (the column encrypts).
+
+        Raises:
+            :exc:`ValueError`: If ``hashed_object_key`` is not exactly
+                32 bytes (the size :class:`HashedLookup` requires).
+            :exc:`RepositoryError`: On underlying SQL integrity errors.
+        """
+        if len(hashed_object_key) != 32:
+            raise ValueError(
+                f"hashed_object_key must be 32 bytes; got {len(hashed_object_key)}",
+            )
+        self._save_internal(
+            namespace=namespace,
+            key=hashed_object_key,
+            classification=classification,
+            schema_version=schema_version,
+            written_at=written_at,
+            payload=payload,
+        )
+
+    def _save_internal(
+        self,
+        *,
+        namespace: str,
+        key: str | bytes,
+        classification: SensitivityClass,
+        schema_version: int,
+        written_at: datetime,
+        payload: bytes,
+    ) -> None:
+        """Shared upsert backing :meth:`save` and :meth:`save_with_raw_key`."""
         with session_scope(self._engine) as session:
             row_id = session.execute(
                 select(_orm.SecureObjectRow.id).where(
                     _orm.SecureObjectRow.namespace == namespace,
-                    _orm.SecureObjectRow.object_key == object_key,
+                    _orm.SecureObjectRow.object_key == key,
                 )
             ).scalar_one_or_none()
             if row_id is None:
                 row = _orm.SecureObjectRow(
                     namespace=namespace,
-                    object_key=object_key,
+                    object_key=key,
                     classification=classification.value,
                     schema_version=schema_version,
                     written_at=written_at,
@@ -157,7 +248,9 @@ class SecureObjectRepository:
             try:
                 session.flush()
             except IntegrityError as exc:
-                raise RepositoryError(f"secure object upsert failed for {namespace}/{object_key}: {exc.orig}") from exc
+                raise RepositoryError(
+                    f"secure object upsert failed for {namespace}/<key>: {exc.orig}",
+                ) from exc
 
     def delete(self, namespace: str, object_key: str) -> bool:
         """Delete one object if it exists."""

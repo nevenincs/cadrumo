@@ -9,7 +9,7 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from . import RegistryCatalogues, RegistryValidator, build_snapshot, load_registry_tree
-from ._schema import ModeloDefinition
+from . import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
