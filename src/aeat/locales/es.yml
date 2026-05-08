@@ -484,14 +484,22 @@ cli:
       no_rows: No hay entradas del libro pendientes de revisión
       verbose_help: Mostrar información detallada durante la revisión
   overview:
+    allow_incomplete_help: "Permitir el calendario con valores por defecto cuando faltan claves de regimen en el perfil. Sin esta opcion, el calendario se rechaza si hay advertencias."
     app_help: Revisar el estado actual del espacio de trabajo fiscal
     calendar_help: Mostrar calendario de obligaciones para un rango de fechas
+    calendar_refused_incomplete: "El perfil no declara las claves: %{keys}. Ejecuta 'aeat setup profile set <clave> <valor>' o usa --allow-incomplete para ver el calendario calculado bajo valores por defecto."
     calendar_requires_dates: Use --from y --to al consultar el calendario
     drafts: Borradores
     from_help: Fecha inicial del calendario (AAAA-MM-DD)
     header: "Modelo\tPeriodo\tEstado\tAbre\tCierra"
     invoices: Facturas
     integrity_warning: "%{count} fila(s) locales no se pueden descifrar bajo la clave maestra actual; ejecuta 'aeat config doctor' para detalle."
+    warning:
+      estimacion_objetiva_unset: "El perfil no declara si tributa IRPF en estimacion objetiva. El modelo 131 puede aplicarse o no en consecuencia."
+      intracomunitario_unset: "El perfil no declara si realiza operaciones intracomunitarias. El modelo 349 puede aplicarse o no en consecuencia."
+      iva_regime_unset: "El perfil no declara su regimen IVA. El calendario asume regimen general; los modelos 303 y 390 pueden no corresponder."
+      retencion_arrendamientos_unset: "El perfil no declara si paga alquileres con retencion. El modelo 115 puede aplicarse o no en consecuencia."
+      retencion_profesionales_unset: "El perfil no declara si paga a profesionales con retencion. El modelo 111 puede aplicarse o no en consecuencia."
     period: Periodo
     period_help: Periodo fiscal a revisar (por ejemplo, 2026-Q1)
     profile: Perfil

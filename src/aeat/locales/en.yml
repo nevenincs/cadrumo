@@ -474,14 +474,22 @@ cli:
       no_rows: No ledger entries pending review
       verbose_help: Show detailed information during review
   overview:
+    allow_incomplete_help: "Allow the calendar to be computed under defaults when regime keys are unset. Without this flag the calendar is refused when warnings exist."
     app_help: Review the current filing workspace
     calendar_help: Show the obligations calendar for a date range
+    calendar_refused_incomplete: "Profile does not declare keys: %{keys}. Run 'aeat setup profile set <key> <value>' or pass --allow-incomplete to see the calendar computed under defaults."
     calendar_requires_dates: Use --from and --to when showing the calendar
     drafts: Drafts
     from_help: Calendar start date (YYYY-MM-DD)
     header: "Model\tPeriod\tState\tOpens\tCloses"
     invoices: Invoices
     integrity_warning: "%{count} local row(s) cannot be decrypted under the current master key; run 'aeat config doctor' for detail."
+    warning:
+      estimacion_objetiva_unset: "Profile does not declare whether IRPF estimacion objetiva applies. Modelo 131 may or may not apply accordingly."
+      intracomunitario_unset: "Profile does not declare intra-community operations. Modelo 349 may or may not apply accordingly."
+      iva_regime_unset: "Profile does not declare its IVA regime. Calendar assumes regimen general; modelos 303 and 390 may not apply."
+      retencion_arrendamientos_unset: "Profile does not declare whether rent is paid with retencion. Modelo 115 may or may not apply accordingly."
+      retencion_profesionales_unset: "Profile does not declare whether professionals are paid with retencion. Modelo 111 may or may not apply accordingly."
     period: Period
     period_help: Tax period to review (for example, 2026-Q1)
     profile: Profile
