@@ -71,8 +71,8 @@ DirectionResolver = Callable[["RawTransaction"], "TransactionDirection"]
 class TransactionCatalogueRepository:
     """Repository over the encrypted SQL-backed transaction catalogue."""
 
-    def __init__(self) -> None:
-        self._objects = SecureObjectRepository()
+    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        self._objects = objects or SecureObjectRepository()
 
     def exists(self) -> bool:
         """Return whether a transaction catalogue has been persisted."""

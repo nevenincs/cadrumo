@@ -9,9 +9,13 @@ JSON catalogue, or envelope file lands on disk.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
 from ._models import InvoiceCatalogue
+
+if TYPE_CHECKING:
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
 
 _log = get_logger(__name__)
 
@@ -23,10 +27,10 @@ _INVOICE_OBJECT_KEY = "catalogue"
 class InvoiceCatalogueRepository:
     """Repository over the encrypted SQL-backed invoice catalogue."""
 
-    def __init__(self) -> None:
+    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
         from ...adapters.persistence.storage.sql import SecureObjectRepository
 
-        self._objects = SecureObjectRepository()
+        self._objects = objects or SecureObjectRepository()
 
     def exists(self) -> bool:
         """Return whether an invoice catalogue has been persisted."""
