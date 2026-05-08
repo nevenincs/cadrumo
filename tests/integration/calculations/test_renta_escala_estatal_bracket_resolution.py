@@ -30,7 +30,8 @@ from aeat.core.paths import PROJECT_ROOT
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
-_BACKPORTED_YEARS = (2021, 2022, 2023, 2024, 2025)
+_BACKPORTED_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
+_POST_AMENDMENT_YEARS = (2021, 2022, 2023, 2024, 2025)
 
 
 def _bracket_table(year: int):
@@ -66,15 +67,26 @@ def test_escala_estatal_resolves_for_30k_base_general(year: int) -> None:
     assert cuota == Decimal("3582.75")
 
 
-@pytest.mark.parametrize("year", _BACKPORTED_YEARS)
-def test_escala_estatal_resolves_in_top_bracket(year: int) -> None:
-    """Base 500,000: lands in top bracket [300000, ∞] @ 24.5%.
+@pytest.mark.parametrize("year", _POST_AMENDMENT_YEARS)
+def test_escala_estatal_resolves_in_top_bracket_post_2021(year: int) -> None:
+    """Base 500,000: lands in top bracket [300000, ∞] @ 24.5% (post-Ley 11/2020).
 
     cuota = 62950.75 + 0.245 * (500000 - 300000) = 62950.75 + 49000 = 111950.75
     """
     table = _bracket_table(year)
     cuota = _resolve_bracket(table, Decimal("500000"), {"filing_period": date(year, 12, 31)})
     assert cuota == Decimal("111950.75")
+
+
+def test_escala_estatal_2020_top_bracket_uses_pre_amendment_22_5_rate() -> None:
+    """Pre-Ley 11/2020 (effective 2021), the top tier was the open 22.5% bracket.
+
+    2020 base 500,000: lands in top bracket [60000, ∞] @ 22.5%.
+    cuota = 8950.75 + 0.225 * (500000 - 60000) = 8950.75 + 99000 = 107950.75
+    """
+    table = _bracket_table(2020)
+    cuota = _resolve_bracket(table, Decimal("500000"), {"filing_period": date(2020, 12, 31)})
+    assert cuota == Decimal("107950.75")
 
 
 @pytest.mark.parametrize("year", _BACKPORTED_YEARS)
