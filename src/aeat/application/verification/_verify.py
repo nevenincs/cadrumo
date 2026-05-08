@@ -295,15 +295,7 @@ def _compose_narrative(
     classified: tuple[ClassifiedDiscrepancy, ...],
     coverage: float,
 ) -> str:
-    """Build the multilingual summary string the operator sees after import.
-
-    The narrative collapses the verdict into one sentence per supported
-    UI language and embeds the coverage percentage and discrepancy count
-    so the operator can decide whether to drill into the classified list.
-    """
-    round(coverage * 100)
-    len(classified)
-
+    """Return the locale key the operator sees after a verification run."""
     if status is VerificationStatus.VERIFIED:
         return "verification.status.verified"
     return "verification.status.needs_review"
