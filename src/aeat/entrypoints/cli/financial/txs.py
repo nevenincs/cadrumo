@@ -94,7 +94,7 @@ def list_cmd(
             range.
     """
     effective_state: BusinessClassification | None = state
-    threshold = _parse_confidence_threshold(confidence_below)
+    threshold = _parse_confidence(confidence_below)
     catalogue = load_catalogue_or_empty()
     transactions = tuple(
         transaction
@@ -294,7 +294,7 @@ def classify_cmd(
             err=True,
         )
         raise typer.Exit(code=2) from exc
-    resolved_confidence = _parse_confidence_option(confidence)
+    resolved_confidence = _parse_confidence(confidence)
     effective_classification = classification if classification is not None else current.business_classification
     if classification is not BusinessClassification.MIXED and business_pct is not None:
         typer.echo(
@@ -792,8 +792,12 @@ def _select_llm_targets(
     return [tx for tx in catalogue.values() if tx.business_classification in _LLM_RETRY_STATES]
 
 
-def _parse_confidence_threshold(value: str | None) -> Decimal | None:
-    """Parse and range-check the ``--confidence-below`` option value.
+def _parse_confidence(value: str | None) -> Decimal | None:
+    """Parse and range-check a confidence option value.
+
+    Shared by ``--confidence`` and ``--confidence-below`` since both options
+    accept a probability in the inclusive ``[0, 1]`` range and surface the
+    same operator-facing error envelope on bad input.
 
     Raises:
         :exc:`typer.Exit`: With exit code ``2`` when the value is not
@@ -803,47 +807,14 @@ def _parse_confidence_threshold(value: str | None) -> Decimal | None:
     if value is None:
         return None
     try:
-        threshold = Decimal(value)
+        confidence = Decimal(value)
     except InvalidOperation as exc:
-        typer.echo(
-            tr("cli.txs.classify.invalid_confidence_err"),
-            err=True,
-        )
+        typer.echo(tr("cli.txs.classify.invalid_confidence_err"), err=True)
         raise typer.Exit(code=2) from exc
-    if not _CONFIDENCE_MIN <= threshold <= _CONFIDENCE_MAX:
-        typer.echo(
-            tr("cli.txs.classify.confidence_range_err"),
-            err=True,
-        )
+    if not _CONFIDENCE_MIN <= confidence <= _CONFIDENCE_MAX:
+        typer.echo(tr("cli.txs.classify.confidence_range_err"), err=True)
         raise typer.Exit(code=2)
-    return threshold
-
-
-def _parse_confidence_option(value: str | None) -> Decimal | None:
-    """Parse and range-check the ``--confidence`` option value.
-
-    Raises:
-        :exc:`typer.Exit`: With exit code ``2`` when the value is not
-            a valid decimal or falls outside the inclusive ``[0, 1]``
-            range.
-    """
-    if value is None:
-        return None
-    try:
-        resolved = Decimal(value)
-    except InvalidOperation as exc:
-        typer.echo(
-            tr("cli.txs.classify.invalid_confidence_err"),
-            err=True,
-        )
-        raise typer.Exit(code=2) from exc
-    if not _CONFIDENCE_MIN <= resolved <= _CONFIDENCE_MAX:
-        typer.echo(
-            tr("cli.txs.classify.confidence_range_err"),
-            err=True,
-        )
-        raise typer.Exit(code=2)
-    return resolved
+    return confidence
 
 
 def _matches_filters(
