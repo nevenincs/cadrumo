@@ -75,8 +75,7 @@ def _drafts_dir() -> Path:
 
 def _load_submission_record(submission_id: str) -> SubmittedFiling:
     """Read an encrypted persisted submission record for amendment assembly."""
-    settings = load_settings()
-    repository = SubmissionRepository(store_dir=settings.aeat_submissions_dir)
+    repository = SubmissionRepository()
     try:
         loaded = repository.load(submission_id)
     except ValueError as exc:
@@ -583,7 +582,6 @@ def import_(
 def _handle_justificante_import(from_justificante: Path) -> None:
     """Dispatch the justificante import path."""
     _logger.info("filing import: importing from justificante %s", from_justificante)
-    settings = load_settings()
     try:
         result = import_filing_from_justificante(
             from_justificante,
@@ -600,7 +598,7 @@ def _handle_justificante_import(from_justificante: Path) -> None:
     _save_draft(result.draft)
     from ....domain.submission._repository import SubmissionRepository
 
-    submission_repository = SubmissionRepository(store_dir=settings.aeat_submissions_dir)
+    submission_repository = SubmissionRepository()
     submission_repository.save(result.submission)
     submission_repository.envelope_path_for(result.submission.submission_id)
     _logger.info(

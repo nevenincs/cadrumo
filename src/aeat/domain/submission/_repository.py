@@ -27,8 +27,7 @@ _SUBMISSION_NAMESPACE = "aeat.domain.submission.records"
 class SubmissionRepository:
     """Repository over encrypted SQL-backed submitted filing records."""
 
-    def __init__(self, *, store_dir: Path | None = None) -> None:
-        del store_dir
+    def __init__(self) -> None:
         self._objects = SecureObjectRepository()
 
     @property

@@ -179,12 +179,12 @@ def load_default_filing_profile(
     *,
     display_name: str | None = None,
 ) -> FilingOperatorProfile:
-    """Load the configured default profile JSON for runtime filing commands.
+    """Load the configured default profile secure object for runtime filing commands.
 
     Resolves ``path`` (or, when ``None``, the
     ``aeat_default_profile_path`` setting from
-    :func:`aeat.core.config.load_settings`), validates the on-disk
-    envelope via :func:`aeat.application.setup._env_writer.load_profile_envelope`,
+    :func:`aeat.core.config.load_settings`), validates the profile via
+    :func:`aeat.application.setup._env_writer.load_profile_envelope`,
     and projects it into a runtime :class:`FilingOperatorProfile`.
 
     Args:
@@ -198,7 +198,7 @@ def load_default_filing_profile(
 
     Raises:
         FilingBuilderError: When no default profile is configured or when the
-            resolved path does not exist on disk.
+            resolved profile secure object does not exist.
     """
     from ...core.config import load_settings
 
@@ -208,11 +208,12 @@ def load_default_filing_profile(
         raise FilingBuilderError(
             "no default filing profile configured; pass --profile PATH or set AEAT_DEFAULT_PROFILE_PATH"
         )
-    if not target.exists():
-        raise FilingBuilderError(f"default filing profile not found: {target}")
     from ..setup._env_writer import load_profile_envelope
 
-    profile = load_profile_envelope(target)
+    try:
+        profile = load_profile_envelope(target)
+    except FileNotFoundError as exc:
+        raise FilingBuilderError(f"default filing profile not found: {target}") from exc
     return filing_profile_from_autonomo(profile, display_name=display_name)
 
 
