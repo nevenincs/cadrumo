@@ -35,18 +35,36 @@ from ._importing import (
     merge_invoice_import,
     parse_invoice_payload,
 )
+from ._projection import (
+    InvoiceMatchProjection,
+    InvoiceReviewProjection,
+    apply_manual_invoice_match,
+    invoice_display_amounts,
+    invoice_review_status,
+    project_invoice_payment_matches,
+    project_invoice_review,
+    project_invoice_reviews,
+)
 
 __all__ = [
     "InvoiceImportResult",
+    "InvoiceMatchProjection",
+    "InvoiceReviewProjection",
     "LinkInconsistency",
     "ReconciliationSuggestion",
+    "apply_manual_invoice_match",
     "find_invoice",
     "find_unmatched",
     "import_invoices_from_path",
+    "invoice_display_amounts",
+    "invoice_review_status",
     "link_transaction",
     "link_transaction_bidirectional",
     "merge_invoice_import",
     "parse_invoice_payload",
+    "project_invoice_payment_matches",
+    "project_invoice_review",
+    "project_invoice_reviews",
     "suggest_reconciliations",
     "verify_link_consistency",
 ]
