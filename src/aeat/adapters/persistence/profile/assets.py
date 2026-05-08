@@ -2,16 +2,13 @@
 
 :class:`aeat.domain.profile.assets.AssetRecord` and
 :class:`aeat.domain.profile.assets.AmortizationLedger` payloads are stored
-as FINANCIAL-class secure objects in the primary database. ``store_dir`` is
-accepted only as a logical partition key for callers that used separate
-ledger roots before the secure-object backend.
+as FINANCIAL-class secure objects in the primary database.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from ....core.config import load_settings
 from ....core.errors import AeatError
 from ....core.logging import get_logger
 from ....domain.profile.assets import (
@@ -30,55 +27,39 @@ ASSETS_AMORTIZATION_LEDGER_FILENAME = "assets-amortization-ledger.secure-object"
 _SECURE_OBJECT_VERSION = 1
 _ASSETS_NAMESPACE = "aeat.persistence.profile.assets"
 _AMORTIZATION_NAMESPACE = "aeat.persistence.profile.assets.amortization"
+_LEDGER_OBJECT_KEY = "default"
 
 
-def default_storage_dir() -> Path:
-    """Return the configured governed ledger storage directory.
-
-    Returns:
-        Filesystem path resolved from
-        :attr:`aeat.core.config.Settings.aeat_ledgers_dir`.
-    """
-
-    return Path(load_settings().aeat_ledgers_dir)
-
-
-def load_assets(*, storage_dir: Path | None = None) -> tuple[AssetRecord, ...]:
+def load_assets() -> tuple[AssetRecord, ...]:
     """Load persisted asset records from the encrypted ledger.
-
-    Args:
-        storage_dir: Override for the ledger storage directory; defaults to
-            :func:`default_storage_dir`.
 
     Returns:
         Tuple of persisted asset records, empty when the ledger is absent.
     """
 
-    return AssetsLedgerRepository(store_dir=storage_dir or default_storage_dir()).load().assets
+    return AssetsLedgerRepository().load().assets
 
 
-def save_assets(assets: tuple[AssetRecord, ...], *, storage_dir: Path | None = None) -> Path:
+def save_assets(assets: tuple[AssetRecord, ...]) -> Path:
     """Persist ``assets`` as a governed FINANCIAL-class encrypted envelope.
 
     Args:
         assets: Asset records to persist.
-        storage_dir: Override for the ledger storage directory.
 
     Returns:
-        Path to the encrypted envelope file that was written.
+        Logical secure-object marker for the persisted ledger.
     """
 
-    repository = AssetsLedgerRepository(store_dir=storage_dir or default_storage_dir())
+    repository = AssetsLedgerRepository()
     repository.save(AssetsLedgerDocument(assets=assets))
     return repository.envelope_path
 
 
-def add_asset(asset: AssetRecord, *, storage_dir: Path | None = None) -> AssetsLedgerDocument:
+def add_asset(asset: AssetRecord) -> AssetsLedgerDocument:
     """Atomically add ``asset`` to the encrypted asset ledger.
 
     Args:
         asset: Asset record to insert.
-        storage_dir: Override for the ledger storage directory.
 
     Returns:
         The updated ledger document including the newly inserted asset.
@@ -88,34 +69,30 @@ def add_asset(asset: AssetRecord, *, storage_dir: Path | None = None) -> AssetsL
             is already present in the ledger.
     """
 
-    return AssetsLedgerRepository(store_dir=storage_dir or default_storage_dir()).add(asset)
+    return AssetsLedgerRepository().add(asset)
 
 
-def load_amortization_ledger(*, storage_dir: Path | None = None) -> AmortizationLedger:
+def load_amortization_ledger() -> AmortizationLedger:
     """Load the amortization ledger, returning an empty ledger when absent.
-
-    Args:
-        storage_dir: Override for the ledger storage directory.
 
     Returns:
         Persisted amortization ledger or an empty one when no envelope exists.
     """
 
-    return AmortizationLedgerRepository(store_dir=storage_dir or default_storage_dir()).load()
+    return AmortizationLedgerRepository().load()
 
 
-def save_amortization_ledger(ledger: AmortizationLedger, *, storage_dir: Path | None = None) -> Path:
+def save_amortization_ledger(ledger: AmortizationLedger) -> Path:
     """Persist ``ledger`` as a governed FINANCIAL-class encrypted envelope.
 
     Args:
         ledger: Amortization ledger to persist.
-        storage_dir: Override for the ledger storage directory.
 
     Returns:
-        Path to the encrypted envelope file that was written.
+        Logical secure-object marker for the persisted ledger.
     """
 
-    repository = AmortizationLedgerRepository(store_dir=storage_dir or default_storage_dir())
+    repository = AmortizationLedgerRepository()
     repository.save(ledger)
     return repository.envelope_path
 
@@ -123,27 +100,20 @@ def save_amortization_ledger(ledger: AmortizationLedger, *, storage_dir: Path | 
 class AssetsLedgerRepository:
     """Governed repository for the encrypted assets ledger."""
 
-    def __init__(self, *, store_dir: Path) -> None:
-        """Initialize the repository.
-
-        Args:
-            store_dir: Directory in which the encrypted envelope and lock
-                sidecar live.
-        """
-        self._store_dir = Path(store_dir)
+    def __init__(self) -> None:
         self._objects = SecureObjectRepository()
 
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
 
-        return self._store_dir / ASSETS_LEDGER_FILENAME
+        return Path("db://secure_objects") / _ASSETS_NAMESPACE / ASSETS_LEDGER_FILENAME
 
     @property
     def lock_target(self) -> Path:
-        """Logical lock target retained for API stability."""
+        """Logical lock marker; SQL transactions govern writes."""
 
-        return self._store_dir / "assets-ledger.lock"
+        return Path("db://secure_objects") / _ASSETS_NAMESPACE / "assets-ledger.lock"
 
     def load(self) -> AssetsLedgerDocument:
         """Load the ledger, returning an empty document when absent.
@@ -221,7 +191,7 @@ class AssetsLedgerRepository:
 
     @property
     def _object_key(self) -> str:
-        return self._store_dir.as_posix()
+        return _LEDGER_OBJECT_KEY
 
 
 class AmortizationLedgerRepository:
@@ -231,27 +201,20 @@ class AmortizationLedgerRepository:
     payload type is :class:`aeat.domain.profile.assets.AmortizationLedger`.
     """
 
-    def __init__(self, *, store_dir: Path) -> None:
-        """Initialize the repository.
-
-        Args:
-            store_dir: Directory in which the encrypted envelope and lock
-                sidecar live.
-        """
-        self._store_dir = Path(store_dir)
+    def __init__(self) -> None:
         self._objects = SecureObjectRepository()
 
     @property
     def envelope_path(self) -> Path:
         """Logical path retained for callers that display the storage target."""
 
-        return self._store_dir / ASSETS_AMORTIZATION_LEDGER_FILENAME
+        return Path("db://secure_objects") / _AMORTIZATION_NAMESPACE / ASSETS_AMORTIZATION_LEDGER_FILENAME
 
     @property
     def lock_target(self) -> Path:
-        """Logical lock target retained for API stability."""
+        """Logical lock marker; SQL transactions govern writes."""
 
-        return self._store_dir / "assets-amortization-ledger.lock"
+        return Path("db://secure_objects") / _AMORTIZATION_NAMESPACE / "assets-amortization-ledger.lock"
 
     def load(self) -> AmortizationLedger:
         """Load the ledger, returning an empty document when absent.
@@ -304,14 +267,13 @@ class AmortizationLedgerRepository:
 
     @property
     def _object_key(self) -> str:
-        return self._store_dir.as_posix()
+        return _LEDGER_OBJECT_KEY
 
 
 __all__ = [
     "AmortizationLedgerRepository",
     "AssetsLedgerRepository",
     "add_asset",
-    "default_storage_dir",
     "load_amortization_ledger",
     "load_assets",
     "save_amortization_ledger",

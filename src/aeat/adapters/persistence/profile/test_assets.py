@@ -45,11 +45,11 @@ def _asset(identifier: str, asset_class: AssetClass, cost_basis: str = "10000.00
     )
 
 
-def test_asset_persistence_round_trip(tmp_path) -> None:
+def test_asset_persistence_round_trip() -> None:
     asset = _asset("pc", AssetClass.ELECTRONICA_INFORMATICA)
 
-    save_assets((asset,), storage_dir=tmp_path)
-    loaded = load_assets(storage_dir=tmp_path)
+    save_assets((asset,))
+    loaded = load_assets()
 
     assert loaded == (asset,)
 
@@ -68,7 +68,7 @@ def test_asset_persistence_is_encrypted_financial_secure_object(tmp_path) -> Non
         cost_basis=Decimal("1105.00"),
     )
 
-    path = save_assets((asset,), storage_dir=tmp_path)
+    path = save_assets((asset,))
     db_bytes = (tmp_path / "aeat.db").read_bytes()
 
     assert not path.exists()
@@ -76,9 +76,9 @@ def test_asset_persistence_is_encrypted_financial_secure_object(tmp_path) -> Non
     assert b'"nas"' not in db_bytes
 
 
-def test_amortization_ledger_persistence_round_trip(tmp_path) -> None:
+def test_amortization_ledger_persistence_round_trip() -> None:
     ledger = AmortizationLedger(entries=(AmortizationEntry(asset_id="pc", year=2025, amount=Decimal("100.00")),))
 
-    save_amortization_ledger(ledger, storage_dir=tmp_path)
+    save_amortization_ledger(ledger)
 
-    assert load_amortization_ledger(storage_dir=tmp_path) == ledger
+    assert load_amortization_ledger() == ledger
