@@ -23,8 +23,7 @@ from aeat.adapters.outbound.aeat.sede._groi_check import (
     GroiSedeDriver,
     extract_verdict_from_response_text,
 )
-from aeat.domain.calculations.registry import RegistryValidationError
-from aeat.domain.calculations.registry._groi_oracle import AEAT_GROI_URL, GROI_ORACLE_ID
+from aeat.domain.calculations.registry import AEAT_GROI_URL, GROI_ORACLE_ID, RegistryValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

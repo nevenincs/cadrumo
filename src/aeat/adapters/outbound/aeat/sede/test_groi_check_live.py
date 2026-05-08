@@ -30,7 +30,7 @@ from aeat.adapters.outbound.aeat.sede._groi_check import (
     extract_verdict_from_response_text,
 )
 from aeat.core.config import Settings
-from aeat.domain.calculations.registry._groi_oracle import AEAT_GROI_URL
+from aeat.domain.calculations.registry import AEAT_GROI_URL
 from aeat.entrypoints.cli._live import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
