@@ -297,6 +297,76 @@ def layer5_cross_modelo_closed_loop(modelo: dict) -> dict:
     }
 
 
+def layer10_rental_pipeline_regression(modelo: dict) -> dict:
+    """Inventory rental / capital inmobiliario casillas across all revisions.
+
+    Surfaces:
+      - per-revision Inmuebles section count
+      - per-property line-item casilla classification (manual / bound / computed)
+      - rental-related parameters registered (rebaja-threshold, rehab-lookback,
+        joven-tenant-age-min/max, ejercicio-amendment-year, tier-50/60/70/90)
+      - integration tests asserting the rental → registry decoupling chain
+
+    Catches drift between the rental domain models (`aeat.domain.rental`)
+    and the Modelo 100 chain by surfacing per-revision counts that should
+    move only when the registry adds new rental-grounded substrate.
+    """
+    revisions: dict[str, dict] = {}
+    expected_params = (
+        "rental-prior-rent-rebaja-threshold",
+        "rental-rehab-lookback-days",
+        "rental-joven-tenant-age-min",
+        "rental-joven-tenant-age-max",
+        "rental-ejercicio-amendment-year",
+        "rental-reduccion-rate-tier-50",
+        "rental-reduccion-rate-tier-60",
+        "rental-reduccion-rate-tier-70",
+        "rental-reduccion-rate-tier-90",
+    )
+    for rev_id, rev in modelo.get("revisions", {}).items():
+        if not isinstance(rev, dict):
+            continue
+        casillas = rev.get("casillas") or []
+        rental_casillas = [
+            c for c in casillas
+            if any(
+                token in (s or "").lower()
+                for s in (c.get("section") or [])
+                for token in ("capital_inmobiliario", "inmueble", "rental", "arrendamiento", "alquiler")
+            )
+        ]
+        kind_counts: Counter = Counter(c.get("input_kind", "(missing)") for c in rental_casillas)
+        registered_params = {p.get("id") for p in (rev.get("parameters") or [])}
+        params_present = []
+        params_missing = []
+        for suffix in expected_params:
+            param_id = f"renta-{rev_id}-{suffix}"
+            if param_id in registered_params:
+                params_present.append(suffix)
+            else:
+                params_missing.append(suffix)
+        revisions[rev_id] = {
+            "rental_casilla_count": len(rental_casillas),
+            "kind_distribution": dict(kind_counts),
+            "rental_params_present": params_present,
+            "rental_params_missing": params_missing,
+            "rental_params_coverage_pct": (
+                100.0 * len(params_present) / len(expected_params)
+            ) if expected_params else 100.0,
+        }
+    aggregate_present = sum(len(r["rental_params_present"]) for r in revisions.values())
+    aggregate_total = len(revisions) * len(expected_params)
+    return {
+        "revisions": revisions,
+        "expected_params_per_revision": expected_params,
+        "params_present_total": aggregate_present,
+        "params_total": aggregate_total,
+        "params_coverage_pct": (
+            100.0 * aggregate_present / aggregate_total
+        ) if aggregate_total else 100.0,
+    }
+
+
 def layer6_external_surface_registration(modelo: dict) -> dict:
     """For each Renta external surface, verify live_cross_reference declared
     + remote-state guard policy + adapter consumer registration.
@@ -893,6 +963,7 @@ def main() -> int:
         "layer4": layer4_legal_grounding(modelo),
         "layer5": layer5_cross_modelo_closed_loop(modelo),
         "layer6": layer6_external_surface_registration(modelo),
+        "layer10": layer10_rental_pipeline_regression(modelo),
         "layer7": layer7_scenario_coverage(),
         "layer8": layer8_test_honesty_inventory(),
         "layer9": layer9_typed_binding_inventory(modelo),

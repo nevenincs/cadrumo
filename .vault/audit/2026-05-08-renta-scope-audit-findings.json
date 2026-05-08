@@ -452,6 +452,139 @@
       ]
     }
   },
+  "layer10": {
+    "revisions": {
+      "2020": {
+        "rental_casilla_count": 165,
+        "kind_distribution": {
+          "manual": 165
+        },
+        "rental_params_present": [
+          "rental-prior-rent-rebaja-threshold",
+          "rental-rehab-lookback-days",
+          "rental-joven-tenant-age-min",
+          "rental-joven-tenant-age-max",
+          "rental-ejercicio-amendment-year",
+          "rental-reduccion-rate-tier-50",
+          "rental-reduccion-rate-tier-60",
+          "rental-reduccion-rate-tier-70",
+          "rental-reduccion-rate-tier-90"
+        ],
+        "rental_params_missing": [],
+        "rental_params_coverage_pct": 100.0
+      },
+      "2021": {
+        "rental_casilla_count": 165,
+        "kind_distribution": {
+          "manual": 165
+        },
+        "rental_params_present": [
+          "rental-prior-rent-rebaja-threshold",
+          "rental-rehab-lookback-days",
+          "rental-joven-tenant-age-min",
+          "rental-joven-tenant-age-max",
+          "rental-ejercicio-amendment-year",
+          "rental-reduccion-rate-tier-50",
+          "rental-reduccion-rate-tier-60",
+          "rental-reduccion-rate-tier-70",
+          "rental-reduccion-rate-tier-90"
+        ],
+        "rental_params_missing": [],
+        "rental_params_coverage_pct": 100.0
+      },
+      "2022": {
+        "rental_casilla_count": 226,
+        "kind_distribution": {
+          "manual": 226
+        },
+        "rental_params_present": [
+          "rental-prior-rent-rebaja-threshold",
+          "rental-rehab-lookback-days",
+          "rental-joven-tenant-age-min",
+          "rental-joven-tenant-age-max",
+          "rental-ejercicio-amendment-year",
+          "rental-reduccion-rate-tier-50",
+          "rental-reduccion-rate-tier-60",
+          "rental-reduccion-rate-tier-70",
+          "rental-reduccion-rate-tier-90"
+        ],
+        "rental_params_missing": [],
+        "rental_params_coverage_pct": 100.0
+      },
+      "2023": {
+        "rental_casilla_count": 231,
+        "kind_distribution": {
+          "manual": 231
+        },
+        "rental_params_present": [
+          "rental-prior-rent-rebaja-threshold",
+          "rental-rehab-lookback-days",
+          "rental-joven-tenant-age-min",
+          "rental-joven-tenant-age-max",
+          "rental-ejercicio-amendment-year",
+          "rental-reduccion-rate-tier-50",
+          "rental-reduccion-rate-tier-60",
+          "rental-reduccion-rate-tier-70",
+          "rental-reduccion-rate-tier-90"
+        ],
+        "rental_params_missing": [],
+        "rental_params_coverage_pct": 100.0
+      },
+      "2024": {
+        "rental_casilla_count": 231,
+        "kind_distribution": {
+          "manual": 231
+        },
+        "rental_params_present": [
+          "rental-prior-rent-rebaja-threshold",
+          "rental-rehab-lookback-days",
+          "rental-joven-tenant-age-min",
+          "rental-joven-tenant-age-max",
+          "rental-ejercicio-amendment-year",
+          "rental-reduccion-rate-tier-50",
+          "rental-reduccion-rate-tier-60",
+          "rental-reduccion-rate-tier-70",
+          "rental-reduccion-rate-tier-90"
+        ],
+        "rental_params_missing": [],
+        "rental_params_coverage_pct": 100.0
+      },
+      "2025": {
+        "rental_casilla_count": 230,
+        "kind_distribution": {
+          "manual": 226,
+          "computed": 4
+        },
+        "rental_params_present": [
+          "rental-prior-rent-rebaja-threshold",
+          "rental-rehab-lookback-days",
+          "rental-joven-tenant-age-min",
+          "rental-joven-tenant-age-max",
+          "rental-ejercicio-amendment-year",
+          "rental-reduccion-rate-tier-50",
+          "rental-reduccion-rate-tier-60",
+          "rental-reduccion-rate-tier-70",
+          "rental-reduccion-rate-tier-90"
+        ],
+        "rental_params_missing": [],
+        "rental_params_coverage_pct": 100.0
+      }
+    },
+    "expected_params_per_revision": [
+      "rental-prior-rent-rebaja-threshold",
+      "rental-rehab-lookback-days",
+      "rental-joven-tenant-age-min",
+      "rental-joven-tenant-age-max",
+      "rental-ejercicio-amendment-year",
+      "rental-reduccion-rate-tier-50",
+      "rental-reduccion-rate-tier-60",
+      "rental-reduccion-rate-tier-70",
+      "rental-reduccion-rate-tier-90"
+    ],
+    "params_present_total": 54,
+    "params_total": 54,
+    "params_coverage_pct": 100.0
+  },
   "layer7": {
     "A1_employee_only": {
       "label": "Employee only (single income, no deductions)",
