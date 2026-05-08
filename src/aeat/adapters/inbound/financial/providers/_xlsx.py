@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
+from typing import Any
 
 from openpyxl import load_workbook
 from openpyxl.workbook import Workbook
@@ -173,7 +174,7 @@ class XlsxProvider(FinancialProvider):
     def _locate_sheet(
         self,
         path: Path,
-    ) -> tuple[Workbook, list[list[object]], str, CsvBankLayout | None, list[str] | None, dict[str, str] | None, int]:
+    ) -> tuple[Workbook, list[list[Any]], str, CsvBankLayout | None, list[str] | None, dict[str, str] | None, int]:
         """Return the first worksheet that matches a known bank layout."""
         try:
             workbook = load_workbook(filename=path, read_only=True, data_only=True)

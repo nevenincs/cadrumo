@@ -38,6 +38,7 @@ def _write_formula_workbook(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     workbook = Workbook()
     worksheet = workbook.active
+    assert worksheet is not None
     worksheet.title = "Modelo"
     worksheet["A1"] = Decimal("10")
     worksheet["A2"] = Decimal("21")
