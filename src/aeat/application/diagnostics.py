@@ -337,13 +337,27 @@ def render_cli_version_text(report: CliVersionReport) -> str:
     )
 
 
+def secure_object_unreadable_total() -> int:
+    """Return the count of rows the current master key cannot decrypt.
+
+    Lightweight wrapper over :func:`_probe_secure_objects_integrity` for
+    consumers (notably ``aeat app overview status``) that want to surface
+    a concise "N rows unreadable" pointer towards
+    ``aeat config doctor`` without rendering the per-namespace breakdown
+    themselves. The full breakdown remains the authority of doctor.
+    """
+    return _probe_secure_objects_integrity().unreadable_total
+
+
 __all__ = [
     "CliVersionReport",
     "ConfigDoctorReport",
     "DiagnosticCheck",
     "RegistryVersionSummary",
+    "SecureObjectIntegrityReport",
     "build_cli_version_report",
     "build_config_doctor_report",
     "render_cli_version_text",
     "render_config_doctor_text",
+    "secure_object_unreadable_total",
 ]

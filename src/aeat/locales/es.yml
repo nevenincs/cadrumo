@@ -580,6 +580,7 @@ cli:
     from_help: Fecha inicial del calendario (AAAA-MM-DD)
     header: "Modelo\tPeriodo\tEstado\tAbre\tCierra"
     invoices: Facturas
+    integrity_warning: "%{count} fila(s) locales no se pueden descifrar bajo la clave maestra actual; ejecuta 'aeat config doctor' para detalle."
     period: Periodo
     period_help: Periodo fiscal a revisar (por ejemplo, 2026-Q1)
     profile: Perfil

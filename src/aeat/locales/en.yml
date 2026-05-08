@@ -572,6 +572,7 @@ cli:
     from_help: Calendar start date (YYYY-MM-DD)
     header: "Model\tPeriod\tState\tOpens\tCloses"
     invoices: Invoices
+    integrity_warning: "%{count} local row(s) cannot be decrypted under the current master key; run 'aeat config doctor' for detail."
     period: Period
     period_help: Tax period to review (for example, 2026-Q1)
     profile: Profile

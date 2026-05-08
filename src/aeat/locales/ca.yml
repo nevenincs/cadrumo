@@ -576,6 +576,7 @@ cli:
     from_help: Data inicial del calendari (AAAA-MM-DD)
     header: "Model\tPeríode\tEstat\tObre\tTanca"
     invoices: Factures
+    integrity_warning: "%{count} fila(es) locals no es poden desxifrar amb la clau mestra actual; executeu 'aeat config doctor' per al detall."
     period: Període
     period_help: Període fiscal a revisar (per exemple, 2026-Q1)
     profile: Perfil

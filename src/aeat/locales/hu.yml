@@ -589,6 +589,7 @@ cli:
     from_help: Naptár kezdő dátuma (YYYY-MM-DD)
     header: "Modell\tIdőszak\tÁllapot\tNyit\tZár"
     invoices: Számlák
+    integrity_warning: "%{count} helyi sor nem dekódolható az aktuális főkulccsal; futtasd: 'aeat config doctor' a részletekért."
     period: Időszak
     period_help: Ellenőrizendő adózási időszak (például 2026-Q1)
     profile: Profil
