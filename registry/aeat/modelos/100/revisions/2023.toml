@@ -1729,6 +1729,1032 @@ source_refs = ["aeat-dr-100-2023-dictionary", "lirpf-cuota-chain-authority"]
 source_ref = "lirpf-cuota-chain-authority"
 required_text = ["estimación directa", "rendimiento neto"]
 
+[[revisions."2023".bindings]]
+id = "renta-2023-profile-tax-residence-ccaa"
+source = "profile"
+selector = { profile_model = "TaxResidenceProfile", field = "ccaa", xsd_attribute = "codigoCADeclaracion", dictionary_field = "ZCCAD" }
+aggregation = { op = "copy" }
+typed_enum = "RentaCCAA"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-dr-100-2023-dictionary", "boe-modelo-100-2023-form"]
+
+[[revisions."2023".bindings.source_citations]]
+source_ref = "boe-modelo-100-2023-form"
+required_text = ["Modelo 100", "ejercicio 2023"]
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-andalucia-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad Autónoma de Andalucía", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "13000"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "13000"
+upper_bound = "21100"
+fixed_addition = "1235"
+marginal_rate = "0.12"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "21100"
+upper_bound = "35200"
+fixed_addition = "2207"
+marginal_rate = "0.15"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "35200"
+upper_bound = "60000"
+fixed_addition = "4322"
+marginal_rate = "0.185"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "60000"
+fixed_addition = "8910"
+marginal_rate = "0.225"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-aragon-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad Autónoma de Aragón", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "13072.50"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "13072.50"
+upper_bound = "21210.00"
+fixed_addition = "1241.89"
+marginal_rate = "0.12"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "21210.00"
+upper_bound = "36960.00"
+fixed_addition = "2218.39"
+marginal_rate = "0.15"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "36960.00"
+upper_bound = "52500.00"
+fixed_addition = "4580.89"
+marginal_rate = "0.185"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "52500.00"
+upper_bound = "60000.00"
+fixed_addition = "7455.79"
+marginal_rate = "0.205"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "60000.00"
+upper_bound = "80000.00"
+fixed_addition = "8993.29"
+marginal_rate = "0.23"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "80000.00"
+upper_bound = "90000.00"
+fixed_addition = "13593.29"
+marginal_rate = "0.24"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "90000.00"
+upper_bound = "130000.00"
+fixed_addition = "15993.29"
+marginal_rate = "0.25"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "130000.00"
+fixed_addition = "25993.29"
+marginal_rate = "0.255"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-asturias-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Principado de Asturias", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.10"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "17707.20"
+fixed_addition = "1245.00"
+marginal_rate = "0.12"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "17707.20"
+upper_bound = "33007.20"
+fixed_addition = "1875.86"
+marginal_rate = "0.14"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "33007.20"
+upper_bound = "53407.20"
+fixed_addition = "4017.86"
+marginal_rate = "0.185"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "53407.20"
+upper_bound = "70000.00"
+fixed_addition = "7791.86"
+marginal_rate = "0.215"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "70000.00"
+upper_bound = "90000.00"
+fixed_addition = "11359.32"
+marginal_rate = "0.225"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "90000.00"
+upper_bound = "175000.00"
+fixed_addition = "15859.32"
+marginal_rate = "0.25"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "175000.00"
+fixed_addition = "37109.32"
+marginal_rate = "0.255"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-baleares-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Illes Balears", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "10000"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "10000"
+upper_bound = "18000"
+fixed_addition = "950"
+marginal_rate = "0.1175"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "18000"
+upper_bound = "30000"
+fixed_addition = "1890"
+marginal_rate = "0.1475"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "30000"
+upper_bound = "48000"
+fixed_addition = "3660"
+marginal_rate = "0.1775"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "48000"
+upper_bound = "70000"
+fixed_addition = "6855"
+marginal_rate = "0.1925"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "70000"
+upper_bound = "90000"
+fixed_addition = "11090"
+marginal_rate = "0.22"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "90000"
+upper_bound = "120000"
+fixed_addition = "15490"
+marginal_rate = "0.23"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "120000"
+upper_bound = "175000"
+fixed_addition = "22390"
+marginal_rate = "0.24"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "175000"
+fixed_addition = "35590"
+marginal_rate = "0.25"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-canarias-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad Autónoma de Canarias", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "13010"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "13010"
+upper_bound = "18468"
+fixed_addition = "1170.90"
+marginal_rate = "0.115"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "18468"
+upper_bound = "34327"
+fixed_addition = "1798.57"
+marginal_rate = "0.14"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "34327"
+upper_bound = "55276"
+fixed_addition = "4018.83"
+marginal_rate = "0.185"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "55276"
+upper_bound = "90000"
+fixed_addition = "7894.39"
+marginal_rate = "0.235"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "90000"
+upper_bound = "120000"
+fixed_addition = "16054.53"
+marginal_rate = "0.25"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "120000"
+fixed_addition = "23554.53"
+marginal_rate = "0.26"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-cantabria-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad Autónoma de Cantabria", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "1182.75"
+marginal_rate = "0.12"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "34000.00"
+fixed_addition = "2112.75"
+marginal_rate = "0.15"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "34000.00"
+upper_bound = "46000.00"
+fixed_addition = "4182.75"
+marginal_rate = "0.185"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "46000.00"
+upper_bound = "60000.00"
+fixed_addition = "6402.75"
+marginal_rate = "0.195"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "60000.00"
+upper_bound = "90000.00"
+fixed_addition = "9132.75"
+marginal_rate = "0.245"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "90000.00"
+fixed_addition = "16482.75"
+marginal_rate = "0.255"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-castilla-la-mancha-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad Autónoma de Castilla-La Mancha", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "1182.75"
+marginal_rate = "0.12"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "35200.00"
+fixed_addition = "2112.75"
+marginal_rate = "0.15"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "35200.00"
+upper_bound = "60000.00"
+fixed_addition = "4362.75"
+marginal_rate = "0.185"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "60000.00"
+fixed_addition = "8950.75"
+marginal_rate = "0.225"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-castilla-y-leon-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad de Castilla y León", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "1120.50"
+marginal_rate = "0.12"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "35200.00"
+fixed_addition = "2050.50"
+marginal_rate = "0.14"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "35200.00"
+upper_bound = "53407.20"
+fixed_addition = "4150.50"
+marginal_rate = "0.185"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "53407.20"
+fixed_addition = "7518.83"
+marginal_rate = "0.215"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-cataluna-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad Autónoma de Cataluña", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.105"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "17707.20"
+fixed_addition = "1307.25"
+marginal_rate = "0.12"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "17707.20"
+upper_bound = "21000.00"
+fixed_addition = "1938.11"
+marginal_rate = "0.14"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "21000.00"
+upper_bound = "33007.20"
+fixed_addition = "2399.10"
+marginal_rate = "0.15"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "33007.20"
+upper_bound = "53407.20"
+fixed_addition = "4200.18"
+marginal_rate = "0.188"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "53407.20"
+upper_bound = "90000.00"
+fixed_addition = "8035.38"
+marginal_rate = "0.215"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "90000.00"
+upper_bound = "120000.00"
+fixed_addition = "15902.83"
+marginal_rate = "0.235"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "120000.00"
+upper_bound = "175000.00"
+fixed_addition = "22952.83"
+marginal_rate = "0.245"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "175000.00"
+fixed_addition = "36427.83"
+marginal_rate = "0.255"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-comunidad-valenciana-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunitat Valenciana", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12000"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "12000"
+upper_bound = "22000"
+fixed_addition = "1080"
+marginal_rate = "0.12"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "22000"
+upper_bound = "32000"
+fixed_addition = "2280"
+marginal_rate = "0.15"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "32000"
+upper_bound = "42000"
+fixed_addition = "3780"
+marginal_rate = "0.175"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "42000"
+upper_bound = "52000"
+fixed_addition = "5530"
+marginal_rate = "0.2"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "52000"
+upper_bound = "62000"
+fixed_addition = "7530"
+marginal_rate = "0.225"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "62000"
+upper_bound = "72000"
+fixed_addition = "9780"
+marginal_rate = "0.25"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "72000"
+upper_bound = "100000"
+fixed_addition = "12280"
+marginal_rate = "0.265"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "100000"
+upper_bound = "150000"
+fixed_addition = "19700"
+marginal_rate = "0.275"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "150000"
+upper_bound = "200000"
+fixed_addition = "33450"
+marginal_rate = "0.285"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "200000"
+fixed_addition = "47700"
+marginal_rate = "0.295"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-extremadura-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad Autónoma de Extremadura", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.08"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "996.00"
+marginal_rate = "0.10"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "24200.00"
+fixed_addition = "1771.00"
+marginal_rate = "0.16"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "24200.00"
+upper_bound = "35200.00"
+fixed_addition = "2411.00"
+marginal_rate = "0.175"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "35200.00"
+upper_bound = "60000.00"
+fixed_addition = "4336.00"
+marginal_rate = "0.21"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "60000.00"
+upper_bound = "80200.00"
+fixed_addition = "9544.00"
+marginal_rate = "0.235"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "80200.00"
+upper_bound = "99200.00"
+fixed_addition = "14291.00"
+marginal_rate = "0.24"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "99200.00"
+upper_bound = "120200.00"
+fixed_addition = "18851.00"
+marginal_rate = "0.245"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "120200.00"
+fixed_addition = "23996.00"
+marginal_rate = "0.25"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-galicia-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad Autónoma de Galicia", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12985.35"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "12985.35"
+upper_bound = "21068.60"
+fixed_addition = "1168.68"
+marginal_rate = "0.1165"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "21068.60"
+upper_bound = "35200.00"
+fixed_addition = "2110.38"
+marginal_rate = "0.149"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "35200.00"
+upper_bound = "60000.00"
+fixed_addition = "4215.96"
+marginal_rate = "0.184"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "60000.00"
+fixed_addition = "8779.16"
+marginal_rate = "0.225"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-la-rioja-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad Autónoma de La Rioja", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.09"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "1120.50"
+marginal_rate = "0.116"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "35200.00"
+fixed_addition = "2019.50"
+marginal_rate = "0.146"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "35200.00"
+upper_bound = "50000.00"
+fixed_addition = "4209.50"
+marginal_rate = "0.188"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "50000.00"
+upper_bound = "60000.00"
+fixed_addition = "6991.90"
+marginal_rate = "0.195"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "60000.00"
+upper_bound = "120000.00"
+fixed_addition = "8941.90"
+marginal_rate = "0.25"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "120000.00"
+fixed_addition = "23941.90"
+marginal_rate = "0.27"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-madrid-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Comunidad de Madrid", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "13362.22"
+fixed_addition = "0"
+marginal_rate = "0.085"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "13362.22"
+upper_bound = "19004.63"
+fixed_addition = "1135.79"
+marginal_rate = "0.107"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "19004.63"
+upper_bound = "35425.68"
+fixed_addition = "1739.53"
+marginal_rate = "0.128"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "35425.68"
+upper_bound = "57320.40"
+fixed_addition = "3841.42"
+marginal_rate = "0.174"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "57320.40"
+fixed_addition = "7651.10"
+marginal_rate = "0.205"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters]]
+id = "renta-2023-escala-autonomica-murcia-base-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-35-2006:art-74"]
+source_refs = ["aeat-renta-2023-manual-parte1"]
+
+[[revisions."2023".parameters.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = ["Región de Murcia", "escala autonómica"]
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "12450.00"
+fixed_addition = "0"
+marginal_rate = "0.095"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "12450.00"
+upper_bound = "20200.00"
+fixed_addition = "1182.75"
+marginal_rate = "0.112"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "20200.00"
+upper_bound = "34000.00"
+fixed_addition = "2050.75"
+marginal_rate = "0.133"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "34000.00"
+upper_bound = "60000.00"
+fixed_addition = "3886.15"
+marginal_rate = "0.179"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
+[[revisions."2023".parameters.brackets]]
+lower_bound = "60000.00"
+fixed_addition = "8540.15"
+marginal_rate = "0.225"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+
 [[revisions."2023".parameters]]
 id = "renta-2023-escala-estatal-base-general"
 data_type = "bracket_table"
