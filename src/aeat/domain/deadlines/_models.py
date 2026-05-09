@@ -11,6 +11,7 @@ from :mod:`aeat.domain.deadlines`.
 from __future__ import annotations
 
 from datetime import date, datetime
+from decimal import Decimal
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -135,6 +136,79 @@ class AutonomoProfile(BaseModel):
     notes: str = ""
 
 
+class RecargoBand(BaseModel):
+    """One Ley 58/2003 art-27 recargo band loaded from the registry TOML.
+
+    The bracket table at
+    ``registry/aeat/legal/ley-58-2003-recargo-bands.toml`` carries the
+    surcharge schedule for self-assessments filed after the deadline
+    without prior AEAT notice. Each row materialises into one
+    :class:`RecargoBand`; the :class:`Recovery` value attached to an
+    OVERDUE :class:`FilingObligation` references the resolved band
+    by ``id``.
+
+    Attributes:
+        id: Stable identifier (``within_30_days``, ``after_12_months``,
+            ...). Used by the CLI for per-band rendering.
+        min_days_late: Inclusive lower bound on the days-late window
+            this band covers.
+        max_days_late: Inclusive upper bound, or ``None`` for the
+            open-ended ``after_12_months`` band.
+        surcharge_pct: Recargo percentage applied on the cuota.
+        interest_applies: True only for the after-12-months band; the
+            CLI renders the interest hint when set.
+        legal_ref: Stable corpus reference (``ley-58-2003:art-27.2``).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    id: str = Field(min_length=1, max_length=64)
+    min_days_late: int = Field(ge=1)
+    max_days_late: int | None = None
+    surcharge_pct: Decimal
+    interest_applies: bool = False
+    legal_ref: str = Field(min_length=1, max_length=128)
+
+    @model_validator(mode="after")
+    def _validate_window(self) -> RecargoBand:
+        if self.max_days_late is not None and self.max_days_late < self.min_days_late:
+            raise ValueError(
+                f"RecargoBand {self.id}: max_days_late ({self.max_days_late}) "
+                f"is below min_days_late ({self.min_days_late})"
+            )
+        return self
+
+
+class Recovery(BaseModel):
+    """Operator-facing recovery payload attached to an OVERDUE obligation.
+
+    Surfaces the resolved Ley 58/2003 art-27 recargo band plus a runnable
+    next-action command the operator can copy. The CLI's calendar
+    renderer surfaces ``recovery\\t<band_id>\\t<surcharge_pct>%\\t<next_command>``
+    underneath each OVERDUE entry.
+
+    Attributes:
+        still_filable: True for every band -- art-27 self-assessments
+            remain admissible past the original deadline; the surcharge
+            is the only consequence. The flag exists so a future band
+            for absolutely-time-barred filings can be added without
+            reshaping the model.
+        recargo_band: The :class:`RecargoBand` resolved from the
+            ``days_late`` window.
+        legal_ref: Same as ``recargo_band.legal_ref``; carried at the
+            top level so renderers do not dereference.
+        next_command: Literal shell command the operator can copy to
+            calculate the late filing.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    still_filable: bool = True
+    recargo_band: RecargoBand
+    legal_ref: str = Field(min_length=1, max_length=128)
+    next_command: str = Field(min_length=1, max_length=256)
+
+
 class FilingObligation(BaseModel):
     """A single filing obligation in a :class:`Schedule`.
 
@@ -157,6 +231,10 @@ class FilingObligation(BaseModel):
             deadline applicability rule.
         boe_references: Tuple of opaque BOE / Manual práctico citation
             keys. Stable identifiers, never URLs.
+        recovery: Resolved :class:`Recovery` payload when ``status`` is
+            ``OVERDUE``; ``None`` for every other status. Populated by
+            the deadline engine using the days-late window and the
+            registry's recargo bracket table.
     """
 
     model_config = _STRICT_FROZEN
@@ -169,6 +247,7 @@ class FilingObligation(BaseModel):
     status: ObligationStatus
     applies_because: str = Field(min_length=1)
     boe_references: tuple[str, ...] = Field(default_factory=tuple)
+    recovery: Recovery | None = None
 
     @model_validator(mode="after")
     def _check_window_order(self) -> FilingObligation:

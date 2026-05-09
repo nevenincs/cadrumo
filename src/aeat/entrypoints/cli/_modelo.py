@@ -12,12 +12,13 @@ from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
 from ...domain.calculations.registry._errors import RegistrySnapshotError
 from ._common import _emit, _parse_iso_date
+from ._i18n import tr
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
 
 app = typer.Typer(
     name="modelo",
-    help="Inspect modelo registry schemas, casillas, bindings, and formulas",
+    help=tr("cli.app.modelo.app_help"),
     no_args_is_help=True,
 )
 
@@ -41,7 +42,7 @@ def _run_query[T](call: Callable[[], T]) -> T:
 @app.command("list")
 def list_modelos(
     ctx: typer.Context,
-    year: Annotated[int | None, typer.Option("--year", help="Filter modelos covering this filing year.")] = None,
+    year: Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.list.year_help"))] = None,
 ) -> None:
     report = _run_query(lambda: _service().list_modelos(year=year))
     _emit(
@@ -60,9 +61,9 @@ def list_modelos(
 @app.command("describe")
 def describe_modelo(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Argument(help="Modelo code, for example 303 or 130.")],
-    period: Annotated[str | None, typer.Option("--period", help="Filing period, for example 2026Q1.")] = None,
-    as_of: Annotated[str | None, typer.Option("--as-of", help="Revision date selector in YYYY-MM-DD format.")] = None,
+    modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.describe.modelo_help"))],
+    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.describe.period_help"))] = None,
+    as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.describe.as_of_help"))] = None,
 ) -> None:
     report = _run_query(lambda: _service().describe_modelo(modelo, period=period, as_of=_as_of(as_of)))
     _emit(
@@ -86,14 +87,14 @@ def describe_modelo(
 @app.command("casillas")
 def casillas(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Argument(help="Modelo code, for example 303 or 130.")],
-    period: Annotated[str | None, typer.Option("--period", help="Filing period, for example 2026Q1.")] = None,
-    as_of: Annotated[str | None, typer.Option("--as-of", help="Revision date selector in YYYY-MM-DD format.")] = None,
+    modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.casillas.modelo_help"))],
+    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.casillas.period_help"))] = None,
+    as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.casillas.as_of_help"))] = None,
     input_kind: Annotated[
         InputKind | None,
-        typer.Option("--input-kind", help="Filter by casilla input kind."),
+        typer.Option("--input-kind", help=tr("cli.app.modelo.casillas.input_kind_help")),
     ] = None,
-    required: Annotated[bool, typer.Option("--required", help="Show only required casillas.")] = False,
+    required: Annotated[bool, typer.Option("--required", help=tr("cli.app.modelo.casillas.required_help"))] = False,
 ) -> None:
     report = _run_query(
         lambda: _service().casillas(
@@ -120,9 +121,9 @@ def casillas(
 @app.command("bindings")
 def bindings(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Argument(help="Modelo code, for example 303 or 130.")],
-    period: Annotated[str | None, typer.Option("--period", help="Filing period, for example 2026Q1.")] = None,
-    as_of: Annotated[str | None, typer.Option("--as-of", help="Revision date selector in YYYY-MM-DD format.")] = None,
+    modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.bindings.modelo_help"))],
+    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help"))] = None,
+    as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help"))] = None,
 ) -> None:
     report = _run_query(lambda: _service().bindings(modelo, period=period, as_of=_as_of(as_of)))
     _emit(
@@ -138,9 +139,9 @@ def bindings(
 @app.command("formulas")
 def formulas(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Argument(help="Modelo code, for example 303 or 130.")],
-    period: Annotated[str | None, typer.Option("--period", help="Filing period, for example 2026Q1.")] = None,
-    as_of: Annotated[str | None, typer.Option("--as-of", help="Revision date selector in YYYY-MM-DD format.")] = None,
+    modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.formulas.modelo_help"))],
+    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.formulas.period_help"))] = None,
+    as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.formulas.as_of_help"))] = None,
 ) -> None:
     report = _run_query(lambda: _service().formulas(modelo, period=period, as_of=_as_of(as_of)))
     _emit(
