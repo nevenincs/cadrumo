@@ -6,7 +6,6 @@ date: "2026-04-18"
 related:
   - "[[2026-04-18-unclassified-state-research]]"
   - "[[2026-04-14-transaction-catalogue-adr]]"
-  - "[[2026-04-17-kent-revise-review-audit]]"
 ---
 
 # `unclassified-state` adr: `split-unclassified-and-track-classification-history` | (**status:** `accepted`)

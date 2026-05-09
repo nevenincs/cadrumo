@@ -5,7 +5,6 @@ tags:
   - '#index'
 date: '2026-04-27'
 related:
-  - '[[2026-04-17-kent-ux-journey-audit]]'
 ---
 
 # `kent-ux-journey` feature index

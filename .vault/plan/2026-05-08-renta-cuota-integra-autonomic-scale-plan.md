@@ -5,8 +5,8 @@ tags:
 date: '2026-05-08'
 related:
   - "[[2026-05-08-renta-cuota-integra-autonomic-scale-adr]]"
+  - "[[2026-05-08-renta-cuota-integra-autonomic-scale-research]]"
 ---
-
 # `renta-cuota-integra-autonomic-scale` plan
 
 Implementation plan grounded in the

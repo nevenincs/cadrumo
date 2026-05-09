@@ -4,7 +4,6 @@ tags:
   - "#restructure-execution"
 date: 2025-05-22
 related:
-  - "[[2025-05-22-restructure-execution-phase1-plan]]"
 ---
 
 # Audit and Fix locales/es.yml

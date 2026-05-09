@@ -4,7 +4,6 @@ tags:
   - "#kent-revise-review"
 date: 2026-04-17
 related:
-  - "[[2026-04-17-kent-ux-journey-audit]]"
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-17-export-first-roadmap-plan]]"
   - "[[2026-04-13-filing-complementaria-review-audit]]"

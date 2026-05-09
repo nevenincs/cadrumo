@@ -12,8 +12,6 @@ date: '2026-04-27'
 # Related documents as quoted wiki-links
 # (e.g., "[[2026-02-04-feature-plan]]")
 related:
-  - "[[2026-04-17-kent-ux-journey-audit]]"
-  - "[[2026-04-17-kent-revise-review-audit]]"
   - "[[2026-04-12-gsuite-bootstrap-audit]]"
   - "[[2026-04-16-submission-safety-sweep-adr-audit]]"
   - "[[2026-04-17-export-first-adr]]"

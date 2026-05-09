@@ -5,7 +5,6 @@ tags:
   - '#index'
 date: '2026-04-27'
 related:
-  - '[[2026-04-24-kent-cli-roleplay-audit]]'
 ---
 
 # `kent-cli-roleplay` feature index

@@ -6,8 +6,6 @@ date: 2026-04-24
 related:
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"
   - "[[2026-04-24-aeat-cli-wireframe-research]]"
-  - "[[2026-04-17-kent-ux-journey-audit]]"
-  - "[[2026-04-18-kent-data-prep-journey-audit]]"
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-unified-review-queue-adr]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"

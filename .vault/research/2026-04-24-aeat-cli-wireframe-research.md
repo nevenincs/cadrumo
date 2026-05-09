@@ -12,8 +12,6 @@ date: '2026-04-24'
 # Related documents as quoted wiki-links
 # (e.g., "[[2026-02-04-feature-plan]]")
 related:
-  - "[[2026-04-17-kent-ux-journey-audit]]"
-  - "[[2026-04-18-kent-data-prep-journey-audit]]"
   - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"
   - "[[2026-04-18-unified-review-queue-adr]]"

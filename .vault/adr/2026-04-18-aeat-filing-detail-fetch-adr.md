@@ -11,7 +11,6 @@ related:
   - "[[2026-04-18-aeat-filing-detail-fetch-research]]"
   - "[[2026-04-12-status-reader-adr]]"
   - "[[2026-04-16-aeat-history-fetch-adr]]"
-  - "[[2026-04-17-kent-revise-review-audit]]"
 ---
 
 # adr — StatusReader.fetch_filing_detail (#227)

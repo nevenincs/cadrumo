@@ -5,7 +5,6 @@ tags:
   - '#index'
 date: '2026-04-27'
 related:
-  - '[[2026-04-18-kent-data-prep-journey-audit]]'
 ---
 
 # `kent-data-prep-journey` feature index
