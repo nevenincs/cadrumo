@@ -17,7 +17,7 @@ related:
   - "[[2026-04-13-p2e-tax-category-catalogue-research]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-research]]"
   - "[[2026-04-28-modelo-100-renta-full-calc-reference]]"
-  - "[[2026-05-08-aeat-cli-hardening-inventory]]"
+  - "[[2026-05-08-aeat-cli-hardening-inventory-audit]]"
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields

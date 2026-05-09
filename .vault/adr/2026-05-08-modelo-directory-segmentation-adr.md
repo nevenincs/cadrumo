@@ -6,8 +6,8 @@ date: '2026-05-08'
 related:
   - "[[2026-05-08-modelo-100-bulk-segmentation-audit]]"
   - "[[2026-05-03-calculation-truth-registry-rebuild-plan]]"
+  - "[[2026-05-04-calculation-authority-evidence-tiering-research]]"
 ---
-
 # modelo-directory-segmentation-adr
 
 ## Context
@@ -177,7 +177,7 @@ declaration before validation. An override:
   id of the same kind.
 - An override MUST reference a shared element that exists.
 - Every casilla referenced by a formula / binding / construct in a
-  revision MUST resolve through (shared + per-revision overrides + 
+  revision MUST resolve through (shared + per-revision overrides +
   revision-local declarations).
 - The audit script's renta-scoped citation walker continues to scan
   `formulas` / `parameters` / `bindings` / `relations` across the

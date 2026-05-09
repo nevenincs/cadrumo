@@ -4,8 +4,6 @@ tags:
   - "#confidence-scoring"
 date: "2026-04-21"
 related:
-  - "[[2026-04-17-kent-revise-review-audit]]"
-  - "[[2026-04-18-kent-data-prep-journey-audit]]"
   - "[[2026-04-18-unclassified-state-adr]]"
 ---
 

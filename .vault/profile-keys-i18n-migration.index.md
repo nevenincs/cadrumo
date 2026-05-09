@@ -4,7 +4,7 @@ tags:
   - '#profile-keys-i18n-migration'
 date: '2026-05-06'
 related:
-  - '[[2025-02-13-profile-keys-i18n-migration]]'
+  - '[[2025-02-13-profile-keys-i18n-migration-exec]]'
 ---
 
 # `profile-keys-i18n-migration` feature index

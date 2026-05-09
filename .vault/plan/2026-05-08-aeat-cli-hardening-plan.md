@@ -2,8 +2,6 @@
 tags: ["#plan", "#aeat-cli-hardening"]
 date: 2026-05-08
 related:
-  - "[[2026-05-06-aeat-cli-gap-discovery-audit]]"
-  - "[[2026-05-06-aeat-cli-gap-discovery-adr]]"
   - "[[2026-04-24-aeat-cli-wireframe-adr]]"
   - "[[2026-05-07-user-profile-backend-schema-plan]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"

@@ -8,8 +8,8 @@ related:
   - '[[2026-05-06-cross-reference-oracle-binding-adr]]'
   - '[[2026-05-06-live-parity-oracle-backend-adr]]'
   - '[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]'
+  - "[[2026-05-06-live-parity-oracle-backend-research]]"
 ---
-
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
      outside the YAML frontmatter above -->
 

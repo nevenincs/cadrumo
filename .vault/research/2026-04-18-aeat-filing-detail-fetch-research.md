@@ -9,8 +9,6 @@ epic: wgergely/aeat#70
 related:
   - "[[2026-04-12-status-reader-adr]]"
   - "[[2026-04-16-aeat-history-fetch-adr]]"
-  - "[[2026-04-17-kent-revise-review-audit]]"
-  - "[[2026-04-17-kent-ux-journey-audit]]"
 ---
 
 # research — StatusReader.fetch_filing_detail (#227)

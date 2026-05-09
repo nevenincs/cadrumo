@@ -6,7 +6,6 @@ date: '2026-04-27'
 related:
   - "[[2026-04-25-mutation-harness-extension-research]]"
   - "[[2026-04-25-mandatory-citations-research]]"
-  - "[[2026-04-25-kent-workflows-expansion-research]]"
 ---
 
 # `modelo-130-calc-verify` research: closing the per-modelo Tier-L bar for 2024 / 2025 / 2026

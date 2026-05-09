@@ -7,7 +7,6 @@ related:
   - '[[2026-04-18-auth-protocol-adr]]'
   - '[[2026-04-18-auth-protocol-plan]]'
   - '[[2026-04-18-auth-protocol-review-audit]]'
-  - '[[2026-04-17-kent-ux-journey-audit]]'
 ---
 
 # `continuous-review` Code Review

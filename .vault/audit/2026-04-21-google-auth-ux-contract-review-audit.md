@@ -6,7 +6,6 @@ date: '2026-04-21'
 related:
   - '[[2026-04-21-google-auth-ux-research]]'
   - '[[2026-04-21-google-auth-ux-adr]]'
-  - '[[2026-04-17-kent-ux-journey-audit]]'
 ---
 
 # `google-auth-ux` Code Review

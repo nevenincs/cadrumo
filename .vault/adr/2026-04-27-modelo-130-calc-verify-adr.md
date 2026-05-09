@@ -7,7 +7,6 @@ related:
   - "[[2026-04-27-modelo-130-calc-verify-research]]"
   - "[[2026-04-25-mandatory-citations-adr]]"
   - "[[2026-04-25-mutation-harness-extension-adr]]"
-  - "[[2026-04-25-kent-workflows-expansion-adr]]"
 ---
 
 # `modelo-130-calc-verify` ADR — child of EPIC `#316`

@@ -4,8 +4,6 @@ tags:
   - "#kent-data-prep-journey"
 date: 2026-04-18
 related:
-  - "[[2026-04-17-kent-ux-journey-audit]]"
-  - "[[2026-04-17-kent-revise-review-audit]]"
   - "[[2026-04-17-export-first-adr]]"
 ---
 

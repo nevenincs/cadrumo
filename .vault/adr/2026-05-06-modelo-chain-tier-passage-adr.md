@@ -6,8 +6,8 @@ date: '2026-05-06'
 related:
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
+  - "[[2026-05-04-calculation-authority-evidence-tiering-research]]"
 ---
-
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
      outside the YAML frontmatter above -->
 

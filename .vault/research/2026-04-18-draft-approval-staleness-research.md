@@ -5,9 +5,7 @@ tags:
 date: "2026-04-18"
 related:
   - "[[2026-04-17-export-first-adr]]"
-  - "[[2026-04-17-kent-revise-review-audit]]"
   - "[[2026-04-17-export-first-roadmap-plan]]"
-  - "[[2026-04-17-kent-ux-journey-audit]]"
 ---
 
 # draft-approval-staleness research: draft approval persistence + deterministic stale detection
