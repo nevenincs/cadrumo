@@ -1,6 +1,10 @@
 aggregation:
   models:
     t_944805: Format de període no vàlid. Useu YYYY, YYYY-Qn o YYYY-MM.
+  renta_ledger:
+    errors:
+      annual_period_required: Es requereix un període anual per a l'agregació del
+        llibre de Renda.
 application:
   auth:
     provider_impact:
@@ -28,6 +32,40 @@ categories:
   test_profile:
     display_label_851219: Etiqueta de visualització 851219
 cli:
+  app:
+    modelo:
+      app_help: cli.app.modelo.app_help
+      bindings:
+        as_of_help: cli.app.modelo.bindings.as_of_help
+        modelo_help: cli.app.modelo.bindings.modelo_help
+        period_help: cli.app.modelo.bindings.period_help
+      casillas:
+        as_of_help: cli.app.modelo.casillas.as_of_help
+        input_kind_help: cli.app.modelo.casillas.input_kind_help
+        modelo_help: cli.app.modelo.casillas.modelo_help
+        period_help: cli.app.modelo.casillas.period_help
+        required_help: cli.app.modelo.casillas.required_help
+      describe:
+        as_of_help: cli.app.modelo.describe.as_of_help
+        modelo_help: cli.app.modelo.describe.modelo_help
+        period_help: cli.app.modelo.describe.period_help
+      formulas:
+        as_of_help: cli.app.modelo.formulas.as_of_help
+        modelo_help: cli.app.modelo.formulas.modelo_help
+        period_help: cli.app.modelo.formulas.period_help
+      list:
+        year_help: cli.app.modelo.list.year_help
+  archive:
+    app_help: cli.archive.app_help
+    export:
+      bundle_id_help: cli.archive.export.bundle_id_help
+      help: cli.archive.export.help
+      namespace_help: cli.archive.export.namespace_help
+      path_help: cli.archive.export.path_help
+    import:
+      conflict_help: cli.archive.import.conflict_help
+      help: cli.archive.import.help
+      path_help: cli.archive.import.path_help
   browser:
     app_help: Gestió de l'automatització del navegador (Playwright)
     health:
@@ -50,8 +88,10 @@ cli:
       help: Diagnosticar configuració local, registre, perfil, autenticació i logs
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
-      quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu; requereix --yes)
-      quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb --yes per confirmar.
+      quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu;
+        requereix --yes)
+      quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
+        --yes per confirmar.
       quarantine_yes_help: Confirmar explícitament l'operació de quarantena
   data:
     app_help: Gestió de dades i registres fiscals
@@ -92,9 +132,11 @@ cli:
     errors:
       activate_profile: Si us plau, activeu un perfil abans de gestionar declaracions
       at_least_one_edit: S'ha d'editar almenys un camp
-      binding_assignment: "Assignacio --binding invalida: %{value}. Useu el format KEY=VALOR (ex: irpf.previous_year_economic_activity_net_income=13000)."
-      binding_value_not_decimal: "El valor del --binding %{value} no es un nombre decimal."
-      draft_selector_ambiguous: "Useu nomes --id o (--modelo + --period); no els dos alhora."
+      binding_assignment: 'Assignacio --binding invalida: %{value}. Useu el format
+        KEY=VALOR (ex: irpf.previous_year_economic_activity_net_income=13000).'
+      binding_value_not_decimal: El valor del --binding %{value} no es un nombre decimal.
+      draft_selector_ambiguous: Useu nomes --id o (--modelo + --period); no els dos
+        alhora.
       file_not_found: No s'ha trobat l'arxiu de la declaració
       filter_parse_error: Error en processar el filtre
       missing_id_or_period_modelo: S'ha de proporcionar l'ID o el (període + model)
@@ -125,7 +167,9 @@ cli:
       warnings: Advertiments
       'yes': Sí
     opts:
-      binding: "Subministra un valor de binding per a 'declaration calculate' com a KEY=VALOR (repetible). Useu 'aeat app modelo bindings <modelo> --period <P>' per descobrir els bindings necessaris."
+      binding: Subministra un valor de binding per a 'declaration calculate' com a
+        KEY=VALOR (repetible). Useu 'aeat app modelo bindings <modelo> --period <P>'
+        per descobrir els bindings necessaris.
       by: Persona que ha revisat la declaració
       draft_id: ID de l'esborrany local
       file: Fitxer local exportat a verificar
@@ -168,11 +212,9 @@ cli:
     errors:
       amendment_success: Declaració complementària processada correctament
       casilla_key_not_string: La clau de la casella ha de ser una cadena de text (string)
-      draft_not_found: Esborrany de la declaració no trobat
       failed_to_load_draft: Fallada en carregar l'esborrany de la declaració
       inputs_not_found: No s'han trobat els fitxers d'entrada
       inputs_not_object: Les dades d'entrada han de ser un objecte (JSON)
-      invalid_draft_extension: Extensió de l'arxiu d'esborrany no vàlida
       invalid_json: Arxiu JSON no vàlid
       invalid_status: Estat de la declaració no vàlid
       missing_import_source: Falta la font d'importació
@@ -260,9 +302,7 @@ cli:
       apply_help: Aplicar canvis o accions a les factures
       consistent: Consistent
       errors:
-        final_save_failed: Fallada en realitzar el desament final de les factures
         not_found: Factura no trobada
-        not_found_after_update: No s'ha pogut trobar la factura després de l'actualització
         skipped_suggestion: Suggeriment omès
       headers:
         list: Llista
@@ -309,8 +349,6 @@ cli:
     txs:
       app_help: Gestió de transaccions bancàries
   financial_invoices:
-    errors:
-      catalogue_not_found: Catàleg de factures no trobat
     headers:
       inconsistencies: Inconsistències
       suggestions: Suggeriments
@@ -335,7 +373,6 @@ cli:
       opening_stock_help: Valor de les existències inicials
       opening_unit_cost_help: Cost unitari inicial
       sku_help: Codi SKU de l'element
-      storage_dir_help: Directori d'emmagatzematge per a les dades de l'inventari
       valuation_method_help: Mètode de valoració (p. ex., PMP, FIFO, LIFO)
       year_help: Any fiscal relacionat
     errors:
@@ -350,7 +387,6 @@ cli:
     list:
       help: Llistar elements de l'inventari
       opening_label: Obertura
-      storage_dir_help: Directori d'emmagatzematge de l'inventari
     movement:
       actividad_help: Codi de l'activitat econòmica relacionada amb el moviment
       add_help: Afegir un nou moviment d'inventari (compra, venda, etc.)
@@ -359,7 +395,6 @@ cli:
       movement_id_help: Identificador del moviment d'inventari
       quantity_help: Quantitat involucrada en el moviment
       sku_help: Codi SKU de l'element del moviment
-      storage_dir_help: Directori d'emmagatzematge de l'inventari per als moviments
       taxable_base_help: Base imposable del moviment
       unit_cost_help: Cost unitari del moviment
       vat_rate_help: Tipus d'IVA aplicat
@@ -371,7 +406,6 @@ cli:
       cogs_label: Cost de Vendes
       preview_help: Previsualitzar l'informe de valoració abans de generar-lo
       preview_line: 'Previsualització: {sku} - {method}'
-      storage_dir_help: Directori d'emmagatzematge de l'inventari per a la valoració
       year_help: Any fiscal per a l'informe de valoració
     valuation_help: Gestió de valoració d'existències (PMP, FIFO, LIFO)
   invoice:
@@ -481,22 +515,21 @@ cli:
       no_rows: No hi ha entrades del llibre pendents de revisió
       verbose_help: Mostrar informació detallada durant la revisió
   overview:
-    allow_incomplete_help: "Permet el calendari amb valors per defecte quan falten claus de regim al perfil. Sense aquesta opcio el calendari es refusa si hi ha advertencies."
+    allow_incomplete_help: Permet el calendari amb valors per defecte quan falten
+      claus de regim al perfil. Sense aquesta opcio el calendari es refusa si hi ha
+      advertencies.
     app_help: Revisar l'estat actual de l'espai de treball fiscal
     calendar_help: Mostrar el calendari d'obligacions per a un rang de dates
-    calendar_refused_incomplete: "El perfil no declara les claus: %{keys}. Executeu 'aeat setup profile set <clau> <valor>' o useu --allow-incomplete per veure el calendari calculat amb valors per defecte."
+    calendar_refused_incomplete: 'El perfil no declara les claus: %{keys}. Executeu
+      ''aeat setup profile set <clau> <valor>'' o useu --allow-incomplete per veure
+      el calendari calculat amb valors per defecte.'
     calendar_requires_dates: Useu --from i --to quan consulteu el calendari
     drafts: Esborranys
     from_help: Data inicial del calendari (AAAA-MM-DD)
     header: "Model\tPeríode\tEstat\tObre\tTanca"
+    integrity_warning: '%{count} fila(es) locals no es poden desxifrar amb la clau
+      mestra actual; executeu ''aeat config doctor'' per al detall.'
     invoices: Factures
-    integrity_warning: "%{count} fila(es) locals no es poden desxifrar amb la clau mestra actual; executeu 'aeat config doctor' per al detall."
-    warning:
-      estimacion_objetiva_unset: "El perfil no declara si tributa IRPF en estimacio objectiva. El model 131 pot aplicar-se o no en consequencia."
-      intracomunitario_unset: "El perfil no declara si fa operacions intracomunitaries. El model 349 pot aplicar-se o no en consequencia."
-      iva_regime_unset: "El perfil no declara el seu regim IVA. El calendari assumeix regim general; els models 303 i 390 poden no correspondre."
-      retencion_arrendamientos_unset: "El perfil no declara si paga lloguers amb retencio. El model 115 pot aplicar-se o no en consequencia."
-      retencion_profesionales_unset: "El perfil no declara si paga a professionals amb retencio. El model 111 pot aplicar-se o no en consequencia."
     period: Període
     period_help: Període fiscal a revisar (per exemple, 2026-Q1)
     profile: Perfil
@@ -557,10 +590,10 @@ cli:
     year_help: Exercici fiscal a consultar o processar
   root:
     app_app_help: Espai de treball fiscal per a llibres, factures i declaracions
-    app_help: |-
-      Assistent per preparar declaracions tributàries espanyoles
+    app_help: 'Assistent per preparar declaracions tributàries espanyoles
 
-      Quickstart: aeat setup init --name NAME --tax-id NIF
+
+      Quickstart: aeat setup init --name NAME --tax-id NIF'
     debug_help: Mostrar logs interns de depuració a stderr
     format_help: Format de sortida per als resultats de l'ordre
     quiet_help: Mostrar només errors a stderr
@@ -572,9 +605,11 @@ cli:
     auth:
       app_help: Configurar i comprovar l'autenticació de l'AEAT
       configure:
-        file_help: "Ruta absoluta o relativa al fitxer de certificat P12/PFX quan el proveidor el requereixi. Exemple: --file /ruta/al/certificat.p12."
+        file_help: 'Ruta absoluta o relativa al fitxer de certificat P12/PFX quan
+          el proveidor el requereixi. Exemple: --file /ruta/al/certificat.p12.'
         help: Configurar el proveïdor d'autenticació
-        provider_help: "Proveidor d'autenticacio. Executeu 'aeat setup auth providers' per llistar els proveidors suportats (certificate, clave_movil)."
+        provider_help: Proveidor d'autenticacio. Executeu 'aeat setup auth providers'
+          per llistar els proveidors suportats (certificate, clave_movil).
       login:
         help: Iniciar la sessió local d'autenticació configurada
       logout:
@@ -582,10 +617,8 @@ cli:
       providers:
         help: Llistar proveïdors d'autenticació disponibles
       reset:
-        all_help: Eliminar tant l'estat de sessió persistit com el bloqueig
-          d'adquisició
-        help: Restablir sessions d'autenticació persistides o bloquejos
-          d'adquisició
+        all_help: Eliminar tant l'estat de sessió persistit com el bloqueig d'adquisició
+        help: Restablir sessions d'autenticació persistides o bloquejos d'adquisició
         locks_help: Eliminar el bloqueig d'adquisició del proveïdor
         sessions_help: Eliminar l'estat de sessió persistit del proveïdor
       status:
@@ -596,8 +629,8 @@ cli:
       certificate_file_required: El proveïdor certificate requereix --file
       file_not_found: No s'ha trobat el fitxer {file}
       not_configured: Configureu un proveïdor abans d'iniciar sessió
-      reset_scope_required: 'Trieu almenys un abast de restabliment: --sessions,
-        --locks o --all.'
+      reset_scope_required: 'Trieu almenys un abast de restabliment: --sessions, --locks
+        o --all.'
       unknown_profile_key: 'Clau de perfil desconeguda: {key}'
       unknown_provider: 'Proveïdor d''autenticació desconegut: {provider}'
     headers:
@@ -621,10 +654,14 @@ cli:
       unknown: Desconegut
       valid: Vàlid
     init:
-      activity_help: "Activitat economica principal de l'autonom. Text lliure o codi IAE/CNAE. Exemple: 'Serveis professionals d'informatica' o '6201'."
+      activity_help: 'Activitat economica principal de l''autonom. Text lliure o codi
+        IAE/CNAE. Exemple: ''Serveis professionals d''informatica'' o ''6201''.'
       help: Crear o activar un perfil de contribuent
-      name_help: "Etiqueta local per distingir aquest perfil dels altres (no s'envia a l'AEAT). Exemple: 'client-acme' o 'meu-perfil'."
-      tax_id_help: "Identificador fiscal espanyol del contribuent. Format: 8 digits + lletra (NIF), lletra + 7 digits + lletra (NIE), o lletra + 7 digits + digit (CIF). Exemple: 12345678Z."
+      name_help: 'Etiqueta local per distingir aquest perfil dels altres (no s''envia
+        a l''AEAT). Exemple: ''client-acme'' o ''meu-perfil''.'
+      tax_id_help: 'Identificador fiscal espanyol del contribuent. Format: 8 digits
+        + lletra (NIF), lletra + 7 digits + lletra (NIE), o lletra + 7 digits + digit
+        (CIF). Exemple: 12345678Z.'
     labels:
       'no': 'no'
       unset: sense valor
@@ -638,9 +675,11 @@ cli:
       set_help: Establir un valor del perfil
       set_key_help: Clau de perfil a modificar
       set_value_help: Valor que es desarà
+      show_all_keys_help: Mostrar totes les claus de perfil, inclosos els valors no
+        configurats
       show_help: Mostrar les dades del perfil actiu
-      show_all_keys_help: Mostrar totes les claus de perfil, inclosos els valors no configurats
-      show_unset_help: Mostrar totes les claus de perfil amb <unset> per als valors buits
+      show_unset_help: Mostrar totes les claus de perfil amb <unset> per als valors
+        buits
       unset_help: Esborrar un valor del perfil
       unset_key_help: Clau de perfil a esborrar
       use_help: Activar un perfil local

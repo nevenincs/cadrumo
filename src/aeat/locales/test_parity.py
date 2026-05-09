@@ -5,6 +5,8 @@ import yaml
 
 from aeat.locales.manager import LocaleManager
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
 
 @pytest.fixture(scope="module")
 def manager():

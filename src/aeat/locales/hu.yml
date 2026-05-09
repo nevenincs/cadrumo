@@ -2,6 +2,9 @@ aggregation:
   models:
     t_944805: Érvénytelen időszak formátum. Használja a YYYY, YYYY-Qn vagy YYYY-MM
       formátumot.
+  renta_ledger:
+    errors:
+      annual_period_required: Éves időszak szükséges a Renta nyilvántartás összesítéséhez.
 application:
   auth:
     provider_impact:
@@ -30,6 +33,40 @@ categories:
   test_profile:
     display_label_851219: Megjelenítési címke 851219
 cli:
+  app:
+    modelo:
+      app_help: cli.app.modelo.app_help
+      bindings:
+        as_of_help: cli.app.modelo.bindings.as_of_help
+        modelo_help: cli.app.modelo.bindings.modelo_help
+        period_help: cli.app.modelo.bindings.period_help
+      casillas:
+        as_of_help: cli.app.modelo.casillas.as_of_help
+        input_kind_help: cli.app.modelo.casillas.input_kind_help
+        modelo_help: cli.app.modelo.casillas.modelo_help
+        period_help: cli.app.modelo.casillas.period_help
+        required_help: cli.app.modelo.casillas.required_help
+      describe:
+        as_of_help: cli.app.modelo.describe.as_of_help
+        modelo_help: cli.app.modelo.describe.modelo_help
+        period_help: cli.app.modelo.describe.period_help
+      formulas:
+        as_of_help: cli.app.modelo.formulas.as_of_help
+        modelo_help: cli.app.modelo.formulas.modelo_help
+        period_help: cli.app.modelo.formulas.period_help
+      list:
+        year_help: cli.app.modelo.list.year_help
+  archive:
+    app_help: cli.archive.app_help
+    export:
+      bundle_id_help: cli.archive.export.bundle_id_help
+      help: cli.archive.export.help
+      namespace_help: cli.archive.export.namespace_help
+      path_help: cli.archive.export.path_help
+    import:
+      conflict_help: cli.archive.import.conflict_help
+      help: cli.archive.import.help
+      path_help: cli.archive.import.path_help
   browser:
     app_help: Böngésző automatizálási feladatok kezelése (Playwright)
     health:
@@ -52,8 +89,10 @@ cli:
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
       logs_lines_help: Megjelenítendő friss naplósorok száma
-      quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló; --yes szükséges)
-      quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval a megerősítéshez.
+      quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;
+        --yes szükséges)
+      quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
+        a megerősítéshez.
       quarantine_yes_help: A karantén művelet kifejezett megerősítése
   data:
     app_help: Adóadatok és nyilvántartások kezelése
@@ -95,9 +134,11 @@ cli:
     errors:
       activate_profile: Kérjük, aktiváljon egy profilt a bevallások kezelése előtt
       at_least_one_edit: Legalább egy mezőt meg kell szerkeszteni
-      binding_assignment: "Érvénytelen --binding hozzárendelés: %{value}. Használja a KEY=ÉRTÉK formátumot (pl. irpf.previous_year_economic_activity_net_income=13000)."
-      binding_value_not_decimal: "A --binding %{value} értéke nem decimális szám."
-      draft_selector_ambiguous: "Használja vagy --id, vagy (--modelo + --period) párat; nem mindkettőt egyszerre."
+      binding_assignment: 'Érvénytelen --binding hozzárendelés: %{value}. Használja
+        a KEY=ÉRTÉK formátumot (pl. irpf.previous_year_economic_activity_net_income=13000).'
+      binding_value_not_decimal: A --binding %{value} értéke nem decimális szám.
+      draft_selector_ambiguous: Használja vagy --id, vagy (--modelo + --period) párat;
+        nem mindkettőt egyszerre.
       file_not_found: Bevallási fájl nem található
       filter_parse_error: Hiba a szűrő elemzésekor
       missing_id_or_period_modelo: Meg kell adni az azonosítót (ID) vagy az (időszak
@@ -130,7 +171,9 @@ cli:
       warnings: Figyelmeztetések
       'yes': Igen
     opts:
-      binding: "Adj meg egy binding értéket a 'declaration calculate' parancshoz KEY=ÉRTÉK formátumban (ismételhető). Használd: 'aeat app modelo bindings <modelo> --period <P>' a szükséges bindingek megtalálásához."
+      binding: 'Adj meg egy binding értéket a ''declaration calculate'' parancshoz
+        KEY=ÉRTÉK formátumban (ismételhető). Használd: ''aeat app modelo bindings
+        <modelo> --period <P>'' a szükséges bindingek megtalálásához.'
       by: A bevallást ellenőrző személy
       draft_id: Helyi tervezet azonosítója
       file: Ellenőrizendő helyi exportfájl
@@ -174,11 +217,9 @@ cli:
       amendment_success: A módosító bevallás feldolgozása sikeres
       casilla_key_not_string: A mező (casilla) kulcsának szövegesnek (string) kell
         lennie
-      draft_not_found: A bevallás tervezete nem található
       failed_to_load_draft: A bevallás tervezetének betöltése sikertelen
       inputs_not_found: Bemeneti fájlok nem találhatók
       inputs_not_object: A bemeneti adatoknak objektumnak (JSON) kell lenniük
-      invalid_draft_extension: Érvénytelen tervezet fájlkiterjesztés
       invalid_json: Érvénytelen JSON fájl
       invalid_status: Érvénytelen bevallási állapot
       missing_import_source: Hiányzó importálási forrás
@@ -265,9 +306,7 @@ cli:
       apply_help: Változtatások vagy műveletek alkalmazása a számlákon
       consistent: Konzisztens
       errors:
-        final_save_failed: A számlák végső mentése sikertelen
         not_found: Számla nem található
-        not_found_after_update: A számla nem található a frissítés után
         skipped_suggestion: Javaslat kihagyva
       headers:
         list: Lista
@@ -314,8 +353,6 @@ cli:
     txs:
       app_help: Banki tranzakciók kezelése
   financial_invoices:
-    errors:
-      catalogue_not_found: Számlakatalógus nem található
     headers:
       inconsistencies: Inkonzisztenciák
       suggestions: Javaslatok
@@ -340,7 +377,6 @@ cli:
       opening_stock_help: Nyitókészlet értéke
       opening_unit_cost_help: Kezdeti egységnyi költség
       sku_help: A tétel SKU kódja
-      storage_dir_help: A nyilvántartási adatok tárolási könyvtára
       valuation_method_help: Értékelési módszer (pl. PMP, FIFO, LIFO)
       year_help: Kapcsolódó adóév
     errors:
@@ -355,7 +391,6 @@ cli:
     list:
       help: Nyilvántartási tételek listázása
       opening_label: Nyitó
-      storage_dir_help: Készletnyilvántartás tárolási könyvtára
     movement:
       actividad_help: A mozgáshoz kapcsolódó gazdasági tevékenység kódja
       add_help: Új készletmozgás hozzáadása (vásárlás, eladás stb.)
@@ -364,7 +399,6 @@ cli:
       movement_id_help: Készletmozgás azonosítója
       quantity_help: A mozgásban érintett mennyiség
       sku_help: A mozgásban érintett tétel SKU kódja
-      storage_dir_help: A mozgások készletnyilvántartási tárolási könyvtára
       taxable_base_help: A mozgás adóalapja
       unit_cost_help: A mozgás egységnyi költsége
       vat_rate_help: Alkalmazott ÁFA-kulcs
@@ -376,7 +410,6 @@ cli:
       cogs_label: ELÁBÉ (Eladott áruk beszerzési értéke)
       preview_help: Az értékelési jelentés előnézete a létrehozás előtt
       preview_line: 'Előnézet: {sku} - {method}'
-      storage_dir_help: Az értékeléshez használt készletnyilvántartási tárolási könyvtár
       year_help: Az értékelési jelentés adóéve
     valuation_help: Készletértékelés kezelése (PMP, FIFO, LIFO)
   invoice:
@@ -398,8 +431,7 @@ cli:
     import:
       dry_run_help: Futtatás próba üzemmódban (mentés nélkül)
       help: Számlák importálása külső forrásokból (pl. PDF, Excel)
-      kind_help: Importálandó számlák típusa. Elfogadott értékek issued vagy
-        received
+      kind_help: Importálandó számlák típusa. Elfogadott értékek issued vagy received
       path_help: A számlákat tartalmazó fájl vagy könyvtár útvonala
     labels:
       base: Adóalap
@@ -487,22 +519,21 @@ cli:
       no_rows: Nincsenek felülvizsgálatra váró naplóbejegyzések
       verbose_help: Részletes információk megjelenítése a felülvizsgálat során
   overview:
-    allow_incomplete_help: "Engedélyezi a naptárt alapértelmezett értékekkel, ha a profil nem deklarálja a regim kulcsokat. E nélkül a naptár elutasításra kerül, ha figyelmeztetések vannak."
+    allow_incomplete_help: Engedélyezi a naptárt alapértelmezett értékekkel, ha a
+      profil nem deklarálja a regim kulcsokat. E nélkül a naptár elutasításra kerül,
+      ha figyelmeztetések vannak.
     app_help: Az aktuális adózási munkaterület áttekintése
     calendar_help: Kötelezettségi naptár megjelenítése dátumtartományra
-    calendar_refused_incomplete: "A profil nem deklarálja ezeket a kulcsokat: %{keys}. Futtasd: 'aeat setup profile set <kulcs> <érték>' vagy add meg --allow-incomplete a naptár alapértelmezett értékekkel történő számításához."
+    calendar_refused_incomplete: 'A profil nem deklarálja ezeket a kulcsokat: %{keys}.
+      Futtasd: ''aeat setup profile set <kulcs> <érték>'' vagy add meg --allow-incomplete
+      a naptár alapértelmezett értékekkel történő számításához.'
     calendar_requires_dates: Naptárhoz használja a --from és --to opciókat
     drafts: Tervezetek
     from_help: Naptár kezdő dátuma (YYYY-MM-DD)
     header: "Modell\tIdőszak\tÁllapot\tNyit\tZár"
+    integrity_warning: '%{count} helyi sor nem dekódolható az aktuális főkulccsal;
+      futtasd: ''aeat config doctor'' a részletekért.'
     invoices: Számlák
-    integrity_warning: "%{count} helyi sor nem dekódolható az aktuális főkulccsal; futtasd: 'aeat config doctor' a részletekért."
-    warning:
-      estimacion_objetiva_unset: "A profil nem deklarálja, hogy IRPF estimacion objetiva alkalmazandó-e. A 131-es modell ennek megfelelően lehet alkalmazható vagy sem."
-      intracomunitario_unset: "A profil nem deklarálja a közösségi műveleteket. A 349-es modell ennek megfelelően lehet alkalmazható vagy sem."
-      iva_regime_unset: "A profil nem deklarálja az IVA rezsimet. A naptár regim general-t feltételez; a 303-as és 390-es modellek lehet, hogy nem alkalmazandók."
-      retencion_arrendamientos_unset: "A profil nem deklarálja, hogy bérleti díjat retencion-nal fizet-e. A 115-ös modell ennek megfelelően lehet alkalmazható vagy sem."
-      retencion_profesionales_unset: "A profil nem deklarálja, hogy szakembereknek retencion-nal fizet-e. A 111-es modell ennek megfelelően lehet alkalmazható vagy sem."
     period: Időszak
     period_help: Ellenőrizendő adózási időszak (például 2026-Q1)
     profile: Profil
@@ -563,10 +594,10 @@ cli:
     year_help: Lekérdezendő vagy feldolgozandó adóév
   root:
     app_app_help: Adózási munkaterület könyveléshez, számlákhoz és bevallásokhoz
-    app_help: |-
-      Spanyol adóbevallási segéd
+    app_help: 'Spanyol adóbevallási segéd
 
-      Quickstart: aeat setup init --name NAME --tax-id NIF
+
+      Quickstart: aeat setup init --name NAME --tax-id NIF'
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     format_help: A parancseredmények kimeneti formátuma
     quiet_help: Csak hibák megjelenítése stderr-en
@@ -578,9 +609,11 @@ cli:
     auth:
       app_help: AEAT-hitelesítés beállítása és ellenőrzése
       configure:
-        file_help: "P12/PFX tanúsítványfájl abszolút vagy relatív útvonala, ha a szolgáltató megköveteli. Példa: --file /ut/a/tanusitvany.p12."
+        file_help: 'P12/PFX tanúsítványfájl abszolút vagy relatív útvonala, ha a szolgáltató
+          megköveteli. Példa: --file /ut/a/tanusitvany.p12.'
         help: Hitelesítési szolgáltató beállítása
-        provider_help: "Hitelesítési szolgáltató. Futtasd: 'aeat setup auth providers' a támogatott szolgáltatók listájához (certificate, clave_movil)."
+        provider_help: 'Hitelesítési szolgáltató. Futtasd: ''aeat setup auth providers''
+          a támogatott szolgáltatók listájához (certificate, clave_movil).'
       login:
         help: A beállított helyi hitelesítési munkamenet indítása
       logout:
@@ -589,8 +622,7 @@ cli:
         help: Elérhető hitelesítési szolgáltatók listázása
       reset:
         all_help: A mentett munkamenetállapot és a megszerzési zárolás eltávolítása
-        help: Mentett hitelesítési munkamenetek vagy megszerzési zárolások
-          visszaállítása
+        help: Mentett hitelesítési munkamenetek vagy megszerzési zárolások visszaállítása
         locks_help: A szolgáltató megszerzési zárolásának eltávolítása
         sessions_help: A szolgáltató mentett munkamenetállapotának eltávolítása
       status:
@@ -626,10 +658,14 @@ cli:
       unknown: Ismeretlen
       valid: Érvényes
     init:
-      activity_help: "Az autonomo fő gazdasági tevékenysége. Szabad szöveg vagy IAE/CNAE kód. Példa: 'IT szakmai szolgáltatások' vagy '6201'."
+      activity_help: 'Az autonomo fő gazdasági tevékenysége. Szabad szöveg vagy IAE/CNAE
+        kód. Példa: ''IT szakmai szolgáltatások'' vagy ''6201''.'
       help: Adózói profil létrehozása vagy aktiválása
-      name_help: "Helyi címke a profil megkülönböztetésére (nem kerül elküldésre az AEAT-nak). Példa: 'ugyfel-acme' vagy 'sajat-profil'."
-      tax_id_help: "Spanyol adóazonosító. Formátum: 8 számjegy + betű (NIF), betű + 7 számjegy + betű (NIE), vagy betű + 7 számjegy + számjegy (CIF). Példa: 12345678Z."
+      name_help: 'Helyi címke a profil megkülönböztetésére (nem kerül elküldésre az
+        AEAT-nak). Példa: ''ugyfel-acme'' vagy ''sajat-profil''.'
+      tax_id_help: 'Spanyol adóazonosító. Formátum: 8 számjegy + betű (NIF), betű
+        + 7 számjegy + betű (NIE), vagy betű + 7 számjegy + számjegy (CIF). Példa:
+        12345678Z.'
     labels:
       'no': nem
       unset: nincs érték
@@ -643,9 +679,11 @@ cli:
       set_help: Egy profilérték beállítása
       set_key_help: Módosítandó profilkulcs
       set_value_help: Mentendő érték
+      show_all_keys_help: Minden profilkulcs megjelenítése, a be nem állított értékekkel
+        együtt
       show_help: Aktív profil értékeinek megjelenítése
-      show_all_keys_help: Minden profilkulcs megjelenítése, a be nem állított értékekkel együtt
-      show_unset_help: Minden profilkulcs megjelenítése <unset> jelöléssel az üres értékekhez
+      show_unset_help: Minden profilkulcs megjelenítése <unset> jelöléssel az üres
+        értékekhez
       unset_help: Egy profilérték törlése
       unset_key_help: Törlendő profilkulcs
       use_help: Helyi profil aktiválása

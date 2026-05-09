@@ -1,6 +1,9 @@
 aggregation:
   models:
     t_944805: Invalid period format. Use YYYY, YYYY-Qn, or YYYY-MM.
+  renta_ledger:
+    errors:
+      annual_period_required: Annual period is required for Renta ledger aggregation.
 application:
   auth:
     provider_impact:
@@ -25,6 +28,40 @@ categories:
   test_profile:
     display_label_851219: Display label 851219
 cli:
+  app:
+    modelo:
+      app_help: cli.app.modelo.app_help
+      bindings:
+        as_of_help: cli.app.modelo.bindings.as_of_help
+        modelo_help: cli.app.modelo.bindings.modelo_help
+        period_help: cli.app.modelo.bindings.period_help
+      casillas:
+        as_of_help: cli.app.modelo.casillas.as_of_help
+        input_kind_help: cli.app.modelo.casillas.input_kind_help
+        modelo_help: cli.app.modelo.casillas.modelo_help
+        period_help: cli.app.modelo.casillas.period_help
+        required_help: cli.app.modelo.casillas.required_help
+      describe:
+        as_of_help: cli.app.modelo.describe.as_of_help
+        modelo_help: cli.app.modelo.describe.modelo_help
+        period_help: cli.app.modelo.describe.period_help
+      formulas:
+        as_of_help: cli.app.modelo.formulas.as_of_help
+        modelo_help: cli.app.modelo.formulas.modelo_help
+        period_help: cli.app.modelo.formulas.period_help
+      list:
+        year_help: cli.app.modelo.list.year_help
+  archive:
+    app_help: cli.archive.app_help
+    export:
+      bundle_id_help: cli.archive.export.bundle_id_help
+      help: cli.archive.export.help
+      namespace_help: cli.archive.export.namespace_help
+      path_help: cli.archive.export.path_help
+    import:
+      conflict_help: cli.archive.import.conflict_help
+      help: cli.archive.import.help
+      path_help: cli.archive.import.path_help
   browser:
     app_help: Browser automation management (Playwright)
     health:
@@ -47,8 +84,10 @@ cli:
       help: Diagnose local configuration, registry, profile, auth, and logs
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
-      quarantine_help: Move undecryptable rows into a quarantine table (destructive; requires --yes)
-      quarantine_requires_yes: This operation is destructive. Re-run with --yes to confirm.
+      quarantine_help: Move undecryptable rows into a quarantine table (destructive;
+        requires --yes)
+      quarantine_requires_yes: This operation is destructive. Re-run with --yes to
+        confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
   data:
     app_help: Management of tax data and records
@@ -90,9 +129,10 @@ cli:
     errors:
       activate_profile: Please activate a profile before managing declarations
       at_least_one_edit: At least one field must be edited
-      binding_assignment: "Invalid --binding assignment: %{value}. Use the form KEY=VALUE (e.g. irpf.previous_year_economic_activity_net_income=13000)."
-      binding_value_not_decimal: "The --binding value %{value} is not a decimal number."
-      draft_selector_ambiguous: "Use either --id or (--modelo + --period); not both."
+      binding_assignment: 'Invalid --binding assignment: %{value}. Use the form KEY=VALUE
+        (e.g. irpf.previous_year_economic_activity_net_income=13000).'
+      binding_value_not_decimal: The --binding value %{value} is not a decimal number.
+      draft_selector_ambiguous: Use either --id or (--modelo + --period); not both.
       file_not_found: Declaration file not found
       filter_parse_error: Error parsing the filter
       missing_id_or_period_modelo: ID or (period + tax form) must be provided
@@ -124,7 +164,9 @@ cli:
       warnings: Warnings
       'yes': 'Yes'
     opts:
-      binding: "Supply a binding value for 'declaration calculate' as KEY=VALUE (repeatable). Use 'aeat app modelo bindings <modelo> --period <P>' to discover required bindings."
+      binding: Supply a binding value for 'declaration calculate' as KEY=VALUE (repeatable).
+        Use 'aeat app modelo bindings <modelo> --period <P>' to discover required
+        bindings.
       by: Person who reviewed the declaration
       draft_id: Local draft ID
       file: Local exported file to verify
@@ -167,11 +209,9 @@ cli:
     errors:
       amendment_success: Supplementary filing successfully processed
       casilla_key_not_string: Box (casilla) key must be a string
-      draft_not_found: Filing draft not found
       failed_to_load_draft: Failed to load filing draft
       inputs_not_found: Input files not found
       inputs_not_object: Input data must be an object (JSON)
-      invalid_draft_extension: Invalid draft file extension
       invalid_json: Invalid JSON file
       invalid_status: Invalid filing status
       missing_import_source: Missing import source
@@ -257,9 +297,7 @@ cli:
       apply_help: Apply changes or actions to invoices
       consistent: Consistent
       errors:
-        final_save_failed: Failed to perform final save of invoices
         not_found: Invoice not found
-        not_found_after_update: Could not find invoice after update
         skipped_suggestion: Suggestion skipped
       headers:
         list: List
@@ -304,8 +342,6 @@ cli:
     txs:
       app_help: Management of bank transactions
   financial_invoices:
-    errors:
-      catalogue_not_found: Invoice catalogue not found
     headers:
       inconsistencies: Inconsistencies
       suggestions: Suggestions
@@ -330,7 +366,6 @@ cli:
       opening_stock_help: Initial stock value
       opening_unit_cost_help: Initial unit cost
       sku_help: SKU code of the item
-      storage_dir_help: Storage directory for inventory data
       valuation_method_help: Valuation method (e.g., PMP, FIFO, LIFO)
       year_help: Related fiscal year
     errors:
@@ -345,7 +380,6 @@ cli:
     list:
       help: List inventory items
       opening_label: Opening
-      storage_dir_help: Inventory storage directory
     movement:
       actividad_help: Economic activity code related to the movement
       add_help: Add a new inventory movement (purchase, sale, etc.)
@@ -354,7 +388,6 @@ cli:
       movement_id_help: Inventory movement identifier
       quantity_help: Quantity involved in the movement
       sku_help: SKU code of the item in the movement
-      storage_dir_help: Inventory storage directory for movements
       taxable_base_help: Taxable base of the movement
       unit_cost_help: Unit cost of the movement
       vat_rate_help: VAT rate applied
@@ -366,7 +399,6 @@ cli:
       cogs_label: COGS (Cost of Goods Sold)
       preview_help: Preview the valuation report before generating it
       preview_line: 'Preview: {sku} - {method}'
-      storage_dir_help: Inventory storage directory for valuation
       year_help: Fiscal year for the valuation report
     valuation_help: Stock valuation management (PMP, FIFO, LIFO)
   invoice:
@@ -474,22 +506,20 @@ cli:
       no_rows: No ledger entries pending review
       verbose_help: Show detailed information during review
   overview:
-    allow_incomplete_help: "Allow the calendar to be computed under defaults when regime keys are unset. Without this flag the calendar is refused when warnings exist."
+    allow_incomplete_help: Allow the calendar to be computed under defaults when regime
+      keys are unset. Without this flag the calendar is refused when warnings exist.
     app_help: Review the current filing workspace
     calendar_help: Show the obligations calendar for a date range
-    calendar_refused_incomplete: "Profile does not declare keys: %{keys}. Run 'aeat setup profile set <key> <value>' or pass --allow-incomplete to see the calendar computed under defaults."
+    calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
+      setup profile set <key> <value>'' or pass --allow-incomplete to see the calendar
+      computed under defaults.'
     calendar_requires_dates: Use --from and --to when showing the calendar
     drafts: Drafts
     from_help: Calendar start date (YYYY-MM-DD)
     header: "Model\tPeriod\tState\tOpens\tCloses"
+    integrity_warning: '%{count} local row(s) cannot be decrypted under the current
+      master key; run ''aeat config doctor'' for detail.'
     invoices: Invoices
-    integrity_warning: "%{count} local row(s) cannot be decrypted under the current master key; run 'aeat config doctor' for detail."
-    warning:
-      estimacion_objetiva_unset: "Profile does not declare whether IRPF estimacion objetiva applies. Modelo 131 may or may not apply accordingly."
-      intracomunitario_unset: "Profile does not declare intra-community operations. Modelo 349 may or may not apply accordingly."
-      iva_regime_unset: "Profile does not declare its IVA regime. Calendar assumes regimen general; modelos 303 and 390 may not apply."
-      retencion_arrendamientos_unset: "Profile does not declare whether rent is paid with retencion. Modelo 115 may or may not apply accordingly."
-      retencion_profesionales_unset: "Profile does not declare whether professionals are paid with retencion. Modelo 111 may or may not apply accordingly."
     period: Period
     period_help: Tax period to review (for example, 2026-Q1)
     profile: Profile
@@ -548,10 +578,10 @@ cli:
     year_help: Fiscal year to query or process
   root:
     app_app_help: Tax workspaces for ledgers, invoices, and declarations
-    app_help: |-
-      Spanish tax filing assistant
+    app_help: 'Spanish tax filing assistant
 
-      Quickstart: aeat setup init --name NAME --tax-id NIF
+
+      Quickstart: aeat setup init --name NAME --tax-id NIF'
     debug_help: Show internal debug logs on stderr
     format_help: Output format for command results
     quiet_help: Show only errors on stderr
@@ -563,9 +593,11 @@ cli:
     auth:
       app_help: Configure and check AEAT authentication
       configure:
-        file_help: "Absolute or relative path to a P12/PFX certificate file when the provider requires it. Example: --file /path/to/cert.p12."
+        file_help: 'Absolute or relative path to a P12/PFX certificate file when the
+          provider requires it. Example: --file /path/to/cert.p12.'
         help: Configure the authentication provider
-        provider_help: "Authentication provider. Run 'aeat setup auth providers' to list supported providers (certificate, clave_movil)."
+        provider_help: Authentication provider. Run 'aeat setup auth providers' to
+          list supported providers (certificate, clave_movil).
       login:
         help: Start the configured local authentication session
       logout:
@@ -610,10 +642,14 @@ cli:
       unknown: Unknown
       valid: Valid
     init:
-      activity_help: "Main economic activity of the autonomo. Free text or IAE/CNAE code. Example: 'IT professional services' or '6201'."
+      activity_help: 'Main economic activity of the autonomo. Free text or IAE/CNAE
+        code. Example: ''IT professional services'' or ''6201''.'
       help: Create or activate a taxpayer profile
-      name_help: "Local label to distinguish this profile from others (never sent to AEAT). Example: 'client-acme' or 'my-profile'."
-      tax_id_help: "Spanish taxpayer identifier. Format: 8 digits + letter (NIF), letter + 7 digits + letter (NIE), or letter + 7 digits + digit (CIF). Example: 12345678Z."
+      name_help: 'Local label to distinguish this profile from others (never sent
+        to AEAT). Example: ''client-acme'' or ''my-profile''.'
+      tax_id_help: 'Spanish taxpayer identifier. Format: 8 digits + letter (NIF),
+        letter + 7 digits + letter (NIE), or letter + 7 digits + digit (CIF). Example:
+        12345678Z.'
     labels:
       'no': 'no'
       unset: unset
@@ -627,8 +663,8 @@ cli:
       set_help: Set one profile value
       set_key_help: Profile key to change
       set_value_help: Value to save
-      show_help: Show the active profile values
       show_all_keys_help: Show every profile key, including unset values
+      show_help: Show the active profile values
       show_unset_help: Show every profile key with <unset> for empty values
       unset_help: Clear one profile value
       unset_key_help: Profile key to clear

@@ -30,28 +30,29 @@ from ...application.archive import (
     restore_archive,
 )
 from ._common import _emit
+from ._i18n import tr
 
 app = typer.Typer(
     name="archive",
     no_args_is_help=True,
-    help="Export and import every encrypted secure-object the user owns.",
+    help=tr("cli.archive.app_help"),
 )
 
 
-@app.command(name="export", help="Write every secure-object to a JSON bundle.")
+@app.command(name="export", help=tr("cli.archive.export.help"))
 def export_cmd(
     ctx: typer.Context,
-    path: Path = typer.Argument(..., help="Destination file. Parent directory is created if missing."),
+    path: Path = typer.Argument(..., help=tr("cli.archive.export.path_help")),
     namespace: list[str] = typer.Option(
         [],
         "--namespace",
         "-n",
-        help="Restrict the export to one or more registered namespaces. Repeat to add namespaces.",
+        help=tr("cli.archive.export.namespace_help"),
     ),
     bundle_id: str | None = typer.Option(
         None,
         "--bundle-id",
-        help="Optional caller-supplied bundle identifier; defaults to a fresh UUID4 hex string.",
+        help=tr("cli.archive.export.bundle_id_help"),
     ),
 ) -> None:
     """Write the bundle JSON to ``path`` and report a one-line summary."""
@@ -76,19 +77,15 @@ def export_cmd(
     )
 
 
-@app.command(name="import", help="Restore a JSON bundle into the encrypted SQL backend.")
+@app.command(name="import", help=tr("cli.archive.import.help"))
 def import_cmd(
     ctx: typer.Context,
-    path: Path = typer.Argument(..., exists=True, readable=True, help="Bundle file to restore."),
+    path: Path = typer.Argument(..., exists=True, readable=True, help=tr("cli.archive.import.path_help")),
     conflict: ConflictPolicy = typer.Option(
         ConflictPolicy.FAIL,
         "--conflict",
         case_sensitive=False,
-        help=(
-            "Policy applied when a record collides with an existing object. "
-            "fail aborts the restore; keep preserves the live object; "
-            "overwrite replaces it."
-        ),
+        help=tr("cli.archive.import.conflict_help"),
     ),
 ) -> None:
     """Validate and apply the bundle at ``path`` under ``--conflict`` semantics."""
