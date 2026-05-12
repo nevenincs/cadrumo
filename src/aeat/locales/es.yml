@@ -3,15 +3,18 @@ aggregation:
     errors:
       annual_period_mixed: El periodo no puede mezclar valores anuales y subaños (trimestre/mes).
       month_required: El tipo de periodo mensual requiere un valor de mes.
-      period_type_ambiguous: El tipo de periodo es ambiguo; especifique trimestre o mes explícitamente.
+      period_type_ambiguous: El tipo de periodo es ambiguo; especifique trimestre
+        o mes explícitamente.
       quarter_required: El tipo de periodo trimestral requiere un valor de trimestre.
     t_944805: Periodo no valido. Usa YYYY-Qn
   renta_ledger:
     errors:
       annual_period_required: Se requiere un periodo anual para la agregación del
         libro de Renta.
-      modelo_mismatch: El modelo tributario no coincide con el modelo esperado del libro de Renta.
-      period_mismatch: El periodo no coincide con el periodo esperado del libro de Renta.
+      modelo_mismatch: El modelo tributario no coincide con el modelo esperado del
+        libro de Renta.
+      period_mismatch: El periodo no coincide con el periodo esperado del libro de
+        Renta.
 application:
   auth:
     provider_impact:
@@ -102,8 +105,10 @@ cli:
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
     errors:
-      no_active_profile: No hay un perfil activo. Ejecuta 'aeat setup init --name NAME --tax-id NIF' primero.
-      unknown_key: "Clave de configuración desconocida: %{name}. Ejecuta 'aeat config list' para ver las claves disponibles."
+      no_active_profile: No hay un perfil activo. Ejecuta 'aeat setup init --name
+        NAME --tax-id NIF' primero.
+      unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
+        list'' para ver las claves disponibles.'
     get:
       help: Mostrar el valor actual de una clave de configuración
       key_help: Clave a leer (ej. tax.id, iva.regime)
@@ -389,17 +394,18 @@ cli:
       ingesting: Ingestando...
       rows_found: Filas encontradas
   init:
-    help: Asistente de onboarding del operador (alias de aeat setup init con prompts)
-    name_help: Nombre local del perfil (no se envía a la AEAT)
-    tax_id_help: NIF/NIE/CIF del contribuyente
     activity_help: Actividad económica principal
-    iva_regime_help: Régimen IVA aplicable (general, simplificado, recargo-equivalencia, exento)
-    quiet_help: Modo no-interactivo; requiere --name, --tax-id y --activity como flags
-    quiet_requires_all: Modo --quiet requiere --name, --tax-id y --activity como flags.
-    prompt_name: Nombre local del perfil
-    prompt_tax_id: NIF/NIE/CIF del contribuyente
+    help: Asistente de onboarding del operador (alias de aeat setup init con prompts)
+    iva_regime_help: Régimen IVA aplicable (general, simplificado, recargo-equivalencia,
+      exento)
+    name_help: Nombre local del perfil (no se envía a la AEAT)
     prompt_activity: Actividad económica principal
     prompt_iva_regime: Régimen IVA
+    prompt_name: Nombre local del perfil
+    prompt_tax_id: NIF/NIE/CIF del contribuyente
+    quiet_help: Modo no-interactivo; requiere --name, --tax-id y --activity como flags
+    quiet_requires_all: Modo --quiet requiere --name, --tax-id y --activity como flags.
+    tax_id_help: NIF/NIE/CIF del contribuyente
   inventory:
     app_help: Gestión de inventario de activos y existencias
     create:
@@ -642,15 +648,6 @@ cli:
   setup:
     app_help: Preparar el perfil local y la autenticación necesarios para usar la
       aplicación
-    reset:
-      help: Restablecer (destructivo) el estado local del usuario por ámbito; requiere --yes.
-      profile_help: Eliminar todos los perfiles del operador y borradores asociados.
-      auth_help: Eliminar el estado de sesión de autenticación.
-      data_help: Mover las filas no descifrables de secure_objects a cuarentena.
-      all_help: Combinar los ámbitos profile, auth y data.
-      yes_help: Confirmar explícitamente la operación destructiva.
-      requires_yes: "Esta operación es destructiva. Vuelve a ejecutar con --yes para confirmar."
-      scope_required: "Debes seleccionar al menos un ámbito: --profile, --auth, --data o --all."
     auth:
       app_help: Configurar y comprobar la autenticación de AEAT
       configure:
@@ -734,12 +731,25 @@ cli:
       use_help: Activar un perfil local
       use_name_help: Nombre del perfil
       validate_help: Validar si el perfil activo está completo
+    reset:
+      all_help: Combinar los ámbitos profile, auth y data.
+      auth_help: Eliminar el estado de sesión de autenticación.
+      data_help: Mover las filas no descifrables de secure_objects a cuarentena.
+      help: Restablecer (destructivo) el estado local del usuario por ámbito; requiere
+        --yes.
+      profile_help: Eliminar todos los perfiles del operador y borradores asociados.
+      requires_yes: Esta operación es destructiva. Vuelve a ejecutar con --yes para
+        confirmar.
+      scope_required: 'Debes seleccionar al menos un ámbito: --profile, --auth, --data
+        o --all.'
+      yes_help: Confirmar explícitamente la operación destructiva.
     status:
       help: Mostrar la preparación del entorno y la siguiente acción requerida
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
-      not_found: "Tema no encontrado: %{slug}. Ejecuta 'aeat topic' para listar los temas registrados."
+      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat topic'' para listar
+        los temas registrados.'
     opts:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
   txs:
@@ -882,6 +892,70 @@ setup:
     third_party_transactions_above_347_threshold_prompt: ¿Realiza operaciones con
       terceros por encima de 3005,06€ (Modelo 347)?
     welcome: Bienvenido al asistente de configuración de AEAT CLI
+topic:
+  authentication:
+    body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
+      digital (FNMT / equivalente). Configura un proveedor con 'aeat setup auth configure'
+      y verifica con 'aeat setup auth status'.
+    title: Autenticación con la AEAT
+  calendar:
+    body: El calendario muestra las obligaciones de presentación (modelos y periodos)
+      dentro de un rango. Necesita un perfil con régimen IVA declarado para no asumir
+      valores por defecto.
+    title: Calendario de obligaciones
+  casilla:
+    body: Una casilla es un campo numerado de un modelo. Las casillas pueden ser manuales,
+      calculadas (computed) o derivadas de bindings. 'aeat app modelo casillas <modelo>'
+      las lista.
+    title: Casillas
+  formats:
+    body: La CLI emite salida en texto, JSON, table o csv según '--format'. JSON es
+      el formato recomendado para automatización; text para inspección humana.
+    title: Formatos de salida
+  irpf-regime:
+    body: Régimen IRPF de un autónomo. Estimación directa (normal o simplificada)
+      o estimación objetiva (módulos). Determina qué modelos de pago fraccionado aplican
+      (130 vs 131).
+    title: Régimen IRPF
+  iva-regime:
+    body: Régimen IVA aplicable al contribuyente. General, simplificado, recargo de
+      equivalencia, exento, REAGP o REBU. Determina el modelo 303 trimestral y el
+      resumen anual 390.
+    title: Régimen IVA
+  modelos:
+    body: Catálogo de modelos tributarios AEAT (303, 130, 100, 347, 349, 111, 115,
+      184, etc.). Cada modelo tiene su propio calendario, casillas y reglas de aplicabilidad.
+      'aeat app modelo list' enumera los disponibles.
+    title: Modelos tributarios
+  pago-fraccionado:
+    body: Pago a cuenta del IRPF que realiza un autónomo cada trimestre. El modelo
+      130 aplica a estimación directa; el 131 a estimación objetiva. El cálculo usa
+      los datos del trimestre y, para algunos casos, los del ejercicio anterior.
+    title: Pago fraccionado IRPF
+  profile:
+    body: El perfil local contiene tu identificación fiscal (NIF), actividad principal,
+      régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
+      Edítalo con 'aeat setup profile set <clave> <valor>'.
+    title: Perfil del contribuyente
+  providers:
+    body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
+      'aeat setup auth providers' lista los proveedores con sus prerrequisitos.
+    title: Proveedores de autenticación
+  recargo-extemporaneo:
+    body: La presentación fuera de plazo sin requerimiento previo de la AEAT acumula
+      un recargo del 1% por mes (hasta el 12%) durante el primer año y 15% más intereses
+      tras 12 meses. Base legal Ley 58/2003 art-27.
+    title: Recargo por presentación extemporánea
+  regimens:
+    body: Conjunto de regímenes fiscales aplicables a un autónomo. Las dos dimensiones
+      principales son IVA (general, simplificado, recargo de equivalencia, exento)
+      e IRPF (directa, objetiva).
+    title: Regímenes fiscales
+  sii-verifactu:
+    body: Sistemas de remisión electrónica de facturas a la AEAT. SII (Suministro
+      Inmediato de Información) aplica obligatoriamente a grandes empresas; Verifactu
+      (RD 1007/2023) es un requisito gradual para sistemas de facturación.
+    title: SII y Verifactu
 transactions:
   import:
     message_053465: Transacción duplicada detectada dentro del archivo importado.
@@ -892,43 +966,147 @@ transactions:
     verified: Importación verificada con éxito
   test_diagnostics:
     message: Falta el mes 2026-03 en el archivo importado.
-topic:
-  authentication:
-    body: 'La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado digital (FNMT / equivalente). Configura un proveedor con ''aeat setup auth configure'' y verifica con ''aeat setup auth status''.'
-    title: 'Autenticación con la AEAT'
-  calendar:
-    body: 'El calendario muestra las obligaciones de presentación (modelos y periodos) dentro de un rango. Necesita un perfil con régimen IVA declarado para no asumir valores por defecto.'
-    title: 'Calendario de obligaciones'
-  casilla:
-    body: 'Una casilla es un campo numerado de un modelo. Las casillas pueden ser manuales, calculadas (computed) o derivadas de bindings. ''aeat app modelo casillas <modelo>'' las lista.'
-    title: 'Casillas'
-  formats:
-    body: 'La CLI emite salida en texto, JSON, table o csv según ''--format''. JSON es el formato recomendado para automatización; text para inspección humana.'
-    title: 'Formatos de salida'
-  irpf-regime:
-    body: 'Régimen IRPF de un autónomo. Estimación directa (normal o simplificada) o estimación objetiva (módulos). Determina qué modelos de pago fraccionado aplican (130 vs 131).'
-    title: 'Régimen IRPF'
-  iva-regime:
-    body: 'Régimen IVA aplicable al contribuyente. General, simplificado, recargo de equivalencia, exento, REAGP o REBU. Determina el modelo 303 trimestral y el resumen anual 390.'
-    title: 'Régimen IVA'
-  modelos:
-    body: 'Catálogo de modelos tributarios AEAT (303, 130, 100, 347, 349, 111, 115, 184, etc.). Cada modelo tiene su propio calendario, casillas y reglas de aplicabilidad. ''aeat app modelo list'' enumera los disponibles.'
-    title: 'Modelos tributarios'
-  pago-fraccionado:
-    body: 'Pago a cuenta del IRPF que realiza un autónomo cada trimestre. El modelo 130 aplica a estimación directa; el 131 a estimación objetiva. El cálculo usa los datos del trimestre y, para algunos casos, los del ejercicio anterior.'
-    title: 'Pago fraccionado IRPF'
-  profile:
-    body: 'El perfil local contiene tu identificación fiscal (NIF), actividad principal, régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario). Edítalo con ''aeat setup profile set <clave> <valor>''.'
-    title: 'Perfil del contribuyente'
-  providers:
-    body: 'Proveedores de autenticación soportados; cada uno requiere requisitos distintos. ''aeat setup auth providers'' lista los proveedores con sus prerrequisitos.'
-    title: 'Proveedores de autenticación'
-  recargo-extemporaneo:
-    body: 'La presentación fuera de plazo sin requerimiento previo de la AEAT acumula un recargo del 1% por mes (hasta el 12%) durante el primer año y 15% más intereses tras 12 meses. Base legal Ley 58/2003 art-27.'
-    title: 'Recargo por presentación extemporánea'
-  regimens:
-    body: 'Conjunto de regímenes fiscales aplicables a un autónomo. Las dos dimensiones principales son IVA (general, simplificado, recargo de equivalencia, exento) e IRPF (directa, objetiva).'
-    title: 'Regímenes fiscales'
-  sii-verifactu:
-    body: 'Sistemas de remisión electrónica de facturas a la AEAT. SII (Suministro Inmediato de Información) aplica obligatoriamente a grandes empresas; Verifactu (RD 1007/2023) es un requisito gradual para sistemas de facturación.'
-    title: 'SII y Verifactu'
+wizard:
+  setup:
+    description: Asistente de configuración para preparar las declaraciones
+    enrollment:
+      enrollment-large-company:
+        prompt: Empresa de gran volumen
+      enrollment-public-administration-budget-gt-6000000:
+        prompt: Presupuesto administración pública superior a 6.000.000
+      title: Inscripción
+    errors:
+      missing_required_flags: 'Faltan banderas requeridas para --quiet: %{missing}'
+    family:
+      family-descendants-eu-eea-deduction:
+        prompt: Descendientes UE/EEE en deducción de unidad familiar
+      family-minor-children-in-unit:
+        prompt: Hijos menores en unidad familiar
+      title: Unidad familiar
+    iva:
+      iva-intracommunity-operations-exceed-50000-eur:
+        prompt: Operaciones intracomunitarias superan 50.000 EUR
+      iva-oss-enrolled:
+        prompt: Alta en OSS
+      iva-regime:
+        prompt: Régimen IVA
+      iva-roi-enrolled:
+        prompt: Alta en ROI
+      title: IVA
+    notes:
+      notes:
+        prompt: Notas del operador (no consumidas por el motor)
+      title: Notas del operador
+    obligations:
+      bienes-extranjero-above-threshold:
+        prompt: Bienes en el extranjero superan el umbral legal
+      does-intracomunitario:
+        prompt: Realiza operaciones intracomunitarias
+      has-employees:
+        prompt: Tiene empleados y paga salarios con retención
+      pays-capital-income-with-retencion:
+        prompt: Paga rentas de capital con retención
+      pays-professionals-with-retencion:
+        prompt: Paga a profesionales con retención
+      pays-rent-with-retencion:
+        prompt: Paga alquiler de local con retención
+      professional-income-withholding-ge-70pct:
+        prompt: Al menos 70% de los ingresos profesionales con retención previa
+      third-party-transactions-above-347-threshold:
+        prompt: Operaciones con terceros superan el umbral del Modelo 347
+      title: Obligaciones
+      uses-objective-estimation-irpf:
+        prompt: Tributa IRPF en estimación objetiva
+    profile:
+      activity:
+        prompt: Etiqueta de actividad o clave controlada
+      address-postcode:
+        prompt: Código postal del domicilio fiscal
+      declaration-type:
+        prompt: Código del tipo de declaración
+      iva-regime:
+        choices:
+          exento:
+            label: Exento
+          general:
+            label: Régimen general
+          recargo-equivalencia:
+            label: Recargo de equivalencia
+          simplificado:
+            label: Régimen simplificado
+      name:
+        prompt: Nombre visible mostrado en revisiones locales
+      surnames:
+        prompt: Apellidos o razón social para cabeceras de exportación
+      tax-id:
+        prompt: Identificador fiscal (NIF/NIE) para declaraciones
+      title: Identidad del perfil
+    residence:
+      ccaa:
+        choices:
+          andalucia:
+            label: Andalucía
+          aragon:
+            label: Aragón
+          asturias:
+            label: Asturias
+          baleares:
+            label: Islas Baleares
+          canarias:
+            label: Islas Canarias
+          cantabria:
+            label: Cantabria
+          castilla_la_mancha:
+            label: Castilla-La Mancha
+          castilla_y_leon:
+            label: Castilla y León
+          cataluna:
+            label: Cataluña
+          comunidad_valenciana:
+            label: Comunidad Valenciana
+          extremadura:
+            label: Extremadura
+          galicia:
+            label: Galicia
+          la_rioja:
+            label: La Rioja
+          madrid:
+            label: Madrid
+          murcia:
+            label: Murcia
+      tax-residence-ccaa:
+        prompt: Comunidad autónoma de residencia fiscal
+      title: Residencia fiscal
+    spouse:
+      spouse-birth-date:
+        prompt: Fecha de nacimiento del cónyuge
+      spouse-disability-grade:
+        prompt: Clave de discapacidad del cónyuge
+      spouse-eu-eea-country:
+        prompt: País UE/EEE del cónyuge
+      spouse-eu-eea-resident:
+        prompt: Cónyuge residente UE/EEE
+      spouse-name:
+        prompt: Nombre del cónyuge
+      spouse-non-resident-irpf:
+        prompt: Cónyuge no residente IRPF
+      spouse-sex:
+        prompt: Sexo del cónyuge
+      spouse-surnames:
+        prompt: Apellidos del cónyuge
+      spouse-tax-id:
+        prompt: NIF/NIE del cónyuge
+      title: Cónyuge
+    taxpayer:
+      taxpayer-birth-date:
+        prompt: Fecha de nacimiento del primer declarante
+      taxpayer-death-date:
+        prompt: Fecha de fallecimiento del primer declarante
+      taxpayer-disability-grade:
+        prompt: Clave de discapacidad del primer declarante
+      taxpayer-marital-status:
+        prompt: Estado civil del primer declarante
+      taxpayer-sex:
+        prompt: Sexo del primer declarante
+      title: Primer declarante
+    title: Asistente de configuración
