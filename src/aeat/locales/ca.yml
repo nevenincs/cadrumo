@@ -3,15 +3,18 @@ aggregation:
     errors:
       annual_period_mixed: El període no pot barrejar valors anuals i subannuals (trimestre/mes).
       month_required: El tipus de període mensual requereix un valor de mes.
-      period_type_ambiguous: El tipus de període és ambigu; especifiqueu trimestre o mes explícitament.
+      period_type_ambiguous: El tipus de període és ambigu; especifiqueu trimestre
+        o mes explícitament.
       quarter_required: El tipus de període trimestral requereix un valor de trimestre.
     t_944805: Format de període no vàlid. Useu YYYY, YYYY-Qn o YYYY-MM.
   renta_ledger:
     errors:
       annual_period_required: Es requereix un període anual per a l'agregació del
         llibre de Renda.
-      modelo_mismatch: El model tributari no coincideix amb el model esperat del llibre de Renda.
-      period_mismatch: El període no coincideix amb el període esperat del llibre de Renda.
+      modelo_mismatch: El model tributari no coincideix amb el model esperat del llibre
+        de Renda.
+      period_mismatch: El període no coincideix amb el període esperat del llibre
+        de Renda.
 application:
   auth:
     provider_impact:
@@ -609,15 +612,6 @@ cli:
     version_help: Mostrar la versió del paquet i el resum del registre
   setup:
     app_help: Preparar el perfil local i l'autenticació necessaris per usar l'aplicació
-    reset:
-      help: Restabliment destructiu per àmbit de l'estat local d'usuari; requereix --yes.
-      profile_help: Elimina tots els perfils de l'operador i els esborranys associats.
-      auth_help: Esborra l'estat de sessió d'autenticació.
-      data_help: Mou les files no desxifrables de secure_objects a quarantena.
-      all_help: Combina els àmbits profile, auth i data.
-      yes_help: Confirmar explícitament l'operació destructiva.
-      requires_yes: "Aquesta operació és destructiva. Torneu a executar amb --yes per confirmar."
-      scope_required: "Heu de triar almenys un àmbit: --profile, --auth, --data o --all."
     auth:
       app_help: Configurar i comprovar l'autenticació de l'AEAT
       configure:
@@ -701,12 +695,25 @@ cli:
       use_help: Activar un perfil local
       use_name_help: Nom del perfil
       validate_help: Validar si el perfil actiu està complet
+    reset:
+      all_help: Combina els àmbits profile, auth i data.
+      auth_help: Esborra l'estat de sessió d'autenticació.
+      data_help: Mou les files no desxifrables de secure_objects a quarantena.
+      help: Restabliment destructiu per àmbit de l'estat local d'usuari; requereix
+        --yes.
+      profile_help: Elimina tots els perfils de l'operador i els esborranys associats.
+      requires_yes: Aquesta operació és destructiva. Torneu a executar amb --yes per
+        confirmar.
+      scope_required: 'Heu de triar almenys un àmbit: --profile, --auth, --data o
+        --all.'
+      yes_help: Confirmar explícitament l'operació destructiva.
     status:
       help: Mostrar la preparació de l'entorn i la següent acció requerida
   topic:
     app_help: Mostrar ajuda conceptual sobre règims, models i processos AEAT
     errors:
-      not_found: "Tema no trobat: %{slug}. Executeu 'aeat topic' per llistar els temes registrats."
+      not_found: 'Tema no trobat: %{slug}. Executeu ''aeat topic'' per llistar els
+        temes registrats.'
     opts:
       slug: Identificador del tema (kebab-case, ex. iva-regime)
   txs:
@@ -849,6 +856,69 @@ setup:
     third_party_transactions_above_347_threshold_prompt: Realitzeu operacions amb
       tercers per sobre de 3005,06€ (Model 347)?
     welcome: Benvingut a l'assistent de configuració d'AEAT CLI
+topic:
+  authentication:
+    body: L'autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat
+      digital (FNMT / equivalent). Configura un proveïdor amb 'aeat setup auth configure'
+      i verifica amb 'aeat setup auth status'.
+    title: Autenticació amb l'AEAT
+  calendar:
+    body: El calendari mostra les obligacions de presentació (models i períodes) dins
+      d'un rang. Requereix un perfil amb règim IVA declarat perquè el motor no assumeixi
+      valors per defecte.
+    title: Calendari d'obligacions
+  casilla:
+    body: Una casella és un camp numerat d'un model. Les caselles poden ser manuals,
+      calculades o derivades de bindings. 'aeat app modelo casillas <modelo>' les
+      llista.
+    title: Caselles
+  formats:
+    body: La CLI emet sortida en text, JSON, taula o csv segons '--format'. JSON és
+      recomanat per a automatització; text per a inspecció humana.
+    title: Formats de sortida
+  irpf-regime:
+    body: Règim IRPF d'un autònom. Estimació directa (normal o simplificada) o estimació
+      objectiva (mòduls). Determina quins models de pagament fraccionat apliquen (130
+      vs 131).
+    title: Règim IRPF
+  iva-regime:
+    body: Règim IVA aplicable al contribuent. General, simplificat, recàrrec d'equivalència,
+      exempt, REAGP o REBU. Determina el model 303 trimestral i el resum anual 390.
+    title: Règim IVA
+  modelos:
+    body: Catàleg de models tributaris AEAT (303, 130, 100, 347, 349, 111, 115, 184,
+      etc.). Cada model té el seu calendari, caselles i regles d'aplicabilitat. 'aeat
+      app modelo list' enumera els disponibles.
+    title: Models tributaris
+  pago-fraccionado:
+    body: Pagament a compte de l'IRPF que fa un autònom cada trimestre. El model 130
+      aplica a estimació directa; el 131 a estimació objectiva. El càlcul usa les
+      dades del trimestre i, en alguns casos, les de l'exercici anterior.
+    title: Pagament fraccionat IRPF
+  profile:
+    body: El perfil local conté la teva identificació fiscal (NIF), activitat principal,
+      règim IVA / IRPF i enrolaments opcionals (SII, Verifactu, intracomunitari).
+      Edita'l amb 'aeat setup profile set <clau> <valor>'.
+    title: Perfil del contribuent
+  providers:
+    body: Proveïdors d'autenticació suportats; cadascun té requeriments diferents.
+      'aeat setup auth providers' els llista amb els prerequisits.
+    title: Proveïdors d'autenticació
+  recargo-extemporaneo:
+    body: La presentació fora de termini sense requeriment previ de l'AEAT acumula
+      un recàrrec de l'1% per mes (fins al 12%) durant el primer any i 15% més interessos
+      després de 12 mesos. Base legal Ley 58/2003 art-27.
+    title: Recàrrec per presentació extemporània
+  regimens:
+    body: Conjunt de règims fiscals aplicables a un autònom. Els dos eixos principals
+      són IVA (general, simplificat, recàrrec d'equivalència, exempt) i IRPF (directa,
+      objectiva).
+    title: Règims fiscals
+  sii-verifactu:
+    body: Sistemes de transmissió electrònica de factures a l'AEAT. SII (Subministrament
+      Immediat d'Informació) aplica obligatòriament a grans empreses; Verifactu (RD
+      1007/2023) és un requisit gradual per a sistemes de facturació.
+    title: SII i Verifactu
 transactions:
   import:
     message_053465: Transacció duplicada detectada dins de l'arxiu importat.
@@ -859,43 +929,147 @@ transactions:
     verified: Importació verificada amb èxit
   test_diagnostics:
     message: Falta el mes 2026-03 a l'arxiu importat.
-topic:
-  authentication:
-    body: 'L''autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat digital (FNMT / equivalent). Configura un proveïdor amb ''aeat setup auth configure'' i verifica amb ''aeat setup auth status''.'
-    title: 'Autenticació amb l''AEAT'
-  calendar:
-    body: 'El calendari mostra les obligacions de presentació (models i períodes) dins d''un rang. Requereix un perfil amb règim IVA declarat perquè el motor no assumeixi valors per defecte.'
-    title: 'Calendari d''obligacions'
-  casilla:
-    body: 'Una casella és un camp numerat d''un model. Les caselles poden ser manuals, calculades o derivades de bindings. ''aeat app modelo casillas <modelo>'' les llista.'
-    title: 'Caselles'
-  formats:
-    body: 'La CLI emet sortida en text, JSON, taula o csv segons ''--format''. JSON és recomanat per a automatització; text per a inspecció humana.'
-    title: 'Formats de sortida'
-  irpf-regime:
-    body: 'Règim IRPF d''un autònom. Estimació directa (normal o simplificada) o estimació objectiva (mòduls). Determina quins models de pagament fraccionat apliquen (130 vs 131).'
-    title: 'Règim IRPF'
-  iva-regime:
-    body: 'Règim IVA aplicable al contribuent. General, simplificat, recàrrec d''equivalència, exempt, REAGP o REBU. Determina el model 303 trimestral i el resum anual 390.'
-    title: 'Règim IVA'
-  modelos:
-    body: 'Catàleg de models tributaris AEAT (303, 130, 100, 347, 349, 111, 115, 184, etc.). Cada model té el seu calendari, caselles i regles d''aplicabilitat. ''aeat app modelo list'' enumera els disponibles.'
-    title: 'Models tributaris'
-  pago-fraccionado:
-    body: 'Pagament a compte de l''IRPF que fa un autònom cada trimestre. El model 130 aplica a estimació directa; el 131 a estimació objectiva. El càlcul usa les dades del trimestre i, en alguns casos, les de l''exercici anterior.'
-    title: 'Pagament fraccionat IRPF'
-  profile:
-    body: 'El perfil local conté la teva identificació fiscal (NIF), activitat principal, règim IVA / IRPF i enrolaments opcionals (SII, Verifactu, intracomunitari). Edita''l amb ''aeat setup profile set <clau> <valor>''.'
-    title: 'Perfil del contribuent'
-  providers:
-    body: 'Proveïdors d''autenticació suportats; cadascun té requeriments diferents. ''aeat setup auth providers'' els llista amb els prerequisits.'
-    title: 'Proveïdors d''autenticació'
-  recargo-extemporaneo:
-    body: 'La presentació fora de termini sense requeriment previ de l''AEAT acumula un recàrrec de l''1% per mes (fins al 12%) durant el primer any i 15% més interessos després de 12 mesos. Base legal Ley 58/2003 art-27.'
-    title: 'Recàrrec per presentació extemporània'
-  regimens:
-    body: 'Conjunt de règims fiscals aplicables a un autònom. Els dos eixos principals són IVA (general, simplificat, recàrrec d''equivalència, exempt) i IRPF (directa, objectiva).'
-    title: 'Règims fiscals'
-  sii-verifactu:
-    body: 'Sistemes de transmissió electrònica de factures a l''AEAT. SII (Subministrament Immediat d''Informació) aplica obligatòriament a grans empreses; Verifactu (RD 1007/2023) és un requisit gradual per a sistemes de facturació.'
-    title: 'SII i Verifactu'
+wizard:
+  setup:
+    description: Auxiliar de configuració per preparar les declaracions
+    enrollment:
+      enrollment-large-company:
+        prompt: Empresa de gran volum
+      enrollment-public-administration-budget-gt-6000000:
+        prompt: Pressupost administració pública superior a 6.000.000
+      title: Inscripció
+    errors:
+      missing_required_flags: 'Falten paràmetres requerits per a --quiet: %{missing}'
+    family:
+      family-descendants-eu-eea-deduction:
+        prompt: Descendents UE/EEE en deducció d'unitat familiar
+      family-minor-children-in-unit:
+        prompt: Fills menors en unitat familiar
+      title: Unitat familiar
+    iva:
+      iva-intracommunity-operations-exceed-50000-eur:
+        prompt: Operacions intracomunitàries superen 50.000 EUR
+      iva-oss-enrolled:
+        prompt: Alta en OSS
+      iva-regime:
+        prompt: Règim IVA
+      iva-roi-enrolled:
+        prompt: Alta en ROI
+      title: IVA
+    notes:
+      notes:
+        prompt: Notes de l'operador (no consumides pel motor)
+      title: Notes de l'operador
+    obligations:
+      bienes-extranjero-above-threshold:
+        prompt: Béns a l'estranger superen el llindar legal
+      does-intracomunitario:
+        prompt: Realitza operacions intracomunitàries
+      has-employees:
+        prompt: Té empleats i paga salaris amb retenció
+      pays-capital-income-with-retencion:
+        prompt: Paga rendes de capital amb retenció
+      pays-professionals-with-retencion:
+        prompt: Paga a professionals amb retenció
+      pays-rent-with-retencion:
+        prompt: Paga lloguer de local amb retenció
+      professional-income-withholding-ge-70pct:
+        prompt: Almenys 70% dels ingressos professionals amb retenció prèvia
+      third-party-transactions-above-347-threshold:
+        prompt: Operacions amb tercers superen el llindar del Modelo 347
+      title: Obligacions
+      uses-objective-estimation-irpf:
+        prompt: Tributa IRPF en estimació objectiva
+    profile:
+      activity:
+        prompt: Etiqueta d'activitat o clau controlada
+      address-postcode:
+        prompt: Codi postal del domicili fiscal
+      declaration-type:
+        prompt: Codi del tipus de declaració
+      iva-regime:
+        choices:
+          exento:
+            label: Exempt
+          general:
+            label: Règim general
+          recargo-equivalencia:
+            label: Recàrrec d'equivalència
+          simplificado:
+            label: Règim simplificat
+      name:
+        prompt: Nom visible mostrat en revisions locals
+      surnames:
+        prompt: Cognoms o raó social per a capçaleres d'exportació
+      tax-id:
+        prompt: Identificador fiscal (NIF/NIE) per a declaracions
+      title: Identitat del perfil
+    residence:
+      ccaa:
+        choices:
+          andalucia:
+            label: Andalusia
+          aragon:
+            label: Aragó
+          asturias:
+            label: Astúries
+          baleares:
+            label: Illes Balears
+          canarias:
+            label: Illes Canàries
+          cantabria:
+            label: Cantàbria
+          castilla_la_mancha:
+            label: Castella-la Manxa
+          castilla_y_leon:
+            label: Castella i Lleó
+          cataluna:
+            label: Catalunya
+          comunidad_valenciana:
+            label: Comunitat Valenciana
+          extremadura:
+            label: Extremadura
+          galicia:
+            label: Galícia
+          la_rioja:
+            label: La Rioja
+          madrid:
+            label: Madrid
+          murcia:
+            label: Múrcia
+      tax-residence-ccaa:
+        prompt: Comunitat autònoma de residència fiscal
+      title: Residència fiscal
+    spouse:
+      spouse-birth-date:
+        prompt: Data de naixement del cònjuge
+      spouse-disability-grade:
+        prompt: Clau de discapacitat del cònjuge
+      spouse-eu-eea-country:
+        prompt: País UE/EEE del cònjuge
+      spouse-eu-eea-resident:
+        prompt: Cònjuge resident UE/EEE
+      spouse-name:
+        prompt: Nom del cònjuge
+      spouse-non-resident-irpf:
+        prompt: Cònjuge no resident IRPF
+      spouse-sex:
+        prompt: Sexe del cònjuge
+      spouse-surnames:
+        prompt: Cognoms del cònjuge
+      spouse-tax-id:
+        prompt: NIF/NIE del cònjuge
+      title: Cònjuge
+    taxpayer:
+      taxpayer-birth-date:
+        prompt: Data de naixement del primer declarant
+      taxpayer-death-date:
+        prompt: Data de defunció del primer declarant
+      taxpayer-disability-grade:
+        prompt: Clau de discapacitat del primer declarant
+      taxpayer-marital-status:
+        prompt: Estat civil del primer declarant
+      taxpayer-sex:
+        prompt: Sexe del primer declarant
+      title: Primer declarant
+    title: Auxiliar de configuració

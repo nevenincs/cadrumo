@@ -1,9 +1,11 @@
 aggregation:
   models:
     errors:
-      annual_period_mixed: Az időszak nem keverhet éves és szévén belüli (negyedév/hónap) értékeket.
+      annual_period_mixed: Az időszak nem keverhet éves és szévén belüli (negyedév/hónap)
+        értékeket.
       month_required: A havi időszaktípushoz hónapnapérték szükséges.
-      period_type_ambiguous: Az időszaktípus nem egyértelmű; adja meg explicitül a negyedévet vagy hónapot.
+      period_type_ambiguous: Az időszaktípus nem egyértelmű; adja meg explicitül a
+        negyedévet vagy hónapot.
       quarter_required: A negyedéves időszaktípushoz negyedévérték szükséges.
     t_944805: Érvénytelen időszak formátum. Használja a YYYY, YYYY-Qn vagy YYYY-MM
       formátumot.
@@ -613,15 +615,6 @@ cli:
     version_help: Csomagverzió és regiszter-összefoglaló megjelenítése
   setup:
     app_help: A használathoz szükséges helyi profil és hitelesítés előkészítése
-    reset:
-      help: A helyi felhasználói állapot romboló, hatókör szerinti visszaállítása; --yes szükséges.
-      profile_help: Eltávolítja az összes operátor-profilt és a kapcsolódó tervezeteket.
-      auth_help: Törli a hitelesítési munkamenet állapotát.
-      data_help: Karanténba helyezi a nem dekódolható secure_objects sorokat.
-      all_help: A profile, auth és data hatókörök kombinálása.
-      yes_help: A romboló művelet kifejezett megerősítése.
-      requires_yes: "Ez a művelet romboló. Futtasd újra a --yes kapcsolóval a megerősítéshez."
-      scope_required: "Legalább egy hatókört ki kell választani: --profile, --auth, --data vagy --all."
     auth:
       app_help: AEAT-hitelesítés beállítása és ellenőrzése
       configure:
@@ -705,12 +698,25 @@ cli:
       use_help: Helyi profil aktiválása
       use_name_help: Profilnév
       validate_help: Az aktív profil teljességének ellenőrzése
+    reset:
+      all_help: A profile, auth és data hatókörök kombinálása.
+      auth_help: Törli a hitelesítési munkamenet állapotát.
+      data_help: Karanténba helyezi a nem dekódolható secure_objects sorokat.
+      help: A helyi felhasználói állapot romboló, hatókör szerinti visszaállítása;
+        --yes szükséges.
+      profile_help: Eltávolítja az összes operátor-profilt és a kapcsolódó tervezeteket.
+      requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval a megerősítéshez.
+      scope_required: 'Legalább egy hatókört ki kell választani: --profile, --auth,
+        --data vagy --all.'
+      yes_help: A romboló művelet kifejezett megerősítése.
     status:
       help: Beállítási állapot és következő szükséges művelet megjelenítése
   topic:
-    app_help: Konceptuális segítség megjelenítése a rezsimekről, modellekről és AEAT folyamatokról
+    app_help: Konceptuális segítség megjelenítése a rezsimekről, modellekről és AEAT
+      folyamatokról
     errors:
-      not_found: "Téma nem található: %{slug}. Futtasd: 'aeat topic' a regisztrált témák listájához."
+      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat topic'' a regisztrált
+        témák listájához.'
     opts:
       slug: Téma azonosító (kebab-case, pl. iva-regime)
   txs:
@@ -854,6 +860,70 @@ setup:
     third_party_transactions_above_347_threshold_prompt: Végez harmadik felekkel 3005,06€
       feletti műveleteket (347-es modell)?
     welcome: Üdvözli az AEAT CLI telepítővarázslója
+topic:
+  authentication:
+    body: 'Az AEAT hitelesítés Cl@ve Móvilt (push a regisztrált mobilra) vagy digitális
+      tanúsítványt (FNMT / megfelelő) használ. Állíts be szolgáltatót az ''aeat setup
+      auth configure'' paranccsal és ellenőrizd: ''aeat setup auth status''.'
+    title: AEAT hitelesítés
+  calendar:
+    body: A naptár megjeleníti a benyújtási kötelezettségeket (modellek és időszakok)
+      egy tartományon belül. Igényli, hogy a profil deklarálja az ÁFA rezsimet, hogy
+      a motor ne alapértelmezett értékeket feltételezzen.
+    title: Kötelezettségi naptár
+  casilla:
+    body: A casilla egy modell számozott mezője. A casillák lehetnek kézi, számított,
+      vagy bindingekből származtatottak. 'aeat app modelo casillas <modelo>' listázza
+      őket.
+    title: Casillák
+  formats:
+    body: A CLI text, JSON, tábla vagy csv formátumban ad ki kimenetet a '--format'
+      alapján. Automatizációhoz a JSON ajánlott; emberi vizsgálathoz a text.
+    title: Kimeneti formátumok
+  irpf-regime:
+    body: Egy önfoglalkoztató IRPF rezsimje. Estimación directa (normál vagy egyszerűsített)
+      vagy estimación objetiva (modulos). Meghatározza, mely pago fraccionado modellek
+      alkalmazandók (130 vs 131).
+    title: IRPF rezsim
+  iva-regime:
+    body: Az adózóra alkalmazandó ÁFA rezsim. General, simplificado, recargo de equivalencia,
+      exento, REAGP vagy REBU. Meghatározza a negyedéves 303-as modellt és a 390-es
+      éves összesítőt.
+    title: ÁFA rezsim
+  modelos:
+    body: AEAT adóbevallási modellek katalógusa (303, 130, 100, 347, 349, 111, 115,
+      184, stb.). Mindegyiknek saját naptára, casillái és alkalmazhatósági szabályai
+      vannak. 'aeat app modelo list' felsorolja a rendelkezésre állókat.
+    title: Adóbevallási modellek
+  pago-fraccionado:
+    body: Az önfoglalkoztató negyedévenkénti IRPF előleges befizetése. A 130-as modell
+      az estimación directa-ra, a 131-es az estimación objetiva-ra vonatkozik. A számítás
+      a negyedév adatait és néhány esetben az előző évet használja.
+    title: IRPF előleges befizetés
+  profile:
+    body: 'A helyi profil tartalmazza az adóazonosítódat (NIF), fő tevékenységedet,
+      ÁFA / IRPF rezsimedet és opcionális regisztrációkat (SII, Verifactu, intracomunitario).
+      Szerkeszd: ''aeat setup profile set <kulcs> <érték>''.'
+    title: Adózói profil
+  providers:
+    body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő követelményei
+      vannak. 'aeat setup auth providers' felsorolja őket a követelményekkel együtt.
+    title: Hitelesítési szolgáltatók
+  recargo-extemporaneo:
+    body: Határidő utáni benyújtás az AEAT előzetes felszólítása nélkül havi 1%-os
+      pótdíjat (legfeljebb 12%) gyűjt az első évben és 15%-ot plusz kamatot 12 hónap
+      után. Jogi alap Ley 58/2003 art-27.
+    title: Késedelmes benyújtás pótdíja
+  regimens:
+    body: Egy önfoglalkoztatóra alkalmazandó adózási rendszerek halmaza. A két fő
+      tengely az ÁFA (general, simplificado, recargo de equivalencia, exento) és az
+      IRPF (directa, objetiva).
+    title: Adózási rendszerek
+  sii-verifactu:
+    body: Elektronikus számlatovábbítási rendszerek az AEAT-hoz. Az SII (Suministro
+      Inmediato de Información) nagyvállalatokra kötelező; a Verifactu (RD 1007/2023)
+      számlázási rendszerekre fokozatosan kötelező.
+    title: SII és Verifactu
 transactions:
   import:
     message_053465: Duplikált tranzakció észlelve az importált fájlban.
@@ -864,43 +934,147 @@ transactions:
     verified: Importálás sikeresen ellenőrizve
   test_diagnostics:
     message: A 2026-03 hónap hiányzik az importált fájlból.
-topic:
-  authentication:
-    body: 'Az AEAT hitelesítés Cl@ve Móvilt (push a regisztrált mobilra) vagy digitális tanúsítványt (FNMT / megfelelő) használ. Állíts be szolgáltatót az ''aeat setup auth configure'' paranccsal és ellenőrizd: ''aeat setup auth status''.'
-    title: 'AEAT hitelesítés'
-  calendar:
-    body: 'A naptár megjeleníti a benyújtási kötelezettségeket (modellek és időszakok) egy tartományon belül. Igényli, hogy a profil deklarálja az ÁFA rezsimet, hogy a motor ne alapértelmezett értékeket feltételezzen.'
-    title: 'Kötelezettségi naptár'
-  casilla:
-    body: 'A casilla egy modell számozott mezője. A casillák lehetnek kézi, számított, vagy bindingekből származtatottak. ''aeat app modelo casillas <modelo>'' listázza őket.'
-    title: 'Casillák'
-  formats:
-    body: 'A CLI text, JSON, tábla vagy csv formátumban ad ki kimenetet a ''--format'' alapján. Automatizációhoz a JSON ajánlott; emberi vizsgálathoz a text.'
-    title: 'Kimeneti formátumok'
-  irpf-regime:
-    body: 'Egy önfoglalkoztató IRPF rezsimje. Estimación directa (normál vagy egyszerűsített) vagy estimación objetiva (modulos). Meghatározza, mely pago fraccionado modellek alkalmazandók (130 vs 131).'
-    title: 'IRPF rezsim'
-  iva-regime:
-    body: 'Az adózóra alkalmazandó ÁFA rezsim. General, simplificado, recargo de equivalencia, exento, REAGP vagy REBU. Meghatározza a negyedéves 303-as modellt és a 390-es éves összesítőt.'
-    title: 'ÁFA rezsim'
-  modelos:
-    body: 'AEAT adóbevallási modellek katalógusa (303, 130, 100, 347, 349, 111, 115, 184, stb.). Mindegyiknek saját naptára, casillái és alkalmazhatósági szabályai vannak. ''aeat app modelo list'' felsorolja a rendelkezésre állókat.'
-    title: 'Adóbevallási modellek'
-  pago-fraccionado:
-    body: 'Az önfoglalkoztató negyedévenkénti IRPF előleges befizetése. A 130-as modell az estimación directa-ra, a 131-es az estimación objetiva-ra vonatkozik. A számítás a negyedév adatait és néhány esetben az előző évet használja.'
-    title: 'IRPF előleges befizetés'
-  profile:
-    body: 'A helyi profil tartalmazza az adóazonosítódat (NIF), fő tevékenységedet, ÁFA / IRPF rezsimedet és opcionális regisztrációkat (SII, Verifactu, intracomunitario). Szerkeszd: ''aeat setup profile set <kulcs> <érték>''.'
-    title: 'Adózói profil'
-  providers:
-    body: 'Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő követelményei vannak. ''aeat setup auth providers'' felsorolja őket a követelményekkel együtt.'
-    title: 'Hitelesítési szolgáltatók'
-  recargo-extemporaneo:
-    body: 'Határidő utáni benyújtás az AEAT előzetes felszólítása nélkül havi 1%-os pótdíjat (legfeljebb 12%) gyűjt az első évben és 15%-ot plusz kamatot 12 hónap után. Jogi alap Ley 58/2003 art-27.'
-    title: 'Késedelmes benyújtás pótdíja'
-  regimens:
-    body: 'Egy önfoglalkoztatóra alkalmazandó adózási rendszerek halmaza. A két fő tengely az ÁFA (general, simplificado, recargo de equivalencia, exento) és az IRPF (directa, objetiva).'
-    title: 'Adózási rendszerek'
-  sii-verifactu:
-    body: 'Elektronikus számlatovábbítási rendszerek az AEAT-hoz. Az SII (Suministro Inmediato de Información) nagyvállalatokra kötelező; a Verifactu (RD 1007/2023) számlázási rendszerekre fokozatosan kötelező.'
-    title: 'SII és Verifactu'
+wizard:
+  setup:
+    description: Operátorbarát beállítás varázsló a bevallások előkészítéséhez
+    enrollment:
+      enrollment-large-company:
+        prompt: Nagyvállalat besorolás
+      enrollment-public-administration-budget-gt-6000000:
+        prompt: Közigazgatási költségvetés 6 000 000 felett
+      title: Bejelentés
+    errors:
+      missing_required_flags: 'Hiányzó kötelező zászlók --quiet futtatáshoz: %{missing}'
+    family:
+      family-descendants-eu-eea-deduction:
+        prompt: EU/EGT leszármazottak családi egység kedvezményében
+      family-minor-children-in-unit:
+        prompt: Kiskorú gyermekek a családi egységben
+      title: Családi egység
+    iva:
+      iva-intracommunity-operations-exceed-50000-eur:
+        prompt: Közösségi műveletek meghaladják az 50 000 EUR küszöböt
+      iva-oss-enrolled:
+        prompt: OSS bejegyzés
+      iva-regime:
+        prompt: ÁFA-rezsim
+      iva-roi-enrolled:
+        prompt: ROI bejegyzés
+      title: ÁFA
+    notes:
+      notes:
+        prompt: Operátori jegyzetek (a motor nem dolgozza fel)
+      title: Operátori jegyzetek
+    obligations:
+      bienes-extranjero-above-threshold:
+        prompt: Külföldön tartott eszközök a törvényi küszöb felett
+      does-intracomunitario:
+        prompt: Közösségi műveleteket végez
+      has-employees:
+        prompt: Van alkalmazottja és bérleti adóelőleget von
+      pays-capital-income-with-retencion:
+        prompt: Tőkejövedelmeket adóelőleggel fizet
+      pays-professionals-with-retencion:
+        prompt: Szakembereket adóelőleggel fizet
+      pays-rent-with-retencion:
+        prompt: Helyiségbérletet adóelőleggel fizet
+      professional-income-withholding-ge-70pct:
+        prompt: A szakmai jövedelem legalább 70%-a előzetes adólevonás alatt
+      third-party-transactions-above-347-threshold:
+        prompt: Harmadik felekkel folytatott műveletek meghaladják a Modelo 347 küszöböt
+      title: Bevallási kötelezettségek
+      uses-objective-estimation-irpf:
+        prompt: IRPF-et becsült rendszerben adózza
+    profile:
+      activity:
+        prompt: Tevékenységcímke vagy ellenőrzött kulcs
+      address-postcode:
+        prompt: Adózási cím irányítószáma
+      declaration-type:
+        prompt: Bevallás-típus kódja
+      iva-regime:
+        choices:
+          exento:
+            label: Mentes
+          general:
+            label: Általános rendszer
+          recargo-equivalencia:
+            label: Egyenértékűségi pótdíj
+          simplificado:
+            label: Egyszerűsített rendszer
+      name:
+        prompt: A helyi áttekintésben megjelenő név
+      surnames:
+        prompt: Vezetéknév vagy cégnév az exportfejlécekhez
+      tax-id:
+        prompt: Adóazonosító (NIF/NIE) bevallásokhoz
+      title: Profil azonosítása
+    residence:
+      ccaa:
+        choices:
+          andalucia:
+            label: Andalúzia
+          aragon:
+            label: Aragónia
+          asturias:
+            label: Asztúria
+          baleares:
+            label: Baleár-szigetek
+          canarias:
+            label: Kanári-szigetek
+          cantabria:
+            label: Kantábria
+          castilla_la_mancha:
+            label: Kasztília-La Mancha
+          castilla_y_leon:
+            label: Kasztília és León
+          cataluna:
+            label: Katalónia
+          comunidad_valenciana:
+            label: Valenciai közösség
+          extremadura:
+            label: Extremadura
+          galicia:
+            label: Galícia
+          la_rioja:
+            label: La Rioja
+          madrid:
+            label: Madrid
+          murcia:
+            label: Murcia
+      tax-residence-ccaa:
+        prompt: Adóügyi rezidens autonóm közösség
+      title: Adóügyi rezidencia
+    spouse:
+      spouse-birth-date:
+        prompt: A házastárs születési dátuma
+      spouse-disability-grade:
+        prompt: A házastárs fogyatékossági kódja
+      spouse-eu-eea-country:
+        prompt: A házastárs EU/EGT országa
+      spouse-eu-eea-resident:
+        prompt: Házastárs EU/EGT rezidens
+      spouse-name:
+        prompt: A házastárs keresztneve
+      spouse-non-resident-irpf:
+        prompt: Házastárs nem rezidens IRPF
+      spouse-sex:
+        prompt: A házastárs neme
+      spouse-surnames:
+        prompt: A házastárs vezetéknevei
+      spouse-tax-id:
+        prompt: A házastárs NIF/NIE azonosítója
+      title: Házastárs
+    taxpayer:
+      taxpayer-birth-date:
+        prompt: Az első adózó születési dátuma
+      taxpayer-death-date:
+        prompt: Az első adózó halálozási dátuma
+      taxpayer-disability-grade:
+        prompt: Az első adózó fogyatékossági kódja
+      taxpayer-marital-status:
+        prompt: Az első adózó családi állapota
+      taxpayer-sex:
+        prompt: Az első adózó neme
+      title: Az első adózó
+    title: Beállítás varázsló
