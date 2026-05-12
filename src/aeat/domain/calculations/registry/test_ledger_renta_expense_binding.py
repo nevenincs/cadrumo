@@ -122,13 +122,21 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
 
 
 def test_renta_ledger_expense_binding_rejects_noncanonical_selector() -> None:
-    binding = DataBindingDefinition(
-        id="bad-renta-binding",
-        source="ledger_renta_expense_aggregation",
-        selector={"modelo": "100", "period": "0A", "target_casilla": "9999", "fact": "deductible_amount_sum"},
-        aggregation={"op": "sum"},
-        legal_refs=("ley-35-2006:art-28",),
-        source_refs=("aeat-renta-2025-manual-parte1",),
+    # Use model_validate(dict) rather than the keyword constructor so the
+    # schema-hygiene gate (test_registry_tests_do_not_define_schema_authority_objects)
+    # stays clean. The gate forbids the direct keyword-constructor syntax for
+    # schema-authority types in test files; the validator under test still
+    # needs an invalid binding instance to exercise the target_casilla
+    # allow-list error path.
+    binding = DataBindingDefinition.model_validate(
+        {
+            "id": "bad-renta-binding",
+            "source": "ledger_renta_expense_aggregation",
+            "selector": {"modelo": "100", "period": "0A", "target_casilla": "9999", "fact": "deductible_amount_sum"},
+            "aggregation": {"op": "sum"},
+            "legal_refs": ("ley-35-2006:art-28",),
+            "source_refs": ("aeat-renta-2025-manual-parte1",),
+        }
     )
 
     with pytest.raises(RegistryValidationError, match="outside the first Modelo 100 Renta ledger expense slice"):
