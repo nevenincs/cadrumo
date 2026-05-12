@@ -72,7 +72,7 @@ _DEFAULT_LOG_DIR = Path.home() / ".config" / "aeat" / "logs"
 _DEFAULT_LOG_FILE_NAME = "aeat.log"
 
 
-def _normalise_key(key: str) -> str:
+def _normalise_log_key(key: str) -> str:
     """Return a canonical, separator-stable representation of ``key``."""
 
     camel_split = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", key)
@@ -83,7 +83,7 @@ def _normalise_key(key: str) -> str:
 def _looks_sensitive_key(key: str | None) -> bool:
     """Return whether ``key`` should have its value redacted."""
 
-    return key is not None and _normalise_key(key) in _SENSITIVE_KEY_SET
+    return key is not None and _normalise_log_key(key) in _SENSITIVE_KEY_SET
 
 
 def _redacted_value(key: str | None, value: str) -> str:

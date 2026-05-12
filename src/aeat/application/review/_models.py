@@ -28,23 +28,10 @@ from ...domain.invoices import Invoice
 from ...domain.transactions import Transaction
 from ..filing import FilingValidationFinding
 from ..workflow._models import WorkflowEvent
-from ..workflow._utils import utc_now
+from ..workflow._utils import _normalise_key, utc_now
 from ._enums import ReviewItemKind, ReviewSeverity
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-
-def _normalise_key(value: str) -> str:
-    """Return the canonical key form used by setup/edit commands.
-
-    Strips surrounding whitespace, lowercases, and folds dashes into
-    dots. Underscores are preserved verbatim so registry-canonical
-    keys (e.g. ``does_intracomunitario`` and ``iva.roi_enrolled``)
-    survive the round-trip through the user-cli store and reach the
-    deadline engine, which looks values up by exact key.
-    """
-
-    return value.strip().lower().replace("-", ".")
 
 
 class _ReviewItemBase(BaseModel):
