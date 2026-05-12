@@ -15,16 +15,17 @@ from ...application.auth import (
     get_auth_provider,
     inspect_auth_acquisition_lock,
     require_verified_aeat_session,
-)
-from ...application.profile import list_profile_value_rows, validate_profile
-from ...application.setup_status import build_setup_status
-from ...application.user_cli import (
-    clear_profile_values,
-    set_active_profile,
-    set_profile_values,
-    state_repository,
     update_auth,
 )
+from ...application.profile import (
+    clear_profile_values,
+    list_profile_value_rows,
+    set_active_profile,
+    set_profile_values,
+    validate_profile,
+)
+from ...application.setup_status import build_setup_status
+from ...application.workflow import workflow_state_repository
 from ...core.config import Settings, load_settings
 from ...domain.profile import (
     PROFILE_KEYS,
@@ -75,9 +76,9 @@ def setup_init(
     if activity:
         seeded["activity"] = activity
     if seeded:
-        updated = state_repository().update(lambda state: set_profile_values(state, name, seeded))
+        updated = workflow_state_repository().update(lambda state: set_profile_values(state, name, seeded))
     else:
-        updated = state_repository().update(lambda state: set_active_profile(state, name))
+        updated = workflow_state_repository().update(lambda state: set_active_profile(state, name))
     record = updated.active_profile_record()
     payload = {
         "active_profile": updated.active_profile,
@@ -163,7 +164,7 @@ def auth_configure(
         raise _bad(tr("cli.setup.errors.certificate_file_required"))
     if listing.id == "certificate" and file is not None and not file.exists():
         raise _bad(tr("cli.setup.errors.file_not_found").format(file=file))
-    updated = state_repository().update(
+    updated = workflow_state_repository().update(
         lambda state: update_auth(
             state,
             provider=listing.id,
@@ -209,7 +210,7 @@ def auth_login(
     record = current.active_profile_record()
     profile_tax_id = record.values.get("tax.id") if record is not None else None
     if fresh:
-        state_repository().update(lambda state: update_auth(state, authenticated=False, subject=""))
+        workflow_state_repository().update(lambda state: update_auth(state, authenticated=False, subject=""))
     result = asyncio.run(
         _authenticate_configured_provider(
             provider_kind,
@@ -221,7 +222,7 @@ def auth_login(
     session = result.session
     assertion = result.assertion
     subject = session.identity_nif or profile_tax_id
-    updated = state_repository().update(lambda state: update_auth(state, authenticated=True, subject=subject))
+    updated = workflow_state_repository().update(lambda state: update_auth(state, authenticated=True, subject=subject))
     payload = {"auth": updated.auth, "session": session, "assertion": assertion, "result": result}
     _emit(
         ctx,
@@ -249,12 +250,12 @@ def auth_status(ctx: typer.Context) -> None:
             acquisition_lock = inspect_auth_acquisition_lock(settings, provider_kind)
             session = asyncio.run(require_verified_aeat_session(settings, kind=provider_kind))
             ready = True
-            state_repository().update(
+            workflow_state_repository().update(
                 lambda state: update_auth(state, authenticated=True, subject=session.identity_nif)
             )
         except (ValueError, AuthSessionUnavailableError) as exc:
             error = str(exc)
-            state_repository().update(lambda state: update_auth(state, authenticated=False))
+            workflow_state_repository().update(lambda state: update_auth(state, authenticated=False))
     current = _state()
     payload = {
         "auth": current.auth,
@@ -308,7 +309,7 @@ def auth_reset(
         lock_status = clear_auth_acquisition_lock(settings, provider_kind, reason="operator-reset-command")
     if reset_sessions:
         removed_sessions = delete_persisted_session(settings, kind=provider_kind)
-        state_repository().update(lambda state: update_auth(state, authenticated=False, subject=""))
+        workflow_state_repository().update(lambda state: update_auth(state, authenticated=False, subject=""))
 
     updated = _state()
     payload = {
@@ -341,7 +342,7 @@ def auth_whoami(ctx: typer.Context) -> None:
     profile_tax_id = record.values.get("tax.id") if record is not None else None
     settings = _settings_for_auth_provider(provider_kind, profile_tax_id=profile_tax_id)
     session = asyncio.run(require_verified_aeat_session(settings, kind=provider_kind))
-    updated = state_repository().update(
+    updated = workflow_state_repository().update(
         lambda state: update_auth(state, authenticated=True, subject=session.identity_nif)
     )
     payload = {"provider": updated.auth.provider, "subject": updated.auth.subject, "session": session}
@@ -368,7 +369,7 @@ def auth_logout(ctx: typer.Context) -> None:
             removed = delete_persisted_session(settings, kind=provider_kind)
         except ValueError:
             removed = []
-    updated = state_repository().update(lambda state: update_auth(state, authenticated=False, subject=""))
+        updated = workflow_state_repository().update(lambda state: update_auth(state, authenticated=False, subject=""))
     payload = {"auth": updated.auth, "removed_sessions": removed}
     _emit(
         ctx,
@@ -419,7 +420,7 @@ def _settings_for_auth_provider(provider_kind: AuthProviderKind, *, profile_tax_
 def profile_use(
     ctx: typer.Context, name: str = typer.Argument(..., help=tr("cli.setup.profile.use_name_help"))
 ) -> None:
-    updated = state_repository().update(lambda state: set_active_profile(state, name))
+    updated = workflow_state_repository().update(lambda state: set_active_profile(state, name))
     payload = {"active_profile": updated.active_profile}
     _emit(ctx, payload, [f"{tr('cli.setup.headers.profile')}\t{updated.active_profile or ''}"])
 
@@ -487,7 +488,7 @@ def profile_set(
     except KeyError as exc:
         raise _bad(tr("cli.setup.errors.unknown_profile_key").format(key=key)) from exc
     _state_value, name = _active_profile_or_exit(ctx)
-    updated = state_repository().update(lambda current: set_profile_values(current, name, {key: value}))
+    updated = workflow_state_repository().update(lambda current: set_profile_values(current, name, {key: value}))
     record = updated.active_profile_record()
     assert record is not None
     _emit(ctx, {"key": key, "value": record.values.get(key, "")}, [f"{key}\t{record.values.get(key, '')}"])
@@ -502,7 +503,7 @@ def profile_unset(
     except KeyError as exc:
         raise _bad(tr("cli.setup.errors.unknown_profile_key").format(key=key)) from exc
     _state_value, name = _active_profile_or_exit(ctx)
-    state_repository().update(lambda current: clear_profile_values(current, name, (key,)))
+    workflow_state_repository().update(lambda current: clear_profile_values(current, name, (key,)))
     _emit(ctx, {"key": key}, [f"{key}\t{tr('cli.setup.labels.unset')}"])
 
 

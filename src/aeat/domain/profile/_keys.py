@@ -25,6 +25,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core.i18n import Translatable as tr  # noqa: N813
+from ._errors import ProfileValidationError
 
 
 class ProfileKeyRequirement(StrEnum):
@@ -49,38 +50,35 @@ class ProfileKey(BaseModel):
     @classmethod
     def _validate_key_shape(cls, value: str) -> str:
         """Reject blank or whitespace-padded keys; keep dot-separated paths intact."""
-        trimmed = value.strip()
-        if not trimmed:
-            raise ValueError("key must not be empty or whitespace-only")
-        if trimmed != value:
-            raise ValueError("key must not be padded with whitespace")
-        return trimmed
+        if not value.strip():
+            raise ProfileValidationError("key must not be empty or whitespace-only")
+        if value.strip() != value:
+            raise ProfileValidationError("key must not be padded with whitespace")
+        return value
 
     @field_validator("description")
     @classmethod
     def _validate_description_key(cls, value: tr) -> tr:
         """Require profile-owned translation keys for authoritative descriptions."""
         if not value.strip():
-            raise ValueError("description must not be empty")
-        if not str(value).startswith("profile."):
-            raise ValueError("description must use a profile translation key")
+            raise ProfileValidationError("description must not be empty")
+        if not str(value).startswith("profile.keys."):
+            raise ProfileValidationError("description must use a profile translation key")
         return value
 
     @field_validator("required_when_key", "required_when_value")
     @classmethod
     def _validate_conditional_requirement(cls, value: str | None) -> str | None:
-        if value is not None and value.strip() != value:
-            raise ValueError("conditional requirement fields must not be padded")
+        if value and value.strip() != value:
+            raise ProfileValidationError("conditional requirement fields must not be padded")
         if value == "":
-            raise ValueError("conditional requirement fields must not be empty")
+            raise ProfileValidationError("conditional requirement fields must not be empty")
         return value
 
     @model_validator(mode="after")
     def _validate_conditional_requirement_pair(self) -> ProfileKey:
-        has_key = self.required_when_key is not None
-        has_value = self.required_when_value is not None
-        if has_key != has_value:
-            raise ValueError("required_when_key and required_when_value must be set together")
+        if bool(self.required_when_key) != bool(self.required_when_value):
+            raise ProfileValidationError("required_when_key and required_when_value must be set together")
         return self
 
 
@@ -99,7 +97,7 @@ def _key(
     return ProfileKey(
         key=key,
         requirement=requirement,
-        description=tr(f"profile.key.{key}"),
+        description=tr(f"profile.keys.{key}"),
         required_when_key=required_when_key,
         required_when_value=required_when_value,
     )

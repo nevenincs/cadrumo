@@ -5,7 +5,6 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict
 
 from .profile import list_profile_key_records, validate_profile
-from .user_cli import UserCliState
 
 _ENROLMENT_KEY = "iva.regime"
 """Profile key whose presence flips the operator profile from ``identity-only``

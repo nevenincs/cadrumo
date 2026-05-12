@@ -4,7 +4,15 @@ Every boundary-crossing type in :mod:`aeat.application.workflow` is
 defined here as a frozen, strict, ``extra="forbid"``
 :class:`pydantic.BaseModel` or as an :class:`enum.StrEnum` for closed
 enumerations. :attr:`WorkflowStep.details` is reserved for string-valued
-diagnostics emitted by workflow stages.
+diagnostics emitted by workflow diagnostics.
+
+Import ordering note
+--------------------
+The ``SiteHealthStatus`` and ``FilingObligation`` imports are placed
+*after* :class:`WorkflowState` and related state models so that
+:mod:`aeat.application.auth._actions` (which imports :class:`WorkflowState`
+from this partially-initialised module during the browser-adapter import
+chain) finds those names already present.
 """
 
 from __future__ import annotations
@@ -12,33 +20,33 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime
 from enum import StrEnum
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
-from ...domain.deadlines import FilingObligation
+from ..auth._models import AuthState
+from ._utils import utc_now
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
+class WorkflowEvent(BaseModel):
+    """One operator-visible workflow event."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    action: str = Field(min_length=1)
+    reason: str = ""
+    at: datetime = Field(default_factory=utc_now)
+
+    @field_validator("action", "reason")
+    @classmethod
+    def _trim_text(cls, value: str) -> str:
+        return value.strip()
+
+
 class WorkflowStage(StrEnum):
-    """The read-only stages of the composite workflow, in strict order.
-
-    The engine walks the stages top-to-bottom. Downstream code (the CLI,
-    schedulers, the UI) depends on the linear ordering for the bailout
-    matrix; the ordering is part of the public contract.
-
-    Attributes:
-        LOADING_PROFILE: Resolve the autónomo profile and target run.
-        COMPUTING_DEADLINES: Determine the next pending obligation.
-        CHECKING_INBOX: Probe the AEAT inbox for blocking requerimientos.
-        BUILDING_DRAFT: Compose the filing draft from registry-backed inputs.
-        VALIDATING_DRAFT: Apply registry-backed validation to the draft.
-        RUNNING_PREFLIGHT: Execute the submission engine's preflight.
-        DONE: Terminal success stage.
-        ABORTED: Terminal failure stage; pairs with a
-            :class:`WorkflowAbortReason`.
-    """
+    """The read-only stages of the composite workflow, in strict order."""
 
     LOADING_PROFILE = "LOADING_PROFILE"
     COMPUTING_DEADLINES = "COMPUTING_DEADLINES"
@@ -51,27 +59,7 @@ class WorkflowStage(StrEnum):
 
 
 class WorkflowAbortReason(StrEnum):
-    """Closed set of reasons the workflow may abort.
-
-    Every value is reachable from a specific :class:`WorkflowStage` via
-    the bailout matrix and is exhaustively tested.
-
-    Attributes:
-        NO_PENDING_OBLIGATION: No filing is due in the requested window.
-        INBOX_BLOCKING_REQUERIMIENTO: An open requerimiento blocks the
-            obligation until resolved.
-        DEADLINE_PASSED: The statutory deadline has expired.
-        ALREADY_FILED: A filing for the obligation already exists.
-        DRAFT_HAS_ERRORS: Draft validation reported blocking errors.
-        PREFLIGHT_FAILED: The submission engine's preflight rejected the
-            draft.
-        CERT_INVALID: The certificate bundle is invalid or expired.
-        USER_CANCELLED: The operator interrupted the run.
-        SITE_UNAVAILABLE: AEAT site-health probe reports unavailable.
-        UNHANDLED_EXCEPTION: A wrapped component raised an unexpected
-            exception captured as
-            :class:`aeat.application.workflow.WorkflowComponentError`.
-    """
+    """Closed set of reasons the workflow may abort."""
 
     NO_PENDING_OBLIGATION = "NO_PENDING_OBLIGATION"
     INBOX_BLOCKING_REQUERIMIENTO = "INBOX_BLOCKING_REQUERIMIENTO"
@@ -85,15 +73,112 @@ class WorkflowAbortReason(StrEnum):
     UNHANDLED_EXCEPTION = "UNHANDLED_EXCEPTION"
 
 
-class SiteHealthAlert(BaseModel):
-    """Workflow-side alert wrapping a browser site-health status.
+class DeclarationPointer(BaseModel):
+    """Pointer to a persisted filing draft and its status."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    modelo: str
+    period: str
+    draft_id: str | None = None
+    status: str | None = None
+    exported_path: str | None = None
+    verified: bool | None = None
+    updated_at: datetime = Field(default_factory=utc_now)
+
+
+def declaration_key(modelo: str, period: str) -> str:
+    """Return the canonical state-store key for a ``(modelo, period)`` pair."""
+    return f"{modelo.strip()}:{period.strip()}"
+
+
+class WorkflowState(BaseModel):
+    """Encrypted operator state for the AEAT user CLI.
+
+    The entire state is persisted as a single encrypted envelope via
+    :class:`WorkflowStateRepository`. Mutations always return a new
+    copy (:meth:`model_copy`) to preserve the frozen-model invariant.
 
     Attributes:
-        stage: The :class:`WorkflowStage` that produced the alert.
-        status: The :class:`aeat.adapters.outbound.aeat.browser._site_health.SiteHealthStatus`
-            captured by the probe.
-        run_id: Identifier of the workflow run that emitted the alert.
+        auth: Local AEAT access readiness state.
+        profiles: Operator-entered profiles keyed by profile name.
+        active_profile: Currently selected profile name, or ``None``.
+        declarations: Filing draft pointers keyed by :func:`declaration_key`.
+        invoice_reviews: Invoice review annotations keyed by ``invoice_id``.
+        ledger_reviews: Ledger transaction review annotations keyed by
+            ``transaction_id``.
+        updated_at: UTC timestamp of the last write.
     """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    auth: AuthState = Field(default_factory=AuthState)
+    profiles: dict[str, Any] = Field(default_factory=dict)  # str → ProfileRecord
+    active_profile: str | None = None
+    declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
+    invoice_reviews: dict[str, Any] = Field(default_factory=dict)
+    ledger_reviews: dict[str, Any] = Field(default_factory=dict)
+    updated_at: datetime = Field(default_factory=utc_now)
+
+    def active_profile_record(self) -> Any | None:
+        """Return the active profile record, or ``None`` when no profile is selected."""
+        if self.active_profile is None:
+            return None
+        record = self.profiles.get(self.active_profile)
+        if isinstance(record, dict):
+            from ..profile._models import ProfileRecord
+
+            return ProfileRecord.model_validate(record)
+        return record
+
+
+def update_declaration_pointer(
+    state: WorkflowState,
+    *,
+    modelo: str,
+    period: str,
+    draft_id: str,
+    status: str,
+    exported_path: str | None = None,
+    verified: bool | None = None,
+) -> WorkflowState:
+    """Return ``state`` with the declaration pointer upserted for ``(modelo, period)``."""
+    declarations: dict[str, Any] = dict(state.declarations)
+    key = declaration_key(modelo, period)
+    current = declarations.get(key)
+    if isinstance(current, dict):
+        current = DeclarationPointer.model_validate(current)
+
+    update_fields: dict[str, Any] = {
+        "draft_id": draft_id,
+        "status": status,
+        "updated_at": utc_now(),
+    }
+    if exported_path is not None:
+        update_fields["exported_path"] = exported_path
+    if verified is not None:
+        update_fields["verified"] = verified
+
+    if isinstance(current, DeclarationPointer):
+        declarations[key] = current.model_copy(update=update_fields)
+    else:
+        declarations[key] = DeclarationPointer(modelo=modelo, period=period, **update_fields)
+    return state.model_copy(update={"declarations": declarations, "updated_at": utc_now()})
+
+
+# ---------------------------------------------------------------------------
+# Heavy adapter/domain imports — placed AFTER the state models above so that
+# auth._actions (which imports WorkflowState from this partially-loaded
+# module during the browser-adapter initialisation chain) finds the names
+# already present in sys.modules['aeat.application.workflow._models'].
+# ---------------------------------------------------------------------------
+
+from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus  # noqa: E402
+from ...domain.deadlines import FilingObligation  # noqa: E402
+
+
+class SiteHealthAlert(BaseModel):
+    """Workflow-side alert wrapping a browser site-health status."""
 
     model_config = _STRICT_FROZEN
 
@@ -103,22 +188,7 @@ class SiteHealthAlert(BaseModel):
 
 
 class WorkflowStep(BaseModel):
-    """A single step in a :class:`WorkflowResult`.
-
-    Attributes:
-        stage: The :class:`WorkflowStage` this step represents.
-        started_at: UTC timestamp when the step began.
-        ended_at: UTC timestamp when the step ended. ``None`` while the
-            step is still running (never persisted as ``None``).
-        success: Whether the step completed without triggering a
-            workflow abort. ``None`` only during construction of a
-            still-running step; always set on completed steps.
-        summary: Multilingual human-readable summary of what happened in
-            this step.
-        details: Optional human-readable diagnostics dictionary. Per-stage
-            diagnostics are string-valued so the result can carry useful
-            context without adding one envelope type per workflow step.
-    """
+    """A single step in a :class:`WorkflowResult`."""
 
     model_config = _STRICT_FROZEN
 
@@ -132,7 +202,6 @@ class WorkflowStep(BaseModel):
 
     @model_validator(mode="after")
     def _check_timestamps(self) -> WorkflowStep:
-        """Reject steps whose ``ended_at`` precedes ``started_at``."""
         if self.ended_at is not None and self.ended_at < self.started_at:
             raise ValueError(f"ended_at ({self.ended_at}) precedes started_at ({self.started_at})")
         if self.ended_at is not None and self.success is None:
@@ -141,27 +210,7 @@ class WorkflowStep(BaseModel):
 
 
 class WorkflowResult(BaseModel):
-    """The full result of one :meth:`WorkflowEngine.run_next` invocation.
-
-    Attributes:
-        run_id: Stable 16-char hex hash of
-            ``(profile.tax_id, modelo, period, started_at)``. Identical
-            seeds produce identical ids across processes.
-        started_at: UTC timestamp when the engine began driving.
-        ended_at: UTC timestamp when the engine returned.
-        final_stage: The terminal stage reached. Either
-            :attr:`WorkflowStage.DONE` or :attr:`WorkflowStage.ABORTED`.
-        aborted_reason: The :class:`WorkflowAbortReason` recorded when
-            ``final_stage == ABORTED``; ``None`` otherwise.
-        obligation: The :class:`aeat.domain.deadlines.FilingObligation` the
-            workflow targeted, if one was computed before the bailout.
-        draft_id: The filing draft id, if a draft was built.
-        submission_id: Reserved for historical persisted records. New
-            workflow runs never create AEAT submission ids.
-        steps: Tuple of :class:`WorkflowStep` in the order the engine
-            executed them.
-        summary: Multilingual user-facing summary of the whole run.
-    """
+    """The full result of one :meth:`WorkflowEngine.run_next` invocation."""
 
     model_config = _STRICT_FROZEN
 
@@ -178,20 +227,12 @@ class WorkflowResult(BaseModel):
 
     @model_validator(mode="after")
     def _check_terminal_consistency(self) -> WorkflowResult:
-        """Enforce the terminal-state invariants.
-
-        - ``final_stage == ABORTED`` iff ``aborted_reason is not None``.
-        - ``final_stage == DONE`` iff ``aborted_reason is None``.
-        - ``ended_at >= started_at``.
-        """
         if self.ended_at < self.started_at:
             raise ValueError("ended_at precedes started_at")
         if self.final_stage is WorkflowStage.ABORTED and self.aborted_reason is None:
             raise ValueError("ABORTED results must carry an aborted_reason")
         if self.final_stage is WorkflowStage.DONE and self.aborted_reason is not None:
             raise ValueError("DONE results must not carry an aborted_reason")
-        if self.final_stage not in {WorkflowStage.DONE, WorkflowStage.ABORTED}:
-            raise ValueError(f"final_stage must be DONE or ABORTED, got {self.final_stage}")
         return self
 
 
@@ -202,18 +243,6 @@ def compute_run_id(
     period: str,
     started_at: datetime,
 ) -> str:
-    """Return a stable 16-char hex hash for a workflow run.
-
-    Args:
-        tax_id: The profile tax ID.
-        modelo: The target modelo, or ``"-"`` when the
-            engine has not yet determined one.
-        period: The target period (e.g. ``"2026Q1"``), or ``"-"``.
-        started_at: The UTC start timestamp of the run.
-
-    Returns:
-        A 16-character lowercase hex prefix of the SHA-256 digest of
-        the deterministic tuple encoding.
-    """
+    """Return a stable 16-char hex hash for a workflow run."""
     payload = "|".join([tax_id, modelo, period, started_at.isoformat()])
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]

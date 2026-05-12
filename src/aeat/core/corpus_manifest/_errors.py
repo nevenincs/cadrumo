@@ -11,7 +11,7 @@ from __future__ import annotations
 from ..errors import AeatError
 
 
-class CorpusManifestError(AeatError):
+class CorpusManifestError(AeatError, ValueError):
     """Base error for any failure in corpus-manifest parsing or validation.
 
     Concrete failure modes derive from this class; callers can catch

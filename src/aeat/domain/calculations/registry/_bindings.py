@@ -73,9 +73,9 @@ class RegistryFilingObservation(BaseModel):
     def _values_are_decimal(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
         for casilla_id, casilla_value in value.items():
             if not casilla_id:
-                raise ValueError("observed casilla id must be non-empty")
+                raise RegistryValidationError("observed casilla id must be non-empty")
             if isinstance(casilla_value, bool) or not isinstance(casilla_value, Decimal):
-                raise ValueError(f"observed casilla {casilla_id!r} must be a Decimal")
+                raise RegistryValidationError(f"observed casilla {casilla_id!r} must be a Decimal")
         return value
 
 
@@ -94,7 +94,7 @@ class RegistryFilingObservationRequirement(BaseModel):
     @classmethod
     def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("observation requirement tuple entries must be unique")
+            raise RegistryValidationError("observation requirement tuple entries must be unique")
         return value
 
 
@@ -213,7 +213,7 @@ class _PreviousFilingSelector(BaseModel):
     @classmethod
     def _source_periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("previous-filing source_periods entries must be unique")
+            raise RegistryValidationError("previous-filing source_periods entries must be unique")
         return value
 
     @property
@@ -226,22 +226,22 @@ class _PreviousFilingSelector(BaseModel):
     @classmethod
     def _period_not_empty(cls, value: str | None) -> str | None:
         if value is not None and not value.strip():
-            raise ValueError("previous-filing period must be non-empty")
+            raise RegistryValidationError("previous-filing period must be non-empty")
         return value
 
     @field_validator("source_casillas")
     @classmethod
     def _source_casillas_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("previous-filing source_casillas entries must be unique")
+            raise RegistryValidationError("previous-filing source_casillas entries must be unique")
         return value
 
     @model_validator(mode="after")
     def _validate_period_selector(self) -> _PreviousFilingSelector:
         if self.period is not None and self.source_periods:
-            raise ValueError("previous-filing selector must use period or source_periods, not both")
+            raise RegistryValidationError("previous-filing selector must use period or source_periods, not both")
         if self.period is None and not self.source_periods:
-            raise ValueError("previous-filing selector must declare period or source_periods")
+            raise RegistryValidationError("previous-filing selector must declare period or source_periods")
         return self
 
 
@@ -300,9 +300,9 @@ class InvoiceObservation(BaseModel):
     @classmethod
     def _country_code_uppercase(cls, value: str) -> str:
         if value != value.upper():
-            raise ValueError("country_code must be uppercase")
+            raise RegistryValidationError("country_code must be uppercase")
         if not value.isalpha():
-            raise ValueError("country_code must be alphabetic")
+            raise RegistryValidationError("country_code must be alphabetic")
         return value
 
     @field_validator("intracommunity_clave")
@@ -311,9 +311,9 @@ class InvoiceObservation(BaseModel):
         if value is None:
             return None
         if value != value.upper():
-            raise ValueError("intracommunity_clave must be uppercase")
+            raise RegistryValidationError("intracommunity_clave must be uppercase")
         if value not in {"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"}:
-            raise ValueError(f"intracommunity_clave {value!r} is not an AEAT clave de operacion")
+            raise RegistryValidationError(f"intracommunity_clave {value!r} is not an AEAT clave de operacion")
         return value
 
     @field_validator("base_amount", "rectified_base_previous")
@@ -322,21 +322,23 @@ class InvoiceObservation(BaseModel):
         if value is None:
             return None
         if isinstance(value, bool) or not isinstance(value, Decimal):
-            raise ValueError("invoice amounts must be Decimal")
+            raise RegistryValidationError("invoice amounts must be Decimal")
         return value
 
     @model_validator(mode="after")
     def _validate_rectification(self) -> InvoiceObservation:
         if self.is_rectification:
             if self.rectified_year is None or self.rectified_period is None:
-                raise ValueError("rectification observation must declare rectified_year and rectified_period")
+                raise RegistryValidationError(
+                    "rectification observation must declare rectified_year and rectified_period"
+                )
             if self.rectified_base_previous is None:
-                raise ValueError("rectification observation must declare rectified_base_previous")
+                raise RegistryValidationError("rectification observation must declare rectified_base_previous")
         else:
             if self.rectified_year is not None or self.rectified_period is not None:
-                raise ValueError("non-rectification observation must not declare rectified_year/period")
+                raise RegistryValidationError("non-rectification observation must not declare rectified_year/period")
             if self.rectified_base_previous is not None:
-                raise ValueError("non-rectification observation must not declare rectified_base_previous")
+                raise RegistryValidationError("non-rectification observation must not declare rectified_base_previous")
         return self
 
 
@@ -358,7 +360,7 @@ class InvoiceObservationRequirement(BaseModel):
     @classmethod
     def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("invoice requirement tuple entries must be unique")
+            raise RegistryValidationError("invoice requirement tuple entries must be unique")
         return value
 
 
@@ -379,12 +381,12 @@ class _InvoiceSelector(BaseModel):
     @classmethod
     def _claves_uppercase_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("invoice selector claves entries must be unique")
+            raise RegistryValidationError("invoice selector claves entries must be unique")
         for clave in value:
             if clave != clave.upper():
-                raise ValueError("invoice selector clave must be uppercase")
+                raise RegistryValidationError("invoice selector clave must be uppercase")
             if clave not in {"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"}:
-                raise ValueError(f"invoice selector clave {clave!r} is not an AEAT clave de operacion")
+                raise RegistryValidationError(f"invoice selector clave {clave!r} is not an AEAT clave de operacion")
         return value
 
 
@@ -867,7 +869,7 @@ class _OssIossLedgerSelector(BaseModel):
     @classmethod
     def _kinds_unique(cls, value: tuple[TransactionKind, ...]) -> tuple[TransactionKind, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("transaction_kinds entries must be unique")
+            raise RegistryValidationError("transaction_kinds entries must be unique")
         return value
 
 
@@ -1023,14 +1025,14 @@ class _IvaLedgerSelector(BaseModel):
     @classmethod
     def _categories_unique(cls, value: tuple[VATCategory, ...]) -> tuple[VATCategory, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("categories entries must be unique")
+            raise RegistryValidationError("categories entries must be unique")
         return value
 
     @field_validator("rate_kinds", mode="after")
     @classmethod
     def _rate_kinds_unique(cls, value: tuple[VATRateKind, ...]) -> tuple[VATRateKind, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("rate_kinds entries must be unique")
+            raise RegistryValidationError("rate_kinds entries must be unique")
         return value
 
 

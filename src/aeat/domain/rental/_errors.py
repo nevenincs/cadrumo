@@ -51,11 +51,20 @@ class RentalAggregationError(RentalRegisterError):
     """
 
 
+class RentalValidationError(RentalRegisterError, ValueError):
+    """Raised when rental records violate state or shape invariants.
+
+    Inherits from ValueError to maintain compatibility with Pydantic
+    validators.
+    """
+
+
 __all__ = [
     "AmortizationLedgerCapExceededError",
     "ContractNotFoundError",
     "FincaNotFoundError",
     "RentalAggregationError",
     "RentalRegisterError",
+    "RentalValidationError",
     "TierResolutionError",
 ]

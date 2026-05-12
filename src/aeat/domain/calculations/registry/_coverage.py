@@ -8,6 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from ._errors import RegistryValidationError
 from ._schema import EvidenceTier, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._snapshot import _build_validated_snapshot
 from ._validate import RegistryValidator
@@ -222,5 +223,5 @@ def _representative_year(revision: ModeloRevision) -> int:
     if selector.years:
         return selector.years[0]
     if selector.year_from is None:
-        raise ValueError(f"revision {revision.id!r} has no representative filing year")
+        raise RegistryValidationError(f"revision {revision.id!r} has no representative filing year")
     return selector.year_from

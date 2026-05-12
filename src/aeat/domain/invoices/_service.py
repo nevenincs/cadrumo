@@ -24,6 +24,7 @@ from ._enums import InvoiceKind
 from ._errors import (
     InvoiceLinkError,
     InvoiceNotFoundError,
+    InvoiceValidationError,
 )
 from ._models import Invoice, InvoiceCatalogue
 
@@ -56,8 +57,8 @@ class ReconciliationSuggestion(BaseModel):
     @field_validator("score")
     @classmethod
     def _require_score_in_range(cls, value: Decimal) -> Decimal:
-        if value < Decimal("0") or value > Decimal("1"):
-            raise ValueError("score must be in the inclusive 0..1 range")
+        if not (0 <= value <= 1):
+            raise InvoiceValidationError("score must be in the inclusive 0..1 range")
         return value
 
 

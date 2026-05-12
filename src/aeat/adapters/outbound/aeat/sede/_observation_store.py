@@ -10,6 +10,7 @@ from pathlib import Path
 from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClass
 from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....persistence.storage.sql import SecureObjectRepository
+from ._errors import SedeValidationError
 from ._schema import FiledDeclarationArtefact, FiledDeclarationObservation
 
 _SAFE_SEGMENT_RE = re.compile(r"[^0-9A-Za-z_.-]+")
@@ -36,15 +37,15 @@ class FiledDeclarationObservationStore:
     ) -> FiledDeclarationArtefact:
         """Persist one captured artefact and return metadata with its storage reference."""
 
-        if not body:
-            raise ValueError("cannot persist an empty filed-declaration artefact")
-        if len(body) != artefact.byte_count:
-            raise ValueError("filed-declaration artefact byte count does not match its body")
+        if not artefact.storage_ref and not body:
+            raise SedeValidationError("cannot persist an empty filed-declaration artefact")
+        if body and len(body) != artefact.byte_count:
+            raise SedeValidationError("filed-declaration artefact byte count does not match its body")
 
         del observation_key
+        if body and hashlib.sha256(body).hexdigest() != artefact.sha256:
+            raise SedeValidationError("filed-declaration artefact SHA-256 does not match its body")
         digest = hashlib.sha256(body).hexdigest()
-        if digest != artefact.sha256:
-            raise ValueError("filed-declaration artefact SHA-256 does not match its body")
         self._objects.save(
             namespace=_ARTEFACT_NAMESPACE,
             object_key=digest,
@@ -141,7 +142,7 @@ def _safe_segment(value: str) -> str:
     cleaned = _SAFE_SEGMENT_RE.sub("_", value.strip())
     cleaned = cleaned.strip("._")
     if not cleaned:
-        raise ValueError("filed-declaration store path segment is empty")
+        raise SedeValidationError("filed-declaration store path segment is empty")
     return cleaned
 
 
@@ -155,7 +156,7 @@ def _format_storage_ref(digest: str) -> str:
 
 def _parse_storage_ref(storage_ref: str) -> str:
     if not storage_ref.startswith(_STORAGE_REF_PREFIX):
-        raise ValueError("filed-declaration artefact storage reference is not financial")
+        raise SedeValidationError("filed-declaration artefact storage reference is not financial")
     return storage_ref.removeprefix(_STORAGE_REF_PREFIX)
 
 

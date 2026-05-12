@@ -16,6 +16,7 @@ from typing import Any, Self
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ._enums import AttachmentKind, AttachmentSource
+from ._errors import AttachmentValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -37,7 +38,7 @@ def _normalize_hex_digest(value: str, *, field_name: str) -> str:
     """
     normalized = value.strip().lower()
     if len(normalized) != 64 or any(char not in _HEX_DIGITS for char in normalized):
-        raise ValueError(f"{field_name} must be a 64-character lowercase hex digest")
+        raise AttachmentValidationError(f"{field_name} must be a 64-character lowercase hex digest")
     return normalized
 
 
@@ -57,10 +58,10 @@ def _dedupe_preserve_order(values: Iterable[str], *, field_name: str) -> tuple[s
     seen: dict[str, None] = {}
     for raw in values:
         if not isinstance(raw, str):
-            raise ValueError(f"{field_name} must contain strings only")
+            raise AttachmentValidationError(f"{field_name} must contain strings only")
         trimmed = raw.strip()
         if not trimmed:
-            raise ValueError(f"{field_name} must not contain blank identifiers")
+            raise AttachmentValidationError(f"{field_name} must not contain blank identifiers")
         seen.setdefault(trimmed, None)
     return tuple(seen)
 
@@ -128,7 +129,7 @@ class Attachment(BaseModel):
         """Trim required text fields, rejecting whitespace-only values."""
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("value must not be blank")
+            raise AttachmentValidationError("value must not be blank")
         return trimmed
 
     @field_validator("notes")
@@ -146,9 +147,9 @@ class Attachment(BaseModel):
         elif isinstance(value, datetime):
             parsed = value
         else:
-            raise ValueError("captured_at must be a datetime or ISO-8601 string")
+            raise AttachmentValidationError("captured_at must be a datetime or ISO-8601 string")
         if parsed.tzinfo is None or parsed.utcoffset() is None:
-            raise ValueError("captured_at must be timezone-aware")
+            raise AttachmentValidationError("captured_at must be timezone-aware")
         return parsed
 
     @field_validator("linked_transaction_ids", mode="before")
@@ -158,9 +159,9 @@ class Attachment(BaseModel):
         if value is None:
             return ()
         if isinstance(value, str | bytes):
-            raise ValueError("linked_transaction_ids must be an iterable of strings, not a scalar")
+            raise AttachmentValidationError("linked_transaction_ids must be an iterable of strings, not a scalar")
         if not isinstance(value, Iterable):
-            raise ValueError("linked_transaction_ids must be iterable")
+            raise AttachmentValidationError("linked_transaction_ids must be iterable")
         return _dedupe_preserve_order(value, field_name="linked_transaction_ids")
 
     @field_validator("linked_invoice_ids", mode="before")
@@ -170,9 +171,9 @@ class Attachment(BaseModel):
         if value is None:
             return ()
         if isinstance(value, str | bytes):
-            raise ValueError("linked_invoice_ids must be an iterable of strings, not a scalar")
+            raise AttachmentValidationError("linked_invoice_ids must be an iterable of strings, not a scalar")
         if not isinstance(value, Iterable):
-            raise ValueError("linked_invoice_ids must be iterable")
+            raise AttachmentValidationError("linked_invoice_ids must be iterable")
         return _dedupe_preserve_order(value, field_name="linked_invoice_ids")
 
     @field_validator("metadata", mode="before")
@@ -182,18 +183,18 @@ class Attachment(BaseModel):
         if value is None:
             return MappingProxyType({})
         if not isinstance(value, Mapping):
-            raise ValueError("metadata must be a mapping of string keys to string values")
+            raise AttachmentValidationError("metadata must be a mapping of string keys to string values")
         normalized: dict[str, str] = {}
         for raw_key, raw_val in value.items():
             if not isinstance(raw_key, str):
-                raise ValueError("metadata keys must be strings")
+                raise AttachmentValidationError("metadata keys must be strings")
             key = raw_key.strip()
             if not key:
-                raise ValueError("metadata keys must not be blank")
+                raise AttachmentValidationError("metadata keys must not be blank")
             if not isinstance(raw_val, str):
-                raise ValueError(f"metadata value for {key!r} must be a string")
+                raise AttachmentValidationError(f"metadata value for {key!r} must be a string")
             if not raw_val:
-                raise ValueError(f"metadata value for {key!r} must not be blank")
+                raise AttachmentValidationError(f"metadata value for {key!r} must not be blank")
             normalized[key] = raw_val
         return MappingProxyType(normalized)
 
@@ -206,7 +207,7 @@ class Attachment(BaseModel):
     def _enforce_attachment_id_matches_sha256(self) -> Self:
         """Ensure ``attachment_id`` is the SHA-256 of the stored bytes."""
         if self.attachment_id != self.sha256:
-            raise ValueError("attachment_id must equal sha256")
+            raise AttachmentValidationError("attachment_id must equal sha256")
         return self
 
 
@@ -243,7 +244,7 @@ class AttachmentCatalogue(BaseModel):
             for item in data:
                 attachment = item if isinstance(item, Attachment) else Attachment.model_validate(item)
                 if attachment.attachment_id in attachments:
-                    raise ValueError(f"duplicate attachment_id: {attachment.attachment_id}")
+                    raise AttachmentValidationError(f"duplicate attachment_id: {attachment.attachment_id}")
                 attachments[attachment.attachment_id] = attachment
             return {"attachments": attachments}
         return data
@@ -253,7 +254,9 @@ class AttachmentCatalogue(BaseModel):
         """Ensure every mapping key matches the embedded attachment ID."""
         for key, attachment in self.attachments.items():
             if key != attachment.attachment_id:
-                raise ValueError(f"catalogue key {key!r} does not match attachment_id {attachment.attachment_id!r}")
+                raise AttachmentValidationError(
+                    f"catalogue key {key!r} does not match attachment_id {attachment.attachment_id!r}"
+                )
         return self
 
     @field_validator("attachments")

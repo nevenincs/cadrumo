@@ -19,7 +19,7 @@ class AttachmentError(AeatError):
     """
 
 
-class AttachmentValidationError(AttachmentError):
+class AttachmentValidationError(AttachmentError, ValueError):
     """Raised when an attachment payload fails domain validation.
 
     Used both by pydantic-driven validation on :class:`aeat.domain.attachments.Attachment`

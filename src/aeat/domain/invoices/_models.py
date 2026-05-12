@@ -26,6 +26,7 @@ from ...core.identity import validate_spanish_tax_id
 from .._identifiers import canonical_decimal_string
 from ..vat import EUMemberState, VATCategory
 from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
+from ._errors import InvoiceValidationError
 
 if TYPE_CHECKING:
     from ._iva_classification import IvaInvoiceClassification
@@ -153,7 +154,7 @@ def _normalise_invoice_currency(payload: dict[str, Any]) -> dict[str, Any]:
     if "currency" in payload and isinstance(payload["currency"], str):
         currency_value = payload["currency"].strip().upper()
         if len(currency_value) != 3 or not currency_value.isalpha():
-            raise ValueError("currency must be a three-letter ISO 4217 code")
+            raise InvoiceValidationError("currency must be a three-letter ISO 4217 code")
         payload["currency"] = currency_value
     return payload
 
@@ -193,7 +194,7 @@ def _derive_invoice_id_when_complete(payload: dict[str, Any]) -> dict[str, Any]:
     )
     existing = payload.get("invoice_id")
     if existing is not None and str(existing).strip().lower() != derived:
-        raise ValueError("invoice_id must match the stable hash derived from identity fields")
+        raise InvoiceValidationError("invoice_id must match the stable hash derived from identity fields")
     payload["invoice_id"] = derived
     return payload
 
@@ -214,7 +215,7 @@ def _normalise_invoice_payment_id(payload: dict[str, Any]) -> dict[str, Any]:
         payload["payment_id"] = None
         return payload
     if not _is_hex_digest(normalized, length=_HEX_TRANSACTION_ID_LENGTH):
-        raise ValueError("payment_id must be a 64-character lowercase hex digest")
+        raise InvoiceValidationError("payment_id must be a 64-character lowercase hex digest")
     payload["payment_id"] = normalized
     return payload
 
@@ -253,7 +254,7 @@ class InvoiceLine(BaseModel):
     def _trim_description(cls, value: str) -> str:
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("description must not be blank")
+            raise InvoiceValidationError("description must not be blank")
         return trimmed
 
     @field_validator("category_id")
@@ -263,36 +264,36 @@ class InvoiceLine(BaseModel):
             return None
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("category_id must not be blank")
+            raise InvoiceValidationError("category_id must not be blank")
         return trimmed
 
     @field_validator("quantity")
     @classmethod
     def _require_positive_quantity(cls, value: Decimal) -> Decimal:
         if value <= Decimal("0"):
-            raise ValueError("quantity must be strictly positive")
+            raise InvoiceValidationError("quantity must be strictly positive")
         return value
 
     @field_validator("unit_price", "subtotal", "iva_amount")
     @classmethod
     def _require_non_negative(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
-            raise ValueError("monetary value must be non-negative")
+            raise InvoiceValidationError("monetary value must be non-negative")
         return value
 
     @model_validator(mode="after")
     def _validate_arithmetic(self) -> Self:
         expected_subtotal = (self.quantity * self.unit_price).quantize(Decimal("0.0001"))
         if abs(self.subtotal - expected_subtotal) > _LINE_TOLERANCE:
-            raise ValueError("subtotal must equal quantity * unit_price within 1 cent")
+            raise InvoiceValidationError("subtotal must equal quantity * unit_price within 1 cent")
         rate = iva_rate_percentage(self.iva_rate)
         if rate is None:
             if self.iva_amount != Decimal("0"):
-                raise ValueError("iva_amount must be zero for EXEMPT / NOT_SUBJECT lines")
+                raise InvoiceValidationError("iva_amount must be zero for EXEMPT / NOT_SUBJECT lines")
         else:
             expected_iva = (self.subtotal * rate).quantize(Decimal("0.0001"))
             if abs(self.iva_amount - expected_iva) > _LINE_TOLERANCE:
-                raise ValueError("iva_amount must equal subtotal * iva_rate within 1 cent")
+                raise InvoiceValidationError("iva_amount must equal subtotal * iva_rate within 1 cent")
         return self
 
 
@@ -345,21 +346,21 @@ class Invoice(BaseModel):
     @classmethod
     def _require_non_negative_totals(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
-            raise ValueError("invoice totals must be non-negative")
+            raise InvoiceValidationError("invoice totals must be non-negative")
         return value
 
     @field_validator("invoice_id")
     @classmethod
     def _validate_invoice_id_shape(cls, value: str) -> str:
         if not _is_hex_digest(value, length=_HEX_INVOICE_ID_LENGTH):
-            raise ValueError("invoice_id must be a 64-character lowercase hex digest")
+            raise InvoiceValidationError("invoice_id must be a 64-character lowercase hex digest")
         return value
 
     @field_validator("lines")
     @classmethod
     def _require_lines(cls, value: tuple[InvoiceLine, ...]) -> tuple[InvoiceLine, ...]:
         if not value:
-            raise ValueError("invoice must carry at least one line")
+            raise InvoiceValidationError("invoice must carry at least one line")
         return value
 
     @model_validator(mode="after")
@@ -367,17 +368,19 @@ class Invoice(BaseModel):
         line_subtotal_sum = sum((line.subtotal for line in self.lines), start=Decimal("0"))
         line_iva_sum = sum((line.iva_amount for line in self.lines), start=Decimal("0"))
         if self.base_total != line_subtotal_sum:
-            raise ValueError("base_total must equal the exact sum of line subtotals")
+            raise InvoiceValidationError("base_total must equal the exact sum of line subtotals")
         if self.iva_total != line_iva_sum:
-            raise ValueError("iva_total must equal the exact sum of line iva amounts")
+            raise InvoiceValidationError("iva_total must equal the exact sum of line iva amounts")
         if self.grand_total != self.base_total + self.iva_total:
-            raise ValueError("grand_total must equal base_total + iva_total exactly")
+            raise InvoiceValidationError("grand_total must equal base_total + iva_total exactly")
         all_non_numeric = all(iva_rate_percentage(line.iva_rate) is None for line in self.lines)
         if all_non_numeric:
             if self.iva_total != Decimal("0"):
-                raise ValueError("iva_total must be zero when every line is EXEMPT or NOT_SUBJECT")
+                raise InvoiceValidationError("iva_total must be zero when every line is EXEMPT or NOT_SUBJECT")
             if self.grand_total != self.base_total:
-                raise ValueError("grand_total must equal base_total when every line is EXEMPT or NOT_SUBJECT")
+                raise InvoiceValidationError(
+                    "grand_total must equal base_total when every line is EXEMPT or NOT_SUBJECT"
+                )
         return self
 
     @property
@@ -438,7 +441,7 @@ class Invoice(BaseModel):
             for the line.
 
         Raises:
-            ValueError: If the line carries
+            InvoiceValidationError: If the line carries
                 :attr:`IvaRate.NOT_SUBJECT` (operations outside the
                 scope of IVA need explicit
                 :attr:`VATCategory.OPERACION_NO_SUJETA` construction).
@@ -455,16 +458,16 @@ class Invoice(BaseModel):
 def _normalise_linked_transaction_ids(value: Any) -> tuple[str, ...]:
     """Deduplicate-preserve-order and validate the shape of linked transaction IDs."""
     if isinstance(value, str | bytes):
-        raise ValueError("linked_transaction_ids must be a sequence of IDs, not a single string")
+        raise InvoiceValidationError("linked_transaction_ids must be a sequence of IDs, not a single string")
     if not isinstance(value, Iterable):
-        raise ValueError("linked_transaction_ids must be iterable")
+        raise InvoiceValidationError("linked_transaction_ids must be iterable")
     seen: dict[str, None] = {}
     for item in value:
         if not isinstance(item, str):
-            raise ValueError("each linked_transaction_id must be a string")
+            raise InvoiceValidationError("each linked_transaction_id must be a string")
         normalized = item.strip().lower()
         if not _is_hex_digest(normalized, length=_HEX_TRANSACTION_ID_LENGTH):
-            raise ValueError("each linked_transaction_id must be a 64-character lowercase hex digest")
+            raise InvoiceValidationError("each linked_transaction_id must be a 64-character lowercase hex digest")
         if normalized not in seen:
             seen[normalized] = None
     return tuple(seen.keys())
@@ -492,7 +495,7 @@ class InvoiceCatalogue(BaseModel):
             for item in data:
                 invoice = item if isinstance(item, Invoice) else Invoice.model_validate(item)
                 if invoice.invoice_id in invoices:
-                    raise ValueError(f"duplicate invoice_id: {invoice.invoice_id}")
+                    raise InvoiceValidationError(f"duplicate invoice_id: {invoice.invoice_id}")
                 invoices[invoice.invoice_id] = invoice
             return {"invoices": invoices}
         return data
@@ -501,7 +504,7 @@ class InvoiceCatalogue(BaseModel):
     def _validate_mapping_keys(self) -> Self:
         for key, invoice in self.invoices.items():
             if key != invoice.invoice_id:
-                raise ValueError(f"catalogue key {key!r} does not match invoice_id {invoice.invoice_id!r}")
+                raise InvoiceValidationError(f"catalogue key {key!r} does not match invoice_id {invoice.invoice_id!r}")
         return self
 
     @field_validator("invoices")

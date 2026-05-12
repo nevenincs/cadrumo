@@ -48,6 +48,7 @@ from ..crypto._crypto import (
     derive_key,
     encrypt_record,
 )
+from ..errors import StorageValidationError
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -143,7 +144,7 @@ def encode_mnemonic(entropy: bytes) -> str:
         ValueError: If ``entropy`` is not exactly 32 bytes.
     """
     if len(entropy) != _RECOVERY_KEY_SIZE:
-        raise ValueError(
+        raise StorageValidationError(
             f"BIP-39 24-word encoding requires exactly {_RECOVERY_KEY_SIZE} bytes; got {len(entropy)}",
         )
     # ENT (256) + CS (8) = 264 bits -> 24 x 11-bit groups.
@@ -178,14 +179,14 @@ def decode_mnemonic(mnemonic: str) -> bytes:
     """
     words = mnemonic.strip().lower().split()
     if len(words) != _MNEMONIC_WORD_COUNT:
-        raise ValueError(
+        raise StorageValidationError(
             f"BIP-39 mnemonic must contain exactly {_MNEMONIC_WORD_COUNT} words; got {len(words)}",
         )
     payload_int = 0
     for position, word in enumerate(words, start=1):
         index = _WORD_TO_INDEX.get(word)
         if index is None:
-            raise ValueError(
+            raise StorageValidationError(
                 f"unknown BIP-39 word at position {position}; verify the word against the BIP-39 English wordlist.",
             )
         payload_int = (payload_int << 11) | index
@@ -195,7 +196,7 @@ def decode_mnemonic(mnemonic: str) -> bytes:
     entropy = entropy_int.to_bytes(_RECOVERY_KEY_SIZE, "big")
     expected = hashlib.sha256(entropy).digest()[0]
     if checksum != expected:
-        raise ValueError("BIP-39 mnemonic checksum mismatch — verify the words")
+        raise StorageValidationError("BIP-39 mnemonic checksum mismatch — verify the words")
     return entropy
 
 
@@ -237,7 +238,7 @@ def wrap_master_key(*, master_key: bytes, recovery_key: RecoveryKey) -> WrappedM
         ValueError: If ``master_key`` is not exactly 32 bytes.
     """
     if len(master_key) != KEY_SIZE:
-        raise ValueError(
+        raise StorageValidationError(
             f"master key must be exactly {KEY_SIZE} bytes; got {len(master_key)}",
         )
     kek = _derive_recovery_kek(recovery_key.raw)
@@ -262,7 +263,7 @@ def unwrap_master_key(*, wrapped: WrappedMasterKey, recovery_key_bytes: bytes) -
             key or tampered file).
     """
     if len(recovery_key_bytes) != _RECOVERY_KEY_SIZE:
-        raise ValueError(
+        raise StorageValidationError(
             f"recovery key must be exactly {_RECOVERY_KEY_SIZE} bytes; got {len(recovery_key_bytes)}",
         )
     kek = _derive_recovery_kek(recovery_key_bytes)

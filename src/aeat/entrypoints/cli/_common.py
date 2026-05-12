@@ -13,7 +13,7 @@ import typer
 
 from ...application.aggregation import aggregate_renta_ledger_expenses_from_repositories
 from ...application.auth import AuthProviderListing
-from ...application.user_cli import UserCliState, state_repository
+from ...application.workflow import WorkflowState, workflow_state_repository
 from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry import (
     ModeloRevision,
@@ -50,6 +50,13 @@ def _emit(ctx: typer.Context, payload: Any, lines: Iterable[str]) -> None:
         typer.echo(line)
 
 
+from ...core.errors import AeatError
+
+
+class JsonEncodingError(AeatError):
+    """Raised when an object cannot be serialized to JSON."""
+
+
 def _json_default(value: Any) -> Any:
     """Coerce non-JSON-native values from typed records."""
     from pydantic import BaseModel
@@ -64,7 +71,7 @@ def _json_default(value: Any) -> Any:
         return format(value, "f")
     if isinstance(value, set | frozenset):
         return sorted(value)
-    raise TypeError(f"cannot JSON-encode {type(value).__name__}")
+    raise JsonEncodingError(f"cannot JSON-encode {type(value).__name__}")
 
 
 def _bad(message: str) -> typer.BadParameter:
@@ -75,11 +82,11 @@ def _exit(code: int) -> None:
     raise typer.Exit(code=code)
 
 
-def _state() -> UserCliState:
-    return state_repository().load()
+def _state() -> WorkflowState:
+    return workflow_state_repository().load()
 
 
-def _active_profile_or_exit(ctx: typer.Context) -> tuple[UserCliState, str]:
+def _active_profile_or_exit(ctx: typer.Context) -> tuple[WorkflowState, str]:
     """Return (state, active_profile_name) or exit code 2 with a typed payload."""
     current = _state()
     if current.active_profile is None:
@@ -146,7 +153,7 @@ def _parse_iso_date(raw: str, *, label: str) -> _date:
         raise _bad(tr("cli.common.errors.invalid_iso_date", label=label, raw=raw)) from exc
 
 
-def _profile_to_autonomo(state: UserCliState) -> AutonomoProfile:
+def _profile_to_autonomo(state: WorkflowState) -> AutonomoProfile:
     record = state.active_profile_record()
     return autonomo_profile_from_mapping(record.values if record else {}, tax_id_default="00000000T")
 
@@ -188,7 +195,7 @@ def _draft_by_id(draft_id: str) -> FilingDraft:
     raise _bad(f"draft id {draft_id!r} not found")
 
 
-def _aggregate_filing_inputs(modelo: str, period: str, state: UserCliState) -> dict[str, object]:
+def _aggregate_filing_inputs(modelo: str, period: str, state: WorkflowState) -> dict[str, object]:
     """Return filing inputs aggregated from registry-approved sources."""
     del state
     if modelo.strip() == "100" and _annual_filing_year(period) is not None:

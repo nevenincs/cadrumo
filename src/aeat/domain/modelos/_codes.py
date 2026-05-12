@@ -7,6 +7,8 @@ from typing import Any
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
 
+from ._errors import ModeloValidationError
+
 
 class ModeloCode(str):
     """Three-digit AEAT modelo identifier.
@@ -18,7 +20,7 @@ class ModeloCode(str):
     def __new__(cls, value: str) -> ModeloCode:
         raw = str(value)
         if len(raw) != 3 or not raw.isdigit():
-            raise ValueError(f"modelo code must be a three-digit string, got {value!r}")
+            raise ModeloValidationError(f"modelo code must be a three-digit string, got {value!r}")
         return str.__new__(cls, raw)
 
     @classmethod

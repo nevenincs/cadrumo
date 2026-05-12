@@ -16,6 +16,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, StringConstraints, field_validator
 
 from ....core.identity import validate_spanish_tax_id
+from ._errors import SanitizerValidationError
 
 _SHA256_PATTERN = r"^[0-9a-f]{64}$"
 
@@ -35,7 +36,7 @@ def _validate_iban_shape(value: str) -> str:
     """
     candidate = value.replace(" ", "").upper()
     if len(candidate) != 24 or not candidate.startswith("ES"):
-        raise ValueError("synthetic IBAN must be 24 characters and start with 'ES'")
+        raise SanitizerValidationError("synthetic IBAN must be 24 characters and start with 'ES'")
     rearranged = candidate[4:] + candidate[:4]
     numeric: list[str] = []
     for character in rearranged:
@@ -44,9 +45,9 @@ def _validate_iban_shape(value: str) -> str:
         elif character.isalpha():
             numeric.append(str(ord(character) - 55))
         else:
-            raise ValueError("synthetic IBAN contains non-alphanumeric characters")
+            raise SanitizerValidationError("synthetic IBAN contains non-alphanumeric characters")
     if int("".join(numeric)) % 97 != 1:
-        raise ValueError("synthetic IBAN fails the ISO 13616 mod-97 check")
+        raise SanitizerValidationError("synthetic IBAN fails the ISO 13616 mod-97 check")
     return candidate
 
 
@@ -64,13 +65,13 @@ def _validate_amount_shape(value: str) -> str:
             ``<thousands>,<cents>`` shape.
     """
     if "," not in value:
-        raise ValueError("synthetic IMPORTE must contain a decimal comma")
+        raise SanitizerValidationError("synthetic IMPORTE must contain a decimal comma")
     integer_part, decimal_part = value.rsplit(",", 1)
     if len(decimal_part) != 2 or not decimal_part.isdigit():
-        raise ValueError("synthetic IMPORTE must end with two decimal digits")
+        raise SanitizerValidationError("synthetic IMPORTE must end with two decimal digits")
     integer_clean = integer_part.replace(".", "").lstrip("-")
     if not integer_clean or not integer_clean.isdigit():
-        raise ValueError("synthetic IMPORTE integer part must be digits with optional thousands dots")
+        raise SanitizerValidationError("synthetic IMPORTE integer part must be digits with optional thousands dots")
     return value
 
 
@@ -119,9 +120,9 @@ class NameReplacement(_ReplacementBase):
     @classmethod
     def _validate_synthetic_name(cls, value: str) -> str:
         if value != value.upper():
-            raise ValueError("synthetic name must be uppercase")
+            raise SanitizerValidationError("synthetic name must be uppercase")
         if any(character.isdigit() for character in value):
-            raise ValueError("synthetic name must not contain digits")
+            raise SanitizerValidationError("synthetic name must not contain digits")
         return value
 
 
@@ -143,9 +144,9 @@ class ExpedienteReplacement(_ReplacementBase):
     @classmethod
     def _validate_synthetic_expediente(cls, value: str) -> str:
         if not (4 <= len(value) <= 32):
-            raise ValueError("synthetic expediente must be 4-32 characters")
+            raise SanitizerValidationError("synthetic expediente must be 4-32 characters")
         if not value.isalnum():
-            raise ValueError("synthetic expediente must be alphanumeric")
+            raise SanitizerValidationError("synthetic expediente must be alphanumeric")
         return value
 
 
@@ -161,9 +162,9 @@ class CsvReplacement(_ReplacementBase):
     @classmethod
     def _validate_synthetic_csv(cls, value: str) -> str:
         if len(value) != 16:
-            raise ValueError("synthetic CSV must be exactly 16 characters")
+            raise SanitizerValidationError("synthetic CSV must be exactly 16 characters")
         if not value.isalnum() or value != value.upper():
-            raise ValueError("synthetic CSV must be uppercase alphanumeric")
+            raise SanitizerValidationError("synthetic CSV must be uppercase alphanumeric")
         return value
 
 
@@ -174,9 +175,9 @@ class NrcReplacement(_ReplacementBase):
     @classmethod
     def _validate_synthetic_nrc(cls, value: str) -> str:
         if not (16 <= len(value) <= 32):
-            raise ValueError("synthetic NRC must be 16-32 characters")
+            raise SanitizerValidationError("synthetic NRC must be 16-32 characters")
         if not value.isalnum():
-            raise ValueError("synthetic NRC must be alphanumeric")
+            raise SanitizerValidationError("synthetic NRC must be alphanumeric")
         return value
 
 

@@ -19,6 +19,18 @@ class SanitizationError(AeatError):
     pass
 
 
+class SanitizerValidationError(SanitizationError, ValueError):
+    """Raised when synthetic parameters or field values fail domain validation.
+
+    This error inherits from both :class:`SanitizationError` and
+    :class:`ValueError`, ensuring compatibility with Pydantic's
+    validator contract while remaining catchable under the package's
+    unified error hierarchy.
+    """
+
+    pass
+
+
 class SanitizerSourceParseError(SanitizationError):
     """Raised when the source PDF cannot be opened by :mod:`pikepdf`.
 

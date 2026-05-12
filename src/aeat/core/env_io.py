@@ -22,6 +22,8 @@ import os
 import tempfile
 from pathlib import Path
 
+from .errors import CoreValidationError
+
 
 def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> None:
     """Atomically write ``text`` to ``path`` via tempfile + :func:`os.replace`.
@@ -114,7 +116,7 @@ def read_env_file(path: Path) -> dict[str, str]:
             continue
         if "=" not in line:
             msg = f"Malformed env line in {path}: {raw_line!r}"
-            raise ValueError(msg)
+            raise CoreValidationError(msg)
         key, _, value = line.partition("=")
         result[key.strip()] = value.strip()
     return result

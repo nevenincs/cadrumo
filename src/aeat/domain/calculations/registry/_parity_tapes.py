@@ -51,15 +51,17 @@ class ParityScenario(ParityTapeModel):
     @model_validator(mode="after")
     def _validate_scenario(self) -> ParityScenario:
         if self.synthetic_input.modelo != self.modelo:
-            raise ValueError("scenario synthetic input modelo must match scenario modelo")
+            raise RegistryValidationError("scenario synthetic input modelo must match scenario modelo")
         if self.synthetic_input.revision != self.revision:
-            raise ValueError("scenario synthetic input revision must match scenario revision")
+            raise RegistryValidationError("scenario synthetic input revision must match scenario revision")
         if set(self.output_cells) != set(self.registry_outputs):
-            raise ValueError("scenario workbook outputs and registry outputs must use the same identifiers")
+            raise RegistryValidationError(
+                "scenario workbook outputs and registry outputs must use the same identifiers"
+            )
         if len(set(self.registry_outputs.values())) != len(self.registry_outputs):
-            raise ValueError("scenario registry outputs must target unique casillas")
+            raise RegistryValidationError("scenario registry outputs must target unique casillas")
         if self.period.strip() != self.period:
-            raise ValueError("scenario period must not include leading or trailing whitespace")
+            raise RegistryValidationError("scenario period must not include leading or trailing whitespace")
         return self
 
 

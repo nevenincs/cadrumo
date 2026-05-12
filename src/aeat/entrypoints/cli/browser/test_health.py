@@ -151,7 +151,12 @@ class _RaisingCreateContextSession:
 
     async def create_context(self) -> object:
         self.create_context_calls += 1
-        raise RuntimeError("boom from create_context")
+        from ....core.errors import AeatError
+
+        class _SimulatedPlaywrightError(AeatError):
+            pass
+
+        raise _SimulatedPlaywrightError("boom from create_context")
 
     async def close(self) -> None:
         self.close_calls += 1
@@ -181,7 +186,12 @@ class _RaisingNewPageSession:
 
 class _RaisingNewPageContext(_StubContext):
     async def new_page(self) -> object:
-        raise RuntimeError("boom from new_page")
+        from ....core.errors import AeatError
+
+        class _SimulatedPlaywrightError(AeatError):
+            pass
+
+        raise _SimulatedPlaywrightError("boom from new_page")
 
 
 class TestRealProbeCleanup:
@@ -190,7 +200,9 @@ class TestRealProbeCleanup:
     def test_session_close_runs_when_create_context_raises(self) -> None:
         session = _RaisingCreateContextSession()
         probe = _RealProbe(session=session)
-        with pytest.raises(RuntimeError, match="boom from create_context"):
+        from ....core.errors import AeatError
+
+        with pytest.raises(AeatError, match="boom from create_context"):
             asyncio.run(probe.probe("https://sede.agenciatributaria.gob.es/"))
         assert session.create_context_calls == 1
         assert session.close_calls == 1
@@ -199,7 +211,9 @@ class TestRealProbeCleanup:
         context = _RaisingNewPageContext()
         session = _RaisingNewPageSession(context=context)
         probe = _RealProbe(session=session)
-        with pytest.raises(RuntimeError, match="boom from new_page"):
+        from ....core.errors import AeatError
+
+        with pytest.raises(AeatError, match="boom from new_page"):
             asyncio.run(probe.probe("https://sede.agenciatributaria.gob.es/"))
         assert context.close_calls == 1
         assert session.close_calls == 1

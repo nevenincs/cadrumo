@@ -47,6 +47,7 @@ from ..errors import (
     RetentionPolicyError,
     SecretAlreadyExistsError,
     SecretNotFoundError,
+    StorageValidationError,
 )
 from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
 
@@ -95,14 +96,14 @@ class SecretRecord(BaseModel):
         if value is None:
             return None
         if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("datetime fields must be timezone-aware")
+            raise StorageValidationError("datetime fields must be timezone-aware")
         return value
 
     @field_validator("classification")
     @classmethod
     def _check_class(cls, value: SensitivityClass) -> SensitivityClass:
         if value not in {SensitivityClass.SECRET, SensitivityClass.SESSION}:
-            raise ValueError("SecretRecord.classification must be SECRET or SESSION")
+            raise StorageValidationError("SecretRecord.classification must be SECRET or SESSION")
         return value
 
 

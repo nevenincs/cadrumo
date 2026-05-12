@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from ...core.paths import PROJECT_ROOT
 from ._schema import EUMemberState, VATRate, VATRateKind
-from .errors import VatCatalogueError, VatRateOverlapError
+from .errors import VatCatalogueError, VatRateOverlapError, VatValidationError
 
 _DEFAULT_RATE_REGISTRY = PROJECT_ROOT / "registry" / "aeat" / "vat" / "rates.toml"
 
@@ -40,7 +40,7 @@ def load_vat_rate_table(path: Path = _DEFAULT_RATE_REGISTRY) -> Mapping[EUMember
             raise VatCatalogueError(f"{path}: rates[{index}] must be a table")
         try:
             rate = _parse_rate(cast("Mapping[str, Any]", raw_rate))
-        except (ValidationError, ValueError) as exc:
+        except (ValidationError, VatValidationError, ValueError) as exc:
             raise VatCatalogueError(f"{path}: invalid rates[{index}]: {exc}") from exc
         by_member_state.setdefault(rate.member_state, []).append(rate)
 
@@ -62,7 +62,7 @@ def _parse_rate(raw_rate: Mapping[str, Any]) -> VATRate:
         kind = VATRateKind(str(raw_rate.get("kind")))
         pct = Decimal(str(raw_rate.get("pct")))
     except (ArithmeticError, TypeError, ValueError) as exc:
-        raise ValueError(f"invalid VAT rate key or pct: {raw_rate!r}") from exc
+        raise VatValidationError(f"invalid VAT rate key or pct: {raw_rate!r}") from exc
     return VATRate.model_validate(
         {
             "member_state": member_state,

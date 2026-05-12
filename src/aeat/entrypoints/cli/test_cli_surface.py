@@ -851,10 +851,10 @@ def test_app_declaration_status_filter_reports_match_state(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    from aeat.application.user_cli import state_repository, update_declaration_pointer
+    from aeat.application.workflow import update_declaration_pointer, workflow_state_repository
 
     _isolate(monkeypatch, tmp_path)
-    state_repository().update(
+    workflow_state_repository().update(
         lambda current: update_declaration_pointer(
             current,
             modelo="303",

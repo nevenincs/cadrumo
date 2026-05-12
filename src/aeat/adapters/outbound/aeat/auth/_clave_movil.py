@@ -36,7 +36,6 @@ from urllib.parse import quote
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.classification import SensitivityClass
-from .....core.errors import AeatError
 from .....core.logging import get_logger
 from ....persistence.storage.sql import SecureObjectRepository
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
@@ -44,13 +43,13 @@ from . import _session_store
 from ._authenticator import (
     AEAT_SESSION_IDLE_TTL,
     AeatLoginAssertion,
-    AeatLoginAssertionError,
     AeatSession,
     BrowserContextLike,
     BrowserPageLike,
     BrowserSessionFactory,
     BrowserSessionLike,
 )
+from ._errors import AeatLoginAssertionError, AuthConfigurationError, AuthError
 from ._providers import (
     AuthProviderDescription,
     AuthProviderKind,
@@ -76,11 +75,11 @@ _DNI_RE: Final[re.Pattern[str]] = re.compile(r"^\d{8}[A-Z]$", re.IGNORECASE)
 _NIE_RE: Final[re.Pattern[str]] = re.compile(r"^[XYZ]\d{7}[A-Z]$", re.IGNORECASE)
 
 
-class ClaveMovilConfigurationError(AeatError):
+class ClaveMovilConfigurationError(AuthConfigurationError):
     """Raised when required Cl@ve Móvil settings are missing or malformed."""
 
 
-class ClaveMovilApprovalTimeoutError(AeatError):
+class ClaveMovilApprovalTimeoutError(AuthError):
     """Raised when the operator does not approve the Cl@ve push within the time window."""
 
     def __init__(

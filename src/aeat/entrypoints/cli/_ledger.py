@@ -17,13 +17,15 @@ from ...adapters.inbound.financial.providers import (
     detect_provider,
 )
 from ...adapters.inbound.pdf._utils import sha256_file
-from ...application.review import EditParseError, FilterParseError, LedgerEditSpec, LedgerReviewFilterSpec
-from ...application.user_cli import (
+from ...application.review import (
+    EditParseError,
+    FilterParseError,
+    LedgerEditSpec,
+    LedgerReviewFilterSpec,
+    LedgerReviewRecord,
     LedgerSplit,
-    UserCliState,
-    state_repository,
-    update_ledger_review,
 )
+from ...application.workflow import WorkflowState, update_ledger_review, workflow_state_repository
 from ...domain.transactions import (
     Transaction,
     TransactionDirection,
@@ -255,7 +257,8 @@ def ledger_review(
     if record_id is not None:
         for tx in rows:
             if tx.transaction_id == record_id:
-                review = state.ledger_reviews.get(record_id)
+                review_raw = state.ledger_reviews.get(record_id)
+                review = LedgerReviewRecord.model_validate(review_raw) if isinstance(review_raw, dict) else review_raw
                 amount_val = tx.raw.amount
                 if review and "amount" in review.fields:
                     amount_val = Decimal(review.fields["amount"])
@@ -304,8 +307,9 @@ def ledger_review(
     _emit(ctx, payload, lines)
 
 
-def _ledger_row_status(tx: Transaction, state: UserCliState) -> str:
-    review = state.ledger_reviews.get(tx.transaction_id)
+def _ledger_row_status(tx: Transaction, state: WorkflowState) -> str:
+    review_raw = state.ledger_reviews.get(tx.transaction_id)
+    review = LedgerReviewRecord.model_validate(review_raw) if isinstance(review_raw, dict) else review_raw
     if review and review.skipped:
         return "skipped"
     if review and review.fields:
@@ -336,7 +340,7 @@ def ledger_edit(
     if not (fields or skip_flag is not None or split_value is not None or clear_split):
         raise _bad(tr("cli.ledger.errors.edit_requires_one"))
 
-    updated = state_repository().update(
+    updated = workflow_state_repository().update(
         lambda current: update_ledger_review(
             current,
             record_id,
@@ -348,7 +352,8 @@ def ledger_edit(
             reason=reason,
         )
     )
-    review = updated.ledger_reviews.get(record_id)
+    review_raw = updated.ledger_reviews.get(record_id)
+    review = LedgerReviewRecord.model_validate(review_raw) if isinstance(review_raw, dict) else review_raw
     payload = {"id": record_id, "review": review}
     skipped_label = tr("cli.ledger.labels.yes") if review and review.skipped else tr("cli.ledger.labels.no")
     fields_label = ", ".join(sorted(review.fields)) if review else "-"

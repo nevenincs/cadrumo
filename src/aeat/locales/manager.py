@@ -9,6 +9,13 @@ from aeat.core.logging import get_logger
 _log = get_logger(__name__)
 
 
+from aeat.core.errors import AeatError
+
+
+class LocaleError(AeatError):
+    """Raised on locale management and parsing errors."""
+
+
 class StrictUniqueKeyLoader(yaml.SafeLoader):
     """YAML loader that raises an error on duplicate keys."""
 
@@ -17,7 +24,7 @@ class StrictUniqueKeyLoader(yaml.SafeLoader):
         for key_node, value_node in node.value:
             key = self.construct_object(key_node, deep=deep)
             if key in mapping:
-                raise ValueError(f"Duplicate key '{key}' found at line {key_node.start_mark.line + 1}")
+                raise LocaleError(f"Duplicate key '{key}' found at line {key_node.start_mark.line + 1}")
             value = self.construct_object(value_node, deep=deep)
             mapping[key] = value
         return mapping

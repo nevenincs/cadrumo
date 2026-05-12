@@ -21,7 +21,7 @@ from ..calculations.registry import (
     applicable_filing_schedules,
     evaluate_profile_conditions,
 )
-from ._errors import ScheduleComputationError
+from ._errors import DeadlineValidationError, ScheduleComputationError
 from ._models import (
     AutonomoProfile,
     FilingObligation,
@@ -83,11 +83,11 @@ class DeadlineEngine:
             source_root: Repository root for source-integrity checks.
 
         Raises:
-            ValueError: If ``due_soon_days`` is negative.
+            DeadlineValidationError: If ``due_soon_days`` is negative.
             ScheduleComputationError: If registry loading or validation fails.
         """
         if due_soon_days < 0:
-            raise ValueError(f"due_soon_days must be >= 0, got {due_soon_days}")
+            raise DeadlineValidationError(f"due_soon_days must be >= 0, got {due_soon_days}")
         self.due_soon_days = due_soon_days
         self._source_root = source_root or PROJECT_ROOT
         root = registry_root or _DEFAULT_REGISTRY_ROOT

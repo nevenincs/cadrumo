@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 _ROOT = Path(__file__).resolve().parents[5]
 _SENSITIVE_SURFACES = (
     _ROOT / "src" / "aeat" / "application" / "review",
-    _ROOT / "src" / "aeat" / "application" / "user_cli.py",
+    _ROOT / "src" / "aeat" / "application" / "workflow" / "_persistence.py",
     _ROOT / "src" / "aeat" / "application" / "auth",
     _ROOT / "src" / "aeat" / "application" / "setup",
     _ROOT / "src" / "aeat" / "application" / "filing" / "_history_repository.py",

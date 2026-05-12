@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ._errors import DeadlineValidationError
 from ._models import AutonomoProfile, FilingEnrollment, FilingIVAProfile, IVARegime
 
 _TRUE_TOKENS = frozenset({"1", "true", "yes", "y", "on", "si", "sí"})
@@ -100,7 +101,7 @@ def _bool_value(values: Mapping[str, object], *keys: str) -> bool:
             return True
         if token in _FALSE_TOKENS:
             return False
-        raise ValueError(f"profile field {key!r} must be a boolean token")
+        raise DeadlineValidationError(f"profile field {key!r} must be a boolean token")
     return False
 
 

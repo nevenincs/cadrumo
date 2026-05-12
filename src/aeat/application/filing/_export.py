@@ -41,7 +41,12 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
     parse_export_payload,
 )
-from ...domain.filing import FilingDraft, FilingDraftStatus
+from ...domain.filing import (
+    FilingDraft,
+    FilingDraftStatus,
+    FilingExportError,
+    FilingExportValidationError,
+)
 from .runtime import RegistrySchemaProvider, build_runtime_schema_provider
 
 _logger = get_logger(__name__)
@@ -128,9 +133,9 @@ class DeclarationExportResult(BaseModel):
         try:
             int(value, 16)
         except ValueError as exc:
-            raise ValueError("file_sha256 must be a hex-encoded digest") from exc
+            raise FilingExportValidationError("file_sha256 must be a hex-encoded digest") from exc
         if value != value.lower():
-            raise ValueError("file_sha256 must be lowercase hex")
+            raise FilingExportValidationError("file_sha256 must be lowercase hex")
         return value
 
 
@@ -181,7 +186,9 @@ class DeclarationVerifyResult(BaseModel):
         """Reject blank casilla identifiers; the CLI renders them verbatim."""
         for entry in value:
             if not entry or entry != entry.strip():
-                raise ValueError("mismatched_casillas entries must be non-blank, untrimmed identifiers")
+                raise FilingExportValidationError(
+                    "mismatched_casillas entries must be non-blank, untrimmed identifiers"
+                )
         return value
 
     @field_validator("file_sha256")
@@ -191,13 +198,13 @@ class DeclarationVerifyResult(BaseModel):
         if value is None:
             return None
         if len(value) != _SHA256_HEX_LENGTH:
-            raise ValueError(f"file_sha256 must be {_SHA256_HEX_LENGTH} hex characters when provided")
+            raise FilingExportValidationError(f"file_sha256 must be {_SHA256_HEX_LENGTH} hex characters when provided")
         try:
             int(value, 16)
         except ValueError as exc:
-            raise ValueError("file_sha256 must be a hex-encoded digest") from exc
+            raise FilingExportValidationError("file_sha256 must be a hex-encoded digest") from exc
         if value != value.lower():
-            raise ValueError("file_sha256 must be lowercase hex")
+            raise FilingExportValidationError("file_sha256 must be lowercase hex")
         return value
 
 
@@ -212,11 +219,11 @@ def export_draft(
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
-        raise ValueError("declaration export requires a draft built from the active registry snapshot")
+        raise FilingExportError("declaration export requires a draft built from the active registry snapshot")
     if draft.status is not FilingDraftStatus.APPROVED:
-        raise ValueError("declaration export requires an approved draft")
+        raise FilingExportError("declaration export requires an approved draft")
     if not subview.export_layout_ids:
-        raise ValueError(f"modelo {draft.modelo!r} registry snapshot declares no export layout")
+        raise FilingExportError(f"modelo {draft.modelo!r} registry snapshot declares no export layout")
     payload = _render_layout(subview.export_layouts[0], draft=draft, headers=headers)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_bytes(payload)
@@ -244,7 +251,7 @@ def verify_export(
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
     if draft.schema_version != subview.schema_version:
-        raise ValueError("declaration verify requires a draft built from the active registry snapshot")
+        raise FilingExportError("declaration verify requires a draft built from the active registry snapshot")
     if not subview.export_layout_ids:
         digest = sha256_file(file_path) if file_path.exists() else None
         return DeclarationVerifyResult(
@@ -349,7 +356,9 @@ def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict
     raw = casilla_values.get(record.requires_positive_casilla)
     amount = Decimal("0") if raw in {None, ""} else Decimal(str(raw))
     if amount <= 0:
-        raise ValueError(f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla!r}")
+        raise FilingExportError(
+            f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla!r}"
+        )
 
 
 def _render_record(
@@ -378,7 +387,7 @@ def _render_record(
     buffer = [" "] * length
     for field in sorted(record.fields, key=lambda item: item.offset or 0):
         if field.offset is None:
-            raise ValueError(f"export field {field.id!r} must declare offset")
+            raise FilingExportValidationError(f"export field {field.id!r} must declare offset")
         rendered = _render_field(
             field,
             draft=draft,
@@ -390,7 +399,7 @@ def _render_record(
         start = field.offset - 1
         end = start + len(rendered)
         if any(char != " " for char in buffer[start:end]):
-            raise ValueError(f"export field {field.id!r} overlaps another field")
+            raise FilingExportError(f"export field {field.id!r} overlaps another field")
         buffer[start:end] = rendered
     return "".join(buffer)
 
@@ -405,7 +414,7 @@ def _render_field(
     row_index: int | None,
 ) -> str:
     if field.length is None:
-        raise ValueError(f"export field {field.id!r} must declare length")
+        raise FilingExportValidationError(f"export field {field.id!r} must declare length")
     raw = _field_value(
         field,
         draft=draft,
@@ -432,18 +441,18 @@ def _field_value(
         return ""
     if field.kind == "casilla":
         if field.casilla is None:
-            raise ValueError(f"export field {field.id!r} must declare casilla")
+            raise FilingExportValidationError(f"export field {field.id!r} must declare casilla")
         return casilla_values.get(field.casilla)
     if field.kind == "binding":
         if field.binding is None:
-            raise ValueError(f"export field {field.id!r} must declare binding")
+            raise FilingExportValidationError(f"export field {field.id!r} must declare binding")
         return binding_values.get((field.binding, row_index))
     if field.kind == "header":
         if field.header_key is None:
-            raise ValueError(f"export field {field.id!r} must declare header_key")
+            raise FilingExportValidationError(f"export field {field.id!r} must declare header_key")
         value = headers.get(field.header_key.lower())
         if field.required and (value is None or value == ""):
-            raise ValueError(f"export header {field.header_key!r} is required")
+            raise FilingExportError(f"export header {field.header_key!r} is required")
         return value or ""
     if field.kind == "draft":
         return _draft_value(field, draft)
@@ -451,8 +460,8 @@ def _field_value(
         if field.computed_key == "envelope_closing_tag":
             year, period = _period_parts(draft.period)
             return f"</T{draft.modelo}0{year}{period}0000>"
-        raise ValueError(f"unsupported export computed field {field.computed_key!r}")
-    raise ValueError(f"unsupported export field kind {field.kind!r}")
+        raise FilingExportError(f"unsupported export computed field {field.computed_key!r}")
+    raise FilingExportError(f"unsupported export field kind {field.kind!r}")
 
 
 def _draft_value(field: ExportFieldDefinition, draft: FilingDraft) -> str:
@@ -466,12 +475,12 @@ def _draft_value(field: ExportFieldDefinition, draft: FilingDraft) -> str:
         return _period_parts(draft.period)[0]
     if field.draft_attribute == "period_code":
         return _period_parts(draft.period)[1]
-    raise ValueError(f"unsupported draft export attribute {field.draft_attribute!r}")
+    raise FilingExportError(f"unsupported draft export attribute {field.draft_attribute!r}")
 
 
 def _format_field(field: ExportFieldDefinition, value: object) -> str:
     if field.length is None:
-        raise ValueError(f"export field {field.id!r} must declare length")
+        raise FilingExportValidationError(f"export field {field.id!r} must declare length")
     if field.kind == "filler":
         return " " * field.length
     if field.data_type == "money":
@@ -483,7 +492,7 @@ def _format_field(field: ExportFieldDefinition, value: object) -> str:
     else:
         rendered = "" if value is None else str(value)
     if len(rendered) > field.length:
-        raise ValueError(f"export field {field.id!r} value exceeds length {field.length}")
+        raise FilingExportValidationError(f"export field {field.id!r} value exceeds length {field.length}")
     return _pad(rendered, field)
 
 
@@ -491,13 +500,13 @@ def _format_money(value: object, *, length: int, signed: bool) -> str:
     if value is None or value == "":
         amount = Decimal("0")
     elif isinstance(value, bool):
-        raise ValueError("money export fields cannot render boolean values")
+        raise FilingExportValidationError("money export fields cannot render boolean values")
     else:
         amount = Decimal(str(value))
     cents = int((abs(amount).quantize(_MONEY_QUANT, rounding=ROUND_HALF_UP) * 100).to_integral_value())
     if amount < 0:
         if not signed:
-            raise ValueError("unsigned money export field cannot render a negative value")
+            raise FilingExportValidationError("unsigned money export field cannot render a negative value")
         return "N" + str(cents).zfill(length - 1)
     if signed:
         return " " + str(cents).zfill(length - 1)
@@ -508,13 +517,13 @@ def _format_integer(value: object, *, length: int) -> str:
     if value is None or value == "":
         return "0".zfill(length)
     if isinstance(value, bool):
-        raise ValueError("integer export fields cannot render boolean values")
+        raise FilingExportValidationError("integer export fields cannot render boolean values")
     return str(int(Decimal(str(value)))).zfill(length)
 
 
 def _pad(value: str, field: ExportFieldDefinition) -> str:
     if field.length is None:
-        raise ValueError(f"export field {field.id!r} must declare length")
+        raise FilingExportValidationError(f"export field {field.id!r} must declare length")
     if field.padding == "left_zero":
         return value.rjust(field.length, "0")
     if field.padding == "left_space":
@@ -547,7 +556,7 @@ def _mismatched_casillas(
 def _period_parts(period: str) -> tuple[str, str]:
     match = _QUARTER_PERIOD_RE.fullmatch(period)
     if match is None:
-        raise ValueError(f"declaration export does not support period {period!r}")
+        raise FilingExportError(f"declaration export does not support period {period!r}")
     return match.group("year"), f"{match.group('quarter')}T"
 
 

@@ -71,7 +71,7 @@ from ..errors import (
     MasterKeyMaterialMissingError,
     MasterKeyPassphraseMismatchError,
     MasterKeyUnavailableError,
-    SecretStoreError,
+    StorageValidationError,
     UnsecuredModeRefusedError,
 )
 
@@ -253,7 +253,7 @@ def _default_passphrase_callback() -> str:
         # Strip trailing CRLF only — the shell often appends it.
         normalized = env_value.rstrip("\r\n")
         if not normalized:
-            raise SecretStoreError(
+            raise StorageValidationError(
                 f"{PASSPHRASE_ENV_VAR} is set to whitespace-only; supply a non-empty passphrase.",
             )
         return normalized
@@ -453,7 +453,7 @@ class FileFallbackMasterKeyProvider:
                 return bytes(cached)
             value = self._passphrase_callback()
             if not value:
-                raise SecretStoreError(
+                raise StorageValidationError(
                     "secret-store passphrase resolved to empty string; set "
                     f"{PASSPHRASE_ENV_VAR} or supply a non-empty value at the prompt.",
                 )
@@ -623,7 +623,7 @@ class FileFallbackMasterKeyProvider:
                 target directory is not writable.
         """
         if len(master_key) != KEY_SIZE:
-            raise SecretStoreError(
+            raise StorageValidationError(
                 f"recovered master key must be {KEY_SIZE} bytes; got {len(master_key)}",
             )
         # Drop any stale cached state so the new artefacts are picked
@@ -764,7 +764,7 @@ class EphemeralMasterKeyProvider:
         if key is None:
             key = secrets.token_bytes(KEY_SIZE)
         if len(key) != KEY_SIZE:
-            raise SecretStoreError(
+            raise StorageValidationError(
                 f"ephemeral master key must be {KEY_SIZE} bytes; got {len(key)}",
             )
         self._key = key
@@ -918,7 +918,7 @@ def get_master_key_provider(
     try:
         resolved = SecretStoreBackend(backend_value)
     except ValueError as exc:
-        raise SecretStoreError(f"unknown secret-store backend: {backend_value!r}") from exc
+        raise StorageValidationError(f"unknown secret-store backend: {backend_value!r}") from exc
     store_dir = Path(settings.aeat_secret_store_dir)
     if resolved is SecretStoreBackend.UNSECURED:
         # Hostile-named opt-out gate: the unsecured backend requires the

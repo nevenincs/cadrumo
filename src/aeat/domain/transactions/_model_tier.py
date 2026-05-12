@@ -28,6 +28,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 
+from ._errors import TransactionError
+
 
 class ModelTier(IntEnum):
     """Ordered capability tier. Comparison operators work as expected.
@@ -209,7 +211,7 @@ def resolve_profile(
         The resolved :class:`ModelProfile`.
 
     Raises:
-        ValueError: If the provider is unknown, if the alias is unknown
+        TransactionError: If the provider is unknown, if the alias is unknown
             for that provider, or if the resolved profile's tier is
             below ``minimum_tier``.
     """
@@ -217,7 +219,7 @@ def resolve_profile(
     candidates = profiles_for_provider(normalised_provider)
     if not candidates:
         known = sorted({p.provider for p in _CATALOGUE})
-        raise ValueError(f"unknown provider {provider!r}; known: {known}")
+        raise TransactionError(f"unknown provider {provider!r}; known: {known}")
 
     if alias is None:
         eligible = sorted(
@@ -226,7 +228,7 @@ def resolve_profile(
         )
         if not eligible:
             available_tiers = sorted({p.tier.name for p in candidates})
-            raise ValueError(
+            raise TransactionError(
                 f"no {normalised_provider} model meets minimum tier {minimum_tier.name}; available: {available_tiers}"
             )
         return eligible[0]
@@ -235,13 +237,13 @@ def resolve_profile(
     for profile in candidates:
         if profile.alias == normalised_alias:
             if profile.tier < minimum_tier:
-                raise ValueError(
+                raise TransactionError(
                     f"model {profile.alias!r} is tier {profile.tier.name} "
                     f"but classification requires at least {minimum_tier.name}"
                 )
             return profile
     known_aliases = sorted(p.alias for p in candidates)
-    raise ValueError(f"unknown alias {alias!r} for provider {normalised_provider}; known: {known_aliases}")
+    raise TransactionError(f"unknown alias {alias!r} for provider {normalised_provider}; known: {known_aliases}")
 
 
 __all__ = [

@@ -20,3 +20,7 @@ class NormativeParseError(NormativeError):
 
 class NormativeNotFoundError(NormativeError):
     """Raised when a requested normative or article is missing."""
+
+
+class NormativeValidationError(NormativeError, ValueError):
+    """Raised on invalid normative field values. Inherits from ValueError for Pydantic."""

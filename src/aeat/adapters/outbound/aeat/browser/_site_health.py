@@ -26,6 +26,8 @@ from pydantic import (
     field_validator,
 )
 
+from ._errors import BrowserValidationError
+
 
 class SiteHealthState(StrEnum):
     """Closed catalogue of AEAT site-health classifications.
@@ -97,7 +99,7 @@ class SiteHealthEvidence(_SiteHealthRecord):
             if not isinstance(marker, str):
                 raise TypeError(f"detected_markers entries must be str, got {type(marker).__name__}")
             if len(marker) < 1 or len(marker) > 128:
-                raise ValueError(f"detected_markers entry must be 1..128 chars, got length {len(marker)}")
+                raise BrowserValidationError(f"detected_markers entry must be 1..128 chars, got length {len(marker)}")
         return value
 
 

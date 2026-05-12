@@ -53,12 +53,12 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     @model_validator(mode="after")
     def _validate_scenario(self) -> RegistryCalculationScenario:
         if self.id.strip() != self.id:
-            raise ValueError("scenario id must not include leading or trailing whitespace")
+            raise RegistryValidationError("scenario id must not include leading or trailing whitespace")
         if self.period.strip() != self.period:
-            raise ValueError("scenario period must not include leading or trailing whitespace")
+            raise RegistryValidationError("scenario period must not include leading or trailing whitespace")
         expected_targets = [expected.target for expected in self.expected_outputs]
         if len(set(expected_targets)) != len(expected_targets):
-            raise ValueError("scenario expected outputs must target unique casillas")
+            raise RegistryValidationError("scenario expected outputs must target unique casillas")
         return self
 
 

@@ -16,7 +16,10 @@ flows from the substrate, not from a hand-maintained list.
 
 from __future__ import annotations
 
+import re
+
 from ..vat import EUMemberState
+from ._errors import InvoiceValidationError
 
 __all__ = [
     "EU_MEMBER_STATE_CODES",
@@ -26,10 +29,11 @@ __all__ = [
     "validate_vat_number",
 ]
 
+_VAT_BODY_RE = re.compile(r"^[a-zA-Z0-9]{4,20}$")
+_ISO_2_RE = re.compile(r"^[A-Z]{2}$")
 
-EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(
-    member.value.upper() for member in EUMemberState
-)
+
+EU_MEMBER_STATE_CODES: frozenset[str] = frozenset(member.value.upper() for member in EUMemberState)
 """Closed set of ISO-3166 alpha-2 codes (uppercase) for the 27 EU
 Member States, sourced directly from :class:`aeat.domain.vat.EUMemberState`."""
 
@@ -44,11 +48,11 @@ def validate_country_code(value: str) -> str:
         The uppercased two-letter country code.
 
     Raises:
-        ValueError: If the input is not exactly two alphabetic characters.
+        InvoiceValidationError: If the input is not exactly two alphabetic characters.
     """
     normalized = value.strip().upper()
-    if len(normalized) != 2 or not normalized.isalpha():
-        raise ValueError("country code must be an ISO-3166 alpha-2 value")
+    if not _ISO_2_RE.match(normalized):
+        raise InvoiceValidationError("country code must be an ISO-3166 alpha-2 value")
     return normalized
 
 
@@ -68,7 +72,7 @@ def is_eu_member_state_code(value: str) -> bool:
     """
     try:
         normalized = validate_country_code(value)
-    except ValueError:
+    except InvoiceValidationError:
         return False
     return normalized in EU_MEMBER_STATE_CODES
 
@@ -83,11 +87,11 @@ def assert_eu_member_state_code(value: str) -> str:
         The uppercased two-letter EU Member State code.
 
     Raises:
-        ValueError: If the input is malformed or names a non-EU country.
+        InvoiceValidationError: If the input is malformed or names a non-EU country.
     """
     normalized = validate_country_code(value)
     if normalized not in EU_MEMBER_STATE_CODES:
-        raise ValueError(
+        raise InvoiceValidationError(
             f"country code {normalized!r} is not one of the 27 EU Member States; "
             "use validate_country_code if a non-EU counterparty is acceptable"
         )
@@ -109,16 +113,16 @@ def validate_vat_number(value: str, country: str) -> str:
         The uppercased, whitespace-trimmed VAT identifier.
 
     Raises:
-        ValueError: If the value is malformed or the prefix does not match
+        InvoiceValidationError: If the value is malformed or the prefix does not match
             ``country``.
     """
     normalized = value.strip().upper().replace(" ", "").replace("-", "").replace(".", "")
     if not normalized:
-        raise ValueError("VAT number must not be blank")
+        raise InvoiceValidationError("VAT number must not be blank")
     country_upper = country.strip().upper()
     if not normalized.startswith(country_upper):
-        raise ValueError("VAT number must start with the counterparty country ISO-2 prefix")
+        raise InvoiceValidationError("VAT number must start with the counterparty country ISO-2 prefix")
     body = normalized[len(country_upper) :]
-    if not (4 <= len(body) <= 20) or not body.isalnum():
-        raise ValueError("VAT number body must be 4-20 alphanumeric characters")
+    if not _VAT_BODY_RE.match(body):
+        raise InvoiceValidationError("VAT number body must be 4-20 alphanumeric characters")
     return normalized

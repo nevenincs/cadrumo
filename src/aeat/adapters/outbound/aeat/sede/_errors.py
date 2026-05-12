@@ -77,6 +77,14 @@ class JustificanteFetchError(SedeError):
     """Raised when the CSV-keyed PDF download fails or is malformed."""
 
 
+class SedeValidationError(SedeError, ValueError):
+    """Raised when data captured from Sede violates expected shape or invariants.
+
+    Inherits from ValueError to maintain compatibility with Pydantic
+    validators.
+    """
+
+
 __all__ = [
     "ExpedienteNotFoundError",
     "JustificanteFetchError",
@@ -84,4 +92,5 @@ __all__ = [
     "SedeFailureMode",
     "SedeNavigationError",
     "SedeParseError",
+    "SedeValidationError",
 ]

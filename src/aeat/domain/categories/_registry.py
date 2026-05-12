@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from ...core.i18n import Translatable
 from ...core.paths import PROJECT_ROOT
+from ._errors import CategoryValidationError
 from ._profile import CategoryProfile, VatCategory
 from ._proportionality import (
     CategoryCitation,
@@ -35,29 +36,29 @@ def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, Category
         with path.open("rb") as fh:
             payload = tomllib.load(fh)
     except tomllib.TOMLDecodeError as exc:
-        raise ValueError(f"{path}: invalid category profile TOML: {exc}") from exc
+        raise CategoryValidationError(f"{path}: invalid category profile TOML: {exc}") from exc
     except OSError as exc:
-        raise ValueError(f"{path}: cannot read category profile registry: {exc}") from exc
+        raise CategoryValidationError(f"{path}: cannot read category profile registry: {exc}") from exc
 
     raw_profiles = payload.get("profiles")
     if not isinstance(raw_profiles, list) or not raw_profiles:
-        raise ValueError(f"{path}: missing [[profiles]] entries")
+        raise CategoryValidationError(f"{path}: missing [[profiles]] entries")
 
     profiles: dict[SpendingCategory, CategoryProfile] = {}
     for index, raw_profile in enumerate(raw_profiles, start=1):
         if not isinstance(raw_profile, dict):
-            raise ValueError(f"{path}: profiles[{index}] must be a table")
+            raise CategoryValidationError(f"{path}: profiles[{index}] must be a table")
         try:
             profile = _parse_profile(cast("Mapping[str, Any]", raw_profile))
         except (ValidationError, ValueError) as exc:
-            raise ValueError(f"{path}: invalid profiles[{index}]: {exc}") from exc
+            raise CategoryValidationError(f"{path}: invalid profiles[{index}]: {exc}") from exc
         if profile.category in profiles:
-            raise ValueError(f"{path}: duplicate spending category {profile.category.value!r}")
+            raise CategoryValidationError(f"{path}: duplicate spending category {profile.category.value!r}")
         profiles[profile.category] = profile
 
     missing = sorted(category.value for category in set(SpendingCategory) - set(profiles))
     if missing:
-        raise ValueError(f"{path}: category profile registry missing categories: {missing}")
+        raise CategoryValidationError(f"{path}: category profile registry missing categories: {missing}")
     return MappingProxyType(profiles)
 
 
@@ -71,10 +72,10 @@ def load_category_profile_registry(
         try:
             year = int(path.stem)
         except ValueError as exc:
-            raise ValueError(f"{path}: category profile filename must be a year") from exc
+            raise CategoryValidationError(f"{path}: category profile filename must be a year") from exc
         registries[year] = load_category_profile_file(path)
     if not registries:
-        raise ValueError(f"{root}: no category profile TOML files found")
+        raise CategoryValidationError(f"{root}: no category profile TOML files found")
     return MappingProxyType(registries)
 
 
@@ -83,7 +84,7 @@ def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryPr
 
     profiles = CATEGORY_PROFILE_REGISTRY_BY_YEAR.get(year)
     if profiles is None:
-        raise ValueError(f"no category profile registry registered for year={year}")
+        raise CategoryValidationError(f"no category profile registry registered for year={year}")
     return profiles
 
 
@@ -91,7 +92,7 @@ def _parse_profile(raw_profile: Mapping[str, Any]) -> CategoryProfile:
     category = SpendingCategory(str(raw_profile.get("category")))
     raw_rule = raw_profile.get("proportionality")
     if not isinstance(raw_rule, dict):
-        raise ValueError(f"profile {category.value!r} must declare [profiles.proportionality]")
+        raise CategoryValidationError(f"profile {category.value!r} must declare [profiles.proportionality]")
     raw_vat_hint = raw_profile.get("vat_hint")
     return CategoryProfile.model_validate(
         {
@@ -106,10 +107,10 @@ def _parse_profile(raw_profile: Mapping[str, Any]) -> CategoryProfile:
 def _parse_rule(raw_rule: Mapping[str, Any]) -> ProportionalityRule:
     raw_variants = raw_rule.get("statutory_cap_variants", ())
     if not isinstance(raw_variants, list | tuple):
-        raise ValueError("statutory_cap_variants must be a list")
+        raise CategoryValidationError("statutory_cap_variants must be a list")
     raw_citations = raw_rule.get("citations", ())
     if not isinstance(raw_citations, list | tuple):
-        raise ValueError("citations must be a list")
+        raise CategoryValidationError("citations must be a list")
     return ProportionalityRule.model_validate(
         {
             "kind": ProportionalityKind(str(raw_rule.get("kind"))),
@@ -142,7 +143,7 @@ def _parse_cap_variant(raw_variant: Mapping[str, Any]) -> StatutoryCapVariant:
 def _parse_citation(raw_citation: Mapping[str, Any]) -> CategoryCitation:
     url = raw_citation.get("url")
     if not isinstance(url, str):
-        raise ValueError("citation url must be a string")
+        raise CategoryValidationError("citation url must be a string")
     return CategoryCitation.model_validate(
         {
             "source": CategoryCitationSource(str(raw_citation.get("source"))),
@@ -160,7 +161,7 @@ def _decimal_or_none(value: Any) -> Decimal | None:
     if isinstance(value, Decimal):
         return value
     if isinstance(value, bool | float):
-        raise ValueError("decimal profile values must not be booleans or floats")
+        raise CategoryValidationError("decimal profile values must not be booleans or floats")
     return Decimal(str(value))
 
 

@@ -25,10 +25,10 @@ from ...application.review import (
     EditParseError,
     FilterParseError,
 )
-from ...application.user_cli import (
+from ...application.workflow import (
     declaration_key,
-    state_repository,
     update_declaration_pointer,
+    workflow_state_repository,
 )
 from ._common import (
     _FORMAT_JSON,
@@ -55,23 +55,23 @@ app = typer.Typer(
 
 
 def _resolve_draft_id(modelo: str | None, period: str | None, draft_id: str | None) -> str:
-    """Resolve a draft id from either ``--id`` or ``(--modelo, --period)``.
+    """Resolve a draft id from either --id or (--modelo, --period).
 
     Every declaration verb accepts both flag forms. The helper raises a
     typed CLI usage error when:
 
-    - ``--id`` is supplied alongside ``--modelo`` or ``--period``
+    - --id is supplied alongside --modelo or --period
       (ambiguous selector);
     - none of the three flags is supplied (no selector);
-    - one of ``--modelo`` / ``--period`` is supplied without the other
+    - one of --modelo / --period is supplied without the other
       (incomplete selector); or
     - the resolved (modelo, period) lookup has no matching draft pointer
       in the active profile's user-cli state.
 
     Args:
-        modelo: Optional ``--modelo`` argument.
-        period: Optional ``--period`` argument.
-        draft_id: Optional ``--id`` argument.
+        modelo: Optional --modelo argument.
+        period: Optional --period argument.
+        draft_id: Optional --id argument.
 
     Returns:
         The resolved canonical draft id.
@@ -93,18 +93,18 @@ def _resolve_draft_id(modelo: str | None, period: str | None, draft_id: str | No
 
 
 def _parse_binding_assignment(raw: str) -> tuple[str, Decimal]:
-    """Parse one ``KEY=VALUE`` token from ``--binding`` into a typed pair.
+    """Parse one KEY=VALUE token from --binding into a typed pair.
 
     Args:
-        raw: The exact string the operator passed after ``--binding``.
+        raw: The exact string the operator passed after --binding.
 
     Returns:
-        A two-tuple ``(key, value)`` where ``key`` is the binding's
-        canonical id and ``value`` is a :class:`Decimal`.
+        A two-tuple (key, value) where key is the binding's
+        canonical id and value is a Decimal.
 
     Raises:
-        typer.BadParameter (via :func:`_bad`): If the assignment is
-            malformed (no ``=``, blank key, blank value) or the value
+        typer.BadParameter (via _bad): If the assignment is
+            malformed (no =, blank key, blank value) or the value
             does not parse as a decimal number.
     """
 
@@ -167,7 +167,7 @@ def declaration_calculate(
         repair_hints=tuple(_translate(f.message) for f in blockers),
     )
     _draft_repo().save(draft)
-    state_repository().update(
+    workflow_state_repository().update(
         lambda current: update_declaration_pointer(
             current,
             modelo=canonical_modelo,
@@ -343,7 +343,7 @@ def declaration_edit(
     except FilingBuilderError as exc:
         raise _bad(str(exc)) from exc
     _draft_repo().save(fresh)
-    state_repository().update(
+    workflow_state_repository().update(
         lambda current: update_declaration_pointer(
             current,
             modelo=fresh.modelo,
@@ -383,7 +383,7 @@ def declaration_approve(
     schema_provider = build_runtime_schema_provider(modelos=(draft.modelo,))
     approved = approve_draft(draft, approved_by=reviewer, schema_provider=schema_provider)
     _draft_repo().save(approved)
-    state_repository().update(
+    workflow_state_repository().update(
         lambda current: update_declaration_pointer(
             current,
             modelo=approved.modelo,
@@ -422,7 +422,7 @@ def declaration_validate(
     schema_provider = build_runtime_schema_provider(modelos=(draft.modelo,))
     refreshed = validate_draft(draft, schema_provider=schema_provider)
     _draft_repo().save(refreshed)
-    state_repository().update(
+    workflow_state_repository().update(
         lambda current: update_declaration_pointer(
             current,
             modelo=refreshed.modelo,
@@ -497,7 +497,7 @@ def declaration_export(
         receipt = export_draft(draft, output_path=output, headers=headers)
     except ValueError as exc:
         raise _bad(str(exc)) from exc
-    state_repository().update(
+    workflow_state_repository().update(
         lambda current: update_declaration_pointer(
             current,
             modelo=draft.modelo,
@@ -538,7 +538,7 @@ def declaration_verify(
     if not file.exists():
         raise _bad(tr("cli.declaration.errors.file_not_found", path=str(file)))
     verdict = verify_export(draft, file_path=file)
-    state_repository().update(
+    workflow_state_repository().update(
         lambda current: update_declaration_pointer(
             current,
             modelo=draft.modelo,

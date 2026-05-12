@@ -9,6 +9,8 @@ from typing import Any
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 
+from ._errors import DomainValidationError
+
 _MODELO_RE = re.compile(r"^\d{3}[A-Z]?$")
 
 
@@ -19,7 +21,7 @@ class ModeloIdentifier(str):
 
     def __new__(cls, value: str) -> ModeloIdentifier:
         if not isinstance(value, str) or not _MODELO_RE.match(value):
-            raise ValueError(f"Invalid modelo identifier: {value!r}")
+            raise DomainValidationError(f"Invalid modelo identifier: {value!r}")
         return super().__new__(cls, value)
 
     @classmethod

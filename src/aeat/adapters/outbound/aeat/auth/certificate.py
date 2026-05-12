@@ -35,8 +35,8 @@ from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
 
 from .....core.access_gate import AeatLiveReadNotEnabledError
-from .....core.errors import AeatError
 from .....core.logging import get_logger
+from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthError, AuthValidationError
 
 if TYPE_CHECKING:
     from ._certificate_backends._base import _CertBackend
@@ -47,7 +47,7 @@ log = get_logger(__name__)
 # ── Errors ──────────────────────────────────────────────────────────────────
 
 
-class CertificateError(AeatError):
+class CertificateError(AuthError):
     """Base class for every certificate-auth domain error."""
 
 
@@ -100,36 +100,7 @@ class CertificateNifParseError(CertificateError):
     """
 
 
-class AeatLoginAssertionError(CertificateError):
-    """Raised when a post-auth verification attempt cannot be produced.
-
-    Distinct from a *negative* assertion result (which returns a
-    :class:`AeatLoginAssertion` with ``is_valid=False``). This
-    exception fires when the assertion cannot even be built — for
-    example a Playwright context is missing the thumbprint marker,
-    the authenticator was never authenticated, or a structural
-    precondition failed before the navigation could complete.
-    """
-
-
-class AeatSessionExpiredError(CertificateError):
-    """Raised when an authenticated AEAT session is no longer usable.
-
-    Three conditions feed this error:
-
-    1. An :class:`AeatSession` whose ``idle_deadline`` has elapsed
-       (``is_stale`` returns True) is passed to
-       :meth:`AeatAuthenticator.verify_login`.
-    2. A single :meth:`AeatAuthenticator.reauthenticate` attempt
-       still yields ``certificate_recognised=False``; the caller
-       MUST NOT loop and MUST raise this upwards.
-    3. An HTTP 401 / 403 surfaced by a downstream live-read call
-       site that consumed the session.
-
-    The error deliberately does not carry the session instance —
-    callers re-derive authentication from ``Settings`` rather than
-    retry with stale state.
-    """
+# AeatLoginAssertionError and AeatSessionExpiredError are now in ._errors
 
 
 # ── Enums ───────────────────────────────────────────────────────────────────
@@ -497,12 +468,14 @@ def evaluate_loaded_certificate_health(
         A frozen :class:`CertificateHealth` record.
 
     Raises:
-        ValueError: If ``critical_days <= 0`` or ``warn_days <= critical_days``.
+        AuthValidationError: If ``critical_days <= 0`` or ``warn_days <= critical_days``.
     """
     if critical_days <= 0:
-        raise ValueError(f"critical_days must be positive, got {critical_days}")
+        raise AuthValidationError(f"critical_days must be positive, got {critical_days}")
     if warn_days <= critical_days:
-        raise ValueError(f"warn_days ({warn_days}) must be strictly greater than critical_days ({critical_days})")
+        raise AuthValidationError(
+            f"warn_days ({warn_days}) must be strictly greater than critical_days ({critical_days})"
+        )
     evaluated_at = now if now is not None else datetime.now(UTC)
     if evaluated_at.tzinfo is None:
         evaluated_at = evaluated_at.replace(tzinfo=UTC)

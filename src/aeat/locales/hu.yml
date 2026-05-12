@@ -1,10 +1,17 @@
 aggregation:
   models:
+    errors:
+      annual_period_mixed: Az időszak nem keverhet éves és szévén belüli (negyedév/hónap) értékeket.
+      month_required: A havi időszaktípushoz hónapnapérték szükséges.
+      period_type_ambiguous: Az időszaktípus nem egyértelmű; adja meg explicitül a negyedévet vagy hónapot.
+      quarter_required: A negyedéves időszaktípushoz negyedévérték szükséges.
     t_944805: Érvénytelen időszak formátum. Használja a YYYY, YYYY-Qn vagy YYYY-MM
       formátumot.
   renta_ledger:
     errors:
       annual_period_required: Éves időszak szükséges a Renta nyilvántartás összesítéséhez.
+      modelo_mismatch: Az adómodell nem egyezik a Renta nyilvántartás várt modeljével.
+      period_mismatch: Az időszak nem egyezik a Renta nyilvántartás várt időszakával.
 application:
   auth:
     provider_impact:

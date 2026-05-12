@@ -144,6 +144,8 @@ from ._acquisition_lock import (  # noqa: E402
     clear_auth_acquisition_lock,
     inspect_auth_acquisition_lock,
 )
+from ._actions import update_auth
+from ._models import AuthState
 from ._sessions import (  # noqa: E402
     AuthenticatedAeatSessionResult,
     AuthSessionUnavailableError,
@@ -168,6 +170,7 @@ __all__ = [
     "AuthProviderKind",
     "AuthProviderListing",
     "AuthSessionUnavailableError",
+    "AuthState",
     "AuthenticatedAeatSessionResult",
     "CorruptAuthSessionError",
     "PersistedAuthSession",
@@ -186,4 +189,5 @@ __all__ = [
     "require_verified_aeat_session",
     "select_provider",
     "storage_state_paths",
+    "update_auth",
 ]

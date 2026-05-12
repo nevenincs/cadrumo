@@ -133,7 +133,7 @@ class ParityResult(_ParityModel):
         seen: set[str] = set()
         for field in value:
             if field.name in seen:
-                raise ValueError(f"duplicate parity field {field.name!r}")
+                raise RegistryValidationError(f"duplicate parity field {field.name!r}")
             seen.add(field.name)
         return value
 

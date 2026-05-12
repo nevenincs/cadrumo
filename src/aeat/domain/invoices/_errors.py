@@ -20,6 +20,7 @@ __all__ = [
     "InvoiceLinkInconsistencyError",
     "InvoiceNotFoundError",
     "InvoicePersistenceError",
+    "InvoiceValidationError",
 ]
 
 
@@ -79,3 +80,11 @@ class InvoiceLinkInconsistencyError(InvoiceLinkError):
         self.transactions_path: Path = transactions_path
         self.invoice_id: str = invoice_id
         self.transaction_id: str = transaction_id
+
+
+class InvoiceValidationError(InvoiceError, ValueError):
+    """Raised when invoice records violate state or shape invariants.
+
+    Inherits from ValueError to maintain compatibility with Pydantic
+    validators.
+    """

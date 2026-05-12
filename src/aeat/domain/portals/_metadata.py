@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, mod
 from ...core.i18n import Translatable as tr  # noqa: N813
 from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from ._codes import Portal
+from ._errors import PortalValidationError
 
 _G_CODE_PATH_RE: re.Pattern[str] = re.compile(r"^/Sede/procedimientoini/G[A-Z0-9]{3}\.shtml$")
 
@@ -64,7 +65,7 @@ class PortalMetadata(BaseModel):
     def _purpose_not_blank(cls, value: tr) -> tr:
         """Reject whitespace-only purpose keys."""
         if not value.strip():
-            raise ValueError("purpose must not be empty or whitespace-only")
+            raise PortalValidationError("purpose must not be empty or whitespace-only")
         return value
 
     @field_validator("label")
@@ -72,7 +73,7 @@ class PortalMetadata(BaseModel):
     def _label_not_blank(cls, value: tr) -> tr:
         """Reject whitespace-only label keys."""
         if not value.strip():
-            raise ValueError("label must not be empty or whitespace-only")
+            raise PortalValidationError("label must not be empty or whitespace-only")
         return value
 
     @field_validator("url")
@@ -80,7 +81,7 @@ class PortalMetadata(BaseModel):
     def _url_is_https(cls, value: HttpUrl) -> HttpUrl:
         """Reject non-HTTPS URLs."""
         if value.scheme != "https":
-            raise ValueError(f"url scheme must be https, got {value.scheme!r}")
+            raise PortalValidationError(f"url scheme must be https, got {value.scheme!r}")
         return value
 
     @model_validator(mode="after")
@@ -88,29 +89,33 @@ class PortalMetadata(BaseModel):
         """Enforce cross-field invariants on a single entry."""
         # ANONYMOUS exclusivity.
         if AuthMethod.ANONYMOUS in self.auth_methods and len(self.auth_methods) != 1:
-            raise ValueError("AuthMethod.ANONYMOUS must be the sole method when present")
+            raise PortalValidationError("AuthMethod.ANONYMOUS must be the sole method when present")
 
         # Subdomain must match URL host.
         host = self.url.host
         if host != self.subdomain.value:
-            raise ValueError(f"url host {host!r} does not match subdomain {self.subdomain.value!r}")
+            raise PortalValidationError(f"url host {host!r} does not match subdomain {self.subdomain.value!r}")
 
         # G-code path check for active FILING / CENSUS entries.
         if self.active and self.category in {PortalCategory.FILING, PortalCategory.CENSUS}:
             path = self.url.path or ""
             if not _G_CODE_PATH_RE.match(path):
-                raise ValueError(
+                raise PortalValidationError(
                     f"active {self.category.value} portal url path must match "
                     f"/Sede/procedimientoini/G<code>.shtml, got {path!r}"
                 )
 
         # Retired-without-replacement fallback.
         if not self.active and self.replaced_by is None and not self.notes:
-            raise ValueError("retired portal without replaced_by must carry a non-empty notes rationale")
+            raise PortalValidationError("retired portal without replaced_by must carry a non-empty notes rationale")
+
+        # Self-replacement check.
+        if self.replaced_by is not None and self.replaced_by == self.portal:
+            raise PortalValidationError(f"portal {self.portal!r} cannot be replaced by itself")
 
         # Replaced-by may only be set when active is False.
         if self.active and self.replaced_by is not None:
-            raise ValueError("replaced_by must be None when active is True")
+            raise PortalValidationError("replaced_by must be None when active is True")
 
         return self
 

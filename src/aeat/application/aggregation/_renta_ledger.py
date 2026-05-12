@@ -25,7 +25,7 @@ from ...domain.renta import (
 )
 from ...domain.transactions import BusinessClassification, TransactionCatalogue, TransactionCatalogueRepository
 from ...domain.transactions import TransactionDirection as LedgerTransactionDirection
-from ._errors import AggregationPeriodError, t
+from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -107,9 +107,9 @@ class RentaLedgerExpenseAggregation(BaseModel):
     @model_validator(mode="after")
     def _validate_casilla_period(self) -> Self:
         if self.casilla_aggregation.modelo != self.modelo:
-            raise ValueError("casilla aggregation modelo must match result modelo")
+            raise AggregationValidationError(t("aggregation.renta_ledger.errors.modelo_mismatch"))
         if self.casilla_aggregation.period != self.period:
-            raise ValueError("casilla aggregation period must match result period")
+            raise AggregationValidationError(t("aggregation.renta_ledger.errors.period_mismatch"))
         return self
 
     @property
