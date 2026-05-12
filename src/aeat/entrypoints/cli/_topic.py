@@ -1,6 +1,6 @@
 """``aeat app topic`` conceptual help surface.
 
-UX-015 closure. Renders topics from
+Renders topics from
 :func:`aeat.application.topics.load_topic_catalogue`; the catalogue
 itself reads ``registry/aeat/topics/<slug>.toml`` and the i18n
 catalogue under ``topic.<slug>.title`` / ``topic.<slug>.body``.

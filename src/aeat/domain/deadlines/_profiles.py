@@ -33,9 +33,9 @@ def autonomo_profile_from_mapping(
     # Coerce mixed-typed mappings to canonical-token strings before the
     # descriptor's projection runs.
     canonical: dict[str, str] = {key: _stringify(raw) for key, raw in values.items()}
-    # The wizard's SELECT validator requires the IVARegime canonical
-    # uppercase token; deadline-engine callers historically supplied
-    # mixed case. Normalise to the enum's value form before projection.
+    # The wizard's SELECT validator only accepts the IVARegime
+    # canonical uppercase token, so the mapping is normalised here
+    # against the enum's value form before projection.
     if canonical.get("iva.regime"):
         canonical["iva.regime"] = canonical["iva.regime"].strip().upper().replace("-", "_")
 
