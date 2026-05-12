@@ -107,24 +107,6 @@ def _check_eu_eea_country_consistency(answers: SetupAnswers) -> WizardCheckFindi
     )
 
 
-def _check_residence_ccaa(answers: SetupAnswers) -> WizardCheckFinding:
-    del answers
-    return WizardCheckFinding(
-        name="residence_ccaa",
-        severity=WizardCheckSeverity.OK,
-        message_key="wizard.setup.verifier.residence_ccaa_ok",
-    )
-
-
-def _check_iva_regime(answers: SetupAnswers) -> WizardCheckFinding:
-    del answers
-    return WizardCheckFinding(
-        name="iva_regime",
-        severity=WizardCheckSeverity.OK,
-        message_key="wizard.setup.verifier.iva_regime_ok",
-    )
-
-
 def _check_obligations_consistency(answers: SetupAnswers) -> WizardCheckFinding:
     if answers.professional_income_withholding_ge_70pct and not answers.pays_professionals_with_retencion:
         return WizardCheckFinding(
@@ -144,8 +126,6 @@ _SETUP_CHECKS: tuple[Callable[[SetupAnswers], WizardCheckFinding], ...] = (
     _check_activity_present,
     _check_spouse_consistency,
     _check_eu_eea_country_consistency,
-    _check_residence_ccaa,
-    _check_iva_regime,
     _check_obligations_consistency,
 )
 
