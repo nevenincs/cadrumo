@@ -94,6 +94,12 @@ cli:
       period_unrecognised: Ismeretlen időszak
   config:
     app_help: Helyi konfiguráció és diagnosztika kezelése
+    auth:
+      file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs)
+      help: Az aktív hitelesítési szolgáltató beállítása
+      provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico)
+      unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd
+        az ''aeat config auth --help'' parancsot az érvényes azonosítókért.'
     doctor:
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
@@ -103,6 +109,43 @@ cli:
       quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
         a megerősítéshez.
       quarantine_yes_help: A karantén művelet kifejezett megerősítése
+    errors:
+      invalid_value: 'Érvénytelen érték a %{name} kulcshoz: %{value}'
+      no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config setup
+        --tax-id <NIF>' parancsot.
+      unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Az ''aeat config list''
+        listázza az érvényes kulcsokat.'
+    get:
+      help: Egy konfigurációs kulcs aktuális értékének megjelenítése
+      key_help: A kiolvasandó kulcs (pl. tax.id, iva.regime)
+    list:
+      help: Az összes konfigurációs kulcs és aktuális értékének listázása
+    reset:
+      help: Operátor által megadott konfigurációs hatókörök visszaállítása
+      invalid_scope: 'Érvénytelen hatókör: %{scope}. Az érvényes hatókörök: %{valid}.'
+      requires_yes: A visszaállítás romboló. Futtasd újra a --yes kapcsolóval a megerősítéshez.
+      scope_help: A visszaállítandó hatókör (all, profile, auth)
+      yes_help: A visszaállítási művelet kifejezett megerősítése
+    set:
+      help: Érték hozzárendelése egy konfigurációs kulcshoz
+      key_help: A beállítandó kulcs (pl. iva.regime)
+      value_help: A beállítandó érték (szöveg, true/false, összeg a kulcstól függően)
+    setup:
+      accept_defaults_help: A leíró alapértelmezett értékeinek elfogadása kérdezés
+        nélkül
+      errors:
+        missing_required_flags: Hiányoznak a kötelező kapcsolók a --quiet módhoz;
+          adj meg értéket minden kötelező kérdéshez.
+      help: A séma-vezérelt beállítási varázsló futtatása interaktívan vagy kapcsoló-vezérelt
+        csendes módban
+      profile_name_help: A profil neve, ahova a válaszok kerülnek
+      quiet_help: A folyamat futtatása interakció nélkül, csak a kapcsolók értékeit
+        használva
+    status:
+      help: Az aktív konfigurációs profil készenlétének megjelenítése
+    unset:
+      help: Egy konfigurációs kulcshoz rendelt érték törlése
+      key_help: A törlendő kulcs
   data:
     app_help: Adóadatok és nyilvántartások kezelése
     ledgers:
@@ -806,6 +849,85 @@ wizard:
       family-minor-children-in-unit:
         prompt: Kiskorú gyermekek a családi egységben
       title: Családi egység
+    flags:
+      activity:
+        help: Tevékenységcímke vagy ellenőrzött kulcs
+      address-postcode:
+        help: Adózási cím irányítószáma
+      bienes-extranjero-above-threshold:
+        help: Külföldön tartott eszközök a törvényi küszöb felett
+      declaration-type:
+        help: Bevallás-típus kódja
+      does-intracomunitario:
+        help: Közösségi műveleteket végez
+      enrollment-large-company:
+        help: Nagyvállalat besorolás
+      enrollment-public-administration-budget-gt-6000000:
+        help: Közigazgatási költségvetés 6 000 000 felett
+      family-descendants-eu-eea-deduction:
+        help: EU/EGT leszármazottak családi egység kedvezményében
+      family-minor-children-in-unit:
+        help: Kiskorú gyermekek a családi egységben
+      has-employees:
+        help: Van alkalmazottja és bérleti adóelőleget von
+      iva-intracommunity-operations-exceed-50000-eur:
+        help: Közösségi műveletek meghaladják az 50 000 EUR küszöböt
+      iva-oss-enrolled:
+        help: OSS bejegyzés
+      iva-regime:
+        help: ÁFA-rezsim
+      iva-roi-enrolled:
+        help: ROI bejegyzés
+      name:
+        help: A helyi áttekintésben megjelenő név
+      notes:
+        help: Operátori jegyzetek (a motor nem dolgozza fel)
+      pays-capital-income-with-retencion:
+        help: Tőkejövedelmeket adóelőleggel fizet
+      pays-professionals-with-retencion:
+        help: Szakembereket adóelőleggel fizet
+      pays-rent-with-retencion:
+        help: Helyiségbérletet adóelőleggel fizet
+      professional-income-withholding-ge-70pct:
+        help: A szakmai jövedelem legalább 70%-a előzetes adólevonás alatt
+      spouse-birth-date:
+        help: A házastárs születési dátuma
+      spouse-disability-grade:
+        help: A házastárs fogyatékossági kódja
+      spouse-eu-eea-country:
+        help: A házastárs EU/EGT országa
+      spouse-eu-eea-resident:
+        help: Házastárs EU/EGT rezidens
+      spouse-name:
+        help: A házastárs keresztneve
+      spouse-non-resident-irpf:
+        help: Házastárs nem rezidens IRPF
+      spouse-sex:
+        help: A házastárs neme
+      spouse-surnames:
+        help: A házastárs vezetéknevei
+      spouse-tax-id:
+        help: A házastárs NIF/NIE azonosítója
+      surnames:
+        help: Vezetéknév vagy cégnév az exportfejlécekhez
+      tax-id:
+        help: Adóazonosító (NIF/NIE) bevallásokhoz
+      tax-residence-ccaa:
+        help: Adóügyi rezidens autonóm közösség
+      taxpayer-birth-date:
+        help: Az első adózó születési dátuma
+      taxpayer-death-date:
+        help: Az első adózó halálozási dátuma
+      taxpayer-disability-grade:
+        help: Az első adózó fogyatékossági kódja
+      taxpayer-marital-status:
+        help: Az első adózó családi állapota
+      taxpayer-sex:
+        help: Az első adózó neme
+      third-party-transactions-above-347-threshold:
+        help: Harmadik felekkel folytatott műveletek meghaladják a Modelo 347 küszöböt
+      uses-objective-estimation-irpf:
+        help: IRPF-et becsült rendszerben adózza
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Közösségi műveletek meghaladják az 50 000 EUR küszöböt

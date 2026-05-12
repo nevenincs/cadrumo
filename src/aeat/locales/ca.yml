@@ -94,6 +94,12 @@ cli:
       period_unrecognised: Període no reconegut
   config:
     app_help: Gestionar configuració local i diagnòstics
+    auth:
+      file_help: Ruta al fitxer de credencials (certificat o clau)
+      help: Configurar el proveïdor d'autenticació actiu
+      provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
+      unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
+        ''aeat config auth --help'' per veure els identificadors vàlids.'
     doctor:
       help: Diagnosticar configuració local, registre, perfil, autenticació i logs
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
@@ -103,6 +109,42 @@ cli:
       quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
         --yes per confirmar.
       quarantine_yes_help: Confirmar explícitament l'operació de quarantena
+    errors:
+      invalid_value: 'Valor no vàlid per a %{name}: %{value}'
+      no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config setup --tax-id
+        <NIF>' primer.
+      unknown_key: 'Clau de configuració desconeguda: %{name}. Executa ''aeat config
+        list'' per veure les claus disponibles.'
+    get:
+      help: Mostrar el valor actual d'una clau de configuració
+      key_help: Clau a llegir (ex. tax.id, iva.regime)
+    list:
+      help: Llistar totes les claus de configuració amb el seu valor actual
+    reset:
+      help: Reiniciar àmbits de configuració introduïts per l'operador
+      invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
+      requires_yes: El reinici és destructiu. Torna a executar amb --yes per confirmar.
+      scope_help: Àmbit a reiniciar (all, profile, auth)
+      yes_help: Confirmar explícitament l'operació de reinici
+    set:
+      help: Assignar un valor a una clau de configuració
+      key_help: Clau a assignar (ex. iva.regime)
+      value_help: Valor a assignar (text, true/false, import segons la clau)
+    setup:
+      accept_defaults_help: Acceptar els valors per defecte del descriptor sense preguntar
+      errors:
+        missing_required_flags: Falten banderes obligatòries per al mode --quiet;
+          proporciona un valor per a cada pregunta obligatòria.
+      help: Executar l'assistent de configuració basat en esquema de forma interactiva
+        o mitjançant banderes
+      profile_name_help: Nom del perfil on s'escriuen les respostes
+      quiet_help: Executar el flux sense interacció utilitzant només els valors de
+        les banderes
+    status:
+      help: Mostrar l'estat del perfil de configuració actiu
+    unset:
+      help: Eliminar el valor assignat a una clau de configuració
+      key_help: Clau a netejar
   data:
     app_help: Gestió de dades i registres fiscals
     ledgers:
@@ -800,6 +842,85 @@ wizard:
       family-minor-children-in-unit:
         prompt: Fills menors en unitat familiar
       title: Unitat familiar
+    flags:
+      activity:
+        help: Etiqueta d'activitat o clau controlada
+      address-postcode:
+        help: Codi postal del domicili fiscal
+      bienes-extranjero-above-threshold:
+        help: Béns a l'estranger superen el llindar legal
+      declaration-type:
+        help: Codi del tipus de declaració
+      does-intracomunitario:
+        help: Realitza operacions intracomunitàries
+      enrollment-large-company:
+        help: Empresa de gran volum
+      enrollment-public-administration-budget-gt-6000000:
+        help: Pressupost administració pública superior a 6.000.000
+      family-descendants-eu-eea-deduction:
+        help: Descendents UE/EEE en deducció d'unitat familiar
+      family-minor-children-in-unit:
+        help: Fills menors en unitat familiar
+      has-employees:
+        help: Té empleats i paga salaris amb retenció
+      iva-intracommunity-operations-exceed-50000-eur:
+        help: Operacions intracomunitàries superen 50.000 EUR
+      iva-oss-enrolled:
+        help: Alta en OSS
+      iva-regime:
+        help: Règim IVA
+      iva-roi-enrolled:
+        help: Alta en ROI
+      name:
+        help: Nom visible mostrat en revisions locals
+      notes:
+        help: Notes de l'operador (no consumides pel motor)
+      pays-capital-income-with-retencion:
+        help: Paga rendes de capital amb retenció
+      pays-professionals-with-retencion:
+        help: Paga a professionals amb retenció
+      pays-rent-with-retencion:
+        help: Paga lloguer de local amb retenció
+      professional-income-withholding-ge-70pct:
+        help: Almenys 70% dels ingressos professionals amb retenció prèvia
+      spouse-birth-date:
+        help: Data de naixement del cònjuge
+      spouse-disability-grade:
+        help: Clau de discapacitat del cònjuge
+      spouse-eu-eea-country:
+        help: País UE/EEE del cònjuge
+      spouse-eu-eea-resident:
+        help: Cònjuge resident UE/EEE
+      spouse-name:
+        help: Nom del cònjuge
+      spouse-non-resident-irpf:
+        help: Cònjuge no resident IRPF
+      spouse-sex:
+        help: Sexe del cònjuge
+      spouse-surnames:
+        help: Cognoms del cònjuge
+      spouse-tax-id:
+        help: NIF/NIE del cònjuge
+      surnames:
+        help: Cognoms o raó social per a capçaleres d'exportació
+      tax-id:
+        help: Identificador fiscal (NIF/NIE) per a declaracions
+      tax-residence-ccaa:
+        help: Comunitat autònoma de residència fiscal
+      taxpayer-birth-date:
+        help: Data de naixement del primer declarant
+      taxpayer-death-date:
+        help: Data de defunció del primer declarant
+      taxpayer-disability-grade:
+        help: Clau de discapacitat del primer declarant
+      taxpayer-marital-status:
+        help: Estat civil del primer declarant
+      taxpayer-sex:
+        help: Sexe del primer declarant
+      third-party-transactions-above-347-threshold:
+        help: Operacions amb tercers superen el llindar del Modelo 347
+      uses-objective-estimation-irpf:
+        help: Tributa IRPF en estimació objectiva
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operacions intracomunitàries superen 50.000 EUR
