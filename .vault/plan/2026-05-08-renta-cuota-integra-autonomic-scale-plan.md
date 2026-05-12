@@ -154,3 +154,74 @@ is committed and per-CCAA reviewable, (2) the cuota arithmetic is
 exercised against AEAT's own outputs, and (3) the dispatch
 mechanism rejects any CCAA value that is not in the dispatch table —
 forcing every supported jurisdiction to be wired explicitly.
+
+## Status (2026-05-12)
+
+All nine phases of the original scope are closed. Every 15 × 6 = 90
+CCAA × ejercicio combination is wired in the committed registry,
+verified against AEAT manual práctico parte 1 and the relevant
+regional gazette, and exercised by the orphan-detection sweep plus
+the structural-rejection gates.
+
+Phase closure summary:
+
+- **Phase 1 (Runtime extension)** — `lookup_bracket_by_ccaa` op and
+  `dispatch_table` leaf landed in `_schema.py` / `_formula_runtime.py`;
+  five focused unit tests in `test_lookup_bracket_by_ccaa.py` cover
+  the happy path, missing-CCAA error, wrong-parameter-type error,
+  and unset-binding error.
+- **Phase 2 (Madrid 2025 proof slice)** — Madrid 2025 scale committed
+  with five-bracket schedule sourced from BOCM and cross-checked
+  against AEAT manual práctico.
+- **Phase 3 (Fan-out 2025)** — remaining 14 CCAA wired into 2025.
+- **Phases 4-8 (Backport 2024 / 2023 / 2022 / 2021 / 2020)** — each
+  ejercicio carries 15 per-CCAA bracket parameters plus the 0529 /
+  0531 dispatch formulas. Bracket data hand-cross-checked between
+  the AEAT manual práctico for that ejercicio and the relevant
+  Decreto Legislativo / Decreto-Ley from each regional gazette.
+- **Phase 9 (Closure)** — `_PRE_STAGED_PARAMETERS` carries no
+  autonomic-scale entries; the drift-detection sweep confirms every
+  per-CCAA parameter is consumed via the dispatch leaf.
+
+### Post-execution hardening (audit-discovered)
+
+The autonomic-scale wave surfaced several adjacent gaps that landed
+as focused follow-up commits, tracked in the session task ledger:
+
+- **#41** — SQL `secure_objects` records enrolled into pydantic v2
+  strict models.
+- **#42** — calculation-pipeline test coverage gaps audit.
+- **#43** — `verification_expectations` blocks declared across modelos
+  100 / 200 / 202 / 303 / 309 / 322 / 353 / 369 (×3 schemes) / 390.
+- **#45** — deferred `enum_binding_values` fix landed in
+  `test_ledger_renta_expense_binding`.
+- **#47** — atribución de rentas pass-through rate wired into the
+  Modelo 184 cross-modelo formula.
+- **#48** — unresolved merge-conflict markers in
+  `test_error_boundary_integration.py` resolved.
+- **#49** — orphan-detection leaf walkers consolidated into
+  `_runtime_graph` public helpers (`expression_binding_refs`,
+  `expression_parameter_refs`). Closed a latent dispatch_table-
+  undercounting bug in `_queries.py:ModeloFormulaRow.input_parameters`
+  for every autonomic-scale formula.
+- **#50** — structural rejection test in `test_registry_schema.py`
+  pinning the validator's dispatch_table parameter-resolution gate.
+- **#51** — six unit tests in `test_text.py` covering
+  `normalise_corpus_text` after the math-notation regex fix.
+- **#52** — eight unit tests in `test_runtime_graph.py` pinning the
+  public `expression_*_refs` walkers, with explicit regression
+  coverage for the dispatch_table walking case.
+
+### Out-of-scope follow-ups (not blocking closure)
+
+- **#44 (data-blocked)** — Modelo 100 chain-behaviour scenario
+  expansion needs AEAT-published worked-example oracle data per
+  CCAA × ejercicio. The no-tautological-calculation-tests rule
+  forbids hand-computed expected values, so this task waits on
+  external oracle data.
+- **#46 (vaultspec-gated)** — wiring orphan RIC parameters
+  (`renta-2025-ric-reduccion-rate-maximo`,
+  `renta-2025-ric-materializacion-plazo-anos`,
+  `renta-2025-ric-mantenimiento-plazo-anos`) into the Modelo 100
+  RIC reduction chain needs a research → ADR → plan pass for the
+  26-casilla RIC scope before code lands.
