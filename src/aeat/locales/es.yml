@@ -576,7 +576,7 @@ cli:
     app_help: Revisar el estado actual del espacio de trabajo fiscal
     calendar_help: Mostrar calendario de obligaciones para un rango de fechas
     calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta
-      ''aeat setup profile set <clave> <valor>'' o usa --allow-incomplete para ver
+      ''aeat config set <clave> <valor>'' o usa --allow-incomplete para ver
       el calendario calculado bajo valores por defecto.'
     calendar_requires_dates: Use --from y --to al consultar el calendario
     drafts: Borradores
@@ -650,7 +650,7 @@ cli:
     app_help: 'Asistente para preparar declaraciones tributarias españolas
 
 
-      Quickstart: aeat setup init --name NAME --tax-id NIF'
+      Quickstart: aeat config setup --profile-name NAME --tax-id NIF'
     debug_help: Mostrar logs internos de depuración en stderr
     format_help: Formato de salida para los resultados del comando
     quiet_help: Mostrar solo errores en stderr
@@ -760,8 +760,8 @@ review:
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
-      digital (FNMT / equivalente). Configura un proveedor con 'aeat setup auth configure'
-      y verifica con 'aeat setup auth status'.
+      digital (FNMT / equivalente). Configura un proveedor con 'aeat config auth --provider certificate'
+      y verifica con 'aeat config status'.
     title: Autenticación con la AEAT
   calendar:
     body: El calendario muestra las obligaciones de presentación (modelos y periodos)
@@ -800,11 +800,11 @@ topic:
   profile:
     body: El perfil local contiene tu identificación fiscal (NIF), actividad principal,
       régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
-      Edítalo con 'aeat setup profile set <clave> <valor>'.
+      Edítalo con 'aeat config set <clave> <valor>'.
     title: Perfil del contribuyente
   providers:
     body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
-      'aeat setup auth providers' lista los proveedores con sus prerrequisitos.
+      'aeat config auth --help' lista los proveedores con sus prerrequisitos.
     title: Proveedores de autenticación
   recargo-extemporaneo:
     body: La presentación fuera de plazo sin requerimiento previo de la AEAT acumula

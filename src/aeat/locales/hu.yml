@@ -577,7 +577,7 @@ cli:
     app_help: Az aktuális adózási munkaterület áttekintése
     calendar_help: Kötelezettségi naptár megjelenítése dátumtartományra
     calendar_refused_incomplete: 'A profil nem deklarálja ezeket a kulcsokat: %{keys}.
-      Futtasd: ''aeat setup profile set <kulcs> <érték>'' vagy add meg --allow-incomplete
+      Futtasd: ''aeat config set <kulcs> <érték>'' vagy add meg --allow-incomplete
       a naptár alapértelmezett értékekkel történő számításához.'
     calendar_requires_dates: Naptárhoz használja a --from és --to opciókat
     drafts: Tervezetek
@@ -649,7 +649,7 @@ cli:
     app_help: 'Spanyol adóbevallási segéd
 
 
-      Quickstart: aeat setup init --name NAME --tax-id NIF'
+      Quickstart: aeat config setup --profile-name NAME --tax-id NIF'
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     format_help: A parancseredmények kimeneti formátuma
     quiet_help: Csak hibák megjelenítése stderr-en
@@ -761,8 +761,8 @@ review:
 topic:
   authentication:
     body: 'Az AEAT hitelesítés Cl@ve Móvilt (push a regisztrált mobilra) vagy digitális
-      tanúsítványt (FNMT / megfelelő) használ. Állíts be szolgáltatót az ''aeat setup
-      auth configure'' paranccsal és ellenőrizd: ''aeat setup auth status''.'
+      tanúsítványt (FNMT / megfelelő) használ. Állíts be szolgáltatót az ''aeat config
+      auth --provider certificate'' paranccsal és ellenőrizd: ''aeat config status''.'
     title: AEAT hitelesítés
   calendar:
     body: A naptár megjeleníti a benyújtási kötelezettségeket (modellek és időszakok)
@@ -801,11 +801,11 @@ topic:
   profile:
     body: 'A helyi profil tartalmazza az adóazonosítódat (NIF), fő tevékenységedet,
       ÁFA / IRPF rezsimedet és opcionális regisztrációkat (SII, Verifactu, intracomunitario).
-      Szerkeszd: ''aeat setup profile set <kulcs> <érték>''.'
+      Szerkeszd: ''aeat config set <kulcs> <érték>''.'
     title: Adózói profil
   providers:
     body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő követelményei
-      vannak. 'aeat setup auth providers' felsorolja őket a követelményekkel együtt.
+      vannak. 'aeat config auth --help' felsorolja őket a követelményekkel együtt.
     title: Hitelesítési szolgáltatók
   recargo-extemporaneo:
     body: Határidő utáni benyújtás az AEAT előzetes felszólítása nélkül havi 1%-os

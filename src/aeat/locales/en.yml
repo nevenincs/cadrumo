@@ -188,7 +188,7 @@ cli:
       no_draft_for_period: No draft exists for the specified period
       not_approved_for_export: The declaration must be approved before being exported
       profile_tax_id_required: 'The active profile requires a configured Tax ID (NIF/CIF).
-        Run: aeat setup profile set tax.id <NIF/NIE>'
+        Run: aeat config set tax.id <NIF/NIE>'
       set_parse_error: Error parsing the field assignment
     export_help: Export an approved declaration to a local AEAT-format file
     format_help: Output format (e.g. json, text, table)
@@ -630,7 +630,7 @@ cli:
     app_help: 'Spanish tax filing assistant
 
 
-      Quickstart: aeat setup init --name NAME --tax-id NIF'
+      Quickstart: aeat config setup --profile-name NAME --tax-id NIF'
     debug_help: Show internal debug logs on stderr
     format_help: Output format for command results
     quiet_help: Show only errors on stderr
@@ -740,8 +740,8 @@ review:
 topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
-      certificate (FNMT / equivalent). Configure a provider with 'aeat setup auth
-      configure' and verify with 'aeat setup auth status'.
+      certificate (FNMT / equivalent). Configure a provider with 'aeat config auth
+      --provider certificate' and verify with 'aeat config status'.
     title: Authentication with AEAT
   calendar:
     body: The calendar shows filing obligations (modelos and periods) within a range.
