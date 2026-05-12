@@ -147,50 +147,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.setup._errors.SetupAbortedError",
-        ErrorCode(
-            code="REFUSED_SETUP_ABORTED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_setup_aborted",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.setup._errors.SetupAnswersError",
-        ErrorCode(
-            code="ERROR_SETUP_ANSWERS",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_setup_answers",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.setup._errors.SetupError",
-        ErrorCode(
-            code="ERROR_SETUP",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_setup",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.setup._errors.SetupVerifyError",
-        ErrorCode(
-            code="ERROR_SETUP_VERIFY",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_setup_verify",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.application.verification._errors.VerificationError",
         ErrorCode(
             code="INTEGRITY_VERIFICATION",

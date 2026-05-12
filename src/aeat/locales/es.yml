@@ -393,19 +393,6 @@ cli:
       complete: Completado
       ingesting: Ingestando...
       rows_found: Filas encontradas
-  init:
-    activity_help: Actividad económica principal
-    help: Asistente de onboarding del operador (alias de aeat setup init con prompts)
-    iva_regime_help: Régimen IVA aplicable (general, simplificado, recargo-equivalencia,
-      exento)
-    name_help: Nombre local del perfil (no se envía a la AEAT)
-    prompt_activity: Actividad económica principal
-    prompt_iva_regime: Régimen IVA
-    prompt_name: Nombre local del perfil
-    prompt_tax_id: NIF/NIE/CIF del contribuyente
-    quiet_help: Modo no-interactivo; requiere --name, --tax-id y --activity como flags
-    quiet_requires_all: Modo --quiet requiere --name, --tax-id y --activity como flags.
-    tax_id_help: NIF/NIE/CIF del contribuyente
   inventory:
     app_help: Gestión de inventario de activos y existencias
     create:
@@ -645,106 +632,6 @@ cli:
     verbose_help: Mostrar logs internos informativos en stderr
     version_command_help: Mostrar la versión del paquete y el resumen del registro
     version_help: Mostrar la versión del paquete y el resumen del registro
-  setup:
-    app_help: Preparar el perfil local y la autenticación necesarios para usar la
-      aplicación
-    auth:
-      app_help: Configurar y comprobar la autenticación de AEAT
-      configure:
-        file_help: 'Ruta absoluta o relativa al archivo de certificado P12/PFX cuando
-          el proveedor lo requiera. Ejemplo: --file /ruta/al/certificado.p12.'
-        help: Configurar el proveedor de autenticación
-        provider_help: Proveedor de autenticacion. Ejecuta 'aeat setup auth providers'
-          para listar los proveedores soportados (certificate, clave_movil).
-      login:
-        help: Iniciar la sesión local de autenticación configurada
-      logout:
-        help: Cerrar la sesión local de autenticación
-      providers:
-        help: Listar proveedores de autenticación disponibles
-      reset:
-        all_help: Eliminar tanto el estado de sesión persistido como el bloqueo de
-          adquisición
-        help: Restablecer sesiones de autenticación persistidas o bloqueos de adquisición
-        locks_help: Eliminar el bloqueo de adquisición del proveedor
-        sessions_help: Eliminar el estado de sesión persistido del proveedor
-      status:
-        help: Mostrar el proveedor configurado y el estado de sesión
-      whoami:
-        help: Mostrar la identidad asociada a la sesión actual
-    errors:
-      certificate_file_required: El proveedor certificate requiere --file
-      file_not_found: No se ha encontrado el archivo {file}
-      not_configured: Configure un proveedor antes de iniciar sesión
-      reset_scope_required: 'Elija al menos un alcance de restablecimiento: --sessions,
-        --locks o --all.'
-      unknown_profile_key: 'Clave de perfil desconocida: {key}'
-      unknown_provider: 'Proveedor de autenticación desconocido: {provider}'
-    headers:
-      active: Activo
-      auth_provider: Proveedor de autenticación
-      authenticated_at: Autenticado el
-      completeness: Completitud
-      description: Descripción
-      id: ID
-      key: Clave
-      login_ready: Sesión lista
-      logout: Cierre de sesión
-      missing: Falta
-      next: Siguiente
-      profile: Perfil
-      profile_ready: Perfil listo
-      provider: Proveedor
-      ready: Listo
-      requirement: Requisito
-      subject: Identidad
-      unknown: Desconocido
-      valid: Válido
-    init:
-      activity_help: 'Actividad economica principal del autonomo. Texto libre o codigo
-        IAE/CNAE. Ejemplo: ''Servicios profesionales de informatica'' o ''6201''.'
-      help: Crear o activar un perfil de contribuyente
-      name_help: 'Nombre local para distinguir este perfil de otros (no se envia a
-        la AEAT). Ejemplo: ''cliente-acme'' o ''mi-perfil''.'
-      tax_id_help: 'Identificador fiscal espanol del contribuyente. Formato: 8 digitos
-        + letra (NIF), letra + 7 digitos + letra (NIE), o letra + 7 digitos + digito
-        (CIF). Ejemplo: 12345678Z.'
-    labels:
-      'no': 'no'
-      unset: sin valor
-      'yes': sí
-    profile:
-      app_help: Gestionar los datos del perfil de contribuyente
-      get_help: Mostrar el valor de una clave de perfil
-      get_key_help: Clave de perfil a consultar
-      list_help: Listar perfiles locales
-      list_keys_help: Listar claves editables del perfil
-      set_help: Establecer un valor del perfil
-      set_key_help: Clave de perfil a modificar
-      set_value_help: Valor que se guardará
-      show_all_keys_help: Mostrar todas las claves de perfil, incluidas las no configuradas
-      show_help: Mostrar los datos del perfil activo
-      show_unset_help: Mostrar todas las claves de perfil con <unset> para valores
-        vacíos
-      unset_help: Borrar un valor del perfil
-      unset_key_help: Clave de perfil a borrar
-      use_help: Activar un perfil local
-      use_name_help: Nombre del perfil
-      validate_help: Validar si el perfil activo está completo
-    reset:
-      all_help: Combinar los ámbitos profile, auth y data.
-      auth_help: Eliminar el estado de sesión de autenticación.
-      data_help: Mover las filas no descifrables de secure_objects a cuarentena.
-      help: Restablecer (destructivo) el estado local del usuario por ámbito; requiere
-        --yes.
-      profile_help: Eliminar todos los perfiles del operador y borradores asociados.
-      requires_yes: Esta operación es destructiva. Vuelve a ejecutar con --yes para
-        confirmar.
-      scope_required: 'Debes seleccionar al menos un ámbito: --profile, --auth, --data
-        o --all.'
-      yes_help: Confirmar explícitamente la operación destructiva.
-    status:
-      help: Mostrar la preparación del entorno y la siguiente acción requerida
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
@@ -845,53 +732,6 @@ review:
     t_791512: procesada sin clasificar
     t_870243: personal
     t_968325: ingreso
-setup:
-  verifier:
-    t_049382: La ruta '{path}' no es un archivo
-    t_104932: La variable de entorno '{var}' está configurada
-    t_104938: El perfil de autónomo en '{path}' es válido
-    t_193582: Asegúrese de que la ruta a su certificado sea correcta y el archivo
-      exista
-    t_204938: El directorio '{name}' en '{path}' está listo
-    t_293847: La configuración de inicio es coherente
-    t_394821: Defina la variable de entorno '{var}' con la contraseña de su certificado
-    t_394827: El perfil de autónomo en '{path}' no existe (se usarán los valores por
-      defecto)
-    t_501723: Certificado no encontrado en '{path}'
-    t_649302: 'No se pudo crear el directorio ''{name}'' en ''{path}'': {exc}'
-    t_749321: Certificado encontrado en '{path}'
-    t_837462: 'El perfil de autónomo en ''{path}'' no es válido: {exc}'
-    t_938472: La variable de entorno '{var}' para la contraseña del certificado no
-      está configurada
-    t_938475: 'La configuración de inicio es incoherente: {exc}'
-  wizard:
-    aeat_drafts_dir_prompt: Directorio para borradores de la AEAT
-    aeat_live_tests_enabled_prompt: ¿Habilitar pruebas en vivo de la AEAT?
-    aeat_manuals_root_prompt: Directorio raíz para manuales de la AEAT
-    aeat_submissions_dir_prompt: Directorio para presentaciones de la AEAT
-    bienes_extranjero_above_threshold_prompt: ¿Posee bienes en el extranjero por encima
-      del umbral (Modelo 720)?
-    certificate_backend_prompt: Motor de gestión de certificados
-    certificate_friendly_name_prompt: Nombre descriptivo del certificado
-    certificate_password_secret_var_name_prompt: Nombre de la variable de entorno
-      para la contraseña del certificado
-    certificate_path_prompt: Ruta al archivo del certificado (.p12, .pfx)
-    default_language_prompt: Idioma por defecto para la interfaz
-    default_profile_path_prompt: Ruta al archivo de perfil de autónomo (.json)
-    does_intracomunitario_prompt: ¿Realiza operaciones intracomunitarias (ROI)?
-    has_employees_prompt: ¿Tiene empleados contratados?
-    iva_regime_prompt: Régimen de IVA
-    output_language_prompt: Idioma para informes y documentos generados
-    pays_professionals_with_retencion_prompt: ¿Paga a profesionales con retención
-      (Modelo 111)?
-    pays_rent_with_retencion_prompt: ¿Paga alquiler con retención (Modelo 115)?
-    professional_income_withholding_ge_70pct_prompt: ¿Tiene retenciones en más del
-      70% de sus ingresos profesionales?
-    tax_id_prompt: NIF/NIE del titular
-    tax_residence_ccaa_prompt: Comunidad Autónoma de residencia fiscal
-    third_party_transactions_above_347_threshold_prompt: ¿Realiza operaciones con
-      terceros por encima de 3005,06€ (Modelo 347)?
-    welcome: Bienvenido al asistente de configuración de AEAT CLI
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado

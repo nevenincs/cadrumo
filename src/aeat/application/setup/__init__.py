@@ -1,70 +1,7 @@
-"""First-run interactive setup wizard.
+"""Stable namespace for legacy operator-profile storage constants.
 
-Ships ``aeat setup``, the on-ramp a fresh Spanish autónomo runs after
-``just bootstrap`` to produce a valid ``env/.env`` and an
-:class:`aeat.domain.deadlines.AutonomoProfile` JSON file — without
-ever writing a certificate password to disk.
-
-Callers outside the subpackage import only from this module, honouring
-the project's public-API-discipline rule. Key entry points:
-
-* :class:`SetupWizard` — orchestrates the linear setup flow.
-* :class:`Verifier` — pure post-write verification step.
-* :class:`SetupAnswers`, :class:`SetupResult`, :class:`SetupStep`,
-  :class:`SetupOutcome`, :class:`VerifyFinding`,
-  :class:`VerifySeverity` — strict pydantic v2 records / enums for
-  cross-boundary state.
-* :class:`Prompter`, :class:`FirstRunRunner` — Protocol surfaces the
-  wizard delegates to.
-* :class:`QueuedPrompter`, :class:`TyperPrompter` — concrete
-  prompter implementations.
-* :func:`write_env_file`, :func:`write_profile_file`,
-  :func:`load_profile_envelope`, :func:`load_answers_from_file`,
-  :func:`owned_env_keys` — file-system helpers.
+The operator-facing setup wizard lives in
+:mod:`aeat.application.wizard`. This subpackage retains only the
+storage-namespace constants the archive registry and the filing
+runtime fixtures consume.
 """
-
-from __future__ import annotations
-
-from ._env_writer import load_profile_envelope, owned_env_keys, write_env_file, write_profile_file
-from ._errors import (
-    SetupAbortedError,
-    SetupAnswersError,
-    SetupError,
-    SetupVerifyError,
-)
-from ._models import (
-    SetupAnswers,
-    SetupOutcome,
-    SetupResult,
-    SetupStep,
-    VerifyFinding,
-    VerifySeverity,
-)
-from ._prompter import QueuedPrompter, TyperPrompter
-from ._protocols import FirstRunRunner, Prompter
-from ._verifier import Verifier, load_answers_from_file
-from ._wizard import SetupWizard
-
-__all__ = [
-    "FirstRunRunner",
-    "Prompter",
-    "QueuedPrompter",
-    "SetupAbortedError",
-    "SetupAnswers",
-    "SetupAnswersError",
-    "SetupError",
-    "SetupOutcome",
-    "SetupResult",
-    "SetupStep",
-    "SetupVerifyError",
-    "SetupWizard",
-    "TyperPrompter",
-    "Verifier",
-    "VerifyFinding",
-    "VerifySeverity",
-    "load_answers_from_file",
-    "load_profile_envelope",
-    "owned_env_keys",
-    "write_env_file",
-    "write_profile_file",
-]
