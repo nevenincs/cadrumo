@@ -49,6 +49,21 @@ tolerance = "0.00"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
+[[revisions."esquema-exterior".verification_expectations]]
+id = "modelo-369-exterior-iva-chain-verification"
+computed_casillas = ["iva.exterior.cuota-total"]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-37-1992:art-163-octiesdecies", "orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
 [[revisions."esquema-exterior".bindings]]
 id = "modelo-369-exterior-de-external-services-21pct"
 source = "ledger_oss_aggregation"
@@ -398,6 +413,21 @@ formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
 legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-union".verification_expectations]]
+id = "modelo-369-union-iva-chain-verification"
+computed_casillas = ["iva.union.cuota-total"]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-37-1992:art-163-unvicies", "orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-union".bindings]]
@@ -794,6 +824,21 @@ formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
 legal_refs = ["orden-hac-610-2021:art-1"]
+source_refs = ["aeat-dr-369-2021"]
+
+[[revisions."esquema-importacion".verification_expectations]]
+id = "modelo-369-importacion-iva-chain-verification"
+computed_casillas = ["iva.importacion.cuota-total"]
+tolerance = "0.00"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-37-1992:art-163-quinvicies", "orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
 [[revisions."esquema-importacion".bindings]]
