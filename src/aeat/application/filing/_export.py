@@ -356,7 +356,7 @@ def _guard_record_export(record: ExportRecordDefinition, *, casilla_values: dict
     raw = casilla_values.get(record.requires_positive_casilla)
     amount = Decimal("0") if raw in {None, ""} else Decimal(str(raw))
     if amount <= 0:
-        raise FilingExportError(
+        raise FilingExportValidationError(
             f"export record {record.id!r} requires positive casilla {record.requires_positive_casilla!r}"
         )
 
@@ -452,7 +452,7 @@ def _field_value(
             raise FilingExportValidationError(f"export field {field.id!r} must declare header_key")
         value = headers.get(field.header_key.lower())
         if field.required and (value is None or value == ""):
-            raise FilingExportError(f"export header {field.header_key!r} is required")
+            raise FilingExportValidationError(f"export header {field.header_key!r} is required")
         return value or ""
     if field.kind == "draft":
         return _draft_value(field, draft)

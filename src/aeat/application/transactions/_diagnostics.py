@@ -83,6 +83,13 @@ class LedgerImportDiagnostic(BaseModel):
     @classmethod
     def _require_authoritative_message(cls, value: str) -> str:
         """Reject diagnostics without an authoritative Spanish message."""
+        from ...core.i18n import tr
+
+        if not value or not str(value).strip():
+            raise ValueError("message must be a non-empty Translatable key")
+        rendered = tr(str(value), locale="es")
+        if rendered == str(value):
+            raise ValueError(f"message key {value!r} has no authoritative Spanish translation")
         return value
 
     @field_validator("source_locator")
