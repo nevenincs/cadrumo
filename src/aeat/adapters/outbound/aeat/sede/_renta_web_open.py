@@ -213,28 +213,44 @@ def extract_renta_web_open_summary_value(body_text: str, label: str) -> str | No
 async def _navigate_to_casilla(page: Any, casilla_number: str, *, timeout_ms: int) -> None:
     """Open the Buscar casilla dialog, enter the casilla number, jump to the page.
 
-    The Resumen view exposes a "Buscar casilla" button that opens a modal
-    dialog with a 4-char "Número de casilla" input and an "Ir a la página"
-    button. Typing a valid casilla number enables both the search button
-    and the navigation button; clicking "Ir a la página" navigates the form
-    to the page containing that casilla.
+    On the Resumen view the "Buscar casilla" button lives on a secondary
+    toolbar that is collapsed by default; we expand it via the
+    "Mostrar opciones" toggle first. Once visible, clicking Buscar opens
+    a modal dialog with a 4-char "Número de casilla" input and an
+    "Ir a la página" button. Typing a valid casilla number enables both
+    the search button and the navigation button; clicking "Ir a la
+    página" navigates the form to the page containing that casilla.
     """
 
+    # Expand the secondary toolbar (idempotent — already expanded is fine).
+    mostrar = page.locator('button[title="Mostrar opciones"]').first
+    try:
+        await mostrar.wait_for(state="visible", timeout=10_000)
+        await mostrar.click(timeout=10_000)
+    except Exception as exc:
+        logger.debug("mostrar opciones already expanded or unavailable: %s", exc)
     await _click_expected(
-        page.get_by_role("button", name="Buscar casilla").first,
+        page.locator('button[title="Buscar casilla"]').first,
         stage=f"navigate-to-casilla:{casilla_number}:open-dialog",
         description="Buscar casilla button",
         timeout_ms=timeout_ms,
     )
+    casilla_input = page.locator('input.estiloAlfanumerico[maxlength="4"]').first
     await _fill_expected(
-        page.locator('input.estiloAlfanumerico[maxlength="4"]').first,
+        casilla_input,
         casilla_number,
         stage=f"navigate-to-casilla:{casilla_number}:type-number",
         description="Buscar casilla number input",
         timeout_ms=timeout_ms,
     )
+    # Pressing Enter (or Tab) commits the value and triggers ZK validation
+    # so the inline "Buscar casilla" lupa button enables.
+    await casilla_input.press("Enter", timeout=timeout_ms)
+    # After validation the "Ir a la página" button becomes enabled.
+    ir_pagina = page.locator('button:has-text("Ir a la página")').first
+    await ir_pagina.wait_for(state="visible", timeout=timeout_ms)
     await _click_expected(
-        page.get_by_role("button", name="Ir a la página").first,
+        ir_pagina,
         stage=f"navigate-to-casilla:{casilla_number}:jump-to-page",
         description="Ir a la página button",
         timeout_ms=timeout_ms,
@@ -245,7 +261,7 @@ async def _navigate_to_resumen(page: Any, *, timeout_ms: int) -> None:
     """Return to the Resumen view after editing form casillas."""
 
     await _click_expected(
-        page.get_by_role("button", name="Resumen", exact=True).first,
+        page.locator('button:has-text("Resumen")').first,
         stage="navigate-to-resumen",
         description="Resumen button",
         timeout_ms=timeout_ms,
