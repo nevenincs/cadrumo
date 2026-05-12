@@ -81,6 +81,24 @@ class ProfileKey(BaseModel):
             raise ProfileValidationError("required_when_key and required_when_value must be set together")
         return self
 
+    @classmethod
+    def from_key(cls, raw: str) -> ProfileKey:
+        """Return the :class:`ProfileKey` for ``raw`` after canonical normalisation.
+
+        Normalisation strips surrounding whitespace, lowercases, and
+        folds dashes into dots so ``"TAX.ID"`` and ``"tax.id"`` resolve
+        to the same registry entry.
+
+        Raises:
+            KeyError: When the normalised form is not in the registry.
+        """
+
+        canonical = raw.strip().lower().replace("-", ".")
+        try:
+            return _by_key()[canonical]
+        except KeyError as exc:
+            raise KeyError(f"unknown profile key: {raw!r}") from exc
+
 
 _PROFILE_KEYS_CACHE: list[tuple[ProfileKey, ...]] = []
 _BY_KEY_CACHE: list[dict[str, ProfileKey]] = []
@@ -125,13 +143,15 @@ def __getattr__(name: str) -> tuple[ProfileKey, ...]:
 def get_profile_key(key: str) -> ProfileKey:
     """Return the :class:`ProfileKey` for ``key``.
 
+    Performs canonical normalisation (strip / lowercase / dash-to-dot)
+    before the registry lookup so case-insensitive callers resolve to
+    the same entry as the canonical form.
+
     Raises:
-        KeyError: When ``key`` is not in the registry.
+        KeyError: When the normalised form is not in the registry.
     """
-    try:
-        return _by_key()[key]
-    except KeyError as exc:
-        raise KeyError(f"unknown profile key: {key!r}") from exc
+
+    return ProfileKey.from_key(key)
 
 
 def required_profile_keys() -> tuple[ProfileKey, ...]:
