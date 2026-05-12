@@ -8,14 +8,14 @@ personal local state needed to parameterize RENTA verification.
 from __future__ import annotations
 
 from datetime import date
-from enum import StrEnum
+from typing import TYPE_CHECKING
 from unicodedata import category, normalize
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ._ccaa import CCAA
 from ._errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
 from ._keys import (
-    PROFILE_KEYS,
     ProfileKey,
     ProfileKeyRequirement,
     get_profile_key,
@@ -24,25 +24,23 @@ from ._keys import (
 )
 from .family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
+if TYPE_CHECKING:
+    # ``PROFILE_KEYS`` is defined lazily via ``__getattr__`` below so the
+    # wizard catalogue (the source of truth) can import the leaf modules
+    # under ``aeat.domain.profile`` without triggering the catalogue-driven
+    # build. Type checkers see the same tuple-of-``ProfileKey`` contract as
+    # an eager export would expose.
+    from ._keys import PROFILE_KEYS as PROFILE_KEYS
 
-class CCAA(StrEnum):
-    """Ordinary common-regime autonomous communities for residence profile data."""
 
-    ANDALUCIA = "andalucia"
-    ARAGON = "aragon"
-    ASTURIAS = "asturias"
-    BALEARES = "baleares"
-    CANARIAS = "canarias"
-    CANTABRIA = "cantabria"
-    CASTILLA_LA_MANCHA = "castilla_la_mancha"
-    CASTILLA_Y_LEON = "castilla_y_leon"
-    CATALUNA = "cataluna"
-    COMUNIDAD_VALENCIANA = "comunidad_valenciana"
-    EXTREMADURA = "extremadura"
-    GALICIA = "galicia"
-    LA_RIOJA = "la_rioja"
-    MADRID = "madrid"
-    MURCIA = "murcia"
+def __getattr__(name: str) -> tuple[ProfileKey, ...]:
+    """Lazily resolve ``PROFILE_KEYS`` so the wizard catalogue can import first."""
+
+    if name == "PROFILE_KEYS":
+        from ._keys import PROFILE_KEYS
+
+        return PROFILE_KEYS
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 _FORAL_ALIASES = frozenset(
