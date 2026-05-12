@@ -1,4 +1,4 @@
-"""Locale-coverage audit for wizard descriptor strings.
+"""Locale-coverage audit for wizard descriptor and CLI translation strings.
 
 ``audit_wizard_translations`` walks every :class:`Translatable` value
 declared anywhere in :data:`WIZARD_FLOWS` (titles, prompts, helps,
@@ -6,10 +6,12 @@ choice labels and descriptions, plus the fixed error keys the runtime
 raises) and the wizard-derived flag-help keys, returning the tuple of
 keys that fail to resolve in any of the four locale catalogues.
 
-``audit_cli_config_translations`` runs the same locale-resolution
-sweep over every ``cli.config.*`` translation key referenced in
-``src/aeat/entrypoints/cli/_config.py`` (statically extracted from
-the source). Both audits are exercised by the test suite.
+``audit_cli_translations`` runs the same locale-resolution sweep over
+every ``cli.<group>.*`` translation key referenced at a ``tr(...)``
+call site in any module under :mod:`aeat.entrypoints.cli`. The audit
+treats a locale that returns the literal key text -- the python-i18n
+fallback behaviour when a key is absent or its value mirrors the key
+itself -- as a structured failure.
 """
 
 from __future__ import annotations
@@ -76,31 +78,42 @@ def audit_wizard_translations() -> tuple[str, ...]:
     return tuple(missing)
 
 
-_CLI_CONFIG_KEY_PATTERN = re.compile(r"['\"](cli\.config(?:\.[A-Za-z0-9_]+)+)['\"]")
+_CLI_KEY_PATTERN = re.compile(r"['\"](cli\.[A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)+)['\"]")
 
 
-def _config_module_path() -> Path:
-    return Path(__file__).resolve().parent.parent.parent / "entrypoints" / "cli" / "_config.py"
+def _cli_entrypoints_root() -> Path:
+    return Path(__file__).resolve().parent.parent.parent / "entrypoints" / "cli"
 
 
-def cli_config_keys_referenced_in_source() -> tuple[str, ...]:
-    """Return every ``cli.config.*`` translation key referenced by ``_config.py``.
+def cli_keys_referenced_in_source() -> tuple[str, ...]:
+    """Return every ``cli.<group>.*`` translation key referenced statically.
 
-    Extracted statically by regex over the source. ``f`` strings that
-    interpolate the flow id (``f"cli.config.{flow.id}.help"``) are not
-    captured by this regex; those keys are walked by
-    :func:`audit_wizard_translations` instead.
+    Walks every ``.py`` module under :mod:`aeat.entrypoints.cli` and
+    extracts literal ``cli.<group>.<rest>`` strings by regex. f-string
+    interpolations that build keys at runtime (for example
+    ``f"cli.config.{flow.id}.help"``) are not captured here; those keys
+    are walked by :func:`audit_wizard_translations` through the wizard
+    descriptor catalogue instead.
     """
 
-    source = _config_module_path().read_text(encoding="utf-8")
-    return tuple(sorted({match.group(1) for match in _CLI_CONFIG_KEY_PATTERN.finditer(source)}))
+    keys: set[str] = set()
+    for module in _cli_entrypoints_root().rglob("*.py"):
+        source = module.read_text(encoding="utf-8")
+        for match in _CLI_KEY_PATTERN.finditer(source):
+            keys.add(match.group(1))
+    return tuple(sorted(keys))
 
 
-def audit_cli_config_translations() -> tuple[str, ...]:
-    """Return the ``cli.config.*`` keys that fail to resolve in any locale."""
+def audit_cli_translations() -> tuple[str, ...]:
+    """Return the ``cli.*`` keys that fail to resolve in any locale.
+
+    A failure means the locale catalogue either omits the key or stores
+    the literal key text as the value, both of which surface as raw key
+    strings in operator-facing help output.
+    """
 
     missing: list[str] = []
-    for key in cli_config_keys_referenced_in_source():
+    for key in cli_keys_referenced_in_source():
         for locale in _LOCALES:
             if not _resolves_in(locale, key):
                 missing.append(f"{locale}:{key}")
@@ -108,7 +121,7 @@ def audit_cli_config_translations() -> tuple[str, ...]:
 
 
 __all__ = [
-    "audit_cli_config_translations",
+    "audit_cli_translations",
     "audit_wizard_translations",
-    "cli_config_keys_referenced_in_source",
+    "cli_keys_referenced_in_source",
 ]

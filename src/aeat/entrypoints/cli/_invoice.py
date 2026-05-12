@@ -10,8 +10,14 @@ from ...application.invoices import (
     project_invoice_payment_matches,
     project_invoice_reviews,
 )
-from ...application.review import EditParseError, FilterParseError, InvoiceEditSpec, InvoiceReviewFilterSpec
-from ...application.workflow import update_invoice_review, workflow_state_repository
+from ...application.review import (
+    EditParseError,
+    FilterParseError,
+    InvoiceEditSpec,
+    InvoiceReviewFilterSpec,
+    update_invoice_review,
+)
+from ...application.workflow import workflow_state_repository
 from ._common import (
     _bad,
     _canonical_period,

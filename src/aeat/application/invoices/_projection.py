@@ -10,8 +10,8 @@ from pydantic import BaseModel, ConfigDict
 
 from ...domain.invoices import Invoice, InvoiceCatalogue
 from ...domain.transactions import TransactionCatalogue
-from ..review import InvoiceReviewFilterSpec, InvoiceReviewRecord
-from ..workflow import WorkflowState, update_invoice_review
+from ..review import InvoiceReviewFilterSpec, InvoiceReviewRecord, update_invoice_review
+from ..workflow import WorkflowState
 
 
 class InvoiceReviewProjection(BaseModel):

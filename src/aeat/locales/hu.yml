@@ -44,38 +44,48 @@ categories:
 cli:
   app:
     modelo:
-      app_help: cli.app.modelo.app_help
+      app_help: AEAT adóbevallás-modellek (modelos) regisztrációs katalógusának
+        áttekintése
       bindings:
-        as_of_help: cli.app.modelo.bindings.as_of_help
-        modelo_help: cli.app.modelo.bindings.modelo_help
-        period_help: cli.app.modelo.bindings.period_help
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
+          feloldása
+        modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
+        period_help: 'Adóidőszak a bindingek szűkítéséhez (pl. 2026Q1, 2026-01)'
       casillas:
-        as_of_help: cli.app.modelo.casillas.as_of_help
-        input_kind_help: cli.app.modelo.casillas.input_kind_help
-        modelo_help: cli.app.modelo.casillas.modelo_help
-        period_help: cli.app.modelo.casillas.period_help
-        required_help: cli.app.modelo.casillas.required_help
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
+          feloldása
+        input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound,
+          computed, informational)
+        modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
+        period_help: 'Adóidőszak a cellák szűkítéséhez (pl. 2026Q1, 2026-01)'
+        required_help: Csak a kötelezőként megjelölt cellák megjelenítése
       describe:
-        as_of_help: cli.app.modelo.describe.as_of_help
-        modelo_help: cli.app.modelo.describe.modelo_help
-        period_help: cli.app.modelo.describe.period_help
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
+          feloldása
+        modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
+        period_help: Adóidőszak a modellrevízió feloldásához (pl. 2026Q1,
+          2026-01)
       formulas:
-        as_of_help: cli.app.modelo.formulas.as_of_help
-        modelo_help: cli.app.modelo.formulas.modelo_help
-        period_help: cli.app.modelo.formulas.period_help
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
+          feloldása
+        modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
+        period_help: 'Adóidőszak a képletek szűkítéséhez (pl. 2026Q1, 2026-01)'
       list:
-        year_help: cli.app.modelo.list.year_help
+        year_help: Modellkatalógus szűrése egyetlen adóévre
   archive:
-    app_help: cli.archive.app_help
+    app_help: A helyi titkosított archívum exportálása és importálása hordozható
+      JSON csomagként
     export:
-      bundle_id_help: cli.archive.export.bundle_id_help
-      help: cli.archive.export.help
-      namespace_help: cli.archive.export.namespace_help
-      path_help: cli.archive.export.path_help
+      bundle_id_help: Az automatikusan generált csomag-azonosító felülírása
+      help: Hordozható JSON csomag írása a biztonságos objektumkatalógusból
+      namespace_help: A csomag szűkítése egy vagy több névtérre (ismételhető)
+      path_help: A JSON csomag cél elérési útja
     import:
-      conflict_help: cli.archive.import.conflict_help
-      help: cli.archive.import.help
-      path_help: cli.archive.import.path_help
+      conflict_help: 'Ütközéskezelési szabály ütköző rekordok visszaállításakor:
+        fail, overwrite vagy keep'
+      help: Archívumcsomag visszaállítása a titkosított biztonságos
+        objektumkatalógusba
+      path_help: A visszaállítandó JSON csomag elérési útja
   browser:
     app_help: Böngésző automatizálási feladatok kezelése (Playwright)
     health:

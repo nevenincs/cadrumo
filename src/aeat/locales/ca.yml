@@ -44,38 +44,51 @@ categories:
 cli:
   app:
     modelo:
-      app_help: cli.app.modelo.app_help
+      app_help: Inspeccionar el catàleg de models tributaris AEAT al registre
       bindings:
-        as_of_help: cli.app.modelo.bindings.as_of_help
-        modelo_help: cli.app.modelo.bindings.modelo_help
-        period_help: cli.app.modelo.bindings.period_help
+        as_of_help: Resoldre la revisió del model vigent a la data ISO indicada
+          (AAAA-MM-DD)
+        modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
+        period_help: Període fiscal per acotar els bindings (p. ex. 2026Q1,
+          2026-01)
       casillas:
-        as_of_help: cli.app.modelo.casillas.as_of_help
-        input_kind_help: cli.app.modelo.casillas.input_kind_help
-        modelo_help: cli.app.modelo.casillas.modelo_help
-        period_help: cli.app.modelo.casillas.period_help
-        required_help: cli.app.modelo.casillas.required_help
+        as_of_help: Resoldre la revisió del model vigent a la data ISO indicada
+          (AAAA-MM-DD)
+        input_kind_help: Filtrar les caselles per tipus d'entrada (manual,
+          bound, computed, informational)
+        modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
+        period_help: Període fiscal per acotar les caselles (p. ex. 2026Q1,
+          2026-01)
+        required_help: Mostrar només les caselles marcades com a obligatòries
       describe:
-        as_of_help: cli.app.modelo.describe.as_of_help
-        modelo_help: cli.app.modelo.describe.modelo_help
-        period_help: cli.app.modelo.describe.period_help
+        as_of_help: Resoldre la revisió del model vigent a la data ISO indicada
+          (AAAA-MM-DD)
+        modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
+        period_help: Període fiscal per resoldre la revisió del model (p. ex.
+          2026Q1, 2026-01)
       formulas:
-        as_of_help: cli.app.modelo.formulas.as_of_help
-        modelo_help: cli.app.modelo.formulas.modelo_help
-        period_help: cli.app.modelo.formulas.period_help
+        as_of_help: Resoldre la revisió del model vigent a la data ISO indicada
+          (AAAA-MM-DD)
+        modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
+        period_help: Període fiscal per acotar les fórmules (p. ex. 2026Q1,
+          2026-01)
       list:
-        year_help: cli.app.modelo.list.year_help
+        year_help: Filtrar el catàleg de models per un únic exercici fiscal
   archive:
-    app_help: cli.archive.app_help
+    app_help: Exportar i importar l'arxiu local xifrat com a paquets JSON
+      portables
     export:
-      bundle_id_help: cli.archive.export.bundle_id_help
-      help: cli.archive.export.help
-      namespace_help: cli.archive.export.namespace_help
-      path_help: cli.archive.export.path_help
+      bundle_id_help: Sobrescriure l'identificador de paquet generat
+        automàticament
+      help: Escriure un paquet JSON portable del catàleg d'objectes segurs
+      namespace_help: Restringir el paquet a un o més espais de noms
+        (repetible)
+      path_help: Ruta de destinació del paquet JSON
     import:
-      conflict_help: cli.archive.import.conflict_help
-      help: cli.archive.import.help
-      path_help: cli.archive.import.path_help
+      conflict_help: 'Política de conflicte en restaurar registres col·lidents:
+        fail, overwrite o keep'
+      help: Restaurar un paquet d'arxiu al catàleg xifrat d'objectes segurs
+      path_help: Ruta del paquet JSON a restaurar
   browser:
     app_help: Gestió de l'automatització del navegador (Playwright)
     health:

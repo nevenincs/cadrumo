@@ -45,38 +45,53 @@ categories:
 cli:
   app:
     modelo:
-      app_help: cli.app.modelo.app_help
+      app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el
+        registro
       bindings:
-        as_of_help: cli.app.modelo.bindings.as_of_help
-        modelo_help: cli.app.modelo.bindings.modelo_help
-        period_help: cli.app.modelo.bindings.period_help
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
+          indicada (AAAA-MM-DD)
+        modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        period_help: Periodo fiscal para acotar los bindings (p. ej. 2026Q1,
+          2026-01)
       casillas:
-        as_of_help: cli.app.modelo.casillas.as_of_help
-        input_kind_help: cli.app.modelo.casillas.input_kind_help
-        modelo_help: cli.app.modelo.casillas.modelo_help
-        period_help: cli.app.modelo.casillas.period_help
-        required_help: cli.app.modelo.casillas.required_help
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
+          indicada (AAAA-MM-DD)
+        input_kind_help: Filtrar las casillas por tipo de entrada (manual,
+          bound, computed, informational)
+        modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        period_help: Periodo fiscal para acotar las casillas (p. ej. 2026Q1,
+          2026-01)
+        required_help: Mostrar solo las casillas marcadas como obligatorias
       describe:
-        as_of_help: cli.app.modelo.describe.as_of_help
-        modelo_help: cli.app.modelo.describe.modelo_help
-        period_help: cli.app.modelo.describe.period_help
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
+          indicada (AAAA-MM-DD)
+        modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        period_help: Periodo fiscal para resolver la revisión del modelo (p. ej.
+          2026Q1, 2026-01)
       formulas:
-        as_of_help: cli.app.modelo.formulas.as_of_help
-        modelo_help: cli.app.modelo.formulas.modelo_help
-        period_help: cli.app.modelo.formulas.period_help
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
+          indicada (AAAA-MM-DD)
+        modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        period_help: Periodo fiscal para acotar las fórmulas (p. ej. 2026Q1,
+          2026-01)
       list:
-        year_help: cli.app.modelo.list.year_help
+        year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
   archive:
-    app_help: cli.archive.app_help
+    app_help: Exportar e importar el archivo local cifrado como paquetes JSON
+      portables
     export:
-      bundle_id_help: cli.archive.export.bundle_id_help
-      help: cli.archive.export.help
-      namespace_help: cli.archive.export.namespace_help
-      path_help: cli.archive.export.path_help
+      bundle_id_help: Sobrescribir el identificador de paquete generado
+        automáticamente
+      help: Escribir un paquete JSON portable del catálogo de objetos seguros
+      namespace_help: Restringir el paquete a uno o varios espacios de nombres
+        (repetible)
+      path_help: Ruta de destino del paquete JSON
     import:
-      conflict_help: cli.archive.import.conflict_help
-      help: cli.archive.import.help
-      path_help: cli.archive.import.path_help
+      conflict_help: 'Política de conflicto al restaurar registros colisionantes:
+        fail, overwrite o keep'
+      help: Restaurar un paquete de archivo en el catálogo cifrado de objetos
+        seguros
+      path_help: Ruta del paquete JSON a restaurar
   browser:
     app_help: Gestión de la automatización del navegador (Playwright)
     health:

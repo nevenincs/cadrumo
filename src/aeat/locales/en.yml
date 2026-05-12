@@ -38,38 +38,46 @@ categories:
 cli:
   app:
     modelo:
-      app_help: cli.app.modelo.app_help
+      app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
       bindings:
-        as_of_help: cli.app.modelo.bindings.as_of_help
-        modelo_help: cli.app.modelo.bindings.modelo_help
-        period_help: cli.app.modelo.bindings.period_help
+        as_of_help: Resolve the modelo revision active on the supplied ISO date
+          (YYYY-MM-DD)
+        modelo_help: Tax form code (e.g. 303, 130, 100)
+        period_help: Fiscal period to scope the bindings (e.g. 2026Q1, 2026-01)
       casillas:
-        as_of_help: cli.app.modelo.casillas.as_of_help
-        input_kind_help: cli.app.modelo.casillas.input_kind_help
-        modelo_help: cli.app.modelo.casillas.modelo_help
-        period_help: cli.app.modelo.casillas.period_help
-        required_help: cli.app.modelo.casillas.required_help
+        as_of_help: Resolve the modelo revision active on the supplied ISO date
+          (YYYY-MM-DD)
+        input_kind_help: Filter casillas by input kind (manual, bound, computed,
+          informational)
+        modelo_help: Tax form code (e.g. 303, 130, 100)
+        period_help: Fiscal period to scope the casillas (e.g. 2026Q1, 2026-01)
+        required_help: Show only casillas the modelo marks as required
       describe:
-        as_of_help: cli.app.modelo.describe.as_of_help
-        modelo_help: cli.app.modelo.describe.modelo_help
-        period_help: cli.app.modelo.describe.period_help
+        as_of_help: Resolve the modelo revision active on the supplied ISO date
+          (YYYY-MM-DD)
+        modelo_help: Tax form code (e.g. 303, 130, 100)
+        period_help: Fiscal period to resolve the modelo revision against (e.g.
+          2026Q1, 2026-01)
       formulas:
-        as_of_help: cli.app.modelo.formulas.as_of_help
-        modelo_help: cli.app.modelo.formulas.modelo_help
-        period_help: cli.app.modelo.formulas.period_help
+        as_of_help: Resolve the modelo revision active on the supplied ISO date
+          (YYYY-MM-DD)
+        modelo_help: Tax form code (e.g. 303, 130, 100)
+        period_help: Fiscal period to scope the formulas (e.g. 2026Q1, 2026-01)
       list:
-        year_help: cli.app.modelo.list.year_help
+        year_help: Filter the modelo catalogue to a single fiscal year
   archive:
-    app_help: cli.archive.app_help
+    app_help: Export and import the encrypted local archive as portable JSON
+      bundles
     export:
-      bundle_id_help: cli.archive.export.bundle_id_help
-      help: cli.archive.export.help
-      namespace_help: cli.archive.export.namespace_help
-      path_help: cli.archive.export.path_help
+      bundle_id_help: Override the auto-generated bundle identifier
+      help: Write a portable JSON bundle of the secure object catalogue
+      namespace_help: Restrict the bundle to one or more namespaces (repeatable)
+      path_help: Destination path for the JSON bundle
     import:
-      conflict_help: cli.archive.import.conflict_help
-      help: cli.archive.import.help
-      path_help: cli.archive.import.path_help
+      conflict_help: 'Conflict policy when restoring colliding records: fail,
+        overwrite, or keep'
+      help: Restore an archive bundle into the encrypted secure object catalogue
+      path_help: Path to the JSON bundle to restore
   browser:
     app_help: Browser automation management (Playwright)
     health:
