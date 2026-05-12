@@ -189,7 +189,8 @@ def config_set(
     except KeyError as exc:
         raise typer.BadParameter(tr("cli.config.errors.unknown_key", name=key)) from exc
 
-    question = _question_for_profile_key(registered.key)
+    canonical_key = registered.key
+    question = _question_for_profile_key(canonical_key)
     if question is not None:
         try:
             value = validate_widget_answer(question, value)
@@ -204,16 +205,16 @@ def config_set(
     profile_name = state.active_profile
     if profile_name is None:
         raise typer.BadParameter(tr("cli.config.errors.no_active_profile"))
-    updated = repository.update(lambda current: set_profile_values(current, profile_name, {key: value}))
+    updated = repository.update(lambda current: set_profile_values(current, profile_name, {canonical_key: value}))
     record = updated.active_profile_record()
-    stored_value = record.values.get(key, "") if record is not None else ""
-    payload = {"key": key, "value": stored_value}
+    stored_value = record.values.get(canonical_key, "") if record is not None else ""
+    payload = {"key": canonical_key, "value": stored_value}
     if _format_of(ctx) == _FORMAT_JSON:
         import json as _json
 
         typer.echo(_json.dumps(payload, ensure_ascii=False))
         return
-    typer.echo(f"{key}\t{stored_value}")
+    typer.echo(f"{canonical_key}\t{stored_value}")
 
 
 @app.command("unset", help=tr("cli.config.unset.help"))
