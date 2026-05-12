@@ -116,6 +116,69 @@ def version_cmd(ctx: typer.Context) -> None:
     typer.echo(render_cli_version_text(report))
 
 
+@app.command("init", help=tr("cli.init.help"))
+def init_cmd(
+    ctx: typer.Context,
+    name: str | None = typer.Option(None, "--name", help=tr("cli.init.name_help")),
+    tax_id: str | None = typer.Option(None, "--tax-id", help=tr("cli.init.tax_id_help")),
+    activity: str | None = typer.Option(None, "--activity", help=tr("cli.init.activity_help")),
+    iva_regime: str | None = typer.Option(None, "--iva-regime", help=tr("cli.init.iva_regime_help")),
+    quiet: bool = typer.Option(False, "--quiet", help=tr("cli.init.quiet_help")),
+) -> None:
+    """Root onboarding wizard: prompt for missing fields and write the profile.
+
+    UX-003 closure. In interactive mode (no ``--quiet``), prompts the
+    operator for any flag the caller omitted; in quiet mode every flag
+    must be supplied (and the caller is treated as a script driver).
+    The wizard delegates writes to the same backend ``aeat setup init``
+    uses, so identity values land in the workflow state and the
+    deadline engine sees them on the next CLI invocation.
+    """
+
+    if quiet:
+        if not (name and tax_id and activity):
+            typer.echo(tr("cli.init.quiet_requires_all"))
+            raise typer.Exit(code=2)
+        resolved_name = name
+        resolved_tax_id = tax_id
+        resolved_activity = activity
+        resolved_iva_regime = iva_regime
+    else:
+        resolved_name = name or typer.prompt(tr("cli.init.prompt_name"))
+        resolved_tax_id = tax_id or typer.prompt(tr("cli.init.prompt_tax_id"))
+        resolved_activity = activity or typer.prompt(tr("cli.init.prompt_activity"))
+        resolved_iva_regime = iva_regime or typer.prompt(tr("cli.init.prompt_iva_regime"), default="general")
+
+    from ...application.profile._actions import set_profile_values as _set_profile_values
+    from ..cli._setup import (
+        set_profile_values,  # noqa: F401 -- bound via _setup module
+        workflow_state_repository,
+    )
+
+    seeded = {
+        "tax.id": resolved_tax_id,
+        "activity": resolved_activity,
+    }
+    if resolved_iva_regime:
+        seeded["iva.regime"] = resolved_iva_regime
+    updated = workflow_state_repository().update(lambda state: _set_profile_values(state, resolved_name, seeded))
+    record = updated.active_profile_record()
+    payload = {
+        "active_profile": updated.active_profile,
+        "values": record.values if record is not None else {},
+    }
+    state_dict = ctx.ensure_object(dict)
+    if state_dict.get("format") == "json":
+        import json as _json
+
+        typer.echo(_json.dumps(payload, default=str, ensure_ascii=False))
+        return
+    typer.echo(f"profile\t{resolved_name}")
+    if record is not None:
+        for key, value in sorted(record.values.items()):
+            typer.echo(f"{key}\t{value}")
+
+
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
     failed_app = typer.Typer(
         name=name,
