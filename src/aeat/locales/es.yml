@@ -101,6 +101,21 @@ cli:
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
+    errors:
+      no_active_profile: No hay un perfil activo. Ejecuta 'aeat setup init --name NAME --tax-id NIF' primero.
+      unknown_key: "Clave de configuración desconocida: %{name}. Ejecuta 'aeat config list' para ver las claves disponibles."
+    get:
+      help: Mostrar el valor actual de una clave de configuración
+      key_help: Clave a leer (ej. tax.id, iva.regime)
+    list:
+      help: Listar todas las claves de configuración y sus valores actuales
+    set:
+      help: Asignar un valor a una clave de configuración
+      key_help: Clave a asignar (ej. iva.regime)
+      value_help: Valor a asignar (texto, true/false, importe segun la clave)
+    unset:
+      help: Eliminar el valor asignado a una clave de configuración
+      key_help: Clave a limpiar
   data:
     app_help: Gestión de datos y registros fiscales
     ledgers:
