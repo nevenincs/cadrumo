@@ -5,6 +5,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict
 
 from .profile import list_profile_key_records, validate_profile
+from .workflow import WorkflowState
 
 _ENROLMENT_KEY = "iva.regime"
 """Profile key whose presence flips the operator profile from ``identity-only``
@@ -30,7 +31,7 @@ class SetupStatusReport(BaseModel):
     next_action: str
 
 
-def build_setup_status(state: UserCliState) -> SetupStatusReport:
+def build_setup_status(state: WorkflowState) -> SetupStatusReport:
     """Return setup readiness and next action for the current user CLI state.
 
     ``profile_ready`` is true only when both the registry-required keys

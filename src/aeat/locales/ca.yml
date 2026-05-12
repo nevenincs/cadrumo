@@ -609,6 +609,15 @@ cli:
     version_help: Mostrar la versió del paquet i el resum del registre
   setup:
     app_help: Preparar el perfil local i l'autenticació necessaris per usar l'aplicació
+    reset:
+      help: Restabliment destructiu per àmbit de l'estat local d'usuari; requereix --yes.
+      profile_help: Elimina tots els perfils de l'operador i els esborranys associats.
+      auth_help: Esborra l'estat de sessió d'autenticació.
+      data_help: Mou les files no desxifrables de secure_objects a quarantena.
+      all_help: Combina els àmbits profile, auth i data.
+      yes_help: Confirmar explícitament l'operació destructiva.
+      requires_yes: "Aquesta operació és destructiva. Torneu a executar amb --yes per confirmar."
+      scope_required: "Heu de triar almenys un àmbit: --profile, --auth, --data o --all."
     auth:
       app_help: Configurar i comprovar l'autenticació de l'AEAT
       configure:

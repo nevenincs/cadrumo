@@ -34,9 +34,12 @@ from ...domain.submission import SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
 from ._errors import WorkflowAbortSignal, WorkflowComponentError
 from ._models import (
+    DeclarationPointer,
+    SiteHealthAlert,
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,
+    WorkflowState,
     WorkflowStep,
     compute_run_id,
 )
@@ -1051,6 +1054,37 @@ class WorkflowEngine:
             reason=WorkflowAbortReason.UNHANDLED_EXCEPTION,
             summary=unhandled_summary,
         ) from wrapped
+
+    def _record_site_unavailable(
+        self,
+        *,
+        stage: WorkflowStage,
+        started: datetime,
+        exc: SiteHealthError,
+        steps: list[WorkflowStep],
+    ) -> NoReturn:
+        """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
+
+        alert_run_id = self._compute_current_run_id() or "-"
+        summary = _t(f"AEAT site unavailable at stage={stage.value}: {exc.status.state.value}")
+        steps.append(
+            WorkflowStep(
+                stage=stage,
+                started_at=started,
+                ended_at=_utcnow(),
+                success=False,
+                summary=summary,
+                site_health_alert=SiteHealthAlert(
+                    stage=stage,
+                    status=exc.status,
+                    run_id=alert_run_id,
+                ),
+            )
+        )
+        raise WorkflowAbortSignal(
+            reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+            summary=summary,
+        ) from exc
 
 
 def declaration_key(modelo: str, period: str) -> str:

@@ -47,6 +47,9 @@ from ._models import (
 # ---- persistence (depends on _models only) ----------------------------------
 from ._persistence import (
     WorkflowStateRepository,
+    list_runs,
+    load_run,
+    save_run,
     workflow_state_repository,
 )
 
@@ -87,6 +90,9 @@ __all__ = [
     "compute_run_id",
     "declaration_key",
     "default_engine",
+    "list_runs",
+    "load_run",
+    "save_run",
     "update_declaration_pointer",
     "update_invoice_review",
     "update_ledger_review",

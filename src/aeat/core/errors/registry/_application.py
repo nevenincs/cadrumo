@@ -15,6 +15,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.setup_reset.SetupResetUnconfirmedError",
+        ErrorCode(
+            code="REFUSED_SETUP_RESET_UNCONFIRMED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_setup_reset_unconfirmed",
+            default_suggestion="aeat setup reset <scope> --yes",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.aggregation._errors.AggregationError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION",
