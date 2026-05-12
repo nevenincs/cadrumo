@@ -388,6 +388,18 @@ cli:
       complete: Completado
       ingesting: Ingestando...
       rows_found: Filas encontradas
+  init:
+    help: Asistente de onboarding del operador (alias de aeat setup init con prompts)
+    name_help: Nombre local del perfil (no se envía a la AEAT)
+    tax_id_help: NIF/NIE/CIF del contribuyente
+    activity_help: Actividad económica principal
+    iva_regime_help: Régimen IVA aplicable (general, simplificado, recargo-equivalencia, exento)
+    quiet_help: Modo no-interactivo; requiere --name, --tax-id y --activity como flags
+    quiet_requires_all: Modo --quiet requiere --name, --tax-id y --activity como flags.
+    prompt_name: Nombre local del perfil
+    prompt_tax_id: NIF/NIE/CIF del contribuyente
+    prompt_activity: Actividad económica principal
+    prompt_iva_regime: Régimen IVA
   inventory:
     app_help: Gestión de inventario de activos y existencias
     create:

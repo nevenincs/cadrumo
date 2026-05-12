@@ -166,12 +166,42 @@ def test_no_orphan_parameters_in_any_revision() -> None:
 
 
 #: Parameters that are declared in the registry with authoritative tax
-#: data (e.g. IRPF state-level progressive bracket tables) but whose
-#: consuming formula has not yet been wired into the registry. Removing
-#: an entry from this set is the gate that the corresponding formula
-#: work must clear before this allow-list shrinks. The data is
-#: preserved on disk so future formula work can land without
-#: re-entering authoritative bracket values.
+#: data (e.g. IRPF state-level progressive bracket tables, Ley 19/1994
+#: RIC caps, Ley 19/1994 ZEC reduced rate, LIRPF arts. 86-89 attribution
+#: pass-through, RD-Ley estimación objetiva indices) but whose consuming
+#: formula has not yet been wired into the registry. Removing an entry
+#: from this set is the gate that the corresponding formula work must
+#: clear before this allow-list shrinks. The data is preserved on disk
+#: so future formula work can land without re-entering authoritative
+#: bracket values.
+#:
+#: Each entry below carries a one-line rationale and a pointer at the
+#: tracking task that will land the consuming formula:
+#:
+#: * RIC trio (Ley 19/1994 art-27) — three legal-authority parameters
+#:   (reduction rate cap 80 %, materialization window 3 years, holding
+#:   period 5 years) cited by the 26 RIC casillas in the
+#:   ``reserva_inversiones_canarias_res`` section, but the aggregation
+#:   formula that applies the cap to the dotación total has not landed.
+#:   See task #46 (Wire orphan RIC parameters).
+#: * ZEC reduced rate (Ley 19/1994 art-43+) — Canarias special economic
+#:   zone reduced corporate-tax rate cited by ZEC-eligible casillas;
+#:   IRPF integration formula pending alongside the MM-7 Canarias work
+#:   slice referenced by the Ley 19/1994 corpus commit.
+#: * Estimación objetiva reducción general rate + corrector pequeña
+#:   dimensión (Orden HFP estimación objetiva annual orders) —
+#:   parameters consumed by the EO computation outside the registry
+#:   evaluator. The values are authoritative for the EO module but the
+#:   in-registry formula path is deferred until EO is brought under the
+#:   formula evaluator.
+#: * Atribución de rentas pass-through 100 % (LIRPF arts. 86-89) —
+#:   parameter encodes the legal 100 % pass-through rate but the
+#:   modelo-184 cross-modelo binding already returns the full attributed
+#:   amount at casilla 1577 (``input_kind = "bound"``). The parameter
+#:   exists for legal citation; turning it into a real consumer requires
+#:   converting 1577 to ``input_kind = "computed"`` with an
+#:   ``op = "percent"`` formula, which is a schema-level change tracked
+#:   by task #47.
 _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
     {
         "renta-2025-ric-reduccion-rate-maximo",
