@@ -359,13 +359,6 @@ def build(
         Path,
         typer.Option("--inputs", help=tr("cli.filing.build.inputs_help")),
     ],
-    profile: Annotated[
-        Path | None,
-        typer.Option(
-            "--profile",
-            help=tr("cli.filing.build.profile_help"),
-        ),
-    ] = None,
     profile_tax_id: Annotated[
         str | None,
         typer.Option(
@@ -382,19 +375,12 @@ def build(
     settings = load_settings()
     parsed_inputs = _load_inputs(inputs)
     operator_profile: FilingOperatorProfile
-    if profile is not None:
-        try:
-            operator_profile = load_default_filing_profile(profile, display_name=profile_name)
-        except FilingDraftError as exc:
-            raise typer.BadParameter(str(exc)) from exc
-    elif settings.aeat_default_profile_path is not None and profile_tax_id is None:
+    if profile_tax_id is None:
         try:
             operator_profile = load_default_filing_profile(display_name=profile_name)
         except FilingDraftError as exc:
             raise typer.BadParameter(str(exc)) from exc
     else:
-        if profile_tax_id is None:
-            raise typer.BadParameter(tr("cli.filing.errors.profile_tax_id_required"))
         operator_profile = FilingOperatorProfile(
             tax_id=profile_tax_id,
             display_name=profile_name or profile_tax_id,

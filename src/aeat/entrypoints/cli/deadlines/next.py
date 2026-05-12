@@ -8,14 +8,13 @@ modelo, period, due date, status, and applies-because rationale.
 from __future__ import annotations
 
 from datetime import date
-from pathlib import Path
 
 import typer
 from rich.console import Console
 
 from ....domain.deadlines import next_deadline
 from .._i18n import tr
-from ._helpers import build_engine, load_profile, resolve_profile_path
+from ._helpers import build_engine, load_profile
 
 _CONSOLE = Console()
 
@@ -26,15 +25,9 @@ def next_obligation(
         "--year",
         help=tr("cli.deadlines.next.year_help"),
     ),
-    profile: Path | None = typer.Option(
-        None,
-        "--profile",
-        help=tr("cli.deadlines.next.profile_help"),
-    ),
 ) -> None:
     """Print the next :class:`aeat.domain.deadlines.FilingObligation` due."""
-    profile_path = resolve_profile_path(profile)
-    loaded_profile = load_profile(profile_path)
+    loaded_profile = load_profile()
     engine = build_engine()
     schedule = engine.compute(loaded_profile, year)
     obligation = next_deadline(schedule)
