@@ -16,7 +16,10 @@ import json
 from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated, cast
+from typing import TYPE_CHECKING, Annotated, cast
+
+if TYPE_CHECKING:
+    from ....domain.filing._repository import FilingDraftRepository
 
 import typer
 from pydantic import ValidationError
@@ -123,7 +126,7 @@ def _load_inputs(path: Path) -> dict[str, object]:
     return parsed
 
 
-def _draft_repository():  # type: ignore[no-untyped-def]
+def _draft_repository() -> FilingDraftRepository:
     """Return the SQL-backed FilingDraftRepository.
 
     Imports are deferred to avoid pulling aeat.adapters.persistence.storage (and Alembic
