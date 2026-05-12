@@ -12,8 +12,13 @@ from pydantic import BaseModel, ConfigDict
 
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistryValidationError
-from ._runtime_graph import expression_casilla_refs
-from ._schema import FormulaExpression, ModeloDefinition, ModeloRevision
+from ._runtime_graph import (
+    expression_binding_refs,
+    expression_casilla_refs,
+    expression_parameter_refs,
+    expression_relation_refs,
+)
+from ._schema import ModeloDefinition, ModeloRevision
 
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:[-]?Q(?P<quarter>[1-4])|-(?P<month>0[1-9]|1[0-2]))?$", re.I)
 
@@ -259,9 +264,9 @@ class RegistryQueryService:
                 formula_id=str(formula.id),
                 target=str(formula.target),
                 input_casillas=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
-                input_bindings=tuple(dict.fromkeys(_expression_binding_refs(formula.expression))),
-                input_parameters=tuple(dict.fromkeys(_expression_parameter_refs(formula.expression))),
-                input_relations=tuple(dict.fromkeys(_expression_relation_refs(formula.expression))),
+                input_bindings=tuple(dict.fromkeys(expression_binding_refs(formula.expression))),
+                input_parameters=tuple(dict.fromkeys(expression_parameter_refs(formula.expression))),
+                input_relations=tuple(dict.fromkeys(expression_relation_refs(formula.expression))),
                 expression=_public_mapping(formula.expression.model_dump(mode="json")),
                 legal_refs=tuple(str(ref) for ref in formula.legal_refs),
                 source_refs=tuple(str(ref) for ref in formula.source_refs),
@@ -330,32 +335,6 @@ def _public_value(value: object) -> object:
     if isinstance(value, Mapping):
         return _public_mapping(cast(Mapping[str, Any], value))
     return value
-
-
-def _expression_binding_refs(expression: FormulaExpression) -> tuple[str, ...]:
-    refs: list[str] = []
-    _collect_expression_attr(expression, refs, "binding")
-    return tuple(refs)
-
-
-def _expression_parameter_refs(expression: FormulaExpression) -> tuple[str, ...]:
-    refs: list[str] = []
-    _collect_expression_attr(expression, refs, "parameter")
-    return tuple(refs)
-
-
-def _expression_relation_refs(expression: FormulaExpression) -> tuple[str, ...]:
-    refs: list[str] = []
-    _collect_expression_attr(expression, refs, "relation")
-    return tuple(refs)
-
-
-def _collect_expression_attr(expression: FormulaExpression, refs: list[str], attr: str) -> None:
-    value = getattr(expression, attr)
-    if value is not None:
-        refs.append(str(value))
-    for arg in expression.args:
-        _collect_expression_attr(arg, refs, attr)
 
 
 __all__ = [
