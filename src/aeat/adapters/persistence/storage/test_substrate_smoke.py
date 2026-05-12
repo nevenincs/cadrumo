@@ -9,8 +9,8 @@ test rather than going undetected until a downstream consumer fails.
 
 from __future__ import annotations
 
-import multiprocessing as mp
-import os
+import subprocess
+import sys
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -148,29 +148,67 @@ def test_file_lock_serializes_writers(tmp_path: Path) -> None:
         pytest.fail("nested non-blocking acquire should have failed")
 
 
-def _holder_proc(target: str, hold_seconds: float, ready_event) -> None:
-    """Worker that holds the lock for hold_seconds then releases."""
-    with exclusive_file_lock(Path(target)):
-        ready_event.set()
-        time.sleep(hold_seconds)
+_LOCK_HOLDER_SCRIPT = """
+import sys
+import time
+from pathlib import Path
+
+from aeat.core.locks import exclusive_file_lock
+
+target = Path(sys.argv[1])
+hold_seconds = float(sys.argv[2])
+with exclusive_file_lock(target):
+    sys.stdout.write("ready\\n")
+    sys.stdout.flush()
+    time.sleep(hold_seconds)
+"""
 
 
-@pytest.mark.skipif(
-    os.name == "nt" and "AEAT_RUN_LOCK_CONTENTION" not in os.environ,
-    reason="Windows mp.spawn flaky; opt-in via AEAT_RUN_LOCK_CONTENTION=1",
-)
 def test_cross_process_lock_contention(tmp_path: Path) -> None:
-    """A real second process is forced to wait for the lock holder."""
+    """A real second process is forced to wait for the lock holder.
+
+    Driven by ``subprocess.Popen`` with a tiny inline worker script
+    so the worker has no test-module import dependency. The previous
+    ``multiprocessing.spawn`` worker pickled the test module and re-
+    imported it in the child process, which on Windows pulled in
+    heavy Alembic / registry imports and made child-process startup
+    slow enough to race the main thread's readiness wait — the
+    project's prior skip cited that as "flaky" on Windows.
+
+    The replacement worker just imports ``aeat.core.locks`` (a
+    lightweight module with no transitive heavy imports), acquires
+    the lock, prints a ``ready`` sentinel to stdout, sleeps, and
+    releases. The main thread blocks on ``stdout.readline()`` until
+    the sentinel is observed before attempting the contention probe.
+    Deterministic on every platform; no opt-in env var required.
+    """
     from . import LockAcquisitionError
 
     target = tmp_path / "contended.json"
-    ctx = mp.get_context("spawn")
-    ready = ctx.Event()
-    holder = ctx.Process(target=_holder_proc, args=(str(target), 0.5, ready))
-    holder.start()
+    proc = subprocess.Popen(  # noqa: S603 - inline script, no shell, args are typed Paths/floats
+        [sys.executable, "-c", _LOCK_HOLDER_SCRIPT, str(target), "0.5"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
     try:
-        ready.wait(timeout=10.0)
+        assert proc.stdout is not None
+        sentinel_deadline = time.monotonic() + 10.0
+        sentinel: str | None = None
+        while time.monotonic() < sentinel_deadline:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            if line.strip() == "ready":
+                sentinel = line.strip()
+                break
+        assert sentinel == "ready", "lock-holder subprocess did not emit readiness sentinel"
+
         with pytest.raises(LockAcquisitionError), exclusive_file_lock(target, timeout=0.1, retry_backoff=0.01):
             pytest.fail("acquired lock while another process held it")
     finally:
-        holder.join(timeout=10.0)
+        try:
+            proc.wait(timeout=10.0)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait(timeout=5.0)
