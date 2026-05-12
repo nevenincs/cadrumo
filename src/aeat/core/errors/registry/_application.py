@@ -26,6 +26,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.topics.TopicNotFoundError",
+        ErrorCode(
+            code="REFUSED_TOPIC_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_topic_not_found",
+            default_suggestion="aeat topic",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.aggregation._errors.AggregationError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION",
