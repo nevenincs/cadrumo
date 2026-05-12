@@ -142,7 +142,15 @@ def test_duplicate_profile_key_raises() -> None:
             WizardSection(
                 id="section",
                 title=Translatable("wizard.other.section.title"),
-                questions=(_question("tax-id-b", profile_key="tax.id"),),
+                questions=(
+                    WizardQuestion(
+                        id="tax-id-b",
+                        profile_key="tax.id",
+                        widget=WizardWidget.TEXT,
+                        prompt=Translatable("wizard.other.section.tax-id-b.prompt"),
+                        answer_type=str,
+                    ),
+                ),
             ),
         ),
         answers_model=_DummyAnswers,

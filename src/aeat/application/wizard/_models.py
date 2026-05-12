@@ -16,7 +16,7 @@ from __future__ import annotations
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...core.i18n import Translatable
 
@@ -94,3 +94,86 @@ class WizardFlow(BaseModel):
     description: Translatable
     sections: tuple[WizardSection, ...] = Field(min_length=1)
     answers_model: type[BaseModel]
+
+    @model_validator(mode="after")
+    def _validate_translatable_prefix(self) -> WizardFlow:
+        """Every ``Translatable`` in the flow must start with ``wizard.<flow.id>.``."""
+
+        expected = f"wizard.{self.id}."
+        offenders: list[str] = []
+        for value, location in _walk_translatables(self):
+            if not str(value).startswith(expected):
+                offenders.append(f"{location}={value!r}")
+        if offenders:
+            raise ValueError(
+                f"WizardFlow {self.id!r} carries Translatable values that do not start with "
+                f"{expected!r}: {', '.join(offenders)}"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _validate_unique_question_ids(self) -> WizardFlow:
+        """Question ids must be unique across the entire flow."""
+
+        seen: set[str] = set()
+        duplicates: list[str] = []
+        for section in self.sections:
+            for question in section.questions:
+                if question.id in seen:
+                    duplicates.append(question.id)
+                seen.add(question.id)
+        if duplicates:
+            raise ValueError(f"WizardFlow {self.id!r} has duplicate question ids: {', '.join(sorted(duplicates))}")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_visible_when_targets(self) -> WizardFlow:
+        """Every ``visible_when.question_id`` must resolve to an earlier question."""
+
+        seen: dict[str, int] = {}
+        index = 0
+        for section in self.sections:
+            for question in section.questions:
+                seen[question.id] = index
+                index += 1
+
+        order = 0
+        bad: list[str] = []
+        for section in self.sections:
+            for question in section.questions:
+                condition = question.visible_when
+                if condition is not None:
+                    target_index = seen.get(condition.question_id)
+                    if target_index is None or target_index >= order:
+                        bad.append(f"{question.id}->{condition.question_id}")
+                order += 1
+        if bad:
+            raise ValueError(
+                f"WizardFlow {self.id!r} has visible_when references that do not resolve "
+                f"to earlier questions: {', '.join(bad)}"
+            )
+        return self
+
+
+def _walk_translatables(flow: WizardFlow) -> list[tuple[Translatable, str]]:
+    """Yield every ``Translatable`` in ``flow`` with a dotted-path location."""
+
+    result: list[tuple[Translatable, str]] = []
+    result.append((flow.title, f"{flow.id}.title"))
+    result.append((flow.description, f"{flow.id}.description"))
+    for section in flow.sections:
+        result.append((section.title, f"{flow.id}.{section.id}.title"))
+        for question in section.questions:
+            result.append((question.prompt, f"{flow.id}.{section.id}.{question.id}.prompt"))
+            if question.help is not None:
+                result.append((question.help, f"{flow.id}.{section.id}.{question.id}.help"))
+            for choice in question.choices:
+                result.append((choice.label, f"{flow.id}.{section.id}.{question.id}.choices.{choice.value}.label"))
+                if choice.description is not None:
+                    result.append(
+                        (
+                            choice.description,
+                            f"{flow.id}.{section.id}.{question.id}.choices.{choice.value}.description",
+                        )
+                    )
+    return result
