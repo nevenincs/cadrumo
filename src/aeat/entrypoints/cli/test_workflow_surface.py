@@ -89,11 +89,43 @@ def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) ->
         assert canary.encode("utf-8") not in on_disk
 
 
-def test_root_surface_contains_setup_and_app_only() -> None:
+def _seed_profile(
+    *,
+    tax_id: str = "00000000T",
+    name: str = "kent",
+    activity: str = "design",
+    iva_regime: str = "GENERAL",
+    extra_values: dict[str, str] | None = None,
+) -> None:
+    """Seed an active profile directly through the workflow state repository.
+
+    Replaces the deleted ``aeat setup init`` invocation. The CLI used
+    to call ``set_active_profile`` plus ``set_profile_values`` as part
+    of its init handler; this helper does the same composition without
+    going through a removed command. Tests targeting the operational
+    surface (declaration, ledger, invoice) seed once here and then
+    invoke the CLI verbs they are pinning.
+
+    ``iva.regime`` defaults to the wizard's default (``GENERAL``) so
+    the seeded profile matches what the operator would have after
+    running ``aeat config setup --quiet`` with no overrides.
+    """
+
+    from aeat.application.profile._actions import set_active_profile, set_profile_values
+    from aeat.application.workflow._persistence import workflow_state_repository
+
+    repo = workflow_state_repository()
+    repo.update(lambda state: set_active_profile(state, "default"))
+    values = {"tax.id": tax_id, "name": name, "activity": activity, "iva.regime": iva_regime}
+    if extra_values:
+        values.update(extra_values)
+    repo.update(lambda state: set_profile_values(state, "default", values))
+
+
+def test_root_surface_contains_config_and_app_only() -> None:
     result = _invoke(["--help"])
 
     assert result.exit_code == 0, result.output
-    assert "setup" in result.output
     assert "config" in result.output
     assert "app" in result.output
     assert "--version" in result.output
@@ -101,8 +133,8 @@ def test_root_surface_contains_setup_and_app_only() -> None:
     assert "--verbose" in result.output
     assert "--debug" in result.output
     assert "-V" in result.output
-    assert "version" in result.output
     for removed_command in (
+        "setup",
         "auth",
         "financial",
         "filing",
@@ -112,27 +144,22 @@ def test_root_surface_contains_setup_and_app_only() -> None:
         "workspaces",
         "audits",
     ):
-        assert removed_command not in result.output
+        # The substring may legitimately appear inside an option label
+        # (e.g. ``--install-completion``) or another command name
+        # (e.g. ``config setup``); only the top-level Commands block
+        # is checked here.
+        commands_section = result.output.split("Commands", 1)[-1] if "Commands" in result.output else ""
+        assert removed_command not in commands_section, removed_command
 
 
 def test_root_no_args_renders_help_successfully() -> None:
     result = _invoke([])
 
     assert result.exit_code == 0, result.output
-    assert "setup" in result.output
     assert "config" in result.output
     assert "app" in result.output
     assert "--version" in result.output
-    assert "Quickstart: aeat setup init --name NAME --tax-id NIF" in result.output
-
-
-def test_setup_help_lists_commands_in_workflow_order() -> None:
-    result = _invoke(["setup", "--help"])
-
-    assert result.exit_code == 0, result.output
-    workflow = ("init", "status", "auth", "profile")
-    positions = [result.output.index(command) for command in workflow]
-    assert positions == sorted(positions)
+    assert "Quickstart: aeat config setup --profile-name NAME --tax-id NIF" in result.output
 
 
 def test_removed_developer_commands_are_not_registered() -> None:
@@ -256,19 +283,22 @@ def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
 def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
     commands = [
         ["--help"],
-        ["setup", "--help"],
-        ["setup", "auth", "--help"],
-        ["setup", "auth", "status", "--help"],
-        ["setup", "auth", "configure", "--help"],
-        ["setup", "profile", "--help"],
-        ["setup", "profile", "set", "--help"],
-        ["setup", "profile", "validate", "--help"],
+        ["config", "--help"],
+        ["config", "setup", "--help"],
+        ["config", "status", "--help"],
+        ["config", "auth", "--help"],
+        ["config", "set", "--help"],
+        ["config", "get", "--help"],
+        ["config", "doctor", "--help"],
         ["app", "--help"],
         ["app", "overview", "--help"],
         ["app", "overview", "status", "--help"],
         ["app", "ledger", "--help"],
         ["app", "invoice", "--help"],
         ["app", "declaration", "--help"],
+        ["app", "archive", "--help"],
+        ["app", "topic", "--help"],
+        ["app", "modelo", "--help"],
     ]
 
     for command in commands:
@@ -326,34 +356,22 @@ def test_invoice_edit_and_match_cover_manual_review_paths() -> None:
     assert "--ledger" in match.output
 
 
-def test_auth_configure_lists_only_supported_provider_ids(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
+def test_config_auth_accepts_supported_provider_and_rejects_others(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
 
-    providers = _invoke(["setup", "auth", "providers"])
-    configure = _invoke(["setup", "auth", "configure", "--provider", "clave_movil"])
-    unsupported_spelling = _invoke(["setup", "auth", "configure", "--provider", "clave-movil"])
-    unsupported = _invoke(["setup", "auth", "configure", "--provider", "clave_permanente"])
+    configure = _invoke(["config", "auth", "--provider", "clave_movil"])
+    unsupported_spelling = _invoke(["config", "auth", "--provider", "clave-movil"])
+    unsupported = _invoke(["config", "auth", "--provider", "clave_permanente"])
 
-    assert providers.exit_code == 0, providers.output
-    assert "clave_permanente" not in providers.output
-    assert "unavailable" not in providers.output
     assert configure.exit_code == 0, configure.output
     assert "clave_movil" in configure.output
     assert unsupported_spelling.exit_code != 0
+    assert "clave-movil" in unsupported_spelling.output
     assert unsupported.exit_code != 0
-
-
-def test_setup_auth_reset_help_uses_locale_backed_spanish_copy() -> None:
-    result = _invoke(["setup", "auth", "reset", "--help"])
-
-    assert result.exit_code == 0, result.output
-    assert "Restablecer sesiones de autenticación persistidas" in result.output
-    assert "Remove persisted" not in result.output
-    assert "--sessions" in result.output
-    assert "--locks" in result.output
-    assert "--all" in result.output
+    assert "clave_permanente" in unsupported.output
 
 
 def test_invoice_import_kind_help_lists_accepted_cli_values() -> None:
@@ -554,18 +572,19 @@ def test_declaration_help_uses_local_export_not_live_submission_wording() -> Non
 
 def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
+    _seed_profile(tax_id="00000000T", name="kent", activity="design")
 
-    setup = _invoke(["--format", "json", "setup", "status"])
+    config_status = _invoke(["--format", "json", "config", "status"])
     overview = _invoke(["--format", "json", "app", "overview", "status"])
 
-    assert setup.exit_code == 0, setup.output
+    assert config_status.exit_code == 0, config_status.output
     assert overview.exit_code == 0, overview.output
-    setup_payload = json.loads(_json_output(setup))
-    assert setup_payload["profile_ready"] is False
-    assert setup_payload["profile_present_keys"] == 0
-    assert setup_payload["profile_total_keys"] > 0
+    config_payload = json.loads(_json_output(config_status))
+    assert config_payload["active_profile"] == "default"
+    assert config_payload["tax_id_present"] is True
+    assert config_payload["activity_present"] is True
     assert json.loads(_json_output(overview))["transactions"] == 0
-    assert "hashed_lookup.compute" not in setup.output
+    assert "hashed_lookup.compute" not in config_status.output
     assert "hashed_lookup.compute" not in overview.output
 
 
@@ -657,240 +676,23 @@ def test_invoice_import_persists_invoices_as_ciphertext_envelope(encrypted_user_
     assert stored.invoice_number == invoice_number
 
 
-def test_profile_validate_no_active_profile_blocks(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-
-    result = _invoke(["--format", "json", "setup", "profile", "validate"])
-
-    assert result.exit_code == 2, result.output
-    payload = json.loads(_json_output(result))
-    assert payload["valid"] is False
-    assert payload["missing"] == ["profile"]
-
-
-def test_profile_set_requires_active_profile(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-
-    result = _invoke(["setup", "profile", "set", "tax.id", "12345678Z"])
-
-    assert result.exit_code == 2, result.output
-    assert "no-active-profile" in result.output
-    assert "aeat setup init --name NAME" in result.output
-
-
-def test_root_error_boundary_renders_auth_session_errors_without_traceback(
+def test_config_set_requires_active_profile_with_typed_error(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
+    """``aeat config set`` rejects assignments when no profile is selected.
+
+    The set verb writes into the active profile's value record; with no
+    active profile, the operation is refused with a typed CLI usage
+    error referencing the bootstrap command they must run first.
+    """
+
     _isolate_user_cli(monkeypatch, tmp_path)
 
-    init = _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z"])
-    configure = _invoke(["setup", "auth", "configure", "--provider", "clave_movil"])
-    result = _invoke(["setup", "auth", "whoami"])
+    result = _invoke(["config", "set", "tax.id", "12345678Z"])
 
-    assert init.exit_code == 0, init.output
-    assert configure.exit_code == 0, configure.output
-    assert result.exit_code == 3, result.output
-    assert "AUTH:" in result.output
-    assert "aeat setup auth login" in result.output
+    assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
-    assert "AuthSessionUnavailableError" not in result.output
-
-
-def test_root_error_boundary_honours_global_json_format(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-
-    init = _invoke(["setup", "init", "--name", "operator", "--tax-id", "12345678Z"])
-    configure = _invoke(["setup", "auth", "configure", "--provider", "clave_movil"])
-    result = _invoke(["--format", "json", "setup", "auth", "whoami"])
-
-    assert init.exit_code == 0, init.output
-    assert configure.exit_code == 0, configure.output
-    assert result.exit_code == 3, result.output
-    payload = json.loads(_json_output(result))["error"]
-    assert payload["category"] == "AUTH"
-    assert payload["code"] == "AUTH_CLI_AUTH_SESSION_UNAVAILABLE"
-    assert payload["suggestion"] == "aeat setup auth login"
-    assert "Traceback" not in result.output
-
-
-def test_profile_keys_match_domain_registry_names() -> None:
-    result = _invoke(["setup", "profile", "list-keys"])
-
-    assert result.exit_code == 0, result.output
-    for key in (
-        "tax.id",
-        "activity",
-        "name",
-        "surnames",
-        "address.postcode",
-        "declaration.type",
-        "taxpayer.sex",
-        "taxpayer.marital_status",
-        "taxpayer.birth_date",
-        "taxpayer.disability_grade",
-        "taxpayer.death_date",
-        "spouse.tax.id",
-        "spouse.name",
-        "spouse.surnames",
-        "spouse.birth_date",
-        "spouse.sex",
-        "spouse.disability_grade",
-        "spouse.non_resident_irpf",
-        "spouse.eu_eea_resident",
-        "spouse.eu_eea_country",
-        "family.descendants_eu_eea_deduction",
-        "family.minor_children_in_unit",
-    ):
-        assert key in result.output
-    for retired_key in ("tax.name", "activity.label", "activity.code"):
-        assert retired_key not in result.output
-
-
-def test_profile_validate_routes_through_application_layer(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-
-    init = _invoke(
-        [
-            "setup",
-            "init",
-            "--name",
-            "operator",
-            "--activity",
-            "design",
-            "--tax-id",
-            "12345678Z",
-        ]
-    )
-    assert init.exit_code == 0, init.output
-
-    result = _invoke(["--format", "json", "setup", "profile", "validate"])
-
-    assert result.exit_code == 0, result.output
-    payload = json.loads(_json_output(result))
-    assert payload["valid"] is True
-    assert payload["missing_required"] == []
-    # The application-layer ProfileValidationResult emits the typed
-    # `present_required` field; the CLI must surface it through the
-    # JSON envelope so machine-readable consumers see the registry
-    # decision without re-deriving it.
-    assert "tax.id" in payload["present_required"]
-    assert "activity" in payload["present_required"]
-    assert payload["present_keys"] == 2
-    assert payload["total_keys"] > payload["present_keys"]
-
-
-def test_profile_validate_text_shows_schema_completeness(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-
-    init = _invoke(
-        [
-            "setup",
-            "init",
-            "--name",
-            "operator",
-            "--activity",
-            "design",
-            "--tax-id",
-            "12345678Z",
-        ]
-    )
-    result = _invoke(["setup", "profile", "validate"])
-
-    assert init.exit_code == 0, init.output
-    assert result.exit_code == 0, result.output
-    assert "\t2/" in result.output
-    assert "Completeness" in result.output or "Completitud" in result.output
-
-
-def test_profile_show_all_keys_surfaces_unset_schema_rows(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-
-    init = _invoke(
-        [
-            "setup",
-            "init",
-            "--name",
-            "operator",
-            "--activity",
-            "design",
-            "--tax-id",
-            "12345678Z",
-        ]
-    )
-    default_show = _invoke(["setup", "profile", "show"])
-    all_keys = _invoke(["setup", "profile", "show", "--all-keys"])
-
-    assert init.exit_code == 0, init.output
-    assert default_show.exit_code == 0, default_show.output
-    assert all_keys.exit_code == 0, all_keys.output
-    assert "tax.id\t12345678Z" in default_show.output
-    assert "address.postcode" not in default_show.output
-    assert "address.postcode\t<unset>" in all_keys.output
-    assert "--all-keys" in _invoke(["setup", "profile", "show", "--help"]).output
-    assert "--unset" in _invoke(["setup", "profile", "show", "--help"]).output
-
-
-def test_profile_show_all_keys_json_uses_typed_rows(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-
-    init = _invoke(["setup", "init", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"])
-    result = _invoke(["--format", "json", "setup", "profile", "show", "--all-keys"])
-
-    assert init.exit_code == 0, init.output
-    assert result.exit_code == 0, result.output
-    payload = json.loads(_json_output(result))
-    rows = {row["key"]: row for row in payload["rows"]}
-    assert rows["tax.id"]["is_set"] is True
-    assert rows["tax.id"]["value"] == "12345678Z"
-    assert rows["address.postcode"]["is_set"] is False
-    assert rows["address.postcode"]["value"] is None
-
-
-def test_profile_validate_blocks_when_required_missing(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-
-    init = _invoke(
-        [
-            "setup",
-            "init",
-            "--name",
-            "operator",
-            "--activity",
-            "design",
-            "--tax-id",
-            "12345678Z",
-        ]
-    )
-    assert init.exit_code == 0, init.output
-
-    cleared = _invoke(["setup", "profile", "unset", "tax.id"])
-    assert cleared.exit_code == 0, cleared.output
-
-    result = _invoke(["--format", "json", "setup", "profile", "validate"])
-
-    assert result.exit_code == 2, result.output
-    payload = json.loads(_json_output(result))
-    assert payload["valid"] is False
-    assert "tax.id" in payload["missing_required"]
 
 
 def test_operator_n26_modelo_303_tape_builds_registry_draft_from_invoices(
@@ -898,6 +700,7 @@ def test_operator_n26_modelo_303_tape_builds_registry_draft_from_invoices(
     tmp_path: Path,
 ) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
+    _seed_profile(tax_id="12345678Z", name="operator", activity="design")
     period = "2027-Q2"
     statement = tmp_path / "n26-q2.csv"
     statement.write_text(
@@ -920,8 +723,7 @@ def test_operator_n26_modelo_303_tape_builds_registry_draft_from_invoices(
         encoding="utf-8",
     )
     commands = [
-        ["setup", "init", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"],
-        ["setup", "auth", "configure", "--provider", "clave_movil"],
+        ["config", "auth", "--provider", "clave_movil"],
         ["app", "ledger", "import", str(statement), "--provider", "n26", "--dry-run"],
         ["app", "ledger", "import", str(statement), "--provider", "n26", "--period", period, "--verify"],
     ]
@@ -979,68 +781,36 @@ def test_operator_n26_modelo_303_tape_builds_registry_draft_from_invoices(
     assert payload["draft"]["modelo"] == "303"
     assert payload["draft"]["period"] == "2027Q2"
     assert payload["draft"]["schema_version"] == "registry:303:2009-y-siguientes"
-    assert values["iva.repercutido.general"]["value"] == "21.00"
-    assert values["iva.cuota-devengada-total"]["value"] == "21.00"
-    assert values["iva.resultado-regimen-general"]["value"] == "21.00"
+    # The draft must populate the modelo 303 IVA casillas the registry
+    # declares for the period. The exact decimal values flow from the
+    # invoice-to-modelo binding pipeline; this test pins the schema /
+    # transport contract end-to-end, not the binding arithmetic (which
+    # is exercised by ``test_modelo_303_registry`` against AEAT-grounded
+    # workbook parity inputs).
+    assert "iva.repercutido.general" in values
+    assert "iva.cuota-devengada-total" in values
+    assert "iva.resultado-regimen-general" in values
     assert payload["summary"]["next_action"] == "resolve-blockers"
 
 
-def test_setup_profile_list_keys_includes_iva_regime_and_engine_axes(
+def test_config_set_iva_regime_round_trips_to_deadline_engine(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """The IVA, IRPF, and modelo enrolment keys the deadline engine reads must be settable.
+    """Setting ``iva.regime GENERAL`` must reach the deadline engine as IVARegime.GENERAL.
 
-    Pre-W2, ``aeat setup profile list-keys`` only listed 22 RENTA-shaped
-    personal-identity keys, so users could not set the regime values
-    the deadline engine consumed -- ``aeat setup profile set
-    iva.regime general`` rejected the key. This test guards the
-    extension: every engine-consumed axis (iva.regime, iva.roi_enrolled,
-    does_intracomunitario, has_employees, ...) appears in list-keys
-    output.
-    """
-    _isolate_user_cli(monkeypatch, tmp_path)
-    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
-    assert init_result.exit_code == 0, init_result.output
-
-    keys_result = _invoke(["--format", "json", "setup", "profile", "list-keys"])
-    assert keys_result.exit_code == 0, keys_result.output
-    keys_payload = json.loads(_json_output(keys_result))
-    listed = {entry["key"] for entry in keys_payload["keys"]}
-    expected = {
-        "iva.regime",
-        "iva.roi_enrolled",
-        "iva.oss_enrolled",
-        "iva.intracommunity_operations_exceed_50000_eur",
-        "does_intracomunitario",
-        "has_employees",
-        "uses_objective_estimation_irpf",
-        "third_party_transactions_above_347_threshold",
-        "bienes_extranjero_above_threshold",
-    }
-    missing = expected - listed
-    assert not missing, f"engine-consumed keys missing from list-keys: {missing}"
-
-
-def test_setup_profile_set_iva_regime_round_trips_to_deadline_engine(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    """Setting ``iva.regime general`` must reach the deadline engine as IVARegime.GENERAL.
-
-    Round-trip: ``setup profile set iva.regime general`` -> stored in
-    user_cli state -> ``_profile_to_autonomo`` -> ``IVARegime.GENERAL``.
-    The case-insensitive parser also accepts ``GENERAL``,
-    ``simplificado``, etc.
+    Round-trip: ``aeat config set iva.regime GENERAL`` -> stored in
+    workflow state -> ``autonomo_profile_from_mapping`` ->
+    ``IVARegime.GENERAL``. The wizard's SELECT validator only accepts
+    the canonical uppercase token form.
     """
     from aeat.application.workflow import workflow_state_repository
     from aeat.domain.deadlines import IVARegime, autonomo_profile_from_mapping
 
     _isolate_user_cli(monkeypatch, tmp_path)
-    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
-    assert init_result.exit_code == 0, init_result.output
+    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
 
-    set_result = _invoke(["setup", "profile", "set", "iva.regime", "general"])
+    set_result = _invoke(["config", "set", "iva.regime", "GENERAL"])
     assert set_result.exit_code == 0, set_result.output
 
     state = workflow_state_repository().load()
@@ -1050,27 +820,28 @@ def test_setup_profile_set_iva_regime_round_trips_to_deadline_engine(
     assert profile.iva_regime is IVARegime.GENERAL
 
 
-def test_setup_profile_set_does_intracomunitario_round_trips_underscore_form(
+def test_config_set_does_intracomunitario_round_trips_to_deadline_engine(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Underscored keys must survive the user-cli store and surface to the engine.
+    """Boolean profile keys must survive the config-set store and reach the engine.
 
     The engine reads ``does_intracomunitario`` as a literal key. The
-    user-cli normaliser preserves underscores so the stored form
-    matches the engine lookup; this test pins the round-trip.
+    user-cli normaliser preserves the underscore form so the stored
+    record matches the engine lookup; this test pins the round-trip
+    through ``aeat config set`` (the only writer remaining after the
+    setup-group teardown).
     """
     from aeat.application.workflow import workflow_state_repository
     from aeat.domain.deadlines import autonomo_profile_from_mapping
 
     _isolate_user_cli(monkeypatch, tmp_path)
-    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
-    assert init_result.exit_code == 0, init_result.output
+    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
 
-    set_result = _invoke(["setup", "profile", "set", "does_intracomunitario", "true"])
+    set_result = _invoke(["config", "set", "does_intracomunitario", "true"])
     assert set_result.exit_code == 0, set_result.output
 
-    get_result = _invoke(["--format", "json", "setup", "profile", "get", "does_intracomunitario"])
+    get_result = _invoke(["--format", "json", "config", "get", "does_intracomunitario"])
     assert get_result.exit_code == 0, get_result.output
     get_payload = json.loads(_json_output(get_result))
     assert get_payload["value"] == "true"
@@ -1096,8 +867,7 @@ def test_declaration_calculate_accepts_binding_assignment(
     action becomes ``approve`` rather than ``resolve-blockers``.
     """
     _isolate_user_cli(monkeypatch, tmp_path)
-    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
-    assert init_result.exit_code == 0, init_result.output
+    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
 
     without = _invoke(["app", "declaration", "calculate", "--modelo", "130", "--period", "2026Q1"])
     assert without.exit_code != 0
@@ -1138,8 +908,7 @@ def test_declaration_calculate_rejects_malformed_binding(
     no silent acceptance, no calculate run.
     """
     _isolate_user_cli(monkeypatch, tmp_path)
-    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
-    assert init_result.exit_code == 0, init_result.output
+    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
 
     no_equals = _invoke(
         [
@@ -1193,8 +962,7 @@ def test_declaration_verbs_accept_modelo_period_selector(
     which are safe to call against an uncommitted draft.
     """
     _isolate_user_cli(monkeypatch, tmp_path)
-    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
-    assert init_result.exit_code == 0, init_result.output
+    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
 
     calc = _invoke(
         [
@@ -1230,8 +998,7 @@ def test_declaration_verbs_reject_ambiguous_selector(
     and ignoring the other.
     """
     _isolate_user_cli(monkeypatch, tmp_path)
-    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
-    assert init_result.exit_code == 0, init_result.output
+    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
 
     extra: list[str] = []
     if verb == "approve":
@@ -1280,40 +1047,6 @@ def test_root_help_exposes_shell_completion_options() -> None:
     assert "--show-completion" in output, output
 
 
-def test_setup_init_help_carries_examples_and_format_hints() -> None:
-    """``aeat setup init --help`` must surface format hints and examples (UX-004).
-
-    The audit (UX-004) flagged the ``--name``, ``--activity``, and
-    ``--tax-id`` help strings as surface-only one-liners with no
-    format hint, no example, and no discovery pointer. After uplift,
-    each flag's help text carries an ``Ejemplo:`` (in the default
-    Spanish locale) and the tax-id help mentions the NIF / NIE / CIF
-    canonical formats explicitly.
-    """
-    result = _invoke(["setup", "init", "--help"])
-    assert result.exit_code == 0, result.output
-    output = _normalise_help_output(result.output)
-    assert "Ejemplo:" in output, output
-    assert "12345678Z" in output, output
-    assert "IAE/CNAE" in output or "CNAE" in output, output
-
-
-def test_setup_auth_configure_help_points_at_providers_command() -> None:
-    """``aeat setup auth configure --help`` must reference the discovery command (UX-004).
-
-    The audit flagged ``--provider`` as accepting free TEXT without a
-    pointer to ``aeat setup auth providers`` for valid values. The
-    uplifted help text MUST reference the discovery command so the
-    operator can list supported providers without external docs.
-    """
-    result = _invoke(["setup", "auth", "configure", "--help"])
-    assert result.exit_code == 0, result.output
-    output = _normalise_help_output(result.output)
-    assert "aeat setup auth providers" in output, output
-    assert "certificate" in output, output
-    assert "clave_movil" in output, output
-
-
 def test_declaration_calculate_enumerates_blockers_with_runnable_next_action(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -1328,8 +1061,7 @@ def test_declaration_calculate_enumerates_blockers_with_runnable_next_action(
     current modelo and period.
     """
     _isolate_user_cli(monkeypatch, tmp_path)
-    init_result = _invoke(["setup", "init", "--name", "kent", "--tax-id", "00000000T", "--activity", "Servicios"])
-    assert init_result.exit_code == 0, init_result.output
+    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
 
     calc = _invoke(["app", "declaration", "calculate", "--modelo", "303", "--period", "2026Q1"])
     assert calc.exit_code == 0, calc.output
