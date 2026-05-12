@@ -1,0 +1,143 @@
+"""Per-widget validators and the canonical dispatch entry point.
+
+The schema-driven wizard collects answers as canonical-token strings.
+Each :class:`WizardWidget` member dispatches onto one validator that
+parses the raw token, enforces the closed-set or filesystem
+constraints declared on the descriptor, and returns the canonical
+form. Validators raise :class:`WizardValidationError` whose message
+carries the failing question's translation key so renderers can map
+the failure back to a localised prompt.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from ...core.i18n import tr
+from ._errors import WizardValidationError
+from ._models import WizardQuestion, WizardWidget
+
+_TRUE_TOKENS = frozenset({"true", "yes", "1", "y"})
+_FALSE_TOKENS = frozenset({"false", "no", "0", "n"})
+
+
+def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardValidationError:
+    """Build a translated :class:`WizardValidationError` for ``question``."""
+
+    message_key = f"wizard.errors.{reason}"
+    full_context: dict[str, object] = {"prompt_key": str(question.prompt), "question_id": question.id}
+    full_context.update(context)
+    translated = tr(message_key, **full_context)
+    return WizardValidationError(message_key, context=full_context, translated_message=translated)
+
+
+def validate_text(raw: str, question: WizardQuestion) -> str:
+    """Return the trimmed text answer; reject blank required strings."""
+
+    value = raw.strip()
+    if not value and question.required and question.visible_when is None:
+        raise _fail(question, "blank_text")
+    return value
+
+
+def validate_secret(raw: str, question: WizardQuestion) -> str:
+    """Return the raw secret answer unchanged; reject blank required strings."""
+
+    if not raw and question.required and question.visible_when is None:
+        raise _fail(question, "blank_secret")
+    return raw
+
+
+def validate_confirm(raw: str, question: WizardQuestion) -> str:
+    """Canonicalise a boolean answer to ``"true"`` / ``"false"``."""
+
+    token = raw.strip().lower()
+    if token in _TRUE_TOKENS:
+        return "true"
+    if token in _FALSE_TOKENS:
+        return "false"
+    raise _fail(question, "invalid_confirm", raw=raw)
+
+
+def validate_select(raw: str, question: WizardQuestion) -> str:
+    """Reject any answer that is not declared in the question's choices."""
+
+    if not question.choices:
+        raise _fail(question, "select_without_choices")
+    allowed = {choice.value for choice in question.choices}
+    if raw not in allowed:
+        raise _fail(question, "select_unknown", raw=raw, choices=sorted(allowed))
+    return raw
+
+
+def validate_checkbox(raw: str, question: WizardQuestion) -> str:
+    """Validate a comma-separated list of choice tokens against the choices."""
+
+    if not question.choices:
+        raise _fail(question, "checkbox_without_choices")
+    allowed = {choice.value for choice in question.choices}
+    tokens = [item.strip() for item in raw.split(",") if item.strip()]
+    if question.required and question.visible_when is None and not tokens:
+        raise _fail(question, "checkbox_required")
+    for token in tokens:
+        if token not in allowed:
+            raise _fail(question, "checkbox_unknown", raw=token, choices=sorted(allowed))
+    return ",".join(tokens)
+
+
+def validate_path(raw: str, question: WizardQuestion) -> str:
+    """Return the canonical filesystem string; reject blank required paths."""
+
+    value = raw.strip()
+    if not value:
+        if question.required and question.visible_when is None:
+            raise _fail(question, "blank_path")
+        return value
+    path = Path(value).expanduser()
+    return str(path)
+
+
+def validate_integer(raw: str, question: WizardQuestion) -> str:
+    """Parse the answer as an integer and re-emit the canonical decimal form."""
+
+    text = raw.strip()
+    if not text:
+        if question.required and question.visible_when is None:
+            raise _fail(question, "blank_integer")
+        return text
+    try:
+        parsed = int(text)
+    except ValueError as exc:
+        raise _fail(question, "invalid_integer", raw=raw) from exc
+    return str(parsed)
+
+
+_VALIDATORS = {
+    WizardWidget.TEXT: validate_text,
+    WizardWidget.SECRET: validate_secret,
+    WizardWidget.CONFIRM: validate_confirm,
+    WizardWidget.SELECT: validate_select,
+    WizardWidget.CHECKBOX: validate_checkbox,
+    WizardWidget.PATH: validate_path,
+    WizardWidget.INTEGER: validate_integer,
+}
+
+
+def validate_widget_answer(question: WizardQuestion, raw: str) -> str:
+    """Dispatch ``question.widget`` onto its widget-specific validator."""
+
+    validator = _VALIDATORS[question.widget]
+    return validator(raw, question)
+
+
+__all__ = [
+    "WizardWidget",
+    "validate_checkbox",
+    "validate_confirm",
+    "validate_integer",
+    "validate_path",
+    "validate_secret",
+    "validate_select",
+    "validate_text",
+    "validate_widget_answer",
+]

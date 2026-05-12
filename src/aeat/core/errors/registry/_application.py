@@ -454,4 +454,26 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.wizard._errors.WizardError",
+        ErrorCode(
+            code="ERROR_WIZARD",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_wizard",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.wizard._errors.WizardValidationError",
+        ErrorCode(
+            code="REFUSED_WIZARD_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_wizard_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
