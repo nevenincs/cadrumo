@@ -88,6 +88,12 @@ cli:
       period_unrecognised: Unrecognized period
   config:
     app_help: Manage local configuration and diagnostics
+    auth:
+      file_help: Path to the credential file (certificate or key)
+      help: Configure the active authentication provider
+      provider_help: Authentication provider id (e.g. certificado-electronico)
+      unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
+        config auth --help'' for valid ids.'
     doctor:
       help: Diagnose local configuration, registry, profile, auth, and logs
       logs_help: Show the log file path and recent lines
@@ -97,6 +103,41 @@ cli:
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
+    errors:
+      invalid_value: 'Invalid value for %{name}: %{value}'
+      no_active_profile: No active profile. Run 'aeat config setup --tax-id <NIF>'
+        first.
+      unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config list'' to
+        see the available keys.'
+    get:
+      help: Show the current value of one configuration key
+      key_help: Key to read (e.g. tax.id, iva.regime)
+    list:
+      help: List every configuration key with its current value
+    reset:
+      help: Reset operator-entered configuration scopes
+      invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
+      requires_yes: Reset is destructive. Re-run with --yes to confirm.
+      scope_help: Scope to reset (all, profile, auth)
+      yes_help: Explicitly confirm the reset operation
+    set:
+      help: Assign a value to one configuration key
+      key_help: Key to assign (e.g. iva.regime)
+      value_help: Value to assign (text, true/false, amount depending on the key)
+    setup:
+      accept_defaults_help: Accept the descriptor's defaults without prompting
+      errors:
+        missing_required_flags: Missing required flags for --quiet wizard run; supply
+          a value for every required question.
+      help: Run the schema-driven setup wizard interactively or via flag-driven quiet
+        mode
+      profile_name_help: Profile name to write the answers into
+      quiet_help: Run the flow non-interactively using only the supplied flag values
+    status:
+      help: Show the readiness of the current configuration profile
+    unset:
+      help: Clear the value of one configuration key
+      key_help: Key to clear
   data:
     app_help: Management of tax data and records
     ledgers:
@@ -785,6 +826,85 @@ wizard:
       family-minor-children-in-unit:
         prompt: Minor children in family unit
       title: Family unit
+    flags:
+      activity:
+        help: Business activity label or controlled key
+      address-postcode:
+        help: Tax address postcode
+      bienes-extranjero-above-threshold:
+        help: Foreign-held assets above legal threshold
+      declaration-type:
+        help: Declaration type code
+      does-intracomunitario:
+        help: Conducts intracomunitario operations
+      enrollment-large-company:
+        help: Large-company enrollment
+      enrollment-public-administration-budget-gt-6000000:
+        help: Public administration budget over 6,000,000
+      family-descendants-eu-eea-deduction:
+        help: EU/EEA descendants in family-unit deduction
+      family-minor-children-in-unit:
+        help: Minor children in family unit
+      has-employees:
+        help: Has employees and pays salaries with retención
+      iva-intracommunity-operations-exceed-50000-eur:
+        help: Intra-community operations exceed 50,000 EUR
+      iva-oss-enrolled:
+        help: Enrolled in OSS
+      iva-regime:
+        help: IVA regime
+      iva-roi-enrolled:
+        help: Enrolled in ROI
+      name:
+        help: Display name shown in local reviews
+      notes:
+        help: Operator notes (not consumed by the engine)
+      pays-capital-income-with-retencion:
+        help: Pays capital income with retención
+      pays-professionals-with-retencion:
+        help: Pays professionals with retención
+      pays-rent-with-retencion:
+        help: Pays local rent with retención
+      professional-income-withholding-ge-70pct:
+        help: At least 70% of professional income with prior retención
+      spouse-birth-date:
+        help: Spouse birth date
+      spouse-disability-grade:
+        help: Spouse disability code
+      spouse-eu-eea-country:
+        help: Spouse EU/EEA country
+      spouse-eu-eea-resident:
+        help: Spouse is EU/EEA resident
+      spouse-name:
+        help: Spouse given name
+      spouse-non-resident-irpf:
+        help: Spouse is non-resident IRPF
+      spouse-sex:
+        help: Spouse sex code
+      spouse-surnames:
+        help: Spouse surnames
+      spouse-tax-id:
+        help: Spouse NIF/NIE
+      surnames:
+        help: Surnames or company name for export headers
+      tax-id:
+        help: Tax identifier (NIF/NIE) for declarations
+      tax-residence-ccaa:
+        help: Tax-residence autonomous community
+      taxpayer-birth-date:
+        help: First taxpayer birth date
+      taxpayer-death-date:
+        help: First taxpayer death date
+      taxpayer-disability-grade:
+        help: First taxpayer disability code
+      taxpayer-marital-status:
+        help: First taxpayer marital status
+      taxpayer-sex:
+        help: First taxpayer sex code
+      third-party-transactions-above-347-threshold:
+        help: Third-party transactions exceed Modelo 347 threshold
+      uses-objective-estimation-irpf:
+        help: Files IRPF under objective estimation
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intra-community operations exceed 50,000 EUR

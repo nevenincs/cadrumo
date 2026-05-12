@@ -95,6 +95,12 @@ cli:
       period_unrecognised: Periodo no reconocido
   config:
     app_help: Gestionar configuración local y diagnósticos
+    auth:
+      file_help: Ruta al archivo de credenciales (certificado o clave)
+      help: Configurar el proveedor de autenticación activo
+      provider_help: Identificador del proveedor (p.ej. certificado-electronico)
+      unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
+        ''aeat config auth --help'' para ver los identificadores válidos.'
     doctor:
       help: Diagnosticar configuración local, registro, perfil, autenticación y logs
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
@@ -105,8 +111,9 @@ cli:
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
     errors:
-      no_active_profile: No hay un perfil activo. Ejecuta 'aeat setup init --name
-        NAME --tax-id NIF' primero.
+      invalid_value: 'Valor inválido para %{name}: %{value}'
+      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config setup --tax-id
+        <NIF>' primero.
       unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
         list'' para ver las claves disponibles.'
     get:
@@ -114,10 +121,28 @@ cli:
       key_help: Clave a leer (ej. tax.id, iva.regime)
     list:
       help: Listar todas las claves de configuración y sus valores actuales
+    reset:
+      help: Reiniciar ámbitos de configuración introducidos por el operador
+      invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
+      requires_yes: El reinicio es destructivo. Vuelve a ejecutar con --yes para confirmar.
+      scope_help: Ámbito a reiniciar (all, profile, auth)
+      yes_help: Confirmar explícitamente la operación de reinicio
     set:
       help: Asignar un valor a una clave de configuración
       key_help: Clave a asignar (ej. iva.regime)
       value_help: Valor a asignar (texto, true/false, importe segun la clave)
+    setup:
+      accept_defaults_help: Aceptar los valores por defecto del descriptor sin preguntar
+      errors:
+        missing_required_flags: Faltan banderas obligatorias para el modo --quiet;
+          proporciona un valor para cada pregunta obligatoria.
+      help: Ejecutar el asistente de configuración basado en esquema de forma interactiva
+        o usando banderas
+      profile_name_help: Nombre del perfil donde guardar las respuestas
+      quiet_help: Ejecutar el flujo sin interacción usando solo los valores de las
+        banderas
+    status:
+      help: Mostrar el estado del perfil de configuración activo
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
@@ -823,6 +848,85 @@ wizard:
       family-minor-children-in-unit:
         prompt: Hijos menores en unidad familiar
       title: Unidad familiar
+    flags:
+      activity:
+        help: Etiqueta de actividad o clave controlada
+      address-postcode:
+        help: Código postal del domicilio fiscal
+      bienes-extranjero-above-threshold:
+        help: Bienes en el extranjero superan el umbral legal
+      declaration-type:
+        help: Código del tipo de declaración
+      does-intracomunitario:
+        help: Realiza operaciones intracomunitarias
+      enrollment-large-company:
+        help: Empresa de gran volumen
+      enrollment-public-administration-budget-gt-6000000:
+        help: Presupuesto administración pública superior a 6.000.000
+      family-descendants-eu-eea-deduction:
+        help: Descendientes UE/EEE en deducción de unidad familiar
+      family-minor-children-in-unit:
+        help: Hijos menores en unidad familiar
+      has-employees:
+        help: Tiene empleados y paga salarios con retención
+      iva-intracommunity-operations-exceed-50000-eur:
+        help: Operaciones intracomunitarias superan 50.000 EUR
+      iva-oss-enrolled:
+        help: Alta en OSS
+      iva-regime:
+        help: Régimen IVA
+      iva-roi-enrolled:
+        help: Alta en ROI
+      name:
+        help: Nombre visible mostrado en revisiones locales
+      notes:
+        help: Notas del operador (no consumidas por el motor)
+      pays-capital-income-with-retencion:
+        help: Paga rentas de capital con retención
+      pays-professionals-with-retencion:
+        help: Paga a profesionales con retención
+      pays-rent-with-retencion:
+        help: Paga alquiler de local con retención
+      professional-income-withholding-ge-70pct:
+        help: Al menos 70% de los ingresos profesionales con retención previa
+      spouse-birth-date:
+        help: Fecha de nacimiento del cónyuge
+      spouse-disability-grade:
+        help: Clave de discapacidad del cónyuge
+      spouse-eu-eea-country:
+        help: País UE/EEE del cónyuge
+      spouse-eu-eea-resident:
+        help: Cónyuge residente UE/EEE
+      spouse-name:
+        help: Nombre del cónyuge
+      spouse-non-resident-irpf:
+        help: Cónyuge no residente IRPF
+      spouse-sex:
+        help: Sexo del cónyuge
+      spouse-surnames:
+        help: Apellidos del cónyuge
+      spouse-tax-id:
+        help: NIF/NIE del cónyuge
+      surnames:
+        help: Apellidos o razón social para cabeceras de exportación
+      tax-id:
+        help: Identificador fiscal (NIF/NIE) para declaraciones
+      tax-residence-ccaa:
+        help: Comunidad autónoma de residencia fiscal
+      taxpayer-birth-date:
+        help: Fecha de nacimiento del primer declarante
+      taxpayer-death-date:
+        help: Fecha de fallecimiento del primer declarante
+      taxpayer-disability-grade:
+        help: Clave de discapacidad del primer declarante
+      taxpayer-marital-status:
+        help: Estado civil del primer declarante
+      taxpayer-sex:
+        help: Sexo del primer declarante
+      third-party-transactions-above-347-threshold:
+        help: Operaciones con terceros superan el umbral del Modelo 347
+      uses-objective-estimation-irpf:
+        help: Tributa IRPF en estimación objetiva
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operaciones intracomunitarias superan 50.000 EUR
