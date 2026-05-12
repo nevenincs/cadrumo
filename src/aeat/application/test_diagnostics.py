@@ -256,12 +256,9 @@ def test_doctor_auth_session_predicate_agrees_with_setup_status(
     - provider configured and session active -> doctor reports
       auth.session ok, setup status reports login_ready=True.
     """
-    from aeat.application.user_cli import (
-        UserCliState,
-        set_active_profile,
-        set_profile_values,
-        update_auth,
-    )
+    from aeat.application.auth import update_auth
+    from aeat.application.profile import set_active_profile, set_profile_values
+    from aeat.application.workflow import WorkflowState
 
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'auth.db').as_posix()}")
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
@@ -270,7 +267,7 @@ def test_doctor_auth_session_predicate_agrees_with_setup_status(
 
     base = set_active_profile(
         set_profile_values(
-            UserCliState(),
+            WorkflowState(),
             "operator",
             {"tax.id": "00000000T", "activity": "design", "iva.regime": "general"},
         ),

@@ -87,7 +87,7 @@ def _resolve_draft_id(modelo: str | None, period: str | None, draft_id: str | No
     canonical_modelo = modelo.strip()
     state = _state()
     pointer = state.declarations.get(declaration_key(canonical_modelo, canonical_period))
-    if pointer is None:
+    if pointer is None or pointer.draft_id is None:
         raise _bad(tr("cli.declaration.errors.no_draft_for_period"))
     return pointer.draft_id
 
@@ -229,7 +229,7 @@ def declaration_review(
         canonical_modelo = modelo.strip()
         state = _state()
         pointer = state.declarations.get(declaration_key(canonical_modelo, canonical_period))
-        if pointer is None:
+        if pointer is None or pointer.draft_id is None:
             raise _bad(tr("cli.declaration.errors.no_draft_for_period"))
         draft = _draft_by_id(pointer.draft_id)
     if format_.lower() == _FORMAT_JSON or _format_of(ctx) == _FORMAT_JSON:
@@ -268,7 +268,8 @@ def declaration_status(
         )
         _exit(2)
     assert pointer is not None
-    matches_filter = _declaration_status_matches(pointer.status, spec.status)
+    status_text = pointer.status or ""
+    matches_filter = _declaration_status_matches(status_text, spec.status)
     matches_filter_label = tr("cli.declaration.labels.yes") if matches_filter else tr("cli.declaration.labels.no")
     payload = {
         "draft_id": pointer.draft_id,

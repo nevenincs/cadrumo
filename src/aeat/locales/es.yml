@@ -615,6 +615,15 @@ cli:
   setup:
     app_help: Preparar el perfil local y la autenticación necesarios para usar la
       aplicación
+    reset:
+      help: Restablecer (destructivo) el estado local del usuario por ámbito; requiere --yes.
+      profile_help: Eliminar todos los perfiles del operador y borradores asociados.
+      auth_help: Eliminar el estado de sesión de autenticación.
+      data_help: Mover las filas no descifrables de secure_objects a cuarentena.
+      all_help: Combinar los ámbitos profile, auth y data.
+      yes_help: Confirmar explícitamente la operación destructiva.
+      requires_yes: "Esta operación es destructiva. Vuelve a ejecutar con --yes para confirmar."
+      scope_required: "Debes seleccionar al menos un ámbito: --profile, --auth, --data o --all."
     auth:
       app_help: Configurar y comprobar la autenticación de AEAT
       configure:

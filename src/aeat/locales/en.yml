@@ -597,6 +597,15 @@ cli:
     version_help: Show package version and registry summary
   setup:
     app_help: Prepare the local profile and authentication needed to use the app
+    reset:
+      help: Destructive scoped reset of local user state; requires --yes.
+      profile_help: Remove every operator profile and associated drafts.
+      auth_help: Clear the authentication session state.
+      data_help: Quarantine undecryptable secure_objects rows.
+      all_help: Combine profile, auth, and data scopes.
+      yes_help: Explicitly confirm the destructive operation.
+      requires_yes: "This operation is destructive. Re-run with --yes to confirm."
+      scope_required: "You must pick at least one scope: --profile, --auth, --data, or --all."
     auth:
       app_help: Configure and check AEAT authentication
       configure:

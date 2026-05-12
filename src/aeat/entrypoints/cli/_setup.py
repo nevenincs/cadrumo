@@ -126,6 +126,62 @@ def setup_status(ctx: typer.Context) -> None:
     )
 
 
+@app.command("reset", help=tr("cli.setup.reset.help"))
+def setup_reset(
+    ctx: typer.Context,
+    profile: bool = typer.Option(False, "--profile", help=tr("cli.setup.reset.profile_help")),
+    auth: bool = typer.Option(False, "--auth", help=tr("cli.setup.reset.auth_help")),
+    data: bool = typer.Option(False, "--data", help=tr("cli.setup.reset.data_help")),
+    all_: bool = typer.Option(False, "--all", help=tr("cli.setup.reset.all_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.setup.reset.yes_help")),
+) -> None:
+    """Scoped destructive reset; requires --yes to take effect.
+
+    Combines four operator-side scopes. The CLI translates the flag
+    set into one :class:`SetupResetScope` value and routes to the
+    application-layer ``reset_setup`` function.
+    """
+
+    from ...application.setup_reset import (
+        SetupResetReport,
+        SetupResetScope,
+        reset_setup,
+    )
+
+    scopes = sum(1 for flag in (profile, auth, data, all_) if flag)
+    if scopes == 0:
+        raise _bad(tr("cli.setup.reset.scope_required"))
+    if all_:
+        scope = SetupResetScope.ALL
+    elif profile:
+        scope = SetupResetScope.PROFILE
+    elif auth:
+        scope = SetupResetScope.AUTH
+    else:
+        scope = SetupResetScope.DATA
+
+    if not yes:
+        raise _bad(tr("cli.setup.reset.requires_yes"))
+
+    report: SetupResetReport = reset_setup(scope, confirmed=True)
+    payload = {
+        "scope": report.scope.value,
+        "removed_profile_names": list(report.removed_profile_names),
+        "removed_auth_session": report.removed_auth_session,
+        "quarantined_namespace_count": report.quarantined_namespace_count,
+    }
+    _emit(
+        ctx,
+        payload,
+        [
+            f"scope\t{report.scope.value}",
+            f"removed_profiles\t{len(report.removed_profile_names)}",
+            f"removed_auth_session\t{'yes' if report.removed_auth_session else 'no'}",
+            f"quarantined_namespaces\t{report.quarantined_namespace_count}",
+        ],
+    )
+
+
 # ---------------------------------------------------------------------
 # `aeat setup auth` — auth-provider commands
 # ---------------------------------------------------------------------
@@ -360,6 +416,7 @@ def auth_whoami(ctx: typer.Context) -> None:
 def auth_logout(ctx: typer.Context) -> None:
     current = _state()
     removed: list[Path] = []
+    updated = current
     if current.auth.provider is not None:
         try:
             provider_kind = AuthProviderKind(current.auth.provider)

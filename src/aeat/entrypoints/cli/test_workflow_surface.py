@@ -1046,7 +1046,7 @@ def test_setup_profile_set_iva_regime_round_trips_to_deadline_engine(
     The case-insensitive parser also accepts ``GENERAL``,
     ``simplificado``, etc.
     """
-    from aeat.application.user_cli import state_repository
+    from aeat.application.workflow import workflow_state_repository
     from aeat.domain.deadlines import IVARegime, autonomo_profile_from_mapping
 
     _isolate_user_cli(monkeypatch, tmp_path)
@@ -1056,7 +1056,7 @@ def test_setup_profile_set_iva_regime_round_trips_to_deadline_engine(
     set_result = _invoke(["setup", "profile", "set", "iva.regime", "general"])
     assert set_result.exit_code == 0, set_result.output
 
-    state = state_repository().load()
+    state = workflow_state_repository().load()
     record = state.active_profile_record()
     assert record is not None
     profile = autonomo_profile_from_mapping(record.values, tax_id_default="00000000T")
@@ -1073,7 +1073,7 @@ def test_setup_profile_set_does_intracomunitario_round_trips_underscore_form(
     user-cli normaliser preserves underscores so the stored form
     matches the engine lookup; this test pins the round-trip.
     """
-    from aeat.application.user_cli import state_repository
+    from aeat.application.workflow import workflow_state_repository
     from aeat.domain.deadlines import autonomo_profile_from_mapping
 
     _isolate_user_cli(monkeypatch, tmp_path)
@@ -1088,7 +1088,7 @@ def test_setup_profile_set_does_intracomunitario_round_trips_underscore_form(
     get_payload = json.loads(_json_output(get_result))
     assert get_payload["value"] == "true"
 
-    state = state_repository().load()
+    state = workflow_state_repository().load()
     record = state.active_profile_record()
     assert record is not None
     profile = autonomo_profile_from_mapping(record.values, tax_id_default="00000000T")

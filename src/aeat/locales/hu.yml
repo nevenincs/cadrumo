@@ -613,6 +613,15 @@ cli:
     version_help: Csomagverzió és regiszter-összefoglaló megjelenítése
   setup:
     app_help: A használathoz szükséges helyi profil és hitelesítés előkészítése
+    reset:
+      help: A helyi felhasználói állapot romboló, hatókör szerinti visszaállítása; --yes szükséges.
+      profile_help: Eltávolítja az összes operátor-profilt és a kapcsolódó tervezeteket.
+      auth_help: Törli a hitelesítési munkamenet állapotát.
+      data_help: Karanténba helyezi a nem dekódolható secure_objects sorokat.
+      all_help: A profile, auth és data hatókörök kombinálása.
+      yes_help: A romboló művelet kifejezett megerősítése.
+      requires_yes: "Ez a művelet romboló. Futtasd újra a --yes kapcsolóval a megerősítéshez."
+      scope_required: "Legalább egy hatókört ki kell választani: --profile, --auth, --data vagy --all."
     auth:
       app_help: AEAT-hitelesítés beállítása és ellenőrzése
       configure:
