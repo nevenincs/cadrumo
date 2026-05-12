@@ -1,21 +1,40 @@
 """Typer command factory for wizard flows.
 
-``build_wizard_command(flow)`` returns a closure whose signature is
-composed from the flow's questions plus a fixed set of mode flags
-(``--quiet``, ``--profile-name``, ``--accept-defaults``). Each question
-contributes one optional flag whose type maps to the canonical
-serialisation: ``TEXT`` / ``SECRET`` / ``PATH`` → ``str``, ``INTEGER``
-→ ``int``, ``CONFIRM`` → ``bool``, ``SELECT`` → ``str``, ``CHECKBOX``
-→ ``list[str]``. When ``--quiet`` is set, every required-and-not-
-conditional question must supply a flag value or descriptor default;
-the closure raises :class:`WizardMissingFlagError` otherwise.
+``build_wizard_command(flow)`` returns a Typer-compatible callable
+whose signature is composed at construction time from the flow's
+questions plus three fixed mode flags (``--profile-name``,
+``--quiet``, ``--accept-defaults``). The closure walks the flow
+against a ``Prompter`` and persists the typed answers.
+
+Flag derivation per ADR section D:
+
+* ``TEXT`` / ``SECRET`` / ``PATH`` → ``--<question-id>`` ``str``
+  option (``Path`` for ``PATH``);
+* ``INTEGER`` → ``--<question-id>`` ``int`` option;
+* ``CONFIRM`` → ``--<question-id>/--no-<question-id>`` boolean pair;
+* ``SELECT`` → ``--<question-id>`` option with
+  ``click.Choice([c.value for c in choices])``;
+* ``CHECKBOX`` → repeated ``--<question-id>`` option that accumulates
+  a ``list[str]``.
+
+The closure accepts a ``Prompter`` injection through the keyword-only
+``_prompter`` parameter (not exposed as a Typer option) so tests can
+drive the flow without questionary interaction.
 """
 
 from __future__ import annotations
 
+import inspect
+import typing
 from collections import deque
 from collections.abc import Callable
+from pathlib import Path
+from typing import Annotated, Any
 
+import click
+import typer
+
+from ...core.i18n import tr
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardMissingFlagError
 from ._models import WizardFlow, WizardQuestion, WizardWidget
@@ -25,15 +44,21 @@ from ._runner import run_flow
 
 
 def _flag_name(question: WizardQuestion) -> str:
-    """Map a question id to its Typer flag name."""
+    """Map a question id to its primary Typer flag name."""
 
     return f"--{question.id}"
 
 
 def _no_flag_name(question: WizardQuestion) -> str:
-    """Map a ``CONFIRM`` question to its negative flag."""
+    """Map a CONFIRM question to its negative flag name."""
 
     return f"--no-{question.id}"
+
+
+def _help_key(flow: WizardFlow, question: WizardQuestion) -> str:
+    """Return the translation key used for the flag's ``--help`` text."""
+
+    return f"wizard.{flow.id}.flags.{question.id}.help"
 
 
 def _required_flag_questions(flow: WizardFlow) -> tuple[WizardQuestion, ...]:
@@ -64,12 +89,7 @@ def _missing_required_flags(
 
 
 def _scripted_from_canonical(flow: WizardFlow, canonical: dict[str, str]) -> ScriptedPrompter:
-    """Build a ``ScriptedPrompter`` from the canonical-token dict.
-
-    The runtime asks questions in flow order; for visible questions
-    without a canonical answer, we feed the descriptor default (or an
-    empty string for optional / conditional questions).
-    """
+    """Build a ``ScriptedPrompter`` driven by the canonical-token dict."""
 
     answers: deque[str] = deque()
     pending: dict[str, str] = dict(canonical)
@@ -86,29 +106,162 @@ def _scripted_from_canonical(flow: WizardFlow, canonical: dict[str, str]) -> Scr
     return ScriptedPrompter(answers)
 
 
+def _canonical_from_flag_value(question: WizardQuestion, value: Any) -> str | None:
+    """Project a Typer-parsed flag value into the canonical-token form."""
+
+    if value is None:
+        return None
+    if question.widget is WizardWidget.CONFIRM:
+        if not isinstance(value, bool):
+            return None
+        return "true" if value else "false"
+    if question.widget is WizardWidget.CHECKBOX:
+        if not isinstance(value, list | tuple):
+            return None
+        tokens = [str(item) for item in value if str(item)]
+        return ",".join(tokens) if tokens else None
+    if question.widget is WizardWidget.INTEGER:
+        return str(int(value))
+    if question.widget is WizardWidget.PATH:
+        return str(value)
+    return str(value)
+
+
+def _python_parameter(flow: WizardFlow, question: WizardQuestion) -> inspect.Parameter:
+    """Build the ``inspect.Parameter`` Typer reads to register a flag."""
+
+    flag = _flag_name(question)
+    help_text = tr(_help_key(flow, question))
+    match question.widget:
+        case WizardWidget.CONFIRM:
+            option = typer.Option(
+                f"{flag}/{_no_flag_name(question)}",
+                help=help_text,
+            )
+            annotation = Annotated[bool | None, option]
+            default = None
+        case WizardWidget.SELECT:
+            option = typer.Option(
+                flag,
+                click_type=click.Choice([choice.value for choice in question.choices]),
+                help=help_text,
+            )
+            annotation = Annotated[str | None, option]
+            default = None
+        case WizardWidget.CHECKBOX:
+            option = typer.Option(
+                flag,
+                click_type=click.Choice([choice.value for choice in question.choices]),
+                help=help_text,
+            )
+            annotation = Annotated[list[str], option]
+            default = []
+        case WizardWidget.INTEGER:
+            option = typer.Option(flag, help=help_text)
+            annotation = Annotated[int | None, option]
+            default = None
+        case WizardWidget.PATH:
+            option = typer.Option(flag, help=help_text)
+            annotation = Annotated[Path | None, option]
+            default = None
+        case WizardWidget.SECRET:
+            option = typer.Option(flag, help=help_text, hide_input=True)
+            annotation = Annotated[str | None, option]
+            default = None
+        case WizardWidget.TEXT:
+            option = typer.Option(flag, help=help_text)
+            annotation = Annotated[str | None, option]
+            default = None
+    return inspect.Parameter(
+        name=question.id.replace("-", "_"),
+        kind=inspect.Parameter.KEYWORD_ONLY,
+        default=default,
+        annotation=annotation,
+    )
+
+
+def _mode_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
+    """Build the three fixed mode-flag parameters."""
+
+    del flow
+    profile_name = inspect.Parameter(
+        name="profile_name",
+        kind=inspect.Parameter.KEYWORD_ONLY,
+        default="default",
+        annotation=Annotated[
+            str,
+            typer.Option(
+                "--profile-name",
+                help=tr("cli.config.setup.profile_name_help"),
+            ),
+        ],
+    )
+    quiet = inspect.Parameter(
+        name="quiet",
+        kind=inspect.Parameter.KEYWORD_ONLY,
+        default=False,
+        annotation=Annotated[
+            bool,
+            typer.Option("--quiet", help=tr("cli.config.setup.quiet_help")),
+        ],
+    )
+    accept_defaults = inspect.Parameter(
+        name="accept_defaults",
+        kind=inspect.Parameter.KEYWORD_ONLY,
+        default=False,
+        annotation=Annotated[
+            bool,
+            typer.Option("--accept-defaults", help=tr("cli.config.setup.accept_defaults_help")),
+        ],
+    )
+    return (profile_name, quiet, accept_defaults)
+
+
+def _question_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
+    """Build one ``inspect.Parameter`` per descriptor question."""
+
+    return tuple(_python_parameter(flow, question) for section in flow.sections for question in section.questions)
+
+
+def _collect_flag_values(
+    flow: WizardFlow,
+    kwargs: dict[str, Any],
+) -> dict[str, str]:
+    """Project the closure's keyword arguments into the canonical-token dict."""
+
+    canonical: dict[str, str] = {}
+    for section in flow.sections:
+        for question in section.questions:
+            field_name = question.id.replace("-", "_")
+            raw = kwargs.get(field_name)
+            canonical_value = _canonical_from_flag_value(question, raw)
+            if canonical_value is not None:
+                canonical[question.id] = canonical_value
+    return canonical
+
+
 def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
     """Return a Typer-compatible callable that runs ``flow``.
 
-    The returned closure walks ``flow`` against either a
-    ``QuestionaryPrompter`` (interactive default) or a
-    ``ScriptedPrompter`` driven by the closure's per-question flag
-    arguments (``--quiet`` mode). On success, the closure persists the
-    typed answers via ``persist_answers``.
+    The returned closure carries one parameter per question in the
+    flow (typed and annotated for Typer to derive a CLI flag) plus the
+    three mode flags. Tests can pass a custom prompter through the
+    keyword-only ``_prompter`` slot (not surfaced as a Typer option).
     """
 
-    def _command(
-        *,
-        prompter: Prompter | None = None,
-        profile_name: str = "default",
-        quiet: bool = False,
-        accept_defaults: bool = False,
-        flag_values: dict[str, str] | None = None,
-    ) -> None:
+    question_params = _question_parameters(flow)
+    mode_params = _mode_parameters(flow)
+    parameters = (*mode_params, *question_params)
+
+    def _command(*, _prompter: Prompter | None = None, **kwargs: Any) -> None:
         from ..workflow._persistence import workflow_state_repository
 
-        flag_values = flag_values or {}
+        profile_name = kwargs.pop("profile_name", "default")
+        quiet = kwargs.pop("quiet", False)
+        accept_defaults = kwargs.pop("accept_defaults", False)
+        canonical = _collect_flag_values(flow, kwargs)
+
         if quiet:
-            canonical: dict[str, str] = dict(flag_values)
             missing = _missing_required_flags(flow, canonical)
             if missing:
                 raise WizardMissingFlagError(
@@ -118,63 +271,32 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
             scripted = _scripted_from_canonical(flow, canonical)
             answers = run_flow(flow, scripted)
         elif accept_defaults:
-            canonical = {
+            seeded: dict[str, str] = {
                 question.id: question.default or ""
                 for section in flow.sections
                 for question in section.questions
                 if question.default is not None
             }
-            canonical.update(flag_values)
-            scripted = _scripted_from_canonical(flow, canonical)
+            seeded.update(canonical)
+            scripted = _scripted_from_canonical(flow, seeded)
             answers = run_flow(flow, scripted)
         else:
-            active = prompter if prompter is not None else QuestionaryPrompter()
-            answers = run_flow(flow, active, defaults=flag_values)
+            active = _prompter if _prompter is not None else QuestionaryPrompter()
+            answers = run_flow(flow, active, defaults=canonical)
 
         repository = workflow_state_repository()
         repository.update(lambda state: persist_answers(flow, answers, state=state, profile_name=profile_name))
 
-    setattr(_command, "__wizard_flow__", flow)  # noqa: B010
+    typed = typing.cast(typing.Any, _command)
+    typed.__signature__ = inspect.Signature(parameters=list(parameters))
+    typed.__annotations__ = {param.name: param.annotation for param in parameters}
+    typed.__name__ = flow.id
+    typed.__doc__ = tr(f"wizard.{flow.id}.description")
+    typed.__wizard_flow__ = flow
     return _command
-
-
-def widget_supports_flag(question: WizardQuestion) -> bool:
-    """Return True when the question can accept a CLI flag value."""
-
-    return question.widget in {
-        WizardWidget.TEXT,
-        WizardWidget.SECRET,
-        WizardWidget.PATH,
-        WizardWidget.INTEGER,
-        WizardWidget.CONFIRM,
-        WizardWidget.SELECT,
-        WizardWidget.CHECKBOX,
-    }
-
-
-def flag_signature(flow: WizardFlow) -> tuple[tuple[str, str, str], ...]:
-    """Return the (flag, no_flag, widget) triple for every question.
-
-    Used by tests and the CLI registrar to introspect the descriptor's
-    flag surface without actually constructing the Typer command.
-    """
-
-    rows: list[tuple[str, str, str]] = []
-    for section in flow.sections:
-        for question in section.questions:
-            rows.append(
-                (
-                    _flag_name(question),
-                    _no_flag_name(question) if question.widget is WizardWidget.CONFIRM else "",
-                    question.widget.value,
-                )
-            )
-    return tuple(rows)
 
 
 __all__ = [
     "SETUP_FLOW",
     "build_wizard_command",
-    "flag_signature",
-    "widget_supports_flag",
 ]
