@@ -3,8 +3,8 @@
 The tests use Typer's ``CliRunner`` to exercise the live command
 surface: invalid choice tokens are rejected at the CLI boundary,
 descriptor-validated values pass through to ``ProfileRecord.values``,
-and the eventual case-insensitive lookup (closed in W12) is gated as
-an ``xfail`` until that Step lands.
+and the case-insensitive lookup resolves ``TAX.ID`` and ``tax.id`` to
+the same descriptor entry.
 """
 
 from __future__ import annotations
