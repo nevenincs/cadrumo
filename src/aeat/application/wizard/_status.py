@@ -55,10 +55,9 @@ def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
     """Build an :class:`AutonomoProfile` from the active profile values.
 
     The bridge runs the canonical-token dict through ``project_answers``
-    and re-shapes the typed fields onto the legacy ``AutonomoProfile``
-    record consumed by the deadline engine and the filing runtime.
-    Values come from the workflow state; the legacy on-disk profile
-    envelope is not consulted.
+    and re-shapes the typed fields onto the ``AutonomoProfile`` record
+    consumed by the deadline engine and the filing runtime. Values come
+    from the workflow state.
 
     Raises:
         ValueError: When no profile is active or the active profile

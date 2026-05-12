@@ -6,9 +6,8 @@ the typed projection and emits one :class:`WizardCheckFinding` per
 check. Findings carry a severity and a translation key so renderers
 can localise the outcome.
 
-The check shape replaces the legacy ``Verifier`` orchestrator. Each
-check is a pure function ``(BaseModel) -> WizardCheckFinding``; the
-verifier accumulates the per-check findings into a
+Each check is a pure function ``(BaseModel) -> WizardCheckFinding``;
+the verifier accumulates the per-check findings into a
 :class:`WizardCheckReport` and returns it as a frozen record.
 """
 

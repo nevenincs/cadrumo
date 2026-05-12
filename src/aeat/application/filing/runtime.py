@@ -183,14 +183,12 @@ def load_default_filing_profile(
 
     Resolves the active workflow profile via the wizard descriptor's
     typed projection and re-shapes it as a runtime
-    :class:`FilingOperatorProfile`. The legacy on-disk profile envelope
-    is no longer consulted; the operator's profile values stored in
+    :class:`FilingOperatorProfile`. Operator profile values stored in
     ``ProfileRecord`` are the single source of truth.
 
     Args:
-        path: Ignored. Retained for source-compatibility with the
-            historical signature; values now come from the active
-            workflow profile.
+        path: Ignored; values are loaded from the active workflow
+            profile.
         display_name: Optional friendly label propagated to the
             returned profile.
 
