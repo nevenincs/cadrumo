@@ -163,10 +163,8 @@ def atomic_write_secure_bytes(target: Path, payload: bytes) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = target.with_name(f"{target.name}.{os.getpid()}.{secrets.token_hex(4)}.tmp")
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    if hasattr(os, "O_NOINHERIT"):
-        flags |= os.O_NOINHERIT  # type: ignore[attr-defined]
-    if hasattr(os, "O_CLOEXEC"):
-        flags |= os.O_CLOEXEC
+    flags |= getattr(os, "O_NOINHERIT", 0)
+    flags |= getattr(os, "O_CLOEXEC", 0)
     fd = os.open(tmp_path, flags, 0o600)
     try:
         try:
@@ -701,10 +699,8 @@ class FileFallbackMasterKeyProvider:
         """
         flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
         # Avoid inheriting handles into child processes on Windows.
-        if hasattr(os, "O_NOINHERIT"):
-            flags |= os.O_NOINHERIT  # type: ignore[attr-defined]
-        if hasattr(os, "O_CLOEXEC"):
-            flags |= os.O_CLOEXEC
+        flags |= getattr(os, "O_NOINHERIT", 0)
+        flags |= getattr(os, "O_CLOEXEC", 0)
         fd = os.open(target, flags, 0o600)
         try:
             os.write(fd, payload)
