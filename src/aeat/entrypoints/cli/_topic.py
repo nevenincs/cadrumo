@@ -1,4 +1,4 @@
-"""``aeat topic`` and ``aeat help <slug>`` conceptual help surface.
+"""``aeat app topic`` conceptual help surface.
 
 UX-015 closure. Renders topics from
 :func:`aeat.application.topics.load_topic_catalogue`; the catalogue
