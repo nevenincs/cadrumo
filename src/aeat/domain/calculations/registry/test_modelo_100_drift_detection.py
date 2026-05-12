@@ -24,6 +24,7 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from . import load_registry_tree
+from ._runtime_graph import expression_binding_refs, expression_parameter_refs
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -122,7 +123,7 @@ def test_no_orphan_formula_feeding_bindings_in_any_revision() -> None:
         formula_feeding = {b.id for b in revision.bindings if b.source in ("manual_input", "previous_filing")}
         referenced: set[str] = set()
         for formula in revision.formulas:
-            _collect_binding_refs(formula.expression, referenced)
+            referenced.update(expression_binding_refs(formula.expression))
         for relation in revision.relations:
             target_binding = getattr(relation, "target_binding", None)
             if target_binding:
@@ -156,7 +157,7 @@ def test_no_orphan_parameters_in_any_revision() -> None:
         declared = {p.id for p in revision.parameters}
         referenced: set[str] = set()
         for formula in revision.formulas:
-            _collect_parameter_refs(formula.expression, referenced)
+            referenced.update(expression_parameter_refs(formula.expression))
         referenced |= cross_module_refs
         referenced |= _PRE_STAGED_PARAMETERS
         orphans = declared - referenced
@@ -238,7 +239,7 @@ def test_every_formula_binding_reference_resolves_to_a_declared_binding() -> Non
         declared_bindings = {b.id for b in revision.bindings}
         for formula in revision.formulas:
             referenced: set[str] = set()
-            _collect_binding_refs(formula.expression, referenced)
+            referenced.update(expression_binding_refs(formula.expression))
             unresolved = referenced - declared_bindings
             for ref in sorted(unresolved):
                 offences.append(f"{revision_id}: formula {formula.id!r} references undeclared binding {ref!r}")
@@ -253,38 +254,11 @@ def test_every_formula_parameter_reference_resolves_to_a_declared_parameter() ->
         declared = {p.id for p in revision.parameters}
         for formula in revision.formulas:
             referenced: set[str] = set()
-            _collect_parameter_refs(formula.expression, referenced)
+            referenced.update(expression_parameter_refs(formula.expression))
             unresolved = referenced - declared
             for ref in sorted(unresolved):
                 offences.append(f"{revision_id}: formula {formula.id!r} references undeclared parameter {ref!r}")
     assert not offences, "formulas referencing undeclared parameters:\n  " + "\n  ".join(offences)
-
-
-def _collect_binding_refs(expression, accumulator: set[str]) -> None:
-    if expression is None:
-        return
-    binding = getattr(expression, "binding", None)
-    if binding is not None:
-        accumulator.add(binding)
-    args = getattr(expression, "args", None)
-    if args:
-        for arg in args:
-            _collect_binding_refs(arg, accumulator)
-
-
-def _collect_parameter_refs(expression, accumulator: set[str]) -> None:
-    if expression is None:
-        return
-    parameter = getattr(expression, "parameter", None)
-    if parameter is not None:
-        accumulator.add(parameter)
-    dispatch_table = getattr(expression, "dispatch_table", None)
-    if dispatch_table:
-        accumulator.update(dispatch_table.values())
-    args = getattr(expression, "args", None)
-    if args:
-        for arg in args:
-            _collect_parameter_refs(arg, accumulator)
 
 
 @lru_cache(maxsize=8)
