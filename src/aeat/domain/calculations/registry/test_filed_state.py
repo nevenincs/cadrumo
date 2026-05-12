@@ -125,3 +125,67 @@ def test_filed_state_comparison_rejects_modelo_mismatch() -> None:
             observation,
             required_casillas=_MODELO_130_COMPUTED_CASILLAS,
         )
+
+
+def test_filed_state_comparison_rejects_empty_required_casillas() -> None:
+    """Passing an empty ``required_casillas`` set is meaningless and the
+    helper must refuse to silently produce a vacuous-satisfied result."""
+    calculation = _modelo_130_calculation()
+
+    with pytest.raises(RegistryValidationError, match="requires at least one casilla"):
+        compare_calculation_to_filed_observation(
+            calculation,
+            _filed_observation(calculation),
+            required_casillas=(),
+        )
+
+
+def test_filed_state_comparison_reports_missing_local_casilla() -> None:
+    """When a required casilla is absent from ``calculation.values`` but
+    present in the observation, it lands in ``missing_local_casillas`` —
+    a separate failure axis from ``missing_filed_casillas`` and drift."""
+    calculation = _modelo_130_calculation()
+    observation = _filed_observation(calculation)
+    pruned_values = {casilla_id: value for casilla_id, value in calculation.values.items() if casilla_id != "19"}
+    calculation = calculation.model_copy(update={"values": pruned_values})
+
+    comparison = compare_calculation_to_filed_observation(
+        calculation,
+        observation,
+        required_casillas=_MODELO_130_COMPUTED_CASILLAS,
+    )
+
+    assert comparison.status == "failed"
+    assert comparison.missing_local_casillas == ("19",)
+    assert comparison.missing_filed_casillas == ()
+    assert "19" not in comparison.compared_casillas
+    assert comparison.drifts == ()
+
+
+def test_filed_state_comparison_reports_composite_missing_and_drift() -> None:
+    """Each failure axis must populate independently — one casilla missing
+    locally, another missing in the filed observation, and a third with a
+    numeric drift, all in the same comparison."""
+    calculation = _modelo_130_calculation()
+    observation = _filed_observation(calculation)
+    pruned_local = {casilla_id: value for casilla_id, value in calculation.values.items() if casilla_id != "03"}
+    calculation = calculation.model_copy(update={"values": pruned_local})
+    filed_values = dict(observation.casilla_values)
+    del filed_values["04"]
+    filed_values["19"] = filed_values["19"] + Decimal("0.01")
+    observation = observation.model_copy(update={"casilla_values": filed_values})
+
+    comparison = compare_calculation_to_filed_observation(
+        calculation,
+        observation,
+        required_casillas=_MODELO_130_COMPUTED_CASILLAS,
+    )
+
+    assert comparison.status == "failed"
+    assert comparison.missing_local_casillas == ("03",)
+    assert comparison.missing_filed_casillas == ("04",)
+    assert len(comparison.drifts) == 1
+    assert comparison.drifts[0].casilla_id == "19"
+    assert comparison.drifts[0].delta == Decimal("-0.01")
+    assert "03" not in comparison.compared_casillas
+    assert "04" not in comparison.compared_casillas
