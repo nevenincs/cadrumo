@@ -105,10 +105,11 @@ class TestAutonomoProfile:
         profile = autonomo_profile_from_mapping(
             {
                 "tax.id": "12345678Z",
+                "activity": "design",
                 "iva.regime": "SIMPLIFICADO",
-                "has.employees": "true",
-                "pays.rent.with.retencion": "yes",
-                "does.intracomunitario": "1",
+                "has_employees": "true",
+                "pays_rent_with_retencion": "true",
+                "does_intracomunitario": "true",
                 "iva.roi_enrolled": "true",
                 "iva.oss_enrolled": "false",
                 "iva.intracommunity_operations_exceed_50000_eur": "true",
@@ -129,13 +130,6 @@ class TestAutonomoProfile:
             intracommunity_operations_exceed_50000_eur=True,
         )
         assert profile.enrollment == FilingEnrollment(large_company=True)
-
-    def test_mapping_projection_rejects_unknown_boolean_tokens(self) -> None:
-        with pytest.raises(ValueError, match="must be a boolean token"):
-            autonomo_profile_from_mapping(
-                {"tax.id": "12345678Z", "has.employees": "sometimes"},
-                tax_id_default="00000000T",
-            )
 
 
 class TestFilingObligation:

@@ -1,14 +1,18 @@
-"""Profile construction helpers for deadline and schedule consumers."""
+"""Profile construction helpers for deadline and schedule consumers.
+
+The helper projects a ``ProfileRecord.values``-shaped mapping into an
+:class:`AutonomoProfile` by deferring to the wizard descriptor's
+typed projection (``project_answers``). The wizard catalogue is the
+single source of truth for the canonical-token shape of every field;
+this helper composes the typed answer over the deadline-engine's
+record.
+"""
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ._errors import DeadlineValidationError
 from ._models import AutonomoProfile, FilingEnrollment, FilingIVAProfile, IVARegime
-
-_TRUE_TOKENS = frozenset({"1", "true", "yes", "y", "on", "si", "sí"})
-_FALSE_TOKENS = frozenset({"0", "false", "no", "n", "off"})
 
 
 def autonomo_profile_from_mapping(
@@ -17,102 +21,78 @@ def autonomo_profile_from_mapping(
     tax_id_default: str,
     iva_regime_default: IVARegime = IVARegime.GENERAL,
 ) -> AutonomoProfile:
-    """Build an :class:`AutonomoProfile` from persisted profile field values."""
+    """Build an :class:`AutonomoProfile` from a profile-values mapping.
 
-    tax_id = _text_value(values, "tax.id") or tax_id_default
-    iva_regime = _iva_regime_value(values, "iva.regime", default=iva_regime_default)
-    enrollment = FilingEnrollment(
-        large_company=_bool_value(values, "enrollment.large_company"),
-        public_administration_budget_gt_6000000=_bool_value(
-            values,
-            "enrollment.public_administration_budget_gt_6000000",
-        ),
-    )
-    iva = FilingIVAProfile(
-        roi_enrolled=_bool_value(values, "iva.roi_enrolled"),
-        oss_enrolled=_bool_value(values, "iva.oss_enrolled"),
-        intracommunity_operations_exceed_50000_eur=_bool_value(
-            values,
-            "iva.intracommunity_operations_exceed_50000_eur",
-        ),
-    )
+    The mapping is projected through the descriptor's
+    :func:`project_answers` so canonical-token semantics for every
+    boolean / select / text field stay in lockstep with the wizard's
+    on-prompt validation. Missing identity fields fall back to
+    ``tax_id_default`` / ``iva_regime_default``.
+    """
+
+    # Coerce mixed-typed mappings to canonical-token strings before the
+    # descriptor's projection runs.
+    canonical: dict[str, str] = {key: _stringify(raw) for key, raw in values.items()}
+    # The wizard's SELECT validator requires the IVARegime canonical
+    # uppercase token; deadline-engine callers historically supplied
+    # mixed case. Normalise to the enum's value form before projection.
+    if canonical.get("iva.regime"):
+        canonical["iva.regime"] = canonical["iva.regime"].strip().upper().replace("-", "_")
+
+    from ...application.wizard._catalogue import SETUP_FLOW
+    from ...application.wizard._persistence import project_answers
+    from ...application.wizard._setup_answers import SetupAnswers
+
+    # SetupAnswers requires tax.id and activity; the deadline engine
+    # supplies a tax_id default so it can render diagnostic schedules
+    # against an empty profile. Pad here so project_answers' strict
+    # validation runs against the same shape.
+    padded = dict(canonical)
+    padded.setdefault("tax.id", tax_id_default)
+    padded.setdefault("activity", "schedule-only")
+
+    typed = project_answers(SETUP_FLOW, padded)
+    if not isinstance(typed, SetupAnswers):
+        raise TypeError("setup flow projection did not yield a SetupAnswers instance")
+
+    tax_id = canonical.get("tax.id") or tax_id_default
+    iva_regime = _resolve_iva_regime(canonical.get("iva.regime"), iva_regime_default)
+
     return AutonomoProfile(
         tax_id=tax_id,
         iva_regime=iva_regime,
-        has_employees=_bool_value(values, "has_employees", "has.employees"),
-        pays_professionals_with_retencion=_bool_value(
-            values,
-            "pays_professionals_with_retencion",
-            "pays.professionals.with.retencion",
+        has_employees=typed.has_employees,
+        pays_professionals_with_retencion=typed.pays_professionals_with_retencion,
+        professional_income_withholding_ge_70pct=typed.professional_income_withholding_ge_70pct,
+        pays_rent_with_retencion=typed.pays_rent_with_retencion,
+        pays_capital_income_with_retencion=typed.pays_capital_income_with_retencion,
+        uses_objective_estimation_irpf=typed.uses_objective_estimation_irpf,
+        does_intracomunitario=typed.does_intracomunitario,
+        third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
+        bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,
+        iva=FilingIVAProfile(
+            roi_enrolled=typed.iva_roi_enrolled,
+            oss_enrolled=typed.iva_oss_enrolled,
+            intracommunity_operations_exceed_50000_eur=typed.iva_intracommunity_operations_exceed_50000_eur,
         ),
-        professional_income_withholding_ge_70pct=_bool_value(
-            values,
-            "professional_income_withholding_ge_70pct",
-            "professional.income.withholding.ge.70pct",
+        enrollment=FilingEnrollment(
+            large_company=typed.enrollment_large_company,
+            public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
         ),
-        pays_rent_with_retencion=_bool_value(values, "pays_rent_with_retencion", "pays.rent.with.retencion"),
-        pays_capital_income_with_retencion=_bool_value(
-            values,
-            "pays_capital_income_with_retencion",
-            "pays.capital.income.with.retencion",
-        ),
-        uses_objective_estimation_irpf=_bool_value(
-            values,
-            "uses_objective_estimation_irpf",
-            "uses.objective.estimation.irpf",
-        ),
-        does_intracomunitario=_bool_value(values, "does_intracomunitario", "does.intracomunitario"),
-        third_party_transactions_above_347_threshold=_bool_value(
-            values,
-            "third_party_transactions_above_347_threshold",
-            "third.party.transactions.above.347.threshold",
-        ),
-        bienes_extranjero_above_threshold=_bool_value(
-            values,
-            "bienes_extranjero_above_threshold",
-            "bienes.extranjero.above.threshold",
-        ),
-        iva=iva,
-        enrollment=enrollment,
-        notes=_text_value(values, "notes"),
+        notes=typed.notes,
     )
 
 
-def _text_value(values: Mapping[str, object], *keys: str) -> str:
-    for key in keys:
-        raw = values.get(key)
-        if raw is None:
-            continue
-        text = str(raw).strip()
-        if text:
-            return text
-    return ""
+def _stringify(raw: object) -> str:
+    if raw is None:
+        return ""
+    if isinstance(raw, bool):
+        return "true" if raw else "false"
+    return str(raw).strip()
 
 
-def _bool_value(values: Mapping[str, object], *keys: str) -> bool:
-    for key in keys:
-        raw = values.get(key)
-        if raw is None:
-            continue
-        if isinstance(raw, bool):
-            return raw
-        token = str(raw).strip().lower()
-        if token in _TRUE_TOKENS:
-            return True
-        if token in _FALSE_TOKENS:
-            return False
-        raise DeadlineValidationError(f"profile field {key!r} must be a boolean token")
-    return False
-
-
-def _iva_regime_value(
-    values: Mapping[str, object],
-    key: str,
-    *,
-    default: IVARegime,
-) -> IVARegime:
-    raw = values.get(key)
-    if raw is None or str(raw).strip() == "":
+def _resolve_iva_regime(raw: str | None, default: IVARegime) -> IVARegime:
+    if raw is None or raw == "":
         return default
-    canonical = str(raw).strip().upper().replace("-", "_")
+    canonical = raw.strip().upper().replace("-", "_")
     return IVARegime(canonical)
