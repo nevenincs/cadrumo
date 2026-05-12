@@ -54,6 +54,8 @@ dependencies = [
   # Data validation & models
   "pydantic>=2.12.5",
   "pydantic-settings>=2.9.1",
+  # Interactive prompt backend for the wizard descriptor runtime.
+  "questionary>=2.1.1",
   # Configuration
   "python-dotenv>=1.2.2",
   # CLI localization backend.
