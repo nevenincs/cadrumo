@@ -126,6 +126,21 @@ tolerance = "0.01"
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
 source_refs = ["aeat-dr-200-2025"]
 
+[[revisions."2024-y-siguientes".verification_expectations]]
+id = "modelo-200-2024-cuota-chain-verification"
+computed_casillas = ["00599"]
+tolerance = "0.01"
+rounding = "money-2"
+min_coverage = "1"
+discrepancy_causes = [
+    "extraction_unreliable",
+    "unmodelled_rule",
+    "rounding",
+    "correctness_divergence",
+]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41"]
+source_refs = ["aeat-dr-200-2025"]
+
 [[revisions."2024-y-siguientes".live_cross_references]]
 id = "modelo-200-2024-static-documentation"
 evidence_tier = "official_source_guidance"
