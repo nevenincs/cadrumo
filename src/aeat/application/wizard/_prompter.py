@@ -12,10 +12,17 @@ operator interaction. Both speak the same canonical-token contract.
 from __future__ import annotations
 
 from collections import deque
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
+import questionary
+
+from ...core.i18n import tr
 from ._errors import WizardScriptOverflowError, WizardScriptUnderflowError
-from ._models import WizardQuestion
+from ._models import WizardChoice, WizardQuestion, WizardWidget
+
+if TYPE_CHECKING:
+    from prompt_toolkit.input import Input
+    from prompt_toolkit.output import Output
 
 
 @runtime_checkable
@@ -75,7 +82,139 @@ class ScriptedPrompter:
             )
 
 
+def _render_choice(choice: WizardChoice) -> questionary.Choice:
+    """Render a :class:`WizardChoice` into a ``questionary.Choice``."""
+
+    return questionary.Choice(
+        title=tr(str(choice.label)),
+        value=choice.value,
+        description=tr(str(choice.description)) if choice.description is not None else None,
+    )
+
+
+class QuestionaryPrompter:
+    """Production prompter that dispatches each widget onto a questionary primitive.
+
+    The mapping is one-to-one: ``TEXT`` → ``questionary.text``,
+    ``SECRET`` → ``questionary.password``, ``CONFIRM`` →
+    ``questionary.confirm``, ``SELECT`` → ``questionary.select``,
+    ``CHECKBOX`` → ``questionary.checkbox``, ``PATH`` →
+    ``questionary.path``, ``INTEGER`` → ``questionary.text`` with a
+    numeric validator. The class accepts an optional
+    ``input`` / ``output`` pair so tests can drive it through
+    :func:`prompt_toolkit.input.create_pipe_input`.
+    """
+
+    def __init__(self, *, input: Input | None = None, output: Output | None = None) -> None:
+        self._input = input
+        self._output = output
+
+    def ask(self, question: WizardQuestion, *, default: str | None) -> str:
+        prompt = tr(str(question.prompt))
+        match question.widget:
+            case WizardWidget.TEXT:
+                return self._ask_text(prompt, default)
+            case WizardWidget.SECRET:
+                return self._ask_secret(prompt)
+            case WizardWidget.CONFIRM:
+                return self._ask_confirm(prompt, default)
+            case WizardWidget.SELECT:
+                return self._ask_select(prompt, question, default)
+            case WizardWidget.CHECKBOX:
+                return self._ask_checkbox(prompt, question)
+            case WizardWidget.PATH:
+                return self._ask_path(prompt, default)
+            case WizardWidget.INTEGER:
+                return self._ask_integer(prompt, default)
+
+    def _ask_text(self, prompt: str, default: str | None) -> str:
+        result = questionary.text(
+            prompt,
+            default=default or "",
+            input=self._input,
+            output=self._output,
+        ).ask()
+        return _stringify(result)
+
+    def _ask_secret(self, prompt: str) -> str:
+        result = questionary.password(prompt, input=self._input, output=self._output).ask()
+        return _stringify(result)
+
+    def _ask_confirm(self, prompt: str, default: str | None) -> str:
+        default_value = (default or "true").strip().lower() in {"true", "yes", "1", "y"}
+        result = questionary.confirm(
+            prompt,
+            default=default_value,
+            input=self._input,
+            output=self._output,
+        ).ask()
+        if result is True:
+            return "true"
+        if result is False:
+            return "false"
+        return _stringify(result)
+
+    def _ask_select(self, prompt: str, question: WizardQuestion, default: str | None) -> str:
+        choices = [_render_choice(choice) for choice in question.choices]
+        result = questionary.select(
+            prompt,
+            choices=choices,
+            default=default,
+            input=self._input,
+            output=self._output,
+        ).ask()
+        return _stringify(result)
+
+    def _ask_checkbox(self, prompt: str, question: WizardQuestion) -> str:
+        choices = [_render_choice(choice) for choice in question.choices]
+        result = questionary.checkbox(
+            prompt,
+            choices=choices,
+            input=self._input,
+            output=self._output,
+        ).ask()
+        if result is None:
+            return ""
+        tokens = [str(item) for item in result]
+        return ",".join(tokens)
+
+    def _ask_path(self, prompt: str, default: str | None) -> str:
+        result = questionary.path(
+            prompt,
+            default=default or "",
+            input=self._input,
+            output=self._output,
+        ).ask()
+        return _stringify(result)
+
+    def _ask_integer(self, prompt: str, default: str | None) -> str:
+        def _is_integer(raw: str) -> bool:
+            try:
+                int(raw.strip())
+            except ValueError:
+                return False
+            return True
+
+        result = questionary.text(
+            prompt,
+            default=default or "",
+            validate=_is_integer,
+            input=self._input,
+            output=self._output,
+        ).ask()
+        return _stringify(result).strip()
+
+
+def _stringify(value: object) -> str:
+    """Coerce questionary's return value into a canonical-token string."""
+
+    if value is None:
+        return ""
+    return str(value)
+
+
 __all__ = [
     "Prompter",
+    "QuestionaryPrompter",
     "ScriptedPrompter",
 ]
