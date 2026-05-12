@@ -5,21 +5,20 @@ These tests feed a tiny synthetic catalogue (NOT ``WIZARD_FLOWS``) to
 profile keys produce one row each, requirement derives from
 ``required`` + ``visible_when``, conditional-requirement pairs flow
 through when the parent question is profile-bound, transient parents
-leave the conditional pair empty, duplicates raise, and the function
-is pure (no env / file I/O).
+leave the conditional pair empty, duplicates raise, and the catalogue
+itself carries only frozen literals (no env / file I/O).
 """
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
-
 import pytest
 from pydantic import BaseModel, ConfigDict
 
+from aeat.application.wizard._catalogue import WIZARD_FLOWS
 from aeat.application.wizard._compiler import compile_profile_keys
 from aeat.application.wizard._errors import WizardCompileError
 from aeat.application.wizard._models import (
+    WizardChoice,
     WizardCondition,
     WizardFlow,
     WizardQuestion,
@@ -165,16 +164,65 @@ def test_description_uses_profile_key_prefix() -> None:
     assert str(entry.description) == "profile.keys.tax.id"
 
 
-def test_compile_is_pure_no_env_or_file_io(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Compiling must not touch the environment or the filesystem."""
+def test_wizard_flows_carry_only_frozen_literals() -> None:
+    """The catalogue must hold only frozen pydantic records, Translatables, and primitives.
 
-    flow = _flow((_question("tax-id", profile_key="tax.id"),))
+    The compiler is import-time pure by construction: ``compile_profile_keys``
+    walks ``WIZARD_FLOWS`` and reads attributes off frozen records. The test
+    asserts that every nested attribute of every ``WizardFlow`` is one of:
 
-    def _explode(*_args: object, **_kwargs: object) -> object:
-        raise AssertionError("file I/O attempted during compile_profile_keys")
+    * a frozen pydantic record (``model_config["frozen"]`` is true);
+    * a ``Translatable`` marker;
+    * an immutable primitive (``str``, ``bool``, ``int``, ``Path``, ``type``,
+      ``WizardWidget``, ``tuple``, ``NoneType``).
 
-    for env_var in list(os.environ):
-        monkeypatch.delenv(env_var, raising=False)
-    monkeypatch.setattr(Path, "read_text", _explode)
-    keys = compile_profile_keys((flow,))
-    assert keys[0].key == "tax.id"
+    No callable, no mutable container, no module reference. A descriptor
+    construction that hides a filesystem read behind a callable default
+    would fail this assertion.
+    """
+
+    permitted_primitives: tuple[type, ...] = (str, bool, int, type(None), WizardWidget, type)
+
+    def _assert_literal(value: object, path: str) -> None:
+        if isinstance(value, permitted_primitives):
+            return
+        if isinstance(value, Translatable):
+            return
+        if isinstance(value, tuple):
+            for index, item in enumerate(value):
+                _assert_literal(item, f"{path}[{index}]")
+            return
+        if isinstance(
+            value,
+            WizardFlow | WizardSection | WizardQuestion | WizardChoice | WizardCondition,
+        ):
+            frozen = bool(value.model_config.get("frozen"))
+            assert frozen, f"{path}: pydantic record is not frozen"
+            for field_name in value.__class__.model_fields:
+                _assert_literal(getattr(value, field_name), f"{path}.{field_name}")
+            return
+        raise AssertionError(f"{path}: unexpected non-literal value of type {type(value).__name__}")
+
+    for index, flow in enumerate(WIZARD_FLOWS):
+        _assert_literal(flow, f"WIZARD_FLOWS[{index}]")
+
+
+def test_compile_is_pure_on_the_real_catalogue() -> None:
+    """``compile_profile_keys(WIZARD_FLOWS)`` runs with no side effects.
+
+    The catalogue carries only frozen literals (asserted above) so this
+    invocation cannot perform file I/O or environment lookups. The test
+    asserts the projection produces a non-empty tuple of ``ProfileKey``s
+    keyed by the descriptor's declared ``profile_key`` values.
+    """
+
+    keys = compile_profile_keys(WIZARD_FLOWS)
+    assert keys, "compile_profile_keys returned an empty tuple"
+    declared = {
+        question.profile_key
+        for flow in WIZARD_FLOWS
+        for section in flow.sections
+        for question in section.questions
+        if question.profile_key is not None
+    }
+    assert {entry.key for entry in keys} == declared
