@@ -17,3 +17,19 @@ class WizardError(AeatError):
 
 class WizardValidationError(WizardError):
     """Raised when a widget-level validator rejects an answer."""
+
+
+class WizardScriptUnderflowError(WizardError):
+    """Raised when a ``ScriptedPrompter`` is asked for more answers than it carries."""
+
+
+class WizardScriptOverflowError(WizardError):
+    """Raised when a ``ScriptedPrompter`` is closed with unconsumed scripted answers."""
+
+
+class WizardMissingFlagError(WizardError):
+    """Raised when a ``--quiet`` invocation omits a required-and-not-conditional question."""
+
+
+class WizardCompileError(WizardError):
+    """Raised when ``compile_profile_keys`` rejects a malformed wizard catalogue."""
