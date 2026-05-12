@@ -25,6 +25,24 @@ broken architecture (`import-linter`) contracts.
 > include the new formula ids, and the orphan-detection allow-list is
 > empty. Workbook parity, drift-detection, and chain-behaviour gates
 > all pass for the wired chain.
+>
+> **Update 2026-05-12 (post-execution):** the follow-up
+> autonomic-scale stream that wires casillas 0529 and 0531 through
+> `op = "lookup_bracket_by_ccaa"` is now closed; see the
+> `[[2026-05-08-renta-cuota-integra-autonomic-scale-plan]]` related
+> entry. Across all six Modelo 100 ejercicios (2020-2025), the per-CCAA
+> autonomic bracket parameters for every ordinary common-regime CCAA
+> (Andalucía, Aragón, Asturias, Illes Balears, Canarias, Cantabria,
+> Castilla-La Mancha, Castilla y León, Cataluña, Comunitat Valenciana,
+> Extremadura, Galicia, La Rioja, Madrid, Murcia) are now consumed by
+> dispatch-table formulas at casillas 0529 and 0531, the
+> `renta-XXXX-profile-tax-residence-ccaa` binding routes against
+> `RentaCCAA` enum values, and the orphan-detection scanner walks
+> `dispatch_table` leaves. Coverage = 90 (CCAA × ejercicio)
+> combinations. Per-modelo `verification_expectations` blocks now
+> cover modelos 100, 200, 202, 303, 309, 322, 353, 369, and 390 — the
+> full set of modelos with calculated outputs (modelos 308, 349, 360
+> carry no formulas and therefore no `computed_casillas` to verify).
 
 This plan is the in-repo mirror of the auditor's brief. The
 auditor-side artefacts live outside this repo at
