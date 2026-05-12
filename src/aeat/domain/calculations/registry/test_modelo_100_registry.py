@@ -187,13 +187,9 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
     # belongs to economic-activities (income attribution semantics), not
     # to payments-retentions. Filter atribución bindings out of the
     # payments-retentions equivalence assertion.
-    payments_retention_bindings = {
-        b for b in filed_dependency_bindings if "atribucion" not in b
-    }
+    payments_retention_bindings = {b for b in filed_dependency_bindings if "atribucion" not in b}
     assert set(payments_retentions.bindings) == payments_retention_bindings
-    payments_retention_relations = {
-        r.id for r in snapshot.revision.relations if "atribucion" not in r.id
-    }
+    payments_retention_relations = {r.id for r in snapshot.revision.relations if "atribucion" not in r.id}
     assert set(payments_retentions.relations) == payments_retention_relations
     assert "renta-2025-modelo-100-estimacion-directa-es-normal" in economic_activities.bindings
     assert {"1479", "1553", "1577"}.issubset(economic_activities.casillas)
@@ -691,6 +687,32 @@ def test_construct_reader_rejects_unknown_construct_id() -> None:
 
     with pytest.raises(RegistrySnapshotError, match="has no construct"):
         resolve_construct(revision, "missing-construct")
+
+
+def test_construct_reader_rejects_unknown_member_id_at_runtime() -> None:
+    """`resolve_construct` carries a defence-in-depth runtime check: if a
+    construct's member tuple references an id absent from the matching
+    revision index, it raises `RegistrySnapshotError` mentioning the
+    construct id, the member kind, and the unknown id. The pre-flight
+    validator should normally catch this, but the runtime gate must hold
+    independently — this test pins the message format and the runtime
+    branch."""
+    modelos_by_id, _catalogues = _loaded_registry()
+    modelo = modelos_by_id["100"]
+    revision = modelo.revisions["2025"]
+    construct = next(item for item in revision.constructs if item.casillas)
+    mutated_construct = construct.model_copy(update={"casillas": (*construct.casillas, "0000-ghost")})
+    mutated_revision = revision.model_copy(
+        update={
+            "constructs": tuple(mutated_construct if item.id == construct.id else item for item in revision.constructs)
+        }
+    )
+
+    with pytest.raises(
+        RegistrySnapshotError,
+        match=rf"construct '{construct.id}' references unknown casilla '0000-ghost'",
+    ):
+        resolve_construct(mutated_revision, construct.id)
 
 
 def test_validator_rejects_construct_member_outside_revision() -> None:
