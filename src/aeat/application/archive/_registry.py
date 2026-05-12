@@ -27,6 +27,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.classification import SensitivityClass
+from ..profile._storage_namespaces import _PROFILE_NAMESPACE
 from ._errors import ArchiveAdapterMissingError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
@@ -149,8 +150,7 @@ def _extract_first_entry_field(entries_field: str, entry_field: str) -> Callable
         value = first.get(entry_field)
         if not isinstance(value, str) or not value:
             raise ArchiveAdapterMissingError(
-                f"archive payload's {entries_field!r}[0].{entry_field!r} is missing or empty; "
-                f"cannot derive object key",
+                f"archive payload's {entries_field!r}[0].{entry_field!r} is missing or empty; cannot derive object key",
             )
         return value
 
@@ -257,7 +257,7 @@ def _register_built_in_adapters() -> None:
     # digest and the restore writes it back through
     # ``save_with_raw_key``. Same-master-key round-trip only.
     for namespace, label, classification in (
-        ("aeat.application.setup.profile", "setup profile (autonomo identity)", SensitivityClass.IDENTITY),
+        (_PROFILE_NAMESPACE, "setup profile (autonomo identity)", SensitivityClass.IDENTITY),
         ("aeat.persistence.profile.assets", "profile assets ledger", SensitivityClass.FINANCIAL),
         (
             "aeat.persistence.profile.assets.amortization",
