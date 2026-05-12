@@ -150,6 +150,8 @@ app_app = typer.Typer(
     no_args_is_help=True,
 )
 
+from . import _topic as _topic_module  # noqa: E402
+
 if _app_import_error is None:
     assert _overview_module is not None
     assert _ledger_module is not None
@@ -164,6 +166,9 @@ if _app_import_error is None:
     app_app.add_typer(_modelo_module.app, name="modelo")
     app_app.add_typer(_registry_module.app, name="registry")
 
+app_app.add_typer(_archive.app, name="archive")
+app_app.add_typer(_topic_module.app, name="topic")
+
 
 # ---------------------------------------------------------------------
 # Wiring
@@ -171,11 +176,6 @@ if _app_import_error is None:
 
 
 app.add_typer(_config.app, name="config")
-app.add_typer(_archive.app, name="archive")
-from . import _topic as _topic_module  # noqa: E402
-
-app.add_typer(_topic_module.app, name="topic")
-app.add_typer(_topic_module.app, name="help")
 if _app_import_error is None:
     app.add_typer(app_app, name="app")
 else:

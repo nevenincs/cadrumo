@@ -660,7 +660,7 @@ cli:
     app_help: Konceptuális segítség megjelenítése a rezsimekről, modellekről és AEAT
       folyamatokról
     errors:
-      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat topic'' a regisztrált
+      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat app topic'' a regisztrált
         témák listájához.'
     opts:
       slug: Téma azonosító (kebab-case, pl. iva-regime)

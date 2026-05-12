@@ -95,11 +95,11 @@ def _seed_invoice() -> Invoice:
 
 
 def test_archive_export_writes_bundle_file(tmp_path: Path) -> None:
-    """`aeat archive export <path>` writes a parseable JSON bundle."""
+    """`aeat app archive export <path>` writes a parseable JSON bundle."""
     InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices([_seed_invoice()]))
     bundle_path = tmp_path / "out.json"
 
-    result = _RUNNER.invoke(app, ["archive", "export", str(bundle_path)])
+    result = _RUNNER.invoke(app, ["app", "archive", "export", str(bundle_path)])
     assert result.exit_code == 0, result.output
     assert bundle_path.exists()
 
@@ -109,12 +109,12 @@ def test_archive_export_writes_bundle_file(tmp_path: Path) -> None:
 
 
 def test_archive_import_round_trips_after_overwrite(tmp_path: Path) -> None:
-    """`aeat archive import <path> --conflict overwrite` restores prior state."""
+    """`aeat app archive import <path> --conflict overwrite` restores prior state."""
     original = InvoiceCatalogue.from_invoices([_seed_invoice()])
     InvoiceCatalogueRepository().save(original)
     bundle_path = tmp_path / "out.json"
 
-    export_result = _RUNNER.invoke(app, ["archive", "export", str(bundle_path)])
+    export_result = _RUNNER.invoke(app, ["app", "archive", "export", str(bundle_path)])
     assert export_result.exit_code == 0, export_result.output
 
     # Drop the live invoice; import should restore it.
@@ -125,7 +125,7 @@ def test_archive_import_round_trips_after_overwrite(tmp_path: Path) -> None:
 
     import_result = _RUNNER.invoke(
         app,
-        ["archive", "import", str(bundle_path), "--conflict", "overwrite"],
+        ["app", "archive", "import", str(bundle_path), "--conflict", "overwrite"],
     )
     assert import_result.exit_code == 0, import_result.output
     reloaded = InvoiceCatalogueRepository().load()
