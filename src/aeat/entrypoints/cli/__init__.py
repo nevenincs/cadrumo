@@ -188,6 +188,10 @@ else:
     app.add_typer(_import_failure_surface("setup", _setup_import_error), name="setup")
 app.add_typer(_config.app, name="config")
 app.add_typer(_archive.app, name="archive")
+from . import _topic as _topic_module  # noqa: E402
+
+app.add_typer(_topic_module.app, name="topic")
+app.add_typer(_topic_module.app, name="help")
 if _app_import_error is None:
     app.add_typer(app_app, name="app")
 else:

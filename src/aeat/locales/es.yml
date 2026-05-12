@@ -709,6 +709,12 @@ cli:
       validate_help: Validar si el perfil activo está completo
     status:
       help: Mostrar la preparación del entorno y la siguiente acción requerida
+  topic:
+    app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
+    errors:
+      not_found: "Tema no encontrado: %{slug}. Ejecuta 'aeat topic' para listar los temas registrados."
+    opts:
+      slug: Identificador del tema (kebab-case, ej. iva-regime)
   txs:
     app_help: Gestión de transacciones bancarias y conciliación
     build:
@@ -859,3 +865,43 @@ transactions:
     verified: Importación verificada con éxito
   test_diagnostics:
     message: Falta el mes 2026-03 en el archivo importado.
+topic:
+  authentication:
+    body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado digital (FNMT / equivalente). Configura un proveedor con 'aeat setup auth configure' y verifica con 'aeat setup auth status'.
+    title: Autenticación con la AEAT
+  calendar:
+    body: El calendario muestra las obligaciones de presentación (modelos y periodos) dentro de un rango. Necesita un perfil con régimen IVA declarado para no asumir valores por defecto.
+    title: Calendario de obligaciones
+  casilla:
+    body: Una casilla es un campo numerado de un modelo. Las casillas pueden ser manuales, calculadas (computed) o derivadas de bindings. 'aeat app modelo casillas <modelo>' las lista.
+    title: Casillas
+  formats:
+    body: La CLI emite salida en texto, JSON, table o csv según '--format'. JSON es el formato recomendado para automatización; text para inspección humana.
+    title: Formatos de salida
+  irpf-regime:
+    body: Régimen IRPF de un autónomo. Estimación directa (normal o simplificada) o estimación objetiva (módulos). Determina qué modelos de pago fraccionado aplican (130 vs 131).
+    title: Régimen IRPF
+  iva-regime:
+    body: Régimen IVA aplicable al contribuyente. General, simplificado, recargo de equivalencia, exento, REAGP o REBU. Determina el modelo 303 trimestral y el resumen anual 390.
+    title: Régimen IVA
+  modelos:
+    body: Catálogo de modelos tributarios AEAT (303, 130, 100, 347, 349, 111, 115, 184, etc.). Cada modelo tiene su propio calendario, casillas y reglas de aplicabilidad. 'aeat app modelo list' enumera los disponibles.
+    title: Modelos tributarios
+  pago-fraccionado:
+    body: Pago a cuenta del IRPF que realiza un autónomo cada trimestre. El modelo 130 aplica a estimación directa; el 131 a estimación objetiva. El cálculo usa los datos del trimestre y, para algunos casos, los del ejercicio anterior.
+    title: Pago fraccionado IRPF
+  profile:
+    body: El perfil local contiene tu identificación fiscal (NIF), actividad principal, régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario). Edítalo con 'aeat setup profile set <clave> <valor>'.
+    title: Perfil del contribuyente
+  providers:
+    body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos. 'aeat setup auth providers' lista los proveedores con sus prerrequisitos.
+    title: Proveedores de autenticación
+  recargo-extemporaneo:
+    body: La presentación fuera de plazo sin requerimiento previo de la AEAT acumula un recargo del 1% por mes (hasta el 12%) durante el primer año y 15% más intereses tras 12 meses. Base legal Ley 58/2003 art-27.
+    title: Recargo por presentación extemporánea
+  regimens:
+    body: Conjunto de regímenes fiscales aplicables a un autónomo. Las dos dimensiones principales son IVA (general, simplificado, recargo de equivalencia, exento) e IRPF (directa, objetiva).
+    title: Regímenes fiscales
+  sii-verifactu:
+    body: Sistemas de remisión electrónica de facturas a la AEAT. SII (Suministro Inmediato de Información) aplica obligatoriamente a grandes empresas; Verifactu (RD 1007/2023) es un requisito gradual para sistemas de facturación.
+    title: SII y Verifactu
