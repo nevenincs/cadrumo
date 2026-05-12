@@ -93,18 +93,6 @@ def _root(
     state["format"] = format_.strip().lower() or _FORMAT_TEXT
 
 
-@app.command("version", help=tr("cli.root.version_command_help"))
-def version_cmd(ctx: typer.Context) -> None:
-    """Show package and registry version information."""
-
-    report = build_cli_version_report()
-    state = ctx.ensure_object(dict)
-    if state.get("format") == "json":
-        typer.echo(report.model_dump_json())
-        return
-    typer.echo(render_cli_version_text(report))
-
-
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
     failed_app = typer.Typer(
         name=name,

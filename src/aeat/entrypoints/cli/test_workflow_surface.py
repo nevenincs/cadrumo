@@ -190,11 +190,11 @@ def test_startup_import_failure_points_to_config_doctor_without_traceback() -> N
     assert "Traceback" not in result.output
 
 
-def test_version_surfaces_render_backend_registry_summary() -> None:
+def test_version_flag_renders_backend_registry_summary() -> None:
     report = build_cli_version_report()
     assert report.registry.available
 
-    for command in (["--version"], ["-V"], ["version"]):
+    for command in (["--version"], ["-V"]):
         result = _invoke(command)
 
         assert result.exit_code == 0, result.output
@@ -202,19 +202,6 @@ def test_version_surfaces_render_backend_registry_summary() -> None:
         assert f"{report.registry.modelo_count} modelos" in result.output
         assert f"{report.registry.casilla_count} casillas" in result.output
         assert f"{report.registry.formula_count} formulas" in result.output
-
-
-def test_version_command_can_emit_typed_json_report() -> None:
-    expected = build_cli_version_report()
-
-    result = _invoke(["--format", "json", "version"])
-
-    assert result.exit_code == 0, result.output
-    payload = json.loads(_json_output(result))
-    assert payload["package_name"] == "aeat"
-    assert payload["package_version"] == expected.package_version
-    assert payload["registry"]["available"] is True
-    assert payload["registry"]["modelo_count"] == expected.registry.modelo_count
 
 
 def test_app_surface_uses_singular_user_domains() -> None:
