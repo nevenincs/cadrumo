@@ -1,4 +1,4 @@
-"""CLI smoke tests for ``aeat archive``.
+"""CLI smoke tests for ``aeat app archive``.
 
 Drives the export and import verbs end-to-end through Typer to confirm
 the bundle file written by ``export`` round-trips through ``import``.
