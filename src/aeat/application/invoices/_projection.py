@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 from decimal import Decimal, InvalidOperation
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -40,13 +39,25 @@ class InvoiceMatchProjection(BaseModel):
     unmatched: tuple[dict[str, str], ...]
 
 
-def _coerce_invoice_review(raw: Any) -> InvoiceReviewRecord | None:
-    """Coerce a raw dict from WorkflowState.invoice_reviews to InvoiceReviewRecord."""
+def _coerce_invoice_review(raw: object) -> InvoiceReviewRecord | None:
+    """Coerce a raw value from WorkflowState.invoice_reviews to InvoiceReviewRecord.
+
+    WorkflowState.invoice_reviews is typed `dict[str, Any]` to accept
+    both already-validated InvoiceReviewRecord instances and raw dicts
+    that need re-validation (e.g. after JSON deserialisation). This
+    helper dispatches on the runtime shape and raises explicitly on
+    anything else so the unsupported value does not silently slip
+    through the projection pipeline.
+    """
     if raw is None:
         return None
+    if isinstance(raw, InvoiceReviewRecord):
+        return raw
     if isinstance(raw, dict):
         return InvoiceReviewRecord.model_validate(raw)
-    return raw  # type: ignore[return-value]
+    raise TypeError(
+        f"WorkflowState.invoice_reviews value must be InvoiceReviewRecord or dict; got {type(raw).__name__}"
+    )
 
 
 def project_invoice_reviews(
