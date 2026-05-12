@@ -77,7 +77,8 @@ def test_capture_baseline_employee_replay_payload() -> None:
     assert observed, "Renta WEB Open returned no observed values"
 
     _REPLAY_DIR.mkdir(parents=True, exist_ok=True)
-    payload_path = _REPLAY_DIR / "modelo-100-2025-employee-default-minimo.json"
+    scenario_id = "modelo-100-2025-employee-default-minimo"
+    payload_path = _REPLAY_DIR / f"{scenario_id}.json"
     # Dual-key the payload: one block keyed by AEAT-readable labels (used by
     # the oracle's `_compare_expected_field`) and one block keyed by registry
     # casilla numbers (used by the per-formula coverage gate in
@@ -109,10 +110,13 @@ def test_capture_baseline_employee_replay_payload() -> None:
 
 
 # Profile-variant scenarios that vary the synthetic identification
-# (autonomous_community, civil_status, sex) without touching casilla
-# inputs. The simulator recomputes mínimos personal y familiar based on
-# the profile; each variant lands a distinct replay payload anchoring
-# the corresponding modelo-100-2025-* chain.
+# (autonomous_community) without touching casilla inputs. The simulator
+# recomputes mínimos personal y familiar (parte autonómica) based on
+# each CCAA's autonomic schedule; each variant lands a distinct replay
+# payload anchoring the corresponding modelo-100-2025-* chain.
+# CASADO/A and other status variants need spouse profile data the
+# default synthetic profile doesn't provide; they're omitted until the
+# profile schema gains spouse fields.
 _PROFILE_VARIANT_CAPTURES: tuple[tuple[str, dict[str, str]], ...] = (
     (
         "modelo-100-2025-employee-default-minimo-madrid",
@@ -127,8 +131,8 @@ _PROFILE_VARIANT_CAPTURES: tuple[tuple[str, dict[str, str]], ...] = (
         {"autonomous_community": "GALICIA"},
     ),
     (
-        "modelo-100-2025-employee-default-minimo-casado",
-        {"civil_status": "CASADO/A"},
+        "modelo-100-2025-employee-default-minimo-canarias",
+        {"autonomous_community": "CANARIAS"},
     ),
 )
 
