@@ -515,18 +515,18 @@ Scope: extend the deadline engine's calendar API so under-specified profiles
 emit typed warnings instead of silently omitting modelos. HIGH severity per
 the audit; gated by W2's enrolment-key extension, which has shipped.
 
-- [ ] Step W9.A.1: read `src/aeat/application/overview/_calendar.py` (or wherever `build_overview_calendar` lives at HEAD) and identify the call shape that returns `OverviewCalendar`. Record the existing return type.
-- [ ] Step W9.A.2: read `src/aeat/domain/deadlines/_models.py` and identify which `AutonomoProfile` fields gate which modelo's applicability rule. Record per-modelo gating fields (e.g. `iva_regime` gates 303/390; `does_intracomunitario` gates 349; `pays_professionals_with_retencion` gates 111).
-- [ ] Step W9.A.3: define `CalendarWarning` Pydantic model with `code: str`, `message: str` (translation key), `fix_command: str`, `affected_modelos: tuple[str, ...]`. Strict, frozen, extra=forbid.
-- [ ] Step W9.A.4: define `CalendarCompleteness` Pydantic model with `computable_modelos: tuple[str, ...]`, `uncomputable_modelos: tuple[str, ...]`, `reasons: dict[str, str]`.
-- [ ] Step W9.A.5: extend `OverviewCalendar` (or wrap it in a `CalendarPayload`) with `warnings: tuple[CalendarWarning, ...]` and `completeness: CalendarCompleteness` fields.
-- [ ] Step W9.A.6: in the deadline engine's modelo-applicability resolver, when a gating field is unset emit a `CalendarWarning(code="profile_field_unset", ...)` rather than silently dropping the modelo. Modelo still appears in `uncomputable_modelos`.
-- [ ] Step W9.A.7: in `_overview.py` `overview_status --calendar` rendering, append warnings as `warning\t<code>\t<message>\tfix=<command>` lines and surface `Computable: M / Uncomputable: N` after the entries table.
-- [ ] Step W9.A.8: add `--allow-incomplete` flag to `overview status --calendar`. Without the flag, refuse to print partial calendars when `len(uncomputable_modelos) > 0` (typed CLI usage error). With the flag, print the partial calendar plus warnings.
-- [ ] Step W9.A.9: register i18n keys `cli.overview.warning.profile_field_unset` and `cli.overview.calendar_refused_incomplete` in ca/en/es/hu.
-- [ ] Step W9.A.10: write `tests/live/test_calendar_warnings_live.py::test_iva_regime_unset_emits_warning_and_fix` and the parallel test for `does_intracomunitario`. External authority: AEAT calendar PDF for an autónomo régimen general (modelo 303 must be present when iva.regime=general; absent and warned when iva.regime is unset).
-- [ ] Step W9.A.11: write `src/aeat/application/overview/test_calendar_completeness.py::test_completeness_lists_uncomputable_with_reason` against an in-process build of the engine.
-- [ ] Step W9.A.12: confirm no transient metadata in source. Commit `feat(overview): emit calendar warnings and completeness for under-specified profiles (UX-008)`.
+- [x] Step W9.A.1: read `src/aeat/application/overview/_calendar.py` (or wherever `build_overview_calendar` lives at HEAD) and identify the call shape that returns `OverviewCalendar`. Record the existing return type.
+- [x] Step W9.A.2: read `src/aeat/domain/deadlines/_models.py` and identify which `AutonomoProfile` fields gate which modelo's applicability rule. Record per-modelo gating fields (e.g. `iva_regime` gates 303/390; `does_intracomunitario` gates 349; `pays_professionals_with_retencion` gates 111).
+- [x] Step W9.A.3: define `CalendarWarning` Pydantic model with `code: str`, `message: str` (translation key), `fix_command: str`, `affected_modelos: tuple[str, ...]`. Strict, frozen, extra=forbid.
+- [x] Step W9.A.4: define `CalendarCompleteness` Pydantic model with `computable_modelos: tuple[str, ...]`, `uncomputable_modelos: tuple[str, ...]`, `reasons: dict[str, str]`.
+- [x] Step W9.A.5: extend `OverviewCalendar` (or wrap it in a `CalendarPayload`) with `warnings: tuple[CalendarWarning, ...]` and `completeness: CalendarCompleteness` fields.
+- [x] Step W9.A.6: in the deadline engine's modelo-applicability resolver, when a gating field is unset emit a `CalendarWarning(code="profile_field_unset", ...)` rather than silently dropping the modelo. Modelo still appears in `uncomputable_modelos`.
+- [x] Step W9.A.7: in `_overview.py` `overview_status --calendar` rendering, append warnings as `warning\t<code>\t<message>\tfix=<command>` lines and surface `Computable: M / Uncomputable: N` after the entries table.
+- [x] Step W9.A.8: add `--allow-incomplete` flag to `overview status --calendar`. Without the flag, refuse to print partial calendars when `len(uncomputable_modelos) > 0` (typed CLI usage error). With the flag, print the partial calendar plus warnings.
+- [x] Step W9.A.9: register i18n keys `cli.overview.warning.profile_field_unset` and `cli.overview.calendar_refused_incomplete` in ca/en/es/hu.
+- [x] Step W9.A.10: write `tests/live/test_calendar_warnings_live.py::test_iva_regime_unset_emits_warning_and_fix` and the parallel test for `does_intracomunitario`. External authority: AEAT calendar PDF for an autónomo régimen general (modelo 303 must be present when iva.regime=general; absent and warned when iva.regime is unset).
+- [x] Step W9.A.11: write `src/aeat/application/overview/test_calendar_completeness.py::test_completeness_lists_uncomputable_with_reason` against an in-process build of the engine.
+- [x] Step W9.A.12: confirm no transient metadata in source. Commit `feat(overview): emit calendar warnings and completeness for under-specified profiles (UX-008)`.
 
 ### W10 UX-010 overdue recovery brackets
 
@@ -534,15 +534,15 @@ Scope: extend each calendar entry with typed `Recovery` data (still-filable,
 recargo band, legal ref, runnable next command). MEDIUM severity. Sourced from
 Art. 27 LGT bracket table, which itself must land as registry data.
 
-- [ ] Step W10.A.1: read `corpus/normatives/...` to confirm whether Art. 27 LGT (Ley General Tributaria) is present. If absent, capture the article text (recargo bands at 1%/3%/5%/15%, plus interest after 12 months) into `corpus/normatives/ley-58-2003.json`.
-- [ ] Step W10.A.2: define `RecargoBand` Pydantic model with `id: str`, `min_days_late: int`, `max_days_late: int | None`, `surcharge_pct: Decimal`, `interest_applies: bool`, `legal_ref: str`. Strict, frozen.
-- [ ] Step W10.A.3: load the bracket table from `registry/aeat/legal/ley-58-2003-recargo-bands.toml`. The TOML lives next to existing legal registry data; do NOT inline literals in Python.
-- [ ] Step W10.A.4: define `Recovery` Pydantic model with `still_filable: bool`, `recargo_band: RecargoBand`, `legal_ref: str`, `next_command: str`.
-- [ ] Step W10.A.5: extend `FilingObligation` with `recovery: Recovery | None`. Populate when `status` is `OVERDUE`; leave `None` otherwise.
-- [ ] Step W10.A.6: in the deadline engine's overdue path, compute `days_late = today - closes_on` and resolve the bracket from the TOML.
-- [ ] Step W10.A.7: in `_overview.py` calendar rendering, append `recovery\t<band_id>\t<surcharge_pct>%\t<next_command>` lines under each OVERDUE entry.
-- [ ] Step W10.A.8: write `src/aeat/domain/deadlines/test_recovery.py` with one test per band: `test_overdue_5_days_returns_1_pct_band`, `test_overdue_60_days_returns_3_pct_band`, `test_overdue_5_months_returns_5_pct_band`, `test_overdue_13_months_adds_interest`. External authority: Art. 27 LGT text in the corpus file.
-- [ ] Step W10.A.9: commit `feat(deadlines): surface overdue recargo bands and runnable recovery command (UX-010)`.
+- [x] Step W10.A.1: read `corpus/normatives/...` to confirm whether Art. 27 LGT (Ley General Tributaria) is present. If absent, capture the article text (recargo bands at 1%/3%/5%/15%, plus interest after 12 months) into `corpus/normatives/ley-58-2003.json`.
+- [x] Step W10.A.2: define `RecargoBand` Pydantic model with `id: str`, `min_days_late: int`, `max_days_late: int | None`, `surcharge_pct: Decimal`, `interest_applies: bool`, `legal_ref: str`. Strict, frozen.
+- [x] Step W10.A.3: load the bracket table from `registry/aeat/legal/ley-58-2003-recargo-bands.toml`. The TOML lives next to existing legal registry data; do NOT inline literals in Python.
+- [x] Step W10.A.4: define `Recovery` Pydantic model with `still_filable: bool`, `recargo_band: RecargoBand`, `legal_ref: str`, `next_command: str`.
+- [x] Step W10.A.5: extend `FilingObligation` with `recovery: Recovery | None`. Populate when `status` is `OVERDUE`; leave `None` otherwise.
+- [x] Step W10.A.6: in the deadline engine's overdue path, compute `days_late = today - closes_on` and resolve the bracket from the TOML.
+- [x] Step W10.A.7: in `_overview.py` calendar rendering, append `recovery\t<band_id>\t<surcharge_pct>%\t<next_command>` lines under each OVERDUE entry.
+- [x] Step W10.A.8: write `src/aeat/domain/deadlines/test_recovery.py` with one test per band: `test_overdue_5_days_returns_1_pct_band`, `test_overdue_60_days_returns_3_pct_band`, `test_overdue_5_months_returns_5_pct_band`, `test_overdue_13_months_adds_interest`. External authority: Art. 27 LGT text in the corpus file.
+- [x] Step W10.A.9: commit `feat(deadlines): surface overdue recargo bands and runnable recovery command (UX-010)`.
 
 ### W11 UX-011 setup reset destructive subcommand
 
@@ -550,30 +550,30 @@ Scope: add `aeat setup reset --profile / --auth / --data / --all` with explicit
 `--yes` confirmation, audit-log entries per scope. LOW severity but the only
 remaining UX-011 item.
 
-- [ ] Step W11.A.1: read `src/aeat/application/setup/...` to find the existing setup orchestration module (or create `src/aeat/application/setup/_reset.py`).
-- [ ] Step W11.A.2: define `SetupResetScope` StrEnum with values `PROFILE`, `AUTH`, `DATA`, `ALL`.
-- [ ] Step W11.A.3: define `SetupResetReport` Pydantic model with `scope: SetupResetScope`, `removed_profile_names: tuple[str, ...]`, `removed_auth_session: bool`, `quarantined_namespace_count: int`. Strict, frozen.
-- [ ] Step W11.A.4: implement `reset_setup(scope: SetupResetScope, *, confirmed: bool) -> SetupResetReport`. Without `confirmed=True`, raises `SetupResetUnconfirmedError`. With `confirmed=True`, removes the requested scope.
-- [ ] Step W11.A.5: each scope writes an audit-log line through the existing `aeat.core.audit` channel (one entry per scope cleared, with timestamp + actor + before/after counts).
-- [ ] Step W11.A.6: add `aeat setup reset` subcommand in `src/aeat/entrypoints/cli/_setup.py`. Accepts `--profile`, `--auth`, `--data`, `--all`, `--yes`. Without `--yes`, exits 2 with the structured i18n message; with `--yes`, calls `reset_setup`.
-- [ ] Step W11.A.7: register i18n keys `cli.setup.reset.help`, `cli.setup.reset.scope_help`, `cli.setup.reset.requires_yes` in ca/en/es/hu.
-- [ ] Step W11.A.8: write `src/aeat/application/setup/test_reset.py::test_reset_profile_only_clears_active_profile_record`, `test_reset_auth_only_clears_session`, `test_reset_data_calls_quarantine_secure_objects`, `test_reset_all_combines_all_scopes`. Use temp DB; assert the secure-objects table state matches expectations after each scope.
-- [ ] Step W11.A.9: write `src/aeat/entrypoints/cli/test_user_cli_surface.py::test_setup_reset_requires_yes_flag` and a parametrised `test_setup_reset_scope_clears_only_scope`.
-- [ ] Step W11.A.10: commit `feat(setup): add scoped reset subcommand with --yes confirmation and audit log (UX-011)`.
+- [x] Step W11.A.1: read `src/aeat/application/setup/...` to find the existing setup orchestration module (or create `src/aeat/application/setup/_reset.py`).
+- [x] Step W11.A.2: define `SetupResetScope` StrEnum with values `PROFILE`, `AUTH`, `DATA`, `ALL`.
+- [x] Step W11.A.3: define `SetupResetReport` Pydantic model with `scope: SetupResetScope`, `removed_profile_names: tuple[str, ...]`, `removed_auth_session: bool`, `quarantined_namespace_count: int`. Strict, frozen.
+- [x] Step W11.A.4: implement `reset_setup(scope: SetupResetScope, *, confirmed: bool) -> SetupResetReport`. Without `confirmed=True`, raises `SetupResetUnconfirmedError`. With `confirmed=True`, removes the requested scope.
+- [x] Step W11.A.5: each scope writes an audit-log line through the existing `aeat.core.audit` channel (one entry per scope cleared, with timestamp + actor + before/after counts).
+- [x] Step W11.A.6: add `aeat setup reset` subcommand in `src/aeat/entrypoints/cli/_setup.py`. Accepts `--profile`, `--auth`, `--data`, `--all`, `--yes`. Without `--yes`, exits 2 with the structured i18n message; with `--yes`, calls `reset_setup`.
+- [x] Step W11.A.7: register i18n keys `cli.setup.reset.help`, `cli.setup.reset.scope_help`, `cli.setup.reset.requires_yes` in ca/en/es/hu.
+- [x] Step W11.A.8: write `src/aeat/application/setup/test_reset.py::test_reset_profile_only_clears_active_profile_record`, `test_reset_auth_only_clears_session`, `test_reset_data_calls_quarantine_secure_objects`, `test_reset_all_combines_all_scopes`. Use temp DB; assert the secure-objects table state matches expectations after each scope.
+- [x] Step W11.A.9: write `src/aeat/entrypoints/cli/test_user_cli_surface.py::test_setup_reset_requires_yes_flag` and a parametrised `test_setup_reset_scope_clears_only_scope`.
+- [x] Step W11.A.10: commit `feat(setup): add scoped reset subcommand with --yes confirmation and audit log (UX-011)`.
 
 ### W12 UX-015 topic / conceptual help system
 
 Scope: HIGH severity per audit. Add `aeat topic [<slug>]` and `aeat help <slug>`
 with 13+ topics across 4 locales. Substantial documentation pipeline workstream.
 
-- [ ] Step W12.A.1: define `Topic` Pydantic model in `src/aeat/application/topics/_models.py` with `slug: str`, `title_key: str`, `body_key: str`, `see_also: tuple[str, ...]`, `legal_refs: tuple[str, ...]`. Strict, frozen.
-- [ ] Step W12.A.2: define `TopicCatalogue` model with `topics: tuple[Topic, ...]` and `topic(slug) -> Topic` lookup that raises `TopicNotFoundError`.
-- [ ] Step W12.A.3: load topics from `registry/aeat/topics/<slug>.toml`. Each TOML carries the slug, the see_also tuple, and the legal_refs. Body and title text live in the i18n catalogue under `topic.<slug>.title` and `topic.<slug>.body`.
-- [ ] Step W12.A.4: scaffold the 13 audit-named topics: `iva-regime`, `irpf-regime`, `modelos`, `casilla`, `pago-fraccionado`, `recargo-extemporaneo`, `sii-verifactu`, `authentication`, `profile`, `calendar`, `formats`, `providers`, `regimens`. Each topic gets one TOML file plus four locale entries.
-- [ ] Step W12.A.5: add `aeat topic` (list) and `aeat topic <slug>` and `aeat help <slug>` (alias) verbs in `src/aeat/entrypoints/cli/_topic.py`. Each delegates to `TopicCatalogue`.
-- [ ] Step W12.A.6: write `src/aeat/application/topics/test_catalogue.py::test_every_topic_renders_in_every_locale` -- iterates the 13 slugs against all four locales, asserts every `topic.<slug>.title` and `topic.<slug>.body` resolves to non-empty text.
-- [ ] Step W12.A.7: write `src/aeat/entrypoints/cli/test_user_cli_surface.py::test_aeat_topic_lists_every_registered_topic` and `test_aeat_help_iva_regime_renders_legal_refs`.
-- [ ] Step W12.A.8: commit per topic OR commit the catalogue scaffolding plus the iva-regime topic first, then per-topic follow-ups. Use `feat(topics): scaffold topic catalogue and aeat topic / aeat help verbs (UX-015)` for the first commit.
+- [x] Step W12.A.1: define `Topic` Pydantic model in `src/aeat/application/topics/_models.py` with `slug: str`, `title_key: str`, `body_key: str`, `see_also: tuple[str, ...]`, `legal_refs: tuple[str, ...]`. Strict, frozen.
+- [x] Step W12.A.2: define `TopicCatalogue` model with `topics: tuple[Topic, ...]` and `topic(slug) -> Topic` lookup that raises `TopicNotFoundError`.
+- [x] Step W12.A.3: load topics from `registry/aeat/topics/<slug>.toml`. Each TOML carries the slug, the see_also tuple, and the legal_refs. Body and title text live in the i18n catalogue under `topic.<slug>.title` and `topic.<slug>.body`.
+- [x] Step W12.A.4: scaffold the 13 audit-named topics: `iva-regime`, `irpf-regime`, `modelos`, `casilla`, `pago-fraccionado`, `recargo-extemporaneo`, `sii-verifactu`, `authentication`, `profile`, `calendar`, `formats`, `providers`, `regimens`. Each topic gets one TOML file plus four locale entries.
+- [x] Step W12.A.5: add `aeat topic` (list) and `aeat topic <slug>` and `aeat help <slug>` (alias) verbs in `src/aeat/entrypoints/cli/_topic.py`. Each delegates to `TopicCatalogue`.
+- [x] Step W12.A.6: write `src/aeat/application/topics/test_catalogue.py::test_every_topic_renders_in_every_locale` -- iterates the 13 slugs against all four locales, asserts every `topic.<slug>.title` and `topic.<slug>.body` resolves to non-empty text.
+- [x] Step W12.A.7: write `src/aeat/entrypoints/cli/test_user_cli_surface.py::test_aeat_topic_lists_every_registered_topic` and `test_aeat_help_iva_regime_renders_legal_refs`.
+- [x] Step W12.A.8: commit per topic OR commit the catalogue scaffolding plus the iva-regime topic first, then per-topic follow-ups. Use `feat(topics): scaffold topic catalogue and aeat topic / aeat help verbs (UX-015)` for the first commit.
 
 ### W13 UX-016 wider config family
 
@@ -582,28 +582,28 @@ optionally `aeat config configurations *`. Architectural decision needed
 between aliasing `setup profile` under `config profile` versus parallel
 surfaces.
 
-- [ ] Step W13.A.1: write a short ADR in `.vault/adr/` titled `aeat-cli-config-vs-setup-namespace-adr`. Decide: alias-vs-parallel. Capture the trade-off (alias = single source of truth, parallel = preserve existing workflows). The ADR is a prerequisite.
-- [ ] Step W13.A.2: define `ConfigKey` -> handler mapping in `src/aeat/application/config/_registry.py`. Initially: `profile.<key>` routes to `aeat.application.profile`; `auth.<key>` routes to `aeat.application.auth`; `format`, `language`, `verbosity` route to settings.
-- [ ] Step W13.A.3: implement `aeat config list` (renders all settable keys with current values via `<unset>` semantics from W4), `aeat config get KEY`, `aeat config set KEY VALUE`, `aeat config unset KEY` in `src/aeat/entrypoints/cli/_config.py`.
-- [ ] Step W13.A.4: write tests asserting profile keys round-trip through both `setup profile set` AND `config set`, surfacing the same `state.auth.authenticated_at` / profile values.
-- [ ] Step W13.A.5: defer `aeat config configurations list|create|activate|describe|delete` -- requires explicit demand from a use case in the issue tracker.
-- [ ] Step W13.A.6: commit `feat(config): add config get/set/unset/list family routing through profile/auth/settings backends (UX-016)`.
+- [x] Step W13.A.1: write a short ADR in `.vault/adr/` titled `aeat-cli-config-vs-setup-namespace-adr`. Decide: alias-vs-parallel. Capture the trade-off (alias = single source of truth, parallel = preserve existing workflows). The ADR is a prerequisite.
+- [x] Step W13.A.2: define `ConfigKey` -> handler mapping in `src/aeat/application/config/_registry.py`. Initially: `profile.<key>` routes to `aeat.application.profile`; `auth.<key>` routes to `aeat.application.auth`; `format`, `language`, `verbosity` route to settings.
+- [x] Step W13.A.3: implement `aeat config list` (renders all settable keys with current values via `<unset>` semantics from W4), `aeat config get KEY`, `aeat config set KEY VALUE`, `aeat config unset KEY` in `src/aeat/entrypoints/cli/_config.py`.
+- [x] Step W13.A.4: write tests asserting profile keys round-trip through both `setup profile set` AND `config set`, surfacing the same `state.auth.authenticated_at` / profile values.
+- [x] Step W13.A.5: defer `aeat config configurations list|create|activate|describe|delete` -- requires explicit demand from a use case in the issue tracker.
+- [x] Step W13.A.6: commit `feat(config): add config get/set/unset/list family routing through profile/auth/settings backends (UX-016)`.
 
 ### W14 UX-003 root init wizard + setup reorder
 
 Scope: HIGH severity. Interactive `aeat init` at root with prompt-flow, plus
 `--quiet` for non-interactive operation and `--resume` for half-finished setups.
 
-- [ ] Step W14.A.1: define `SetupWizardState` Pydantic model in `src/aeat/application/setup/_wizard.py` with one field per question: `name`, `tax_id`, `activity`, `iva_regime`, `does_intracomunitario`, `auth_provider`. Plus `completed_steps: tuple[str, ...]` for resume tracking.
-- [ ] Step W14.A.2: define `SetupWizardStep` interface with `prompt() -> str`, `parse(answer: str) -> object`, `validate(value) -> None`. Each question is a step instance.
-- [ ] Step W14.A.3: implement `run_wizard(callback: PromptCallback, state: SetupWizardState | None) -> SetupWizardState`. The callback abstracts stdin/stdout so tests can drive the wizard programmatically.
-- [ ] Step W14.A.4: persist `SetupWizardState` to a non-secure JSON file under `~/.config/aeat/wizard-state.json` (or the user_cli store under namespace `aeat.application.setup.wizard_state`) on every step. Resume reads the persisted state.
-- [ ] Step W14.A.5: add `aeat init` at the root in `src/aeat/entrypoints/cli/__init__.py`. Three modes: interactive (default), `--quiet --name X --tax-id Y --activity Z --iva-regime W` (all answers via flags), `--resume` (pick up persisted state).
-- [ ] Step W14.A.6: register i18n keys for every wizard prompt in ca/en/es/hu under `cli.init.wizard.*`.
-- [ ] Step W14.A.7: write `src/aeat/application/setup/test_wizard.py::test_wizard_with_callback_runs_to_completion` driving the wizard programmatically. Assert the resulting `SetupWizardState` matches the supplied answers.
-- [ ] Step W14.A.8: write `src/aeat/entrypoints/cli/test_user_cli_surface.py::test_aeat_init_quiet_mode_writes_profile_engine_can_read` -- runs `aeat init --quiet --name kent --tax-id 00000000T --activity Servicios --iva-regime general`, then asserts `_profile_to_autonomo` returns `IVARegime.GENERAL`.
-- [ ] Step W14.A.9: confirm `aeat setup` subcommand ordering already passes `test_setup_help_lists_commands_in_workflow_order` -- no extra reorder work needed.
-- [ ] Step W14.A.10: commit `feat(setup): root aeat init wizard with --quiet and --resume modes (UX-003)`.
+- [x] Step W14.A.1: define `SetupWizardState` Pydantic model in `src/aeat/application/setup/_wizard.py` with one field per question: `name`, `tax_id`, `activity`, `iva_regime`, `does_intracomunitario`, `auth_provider`. Plus `completed_steps: tuple[str, ...]` for resume tracking.
+- [x] Step W14.A.2: define `SetupWizardStep` interface with `prompt() -> str`, `parse(answer: str) -> object`, `validate(value) -> None`. Each question is a step instance.
+- [x] Step W14.A.3: implement `run_wizard(callback: PromptCallback, state: SetupWizardState | None) -> SetupWizardState`. The callback abstracts stdin/stdout so tests can drive the wizard programmatically.
+- [x] Step W14.A.4: persist `SetupWizardState` to a non-secure JSON file under `~/.config/aeat/wizard-state.json` (or the user_cli store under namespace `aeat.application.setup.wizard_state`) on every step. Resume reads the persisted state.
+- [x] Step W14.A.5: add `aeat init` at the root in `src/aeat/entrypoints/cli/__init__.py`. Three modes: interactive (default), `--quiet --name X --tax-id Y --activity Z --iva-regime W` (all answers via flags), `--resume` (pick up persisted state).
+- [x] Step W14.A.6: register i18n keys for every wizard prompt in ca/en/es/hu under `cli.init.wizard.*`.
+- [x] Step W14.A.7: write `src/aeat/application/setup/test_wizard.py::test_wizard_with_callback_runs_to_completion` driving the wizard programmatically. Assert the resulting `SetupWizardState` matches the supplied answers.
+- [x] Step W14.A.8: write `src/aeat/entrypoints/cli/test_user_cli_surface.py::test_aeat_init_quiet_mode_writes_profile_engine_can_read` -- runs `aeat init --quiet --name kent --tax-id 00000000T --activity Servicios --iva-regime general`, then asserts `_profile_to_autonomo` returns `IVARegime.GENERAL`.
+- [x] Step W14.A.9: confirm `aeat setup` subcommand ordering already passes `test_setup_help_lists_commands_in_workflow_order` -- no extra reorder work needed.
+- [x] Step W14.A.10: commit `feat(setup): root aeat init wizard with --quiet and --resume modes (UX-003)`.
 
 ## 15. New audit findings inbox
 

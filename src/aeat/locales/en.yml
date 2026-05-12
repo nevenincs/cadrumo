@@ -689,6 +689,12 @@ cli:
       validate_help: Validate whether the active profile is complete
     status:
       help: Show setup readiness and the next required action
+  topic:
+    app_help: Show conceptual help about regimes, modelos, and AEAT processes
+    errors:
+      not_found: "Topic not found: %{slug}. Run 'aeat topic' to list registered topics."
+    opts:
+      slug: Topic identifier (kebab-case, e.g. iva-regime)
   txs:
     app_help: Bank transactions and reconciliation management
     build:
@@ -836,3 +842,43 @@ transactions:
     verified: Import verified successfully
   test_diagnostics:
     message: Month 2026-03 is missing from the imported file.
+topic:
+  authentication:
+    body: 'AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital certificate (FNMT / equivalent). Configure a provider with ''aeat setup auth configure'' and verify with ''aeat setup auth status''.'
+    title: 'Authentication with AEAT'
+  calendar:
+    body: 'The calendar shows filing obligations (modelos and periods) within a range. Requires a profile with an IVA regime declared so the engine does not default silently.'
+    title: 'Obligations calendar'
+  casilla:
+    body: 'A casilla is a numbered field in a modelo. Casillas can be manual, computed, or derived from bindings. ''aeat app modelo casillas <modelo>'' lists them.'
+    title: 'Casillas'
+  formats:
+    body: 'The CLI emits output in text, JSON, table, or csv based on ''--format''. JSON is recommended for automation; text for human inspection.'
+    title: 'Output formats'
+  irpf-regime:
+    body: 'An autonomo''s IRPF regime. Estimación directa (normal or simplified) or estimación objetiva (módulos). Determines which pago-fraccionado modelos apply (130 vs 131).'
+    title: 'IRPF regime'
+  iva-regime:
+    body: 'VAT regime applicable to the taxpayer. General, simplified, recargo de equivalencia, exempt, REAGP, or REBU. Determines the quarterly modelo 303 and the annual summary 390.'
+    title: 'IVA regime'
+  modelos:
+    body: 'Catalogue of AEAT tax forms (303, 130, 100, 347, 349, 111, 115, 184, etc.). Each has its own calendar, casillas, and applicability rules. ''aeat app modelo list'' enumerates the available ones.'
+    title: 'Tax forms (modelos)'
+  pago-fraccionado:
+    body: 'Quarterly IRPF advance payment for an autonomo. Modelo 130 applies to estimación directa; 131 to estimación objetiva. Calculation uses the quarter''s data and, in some cases, the prior year.'
+    title: 'IRPF advance payment'
+  profile:
+    body: 'The local profile carries your tax id (NIF), main activity, IVA/IRPF regime, and optional enrolments (SII, Verifactu, intracomunitario). Edit it with ''aeat setup profile set <key> <value>''.'
+    title: 'Taxpayer profile'
+  providers:
+    body: 'Supported authentication providers; each has distinct prerequisites. ''aeat setup auth providers'' lists them with requirements.'
+    title: 'Authentication providers'
+  recargo-extemporaneo:
+    body: 'Filing after the deadline without prior AEAT notice accrues 1% per month (up to 12%) during the first year and 15% plus interest after 12 months. Legal basis Ley 58/2003 art-27.'
+    title: 'Late-filing surcharge'
+  regimens:
+    body: 'Set of tax regimes applicable to an autonomo. The two main axes are VAT (general, simplified, recargo de equivalencia, exempt) and IRPF (direct, objective).'
+    title: 'Tax regimes'
+  sii-verifactu:
+    body: 'Electronic invoice transmission systems to AEAT. SII (Suministro Inmediato de Información) is mandatory for large companies; Verifactu (RD 1007/2023) is a phased requirement for billing systems.'
+    title: 'SII and Verifactu'

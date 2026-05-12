@@ -703,6 +703,12 @@ cli:
       validate_help: Validar si el perfil actiu està complet
     status:
       help: Mostrar la preparació de l'entorn i la següent acció requerida
+  topic:
+    app_help: Mostrar ajuda conceptual sobre règims, models i processos AEAT
+    errors:
+      not_found: "Tema no trobat: %{slug}. Executeu 'aeat topic' per llistar els temes registrats."
+    opts:
+      slug: Identificador del tema (kebab-case, ex. iva-regime)
   txs:
     app_help: Gestió de transaccions bancàries i conciliació
     build:
@@ -853,3 +859,43 @@ transactions:
     verified: Importació verificada amb èxit
   test_diagnostics:
     message: Falta el mes 2026-03 a l'arxiu importat.
+topic:
+  authentication:
+    body: 'L''autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat digital (FNMT / equivalent). Configura un proveïdor amb ''aeat setup auth configure'' i verifica amb ''aeat setup auth status''.'
+    title: 'Autenticació amb l''AEAT'
+  calendar:
+    body: 'El calendari mostra les obligacions de presentació (models i períodes) dins d''un rang. Requereix un perfil amb règim IVA declarat perquè el motor no assumeixi valors per defecte.'
+    title: 'Calendari d''obligacions'
+  casilla:
+    body: 'Una casella és un camp numerat d''un model. Les caselles poden ser manuals, calculades o derivades de bindings. ''aeat app modelo casillas <modelo>'' les llista.'
+    title: 'Caselles'
+  formats:
+    body: 'La CLI emet sortida en text, JSON, taula o csv segons ''--format''. JSON és recomanat per a automatització; text per a inspecció humana.'
+    title: 'Formats de sortida'
+  irpf-regime:
+    body: 'Règim IRPF d''un autònom. Estimació directa (normal o simplificada) o estimació objectiva (mòduls). Determina quins models de pagament fraccionat apliquen (130 vs 131).'
+    title: 'Règim IRPF'
+  iva-regime:
+    body: 'Règim IVA aplicable al contribuent. General, simplificat, recàrrec d''equivalència, exempt, REAGP o REBU. Determina el model 303 trimestral i el resum anual 390.'
+    title: 'Règim IVA'
+  modelos:
+    body: 'Catàleg de models tributaris AEAT (303, 130, 100, 347, 349, 111, 115, 184, etc.). Cada model té el seu calendari, caselles i regles d''aplicabilitat. ''aeat app modelo list'' enumera els disponibles.'
+    title: 'Models tributaris'
+  pago-fraccionado:
+    body: 'Pagament a compte de l''IRPF que fa un autònom cada trimestre. El model 130 aplica a estimació directa; el 131 a estimació objectiva. El càlcul usa les dades del trimestre i, en alguns casos, les de l''exercici anterior.'
+    title: 'Pagament fraccionat IRPF'
+  profile:
+    body: 'El perfil local conté la teva identificació fiscal (NIF), activitat principal, règim IVA / IRPF i enrolaments opcionals (SII, Verifactu, intracomunitari). Edita''l amb ''aeat setup profile set <clau> <valor>''.'
+    title: 'Perfil del contribuent'
+  providers:
+    body: 'Proveïdors d''autenticació suportats; cadascun té requeriments diferents. ''aeat setup auth providers'' els llista amb els prerequisits.'
+    title: 'Proveïdors d''autenticació'
+  recargo-extemporaneo:
+    body: 'La presentació fora de termini sense requeriment previ de l''AEAT acumula un recàrrec de l''1% per mes (fins al 12%) durant el primer any i 15% més interessos després de 12 mesos. Base legal Ley 58/2003 art-27.'
+    title: 'Recàrrec per presentació extemporània'
+  regimens:
+    body: 'Conjunt de règims fiscals aplicables a un autònom. Els dos eixos principals són IVA (general, simplificat, recàrrec d''equivalència, exempt) i IRPF (directa, objectiva).'
+    title: 'Règims fiscals'
+  sii-verifactu:
+    body: 'Sistemes de transmissió electrònica de factures a l''AEAT. SII (Subministrament Immediat d''Informació) aplica obligatòriament a grans empreses; Verifactu (RD 1007/2023) és un requisit gradual per a sistemes de facturació.'
+    title: 'SII i Verifactu'
