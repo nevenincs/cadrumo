@@ -179,17 +179,18 @@ def load_default_filing_profile(
     *,
     display_name: str | None = None,
 ) -> FilingOperatorProfile:
-    """Load the configured default profile secure object for runtime filing commands.
+    """Load the configured default profile for runtime filing commands.
 
-    Resolves ``path`` (or, when ``None``, the
-    ``aeat_default_profile_path`` setting from
-    :func:`aeat.core.config.load_settings`), validates the profile via
-    :func:`aeat.application.setup._env_writer.load_profile_envelope`,
-    and projects it into a runtime :class:`FilingOperatorProfile`.
+    Resolves the active workflow profile via the wizard descriptor's
+    typed projection and re-shapes it as a runtime
+    :class:`FilingOperatorProfile`. The legacy on-disk profile envelope
+    is no longer consulted; the operator's profile values stored in
+    ``ProfileRecord`` are the single source of truth.
 
     Args:
-        path: Override path to the profile JSON. Defaults to the
-            value of ``AEAT_DEFAULT_PROFILE_PATH``.
+        path: Ignored. Retained for source-compatibility with the
+            historical signature; values now come from the active
+            workflow profile.
         display_name: Optional friendly label propagated to the
             returned profile.
 
@@ -197,23 +198,18 @@ def load_default_filing_profile(
         The loaded :class:`FilingOperatorProfile`.
 
     Raises:
-        FilingBuilderError: When no default profile is configured or when the
-            resolved profile secure object does not exist.
+        FilingBuilderError: When no profile is active in the workflow
+            state.
     """
-    from ...core.config import load_settings
+    del path  # callers no longer drive this through a JSON envelope
+    from ..wizard._status import load_active_autonomo_profile
+    from ..workflow._persistence import workflow_state_repository
 
-    settings = load_settings()
-    target = path or settings.aeat_default_profile_path
-    if target is None:
-        raise FilingBuilderError(
-            "no default filing profile configured; pass --profile PATH or set AEAT_DEFAULT_PROFILE_PATH"
-        )
-    from ..setup._env_writer import load_profile_envelope
-
+    state = workflow_state_repository().load()
     try:
-        profile = load_profile_envelope(target)
-    except FileNotFoundError as exc:
-        raise FilingBuilderError(f"default filing profile not found: {target}") from exc
+        profile = load_active_autonomo_profile(state)
+    except ValueError as exc:
+        raise FilingBuilderError(str(exc)) from exc
     return filing_profile_from_autonomo(profile, display_name=display_name)
 
 

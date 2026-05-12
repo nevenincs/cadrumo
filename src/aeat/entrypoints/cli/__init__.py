@@ -2,8 +2,7 @@
 
 The command tree exposes two top-level namespaces:
 
-- ``aeat setup`` — local prerequisites: profile, authentication, status.
-- ``aeat config`` — local configuration and diagnostics.
+- ``aeat config`` — local configuration, on-ramp wizard, diagnostics.
 - ``aeat app`` — operational tax work: overview, ledger, invoice,
   declaration.
 
@@ -28,20 +27,12 @@ from ._errors import decorate_typer_app, write_stderr
 from ._i18n import tr
 from ._log_levels import apply_to_root_logger, resolve_log_level
 
-_setup_module: Any | None = None
 _overview_module: Any | None = None
 _ledger_module: Any | None = None
 _invoice_module: Any | None = None
 _declaration_module: Any | None = None
 _modelo_module: Any | None = None
 _registry_module: Any | None = None
-
-try:
-    from . import _setup as _setup_module
-except ModuleNotFoundError as exc:
-    _setup_import_error: ModuleNotFoundError | None = exc
-else:
-    _setup_import_error = None
 
 try:
     from . import _declaration as _declaration_module
@@ -94,8 +85,6 @@ def _root(
         typer.echo(render_cli_version_text(build_cli_version_report()))
         raise typer.Exit()
     if ctx.invoked_subcommand is None:
-        if _setup_import_error is not None:
-            _emit_startup_import_error(_setup_import_error)
         if _app_import_error is not None:
             _emit_startup_import_error(_app_import_error)
         typer.echo(ctx.get_help())
@@ -181,13 +170,12 @@ if _app_import_error is None:
 # ---------------------------------------------------------------------
 
 
-if _setup_import_error is None:
-    assert _setup_module is not None
-    app.add_typer(_setup_module.app, name="setup")
-else:
-    app.add_typer(_import_failure_surface("setup", _setup_import_error), name="setup")
 app.add_typer(_config.app, name="config")
 app.add_typer(_archive.app, name="archive")
+from . import _topic as _topic_module  # noqa: E402
+
+app.add_typer(_topic_module.app, name="topic")
+app.add_typer(_topic_module.app, name="help")
 if _app_import_error is None:
     app.add_typer(app_app, name="app")
 else:

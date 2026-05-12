@@ -1,128 +1,174 @@
-"""Secure persistence for :class:`aeat.application.workflow.WorkflowResult`.
-
-Workflow runs contain casilla values, filing identifiers, and run
-diagnostics. Runs are stored as encrypted byte objects in the primary
-SQL backend at AUDIT sensitivity; no plaintext workflow JSON or
-envelope file lands on disk.
-"""
+"""Encrypted persistence for workflow state and workflow runs."""
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from collections.abc import Callable
+from datetime import date
 from pathlib import Path
+from typing import Self
 
-from pydantic import ValidationError
-
-from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_repository_id
+from ...adapters.persistence.storage.envelope._envelope import Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...core.errors import AeatError
+from ...core.classification import SensitivityClass
+from ...core.config import Settings
 from ...core.logging import get_logger
 from ._errors import WorkflowError
-from ._models import WorkflowResult
+from ._models import WorkflowResult, WorkflowState, utc_now
 
 _logger = get_logger(__name__)
 
-_WORKFLOW_RUN_VERSION = 1
-_WORKFLOW_NAMESPACE = "aeat.application.workflow.runs"
+_STATE_VERSION = 1
+_STATE_NAMESPACE = "aeat.workflow"
+_STATE_OBJECT_KEY = "state"
+_RUN_VERSION = 1
+_RUN_NAMESPACE = "aeat.application.workflow.runs"
 
 
-def _object_path_for(run_id: str) -> Path:
-    """Return a logical object marker for ``run_id``."""
+class WorkflowStateRepository:
+    """Encrypted SQL object repository for :class:`WorkflowState`."""
 
-    safe_repository_id(run_id, context="workflow run id")
-    return Path("db://secure_objects") / _WORKFLOW_NAMESPACE / run_id
+    def __init__(self) -> None:
+        self._objects = SecureObjectRepository()
+
+    @classmethod
+    def from_settings(cls, settings: Settings | None = None) -> Self:
+        del settings
+        return cls()
+
+    def load(self) -> WorkflowState:
+        """Load state or return an empty payload when absent."""
+
+        record = self._objects.load(
+            _STATE_NAMESPACE,
+            _STATE_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_STATE_VERSION,
+        )
+        if record is None:
+            return WorkflowState()
+        envelope = Envelope[WorkflowState].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not SensitivityClass.FINANCIAL:
+            raise ClassificationError(
+                f"workflow state has classification {envelope.classification}; "
+                f"consumer expected {SensitivityClass.FINANCIAL}",
+            )
+        if envelope.schema_version > _STATE_VERSION:
+            raise EnvelopeVersionError(
+                f"workflow state is at version {envelope.schema_version}; consumer supports up to {_STATE_VERSION}",
+            )
+        return envelope.payload
+
+    def save(self, state: WorkflowState) -> None:
+        """Persist state in the encrypted database object store."""
+
+        envelope = Envelope[WorkflowState](
+            schema_version=_STATE_VERSION,
+            written_at=utc_now(),
+            classification=SensitivityClass.FINANCIAL,
+            payload=state.model_copy(update={"updated_at": utc_now()}),
+        )
+        self._objects.save(
+            namespace=_STATE_NAMESPACE,
+            object_key=_STATE_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_STATE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+        _logger.debug("persisted workflow state to secure backend")
+
+    def update(self, fn: Callable[[WorkflowState], WorkflowState]) -> WorkflowState:
+        """Load, transform, save, and return the updated state."""
+
+        state = self.load()
+        updated = fn(state)
+        self.save(updated)
+        return updated
 
 
-def save_run(result: WorkflowResult, *, runs_dir: Path) -> Path:
-    """Persist ``result`` as an encrypted database object.
+def workflow_state_repository(settings: Settings | None = None) -> WorkflowStateRepository:
+    """Return the repository bound to the configured run-state directory."""
 
-    ``runs_dir`` is accepted by callers that still carry environment
-    settings, but the persistence location is the secure SQL backend.
+    return WorkflowStateRepository.from_settings(settings)
+
+
+def _validate_run_id(run_id: str) -> str:
+    if "/" in run_id or "\\" in run_id:
+        raise WorkflowError("run_id must not contain path separators")
+    trimmed = run_id.strip()
+    if not trimmed:
+        raise WorkflowError("run_id must not be blank")
+    return trimmed
+
+
+def save_run(result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
+    """Persist one workflow result in the secure object backend.
+
+    ``runs_dir`` remains part of the API as a logical marker path for callers
+    and tests, but no plaintext run file is written there.
     """
 
-    del runs_dir
-    try:
-        safe_repository_id(result.run_id, context="workflow run id")
-    except ValueError as exc:
-        raise WorkflowError(str(exc)) from exc
+    run_id = _validate_run_id(result.run_id)
+    marker_dir = runs_dir or Settings().aeat_workflow_runs_dir
     envelope = Envelope[WorkflowResult](
-        schema_version=_WORKFLOW_RUN_VERSION,
-        written_at=datetime.now(UTC),
-        classification=SensitivityClass.AUDIT,
+        schema_version=_RUN_VERSION,
+        written_at=utc_now(),
+        classification=SensitivityClass.FINANCIAL,
         payload=result,
     )
     SecureObjectRepository().save(
-        namespace=_WORKFLOW_NAMESPACE,
-        object_key=result.run_id,
-        classification=SensitivityClass.AUDIT,
-        schema_version=_WORKFLOW_RUN_VERSION,
+        namespace=_RUN_NAMESPACE,
+        object_key=run_id,
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=_RUN_VERSION,
         written_at=envelope.written_at,
         payload=envelope.model_dump_json().encode("utf-8"),
     )
-    _logger.info("workflow: persisted run %s to secure database", result.run_id)
-    return _object_path_for(result.run_id)
+    return marker_dir / run_id
 
 
-def load_run(run_id: str, *, runs_dir: Path) -> WorkflowResult:
-    """Load and return the :class:`WorkflowResult` for ``run_id``."""
+def load_run(run_id: str, *, runs_dir: Path | None = None) -> WorkflowResult:
+    """Load one persisted workflow result from the secure backend."""
 
     del runs_dir
-    try:
-        safe_repository_id(run_id, context="workflow run id")
-    except ValueError as exc:
-        raise WorkflowError(str(exc)) from exc
+    safe_run_id = _validate_run_id(run_id)
     record = SecureObjectRepository().load(
-        _WORKFLOW_NAMESPACE,
-        run_id,
-        expected_class=SensitivityClass.AUDIT,
-        max_supported_version=_WORKFLOW_RUN_VERSION,
+        _RUN_NAMESPACE,
+        safe_run_id,
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=_RUN_VERSION,
     )
     if record is None:
-        raise WorkflowError(f"no persisted workflow run with id {run_id!r}")
+        raise WorkflowError(f"workflow run not found: {safe_run_id}")
     envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
-    if envelope.classification is not SensitivityClass.AUDIT:
+    if envelope.classification is not SensitivityClass.FINANCIAL:
         raise ClassificationError(
-            f"workflow run {run_id} has classification {envelope.classification}; "
-            f"consumer expected {SensitivityClass.AUDIT}",
+            f"workflow run has classification {envelope.classification}; "
+            f"consumer expected {SensitivityClass.FINANCIAL}",
         )
-    if envelope.schema_version > _WORKFLOW_RUN_VERSION:
+    if envelope.schema_version > _RUN_VERSION:
         raise EnvelopeVersionError(
-            f"workflow run {run_id} is at version {envelope.schema_version}; "
-            f"consumer supports up to {_WORKFLOW_RUN_VERSION}",
+            f"workflow run is at version {envelope.schema_version}; consumer supports up to {_RUN_VERSION}",
         )
     return envelope.payload
 
 
-def list_runs(
-    *,
-    runs_dir: Path,
-    since: date | None = None,
-) -> tuple[WorkflowResult, ...]:
-    """Return every persisted :class:`WorkflowResult` in the secure backend."""
+def list_runs(*, runs_dir: Path | None = None, since: date | None = None) -> tuple[WorkflowResult, ...]:
+    """List persisted workflow runs newest-first, optionally filtered by date."""
 
     del runs_dir
-    objects = SecureObjectRepository()
-    results: list[WorkflowResult] = []
-    for record in objects.list_records(
-        _WORKFLOW_NAMESPACE,
-        expected_class=SensitivityClass.AUDIT,
-        max_supported_version=_WORKFLOW_RUN_VERSION,
-    ):
-        try:
-            envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
-        except (ValueError, ValidationError, AeatError):  # pragma: no cover - defensive
-            _logger.warning("workflow: skipping unreadable run %s", record.object_key.hex(), exc_info=True)
-            continue
+    records = SecureObjectRepository().list_records(
+        _RUN_NAMESPACE,
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=_RUN_VERSION,
+    )
+    runs: list[WorkflowResult] = []
+    for record in records:
+        envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
         result = envelope.payload
         if since is not None and result.started_at.date() < since:
             continue
-        results.append(result)
-    results.sort(key=_started_at_key, reverse=True)
-    return tuple(results)
-
-
-def _started_at_key(result: WorkflowResult) -> datetime:
-    """Sort key helper. Factored for deterministic tie-breaking."""
-
-    return result.started_at
+        runs.append(result)
+    runs.sort(key=lambda item: item.started_at, reverse=True)
+    return tuple(runs)

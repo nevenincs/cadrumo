@@ -4,36 +4,38 @@ from __future__ import annotations
 
 import pytest
 
+from .auth import update_auth
+from .profile import set_active_profile, set_profile_values
 from .setup_status import build_setup_status
-from .user_cli import UserCliState, set_active_profile, set_profile_values, update_auth
+from .workflow import WorkflowState
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def test_setup_status_without_profile_points_to_profile_creation() -> None:
-    report = build_setup_status(UserCliState())
+    report = build_setup_status(WorkflowState())
 
     assert report.active_profile is None
     assert report.profile_ready is False
     assert report.missing_required == ()
     assert report.profile_present_keys == 0
     assert report.profile_total_keys > 0
-    assert report.next_action == "aeat setup init --name NAME"
+    assert report.next_action == "aeat config setup --profile-name NAME"
 
 
 def test_setup_status_with_missing_required_profile_key_points_to_first_missing_key() -> None:
-    state = set_active_profile(UserCliState(), "operator")
+    state = set_active_profile(WorkflowState(), "operator")
 
     report = build_setup_status(state)
 
     assert report.profile_ready is False
     assert report.missing_required[0] == "tax.id"
-    assert report.next_action == "aeat setup profile set tax.id VALUE"
+    assert report.next_action == "aeat config set tax.id VALUE"
 
 
 def test_setup_status_with_complete_profile_points_to_auth_configuration() -> None:
     state = set_profile_values(
-        UserCliState(),
+        WorkflowState(),
         "operator",
         {
             "tax.id": "12345678Z",
@@ -52,7 +54,7 @@ def test_setup_status_with_complete_profile_points_to_auth_configuration() -> No
     assert report.profile_present_keys == 3
     assert report.profile_total_keys > report.profile_present_keys
     assert report.auth_provider == ""
-    assert report.next_action == "aeat setup auth configure --provider certificate --file PATH"
+    assert report.next_action == "aeat config auth --provider certificate --file PATH"
 
 
 def test_setup_status_with_identity_only_remains_not_ready_until_enrolment_declared() -> None:
@@ -64,7 +66,7 @@ def test_setup_status_with_identity_only_remains_not_ready_until_enrolment_decla
     boolean must NOT report ready.
     """
     state = set_profile_values(
-        UserCliState(),
+        WorkflowState(),
         "operator",
         {
             "tax.id": "12345678Z",
@@ -78,12 +80,12 @@ def test_setup_status_with_identity_only_remains_not_ready_until_enrolment_decla
     assert report.enrolment_ready is False
     assert report.profile_ready is False
     assert report.missing_enrolment == ("iva.regime",)
-    assert report.next_action == "aeat setup profile set iva.regime general"
+    assert report.next_action == "aeat config set iva.regime GENERAL"
 
 
 def test_setup_status_with_provider_points_to_login_until_session_ready() -> None:
     state = set_profile_values(
-        UserCliState(),
+        WorkflowState(),
         "operator",
         {
             "tax.id": "12345678Z",
@@ -97,12 +99,12 @@ def test_setup_status_with_provider_points_to_login_until_session_ready() -> Non
 
     assert report.auth_provider == "clave_movil"
     assert report.login_ready is False
-    assert report.next_action == "aeat setup auth login"
+    assert report.next_action == "aeat config auth --provider certificate"
 
 
 def test_setup_status_with_verified_session_points_to_app_overview() -> None:
     state = set_profile_values(
-        UserCliState(),
+        WorkflowState(),
         "operator",
         {
             "tax.id": "12345678Z",

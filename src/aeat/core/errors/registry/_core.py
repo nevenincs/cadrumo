@@ -15,6 +15,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core.errors.CoreError",
+        ErrorCode(
+            code="ERROR_AEAT_CORE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_aeat_core",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.errors.CoreValidationError",
+        ErrorCode(
+            code="INTEGRITY_AEAT_CORE_VALIDATION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_aeat_core_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.errors.AeatObservabilityError",
         ErrorCode(
             code="ERROR_AEAT_OBSERVABILITY",
@@ -196,6 +218,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_access_gate_live_read_not_enabled",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.locales.manager.LocaleError",
+        ErrorCode(
+            code="FAIL_LOCALE_MANAGER",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_locale_manager",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

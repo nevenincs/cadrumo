@@ -42,6 +42,7 @@ from ..errors import (
     ClassificationError,
     DecryptionError,
     EnvelopeVersionError,
+    StorageValidationError,
 )
 from ..master_key._master_key import MasterKeyProvider
 
@@ -132,7 +133,7 @@ class Envelope[PayloadT: BaseModel](BaseModel):
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
         if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("written_at must be timezone-aware")
+            raise StorageValidationError("written_at must be timezone-aware")
         return value
 
 
@@ -319,7 +320,7 @@ class CipherEnvelope(BaseModel):
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
         if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("written_at must be timezone-aware")
+            raise StorageValidationError("written_at must be timezone-aware")
         return value
 
 

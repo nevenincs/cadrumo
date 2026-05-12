@@ -43,6 +43,7 @@ from ...domain.deadlines import (
     DeadlineEngine,
     FilingObligation,
     ObligationStatus,
+    Recovery,
     Schedule,
 )
 
@@ -143,6 +144,9 @@ class OverviewCalendarEntry(BaseModel):
             the engine.
         user_state: Precomputed :class:`OverviewPeriodState` derived
             via :func:`user_state_for` for the CLI's 4-column table.
+        recovery: Resolved :class:`Recovery` payload when ``status`` is
+            ``OVERDUE``; ``None`` otherwise. Carried through verbatim
+            from the underlying :class:`FilingObligation`.
     """
 
     model_config = _STRICT_FROZEN
@@ -154,6 +158,7 @@ class OverviewCalendarEntry(BaseModel):
     payment_cutoff_on: date | None = None
     status: ObligationStatus
     user_state: OverviewPeriodState
+    recovery: Recovery | None = None
 
     @model_validator(mode="after")
     def _enforce_window_order(self) -> OverviewCalendarEntry:
@@ -392,6 +397,7 @@ def build_overview_calendar(
                     payment_cutoff_on=obligation.payment_cutoff_on,
                     status=obligation.status,
                     user_state=user_state_for(obligation.status),
+                    recovery=obligation.recovery,
                 )
             )
 

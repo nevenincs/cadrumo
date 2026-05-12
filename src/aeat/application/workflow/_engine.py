@@ -34,10 +34,12 @@ from ...domain.submission import SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
 from ._errors import WorkflowAbortSignal, WorkflowComponentError
 from ._models import (
+    DeclarationPointer,
     SiteHealthAlert,
     WorkflowAbortReason,
     WorkflowResult,
     WorkflowStage,
+    WorkflowState,
     WorkflowStep,
     compute_run_id,
 )
@@ -1061,25 +1063,10 @@ class WorkflowEngine:
         exc: SiteHealthError,
         steps: list[WorkflowStep],
     ) -> NoReturn:
-        """Record a typed site-health alert and raise ``SITE_UNAVAILABLE``.
+        """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
 
-        Invoked from the ``except SiteHealthError`` arm inserted
-        strictly *before* the generic ``except Exception`` catch in
-        every stage method that wraps a component call. The helper
-        composes a :class:`aeat.application.workflow.SiteHealthAlert`
-        around the caught error, appends a failed :class:`WorkflowStep`
-        carrying the alert, and raises
-        ``WorkflowAbortSignal(reason=WorkflowAbortReason.SITE_UNAVAILABLE)``
-        so the collapse to ``UNHANDLED_EXCEPTION`` never fires.
-        """
-        run_id = self._compute_current_run_id() or "unassigned"
-        alert = SiteHealthAlert(
-            stage=stage,
-            status=exc.status,
-            run_id=run_id,
-        )
-        state_label = exc.status.state.value
-        summary = _t(f"Site unavailable at stage={stage.value}: {state_label}")
+        alert_run_id = self._compute_current_run_id() or "-"
+        summary = _t(f"AEAT site unavailable at stage={stage.value}: {exc.status.state.value}")
         steps.append(
             WorkflowStep(
                 stage=stage,
@@ -1087,14 +1074,71 @@ class WorkflowEngine:
                 ended_at=_utcnow(),
                 success=False,
                 summary=summary,
-                details={
-                    "site_health_state": state_label,
-                    "http_status": str(exc.status.evidence.http_status),
-                },
-                site_health_alert=alert,
+                site_health_alert=SiteHealthAlert(
+                    stage=stage,
+                    status=exc.status,
+                    run_id=alert_run_id,
+                ),
             )
         )
         raise WorkflowAbortSignal(
             reason=WorkflowAbortReason.SITE_UNAVAILABLE,
             summary=summary,
         ) from exc
+
+
+def declaration_key(modelo: str, period: str) -> str:
+    """Return the stable dictionary key for a modelo/period pair."""
+    return f"{modelo.strip()}:{period.strip().upper()}"
+
+
+def update_declaration_pointer(
+    state: WorkflowState,
+    *,
+    modelo: str,
+    period: str,
+    draft_id: str | None = None,
+    status: str | None = None,
+    exported_path: str | None = None,
+) -> WorkflowState:
+    """Return a copy of ``state`` with an updated declaration pointer.
+
+    Upserts a :class:`DeclarationPointer` into the ``declarations``
+    registry. If a pointer already exists for the key, its fields are
+    updated with the supplied values.
+    """
+    key = declaration_key(modelo, period)
+    current = state.declarations.get(key)
+    if current is None:
+        updated = DeclarationPointer(
+            modelo=modelo,
+            period=period,
+            draft_id=draft_id,
+            status=status,
+            exported_path=exported_path,
+        )
+    else:
+        updated = current.model_copy(
+            update={
+                k: v
+                for k, v in {
+                    "draft_id": draft_id,
+                    "status": status,
+                    "exported_path": exported_path,
+                }.items()
+                if v is not None
+            }
+        )
+
+    new_declarations = dict(state.declarations)
+    new_declarations[key] = updated
+    return state.model_copy(update={"declarations": new_declarations})
+
+
+__all__ = [
+    "ExpedientesSource",
+    "NotificationsSource",
+    "WorkflowEngine",
+    "declaration_key",
+    "update_declaration_pointer",
+]

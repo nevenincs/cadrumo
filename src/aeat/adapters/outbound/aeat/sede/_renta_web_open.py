@@ -135,6 +135,18 @@ async def collect_renta_web_open_observation(
             description="Resumen de declaraciones heading",
             timeout_ms=live_payload.timeout_ms,
         )
+        # When the payload declares casilla_overrides, navigate into the
+        # editable form via the "Buscar casilla" dialog, fill each casilla
+        # input with the requested value, then return to the Resumen so the
+        # summary scrape below picks up the recomputed totals. Empty
+        # overrides → driver stays on the baseline identification path.
+        if live_payload.casilla_overrides:
+            await _apply_casilla_overrides(
+                page,
+                live_payload.casilla_overrides,
+                timeout_ms=live_payload.timeout_ms,
+            )
+            await _navigate_to_resumen(page, timeout_ms=live_payload.timeout_ms)
         body_text = await _playwright_stage(
             page.locator("body").inner_text(timeout=live_payload.timeout_ms),
             stage="scrape-summary-text",
@@ -146,6 +158,19 @@ async def collect_renta_web_open_observation(
             observed = extract_renta_web_open_summary_value(body_text, label)
             if observed is not None:
                 values[label] = observed
+        # When the payload declares additional casillas to scrape (beyond the
+        # summary labels), navigate to each via the Buscar dialog and read
+        # the input value off the form page. The scraped value is recorded
+        # under the casilla number key so the audit gate's casilla-id-keyed
+        # coverage check resolves.
+        for casilla_number in sorted(live_payload.scrape_casillas):
+            scraped = await _scrape_casilla_form_value(
+                page,
+                casilla_number,
+                timeout_ms=live_payload.timeout_ms,
+            )
+            if scraped is not None:
+                values[casilla_number] = scraped
         return RentaWebOpenObservation(values=values, raw_evidence_locator=page.url)
     except (SedeError, SiteHealthError, BrowserError):
         raise
@@ -183,6 +208,104 @@ def extract_renta_web_open_summary_value(body_text: str, label: str) -> str | No
             if match is not None:
                 return match.group(0)
     return None
+
+
+async def _navigate_to_casilla(page: Any, casilla_number: str, *, timeout_ms: int) -> None:
+    """Open the Buscar casilla dialog, enter the casilla number, jump to the page.
+
+    The Resumen view exposes a "Buscar casilla" button that opens a modal
+    dialog with a 4-char "Número de casilla" input and an "Ir a la página"
+    button. Typing a valid casilla number enables both the search button
+    and the navigation button; clicking "Ir a la página" navigates the form
+    to the page containing that casilla.
+    """
+
+    await _click_expected(
+        page.get_by_role("button", name="Buscar casilla").first,
+        stage=f"navigate-to-casilla:{casilla_number}:open-dialog",
+        description="Buscar casilla button",
+        timeout_ms=timeout_ms,
+    )
+    await _fill_expected(
+        page.locator('input.estiloAlfanumerico[maxlength="4"]').first,
+        casilla_number,
+        stage=f"navigate-to-casilla:{casilla_number}:type-number",
+        description="Buscar casilla number input",
+        timeout_ms=timeout_ms,
+    )
+    await _click_expected(
+        page.get_by_role("button", name="Ir a la página").first,
+        stage=f"navigate-to-casilla:{casilla_number}:jump-to-page",
+        description="Ir a la página button",
+        timeout_ms=timeout_ms,
+    )
+
+
+async def _navigate_to_resumen(page: Any, *, timeout_ms: int) -> None:
+    """Return to the Resumen view after editing form casillas."""
+
+    await _click_expected(
+        page.get_by_role("button", name="Resumen", exact=True).first,
+        stage="navigate-to-resumen",
+        description="Resumen button",
+        timeout_ms=timeout_ms,
+    )
+    await _expect_visible(
+        page.get_by_text("Resumen de declaraciones"),
+        stage="navigate-to-resumen:wait-summary",
+        description="Resumen de declaraciones heading",
+        timeout_ms=timeout_ms,
+    )
+
+
+async def _apply_casilla_overrides(
+    page: Any,
+    overrides: Mapping[str, str],
+    *,
+    timeout_ms: int,
+) -> None:
+    """Apply each (casilla, value) override by navigating to the casilla and filling it.
+
+    Uses the Buscar casilla dialog to jump to each casilla's page, then
+    locates the input field associated with that casilla number and fills
+    it with the requested value. The Renta WEB Open form pages label each
+    editable input with a `title` attribute that includes the casilla
+    number (e.g. ``title="0511 ..."``); the locator matches by title-prefix.
+    """
+
+    for casilla_number, value in overrides.items():
+        await _navigate_to_casilla(page, casilla_number, timeout_ms=timeout_ms)
+        await _fill_expected(
+            page.locator(f'input[title^="{casilla_number}"]').first,
+            value,
+            stage=f"apply-casilla-override:{casilla_number}",
+            description=f"casilla {casilla_number} input",
+            timeout_ms=timeout_ms,
+        )
+
+
+async def _scrape_casilla_form_value(
+    page: Any,
+    casilla_number: str,
+    *,
+    timeout_ms: int,
+) -> str | None:
+    """Read the current value of one casilla's form input.
+
+    Navigates to the casilla via the Buscar dialog, reads the input value,
+    and returns the raw string. Returns None when the locator does not
+    resolve (the casilla may be on a page that requires upstream inputs).
+    """
+
+    try:
+        await _navigate_to_casilla(page, casilla_number, timeout_ms=timeout_ms)
+    except SedeNavigationError:
+        return None
+    locator = page.locator(f'input[title^="{casilla_number}"]').first
+    try:
+        return cast(str, await locator.input_value(timeout=timeout_ms))
+    except Exception:
+        return None
 
 
 async def _fill_identification_profile(page: Any, profile: RentaWebOpenSyntheticProfile, *, timeout_ms: int) -> None:

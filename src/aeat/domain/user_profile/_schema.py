@@ -13,6 +13,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from ...core.classification import SensitivityClass
+from ._errors import UserProfileNotFoundError, UserProfileValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -119,11 +120,11 @@ class ProfileFieldDefinition(BaseModel):
     @model_validator(mode="after")
     def _validate_enum_values(self) -> Self:
         if self.type is ProfileFieldType.ENUM and not self.enum_values:
-            raise ValueError(f"field {self.key!r}: enum fields must declare enum_values")
+            raise UserProfileValidationError(f"field {self.key!r}: enum fields must declare enum_values")
         if self.type is not ProfileFieldType.ENUM and self.enum_values:
-            raise ValueError(f"field {self.key!r}: enum_values are only valid for enum fields")
+            raise UserProfileValidationError(f"field {self.key!r}: enum_values are only valid for enum fields")
         if len(set(self.enum_values)) != len(self.enum_values):
-            raise ValueError(f"field {self.key!r}: duplicate enum_values are not allowed")
+            raise UserProfileValidationError(f"field {self.key!r}: duplicate enum_values are not allowed")
         return self
 
 
@@ -149,7 +150,7 @@ class ProfileSectionDefinition(BaseModel):
         keys = tuple(field.key for field in self.fields)
         if len(set(keys)) != len(keys):
             duplicates = sorted({key for key in keys if keys.count(key) > 1})
-            raise ValueError(f"section {self.key!r}: duplicate field keys {duplicates!r}")
+            raise UserProfileValidationError(f"section {self.key!r}: duplicate field keys {duplicates!r}")
         return self
 
 
@@ -180,7 +181,7 @@ class ProfileSchemaDefinition(BaseModel):
         keys = tuple(section.key for section in self.sections)
         if len(set(keys)) != len(keys):
             duplicates = sorted({key for key in keys if keys.count(key) > 1})
-            raise ValueError(f"duplicate section keys {duplicates!r}")
+            raise UserProfileValidationError(f"duplicate section keys {duplicates!r}")
         return self
 
     @property
@@ -195,7 +196,7 @@ class ProfileSchemaDefinition(BaseModel):
         for section in self.sections:
             if section.key == key:
                 return section
-        raise KeyError(f"unknown user-profile section {key!r}")
+        raise UserProfileNotFoundError(f"unknown user-profile section {key!r}")
 
     def field(self, path: _FieldPath) -> ProfileFieldDefinition:
         """Return a field by canonical dotted path."""
@@ -205,4 +206,4 @@ class ProfileSchemaDefinition(BaseModel):
         for field in section.fields:
             if field.key == field_key:
                 return field
-        raise KeyError(f"unknown user-profile field {path!r}")
+        raise UserProfileNotFoundError(f"unknown user-profile field {path!r}")

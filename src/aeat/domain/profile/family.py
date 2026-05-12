@@ -11,6 +11,8 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ._errors import ProfileValidationError
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
@@ -32,7 +34,7 @@ class RentaDescendantProfile(BaseModel):
             return None
         stripped = value.strip()
         if not stripped:
-            raise ValueError("optional text fields must not be blank")
+            raise ProfileValidationError("optional text fields must not be blank")
         return stripped
 
     @field_validator("birth_date", "death_date", mode="before")
@@ -62,7 +64,7 @@ class RentaAscendantProfile(BaseModel):
             return None
         stripped = value.strip()
         if not stripped:
-            raise ValueError("optional text fields must not be blank")
+            raise ProfileValidationError("optional text fields must not be blank")
         return stripped
 
     @field_validator("birth_date", "death_date", mode="before")
@@ -86,7 +88,7 @@ class RentaFamilyProfile(BaseModel):
     @classmethod
     def _schema_version_is_supported(cls, value: str) -> str:
         if value != "1":
-            raise ValueError("schema_version must be '1'")
+            raise ProfileValidationError("schema_version must be '1'")
         return value
 
     @field_validator("descendants", "ascendants", mode="before")

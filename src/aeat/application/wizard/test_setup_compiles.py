@@ -1,0 +1,70 @@
+"""Structural assertions on the ``setup`` wizard flow descriptor.
+
+The tests verify every wiring invariant the runtime depends on: unique
+question ids inside the flow, every ``WizardCondition.question_id``
+resolves to an earlier question, every profile-bound question shows
+up in the compiled ``PROFILE_KEYS``, and every choice value passes
+``validate_widget_answer`` so the descriptor is internally consistent
+before the runtime ever runs.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from aeat.application.wizard._catalogue import SETUP_FLOW, WIZARD_FLOWS
+from aeat.application.wizard._compiler import compile_profile_keys
+from aeat.application.wizard._models import WizardQuestion
+from aeat.application.wizard._widgets import validate_widget_answer
+from aeat.domain.profile import PROFILE_KEYS
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def _setup_questions() -> tuple[WizardQuestion, ...]:
+    return tuple(question for section in SETUP_FLOW.sections for question in section.questions)
+
+
+def test_every_question_id_is_unique_inside_the_setup_flow() -> None:
+    ids = [question.id for question in _setup_questions()]
+    assert len(ids) == len(set(ids))
+
+
+def test_every_visible_when_resolves_to_an_earlier_question() -> None:
+    seen: set[str] = set()
+    for question in _setup_questions():
+        if question.visible_when is not None:
+            assert question.visible_when.question_id in seen
+        seen.add(question.id)
+
+
+def test_every_profile_key_appears_in_profile_keys() -> None:
+    registered = {entry.key for entry in PROFILE_KEYS}
+    for question in _setup_questions():
+        if question.profile_key is not None:
+            assert question.profile_key in registered
+
+
+def test_every_choice_value_passes_its_widget_validator() -> None:
+    for question in _setup_questions():
+        for choice in question.choices:
+            validate_widget_answer(question, choice.value)
+
+
+def test_compile_profile_keys_returns_one_entry_per_profile_bound_question() -> None:
+    expected = {question.profile_key for question in _setup_questions() if question.profile_key is not None}
+    compiled = {entry.key for entry in compile_profile_keys(WIZARD_FLOWS)}
+    assert expected == compiled
+
+
+def test_tax_residence_ccaa_is_a_descriptor_bound_profile_key() -> None:
+    profile_keys = {question.profile_key for question in _setup_questions()}
+    assert "tax.residence.ccaa" in profile_keys
+    registered = {entry.key for entry in PROFILE_KEYS}
+    assert "tax.residence.ccaa" in registered
+
+
+def test_pays_capital_income_and_uses_objective_estimation_are_now_descriptor_questions() -> None:
+    profile_keys = {question.profile_key for question in _setup_questions()}
+    assert "pays_capital_income_with_retencion" in profile_keys
+    assert "uses_objective_estimation_irpf" in profile_keys

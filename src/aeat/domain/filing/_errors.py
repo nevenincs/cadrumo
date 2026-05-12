@@ -39,3 +39,11 @@ class FilingAmendmentValidationError(FilingAmendmentError):
 
 class FilingImportError(FilingDraftError):
     """Raised when importing a filing from a justificante PDF fails."""
+
+
+class FilingExportError(FilingDraftError):
+    """Raised when exporting a draft to an AEAT wire format fails."""
+
+
+class FilingExportValidationError(FilingExportError, ValueError):
+    """Raised on invalid export field values or layouts. Inherits from ValueError for Pydantic."""

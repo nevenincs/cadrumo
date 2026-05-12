@@ -29,6 +29,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serial
 
 from .._identifiers import canonical_decimal_string
 from ._enums import BusinessClassification, TransactionDirection
+from ._errors import TransactionValidationError
 from ._raw_transaction import RawTransaction
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -75,13 +76,13 @@ def _coerce_history(raw: Any) -> tuple[Any, ...]:
         return raw
     if isinstance(raw, Sequence) and not isinstance(raw, str | bytes):
         return tuple(raw)
-    raise ValueError("classification_history must be a sequence of history entries")
+    raise TransactionValidationError("classification_history must be a sequence of history entries")
 
 
 def _require_aware_datetime(value: datetime) -> datetime:
     """Reject naive ``classified_at`` timestamps; enum-safe for both models."""
     if value.tzinfo is None or value.utcoffset() is None:
-        raise ValueError("classified_at must be timezone-aware")
+        raise TransactionValidationError("classified_at must be timezone-aware")
     return value
 
 
@@ -98,7 +99,7 @@ def _validate_classified_by_shape(value: str) -> str:
     for prefix in ("rule:", "llm:"):
         if normalized.startswith(prefix) and normalized.removeprefix(prefix).strip():
             return normalized
-    raise ValueError("classified_by must be 'auto', 'manual', 'rule:<rule-id>', or 'llm:<model>'")
+    raise TransactionValidationError("classified_by must be 'auto', 'manual', 'rule:<rule-id>', or 'llm:<model>'")
 
 
 _CONFIDENCE_MIN = Decimal("0")
@@ -110,7 +111,7 @@ def _validate_confidence_range(value: Decimal | None) -> Decimal | None:
     if value is None:
         return None
     if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
-        raise ValueError("confidence must be within the inclusive 0..1 range")
+        raise TransactionValidationError("confidence must be within the inclusive 0..1 range")
     return value
 
 
@@ -125,12 +126,12 @@ def _validate_business_pct_coupling(
     """
     if state is BusinessClassification.MIXED:
         if pct is None:
-            raise ValueError("business_pct is required when classification is MIXED")
+            raise TransactionValidationError("business_pct is required when classification is MIXED")
         if not Decimal("0") <= pct <= Decimal("1"):
-            raise ValueError("business_pct must be within 0..1 when classification is MIXED")
+            raise TransactionValidationError("business_pct must be within 0..1 when classification is MIXED")
         return
     if pct is not None:
-        raise ValueError("business_pct must be None unless classification is MIXED")
+        raise TransactionValidationError("business_pct must be None unless classification is MIXED")
 
 
 class ClassificationHistoryEntry(BaseModel):
@@ -221,7 +222,7 @@ class ClassificationHistoryEntry(BaseModel):
             return None
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("foreign-key identifiers must not be blank")
+            raise TransactionValidationError("foreign-key identifiers must not be blank")
         return trimmed
 
     @field_validator("notes")
@@ -310,7 +311,7 @@ class Transaction(BaseModel):
         derived = derive_transaction_id(raw_transaction)
         existing = data.get("transaction_id")
         if existing is not None and str(existing).strip() != derived:
-            raise ValueError("transaction_id must match the stable hash derived from raw")
+            raise TransactionValidationError("transaction_id must match the stable hash derived from raw")
         payload = dict(data)
         payload["raw"] = raw_transaction
         if isinstance(payload.get("direction"), str):
@@ -341,7 +342,7 @@ class Transaction(BaseModel):
             return None
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("foreign-key identifiers must not be blank")
+            raise TransactionValidationError("foreign-key identifiers must not be blank")
         return trimmed
 
     @field_validator("notes", "classification_reason")
@@ -407,7 +408,7 @@ class TransactionCatalogue(BaseModel):
             for item in data:
                 transaction = item if isinstance(item, Transaction) else Transaction.model_validate(item)
                 if transaction.transaction_id in transactions:
-                    raise ValueError(f"duplicate transaction_id: {transaction.transaction_id}")
+                    raise TransactionValidationError(f"duplicate transaction_id: {transaction.transaction_id}")
                 transactions[transaction.transaction_id] = transaction
             return {"transactions": transactions}
         return data
@@ -417,7 +418,9 @@ class TransactionCatalogue(BaseModel):
         """Ensure every mapping key matches the embedded transaction ID."""
         for key, transaction in self.transactions.items():
             if key != transaction.transaction_id:
-                raise ValueError(f"catalogue key {key!r} does not match transaction_id {transaction.transaction_id!r}")
+                raise TransactionValidationError(
+                    f"catalogue key {key!r} does not match transaction_id {transaction.transaction_id!r}"
+                )
         return self
 
     @field_validator("transactions")

@@ -79,10 +79,16 @@ def overview_status(
             "drafts": len(drafts),
         }
         lines: list[str] = [tr("cli.overview.header")]
-        lines.extend(
-            f"{entry.modelo}\t{entry.period}\t{entry.user_state.value}\t{entry.opens_on.isoformat()}\t{entry.closes_on.isoformat()}"
-            for entry in cal.entries
-        )
+        for entry in cal.entries:
+            lines.append(
+                f"{entry.modelo}\t{entry.period}\t{entry.user_state.value}\t{entry.opens_on.isoformat()}\t{entry.closes_on.isoformat()}"
+            )
+            if entry.recovery is not None:
+                band = entry.recovery.recargo_band
+                interest_marker = "+interest" if band.interest_applies else ""
+                lines.append(
+                    f"recovery\t{band.id}\t{band.surcharge_pct}%{interest_marker}\t{entry.recovery.next_command}"
+                )
         for warning in cal.warnings:
             lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
         if cal.completeness.computable_modelos:

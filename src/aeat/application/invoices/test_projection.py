@@ -18,7 +18,7 @@ from ...domain.transactions import (
     TransactionDirection,
 )
 from ..review import InvoiceReviewFilterSpec
-from ..user_cli import UserCliState, update_invoice_review
+from ..workflow import WorkflowState, update_invoice_review
 from . import apply_manual_invoice_match, project_invoice_payment_matches, project_invoice_reviews
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -58,7 +58,7 @@ def test_review_projection_applies_review_rate_and_status() -> None:
     invoice = _invoice()
     catalogue = InvoiceCatalogue.from_invoices([invoice])
     state = update_invoice_review(
-        UserCliState(),
+        WorkflowState(),
         invoice.invoice_id,
         fields={"base": "200.00", "iva.rate": "10"},
         action="edit",
@@ -77,7 +77,7 @@ def test_manual_match_projection_records_payment_and_matches_existing_transactio
     invoice = _invoice()
     transaction = _transaction()
     transaction_id = transaction.transaction_id
-    state = apply_manual_invoice_match(UserCliState(), invoice.invoice_id, transaction_id)
+    state = apply_manual_invoice_match(WorkflowState(), invoice.invoice_id, transaction_id)
     catalogue = InvoiceCatalogue.from_invoices([invoice])
     transactions = TransactionCatalogue.from_transactions([transaction])
 

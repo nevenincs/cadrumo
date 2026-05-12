@@ -20,6 +20,7 @@ from typing import Annotated, Literal
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from ._ids import ManualId, ManualPart
+from .errors import ManualValidationError
 
 _StableId = Annotated[
     str,
@@ -80,7 +81,7 @@ _YearField = Annotated[int, Field(ge=2000, le=2100)]
 def _require_spanish(text: str, field_name: str) -> None:
     """Assert a string carries non-empty authoritative Spanish text."""
     if not text or not text.strip():
-        raise ValueError(f"{field_name}: missing authoritative Spanish text")
+        raise ManualValidationError(f"{field_name}: missing authoritative Spanish text")
 
 
 class _ManualStrictFrozen(BaseModel):

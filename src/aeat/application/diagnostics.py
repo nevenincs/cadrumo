@@ -18,7 +18,7 @@ from ..core.config import PROJECT_ROOT
 from ..core.logging import default_log_file_path
 from ..domain.calculations.registry import ValidatedRegistryAuthority
 from .setup_status import SetupStatusReport, build_setup_status
-from .user_cli import state_repository
+from .workflow import workflow_state_repository
 
 DiagnosticStatus = Literal["ok", "warn", "fail"]
 
@@ -140,7 +140,7 @@ def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDocto
 
     setup_report: SetupStatusReport | None = None
     try:
-        state = state_repository().load()
+        state = workflow_state_repository().load()
         checks.append(DiagnosticCheck(name="secure_state.load", status="ok", summary="state backend readable"))
         setup_report = build_setup_status(state)
         checks.append(_profile_check(setup_report))

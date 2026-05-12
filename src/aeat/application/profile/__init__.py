@@ -25,6 +25,12 @@ from ...domain.profile import (
     ProfileKeyRequirement,
     optional_profile_keys,
 )
+from ._actions import (
+    clear_profile_values,
+    set_active_profile,
+    set_profile_values,
+)
+from ._models import ProfileRecord
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` for profile validation records."""
@@ -182,6 +188,7 @@ def list_profile_value_rows(
 __all__ = [
     "ProfileKey",
     "ProfileKeyRequirement",
+    "ProfileRecord",
     "ProfileValidationResult",
     "ProfileValueRow",
     "list_profile_key_records",

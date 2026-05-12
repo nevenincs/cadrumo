@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import contextlib
 from decimal import Decimal, InvalidOperation
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
 from ...domain.invoices import Invoice, InvoiceCatalogue
 from ...domain.transactions import TransactionCatalogue
-from ..review import InvoiceReviewFilterSpec
-from ..user_cli import InvoiceReviewRecord, UserCliState, update_invoice_review
+from ..review import InvoiceReviewFilterSpec, InvoiceReviewRecord
+from ..workflow import WorkflowState, update_invoice_review
 
 
 class InvoiceReviewProjection(BaseModel):
@@ -39,9 +40,18 @@ class InvoiceMatchProjection(BaseModel):
     unmatched: tuple[dict[str, str], ...]
 
 
+def _coerce_invoice_review(raw: Any) -> InvoiceReviewRecord | None:
+    """Coerce a raw dict from WorkflowState.invoice_reviews to InvoiceReviewRecord."""
+    if raw is None:
+        return None
+    if isinstance(raw, dict):
+        return InvoiceReviewRecord.model_validate(raw)
+    return raw  # type: ignore[return-value]
+
+
 def project_invoice_reviews(
     catalogue: InvoiceCatalogue,
-    state: UserCliState,
+    state: WorkflowState,
     *,
     spec: InvoiceReviewFilterSpec,
     invoice_id: str | None = None,
@@ -50,7 +60,7 @@ def project_invoice_reviews(
 
     rows: list[InvoiceReviewProjection] = []
     for invoice in catalogue.values():
-        review = state.invoice_reviews.get(invoice.invoice_id)
+        review = _coerce_invoice_review(state.invoice_reviews.get(invoice.invoice_id))
         status = invoice_review_status(invoice, review)
         if spec.kind is not None and invoice.kind is not spec.kind:
             continue
@@ -118,7 +128,7 @@ def invoice_review_status(invoice: Invoice, review: InvoiceReviewRecord | None) 
     return "pending"
 
 
-def apply_manual_invoice_match(state: UserCliState, invoice_id: str, ledger_id: str) -> UserCliState:
+def apply_manual_invoice_match(state: WorkflowState, invoice_id: str, ledger_id: str) -> WorkflowState:
     """Return ``state`` with a manual invoice/payment match recorded."""
 
     return update_invoice_review(
@@ -135,14 +145,14 @@ def project_invoice_payment_matches(
     period: str,
     catalogue: InvoiceCatalogue,
     transactions: TransactionCatalogue,
-    state: UserCliState,
+    state: WorkflowState,
 ) -> InvoiceMatchProjection:
     """Return period-labelled invoice/payment match status."""
 
     matched: list[dict[str, str]] = []
     unmatched: list[dict[str, str]] = []
     for invoice in catalogue.values():
-        review = state.invoice_reviews.get(invoice.invoice_id)
+        review = _coerce_invoice_review(state.invoice_reviews.get(invoice.invoice_id))
         payment_id = (review.fields.get("payment.id") if review else None) or ""
         if payment_id and payment_id in transactions.transactions:
             matched.append({"invoice": invoice.invoice_id, "payment": payment_id})

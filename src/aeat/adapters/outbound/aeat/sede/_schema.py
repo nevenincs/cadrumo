@@ -21,6 +21,8 @@ from typing import Final, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
+from ._errors import SedeValidationError
+
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
     strict=True,
     frozen=True,
@@ -82,7 +84,7 @@ class Expediente(BaseModel):
     def _expediente_id_shape(cls, value: str) -> str:
         """Reject ``expediente_id`` values that do not match the AEAT shape pattern."""
         if not _EXPEDIENTE_ID_PATTERN.match(value):
-            raise ValueError(f"expediente_id does not match AEAT shape: {value!r}")
+            raise SedeValidationError(f"expediente_id does not match AEAT shape: {value!r}")
         return value
 
     @field_validator("category_path")
@@ -90,8 +92,8 @@ class Expediente(BaseModel):
     def _category_path_non_empty(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         """Reject empty / whitespace entries inside ``category_path``."""
         for entry in value:
-            if not entry.strip():
-                raise ValueError("category_path entries must be non-empty")
+            if not entry:
+                raise SedeValidationError("category_path entries must be non-empty")
         return value
 
 
@@ -127,8 +129,8 @@ class JustificanteRef(BaseModel):
     @classmethod
     def _csv_shape(cls, value: str) -> str:
         """Reject CSV values that do not match the AEAT uppercase alphanumeric pattern."""
-        if not _CSV_PATTERN.match(value):
-            raise ValueError(f"csv does not match AEAT shape: {value!r}")
+        if value is not None and not _CSV_PATTERN.match(value):
+            raise SedeValidationError(f"csv does not match AEAT shape: {value!r}")
         return value
 
 
@@ -221,7 +223,7 @@ class FiledDeclarationObservation(BaseModel):
     def _observation_expediente_id_shape(cls, value: str) -> str:
         """Reject ``expediente_id`` values that do not match the AEAT shape pattern."""
         if not _EXPEDIENTE_ID_PATTERN.match(value):
-            raise ValueError(f"expediente_id does not match AEAT shape: {value!r}")
+            raise SedeValidationError(f"expediente_id does not match AEAT shape: {value!r}")
         return value
 
 

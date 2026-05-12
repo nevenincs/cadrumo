@@ -32,3 +32,13 @@ class LLMRateLimitError(LLMProviderError):
 
 class LLMConfigError(LLMError):
     """Raised when the LLM client configuration is invalid or incomplete."""
+
+
+class LLMValidationError(LLMError, ValueError):
+    """Raised when an LLM-related object fails validation.
+
+    Inherits from both :class:`LLMError` and :class:`ValueError` to
+    remain compatible with Pydantic's validator-failure contract while
+    allowing catch-all :class:`LLMError` handlers to detect integrity
+    failures.
+    """

@@ -17,6 +17,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._enums import ExpenseCategory, UseType
+from ._errors import RentalValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -79,15 +80,15 @@ class RentalFinca(_RentalRecord):
     @model_validator(mode="after")
     def _validate_ratios(self) -> RentalFinca:
         if self.valor_catastral_construccion > self.valor_catastral_total:
-            raise ValueError(
+            raise RentalValidationError(
                 "valor_catastral_construccion must not exceed valor_catastral_total",
             )
         if self.coste_adquisicion_construccion > self.coste_adquisicion:
-            raise ValueError(
+            raise RentalValidationError(
                 "coste_adquisicion_construccion must not exceed coste_adquisicion",
             )
         if self.disposal_date is not None and self.disposal_date < self.acquisition_date:
-            raise ValueError("disposal_date must not precede acquisition_date")
+            raise RentalValidationError("disposal_date must not precede acquisition_date")
         return self
 
 
@@ -172,7 +173,7 @@ class RentalContract(_RentalRecord):
     @model_validator(mode="after")
     def _validate_invariants(self) -> RentalContract:
         if self.qualifying_co_tenant_count > self.tenant_count:
-            raise ValueError(
+            raise RentalValidationError(
                 "qualifying_co_tenant_count must not exceed tenant_count",
             )
         if (
@@ -180,12 +181,12 @@ class RentalContract(_RentalRecord):
             and self.tenant_max_age is not None
             and self.tenant_min_age > self.tenant_max_age
         ):
-            raise ValueError("tenant_min_age must not exceed tenant_max_age")
+            raise RentalValidationError("tenant_min_age must not exceed tenant_max_age")
         if (
             self.contract_termination_date is not None
             and self.contract_termination_date < self.contract_celebration_date
         ):
-            raise ValueError(
+            raise RentalValidationError(
                 "contract_termination_date must not precede contract_celebration_date",
             )
         return self

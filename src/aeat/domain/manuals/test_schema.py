@@ -23,6 +23,7 @@ from . import (
     SectionSource,
     generate_rule_id,
 )
+from .errors import ManualValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -280,8 +281,8 @@ class TestRuleIds:
         )
 
     def test_ordinal_must_be_positive(self) -> None:
-        """Ordinals below 1 raise ValueError."""
-        with pytest.raises(ValueError, match="ordinal must be >= 1"):
+        """Ordinals below 1 raise ManualValidationError."""
+        with pytest.raises(ManualValidationError, match="ordinal must be >= 1"):
             generate_rule_id(
                 manual_id=ManualId.IVA,
                 year=2025,
@@ -293,7 +294,7 @@ class TestRuleIds:
 
     def test_empty_chapter_after_slug_rejected(self) -> None:
         """A chapter id that slugs to the empty string is rejected."""
-        with pytest.raises(ValueError, match="chapter_id"):
+        with pytest.raises(ManualValidationError, match="chapter_id"):
             generate_rule_id(
                 manual_id=ManualId.IVA,
                 year=2025,

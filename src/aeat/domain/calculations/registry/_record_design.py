@@ -17,6 +17,7 @@ import xlrd
 from openpyxl import load_workbook
 from pydantic import ConfigDict
 
+from ._errors import RegistryValidationError
 from ._schema import RegistryModel
 
 _OPENPYXL_HEADER_FOOTER_WARNING = "Cannot parse header or footer so it will be ignored"
@@ -86,7 +87,7 @@ def _extract_record_design_cached(
         return extract_record_design_workbook(source_path)
     if suffix == ".xls":
         return extract_record_design_xls_workbook(source_path)
-    raise ValueError(f"unsupported record-design source extension: {source_path.suffix}")
+    raise RegistryValidationError(f"unsupported record-design source extension: {source_path.suffix}")
 
 
 def extract_record_design_workbook(path: Path) -> tuple[RecordDesignSheet, ...]:
@@ -131,7 +132,9 @@ def _extract_record_design_workbook_cached(
                     skipped.append(worksheet.title)
             if not sheets:
                 skipped_sheets = ", ".join(skipped) if skipped else "none"
-                raise ValueError(f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}")
+                raise RegistryValidationError(
+                    f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}"
+                )
             return tuple(sheets)
         finally:
             workbook.close()
@@ -159,7 +162,9 @@ def _extract_record_design_xls_workbook_cached(
                 skipped.append(sheet_name)
         if not sheets:
             skipped_sheets = ", ".join(skipped) if skipped else "none"
-            raise ValueError(f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}")
+            raise RegistryValidationError(
+                f"{source_path}: no record-design sheets found; skipped sheets: {skipped_sheets}"
+            )
         return tuple(sheets)
     finally:
         workbook.release_resources()
@@ -225,7 +230,7 @@ def _extract_record_design_pdf_stream(
     if _uses_page_record_layout(lines):
         lines = _extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
     if not any(line.strip() for line in lines):
-        raise ValueError(f"no text extracted from record-design PDF {source_label}")
+        raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
     try:
         return _extract_pdf_lines(lines, source_label=source_label)
     except ValueError as pdfium_exc:
@@ -241,7 +246,9 @@ def _extract_record_design_pdf_stream(
             with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
                 pages = tuple(_snapshot_pdf_page(page) for page in pdf.pages)
         except Exception as pdf_exc:  # pragma: no cover - defensive; pdfplumber surface
-            raise ValueError(f"pdfplumber could not open record-design PDF {source_label}: {pdf_exc}") from pdf_exc
+            raise RegistryValidationError(
+                f"pdfplumber could not open record-design PDF {source_label}: {pdf_exc}"
+            ) from pdf_exc
         visual_chart = _extract_visual_record_design_chart(pages, source_label=source_label)
         if visual_chart:
             return visual_chart
@@ -350,7 +357,7 @@ def _find_header(worksheet) -> _WorkbookHeader:  # type: ignore[no-untyped-def]
             validation_index=_optional_header_index(values, "validacion", "oblig."),
             content_index=_optional_header_index(values, "contenido"),
         )
-    raise ValueError(f"{worksheet.title!r} has no record-design header")
+    raise RegistryValidationError(f"{worksheet.title!r} has no record-design header")
 
 
 def _find_xls_header(worksheet) -> _WorkbookHeader:  # type: ignore[no-untyped-def]
@@ -376,7 +383,7 @@ def _find_xls_header(worksheet) -> _WorkbookHeader:  # type: ignore[no-untyped-d
             validation_index=_optional_header_index(values, "validacion", "oblig."),
             content_index=_optional_header_index(values, "contenido"),
         )
-    raise ValueError(f"{worksheet.name!r} has no record-design header")
+    raise RegistryValidationError(f"{worksheet.name!r} has no record-design header")
 
 
 def _cell(values: tuple[object, ...], index: int) -> object | None:
@@ -401,7 +408,7 @@ def _optional_header_text(values: tuple[object, ...], index: int | None) -> str 
 def _required_text(value: object | None, sheet: str, row: int, field: str) -> str:
     cleaned = _clean(value)
     if not cleaned:
-        raise ValueError(f"{sheet!r} row {row} missing {field}")
+        raise RegistryValidationError(f"{sheet!r} row {row} missing {field}")
     return cleaned
 
 
@@ -418,7 +425,7 @@ def _field_description_text(
         return description
     if content is not None:
         return content
-    raise ValueError(f"{sheet!r} row {row} missing description")
+    raise RegistryValidationError(f"{sheet!r} row {row} missing description")
 
 
 def _int_or_none(value: object | None) -> int | None:
@@ -447,7 +454,7 @@ def _normalise_header_cell(value: object | None) -> str:
 def _required_header_index(values: tuple[object, ...], header_name: str) -> int:
     index = _optional_header_index(values, header_name)
     if index is None:
-        raise ValueError(f"missing workbook header {header_name!r}")
+        raise RegistryValidationError(f"missing workbook header {header_name!r}")
     return index
 
 
@@ -514,7 +521,7 @@ class _PdfFieldDraft:
     def finish(self) -> RecordDesignField:
         description = _join_pdf_parts(self.description_parts)
         if not description:
-            raise ValueError(f"{self.sheet!r} PDF row {self.row} missing description")
+            raise RegistryValidationError(f"{self.sheet!r} PDF row {self.row} missing description")
         return RecordDesignField(
             sheet=self.sheet,
             row=self.row,
@@ -609,7 +616,7 @@ def _extract_pdf_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str
     try:
         document = pdfium.PdfDocument(pdf_bytes)
     except Exception as exc:  # pragma: no cover - pdfium parser surface
-        raise ValueError(f"pypdfium2 could not open record-design PDF {source_label}: {exc}") from exc
+        raise RegistryValidationError(f"pypdfium2 could not open record-design PDF {source_label}: {exc}") from exc
     try:
         lines: list[str] = []
         for page in document:
@@ -629,7 +636,7 @@ def _extract_pdfplumber_text_lines(pdf_bytes: bytes, *, source_label: str) -> tu
         with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
             return tuple(line for page in pdf.pages for line in _extract_pdf_page_lines(page))
     except Exception as exc:  # pragma: no cover - defensive; pdfplumber surface
-        raise ValueError(f"pdfplumber could not open record-design PDF {source_label}: {exc}") from exc
+        raise RegistryValidationError(f"pdfplumber could not open record-design PDF {source_label}: {exc}") from exc
 
 
 def _uses_page_record_layout(lines: tuple[str, ...]) -> bool:
@@ -725,7 +732,7 @@ def _extract_pdf_lines(lines: tuple[str, ...], *, source_label: str) -> tuple[Re
 
     non_empty = tuple(sheet for sheet in sheets if sheet.fields)
     if not non_empty:
-        raise ValueError("record-design PDF did not contain parseable field rows")
+        raise RegistryValidationError("record-design PDF did not contain parseable field rows")
     return non_empty
 
 
@@ -734,23 +741,23 @@ def _validate_pdf_sheet(sheet: RecordDesignSheet, *, source_label: str) -> None:
         return
     first_field = sheet.fields[0]
     if first_field.offset != 1:
-        raise ValueError(
+        raise RegistryValidationError(
             f"{source_label} {sheet.name!r} first field starts at position {first_field.offset}; expected 1"
         )
     for parsed_field in sheet.fields:
         if parsed_field.offset < 1:
-            raise ValueError(
+            raise RegistryValidationError(
                 f"{source_label} {sheet.name!r} field ordinal {parsed_field.ordinal} has invalid "
                 f"position {parsed_field.offset}"
             )
         if parsed_field.length < 1:
-            raise ValueError(
+            raise RegistryValidationError(
                 f"{source_label} {sheet.name!r} field ordinal {parsed_field.ordinal} has invalid "
                 f"length {parsed_field.length}"
             )
     terminal_position = max(parsed_field.offset + parsed_field.length - 1 for parsed_field in sheet.fields)
     if sheet.total_positions is not None and terminal_position != sheet.total_positions:
-        raise ValueError(
+        raise RegistryValidationError(
             f"{source_label} {sheet.name!r} declares {sheet.total_positions} total positions "
             f"but parsed fields fill {terminal_position}"
         )
@@ -787,7 +794,7 @@ def _parse_pdf_row(line: str, source_row: int) -> _PdfRow | None:
     end_group = narrative.group("end")
     end = int(end_group) if end_group is not None else start
     if end < start:
-        raise ValueError(f"PDF row {source_row} has inverted position range {start}-{end}")
+        raise RegistryValidationError(f"PDF row {source_row} has inverted position range {start}-{end}")
     return _PdfRow(
         source_row=source_row,
         ordinal=None,

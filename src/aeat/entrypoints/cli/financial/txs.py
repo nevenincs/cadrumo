@@ -22,6 +22,7 @@ from pydantic import ValidationError
 from ....adapters.inbound.financial._decimal import canonical_decimal
 from ....adapters.inbound.financial.providers import detect_provider, provider_for_extension
 from ....adapters.inbound.financial.providers._base import FinancialProviderError
+from ....core.errors import AeatError
 from ....domain.categories import CATEGORY_PROFILES_2025, ProportionalityKind, SpendingCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -38,6 +39,12 @@ from ....domain.transactions import (
     set_classification,
 )
 from .._i18n import tr
+
+
+class TxsArgumentError(AeatError):
+    """Raised on invalid CLI arguments in the txs group."""
+
+
 from ._catalogue import (
     catalogue_repository,
     load_catalogue_or_empty,
@@ -581,7 +588,7 @@ def _resolve_pct_override_or_exit(raw: str | None) -> Decimal | None:
     """Wrap :func:`_parse_pct_override` with the CLI's exit-code-2 protocol."""
     try:
         return _parse_pct_override(raw)
-    except ValueError as exc:
+    except TxsArgumentError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
 
@@ -590,7 +597,7 @@ def _resolve_tier_or_exit(raw: str | None) -> ModelTier:
     """Wrap :func:`_parse_tier` with the CLI's exit-code-2 protocol."""
     try:
         return _parse_tier(raw)
-    except ValueError as exc:
+    except TxsArgumentError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
 
@@ -626,7 +633,7 @@ def _parse_pct_override(raw: str | None) -> Decimal | None:
         ``None``.
 
     Raises:
-        ValueError: When ``raw`` is not a valid decimal or falls
+        TxsArgumentError: When ``raw`` is not a valid decimal or falls
             outside the inclusive ``[0, 1]`` range.
     """
     if raw is None:
@@ -634,9 +641,9 @@ def _parse_pct_override(raw: str | None) -> Decimal | None:
     try:
         value = Decimal(raw)
     except InvalidOperation as exc:
-        raise ValueError(f"--pct-override {raw!r} is not a valid decimal") from exc
+        raise TxsArgumentError(f"--pct-override {raw!r} is not a valid decimal") from exc
     if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
-        raise ValueError("--pct-override must be within the inclusive 0..1 range")
+        raise TxsArgumentError("--pct-override must be within the inclusive 0..1 range")
     return value
 
 
@@ -724,7 +731,7 @@ def _parse_tier(raw: str | None) -> ModelTier:
         The resolved :class:`~aeat.domain.transactions.ModelTier`.
 
     Raises:
-        ValueError: When ``raw`` does not match a known tier.
+        TxsArgumentError: When ``raw`` does not match a known tier.
     """
     from ....domain.transactions import MINIMUM_CLASSIFICATION_TIER
 
@@ -735,7 +742,7 @@ def _parse_tier(raw: str | None) -> ModelTier:
         return ModelTier[normalised]
     except KeyError as exc:
         known = ", ".join(t.name.lower() for t in ModelTier)
-        raise ValueError(f"unknown --tier value {raw!r}; valid: {known}") from exc
+        raise TxsArgumentError(f"unknown --tier value {raw!r}; valid: {known}") from exc
 
 
 _LLM_RETRY_STATES: frozenset[BusinessClassification] = frozenset(

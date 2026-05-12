@@ -54,6 +54,7 @@ from ..vat import (
     settlement_sides_for_flow,
 )
 from ._enums import InvoiceKind, IvaRate
+from ._errors import InvoiceValidationError
 
 if TYPE_CHECKING:
     from ..calculations.registry import IvaLedgerObservation
@@ -121,7 +122,7 @@ class IvaInvoiceClassification(BaseModel):
     def _validate_settlement_sides_match_flow(self) -> IvaInvoiceClassification:
         expected = settlement_sides_for_flow(self.flow_direction)
         if self.settlement_sides != expected:
-            raise ValueError(
+            raise InvoiceValidationError(
                 f"settlement_sides {sorted(s.value for s in self.settlement_sides)!r} "
                 f"does not match flow_direction {self.flow_direction.value!r} "
                 f"(expected {sorted(s.value for s in expected)!r})"
@@ -184,12 +185,12 @@ def classify_invoice_line_for_iva(
         substrate triple and pre-computed settlement-side set.
 
     Raises:
-        ValueError: If ``iva_rate`` is :attr:`IvaRate.NOT_SUBJECT`,
+        InvoiceValidationError: If ``iva_rate`` is :attr:`IvaRate.NOT_SUBJECT`,
             which has no rate-tier classification and cannot be
             handled by the standard-case helper.
     """
     if iva_rate is IvaRate.NOT_SUBJECT:
-        raise ValueError(
+        raise InvoiceValidationError(
             "classify_invoice_line_for_iva does not handle IvaRate.NOT_SUBJECT — "
             "operations outside the scope of IVA must construct "
             "IvaInvoiceClassification directly with VATCategory.OPERACION_NO_SUJETA"
@@ -250,7 +251,7 @@ def invoice_line_to_iva_observation(
 
     classification = classify_invoice_line_for_iva(iva_rate=iva_rate, invoice_kind=invoice_kind)
     if classification.rate_kind is None:
-        raise ValueError("standard IVA invoice observations require a rate_kind")
+        raise InvoiceValidationError("standard IVA invoice observations require a rate_kind")
     return IvaLedgerObservation(
         ledger_id=invoice_id,
         transaction_date=issued_at,

@@ -44,7 +44,7 @@ from ...core.i18n import Translatable as tr  # noqa: N813
 from ...core.logging import get_logger
 from ..categories import CATEGORY_PROFILES_2025, SpendingCategory
 from ._enums import BusinessClassification
-from ._errors import LLMClassifierError
+from ._errors import LLMClassifierError, TransactionValidationError
 from ._model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier, resolve_profile
 from ._models import Transaction
 
@@ -75,7 +75,7 @@ class LLMClassificationResponse(BaseModel):
     def _check_confidence_range(cls, value: Decimal) -> Decimal:
         """Restrict confidence to the inclusive 0..1 range."""
         if not _CONFIDENCE_MIN <= value <= _CONFIDENCE_MAX:
-            raise ValueError("confidence must be within the inclusive 0..1 range")
+            raise TransactionValidationError("confidence must be within the inclusive 0..1 range")
         return value
 
     @field_validator("reason")
@@ -84,7 +84,7 @@ class LLMClassificationResponse(BaseModel):
         """Trim whitespace and reject empty reasons."""
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("reason must not be empty")
+            raise TransactionValidationError("reason must not be empty")
         return trimmed
 
 

@@ -63,7 +63,12 @@ from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from ._adapter_utils import normalize_response_text
 from ._auth_state import storage_state_for_session
-from ._errors import JustificanteFetchError, SedeNavigationError, SedeParseError
+from ._errors import (
+    JustificanteFetchError,
+    SedeNavigationError,
+    SedeParseError,
+    SedeValidationError,
+)
 from ._schema import (
     FiledDeclarationArtefact,
     FiledDeclarationObservation,
@@ -699,7 +704,7 @@ def _parse_presented_at(value: str) -> datetime:
     """
     match = _PRESENTED_AT_RE.match(value)
     if match is None:
-        raise ValueError(f"unexpected presented_at shape: {value!r}")
+        raise SedeValidationError(f"unexpected presented_at shape: {value!r}")
     return datetime(
         year=int(match["year"]),
         month=int(match["month"]),

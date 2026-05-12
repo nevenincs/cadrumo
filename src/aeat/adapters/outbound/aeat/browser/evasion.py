@@ -6,14 +6,10 @@ from typing import Protocol
 
 from playwright.async_api import BrowserContext
 
-from .....core.errors import AeatError
 from .....core.logging import get_logger
+from ._errors import BrowserEvasionError
 
 logger = get_logger(__name__)
-
-
-class BrowserEvasionError(AeatError):
-    """Raised when browser evasion setup cannot be applied."""
 
 
 class EvasionStrategy(Protocol):

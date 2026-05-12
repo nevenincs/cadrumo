@@ -25,12 +25,15 @@ from .....domain.submission._protocols import (
     FilingFinding,
     FilingFindingSeverity,
 )
+from ._errors import ExportError, ExportFormatError
 
 __all__ = [
     "AuthProviderProbe",
     "DeadlineWindowChecker",
     "DraftLoader",
     "DraftStatus",
+    "ExportError",
+    "ExportFormatError",
     "FilingDraftLike",
     "FilingFinding",
     "FilingFindingSeverity",

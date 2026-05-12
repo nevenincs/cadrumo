@@ -23,3 +23,7 @@ class TransactionNotFoundError(TransactionCatalogueError):
 
 class LLMClassifierError(TransactionError):
     """Raised when an LLM classification attempt fails."""
+
+
+class TransactionValidationError(TransactionError, ValueError):
+    """Raised on invalid transaction field values. Inherits from ValueError for Pydantic."""

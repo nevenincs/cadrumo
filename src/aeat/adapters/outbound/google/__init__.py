@@ -11,11 +11,16 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import NoReturn
 
+from ....core.errors import AeatError
 from ._paths import GoogleAuthPath
 
 
-class GoogleAuthUnavailableError(RuntimeError):
+class GoogleAuthUnavailableError(AeatError):
     """Raised when Google credentials are requested without a configured backend."""
+
+
+class GoogleAuthValidationError(GoogleAuthUnavailableError, ValueError):
+    """Raised when Google auth parameters (e.g. scopes) fail validation."""
 
 
 @dataclass(frozen=True)
@@ -42,7 +47,7 @@ def get_credentials_for_scopes(scopes: Iterable[str], *, path: GoogleAuthPath | 
 
     normalized = tuple(scope.strip() for scope in scopes if scope.strip())
     if not normalized:
-        raise ValueError("at least one Google OAuth scope is required")
+        raise GoogleAuthValidationError("at least one Google OAuth scope is required")
     requested_path = path.value if path is not None else "default"
     raise GoogleAuthUnavailableError(
         f"Google credential acquisition is not configured; requested_path={requested_path!r} scopes={normalized!r}"

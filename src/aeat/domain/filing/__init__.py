@@ -37,6 +37,8 @@ from ._errors import (
     FilingBuilderError,
     FilingComputationError,
     FilingDraftError,
+    FilingExportError,
+    FilingExportValidationError,
     FilingImportError,
     FilingValidationError,
 )
@@ -95,6 +97,8 @@ __all__ = [
     "FilingDraftError",
     "FilingDraftRepository",
     "FilingDraftStatus",
+    "FilingExportError",
+    "FilingExportValidationError",
     "FilingFindingSeverity",
     "FilingImportError",
     "FilingInputs",

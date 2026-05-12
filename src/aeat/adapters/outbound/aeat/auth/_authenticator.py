@@ -45,6 +45,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError
 from . import _session_store
+from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthValidationError
 from ._providers import (
     CERTIFICATE_CONTEXT_MARKER,
     AuthLoginAssertionDetail,
@@ -56,8 +57,6 @@ from ._providers import (
     CertificateSessionDetail,
 )
 from .certificate import (
-    AeatLoginAssertionError,
-    AeatSessionExpiredError,
     CertificateBackend,
     CertificateBundle,
     CertificateHealth,
@@ -699,10 +698,9 @@ class AeatAuthenticator:
     ) -> AeatSession:
         """Resume a persisted AEAT browser session from ``path``."""
         async with self._lock:
-            if self._active_session is not None:
-                raise AeatLoginAssertionError(
-                    "AeatAuthenticator already has an active session; "
-                    "call close() or reauthenticate() before resuming another one"
+            if self._context is not None:
+                raise AuthValidationError(
+                    "AeatAuthenticator already has an active session; call close() before resuming another one"
                 )
             return await self._resume_from_storage_state_locked(
                 path,
@@ -1042,7 +1040,7 @@ class AeatAuthenticator:
 
         try:
             persisted = _session_store.load(storage_state_path)
-        except (ValueError, ValidationError) as exc:
+        except (AuthValidationError, ValidationError) as exc:
             self._raise_invalid_persisted_state(
                 storage_state_path,
                 f"persisted storage_state is malformed: {exc}",
@@ -1060,7 +1058,7 @@ class AeatAuthenticator:
         metadata: _PersistedSessionMetadata | None = None
         try:
             metadata = _PersistedSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
-        except (ValueError, ValidationError) as exc:
+        except (AuthValidationError, ValidationError) as exc:
             self._raise_invalid_persisted_state(
                 storage_state_path,
                 f"persisted metadata is malformed: {exc}",

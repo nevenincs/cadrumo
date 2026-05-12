@@ -30,6 +30,7 @@ from pydantic import (
 )
 
 from ...core.i18n import Translatable as tr  # noqa: N813
+from .errors import VatValidationError
 
 
 class VATCategory(StrEnum):
@@ -160,7 +161,7 @@ def _require_translatable(translatable: tr, field_name: str) -> None:
         :exc:`ValueError`: If the translation key is missing or empty.
     """
     if not translatable:
-        raise ValueError(f"{field_name}: missing authoritative translation key")
+        raise VatValidationError(f"{field_name}: missing authoritative translation key")
 
 
 class _VatStrictFrozen(BaseModel):
@@ -221,7 +222,7 @@ class VATRate(_VatStrictFrozen):
     def _validate_window(self) -> VATRate:
         """Ensure :attr:`effective_from` precedes :attr:`effective_until`."""
         if self.effective_until is not None and self.effective_from > self.effective_until:
-            raise ValueError(
+            raise VatValidationError(
                 f"VATRate[{self.member_state.value}/{self.kind.value}]: "
                 f"effective_from {self.effective_from} is after effective_until {self.effective_until}"
             )
@@ -324,7 +325,7 @@ class VATRegulation(_VatStrictFrozen):
         _require_translatable(self.triggers_when, f"VATRegulation[{self.category.value}].triggers_when")
         _require_translatable(self.iva_treatment, f"VATRegulation[{self.category.value}].iva_treatment")
         if not self.citations:
-            raise ValueError(f"VATRegulation[{self.category.value}]: at least one VatCitation is required")
+            raise VatValidationError(f"VATRegulation[{self.category.value}]: at least one VatCitation is required")
         return self
 
 
@@ -350,7 +351,7 @@ class VATCatalogue(_VatStrictMutable):
         """Ensure every mapping key matches its record's :attr:`VATRegulation.category`."""
         for key, regulation in self.regulations.items():
             if key != regulation.category:
-                raise ValueError(
+                raise VatValidationError(
                     f"VATCatalogue: key {key!r} does not match regulation.category {regulation.category!r}"
                 )
         return self

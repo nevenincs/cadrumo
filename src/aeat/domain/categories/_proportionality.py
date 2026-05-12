@@ -17,6 +17,7 @@ from enum import StrEnum
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
 from ...core.i18n import Translatable as tr  # noqa: N813
+from ._errors import CategoryValidationError
 
 
 class _ProportionalityStrictFrozenModel(BaseModel):
@@ -167,40 +168,40 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     @model_validator(mode="after")
     def _validate_shape(self) -> ProportionalityRule:
         if not self.citations:
-            raise ValueError("proportionality rules require at least one citation")
+            raise CategoryValidationError("proportionality rules require at least one citation")
         if self.kind is ProportionalityKind.FIXED_PERCENTAGE and self.fixed_pct is None:
-            raise ValueError("fixed_percentage rules require fixed_pct")
+            raise CategoryValidationError("fixed_percentage rules require fixed_pct")
         if self.kind is not ProportionalityKind.FIXED_PERCENTAGE and self.fixed_pct is not None:
-            raise ValueError("fixed_pct is only valid for fixed_percentage rules")
+            raise CategoryValidationError("fixed_pct is only valid for fixed_percentage rules")
         is_usage_ratio = self.kind in {
             ProportionalityKind.USAGE_RATIO_HOME_AREA,
             ProportionalityKind.USAGE_RATIO_PERSONAL,
         }
         if not is_usage_ratio and self.default_ratio is not None:
-            raise ValueError("default_ratio is only valid for usage_ratio rules")
+            raise CategoryValidationError("default_ratio is only valid for usage_ratio rules")
         has_daily_cap = self.statutory_cap_eur_per_day is not None
         has_generic_cap = self.statutory_cap_eur is not None or self.statutory_cap_period is not None
         has_variant_caps = bool(self.statutory_cap_variants)
         if self.kind is ProportionalityKind.STATUTORY_CAP:
             if not has_daily_cap and not has_generic_cap and not has_variant_caps:
-                raise ValueError("statutory_cap rules require a cap amount")
+                raise CategoryValidationError("statutory_cap rules require a cap amount")
             mode_count = sum((has_daily_cap, has_generic_cap, has_variant_caps))
             if mode_count > 1:
-                raise ValueError("statutory cap rules must use one cap mode")
+                raise CategoryValidationError("statutory cap rules must use one cap mode")
             if self.statutory_cap_eur is None and self.statutory_cap_period is not None:
-                raise ValueError("statutory_cap_period requires statutory_cap_eur")
+                raise CategoryValidationError("statutory_cap_period requires statutory_cap_eur")
             if self.statutory_cap_eur is not None and self.statutory_cap_period is None:
-                raise ValueError("statutory_cap_eur requires statutory_cap_period")
+                raise CategoryValidationError("statutory_cap_eur requires statutory_cap_period")
             variant_ids = [variant.id for variant in self.statutory_cap_variants]
             if len(set(variant_ids)) != len(variant_ids):
-                raise ValueError("statutory cap variant ids must be unique")
+                raise CategoryValidationError("statutory cap variant ids must be unique")
             return self
         if has_daily_cap:
-            raise ValueError("statutory_cap_eur_per_day is only valid for statutory_cap rules")
+            raise CategoryValidationError("statutory_cap_eur_per_day is only valid for statutory_cap rules")
         if self.statutory_cap_eur is not None:
-            raise ValueError("statutory_cap_eur is only valid for statutory_cap rules")
+            raise CategoryValidationError("statutory_cap_eur is only valid for statutory_cap rules")
         if self.statutory_cap_period is not None:
-            raise ValueError("statutory_cap_period is only valid for statutory_cap rules")
+            raise CategoryValidationError("statutory_cap_period is only valid for statutory_cap rules")
         if has_variant_caps:
-            raise ValueError("statutory_cap_variants are only valid for statutory_cap rules")
+            raise CategoryValidationError("statutory_cap_variants are only valid for statutory_cap rules")
         return self

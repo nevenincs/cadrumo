@@ -21,13 +21,14 @@ from ..calculations.registry import (
     applicable_filing_schedules,
     evaluate_profile_conditions,
 )
-from ._errors import ScheduleComputationError
+from ._errors import DeadlineValidationError, ScheduleComputationError
 from ._models import (
     AutonomoProfile,
     FilingObligation,
     ObligationStatus,
     Schedule,
 )
+from ._recargo import build_recovery_for_overdue
 
 _logger = get_logger(__name__)
 
@@ -83,11 +84,11 @@ class DeadlineEngine:
             source_root: Repository root for source-integrity checks.
 
         Raises:
-            ValueError: If ``due_soon_days`` is negative.
+            DeadlineValidationError: If ``due_soon_days`` is negative.
             ScheduleComputationError: If registry loading or validation fails.
         """
         if due_soon_days < 0:
-            raise ValueError(f"due_soon_days must be >= 0, got {due_soon_days}")
+            raise DeadlineValidationError(f"due_soon_days must be >= 0, got {due_soon_days}")
         self.due_soon_days = due_soon_days
         self._source_root = source_root or PROJECT_ROOT
         root = registry_root or _DEFAULT_REGISTRY_ROOT
@@ -141,6 +142,23 @@ class DeadlineEngine:
             )
             if condition_text is None:
                 continue
+            obligation_status = _classify(
+                window.closes_on,
+                reference_today,
+                self.due_soon_days,
+            )
+            recovery = None
+            if obligation_status is ObligationStatus.OVERDUE:
+                days_late = (reference_today - window.closes_on).days
+                if days_late >= 1:
+                    try:
+                        recovery = build_recovery_for_overdue(
+                            days_late=days_late,
+                            modelo=modelo,
+                            period=window.period,
+                        )
+                    except (FileNotFoundError, ValueError):
+                        recovery = None
             obligations.append(
                 FilingObligation(
                     modelo=modelo,
@@ -148,13 +166,10 @@ class DeadlineEngine:
                     opens_on=window.opens_on,
                     closes_on=window.closes_on,
                     payment_cutoff_on=window.payment_cutoff_on,
-                    status=_classify(
-                        window.closes_on,
-                        reference_today,
-                        self.due_soon_days,
-                    ),
+                    status=obligation_status,
                     applies_because=condition_text,
                     boe_references=window.legal_refs,
+                    recovery=recovery,
                 )
             )
 

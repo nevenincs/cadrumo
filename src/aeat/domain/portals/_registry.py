@@ -65,7 +65,7 @@ from ._entries import (
     portal_renta_web_borrador,
     portal_sede_root,
 )
-from ._errors import PortalIntegrityError, UnknownPortalError
+from ._errors import PortalIntegrityError, PortalValidationError, UnknownPortalError
 from ._metadata import PortalMetadata
 
 _LOG = get_logger(__name__)
@@ -298,8 +298,8 @@ def portals_for_modelo(code: ModeloCode | str) -> tuple[PortalMetadata, ...]:
     else:
         try:
             member = ModeloCode(code)
-        except ValueError as exc:
-            raise ValueError(f"unknown modelo code: {code!r}") from exc
+        except KeyError as exc:
+            raise PortalValidationError(f"unknown modelo code: {code!r}") from exc
     bound_portals = _registry_portal_bindings_for_modelo(member)
     matches = [
         metadata

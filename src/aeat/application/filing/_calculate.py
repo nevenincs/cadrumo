@@ -28,6 +28,7 @@ from ...domain.filing import (
     FilingDraftStatus,
     FilingFindingSeverity,
 )
+from .errors import FilingCalculateError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
@@ -117,10 +118,10 @@ class DeclarationCalculateSummary(BaseModel):
         """
         if self.next_action is DeclarationCalculateNextAction.RESOLVE_BLOCKERS:
             if not self.repair_hints:
-                raise ValueError("repair_hints must be non-empty when next_action is RESOLVE_BLOCKERS")
+                raise FilingCalculateError("repair_hints must be non-empty when next_action is RESOLVE_BLOCKERS")
         else:
             if self.repair_hints:
-                raise ValueError("repair_hints must be empty unless next_action is RESOLVE_BLOCKERS")
+                raise FilingCalculateError("repair_hints must be empty unless next_action is RESOLVE_BLOCKERS")
         return self
 
 
@@ -183,7 +184,7 @@ def summarise_calculation(
         A frozen :class:`DeclarationCalculateSummary`.
 
     Raises:
-        ValueError: When ``repair_hints`` violates the
+        FilingCalculateError: When ``repair_hints`` violates the
             ``RESOLVE_BLOCKERS`` invariant.
     """
     counts: dict[FilingFindingSeverity, int] = {

@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 _ROOT = Path(__file__).resolve().parents[5]
 _SENSITIVE_SURFACES = (
     _ROOT / "src" / "aeat" / "application" / "review",
-    _ROOT / "src" / "aeat" / "application" / "user_cli.py",
+    _ROOT / "src" / "aeat" / "application" / "workflow" / "_persistence.py",
     _ROOT / "src" / "aeat" / "application" / "auth",
     _ROOT / "src" / "aeat" / "application" / "setup",
     _ROOT / "src" / "aeat" / "application" / "filing" / "_history_repository.py",
@@ -122,6 +122,11 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "secret-store backend writes encrypted index metadata only",
     (
+        "src/aeat/application/auth/_acquisition_lock.py",
+        "acquire_auth_acquisition_lock",
+        "os.open",
+    ): "auth acquisition lock file; non-sensitive lock metadata only",
+    (
         "src/aeat/application/filing/_export.py",
         "export_draft",
         "output_path.write_bytes",
@@ -182,15 +187,15 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "manifest_path.write_text",
     ): "official manual corpus manifest",
     (
+        "src/aeat/entrypoints/cli/_archive.py",
+        "export_cmd",
+        "path.write_text",
+    ): "explicit user-directed portable archive export",
+    (
         "src/aeat/entrypoints/cli/_declaration.py",
         "declaration_validate",
         "output.write_text",
     ): "explicit user-directed validation report export",
-    (
-        "src/aeat/entrypoints/cli/drive.py",
-        "fetch",
-        "target.write_bytes",
-    ): "explicit user-directed Drive download",
     (
         "src/aeat/entrypoints/cli/registry.py",
         "verify_workbooks_cmd",

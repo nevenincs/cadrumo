@@ -24,6 +24,7 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from . import load_registry_tree
+from ._runtime_graph import expression_binding_refs, expression_parameter_refs
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -122,7 +123,7 @@ def test_no_orphan_formula_feeding_bindings_in_any_revision() -> None:
         formula_feeding = {b.id for b in revision.bindings if b.source in ("manual_input", "previous_filing")}
         referenced: set[str] = set()
         for formula in revision.formulas:
-            _collect_binding_refs(formula.expression, referenced)
+            referenced.update(expression_binding_refs(formula.expression))
         for relation in revision.relations:
             target_binding = getattr(relation, "target_binding", None)
             if target_binding:
@@ -156,7 +157,7 @@ def test_no_orphan_parameters_in_any_revision() -> None:
         declared = {p.id for p in revision.parameters}
         referenced: set[str] = set()
         for formula in revision.formulas:
-            _collect_parameter_refs(formula.expression, referenced)
+            referenced.update(expression_parameter_refs(formula.expression))
         referenced |= cross_module_refs
         referenced |= _PRE_STAGED_PARAMETERS
         orphans = declared - referenced
@@ -166,12 +167,42 @@ def test_no_orphan_parameters_in_any_revision() -> None:
 
 
 #: Parameters that are declared in the registry with authoritative tax
-#: data (e.g. IRPF state-level progressive bracket tables) but whose
-#: consuming formula has not yet been wired into the registry. Removing
-#: an entry from this set is the gate that the corresponding formula
-#: work must clear before this allow-list shrinks. The data is
-#: preserved on disk so future formula work can land without
-#: re-entering authoritative bracket values.
+#: data (e.g. IRPF state-level progressive bracket tables, Ley 19/1994
+#: RIC caps, Ley 19/1994 ZEC reduced rate, LIRPF arts. 86-89 attribution
+#: pass-through, RD-Ley estimación objetiva indices) but whose consuming
+#: formula has not yet been wired into the registry. Removing an entry
+#: from this set is the gate that the corresponding formula work must
+#: clear before this allow-list shrinks. The data is preserved on disk
+#: so future formula work can land without re-entering authoritative
+#: bracket values.
+#:
+#: Each entry below carries a one-line rationale and a pointer at the
+#: tracking task that will land the consuming formula:
+#:
+#: * RIC trio (Ley 19/1994 art-27) — three legal-authority parameters
+#:   (reduction rate cap 80 %, materialization window 3 years, holding
+#:   period 5 years) cited by the 26 RIC casillas in the
+#:   ``reserva_inversiones_canarias_res`` section, but the aggregation
+#:   formula that applies the cap to the dotación total has not landed.
+#:   See task #46 (Wire orphan RIC parameters).
+#: * ZEC reduced rate (Ley 19/1994 art-43+) — Canarias special economic
+#:   zone reduced corporate-tax rate cited by ZEC-eligible casillas;
+#:   IRPF integration formula pending alongside the MM-7 Canarias work
+#:   slice referenced by the Ley 19/1994 corpus commit.
+#: * Estimación objetiva reducción general rate + corrector pequeña
+#:   dimensión (Orden HFP estimación objetiva annual orders) —
+#:   parameters consumed by the EO computation outside the registry
+#:   evaluator. The values are authoritative for the EO module but the
+#:   in-registry formula path is deferred until EO is brought under the
+#:   formula evaluator.
+#: * Atribución de rentas pass-through 100 % (LIRPF arts. 86-89) —
+#:   parameter encodes the legal 100 % pass-through rate but the
+#:   modelo-184 cross-modelo binding already returns the full attributed
+#:   amount at casilla 1577 (``input_kind = "bound"``). The parameter
+#:   exists for legal citation; turning it into a real consumer requires
+#:   converting 1577 to ``input_kind = "computed"`` with an
+#:   ``op = "percent"`` formula, which is a schema-level change tracked
+#:   by task #47.
 _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
     {
         "renta-2025-ric-reduccion-rate-maximo",
@@ -208,7 +239,7 @@ def test_every_formula_binding_reference_resolves_to_a_declared_binding() -> Non
         declared_bindings = {b.id for b in revision.bindings}
         for formula in revision.formulas:
             referenced: set[str] = set()
-            _collect_binding_refs(formula.expression, referenced)
+            referenced.update(expression_binding_refs(formula.expression))
             unresolved = referenced - declared_bindings
             for ref in sorted(unresolved):
                 offences.append(f"{revision_id}: formula {formula.id!r} references undeclared binding {ref!r}")
@@ -223,38 +254,11 @@ def test_every_formula_parameter_reference_resolves_to_a_declared_parameter() ->
         declared = {p.id for p in revision.parameters}
         for formula in revision.formulas:
             referenced: set[str] = set()
-            _collect_parameter_refs(formula.expression, referenced)
+            referenced.update(expression_parameter_refs(formula.expression))
             unresolved = referenced - declared
             for ref in sorted(unresolved):
                 offences.append(f"{revision_id}: formula {formula.id!r} references undeclared parameter {ref!r}")
     assert not offences, "formulas referencing undeclared parameters:\n  " + "\n  ".join(offences)
-
-
-def _collect_binding_refs(expression, accumulator: set[str]) -> None:
-    if expression is None:
-        return
-    binding = getattr(expression, "binding", None)
-    if binding is not None:
-        accumulator.add(binding)
-    args = getattr(expression, "args", None)
-    if args:
-        for arg in args:
-            _collect_binding_refs(arg, accumulator)
-
-
-def _collect_parameter_refs(expression, accumulator: set[str]) -> None:
-    if expression is None:
-        return
-    parameter = getattr(expression, "parameter", None)
-    if parameter is not None:
-        accumulator.add(parameter)
-    dispatch_table = getattr(expression, "dispatch_table", None)
-    if dispatch_table:
-        accumulator.update(dispatch_table.values())
-    args = getattr(expression, "args", None)
-    if args:
-        for arg in args:
-            _collect_parameter_refs(arg, accumulator)
 
 
 @lru_cache(maxsize=8)

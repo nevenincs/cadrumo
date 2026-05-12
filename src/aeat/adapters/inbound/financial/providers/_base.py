@@ -48,6 +48,17 @@ class InvalidFinancialSourceError(FinancialProviderError):
     """Raised when a source document is unreadable or structurally invalid."""
 
 
+class FinancialValidationError(FinancialProviderError, ValueError):
+    """Raised when a specific field (date, amount) fails domain validation.
+
+    This error inherits from both :class:`FinancialProviderError` and
+    :class:`ValueError` for compatibility with Pydantic and consistent
+    adapter-layer error handling.
+    """
+
+    pass
+
+
 class ProviderValidation(BaseModel):
     """Typed validation result returned before ingest.
 
@@ -211,7 +222,7 @@ def parse_date_value(value: object, *, day_first: bool = True) -> date:
         return value
     raw = coerce_cell_text(value)
     if not raw:
-        raise ValueError("missing date value")
+        raise FinancialValidationError("missing date value")
     raw = raw.replace(".", "/")
     if raw.isdigit() and len(raw) >= 8:
         return datetime.strptime(raw[:8], "%Y%m%d").date()
@@ -243,7 +254,7 @@ def parse_date_value(value: object, *, day_first: bool = True) -> date:
             return datetime.strptime(raw, candidate).date()
         except ValueError:
             continue
-    raise ValueError(f"unsupported date format: {raw!r}")
+    raise FinancialValidationError(f"unsupported date format: {raw!r}")
 
 
 def parse_amount_value(
@@ -282,7 +293,7 @@ def parse_amount_value(
         return Decimal(str(value))
     raw = coerce_cell_text(value)
     if not raw:
-        raise ValueError("missing amount value")
+        raise FinancialValidationError("missing amount value")
     sanitized = raw.replace(" ", "").replace("\u202f", "")
     negative = (
         sanitized.startswith("-") or sanitized.endswith("-") or (sanitized.startswith("(") and sanitized.endswith(")"))
@@ -290,9 +301,9 @@ def parse_amount_value(
     sanitized = sanitized.strip("()-+")
     sanitized = "".join(char for char in sanitized if char.isdigit() or char in ",.")
     if not sanitized:
-        raise ValueError(f"unsupported amount value: {raw!r}")
+        raise FinancialValidationError(f"unsupported amount value: {raw!r}")
     if decimal_separator is not None and decimal_separator not in {",", "."}:
-        raise ValueError(f"unsupported decimal separator: {decimal_separator!r}")
+        raise FinancialValidationError(f"unsupported decimal separator: {decimal_separator!r}")
     if decimal_separator is not None:
         decimal_sep = decimal_separator
     elif "," in sanitized and "." in sanitized:
@@ -308,7 +319,7 @@ def parse_amount_value(
     try:
         amount = Decimal(normalized)
     except InvalidOperation as exc:
-        raise ValueError(f"unsupported amount value: {raw!r}") from exc
+        raise FinancialValidationError(f"unsupported amount value: {raw!r}") from exc
     return -amount if negative else amount
 
 

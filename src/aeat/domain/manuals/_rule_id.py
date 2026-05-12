@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 
 from ._ids import ManualId, ManualPart
+from .errors import ManualValidationError
 
 _ID_CHAR_RE = re.compile(r"[^a-z0-9-]+")
 
@@ -51,14 +52,14 @@ def generate_rule_id(
             the identifier components is empty after slugging.
     """
     if ordinal < 1:
-        raise ValueError(f"ordinal must be >= 1, got {ordinal}")
+        raise ManualValidationError(f"ordinal must be >= 1, got {ordinal}")
 
     chapter_slug = _slug(chapter_id)
     section_slug = _slug(section_id)
     if not chapter_slug:
-        raise ValueError("chapter_id is empty after slugging")
+        raise ManualValidationError("chapter_id is empty after slugging")
     if not section_slug:
-        raise ValueError("section_id is empty after slugging")
+        raise ManualValidationError("section_id is empty after slugging")
 
     segments: list[str] = [manual_id.value, str(year)]
     if part is not ManualPart.SINGLE:

@@ -1,10 +1,19 @@
 aggregation:
   models:
+    errors:
+      annual_period_mixed: Az időszak nem keverhet éves és szévén belüli (negyedév/hónap)
+        értékeket.
+      month_required: A havi időszaktípushoz hónapnapérték szükséges.
+      period_type_ambiguous: Az időszaktípus nem egyértelmű; adja meg explicitül a
+        negyedévet vagy hónapot.
+      quarter_required: A negyedéves időszaktípushoz negyedévérték szükséges.
     t_944805: Érvénytelen időszak formátum. Használja a YYYY, YYYY-Qn vagy YYYY-MM
       formátumot.
   renta_ledger:
     errors:
       annual_period_required: Éves időszak szükséges a Renta nyilvántartás összesítéséhez.
+      modelo_mismatch: Az adómodell nem egyezik a Renta nyilvántartás várt modeljével.
+      period_mismatch: Az időszak nem egyezik a Renta nyilvántartás várt időszakával.
 application:
   auth:
     provider_impact:
@@ -604,93 +613,14 @@ cli:
     verbose_help: Belső információs naplók megjelenítése stderr-en
     version_command_help: Csomagverzió és regiszter-összefoglaló megjelenítése
     version_help: Csomagverzió és regiszter-összefoglaló megjelenítése
-  setup:
-    app_help: A használathoz szükséges helyi profil és hitelesítés előkészítése
-    auth:
-      app_help: AEAT-hitelesítés beállítása és ellenőrzése
-      configure:
-        file_help: 'P12/PFX tanúsítványfájl abszolút vagy relatív útvonala, ha a szolgáltató
-          megköveteli. Példa: --file /ut/a/tanusitvany.p12.'
-        help: Hitelesítési szolgáltató beállítása
-        provider_help: 'Hitelesítési szolgáltató. Futtasd: ''aeat setup auth providers''
-          a támogatott szolgáltatók listájához (certificate, clave_movil).'
-      login:
-        help: A beállított helyi hitelesítési munkamenet indítása
-      logout:
-        help: A helyi hitelesítési munkamenet lezárása
-      providers:
-        help: Elérhető hitelesítési szolgáltatók listázása
-      reset:
-        all_help: A mentett munkamenetállapot és a megszerzési zárolás eltávolítása
-        help: Mentett hitelesítési munkamenetek vagy megszerzési zárolások visszaállítása
-        locks_help: A szolgáltató megszerzési zárolásának eltávolítása
-        sessions_help: A szolgáltató mentett munkamenetállapotának eltávolítása
-      status:
-        help: Beállított szolgáltató és munkamenet állapotának megjelenítése
-      whoami:
-        help: Az aktuális munkamenethez tartozó azonosító megjelenítése
+  topic:
+    app_help: Konceptuális segítség megjelenítése a rezsimekről, modellekről és AEAT
+      folyamatokról
     errors:
-      certificate_file_required: A certificate szolgáltatóhoz --file szükséges
-      file_not_found: 'A fájl nem található: {file}'
-      not_configured: Bejelentkezés előtt állítson be szolgáltatót
-      reset_scope_required: 'Válasszon legalább egy visszaállítási hatókört: --sessions,
-        --locks vagy --all.'
-      unknown_profile_key: 'Ismeretlen profilkulcs: {key}'
-      unknown_provider: 'Ismeretlen hitelesítési szolgáltató: {provider}'
-    headers:
-      active: Aktív
-      auth_provider: Hitelesítési szolgáltató
-      authenticated_at: Hitelesítve
-      completeness: Teljesség
-      description: Leírás
-      id: ID
-      key: Kulcs
-      login_ready: Munkamenet kész
-      logout: Kijelentkezés
-      missing: Hiányzik
-      next: Következő
-      profile: Profil
-      profile_ready: Profil kész
-      provider: Szolgáltató
-      ready: Kész
-      requirement: Követelmény
-      subject: Azonosító
-      unknown: Ismeretlen
-      valid: Érvényes
-    init:
-      activity_help: 'Az autonomo fő gazdasági tevékenysége. Szabad szöveg vagy IAE/CNAE
-        kód. Példa: ''IT szakmai szolgáltatások'' vagy ''6201''.'
-      help: Adózói profil létrehozása vagy aktiválása
-      name_help: 'Helyi címke a profil megkülönböztetésére (nem kerül elküldésre az
-        AEAT-nak). Példa: ''ugyfel-acme'' vagy ''sajat-profil''.'
-      tax_id_help: 'Spanyol adóazonosító. Formátum: 8 számjegy + betű (NIF), betű
-        + 7 számjegy + betű (NIE), vagy betű + 7 számjegy + számjegy (CIF). Példa:
-        12345678Z.'
-    labels:
-      'no': nem
-      unset: nincs érték
-      'yes': igen
-    profile:
-      app_help: Adózói profiladatok kezelése
-      get_help: Egy profilérték megjelenítése
-      get_key_help: Olvasandó profilkulcs
-      list_help: Helyi profilok listázása
-      list_keys_help: Szerkeszthető profilkulcsok listázása
-      set_help: Egy profilérték beállítása
-      set_key_help: Módosítandó profilkulcs
-      set_value_help: Mentendő érték
-      show_all_keys_help: Minden profilkulcs megjelenítése, a be nem állított értékekkel
-        együtt
-      show_help: Aktív profil értékeinek megjelenítése
-      show_unset_help: Minden profilkulcs megjelenítése <unset> jelöléssel az üres
-        értékekhez
-      unset_help: Egy profilérték törlése
-      unset_key_help: Törlendő profilkulcs
-      use_help: Helyi profil aktiválása
-      use_name_help: Profilnév
-      validate_help: Az aktív profil teljességének ellenőrzése
-    status:
-      help: Beállítási állapot és következő szükséges művelet megjelenítése
+      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat topic'' a regisztrált
+        témák listájához.'
+    opts:
+      slug: Téma azonosító (kebab-case, pl. iva-regime)
   txs:
     app_help: Banki tranzakciók és egyeztetés kezelése
     build:
@@ -785,53 +715,70 @@ review:
     t_791512: feldolgozva
     t_870243: személyes
     t_968325: bevetel
-setup:
-  verifier:
-    t_049382: A(z) '{path}' útvonal nem fájl
-    t_104932: A(z) '{var}' környezeti változó be van állítva
-    t_104938: Az egyéni vállalkozói profil a(z) '{path}' útvonalon érvényes
-    t_193582: Ellenőrizze, hogy a tanúsítvány elérési útja helyes-e, és a fájl létezik-e
-    t_204938: A(z) '{name}' könyvtár a(z) '{path}' útvonalon készen áll
-    t_293847: A telepítési konfiguráció önkonzisztens
-    t_394821: Adja meg a(z) '{var}' környezeti változót a tanúsítvány jelszavával
-    t_394827: Az egyéni vállalkozói profil a(z) '{path}' útvonalon nem létezik (az
-      alapértelmezett értékek lesznek használva)
-    t_501723: A tanúsítvány nem található a(z) '{path}' útvonalon
-    t_649302: 'Nem sikerült létrehozni a(z) ''{name}'' könyvtárat a(z) ''{path}''
-      útvonalon: {exc}'
-    t_749321: Tanúsítvány megtalálva a(z) '{path}' útvonalon
-    t_837462: 'Az egyéni vállalkozói profil a(z) ''{path}'' útvonalon érvénytelen:
-      {exc}'
-    t_938472: A tanúsítvány jelszavához tartozó '{var}' környezeti változó nincs beállítva
-    t_938475: 'A telepítési konfiguráció nem konzisztens: {exc}'
-  wizard:
-    aeat_drafts_dir_prompt: AEAT piszkozatok könyvtára
-    aeat_live_tests_enabled_prompt: Engedélyezi az AEAT élő teszteket?
-    aeat_manuals_root_prompt: AEAT kézikönyvek gyökérkönyvtára
-    aeat_submissions_dir_prompt: AEAT benyújtások könyvtára
-    bienes_extranjero_above_threshold_prompt: Rendelkezik külföldi vagyontárgyakkal
-      a küszöbérték felett (720-as modell)?
-    certificate_backend_prompt: Tanúsítványkezelő háttérrendszer
-    certificate_friendly_name_prompt: A tanúsítvány barátságos neve
-    certificate_password_secret_var_name_prompt: Környezeti változó neve a tanúsítvány
-      jelszavához
-    certificate_path_prompt: A tanúsítványfájl elérési útja (.p12, .pfx)
-    default_language_prompt: Alapértelmezett nyelv a felülethez
-    default_profile_path_prompt: Az egyéni vállalkozói profilfájl elérési útja (.json)
-    does_intracomunitario_prompt: Végez közösségen belüli műveleteket (ROI)?
-    has_employees_prompt: Vannak alkalmazottai?
-    iva_regime_prompt: ÁFA-rendszer
-    output_language_prompt: A generált jelentések és dokumentumok nyelve
-    pays_professionals_with_retencion_prompt: Fizet szakembereknek forrásadóval (111-es
-      modell)?
-    pays_rent_with_retencion_prompt: Fizet bérleti díjat forrásadóval (115-ös modell)?
-    professional_income_withholding_ge_70pct_prompt: Rendelkezik forrásadóval a szakmai
-      jövedelmének több mint 70%-ában?
-    tax_id_prompt: A tulajdonos adóazonosító jele (NIF/NIE)
-    tax_residence_ccaa_prompt: Adóilletékesség szerinti autonóm közösség
-    third_party_transactions_above_347_threshold_prompt: Végez harmadik felekkel 3005,06€
-      feletti műveleteket (347-es modell)?
-    welcome: Üdvözli az AEAT CLI telepítővarázslója
+topic:
+  authentication:
+    body: 'Az AEAT hitelesítés Cl@ve Móvilt (push a regisztrált mobilra) vagy digitális
+      tanúsítványt (FNMT / megfelelő) használ. Állíts be szolgáltatót az ''aeat setup
+      auth configure'' paranccsal és ellenőrizd: ''aeat setup auth status''.'
+    title: AEAT hitelesítés
+  calendar:
+    body: A naptár megjeleníti a benyújtási kötelezettségeket (modellek és időszakok)
+      egy tartományon belül. Igényli, hogy a profil deklarálja az ÁFA rezsimet, hogy
+      a motor ne alapértelmezett értékeket feltételezzen.
+    title: Kötelezettségi naptár
+  casilla:
+    body: A casilla egy modell számozott mezője. A casillák lehetnek kézi, számított,
+      vagy bindingekből származtatottak. 'aeat app modelo casillas <modelo>' listázza
+      őket.
+    title: Casillák
+  formats:
+    body: A CLI text, JSON, tábla vagy csv formátumban ad ki kimenetet a '--format'
+      alapján. Automatizációhoz a JSON ajánlott; emberi vizsgálathoz a text.
+    title: Kimeneti formátumok
+  irpf-regime:
+    body: Egy önfoglalkoztató IRPF rezsimje. Estimación directa (normál vagy egyszerűsített)
+      vagy estimación objetiva (modulos). Meghatározza, mely pago fraccionado modellek
+      alkalmazandók (130 vs 131).
+    title: IRPF rezsim
+  iva-regime:
+    body: Az adózóra alkalmazandó ÁFA rezsim. General, simplificado, recargo de equivalencia,
+      exento, REAGP vagy REBU. Meghatározza a negyedéves 303-as modellt és a 390-es
+      éves összesítőt.
+    title: ÁFA rezsim
+  modelos:
+    body: AEAT adóbevallási modellek katalógusa (303, 130, 100, 347, 349, 111, 115,
+      184, stb.). Mindegyiknek saját naptára, casillái és alkalmazhatósági szabályai
+      vannak. 'aeat app modelo list' felsorolja a rendelkezésre állókat.
+    title: Adóbevallási modellek
+  pago-fraccionado:
+    body: Az önfoglalkoztató negyedévenkénti IRPF előleges befizetése. A 130-as modell
+      az estimación directa-ra, a 131-es az estimación objetiva-ra vonatkozik. A számítás
+      a negyedév adatait és néhány esetben az előző évet használja.
+    title: IRPF előleges befizetés
+  profile:
+    body: 'A helyi profil tartalmazza az adóazonosítódat (NIF), fő tevékenységedet,
+      ÁFA / IRPF rezsimedet és opcionális regisztrációkat (SII, Verifactu, intracomunitario).
+      Szerkeszd: ''aeat setup profile set <kulcs> <érték>''.'
+    title: Adózói profil
+  providers:
+    body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő követelményei
+      vannak. 'aeat setup auth providers' felsorolja őket a követelményekkel együtt.
+    title: Hitelesítési szolgáltatók
+  recargo-extemporaneo:
+    body: Határidő utáni benyújtás az AEAT előzetes felszólítása nélkül havi 1%-os
+      pótdíjat (legfeljebb 12%) gyűjt az első évben és 15%-ot plusz kamatot 12 hónap
+      után. Jogi alap Ley 58/2003 art-27.
+    title: Késedelmes benyújtás pótdíja
+  regimens:
+    body: Egy önfoglalkoztatóra alkalmazandó adózási rendszerek halmaza. A két fő
+      tengely az ÁFA (general, simplificado, recargo de equivalencia, exento) és az
+      IRPF (directa, objetiva).
+    title: Adózási rendszerek
+  sii-verifactu:
+    body: Elektronikus számlatovábbítási rendszerek az AEAT-hoz. Az SII (Suministro
+      Inmediato de Información) nagyvállalatokra kötelező; a Verifactu (RD 1007/2023)
+      számlázási rendszerekre fokozatosan kötelező.
+    title: SII és Verifactu
 transactions:
   import:
     message_053465: Duplikált tranzakció észlelve az importált fájlban.
@@ -842,3 +789,147 @@ transactions:
     verified: Importálás sikeresen ellenőrizve
   test_diagnostics:
     message: A 2026-03 hónap hiányzik az importált fájlból.
+wizard:
+  setup:
+    description: Operátorbarát beállítás varázsló a bevallások előkészítéséhez
+    enrollment:
+      enrollment-large-company:
+        prompt: Nagyvállalat besorolás
+      enrollment-public-administration-budget-gt-6000000:
+        prompt: Közigazgatási költségvetés 6 000 000 felett
+      title: Bejelentés
+    errors:
+      missing_required_flags: 'Hiányzó kötelező zászlók --quiet futtatáshoz: %{missing}'
+    family:
+      family-descendants-eu-eea-deduction:
+        prompt: EU/EGT leszármazottak családi egység kedvezményében
+      family-minor-children-in-unit:
+        prompt: Kiskorú gyermekek a családi egységben
+      title: Családi egység
+    iva:
+      iva-intracommunity-operations-exceed-50000-eur:
+        prompt: Közösségi műveletek meghaladják az 50 000 EUR küszöböt
+      iva-oss-enrolled:
+        prompt: OSS bejegyzés
+      iva-regime:
+        prompt: ÁFA-rezsim
+      iva-roi-enrolled:
+        prompt: ROI bejegyzés
+      title: ÁFA
+    notes:
+      notes:
+        prompt: Operátori jegyzetek (a motor nem dolgozza fel)
+      title: Operátori jegyzetek
+    obligations:
+      bienes-extranjero-above-threshold:
+        prompt: Külföldön tartott eszközök a törvényi küszöb felett
+      does-intracomunitario:
+        prompt: Közösségi műveleteket végez
+      has-employees:
+        prompt: Van alkalmazottja és bérleti adóelőleget von
+      pays-capital-income-with-retencion:
+        prompt: Tőkejövedelmeket adóelőleggel fizet
+      pays-professionals-with-retencion:
+        prompt: Szakembereket adóelőleggel fizet
+      pays-rent-with-retencion:
+        prompt: Helyiségbérletet adóelőleggel fizet
+      professional-income-withholding-ge-70pct:
+        prompt: A szakmai jövedelem legalább 70%-a előzetes adólevonás alatt
+      third-party-transactions-above-347-threshold:
+        prompt: Harmadik felekkel folytatott műveletek meghaladják a Modelo 347 küszöböt
+      title: Bevallási kötelezettségek
+      uses-objective-estimation-irpf:
+        prompt: IRPF-et becsült rendszerben adózza
+    profile:
+      activity:
+        prompt: Tevékenységcímke vagy ellenőrzött kulcs
+      address-postcode:
+        prompt: Adózási cím irányítószáma
+      declaration-type:
+        prompt: Bevallás-típus kódja
+      iva-regime:
+        choices:
+          exento:
+            label: Mentes
+          general:
+            label: Általános rendszer
+          recargo-equivalencia:
+            label: Egyenértékűségi pótdíj
+          simplificado:
+            label: Egyszerűsített rendszer
+      name:
+        prompt: A helyi áttekintésben megjelenő név
+      surnames:
+        prompt: Vezetéknév vagy cégnév az exportfejlécekhez
+      tax-id:
+        prompt: Adóazonosító (NIF/NIE) bevallásokhoz
+      title: Profil azonosítása
+    residence:
+      ccaa:
+        choices:
+          andalucia:
+            label: Andalúzia
+          aragon:
+            label: Aragónia
+          asturias:
+            label: Asztúria
+          baleares:
+            label: Baleár-szigetek
+          canarias:
+            label: Kanári-szigetek
+          cantabria:
+            label: Kantábria
+          castilla_la_mancha:
+            label: Kasztília-La Mancha
+          castilla_y_leon:
+            label: Kasztília és León
+          cataluna:
+            label: Katalónia
+          comunidad_valenciana:
+            label: Valenciai közösség
+          extremadura:
+            label: Extremadura
+          galicia:
+            label: Galícia
+          la_rioja:
+            label: La Rioja
+          madrid:
+            label: Madrid
+          murcia:
+            label: Murcia
+      tax-residence-ccaa:
+        prompt: Adóügyi rezidens autonóm közösség
+      title: Adóügyi rezidencia
+    spouse:
+      spouse-birth-date:
+        prompt: A házastárs születési dátuma
+      spouse-disability-grade:
+        prompt: A házastárs fogyatékossági kódja
+      spouse-eu-eea-country:
+        prompt: A házastárs EU/EGT országa
+      spouse-eu-eea-resident:
+        prompt: Házastárs EU/EGT rezidens
+      spouse-name:
+        prompt: A házastárs keresztneve
+      spouse-non-resident-irpf:
+        prompt: Házastárs nem rezidens IRPF
+      spouse-sex:
+        prompt: A házastárs neme
+      spouse-surnames:
+        prompt: A házastárs vezetéknevei
+      spouse-tax-id:
+        prompt: A házastárs NIF/NIE azonosítója
+      title: Házastárs
+    taxpayer:
+      taxpayer-birth-date:
+        prompt: Az első adózó születési dátuma
+      taxpayer-death-date:
+        prompt: Az első adózó halálozási dátuma
+      taxpayer-disability-grade:
+        prompt: Az első adózó fogyatékossági kódja
+      taxpayer-marital-status:
+        prompt: Az első adózó családi állapota
+      taxpayer-sex:
+        prompt: Az első adózó neme
+      title: Az első adózó
+    title: Beállítás varázsló

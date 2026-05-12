@@ -24,6 +24,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from ...core.paths import PROJECT_ROOT
+from ._errors import DeadlineValidationError
 from ._models import RecargoBand, Recovery
 
 _DEFAULT_BRACKET_PATH = PROJECT_ROOT / "registry" / "aeat" / "legal" / "ley-58-2003-recargo-bands.toml"
@@ -49,7 +50,7 @@ def load_recargo_bands(path: Path | None = None) -> tuple[RecargoBand, ...]:
     raw = tomllib.loads(target.read_text(encoding="utf-8"))
     rows = raw.get("band", [])
     if not rows:
-        raise ValueError(f"recargo bracket TOML at {target} declares no bands")
+        raise DeadlineValidationError(f"recargo bracket TOML at {target} declares no bands")
     bands = tuple(
         RecargoBand(
             id=str(row["id"]),
@@ -82,12 +83,12 @@ def resolve_recargo_band(days_late: int, bands: Sequence[RecargoBand]) -> Recarg
     """
 
     if days_late < 1:
-        raise ValueError(f"resolve_recargo_band: days_late must be >= 1; got {days_late}")
+        raise DeadlineValidationError(f"resolve_recargo_band: days_late must be >= 1; got {days_late}")
     for band in bands:
         upper = band.max_days_late if band.max_days_late is not None else days_late
         if band.min_days_late <= days_late <= upper:
             return band
-    raise ValueError(f"resolve_recargo_band: no band covers days_late={days_late}")
+    raise DeadlineValidationError(f"resolve_recargo_band: no band covers days_late={days_late}")
 
 
 def build_recovery_for_overdue(

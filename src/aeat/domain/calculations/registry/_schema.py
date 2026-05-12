@@ -10,6 +10,7 @@ from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from ._errors import RegistryValidationError
 from ._ids import (
     ApplicationLinkId,
     BindingId,
@@ -39,7 +40,7 @@ def _coerce_decimal(value: Any) -> Any:
     if isinstance(value, Decimal):
         return value
     if isinstance(value, bool | float):
-        raise ValueError("decimal values must not be booleans or floats")
+        raise RegistryValidationError("decimal values must not be booleans or floats")
     if isinstance(value, int | str):
         return Decimal(value)
     return value
@@ -101,21 +102,21 @@ class PeriodSelector(RegistryModel):
     @classmethod
     def _periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("period_selector periods must be unique")
+            raise RegistryValidationError("period_selector periods must be unique")
         return value
 
     @model_validator(mode="after")
     def _validate_year_selector(self) -> PeriodSelector:
         if self.years and self.year_from is not None:
-            raise ValueError("period_selector must use either years or year_from/year_to")
+            raise RegistryValidationError("period_selector must use either years or year_from/year_to")
         if not self.years and self.year_from is None:
-            raise ValueError("period_selector must declare years or year_from")
+            raise RegistryValidationError("period_selector must declare years or year_from")
         if len(set(self.years)) != len(self.years):
-            raise ValueError("period_selector years must be unique")
+            raise RegistryValidationError("period_selector years must be unique")
         if self.year_to is not None and self.year_from is None:
-            raise ValueError("period_selector year_to requires year_from")
+            raise RegistryValidationError("period_selector year_to requires year_from")
         if self.year_from is not None and self.year_to is not None and self.year_to < self.year_from:
-            raise ValueError("period_selector year_to must be on or after year_from")
+            raise RegistryValidationError("period_selector year_to must be on or after year_from")
         return self
 
     def includes_year(self, year: int) -> bool:
@@ -137,7 +138,7 @@ class TemporalApplicability(RegistryModel):
     @model_validator(mode="after")
     def _validate_window(self) -> TemporalApplicability:
         if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise ValueError("valid_to must be on or after valid_from")
+            raise RegistryValidationError("valid_to must be on or after valid_from")
         return self
 
 
@@ -173,13 +174,13 @@ class LegalReference(RegistryModel):
     @model_validator(mode="after")
     def _validate_legal_reference(self) -> LegalReference:
         if self.effective_to is not None and self.effective_to < self.effective_from:
-            raise ValueError("legal reference effective_to must be on or after effective_from")
+            raise RegistryValidationError("legal reference effective_to must be on or after effective_from")
         if self.review_status != "reviewed":
-            raise ValueError(f"legal reference {self.id!r} is not reviewed")
+            raise RegistryValidationError(f"legal reference {self.id!r} is not reviewed")
         if any(not item.strip() for item in self.required_text):
-            raise ValueError("legal reference required_text entries must be non-empty")
+            raise RegistryValidationError("legal reference required_text entries must be non-empty")
         if len(set(self.required_text)) != len(self.required_text):
-            raise ValueError("legal reference required_text entries must be unique")
+            raise RegistryValidationError("legal reference required_text entries must be unique")
         return self
 
 
@@ -201,11 +202,11 @@ class SourceReference(RegistryModel):
     @model_validator(mode="after")
     def _validate_source_reference(self) -> SourceReference:
         if self.review_status != "reviewed":
-            raise ValueError(f"source reference {self.id!r} is not reviewed")
+            raise RegistryValidationError(f"source reference {self.id!r} is not reviewed")
         if self.applies_to is not None and self.applies_from is not None and self.applies_to < self.applies_from:
-            raise ValueError("source reference applies_to must be on or after applies_from")
+            raise RegistryValidationError("source reference applies_to must be on or after applies_from")
         if "\\" in self.corpus_path or self.corpus_path.startswith(("/", ".")):
-            raise ValueError("source reference corpus_path must be repository-relative POSIX style")
+            raise RegistryValidationError("source reference corpus_path must be repository-relative POSIX style")
         return self
 
     @field_validator("sha256")
@@ -213,7 +214,7 @@ class SourceReference(RegistryModel):
     def _sha256_lower_hex(cls, value: str) -> str:
         lowered = value.lower()
         if lowered != value or any(char not in "0123456789abcdef" for char in value):
-            raise ValueError("sha256 must be lowercase hexadecimal")
+            raise RegistryValidationError("sha256 must be lowercase hexadecimal")
         return value
 
 
@@ -225,9 +226,9 @@ class SourceCitation(RegistryModel):
     @classmethod
     def _required_text_non_empty(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if any(not item.strip() for item in value):
-            raise ValueError("source citation required_text entries must be non-empty")
+            raise RegistryValidationError("source citation required_text entries must be non-empty")
         if len(set(value)) != len(value):
-            raise ValueError("source citation required_text entries must be unique")
+            raise RegistryValidationError("source citation required_text entries must be unique")
         return value
 
 
@@ -251,7 +252,7 @@ class ExtractionProfileDefinition(RegistryModel):
     @classmethod
     def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("extraction profile tuple entries must be unique")
+            raise RegistryValidationError("extraction profile tuple entries must be unique")
         return value
 
 
@@ -312,12 +313,12 @@ class LiveCrossReferenceDecision(RegistryModel):
         # kebab-case ASCII identifier: lowercase alpha start, alphanumerics
         # plus hyphens, no trailing hyphen.
         if not value[0].isalpha() or not value[0].islower():
-            raise ValueError("oracle_id must start with a lowercase ASCII letter")
+            raise RegistryValidationError("oracle_id must start with a lowercase ASCII letter")
         if value.endswith("-"):
-            raise ValueError("oracle_id must not end with a hyphen")
+            raise RegistryValidationError("oracle_id must not end with a hyphen")
         for char in value:
             if not (char.islower() and char.isascii()) and not char.isdigit() and char != "-":
-                raise ValueError(
+                raise RegistryValidationError(
                     f"oracle_id contains unsupported character {char!r}; "
                     f"only lowercase ASCII letters, digits, and hyphens are permitted"
                 )
@@ -329,13 +330,19 @@ class LiveCrossReferenceDecision(RegistryModel):
             self.surface in {"open_simulator", "integration_test_service", "authenticated_simulator"}
             and self.evidence_tier != "executable_parity_evidence"
         ):
-            raise ValueError(f"cross-reference {self.id!r} live surface requires executable parity evidence")
+            raise RegistryValidationError(
+                f"cross-reference {self.id!r} live surface requires executable parity evidence"
+            )
         if self.surface in {"public_read_surface", "authenticated_read_surface"} and (
             self.evidence_tier == "executable_parity_evidence"
         ):
-            raise ValueError(f"cross-reference {self.id!r} read surface is observation evidence, not parity")
+            raise RegistryValidationError(
+                f"cross-reference {self.id!r} read surface is observation evidence, not parity"
+            )
         if self.surface == "static_official_documentation" and self.evidence_tier == "executable_parity_evidence":
-            raise ValueError(f"cross-reference {self.id!r} static documentation is not executable parity evidence")
+            raise RegistryValidationError(
+                f"cross-reference {self.id!r} static documentation is not executable parity evidence"
+            )
         if (
             self.surface
             in {
@@ -347,30 +354,42 @@ class LiveCrossReferenceDecision(RegistryModel):
             }
             and not self.allowed_hosts
         ):
-            raise ValueError(f"cross-reference {self.id!r} must declare allowed_hosts")
+            raise RegistryValidationError(f"cross-reference {self.id!r} must declare allowed_hosts")
         if self.surface == "open_simulator" and self.requires_authentication:
-            raise ValueError(f"cross-reference {self.id!r} open simulator must not require authentication")
+            raise RegistryValidationError(f"cross-reference {self.id!r} open simulator must not require authentication")
         if self.surface == "public_read_surface" and self.requires_authentication:
-            raise ValueError(f"cross-reference {self.id!r} public read surface must not require authentication")
+            raise RegistryValidationError(
+                f"cross-reference {self.id!r} public read surface must not require authentication"
+            )
         if self.surface == "authenticated_read_surface" and not self.requires_authentication:
-            raise ValueError(f"cross-reference {self.id!r} authenticated read surface must require authentication")
+            raise RegistryValidationError(
+                f"cross-reference {self.id!r} authenticated read surface must require authentication"
+            )
         if self.surface == "authenticated_read_surface" and not self.requires_aeat_authorization:
-            raise ValueError(f"cross-reference {self.id!r} authenticated read surface must require authorization")
+            raise RegistryValidationError(
+                f"cross-reference {self.id!r} authenticated read surface must require authorization"
+            )
         if self.surface == "authenticated_simulator" and not self.requires_authentication:
-            raise ValueError(f"cross-reference {self.id!r} authenticated simulator must require authentication")
+            raise RegistryValidationError(
+                f"cross-reference {self.id!r} authenticated simulator must require authentication"
+            )
         if self.surface in {"public_read_surface", "authenticated_read_surface"} and self.synthetic_data_allowed:
-            raise ValueError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
+            raise RegistryValidationError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
         if self.surface == "static_official_documentation" and self.synthetic_data_allowed:
-            raise ValueError(f"cross-reference {self.id!r} static documentation cannot accept synthetic data")
+            raise RegistryValidationError(
+                f"cross-reference {self.id!r} static documentation cannot accept synthetic data"
+            )
         for method in self.allowed_methods:
             if method.upper() != method:
-                raise ValueError(f"cross-reference {self.id!r} allowed_methods must be uppercase")
+                raise RegistryValidationError(f"cross-reference {self.id!r} allowed_methods must be uppercase")
             if self.surface in {"public_read_surface", "authenticated_read_surface"} and method not in {
                 "GET",
                 "HEAD",
                 "OPTIONS",
             }:
-                raise ValueError(f"cross-reference {self.id!r} read surface method {method!r} is not read-only")
+                raise RegistryValidationError(
+                    f"cross-reference {self.id!r} read surface method {method!r} is not read-only"
+                )
             # authenticated_simulator declares the AEAT-prescribed query
             # method (POST is the GROI / IXVI form-submit mechanism). The
             # remote-state guard's HTTP-method check stays strict for
@@ -382,12 +401,12 @@ class LiveCrossReferenceDecision(RegistryModel):
                 "OPTIONS",
                 "POST",
             }:
-                raise ValueError(
+                raise RegistryValidationError(
                     f"cross-reference {self.id!r} authenticated simulator method "
                     f"{method!r} not in (GET, HEAD, OPTIONS, POST)"
                 )
         if self.applicability_condition_mode == "any" and not self.applicability_predicates:
-            raise ValueError(f"cross-reference {self.id!r} any-mode requires applicability predicates")
+            raise RegistryValidationError(f"cross-reference {self.id!r} any-mode requires applicability predicates")
         return self
 
 
@@ -405,13 +424,15 @@ class WorkbookParityReference(RegistryModel):
     @model_validator(mode="after")
     def _validate_workbook_reference(self) -> WorkbookParityReference:
         if self.formula_coverage == "formula_form" and not self.runner_required:
-            raise ValueError(f"workbook parity reference {self.id!r} formula coverage requires a runner")
+            raise RegistryValidationError(f"workbook parity reference {self.id!r} formula coverage requires a runner")
         if self.formula_coverage != "formula_form" and self.runner_required:
-            raise ValueError(f"workbook parity reference {self.id!r} runner requires formula coverage")
+            raise RegistryValidationError(f"workbook parity reference {self.id!r} runner requires formula coverage")
         if self.runner_required and not self.output_cells:
-            raise ValueError(f"workbook parity reference {self.id!r} requires output_cells")
+            raise RegistryValidationError(f"workbook parity reference {self.id!r} requires output_cells")
         if self.workbook_source not in self.source_refs:
-            raise ValueError(f"workbook parity reference {self.id!r} source_refs must include workbook_source")
+            raise RegistryValidationError(
+                f"workbook parity reference {self.id!r} source_refs must include workbook_source"
+            )
         return self
 
 
@@ -433,7 +454,7 @@ class VerificationExpectationDefinition(RegistryModel):
     @classmethod
     def _computed_casillas_unique(cls, value: tuple[CasillaId, ...]) -> tuple[CasillaId, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("verification expectation computed_casillas must be unique")
+            raise RegistryValidationError("verification expectation computed_casillas must be unique")
         return value
 
 
@@ -530,7 +551,7 @@ class ConstructDefinition(RegistryModel):
     @classmethod
     def _member_ids_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("construct member ids must be unique")
+            raise RegistryValidationError("construct member ids must be unique")
         return value
 
     @model_validator(mode="after")
@@ -555,7 +576,7 @@ class ConstructDefinition(RegistryModel):
             self.dependency_classifications,
         )
         if not any(member_groups):
-            raise ValueError(f"construct {self.id!r} must declare at least one revision member")
+            raise RegistryValidationError(f"construct {self.id!r} must declare at least one revision member")
         return self
 
 
@@ -572,19 +593,21 @@ class DependencyClassificationDefinition(RegistryModel):
     @classmethod
     def _tuple_values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("dependency classification tuple entries must be unique")
+            raise RegistryValidationError("dependency classification tuple entries must be unique")
         return value
 
     @model_validator(mode="after")
     def _validate_classification(self) -> DependencyClassificationDefinition:
         if self.treatment == "non_dependency":
             if self.target_constructs or self.relation_refs:
-                raise ValueError(f"non-dependency classification {self.id!r} must not declare target members")
+                raise RegistryValidationError(
+                    f"non-dependency classification {self.id!r} must not declare target members"
+                )
             return self
         if not self.target_constructs:
-            raise ValueError(f"dependency classification {self.id!r} must declare target_constructs")
+            raise RegistryValidationError(f"dependency classification {self.id!r} must declare target_constructs")
         if self.treatment == "direct_annual_settlement" and not self.relation_refs:
-            raise ValueError(f"dependency classification {self.id!r} must declare relation_refs")
+            raise RegistryValidationError(f"dependency classification {self.id!r} must declare relation_refs")
         return self
 
 
@@ -608,11 +631,11 @@ class DeadlineWindowDefinition(RegistryModel):
     @model_validator(mode="after")
     def _validate_window(self) -> DeadlineWindowDefinition:
         if self.opens_on > self.closes_on:
-            raise ValueError(f"deadline window {self.id!r} opens_on must not be after closes_on")
+            raise RegistryValidationError(f"deadline window {self.id!r} opens_on must not be after closes_on")
         if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.closes_on:
-            raise ValueError(f"deadline window {self.id!r} payment_cutoff_on must not be after closes_on")
+            raise RegistryValidationError(f"deadline window {self.id!r} payment_cutoff_on must not be after closes_on")
         if self.applicability_condition_mode == "any" and not self.applicability_conditions:
-            raise ValueError(f"deadline window {self.id!r} any-mode requires applicability conditions")
+            raise RegistryValidationError(f"deadline window {self.id!r} any-mode requires applicability conditions")
         return self
 
 
@@ -629,13 +652,13 @@ class FilingScheduleDefinition(RegistryModel):
     @classmethod
     def _periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("filing schedule periods must be unique")
+            raise RegistryValidationError("filing schedule periods must be unique")
         return value
 
     @model_validator(mode="after")
     def _validate_schedule(self) -> FilingScheduleDefinition:
         if self.profile_condition_mode == "any" and not self.profile_conditions:
-            raise ValueError(f"filing schedule {self.id!r} any-mode requires profile conditions")
+            raise RegistryValidationError(f"filing schedule {self.id!r} any-mode requires profile conditions")
         return self
 
 
@@ -661,16 +684,16 @@ class FormulaExpression(RegistryModel):
         ]
         if self.op is None:
             if self.args:
-                raise ValueError("formula leaf must not declare args")
+                raise RegistryValidationError("formula leaf must not declare args")
             if sum(populated_leaves) != 1:
-                raise ValueError("formula leaf must declare exactly one source")
+                raise RegistryValidationError("formula leaf must declare exactly one source")
             if self.dispatch_table is not None and not self.dispatch_table:
-                raise ValueError("dispatch_table leaf must declare at least one entry")
+                raise RegistryValidationError("dispatch_table leaf must declare at least one entry")
             return self
         if sum(populated_leaves):
-            raise ValueError("formula operator must not declare leaf sources")
+            raise RegistryValidationError("formula operator must not declare leaf sources")
         if not self.args:
-            raise ValueError("formula operator must declare args")
+            raise RegistryValidationError("formula operator must declare args")
         return self
 
 
@@ -683,7 +706,7 @@ class DatedValue(RegistryModel):
     @model_validator(mode="after")
     def _validate_window(self) -> DatedValue:
         if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise ValueError("dated value valid_to must be on or after valid_from")
+            raise RegistryValidationError("dated value valid_to must be on or after valid_from")
         return self
 
 
@@ -709,13 +732,13 @@ class BracketEntry(RegistryModel):
     @model_validator(mode="after")
     def _validate_bracket(self) -> BracketEntry:
         if self.upper_bound is not None and self.upper_bound < self.lower_bound:
-            raise ValueError("bracket upper_bound must be on or after lower_bound")
+            raise RegistryValidationError("bracket upper_bound must be on or after lower_bound")
         if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise ValueError("bracket valid_to must be on or after valid_from")
+            raise RegistryValidationError("bracket valid_to must be on or after valid_from")
         if self.lower_bound < Decimal("0"):
-            raise ValueError("bracket lower_bound must be non-negative")
+            raise RegistryValidationError("bracket lower_bound must be non-negative")
         if self.marginal_rate < Decimal("0"):
-            raise ValueError("bracket marginal_rate must be non-negative")
+            raise RegistryValidationError("bracket marginal_rate must be non-negative")
         return self
 
 
@@ -734,11 +757,11 @@ class ParameterDefinition(RegistryModel):
     def _validate_bracket_table(self) -> ParameterDefinition:
         if self.data_type == "bracket_table":
             if not self.brackets:
-                raise ValueError(f"parameter {self.id!r} declares bracket_table but has no brackets")
+                raise RegistryValidationError(f"parameter {self.id!r} declares bracket_table but has no brackets")
             if self.values:
-                raise ValueError(f"parameter {self.id!r} cannot mix bracket_table and dated values")
+                raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and dated values")
             if self.bracket_axis is None:
-                raise ValueError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
+                raise RegistryValidationError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
             sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
             for prev, current in pairwise(sorted_brackets):
                 if (
@@ -746,17 +769,17 @@ class ParameterDefinition(RegistryModel):
                     and prev.upper_bound is not None
                     and current.lower_bound < prev.upper_bound
                 ):
-                    raise ValueError(
+                    raise RegistryValidationError(
                         f"parameter {self.id!r} brackets {prev.lower_bound}-{prev.upper_bound} "
                         f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
                     )
         else:
             if self.brackets:
-                raise ValueError(
+                raise RegistryValidationError(
                     f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'"
                 )
             if self.bracket_axis is not None:
-                raise ValueError(f"parameter {self.id!r} declares bracket_axis but is not a bracket_table")
+                raise RegistryValidationError(f"parameter {self.id!r} declares bracket_axis but is not a bracket_table")
         return self
 
 
@@ -811,13 +834,13 @@ class CasillaDefinition(RegistryModel):
     @model_validator(mode="after")
     def _validate_input_kind(self) -> CasillaDefinition:
         if self.input_kind == "computed" and self.formula is None:
-            raise ValueError(f"computed casilla {self.id!r} must declare formula")
+            raise RegistryValidationError(f"computed casilla {self.id!r} must declare formula")
         if self.input_kind == "computed" and self.binding is not None:
-            raise ValueError(f"computed casilla {self.id!r} must not declare binding")
+            raise RegistryValidationError(f"computed casilla {self.id!r} must not declare binding")
         if self.input_kind == "bound" and self.binding is None:
-            raise ValueError(f"bound casilla {self.id!r} must declare binding")
+            raise RegistryValidationError(f"bound casilla {self.id!r} must declare binding")
         if self.input_kind == "bound" and self.formula is not None:
-            raise ValueError(f"bound casilla {self.id!r} must not declare formula")
+            raise RegistryValidationError(f"bound casilla {self.id!r} must not declare formula")
         return self
 
 
@@ -870,13 +893,15 @@ class RelationDefinition(RegistryModel):
     @classmethod
     def _relation_periods_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("relation periods must be unique")
+            raise RegistryValidationError("relation periods must be unique")
         return value
 
     @model_validator(mode="after")
     def _validate_dependency_role(self) -> RelationDefinition:
         if self.kind == "annual_summary" and self.dependency_role != "periodic_to_annual_summary":
-            raise ValueError(f"annual summary relation {self.id!r} must use periodic_to_annual_summary role")
+            raise RegistryValidationError(
+                f"annual summary relation {self.id!r} must use periodic_to_annual_summary role"
+            )
         return self
 
 
@@ -903,19 +928,19 @@ class ExportFieldDefinition(RegistryModel):
     @model_validator(mode="after")
     def _validate_field_kind(self) -> ExportFieldDefinition:
         if self.kind == "casilla" and self.casilla is None:
-            raise ValueError(f"export field {self.id!r} must declare casilla")
+            raise RegistryValidationError(f"export field {self.id!r} must declare casilla")
         if self.kind == "binding" and self.binding is None:
-            raise ValueError(f"export field {self.id!r} must declare binding")
+            raise RegistryValidationError(f"export field {self.id!r} must declare binding")
         if self.kind == "literal" and self.literal is None:
-            raise ValueError(f"export field {self.id!r} must declare literal")
+            raise RegistryValidationError(f"export field {self.id!r} must declare literal")
         if self.kind == "header" and self.header_key is None:
-            raise ValueError(f"export field {self.id!r} must declare header_key")
+            raise RegistryValidationError(f"export field {self.id!r} must declare header_key")
         if self.kind == "draft" and self.draft_attribute is None:
-            raise ValueError(f"export field {self.id!r} must declare draft_attribute")
+            raise RegistryValidationError(f"export field {self.id!r} must declare draft_attribute")
         if self.kind == "computed" and self.computed_key is None:
-            raise ValueError(f"export field {self.id!r} must declare computed_key")
+            raise RegistryValidationError(f"export field {self.id!r} must declare computed_key")
         if self.kind == "filler" and self.length is None:
-            raise ValueError(f"export field {self.id!r} filler must declare length")
+            raise RegistryValidationError(f"export field {self.id!r} filler must declare length")
         return self
 
 
@@ -952,7 +977,7 @@ class ExportRecordDefinition(RegistryModel):
     @classmethod
     def _binding_record_non_empty(cls, value: str | None) -> str | None:
         if value is not None and not value.strip():
-            raise ValueError("export record binding_record must be non-empty")
+            raise RegistryValidationError("export record binding_record must be non-empty")
         return value
 
 
@@ -968,9 +993,11 @@ class ExportLayoutDefinition(RegistryModel):
     def _validate_layout_format(self) -> ExportLayoutDefinition:
         if self.format == "xml_dictionary":
             if self.dictionary_source_ref is None:
-                raise ValueError(f"export layout {self.id!r} must declare dictionary_source_ref")
+                raise RegistryValidationError(f"export layout {self.id!r} must declare dictionary_source_ref")
             if self.dictionary_source_ref not in self.source_refs:
-                raise ValueError(f"export layout {self.id!r} dictionary source must be included in source_refs")
+                raise RegistryValidationError(
+                    f"export layout {self.id!r} dictionary source must be included in source_refs"
+                )
         return self
 
 
@@ -1004,7 +1031,7 @@ class ModeloRevision(RegistryModel):
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:
         if self.valid_to is not None and self.valid_to < self.valid_from:
-            raise ValueError("revision valid_to must be on or after valid_from")
+            raise RegistryValidationError("revision valid_to must be on or after valid_from")
         return self
 
 
@@ -1022,10 +1049,10 @@ class ModeloDefinition(RegistryModel):
     @model_validator(mode="after")
     def _validate_revisions(self) -> ModeloDefinition:
         if not self.revisions:
-            raise ValueError(f"modelo {self.id!r} must declare at least one revision")
+            raise RegistryValidationError(f"modelo {self.id!r} must declare at least one revision")
         for key, revision in self.revisions.items():
             if key != revision.id:
-                raise ValueError(f"revision key {key!r} does not match revision id {revision.id!r}")
+                raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
         return self
 
 

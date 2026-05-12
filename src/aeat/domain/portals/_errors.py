@@ -42,3 +42,19 @@ class PortalIntegrityError(PortalRegistryError):
     or dangling ``replaced_by`` reference. It can also surface invalid
     registry-backed portal bindings during lookup.
     """
+
+
+class PortalValidationError(PortalRegistryError, ValueError):
+    """Raised when portal metadata violates state or shape invariants.
+
+    Inherits from ValueError to maintain compatibility with Pydantic
+    validators.
+    """
+
+
+__all__ = [
+    "PortalIntegrityError",
+    "PortalRegistryError",
+    "PortalValidationError",
+    "UnknownPortalError",
+]

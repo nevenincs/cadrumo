@@ -5,6 +5,7 @@ from __future__ import annotations
 from ._base import (
     FinancialProvider,
     FinancialProviderError,
+    FinancialValidationError,
     InvalidFinancialSourceError,
     ProviderValidation,
     UnsupportedFinancialSourceError,
@@ -19,6 +20,7 @@ __all__ = [
     "CsvProvider",
     "FinancialProvider",
     "FinancialProviderError",
+    "FinancialValidationError",
     "InvalidFinancialSourceError",
     "OfxProvider",
     "PdfN26Provider",

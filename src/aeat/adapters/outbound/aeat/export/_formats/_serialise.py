@@ -24,6 +24,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 
+from .._errors import ExportFormatError
 from ._record_spec import (
     FicheroBoeEncoding,
     FieldKind,
@@ -69,13 +70,13 @@ def serialise(
         total_length: Expected content-byte count, excluding CRLF.
         required_field_ids: ``field_id`` values the caller guarantees
             must be present in ``headers``; missing required fields
-            raise :exc:`ValueError` before any bytes are emitted.
+            raise :exc:`ExportFormatError` before any bytes are emitted.
 
     Returns:
         The ``total_length + 2`` byte payload (content + CRLF).
 
     Raises:
-        ValueError: On missing required headers, on serialised-length
+        ExportFormatError: On missing required headers, on serialised-length
             mismatch, or from the individual encoders on overflow or
             non-encoding-compatible characters.
     """
@@ -83,7 +84,9 @@ def serialise(
     for required in required_field_ids:
         value = headers.get(required)
         if value is None or (isinstance(value, str) and not value):
-            raise ValueError(f"required header {required!r} missing from draft; cannot serialise fichero-BOE payload")
+            raise ExportFormatError(
+                f"required header {required!r} missing from draft; cannot serialise fichero-BOE payload"
+            )
 
     parts: list[bytes] = []
     for spec in specs:
@@ -92,7 +95,7 @@ def serialise(
                 assert spec.literal_value is not None  # invariant from model_validator
                 lit = spec.literal_value.encode(encoding)
                 if len(lit) != spec.length:
-                    raise ValueError(
+                    raise ExportFormatError(
                         f"RESERVED field {spec.field_id!r} literal width {len(lit)} != declared length {spec.length}"
                     )
                 parts.append(lit)
@@ -106,7 +109,7 @@ def serialise(
                 else:
                     header_val = headers.get(spec.field_id, _ZERO)
                     if isinstance(header_val, (str, date)):
-                        raise ValueError(
+                        raise ExportFormatError(
                             f"CURRENCY field {spec.field_id!r} requires a "
                             f"Decimal in headers; got {type(header_val).__name__}"
                         )
@@ -126,7 +129,7 @@ def serialise(
                 assert spec.date_fmt is not None  # invariant from model_validator
                 dval = headers.get(spec.field_id)
                 if not isinstance(dval, date):
-                    raise ValueError(
+                    raise ExportFormatError(
                         f"DATE field {spec.field_id!r} requires a date in headers; got {type(dval).__name__}"
                     )
                 parts.append(encode_date(dval, spec.date_fmt, encoding=encoding))
@@ -134,7 +137,7 @@ def serialise(
             case FieldKind.ALPHANUMERIC | FieldKind.NUMERIC:
                 tval = headers.get(spec.field_id, "")
                 if isinstance(tval, date):
-                    raise ValueError(f"text field {spec.field_id!r} received a date; expected a string")
+                    raise ExportFormatError(f"text field {spec.field_id!r} received a date; expected a string")
                 parts.append(
                     encode_text(
                         str(tval),
@@ -147,7 +150,7 @@ def serialise(
 
     body = b"".join(parts)
     if len(body) != total_length:
-        raise ValueError(
+        raise ExportFormatError(
             f"serialised body is {len(body)} bytes but total_length={total_length} "
             f"was declared; likely an encoder width mismatch."
         )
@@ -186,14 +189,16 @@ def serialise_envelope(
         The full envelope byte payload with a single trailing CRLF.
 
     Raises:
-        ValueError: Same conditions as :func:`serialise`, plus any
+        ExportFormatError: Same conditions as :func:`serialise`, plus any
             per-segment width mismatch.
     """
     # Pre-flight required headers once (not per-segment).
     for required in required_field_ids:
         value = headers.get(required)
         if value is None or (isinstance(value, str) and not value):
-            raise ValueError(f"required header {required!r} missing from draft; cannot serialise fichero-BOE envelope")
+            raise ExportFormatError(
+                f"required header {required!r} missing from draft; cannot serialise fichero-BOE envelope"
+            )
 
     chunks: list[bytes] = []
     for segment in segments:

@@ -15,6 +15,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ..errors import AssetValidationError
+
 SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
 
@@ -139,7 +141,7 @@ class AssetRecord(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
         if value != SCHEMA_VERSION:
-            raise ValueError(f"unsupported AssetRecord schema_version {value!r}")
+            raise AssetValidationError(f"unsupported AssetRecord schema_version {value!r}")
         return value
 
     @model_validator(mode="after")
@@ -148,15 +150,15 @@ class AssetRecord(BaseModel):
         base = self.taxable_base or self.cost_basis
         computed_vat = _quantize(base * self.vat_rate / _HUNDRED)
         if self.vat_amount is not None and self.vat_amount != computed_vat:
-            raise ValueError("vat_amount must equal taxable_base * vat_rate")
+            raise AssetValidationError("vat_amount must equal taxable_base * vat_rate")
         computed_gross = _quantize(base + computed_vat)
         if self.gross_total is not None and self.gross_total != computed_gross:
-            raise ValueError("gross_total must equal taxable_base + vat_amount")
+            raise AssetValidationError("gross_total must equal taxable_base + vat_amount")
         if self.taxable_base is not None:
             non_deductible_vat = computed_vat * (_ONE - self.deductible_vat_ratio)
             expected_basis = _quantize(self.taxable_base + non_deductible_vat)
             if self.cost_basis != expected_basis:
-                raise ValueError("cost_basis must equal taxable_base plus non-deductible VAT")
+                raise AssetValidationError("cost_basis must equal taxable_base plus non-deductible VAT")
         return self
 
     @property
@@ -209,7 +211,7 @@ class AmortizationLedger(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
         if value != SCHEMA_VERSION:
-            raise ValueError(f"unsupported AmortizationLedger schema_version {value!r}")
+            raise AssetValidationError(f"unsupported AmortizationLedger schema_version {value!r}")
         return value
 
 
@@ -231,7 +233,7 @@ class AssetsLedgerDocument(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
         if value != SCHEMA_VERSION:
-            raise ValueError(f"unsupported AssetsLedgerDocument schema_version {value!r}")
+            raise AssetValidationError(f"unsupported AssetsLedgerDocument schema_version {value!r}")
         return value
 
 

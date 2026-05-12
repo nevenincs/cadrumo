@@ -18,6 +18,8 @@ from __future__ import annotations
 import re
 from pathlib import Path, PurePosixPath
 
+from .errors import CoreValidationError
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 """Absolute filesystem path to the repository root."""
 
@@ -96,17 +98,17 @@ def resolve_relative_subpath(root: Path, relative_path: str, *, context: str) ->
     """
 
     if "\\" in relative_path:
-        raise ValueError(f"{context} must use forward slashes only")
+        raise CoreValidationError(f"{context} must use forward slashes only")
     pure = PurePosixPath(relative_path)
     if pure.is_absolute() or any(part in {"", ".", ".."} for part in pure.parts):
-        raise ValueError(f"{context} must stay within the owning root")
+        raise CoreValidationError(f"{context} must stay within the owning root")
 
     resolved_root = root.resolve()
     resolved = (resolved_root / Path(*pure.parts)).resolve()
     try:
         resolved.relative_to(resolved_root)
     except ValueError as exc:
-        raise ValueError(f"{context} escapes the owning root") from exc
+        raise CoreValidationError(f"{context} escapes the owning root") from exc
     return resolved
 
 
@@ -131,11 +133,11 @@ def resolve_record_json_path(root: Path, record_id: str, *, context: str) -> Pat
     """
 
     if not _SAFE_FILE_TOKEN_RE.fullmatch(record_id):
-        raise ValueError(f"{context} must be a simple filename token")
+        raise CoreValidationError(f"{context} must be a simple filename token")
     resolved_root = root.resolve()
     resolved = (resolved_root / f"{record_id}.json").resolve()
     try:
         resolved.relative_to(resolved_root)
     except ValueError as exc:  # pragma: no cover - defensive
-        raise ValueError(f"{context} escapes the owning root") from exc
+        raise CoreValidationError(f"{context} escapes the owning root") from exc
     return resolved

@@ -49,7 +49,7 @@ class RegistryFiledStateComparison(BaseModel):
     @classmethod
     def _casilla_ids_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(set(value)) != len(value):
-            raise ValueError("casilla ids must be unique")
+            raise RegistryValidationError("casilla ids must be unique")
         return value
 
 

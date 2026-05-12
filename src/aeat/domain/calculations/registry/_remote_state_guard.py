@@ -139,33 +139,35 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
         if self.classification in {"open_simulator", "integration_test_service"} and (
             self.evidence_tier != "executable_parity_evidence"
         ):
-            raise ValueError("live cross-reference policy requires executable parity evidence")
+            raise RegistryValidationError("live cross-reference policy requires executable parity evidence")
         if self.classification == "public_read_surface" and self.evidence_tier == "executable_parity_evidence":
-            raise ValueError("public read surfaces are observations, not executable parity evidence")
+            raise RegistryValidationError("public read surfaces are observations, not executable parity evidence")
         if self.classification == "authenticated_read_surface" and self.evidence_tier == "executable_parity_evidence":
-            raise ValueError("authenticated filed-data reads are observations, not executable parity evidence")
+            raise RegistryValidationError(
+                "authenticated filed-data reads are observations, not executable parity evidence"
+            )
         if self.classification == "static_official_only" and self.evidence_tier == "executable_parity_evidence":
-            raise ValueError("static official documentation is not executable parity evidence")
+            raise RegistryValidationError("static official documentation is not executable parity evidence")
         if (
             self.classification
             in {"open_simulator", "integration_test_service", "public_read_surface", "authenticated_read_surface"}
             and not self.allowed_hosts
         ):
-            raise ValueError("AEAT remote policy must declare allowed hosts")
+            raise RegistryValidationError("AEAT remote policy must declare allowed hosts")
         if self.classification == "open_simulator" and self.requires_authentication:
-            raise ValueError("open simulator policy must not require authentication")
+            raise RegistryValidationError("open simulator policy must not require authentication")
         if self.classification == "public_read_surface" and self.requires_authentication:
-            raise ValueError("public read policy must not require authentication")
+            raise RegistryValidationError("public read policy must not require authentication")
         if self.classification == "public_read_surface" and self.synthetic_data_allowed:
-            raise ValueError("public reads must not use synthetic remote data")
+            raise RegistryValidationError("public reads must not use synthetic remote data")
         if self.classification == "authenticated_read_surface" and not self.requires_authentication:
-            raise ValueError("authenticated filed-data read policy must require authentication")
+            raise RegistryValidationError("authenticated filed-data read policy must require authentication")
         if self.classification == "authenticated_read_surface" and self.synthetic_data_allowed:
-            raise ValueError("authenticated filed-data reads must not use synthetic remote data")
+            raise RegistryValidationError("authenticated filed-data reads must not use synthetic remote data")
         if self.classification == "static_official_only" and self.synthetic_data_allowed:
-            raise ValueError("static official documentation cannot accept synthetic remote data")
+            raise RegistryValidationError("static official documentation cannot accept synthetic remote data")
         if self.classification == "forbidden_stateful_surface" and self.synthetic_data_allowed:
-            raise ValueError("forbidden stateful surface cannot accept synthetic remote data")
+            raise RegistryValidationError("forbidden stateful surface cannot accept synthetic remote data")
         return self
 
     @field_validator("allowed_hosts")
@@ -174,9 +176,9 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
         for host in value:
             parsed = urlparse(f"https://{host}")
             if not parsed.hostname or parsed.hostname != host.lower():
-                raise ValueError(f"invalid allowed host {host!r}")
+                raise RegistryValidationError(f"invalid allowed host {host!r}")
             if not _is_aeat_host(host):
-                raise ValueError(f"allowed host is not an AEAT host: {host!r}")
+                raise RegistryValidationError(f"allowed host is not an AEAT host: {host!r}")
         return value
 
 
@@ -191,11 +193,11 @@ class RemoteOperation(RemoteStateGuardModel):
     @model_validator(mode="after")
     def _validate_operation(self) -> RemoteOperation:
         if self.kind == "http" and (self.method is None or self.url is None):
-            raise ValueError("http operation requires method and url")
+            raise RegistryValidationError("http operation requires method and url")
         if self.kind == "browser_action" and self.action is None:
-            raise ValueError("browser action requires action text")
+            raise RegistryValidationError("browser action requires action text")
         if self.kind == "local_workbook" and (self.method is not None or self.url is not None):
-            raise ValueError("local workbook operation must not declare remote method or url")
+            raise RegistryValidationError("local workbook operation must not declare remote method or url")
         return self
 
 
@@ -211,7 +213,7 @@ def remote_state_policy_from_cross_reference(decision: LiveCrossReferenceDecisio
     """Build the executable remote-state guard policy for a registry cross-reference."""
 
     if decision.evidence_tier == "legal_authority":
-        raise ValueError("remote-state policy cannot be built from legal-authority evidence")
+        raise RegistryValidationError("remote-state policy cannot be built from legal-authority evidence")
     evidence_tier: RemoteEvidenceTier = decision.evidence_tier
     classification: CrossReferenceClassification
     if decision.surface == "static_official_documentation":

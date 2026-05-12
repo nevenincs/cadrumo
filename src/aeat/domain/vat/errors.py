@@ -57,3 +57,7 @@ class VatClassificationError(VatError):
     This error is reserved for future extensions such as ambiguous rule
     rankings.
     """
+
+
+class VatValidationError(VatError, ValueError):
+    """Raised on invalid VAT field values. Inherits from ValueError for Pydantic."""

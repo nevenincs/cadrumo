@@ -66,20 +66,20 @@ class CorpusEntry(BaseModel):
     @classmethod
     def _validate_relative_path(cls, value: str) -> str:
         if value in {".", "..", ""}:
-            raise ValueError(f"relative_path must not be a dot token: {value!r}")
+            raise CorpusManifestError(f"relative_path must not be a dot token: {value!r}")
         # PurePosixPath ignores backslashes (treats them as part of a
         # single path token), so a Windows-style ``..\\escape`` would
         # slip past the dot-part walk below. Reject them explicitly.
         if "\\" in value:
-            raise ValueError(
+            raise CorpusManifestError(
                 f"relative_path must use POSIX-style separators only: {value!r}",
             )
         pure = PurePosixPath(value)
         if pure.is_absolute():
-            raise ValueError(f"relative_path must not be absolute: {value!r}")
+            raise CorpusManifestError(f"relative_path must not be absolute: {value!r}")
         for part in pure.parts:
             if part in {"..", "."}:
-                raise ValueError(f"relative_path must not contain dot tokens: {value!r}")
+                raise CorpusManifestError(f"relative_path must not contain dot tokens: {value!r}")
         return value
 
 
@@ -115,7 +115,7 @@ class CorpusManifest(BaseModel):
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
         if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("generated_at must be timezone-aware")
+            raise CorpusManifestError("generated_at must be timezone-aware")
         return value
 
 

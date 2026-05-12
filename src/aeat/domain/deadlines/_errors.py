@@ -18,9 +18,17 @@ class ProfileError(DeadlineError):
 
 
 class ScheduleComputationError(DeadlineError):
-    """Raised when :meth:`aeat.domain.deadlines.DeadlineEngine.compute` cannot produce a schedule.
+    """Raised when the engine cannot produce a valid schedule.
 
-    Typical triggers include a configured year outside the supported
-    calendar range, or an injected catalogue loader returning an
+    Often caused by a mismatch between the requested year and the
+    registry's coverage, or by profile facts that trigger an
     unknown modelo.
+    """
+
+
+class DeadlineValidationError(DeadlineError, ValueError):
+    """Raised when deadline records violate state or shape invariants.
+
+    Inherits from ValueError to maintain compatibility with Pydantic
+    validators.
     """

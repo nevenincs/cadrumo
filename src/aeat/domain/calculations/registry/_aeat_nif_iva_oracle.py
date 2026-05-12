@@ -72,7 +72,7 @@ class AeatNifIvaObservation(AeatNifIvaModel):
             normalized_nif = nif.strip().upper()
             normalized_verdict = verdict.strip().lower()
             if not normalized_nif or not normalized_verdict:
-                raise ValueError("AEAT NIF-IVA observations must not contain blank keys or values")
+                raise RegistryValidationError("AEAT NIF-IVA observations must not contain blank keys or values")
             cleaned[normalized_nif] = normalized_verdict
         return cleaned
 

@@ -50,6 +50,18 @@ class AeatError(Exception):
         self.translated_message: str | None = translated_message
 
 
+class CoreError(AeatError):
+    """Base error for internal framework and core-primitive failures."""
+
+
+class CoreValidationError(CoreError, ValueError):
+    """Raised when core primitives or configuration violate invariants.
+
+    Inherits from ValueError to maintain compatibility with Pydantic
+    validators.
+    """
+
+
 class AeatObservabilityError(AeatError):
     """Base class for observability-layer errors.
 
@@ -145,6 +157,8 @@ __all__ = [
     "ERROR_REGISTRY",
     "AeatError",
     "AeatObservabilityError",
+    "CoreError",
+    "CoreValidationError",
     "ErrorCategory",
     "ErrorCode",
     "ErrorEnvelope",

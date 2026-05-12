@@ -42,7 +42,7 @@ class RentaWebOpenSyntheticProfile(RentaWebOpenModel):
     def _trimmed(cls, value: str) -> str:
         normalized = value.strip()
         if not normalized:
-            raise ValueError("Renta WEB Open synthetic profile values must not be blank")
+            raise RegistryValidationError("Renta WEB Open synthetic profile values must not be blank")
         return normalized
 
 

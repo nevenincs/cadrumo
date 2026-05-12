@@ -25,6 +25,8 @@ from pydantic import (
     model_validator,
 )
 
+from .errors import NormativeValidationError
+
 
 class NormativeKind(StrEnum):
     """Closed catalogue of Spanish legal-act kinds the project cites.
@@ -116,7 +118,7 @@ def _require_spanish(translatable: str, field_name: str) -> None:
         ValueError: If the ``es`` key is missing or empty.
     """
     if not translatable:
-        raise ValueError(f"{field_name}: missing authoritative Spanish ('es') translation")
+        raise NormativeValidationError(f"{field_name}: missing authoritative Spanish ('es') translation")
 
 
 class _NormativeStrictFrozen(BaseModel):
@@ -190,11 +192,13 @@ class NormativeReference(_NormativeStrictFrozen):
         seen: set[str] = set()
         for articulo in self.articulos:
             if articulo.numero in seen:
-                raise ValueError(f"NormativeReference[{self.id}]: duplicate articulo numero {articulo.numero!r}")
+                raise NormativeValidationError(
+                    f"NormativeReference[{self.id}]: duplicate articulo numero {articulo.numero!r}"
+                )
             seen.add(articulo.numero)
             permalink = str(articulo.permalink)
             if self.boe_id not in permalink:
-                raise ValueError(
+                raise NormativeValidationError(
                     f"NormativeReference[{self.id}].articulo[{articulo.numero}]: "
                     f"permalink {permalink!r} does not reference boe_id {self.boe_id!r}"
                 )
@@ -220,7 +224,9 @@ class NormativeCatalogue(_NormativeStrictMutable):
         """Ensure every mapping key matches its record's id."""
         for key, ref in self.references.items():
             if key != ref.id:
-                raise ValueError(f"NormativeCatalogue: key {key!r} does not match reference id {ref.id!r}")
+                raise NormativeValidationError(
+                    f"NormativeCatalogue: key {key!r} does not match reference id {ref.id!r}"
+                )
         return self
 
     def __iter__(self):  # type: ignore[override]

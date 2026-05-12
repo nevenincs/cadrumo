@@ -713,6 +713,33 @@ def test_validator_requires_reconciliation_total_to_be_computed() -> None:
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
+def test_validator_rejects_dispatch_table_referencing_unknown_parameter() -> None:
+    """The lookup_bracket_by_ccaa dispatch_table leaf must resolve every value
+    to a declared parameter; otherwise the registry would only fault at runtime."""
+    modelo, catalogues = _committed_modelo("100")
+    revision = modelo.revisions["2025"]
+    formula = next(item for item in revision.formulas if item.target == "0529")
+    dispatch_leaf = formula.expression.args[2]
+    assert dispatch_leaf.dispatch_table is not None, "fixture must expose a dispatch_table leaf"
+
+    mutated_dispatch = {**dispatch_leaf.dispatch_table, "madrid": "renta-2025-not-a-declared-parameter"}
+    mutated_leaf = dispatch_leaf.model_copy(update={"dispatch_table": mutated_dispatch})
+    mutated_args = (formula.expression.args[0], formula.expression.args[1], mutated_leaf)
+    mutated_expression = formula.expression.model_copy(update={"args": mutated_args})
+    mutated_formula = formula.model_copy(update={"expression": mutated_expression})
+    mutated_formulas = tuple(mutated_formula if item.id == formula.id else item for item in revision.formulas)
+    mutated_revision = revision.model_copy(update={"formulas": mutated_formulas})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"dispatch_table\['madrid'\] references unknown parameter "
+        r"'renta-2025-not-a-declared-parameter'",
+    ):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(
+            _with_revision(modelo, mutated_revision)
+        )
+
+
 def test_deadline_window_any_mode_requires_conditions() -> None:
     modelo, _catalogues = _committed_registry()
     revision = _revision(modelo)

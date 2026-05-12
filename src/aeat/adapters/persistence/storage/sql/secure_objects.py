@@ -18,6 +18,7 @@ from ..errors import (
     DecryptionError,
     EnvelopeVersionError,
     RepositoryError,
+    StorageValidationError,
 )
 from . import _orm
 from .engine import get_engine
@@ -114,7 +115,7 @@ class SecureObjectRepository:
         master-key constraint as :meth:`save_with_raw_key`.
         """
         if len(hashed_object_key) != 32:
-            raise ValueError(
+            raise StorageValidationError(
                 f"hashed_object_key must be 32 bytes; got {len(hashed_object_key)}",
             )
         with session_scope(self._engine) as session:
@@ -199,8 +200,15 @@ class SecureObjectRepository:
                 quarantined = 0
                 retained = 0
                 for raw in rows:
+                    payload_bytes = raw.payload if isinstance(raw.payload, bytes) else bytes(raw.payload)
+                    object_key_value = (
+                        raw.object_key
+                        if isinstance(raw.object_key, bytes | bytearray | memoryview)
+                        else str(raw.object_key).encode("utf-8")
+                    )
+                    object_key_bytes = bytes(object_key_value)
                     try:
-                        decrypt_encrypted_bytes_column(bytes(raw.payload))
+                        decrypt_encrypted_bytes_column(payload_bytes)
                     except DecryptionError:
                         session.execute(
                             text(
@@ -213,11 +221,11 @@ class SecureObjectRepository:
                             {
                                 "source_id": int(raw.id),
                                 "namespace": namespace,
-                                "object_key": bytes(raw.object_key),
+                                "object_key": object_key_bytes,
                                 "classification": str(raw.classification),
                                 "schema_version": int(raw.schema_version),
                                 "written_at": raw.written_at,
-                                "payload": bytes(raw.payload),
+                                "payload": payload_bytes,
                                 "quarantined_at": quarantined_at,
                             },
                         )
@@ -491,7 +499,7 @@ class SecureObjectRepository:
             :exc:`RepositoryError`: On underlying SQL integrity errors.
         """
         if len(hashed_object_key) != 32:
-            raise ValueError(
+            raise StorageValidationError(
                 f"hashed_object_key must be 32 bytes; got {len(hashed_object_key)}",
             )
         self._save_internal(

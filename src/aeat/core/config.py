@@ -17,6 +17,7 @@ from pathlib import Path
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from .errors import CoreValidationError
 from .paths import normalize_project_relative_path
 
 
@@ -620,7 +621,7 @@ class Settings(BaseSettings):
     def _detail_url_template_has_expediente_id(cls, value: str) -> str:
         """Reject templates that omit the ``{expediente_id}`` placeholder."""
         if "{expediente_id}" not in value:
-            raise ValueError("aeat_status_detail_url_template must contain '{expediente_id}'")
+            raise CoreValidationError("aeat_status_detail_url_template must contain '{expediente_id}'")
         return value
 
     @field_validator(
@@ -652,11 +653,11 @@ class Settings(BaseSettings):
         import re as _re
 
         if not _re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
-            raise ValueError("AEAT_CLAVE_MOVIL_DNI_FECHA must be YYYY-MM-DD (e.g. 2030-01-01)")
+            raise CoreValidationError("AEAT_CLAVE_MOVIL_DNI_FECHA must be YYYY-MM-DD (e.g. 2030-01-01)")
         try:
             date.fromisoformat(value)
         except ValueError as exc:
-            raise ValueError("AEAT_CLAVE_MOVIL_DNI_FECHA must be a valid YYYY-MM-DD date") from exc
+            raise CoreValidationError("AEAT_CLAVE_MOVIL_DNI_FECHA must be a valid YYYY-MM-DD date") from exc
         return value
 
     @field_validator("aeat_clave_sede_access_url_template")
@@ -664,7 +665,7 @@ class Settings(BaseSettings):
     def _clave_sede_access_url_template_has_target(cls, value: str) -> str:
         """Reject templates that omit the ``{target}`` placeholder."""
         if "{target}" not in value:
-            raise ValueError(
+            raise CoreValidationError(
                 "aeat_clave_sede_access_url_template must contain '{target}' for the URL-encoded post-auth path"
             )
         return value
@@ -712,6 +713,7 @@ class Settings(BaseSettings):
         """Anchor repo-relative path settings to ``PROJECT_ROOT``."""
 
         return normalize_project_relative_path(value)
+
 
 def load_settings() -> Settings:
     """Create a Settings instance from environment variables and ``.env`` file."""

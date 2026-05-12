@@ -45,34 +45,34 @@ def resolve_profile_path(explicit: Path | None) -> Path:
 
 
 def load_profile(path: Path) -> AutonomoProfile:
-    """Load and validate an :class:`AutonomoProfile` from disk.
+    """Load and validate the active :class:`AutonomoProfile`.
 
-    The setup wizard writes the profile as an encrypted envelope at
-    IDENTITY class via :func:`aeat.application.setup.write_profile_file`; this
-    helper round-trips through the matching loader so the on-disk
-    record is always ciphertext.
+    Reads the workflow's active profile values and projects them onto
+    the legacy ``AutonomoProfile`` record via the wizard descriptor's
+    typed projection. The on-disk JSON envelope is no longer used.
 
     Args:
-        path: Logical handle for the setup-profile entry. The path's
-            resolved POSIX form is used as the SQL secure-object key;
-            the on-disk file does not need to exist.
+        path: Ignored. Retained for source-compatibility.
 
     Returns:
         The validated profile.
 
     Raises:
-        ProfileError: If no profile envelope is registered under the
-            logical handle, or its contents are not a valid profile.
+        ProfileError: When no profile is active or required fields
+            (``tax.id``) are missing.
     """
-    from ....application.setup._env_writer import load_profile_envelope
+    del path
+    from ....application.wizard._status import load_active_autonomo_profile
+    from ....application.workflow._persistence import workflow_state_repository
 
+    state = workflow_state_repository().load()
     try:
-        return load_profile_envelope(path)
-    except FileNotFoundError as exc:
-        raise ProfileError(f"profile file not found: {path}") from exc
-    except (OSError, ValueError, AeatError) as exc:  # pragma: no cover - defensive: covered by tests
-        _logger.error("load_profile: failed to load profile envelope at %s", path, exc_info=True)
-        raise ProfileError(f"invalid profile envelope at {path}: {exc}") from exc
+        return load_active_autonomo_profile(state)
+    except ValueError as exc:
+        raise ProfileError(str(exc)) from exc
+    except (OSError, AeatError) as exc:  # pragma: no cover - defensive
+        _logger.error("load_profile: failed to project active profile", exc_info=True)
+        raise ProfileError(str(exc)) from exc
 
 
 def build_engine() -> DeadlineEngine:

@@ -25,7 +25,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ..errors import InventoryLedgerError, LIFOForbiddenError
+from ..errors import InventoryLedgerError, InventoryValidationError, LIFOForbiddenError
 
 SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
@@ -118,7 +118,7 @@ class MovementRecord(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
         if value != SCHEMA_VERSION:
-            raise ValueError(f"unsupported MovementRecord schema_version {value!r}")
+            raise InventoryValidationError(f"unsupported MovementRecord schema_version {value!r}")
         return value
 
     @model_validator(mode="after")
@@ -126,11 +126,11 @@ class MovementRecord(BaseModel):
         """Enforce that opening / purchase movements carry a cost and VAT decomposes consistently."""
         needs_cost = self.kind in {MovementKind.OPENING, MovementKind.PURCHASE}
         if needs_cost and self.unit_cost is None and self.taxable_base is None:
-            raise ValueError("opening and purchase movements require unit_cost or taxable_base")
+            raise InventoryValidationError("opening and purchase movements require unit_cost or taxable_base")
         if self.taxable_base is not None:
             computed_vat = _quantize(self.taxable_base * self.vat_rate / _HUNDRED)
             if self.vat_amount is not None and self.vat_amount != computed_vat:
-                raise ValueError("vat_amount must equal taxable_base * vat_rate")
+                raise InventoryValidationError("vat_amount must equal taxable_base * vat_rate")
         return self
 
 
@@ -187,14 +187,14 @@ class InventoryLedger(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
         if value != SCHEMA_VERSION:
-            raise ValueError(f"unsupported InventoryLedger schema_version {value!r}")
+            raise InventoryValidationError(f"unsupported InventoryLedger schema_version {value!r}")
         return value
 
     @model_validator(mode="after")
     def _opening_stock_matches_layers(self) -> InventoryLedger:
         """Enforce that ``opening_layers`` value-balances with ``opening_stock``."""
         if self.opening_layers and _quantize(_layers_value(self.opening_layers)) != _quantize(self.opening_stock):
-            raise ValueError("opening_stock must equal the value of opening_layers")
+            raise InventoryValidationError("opening_stock must equal the value of opening_layers")
         return self
 
 
@@ -216,7 +216,7 @@ class InventoryLedgerDocument(BaseModel):
     def _schema_version_supported(cls, value: str) -> str:
         """Reject any schema_version other than the current :data:`SCHEMA_VERSION`."""
         if value != SCHEMA_VERSION:
-            raise ValueError(f"unsupported InventoryLedgerDocument schema_version {value!r}")
+            raise InventoryValidationError(f"unsupported InventoryLedgerDocument schema_version {value!r}")
         return value
 
 
