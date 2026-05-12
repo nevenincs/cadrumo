@@ -158,21 +158,47 @@ def config_get(
     typer.echo(f"{key}\t{value or '<unset>'}")
 
 
+def _question_for_profile_key(profile_key: str):
+    """Return the descriptor's question for ``profile_key``, or ``None``."""
+
+    from ...application.wizard._catalogue import WIZARD_FLOWS
+
+    for flow in WIZARD_FLOWS:
+        for section in flow.sections:
+            for question in section.questions:
+                if question.profile_key == profile_key:
+                    return question
+    return None
+
+
 @app.command("set", help=tr("cli.config.set.help"))
 def config_set(
     ctx: typer.Context,
     key: str = typer.Argument(..., help=tr("cli.config.set.key_help")),
     value: str = typer.Argument(..., help=tr("cli.config.set.value_help")),
 ) -> None:
-    """Write one profile key value through the shared application backend."""
+    """Write one profile key value, validated through the wizard descriptor."""
 
     from ...application.profile._actions import set_profile_values
+    from ...application.wizard._errors import WizardValidationError
+    from ...application.wizard._widgets import validate_widget_answer
     from ...domain.profile import get_profile_key
 
     try:
-        get_profile_key(key)
+        registered = get_profile_key(key)
     except KeyError as exc:
         raise typer.BadParameter(tr("cli.config.errors.unknown_key", name=key)) from exc
+
+    question = _question_for_profile_key(registered.key)
+    if question is not None:
+        try:
+            value = validate_widget_answer(question, value)
+        except WizardValidationError as exc:
+            choices = ", ".join(choice.value for choice in question.choices)
+            translated = exc.translated_message or tr("cli.config.errors.invalid_value", name=key, value=value)
+            message = f"{translated} ({choices})" if choices else translated
+            raise typer.BadParameter(message) from exc
+
     repository = _profile_state()
     state = repository.load()
     profile_name = state.active_profile
@@ -211,6 +237,138 @@ def config_unset(
         raise typer.BadParameter(tr("cli.config.errors.no_active_profile"))
     repository.update(lambda current: clear_profile_values(current, profile_name, (key,)))
     typer.echo(f"{key}\t<unset>")
+
+
+@app.command("setup", help=tr("cli.config.setup.help"))
+def config_setup(
+    profile_name: str = typer.Option(
+        "default",
+        "--profile-name",
+        help=tr("cli.config.setup.profile_name_help"),
+    ),
+    quiet: bool = typer.Option(False, "--quiet", help=tr("cli.config.setup.quiet_help")),
+    accept_defaults: bool = typer.Option(
+        False,
+        "--accept-defaults",
+        help=tr("cli.config.setup.accept_defaults_help"),
+    ),
+    tax_id: str | None = typer.Option(None, "--tax-id", help=tr("cli.config.setup.tax_id_help")),
+    activity: str | None = typer.Option(None, "--activity", help=tr("cli.config.setup.activity_help")),
+) -> None:
+    """Run the schema-driven setup wizard interactively or via flag-driven quiet mode."""
+
+    from ...application.wizard._catalogue import SETUP_FLOW
+    from ...application.wizard._commands import build_wizard_command
+    from ...application.wizard._errors import WizardMissingFlagError
+
+    flag_values: dict[str, str] = {}
+    if tax_id is not None:
+        flag_values["tax-id"] = tax_id
+    if activity is not None:
+        flag_values["activity"] = activity
+
+    command = build_wizard_command(SETUP_FLOW)
+    try:
+        command(
+            profile_name=profile_name,
+            quiet=quiet,
+            accept_defaults=accept_defaults,
+            flag_values=flag_values,
+        )
+    except WizardMissingFlagError as exc:
+        translated = exc.translated_message or tr("cli.config.setup.errors.missing_required_flags")
+        raise typer.BadParameter(translated) from exc
+
+
+@app.command("status", help=tr("cli.config.status.help"))
+def config_status(ctx: typer.Context) -> None:
+    """Show the readiness of the current configuration profile."""
+
+    from ...application.wizard._catalogue import SETUP_FLOW
+    from ...application.wizard._persistence import project_answers
+    from ...application.workflow._persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    record = state.active_profile_record()
+    values: dict[str, str] = dict(record.values) if record is not None else {}
+    projection = project_answers(SETUP_FLOW, values)
+    payload = {
+        "active_profile": state.active_profile,
+        "tax_id_present": bool(values.get("tax.id")),
+        "activity_present": bool(values.get("activity")),
+        "iva_regime": values.get("iva.regime", ""),
+        "tax_residence_ccaa": values.get("tax.residence.ccaa", ""),
+    }
+    if _format_of(ctx) == _FORMAT_JSON:
+        import json as _json
+
+        typer.echo(_json.dumps(payload, ensure_ascii=False))
+        return
+    typer.echo(f"profile\t{state.active_profile or ''}")
+    typer.echo(f"tax.id\t{values.get('tax.id', '<unset>')}")
+    typer.echo(f"activity\t{values.get('activity', '<unset>')}")
+    typer.echo(f"iva.regime\t{values.get('iva.regime', '<unset>')}")
+    typer.echo(f"tax.residence.ccaa\t{values.get('tax.residence.ccaa', '<unset>')}")
+    del projection
+
+
+@app.command("reset", help=tr("cli.config.reset.help"))
+def config_reset(
+    scope: str = typer.Option(
+        "all",
+        "--scope",
+        help=tr("cli.config.reset.scope_help"),
+    ),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.reset.yes_help")),
+) -> None:
+    """Reset operator-entered configuration scopes."""
+
+    from ...application.setup_reset import SetupResetScope, reset_setup
+
+    if not yes:
+        raise typer.BadParameter(tr("cli.config.reset.requires_yes"))
+    try:
+        scope_enum = SetupResetScope(scope)
+    except ValueError as exc:
+        valid = ", ".join(member.value for member in SetupResetScope)
+        raise typer.BadParameter(tr("cli.config.reset.invalid_scope", scope=scope, valid=valid)) from exc
+    report = reset_setup(scope_enum, confirmed=True)
+    typer.echo(f"scope\t{report.scope.value}")
+    typer.echo(f"removed_profiles\t{len(report.removed_profile_names)}")
+    typer.echo(f"removed_auth\t{report.removed_auth_session}")
+
+
+@app.command("auth", help=tr("cli.config.auth.help"))
+def config_auth(
+    ctx: typer.Context,
+    provider: str = typer.Option(
+        ...,
+        "--provider",
+        help=tr("cli.config.auth.provider_help"),
+    ),
+    file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
+) -> None:
+    """Configure the active authentication provider."""
+
+    del ctx
+    from ...application.auth._actions import update_auth
+    from ...application.auth._catalogue import get_auth_provider
+    from ...application.workflow._persistence import workflow_state_repository
+
+    try:
+        listing = get_auth_provider(provider)
+    except KeyError as exc:
+        raise typer.BadParameter(tr("cli.config.auth.unknown_provider", provider=provider)) from exc
+    repository = workflow_state_repository()
+    repository.update(
+        lambda current: update_auth(
+            current,
+            provider=listing.id,
+            certificate_path=str(file) if file is not None else None,
+        )
+    )
+    typer.echo(f"provider\t{listing.id}")
+    typer.echo(f"file\t{file or ''}")
 
 
 __all__ = ["app"]
