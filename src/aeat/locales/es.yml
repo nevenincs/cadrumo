@@ -660,7 +660,7 @@ cli:
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
-      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat topic'' para listar
+      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat app topic'' para listar
         los temas registrados.'
     opts:
       slug: Identificador del tema (kebab-case, ej. iva-regime)

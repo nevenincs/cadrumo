@@ -640,7 +640,7 @@ cli:
   topic:
     app_help: Show conceptual help about regimes, modelos, and AEAT processes
     errors:
-      not_found: 'Topic not found: %{slug}. Run ''aeat topic'' to list registered
+      not_found: 'Topic not found: %{slug}. Run ''aeat app topic'' to list registered
         topics.'
     opts:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
