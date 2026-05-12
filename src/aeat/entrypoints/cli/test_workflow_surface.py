@@ -99,16 +99,16 @@ def _seed_profile(
 ) -> None:
     """Seed an active profile directly through the workflow state repository.
 
-    Replaces the deleted ``aeat setup init`` invocation. The CLI used
-    to call ``set_active_profile`` plus ``set_profile_values`` as part
-    of its init handler; this helper does the same composition without
-    going through a removed command. Tests targeting the operational
-    surface (declaration, ledger, invoice) seed once here and then
-    invoke the CLI verbs they are pinning.
+    Composes ``set_active_profile('default')`` with ``set_profile_values``
+    over the supplied identity fields and writes the result through
+    ``workflow_state_repository().update(...)``. Tests pinning the
+    operational CLI verbs (declaration, ledger, invoice) call this
+    once to prime an active profile before exercising the verb under
+    test.
 
-    ``iva.regime`` defaults to the wizard's default (``GENERAL``) so
-    the seeded profile matches what the operator would have after
-    running ``aeat config setup --quiet`` with no overrides.
+    ``iva.regime`` defaults to ``GENERAL`` so the seeded profile
+    matches the operator's state after a quiet, no-override
+    ``aeat config setup`` run.
     """
 
     from aeat.application.profile._actions import set_active_profile, set_profile_values
