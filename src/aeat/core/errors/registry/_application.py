@@ -476,4 +476,48 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.wizard._errors.WizardScriptUnderflowError",
+        ErrorCode(
+            code="INTERNAL_WIZARD_SCRIPT_UNDERFLOW",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_wizard_script_underflow",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.wizard._errors.WizardScriptOverflowError",
+        ErrorCode(
+            code="INTERNAL_WIZARD_SCRIPT_OVERFLOW",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_wizard_script_overflow",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.wizard._errors.WizardMissingFlagError",
+        ErrorCode(
+            code="REFUSED_WIZARD_MISSING_FLAG",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_wizard_missing_flag",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.wizard._errors.WizardCompileError",
+        ErrorCode(
+            code="ERROR_WIZARD_COMPILE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_wizard_compile",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
