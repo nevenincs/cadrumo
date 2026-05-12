@@ -54,8 +54,17 @@ class ForalRegimeError(TaxResidenceProfileError):
         self.value = value
 
 
+class ProfileValidationError(TaxResidenceProfileError, ValueError):
+    """Raised when profile records violate state or shape invariants.
+
+    Inherits from ValueError to maintain compatibility with Pydantic
+    validators.
+    """
+
+
 __all__ = [
     "ForalRegimeError",
     "ProfileNotConfiguredError",
+    "ProfileValidationError",
     "TaxResidenceProfileError",
 ]

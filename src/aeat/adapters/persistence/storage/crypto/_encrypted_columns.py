@@ -41,6 +41,7 @@ from typing import Any
 from sqlalchemy import LargeBinary
 from sqlalchemy.types import TypeDecorator
 
+from ..errors import StorageValidationError
 from ..master_key._master_key import MasterKeyProvider, get_master_key_provider
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 
@@ -279,7 +280,7 @@ class HashedLookup(TypeDecorator[bytes]):
         if isinstance(value, bytes | bytearray | memoryview):
             digest = bytes(value)
             if len(digest) != _HASHED_LOOKUP_DIGEST_SIZE:
-                raise ValueError(
+                raise StorageValidationError(
                     f"HashedLookup pre-computed digest must be {_HASHED_LOOKUP_DIGEST_SIZE} bytes; got {len(digest)}",
                 )
             return digest
@@ -294,7 +295,7 @@ class HashedLookup(TypeDecorator[bytes]):
         # the raw digest so callers can compare it against another
         # ``compute()`` result.
         if len(value) != _HASHED_LOOKUP_DIGEST_SIZE:
-            raise ValueError(
+            raise StorageValidationError(
                 f"HashedLookup expects {_HASHED_LOOKUP_DIGEST_SIZE}-byte digests; got {len(value)}",
             )
         return bytes(value)

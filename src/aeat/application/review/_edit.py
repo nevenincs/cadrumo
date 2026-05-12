@@ -27,7 +27,7 @@ The orchestration that applies an :class:`EditSpec` to a stored
 :class:`aeat.domain.transactions.Transaction` /
 :class:`aeat.domain.invoices.Invoice` /
 :class:`aeat.domain.filing.FilingDraft` lives in the
-``application/user_cli.py`` review-state overlay.
+``application/workflow`` state overlay.
 """
 
 from __future__ import annotations
@@ -139,9 +139,7 @@ def _coerce_decimal(clause: EditClause, *, scope: str) -> Decimal:
         ) from exc
 
 
-_INVOICE_IVA_RATE_ALLOWED: frozenset[Decimal] = frozenset(
-    {Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")}
-)
+_INVOICE_IVA_RATE_ALLOWED: frozenset[Decimal] = frozenset({Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")})
 """Closed set of integer-percentage IVA rates the CLI accepts on
 ``--set iva.rate``. The values map onto :class:`aeat.domain.invoices.IvaRate`
 slots (``RATE_0`` / ``RATE_4`` / ``RATE_10`` / ``RATE_21``); the underlying

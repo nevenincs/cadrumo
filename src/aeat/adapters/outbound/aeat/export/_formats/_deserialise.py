@@ -23,6 +23,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .._errors import ExportFormatError
 from ._record_spec import (
     DateFmt,
     FicheroBoeEncoding,
@@ -131,7 +132,7 @@ def deserialise(
     # stream (content + CRLF) or already-stripped content bytes.
     body = payload[: -len(_CRLF)] if payload.endswith(_CRLF) else payload
     if len(body) != total_length:
-        raise ValueError(
+        raise ExportFormatError(
             f"payload content is {len(body)} bytes but total_length={total_length} "
             f"was declared; likely wrong record spec or corrupted stream."
         )
@@ -144,7 +145,7 @@ def deserialise(
         end = start + spec.length
         raw = body[start:end]
         if len(raw) != spec.length:
-            raise ValueError(
+            raise ExportFormatError(
                 f"field {spec.field_id!r} expects {spec.length} bytes "
                 f"at offset {spec.offset}; got {len(raw)} — payload too short?"
             )
@@ -256,12 +257,12 @@ def deserialise_envelope(
             segments.
     """
     if not segments:
-        raise ValueError("segments must not be empty")
+        raise ExportFormatError("segments must not be empty")
 
     body = payload[: -len(_CRLF)] if payload.endswith(_CRLF) else payload
     expected_total = sum(s.total_length for s in segments)
     if len(body) != expected_total:
-        raise ValueError(
+        raise ExportFormatError(
             f"envelope payload is {len(body)} bytes but segments sum to "
             f"{expected_total}; wrong envelope composition or corrupted stream."
         )
@@ -282,7 +283,7 @@ def deserialise_envelope(
         parsed[segment.segment_id] = record
         for cid, value in record.casilla_values.items():
             if cid in merged and merged[cid] != value:
-                raise ValueError(
+                raise ExportFormatError(
                     f"casilla {cid!r} appears with divergent values across "
                     f"segments (got {merged[cid]} then {value}); record spec "
                     f"must not duplicate casilla_id across pages."
@@ -290,7 +291,7 @@ def deserialise_envelope(
             merged[cid] = value
         for fid, fvalue in record.field_values.items():
             if fid in merged_fields and merged_fields[fid] != fvalue:
-                raise ValueError(
+                raise ExportFormatError(
                     f"field {fid!r} appears with divergent values across "
                     f"segments (got {merged_fields[fid]!r} then {fvalue!r}); "
                     f"record spec must not duplicate field_id across pages "

@@ -20,6 +20,8 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from ._errors import TransactionValidationError
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
@@ -76,7 +78,7 @@ class RawProvenance(BaseModel):
         """Lowercase, strip, and assert ``source_sha256`` is 64 hex chars."""
         normalized = value.strip().lower()
         if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
-            raise ValueError("source_sha256 must be a 64-character lowercase hex digest")
+            raise TransactionValidationError("source_sha256 must be a 64-character lowercase hex digest")
         return normalized
 
     @field_validator("ingested_at")
@@ -84,7 +86,7 @@ class RawProvenance(BaseModel):
     def _require_aware_timestamp(cls, value: datetime) -> datetime:
         """Reject naive timestamps; ingest must record UTC offsets."""
         if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("ingested_at must be timezone-aware")
+            raise TransactionValidationError("ingested_at must be timezone-aware")
         return value
 
     @field_validator("provider_name")
@@ -93,7 +95,7 @@ class RawProvenance(BaseModel):
         """Trim ``provider_name``; reject the empty string."""
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("provider_name must not be blank")
+            raise TransactionValidationError("provider_name must not be blank")
         return trimmed
 
 
@@ -135,7 +137,7 @@ class RawTransaction(BaseModel):
         """Trim and reject blank strings on identifier / narrative fields."""
         trimmed = value.strip()
         if not trimmed:
-            raise ValueError("field must not be blank")
+            raise TransactionValidationError("field must not be blank")
         return trimmed
 
     @field_validator("currency")
@@ -144,7 +146,7 @@ class RawTransaction(BaseModel):
         """Uppercase and assert ``currency`` is a three-letter ISO 4217 code."""
         normalized = value.strip().upper()
         if len(normalized) != 3 or not normalized.isalpha():
-            raise ValueError("currency must be a three-letter ISO 4217 code")
+            raise TransactionValidationError("currency must be a three-letter ISO 4217 code")
         return normalized
 
     @field_validator("counterparty")

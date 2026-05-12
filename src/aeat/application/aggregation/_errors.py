@@ -46,6 +46,10 @@ class AggregationCategoryCoverageError(AggregationError):
     """Raised when a business transaction lacks category or profile coverage."""
 
 
+class AggregationValidationError(AggregationError, ValueError):
+    """Raised on invalid aggregation payload or state. Inherits from ValueError for Pydantic."""
+
+
 def t(message: str) -> tr:
     """Build a multilingual :class:`aeat.core.i18n.tr` message payload.
 
@@ -65,5 +69,6 @@ __all__ = [
     "AggregationMissingClassificationError",
     "AggregationPeriodError",
     "AggregationUnsupportedModeloError",
+    "AggregationValidationError",
     "t",
 ]

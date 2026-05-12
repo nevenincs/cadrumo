@@ -13,7 +13,7 @@ from unicodedata import category, normalize
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ._errors import ForalRegimeError, ProfileNotConfiguredError, TaxResidenceProfileError
+from ._errors import ForalRegimeError, ProfileNotConfiguredError, ProfileValidationError, TaxResidenceProfileError
 from ._keys import (
     PROFILE_KEYS,
     ProfileKey,
@@ -96,7 +96,7 @@ class TaxResidenceProfile(BaseModel, frozen=True, strict=True):
     @classmethod
     def _schema_version_is_supported(cls, value: str) -> str:
         if value != "1":
-            raise ValueError("schema_version must be '1'")
+            raise ProfileValidationError("schema_version must be '1'")
         return value
 
     @field_validator("ccaa", mode="before")

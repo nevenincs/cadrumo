@@ -11,10 +11,7 @@ from ...application.invoices import (
     project_invoice_reviews,
 )
 from ...application.review import EditParseError, FilterParseError, InvoiceEditSpec, InvoiceReviewFilterSpec
-from ...application.user_cli import (
-    state_repository,
-    update_invoice_review,
-)
+from ...application.workflow import update_invoice_review, workflow_state_repository
 from ._common import (
     _bad,
     _canonical_period,
@@ -171,7 +168,7 @@ def invoice_edit(
         fields["document.path"] = str(spec.document_path)
     if not fields:
         raise _bad(tr("cli.invoice.errors.at_least_one_edit"))
-    updated = state_repository().update(
+    updated = workflow_state_repository().update(
         lambda current: update_invoice_review(current, invoice_id, fields=fields, action="edit", reason=reason)
     )
     review = updated.invoice_reviews.get(invoice_id)
@@ -201,7 +198,7 @@ def invoice_match(
         raise _bad(tr("cli.invoice.errors.match_both_required"))
 
     if invoice_id and ledger_id:
-        state_repository().update(lambda state: apply_manual_invoice_match(state, invoice_id, ledger_id))
+        workflow_state_repository().update(lambda state: apply_manual_invoice_match(state, invoice_id, ledger_id))
         _emit(
             ctx,
             {"invoice": invoice_id, "payment": ledger_id, "status": "matched"},

@@ -1,10 +1,17 @@
 aggregation:
   models:
+    errors:
+      annual_period_mixed: El periodo no puede mezclar valores anuales y subaños (trimestre/mes).
+      month_required: El tipo de periodo mensual requiere un valor de mes.
+      period_type_ambiguous: El tipo de periodo es ambiguo; especifique trimestre o mes explícitamente.
+      quarter_required: El tipo de periodo trimestral requiere un valor de trimestre.
     t_944805: Periodo no valido. Usa YYYY-Qn
   renta_ledger:
     errors:
       annual_period_required: Se requiere un periodo anual para la agregación del
         libro de Renta.
+      modelo_mismatch: El modelo tributario no coincide con el modelo esperado del libro de Renta.
+      period_mismatch: El periodo no coincide con el periodo esperado del libro de Renta.
 application:
   auth:
     provider_impact:

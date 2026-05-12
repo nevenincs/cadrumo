@@ -39,6 +39,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.paths import PROJECT_ROOT
 from ._schema import VATRateKind
+from .errors import VatCatalogueError, VatValidationError
 
 
 class LivaArt161RecargoRates(BaseModel):
@@ -63,9 +64,7 @@ class LivaArt161RecargoRates(BaseModel):
     tabaco_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
 
 
-_PARAMETER_TABLE_PATH: Final[Path] = (
-    PROJECT_ROOT / "registry" / "aeat" / "legal" / "iva-recargo-equivalencia.toml"
-)
+_PARAMETER_TABLE_PATH: Final[Path] = PROJECT_ROOT / "registry" / "aeat" / "legal" / "iva-recargo-equivalencia.toml"
 
 _GENERAL_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-general"
 _REDUCIDO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-reducido"
@@ -78,8 +77,8 @@ def _load_rates() -> LivaArt161RecargoRates:
 
     Raises:
         FileNotFoundError: If the parameter TOML is missing.
-        KeyError: If any of the four expected parameter ids is absent.
-        ValueError: If any value cannot be parsed as a Decimal.
+        VatCatalogueError: If any of the four expected parameter ids is absent.
+        VatValidationError: If any value cannot be parsed as a Decimal.
     """
     with _PARAMETER_TABLE_PATH.open("rb") as handle:
         data = tomllib.load(handle)
@@ -91,17 +90,19 @@ def _load_rates() -> LivaArt161RecargoRates:
         super_reducido_raw = parameters[_SUPER_REDUCIDO_PARAM_ID]["value"]
         tabaco_raw = parameters[_TABACO_PARAM_ID]["value"]
     except KeyError as exc:
-        raise KeyError(
-            f"registry/aeat/legal/iva-recargo-equivalencia.toml is missing "
-            f"LIVA art. 161 parameter {exc.args[0]!r}"
+        raise VatCatalogueError(
+            f"registry/aeat/legal/iva-recargo-equivalencia.toml is missing LIVA art. 161 parameter {exc.args[0]!r}"
         ) from exc
 
-    return LivaArt161RecargoRates(
-        general_rate=Decimal(str(general_raw)),
-        reducido_rate=Decimal(str(reducido_raw)),
-        super_reducido_rate=Decimal(str(super_reducido_raw)),
-        tabaco_rate=Decimal(str(tabaco_raw)),
-    )
+    try:
+        return LivaArt161RecargoRates(
+            general_rate=Decimal(str(general_raw)),
+            reducido_rate=Decimal(str(reducido_raw)),
+            super_reducido_rate=Decimal(str(super_reducido_raw)),
+            tabaco_rate=Decimal(str(tabaco_raw)),
+        )
+    except (ValueError, TypeError) as exc:
+        raise VatValidationError(f"failed to parse recargo rates as Decimal: {exc}") from exc
 
 
 LIVA_ART_161_RECARGO: Final[LivaArt161RecargoRates] = _load_rates()

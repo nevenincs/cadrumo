@@ -11,6 +11,7 @@ from typing import Any, Literal, cast
 from pydantic import BaseModel, ConfigDict
 
 from ._authority import ValidatedRegistryAuthority
+from ._errors import RegistryValidationError
 from ._runtime_graph import expression_casilla_refs
 from ._schema import FormulaExpression, ModeloDefinition, ModeloRevision
 
@@ -302,7 +303,7 @@ def parse_modelo_period(raw: str) -> tuple[int, str]:
     candidate = raw.strip()
     match = _PERIOD_RE.fullmatch(candidate)
     if match is None:
-        raise ValueError(f"period must be YYYY, YYYYQn, YYYY-Qn, or YYYY-MM; got {raw!r}")
+        raise RegistryValidationError(f"period must be YYYY, YYYYQn, YYYY-Qn, or YYYY-MM; got {raw!r}")
     year = int(match.group("year"))
     quarter = match.group("quarter")
     month = match.group("month")

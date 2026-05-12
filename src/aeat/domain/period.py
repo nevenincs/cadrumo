@@ -30,6 +30,17 @@ from __future__ import annotations
 import re
 from datetime import date
 
+from ..core.errors import AeatError
+
+
+class PeriodError(AeatError):
+    """Base class for period-related errors."""
+
+
+class PeriodValidationError(PeriodError, ValueError):
+    """Raised when a period token is malformed. Inherits from ValueError for Pydantic."""
+
+
 _QUARTER_PERIOD_RE = re.compile(r"^(?P<year>\d{4})Q(?P<quarter>[1-4])$")
 _MONTH_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$")
 _ANNUAL_PERIOD_RE = re.compile(r"^(?P<year>\d{4})A$")
@@ -55,7 +66,7 @@ def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tupl
         ``"12"``, or ``"0A"``).
 
     Raises:
-        ValueError: When ``period`` is none of the accepted shapes.
+        PeriodValidationError: When ``period`` is none of the accepted shapes.
     """
 
     if match := _QUARTER_PERIOD_RE.fullmatch(period):
@@ -68,7 +79,7 @@ def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tupl
         return int(period), "0A"
     if ejercicio is not None and (match := _RAW_QUARTER_RE.fullmatch(period)):
         return int(ejercicio), f"{match.group('quarter')}T"
-    raise ValueError(f"cannot map filing period {period!r} to a registry period")
+    raise PeriodValidationError(f"cannot map filing period {period!r} to a registry period")
 
 
 def period_end_date(filing_year: int, registry_period: str) -> date:
@@ -87,7 +98,7 @@ def period_end_date(filing_year: int, registry_period: str) -> date:
         the application layer already uses).
 
     Raises:
-        ValueError: When ``registry_period`` is not a recognised shape.
+        PeriodValidationError: When ``registry_period`` is not a recognised shape.
     """
 
     if registry_period == "1T":
@@ -98,7 +109,10 @@ def period_end_date(filing_year: int, registry_period: str) -> date:
         return date(filing_year, 9, 30)
     if registry_period in {"4T", "0A"}:
         return date(filing_year, 12, 31)
-    return date(filing_year, int(registry_period), 1)
+    try:
+        return date(filing_year, int(registry_period), 1)
+    except ValueError as exc:
+        raise PeriodValidationError(f"invalid registry period {registry_period!r}") from exc
 
 
-__all__ = ["parse_canonical_period", "period_end_date"]
+__all__ = ["PeriodError", "PeriodValidationError", "parse_canonical_period", "period_end_date"]

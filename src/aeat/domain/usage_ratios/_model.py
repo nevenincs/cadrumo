@@ -20,6 +20,7 @@ from ..categories import (
     ProportionalityKind,
     SpendingCategory,
 )
+from ._errors import UsageRatioValidationError
 
 __all__ = [
     "ELIGIBLE_USAGE_RATIO_CATEGORIES",
@@ -85,7 +86,7 @@ class UsageRatioProfile(BaseModel):
         # bound check here covers the remaining domain.
         for category, ratio in value.items():
             if not (Decimal("0") <= ratio <= Decimal("1")):
-                raise ValueError(f"usage ratio for {category.value!r} must be in [0, 1] (got {ratio})")
+                raise UsageRatioValidationError(f"usage ratio for {category.value!r} must be in [0, 1] (got {ratio})")
         # Canonicalise key order so two equal profiles serialise to identical bytes.
         # operator's ``var/financial/usage-ratios.json`` is a candidate for git-tracking;
         # stable ordering prevents spurious diffs when ratios are toggled.
@@ -96,7 +97,7 @@ class UsageRatioProfile(BaseModel):
         invalid = tuple(category for category in self.ratios if category not in ELIGIBLE_USAGE_RATIO_CATEGORIES)
         if invalid:
             names = ", ".join(sorted(c.value for c in invalid))
-            raise ValueError(f"usage ratios may only target USAGE_RATIO_* categories; rejected: {names}")
+            raise UsageRatioValidationError(f"usage ratios may only target USAGE_RATIO_* categories; rejected: {names}")
         return self
 
     def with_ratio(self, category: SpendingCategory, ratio: Decimal) -> UsageRatioProfile:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ._errors import BrowserError, BrowserFailureMode, BrowserValidationError
 from ._factory import (
     DefaultBrowserSession,
     create_browser_session,
@@ -23,13 +24,14 @@ from ._site_health_parsers import (
 from .evasion import BrowserEvasionError, EvasionStrategy, PlaywrightStealthEvasion
 from .health import run_health_check
 from .profile import Profile
-from .session import BrowserError, BrowserFailureMode, BrowserSession
+from .session import BrowserSession
 
 __all__ = [
     "BrowserError",
     "BrowserEvasionError",
     "BrowserFailureMode",
     "BrowserSession",
+    "BrowserValidationError",
     "DefaultBrowserSession",
     "EvasionStrategy",
     "PlaywrightStealthEvasion",

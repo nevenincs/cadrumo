@@ -1,10 +1,17 @@
 aggregation:
   models:
+    errors:
+      annual_period_mixed: El període no pot barrejar valors anuals i subannuals (trimestre/mes).
+      month_required: El tipus de període mensual requereix un valor de mes.
+      period_type_ambiguous: El tipus de període és ambigu; especifiqueu trimestre o mes explícitament.
+      quarter_required: El tipus de període trimestral requereix un valor de trimestre.
     t_944805: Format de període no vàlid. Useu YYYY, YYYY-Qn o YYYY-MM.
   renta_ledger:
     errors:
       annual_period_required: Es requereix un període anual per a l'agregació del
         llibre de Renda.
+      modelo_mismatch: El model tributari no coincideix amb el model esperat del llibre de Renda.
+      period_mismatch: El període no coincideix amb el període esperat del llibre de Renda.
 application:
   auth:
     provider_impact:

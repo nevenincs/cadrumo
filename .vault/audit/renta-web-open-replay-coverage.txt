@@ -1,13 +1,9 @@
-scenarios_total: 9
-scenarios_with_payload: 1
-scenarios_uncovered: 8
-coverage_pct: 11.1
+scenarios_total: 4
+scenarios_with_payload: 0
+scenarios_uncovered: 4
+coverage_pct: 0.0
 uncovered_ids:
   - base-imponible-with-negative-capital-gains
   - base-liquidable-with-reductions
-  - cuota-integra-estatal-from-both-components
-  - cuota-liquida-estatal-with-deductions
-  - cuota-liquida-incrementada-with-perdida-derecho
-  - cuota-liquida-total-from-both-halves
   - minimo-aggregation-estatal
   - minimo-clip-to-base-liquidable

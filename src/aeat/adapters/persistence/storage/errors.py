@@ -39,6 +39,16 @@ class PersistenceError(StorageError):
     """
 
 
+class StorageValidationError(PersistenceError, ValueError):
+    """Raised when a storage parameter fails validation (e.g. key length).
+
+    Inherits from both :class:`PersistenceError` and :class:`ValueError`
+    to remain compatible with Pydantic's validator-failure contract while
+    allowing catch-all :class:`StorageError` handlers to detect integrity
+    failures.
+    """
+
+
 class EncryptionError(PersistenceError):
     """Base class for AEAD encryption / decryption failures."""
 
@@ -173,23 +183,8 @@ class EnvelopeVersionError(PersistenceError):
     """
 
 
-class PathContainmentError(PersistenceError, ValueError):
-    """Raised when a computed path escapes its configured root directory.
-
-    Inherits from :class:`ValueError` as well as :class:`PersistenceError` so
-    legacy call-sites that catch ``ValueError`` from the path helpers in
-    :mod:`aeat.core.paths` continue to work; new code should catch the
-    typed :class:`PathContainmentError` instead.
-
-    Method-resolution order: :class:`PathContainmentError` ->
-    :class:`PersistenceError` -> :class:`StorageError` ->
-    :class:`AeatError` -> :class:`Exception` and (separately)
-    :class:`ValueError` -> :class:`Exception`. Python's C3 linearisation
-    resolves cleanly because both bases share :class:`Exception` as their
-    common ancestor; the registered :class:`ErrorCode`
-    (``INTEGRITY_STORAGE_PATH_CONTAINMENT``) is keyed by fully qualified
-    class name, so the multi-inheritance does not introduce shadowing.
-    """
+class PathContainmentError(PersistenceError):
+    """Raised when a computed path escapes its configured root directory."""
 
 
 class BlobNotFoundError(PersistenceError):

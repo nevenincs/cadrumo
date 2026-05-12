@@ -102,9 +102,9 @@ class WorkbookArtefactReport(WorkbookParityModel):
     @model_validator(mode="after")
     def _validate_status(self) -> WorkbookArtefactReport:
         if self.scan_status == "scanned" and self.workbook_kind in {"unreadable", "unsupported_binary_xls"}:
-            raise ValueError("scanned workbook cannot be unreadable or unsupported")
+            raise RegistryValidationError("scanned workbook cannot be unreadable or unsupported")
         if self.scan_status != "scanned" and self.error is None:
-            raise ValueError("non-scanned workbook report must include an error")
+            raise RegistryValidationError("non-scanned workbook report must include an error")
         return self
 
 
@@ -130,9 +130,9 @@ class WorkbookConversionReport(WorkbookParityModel):
     @model_validator(mode="after")
     def _validate_status(self) -> WorkbookConversionReport:
         if self.conversion_status == "converted" and self.error is not None:
-            raise ValueError("converted workbook report must not include an error")
+            raise RegistryValidationError("converted workbook report must not include an error")
         if self.conversion_status == "failed" and self.error is None:
-            raise ValueError("failed workbook conversion report must include an error")
+            raise RegistryValidationError("failed workbook conversion report must include an error")
         return self
 
 
@@ -147,7 +147,7 @@ class SyntheticInputValue(WorkbookParityModel):
     @model_validator(mode="after")
     def _validate_target(self) -> SyntheticInputValue:
         if self.workbook_cell is None and self.registry_binding is None:
-            raise ValueError("synthetic input must target a workbook cell, registry binding, or both")
+            raise RegistryValidationError("synthetic input must target a workbook cell, registry binding, or both")
         return self
 
 

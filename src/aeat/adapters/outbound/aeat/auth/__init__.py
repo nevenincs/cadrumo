@@ -33,6 +33,12 @@ from ._clave_movil import (
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
 )
+from ._errors import (
+    AeatLoginAssertionError,
+    AeatSessionExpiredError,
+    AuthConfigurationError,
+    AuthError,
+)
 from ._providers import (
     CERTIFICATE_CONTEXT_MARKER,
     AuthLoginAssertionDetail,
@@ -46,8 +52,6 @@ from ._providers import (
     describe_certificate_provider,
 )
 from .certificate import (
-    AeatLoginAssertionError,
-    AeatSessionExpiredError,
     CertificateBackend,
     CertificateBundle,
     CertificateError,
@@ -83,6 +87,8 @@ __all__ = [
     "AeatLoginAssertionError",
     "AeatSession",
     "AeatSessionExpiredError",
+    "AuthConfigurationError",
+    "AuthError",
     "AuthLoginAssertionDetail",
     "AuthSessionDetail",
     "BrowserContextLike",
@@ -142,4 +148,4 @@ def select_provider(
             settings,
             browser_session_factory=browser_session_factory,
         )
-    raise ValueError(f"unsupported auth provider kind {kind!r}")
+    raise AuthConfigurationError(f"unsupported auth provider kind {kind!r}")

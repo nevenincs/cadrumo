@@ -59,7 +59,7 @@ from ._schema import (
     VATRateKind,
     _VatStrictFrozen,
 )
-from .errors import VatRateNotFoundError
+from .errors import VatRateNotFoundError, VatValidationError
 
 _logger = get_logger(__name__)
 
@@ -261,7 +261,7 @@ class VATClassificationCriteria(_VatStrictFrozen):
     def _validate_member_state_consistency(self) -> VATClassificationCriteria:
         """Enforce residency and rate-tier invariants.
 
-        Three checks, each raising :exc:`ValueError` on violation:
+        Three checks, each raising :exc:`VatValidationError` on violation:
 
         * ``issuer_residency == EU_MEMBER`` requires ``issuer_member_state``.
         * ``customer_residency == EU_MEMBER`` requires
@@ -278,9 +278,9 @@ class VATClassificationCriteria(_VatStrictFrozen):
           classification axis.
         """
         if self.issuer_residency is IssuerResidency.EU_MEMBER and self.issuer_member_state is None:
-            raise ValueError("issuer_member_state is required when issuer_residency is EU_MEMBER")
+            raise VatValidationError("issuer_member_state is required when issuer_residency is EU_MEMBER")
         if self.customer_residency is CustomerResidency.EU_MEMBER and self.customer_member_state is None:
-            raise ValueError("customer_member_state is required when customer_residency is EU_MEMBER")
+            raise VatValidationError("customer_member_state is required when customer_residency is EU_MEMBER")
         if (
             self.issuer_residency is IssuerResidency.ES_MAINLAND
             and self.customer_residency is CustomerResidency.ES_MAINLAND
@@ -293,7 +293,7 @@ class VATClassificationCriteria(_VatStrictFrozen):
             }
             and self.rate_tier is None
         ):
-            raise ValueError(
+            raise VatValidationError(
                 "rate_tier is required for ES-to-ES domestic transactions; "
                 "supply GENERAL / REDUCED / SUPER_REDUCED / ZERO / EXEMPT explicitly"
             )

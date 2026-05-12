@@ -12,6 +12,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ._errors import UserProfileValidationError
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _ProfileId = Annotated[
@@ -71,7 +73,7 @@ class UserProfileFact(BaseModel):
     @model_validator(mode="after")
     def _validate_window(self) -> UserProfileFact:
         if self.valid_from is not None and self.valid_to is not None and self.valid_from > self.valid_to:
-            raise ValueError(f"{self.path}: valid_from is after valid_to")
+            raise UserProfileValidationError(f"{self.path}: valid_from is after valid_to")
         return self
 
 
@@ -102,11 +104,11 @@ class UserProfileRecord(BaseModel):
     @model_validator(mode="after")
     def _validate_lifecycle(self) -> UserProfileRecord:
         if self.created_at > self.updated_at:
-            raise ValueError("created_at must be before or equal to updated_at")
+            raise UserProfileValidationError("created_at must be before or equal to updated_at")
         if self.status is UserProfileStatus.ACTIVE and self.removed_at is not None:
-            raise ValueError("active profiles must not carry removed_at")
+            raise UserProfileValidationError("active profiles must not carry removed_at")
         if self.status is UserProfileStatus.TOMBSTONED and self.removed_at is None:
-            raise ValueError("tombstoned profiles must carry removed_at")
+            raise UserProfileValidationError("tombstoned profiles must carry removed_at")
         return self
 
     def tombstone(self, *, removed_at: datetime | None = None) -> UserProfileRecord:
@@ -146,7 +148,7 @@ class UserProfileSnapshot(BaseModel):
         """Create an immutable snapshot from a live profile record."""
 
         if profile.status is not UserProfileStatus.ACTIVE:
-            raise ValueError("cannot snapshot a tombstoned profile")
+            raise UserProfileValidationError("cannot snapshot a tombstoned profile")
         instant = created_at or utc_now()
         facts = tuple(
             sorted(

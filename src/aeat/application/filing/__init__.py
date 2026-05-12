@@ -53,7 +53,11 @@ from ...domain.filing import (
     derive_validation_status,
     make_amendment_id,
 )
-from ...domain.period import parse_canonical_period, period_end_date
+from ...domain.period import (
+    PeriodValidationError,
+    parse_canonical_period,
+    period_end_date,
+)
 from ._calculate import (
     DeclarationCalculateNextAction,
     DeclarationCalculateSummary,
@@ -80,6 +84,7 @@ from ._review import (
     refresh_review_status,
     unapprove_draft,
 )
+from .errors import FilingApplicationError, FilingCalculateError
 from .runtime import (
     FilingOperatorProfile,
     build_runtime_schema_provider,
@@ -219,7 +224,7 @@ def _load_registry_snapshot(*, modelo: str, period: str) -> RegistrySnapshot:
 def _registry_period(period: str) -> tuple[int, str]:
     try:
         return parse_canonical_period(period)
-    except ValueError as exc:
+    except PeriodValidationError as exc:
         raise FilingBuilderError(str(exc)) from exc
 
 
@@ -421,7 +426,7 @@ def iter_findings(
     try:
         threshold = _SEVERITY_RANK[FilingFindingSeverity(severity_at_least)]
     except ValueError as exc:
-        raise FilingBuilderError(f"Unknown severity {severity_at_least!r}; expected INFO, WARNING, or ERROR") from exc
+        raise FilingCalculateError(f"Unknown severity {severity_at_least!r}; expected INFO, WARNING, or ERROR") from exc
     for finding in draft.findings:
         if _SEVERITY_RANK[finding.severity] >= threshold:
             yield finding
@@ -452,10 +457,12 @@ __all__ = [
     "FilingAmendment",
     "FilingAmendmentError",
     "FilingAmendmentValidationError",
+    "FilingApplicationError",
     "FilingApprovalBasis",
     "FilingApprovalStaleReason",
     "FilingBindingValue",
     "FilingBuilderError",
+    "FilingCalculateError",
     "FilingComputationError",
     "FilingDraft",
     "FilingDraftError",

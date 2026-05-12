@@ -9,6 +9,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ._errors import LLMValidationError
+
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 
 
@@ -43,7 +45,7 @@ class LLMRequest(BaseModel):
         normalized = value.strip()
         if not normalized:
             msg = "Prompt must not be empty."
-            raise ValueError(msg)
+            raise LLMValidationError(msg)
         return normalized
 
     @field_validator("system")
@@ -103,7 +105,7 @@ class PromptDefinition(BaseModel):
 
         if not _PROMPT_ID_PATTERN.fullmatch(value):
             msg = f"Prompt id must be kebab-case, got {value!r}"
-            raise ValueError(msg)
+            raise LLMValidationError(msg)
         return value
 
 

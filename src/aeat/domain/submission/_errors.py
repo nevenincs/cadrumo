@@ -13,7 +13,12 @@ class SubmissionPreflightError(SubmissionError):
     """Raised when a draft cannot pass local submission preflight."""
 
 
+class SubmissionValidationError(SubmissionError, ValueError):
+    """Raised when submission models violate state or shape invariants."""
+
+
 __all__ = [
     "SubmissionError",
     "SubmissionPreflightError",
+    "SubmissionValidationError",
 ]

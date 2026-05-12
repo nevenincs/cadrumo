@@ -138,6 +138,7 @@ from .errors import (
     SecretNotFoundError,
     SecretStoreError,
     StorageError,
+    StorageValidationError,
     UnsecuredModeRefusedError,
 )
 from .master_key._master_key import (
@@ -240,6 +241,7 @@ __all__ = [
     "SecretStoreError",
     "SensitivityClass",
     "StorageError",
+    "StorageValidationError",
     "UnsecuredMasterKeyProvider",
     "UnsecuredModeRefusedError",
     "WrappedMasterKey",

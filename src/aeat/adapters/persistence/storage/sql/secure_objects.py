@@ -18,6 +18,7 @@ from ..errors import (
     DecryptionError,
     EnvelopeVersionError,
     RepositoryError,
+    StorageValidationError,
 )
 from . import _orm
 from .engine import get_engine
@@ -114,7 +115,7 @@ class SecureObjectRepository:
         master-key constraint as :meth:`save_with_raw_key`.
         """
         if len(hashed_object_key) != 32:
-            raise ValueError(
+            raise StorageValidationError(
                 f"hashed_object_key must be 32 bytes; got {len(hashed_object_key)}",
             )
         with session_scope(self._engine) as session:
@@ -491,7 +492,7 @@ class SecureObjectRepository:
             :exc:`RepositoryError`: On underlying SQL integrity errors.
         """
         if len(hashed_object_key) != 32:
-            raise ValueError(
+            raise StorageValidationError(
                 f"hashed_object_key must be 32 bytes; got {len(hashed_object_key)}",
             )
         self._save_internal(

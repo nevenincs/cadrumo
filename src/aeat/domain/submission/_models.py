@@ -14,6 +14,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ._errors import SubmissionValidationError
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
@@ -69,8 +71,8 @@ class SubmissionAttempt(BaseModel):
     @model_validator(mode="after")
     def _check_time_ordering(self) -> SubmissionAttempt:
         """Reject attempts whose ``ended_at`` predates ``started_at``."""
-        if self.ended_at < self.started_at:
-            raise ValueError(f"ended_at ({self.ended_at}) is before started_at ({self.started_at})")
+        if self.ended_at and self.ended_at < self.started_at:
+            raise SubmissionValidationError(f"ended_at ({self.ended_at}) is before started_at ({self.started_at})")
         return self
 
 
@@ -114,12 +116,16 @@ class SubmittedFiling(BaseModel):
     def _check_ack_consistency(self) -> SubmittedFiling:
         """Enforce ``ACKNOWLEDGED`` ↔ justificante-present invariants."""
         if self.status is SubmissionStatus.ACKNOWLEDGED:
-            if self.justificante_csv is None or self.justificante_pdf_path is None:
-                raise ValueError("status ACKNOWLEDGED requires both justificante_csv and justificante_pdf_path")
-            if self.acknowledged_at is None:
-                raise ValueError("status ACKNOWLEDGED requires acknowledged_at")
-        if self.acknowledged_at is not None and self.acknowledged_at < self.submitted_at:
-            raise ValueError(f"acknowledged_at ({self.acknowledged_at}) is before submitted_at ({self.submitted_at})")
+            if not self.justificante_csv or not self.justificante_pdf_path:
+                raise SubmissionValidationError(
+                    "status ACKNOWLEDGED requires both justificante_csv and justificante_pdf_path"
+                )
+            if not self.acknowledged_at:
+                raise SubmissionValidationError("status ACKNOWLEDGED requires acknowledged_at")
+        if self.acknowledged_at and self.acknowledged_at < self.submitted_at:
+            raise SubmissionValidationError(
+                f"acknowledged_at ({self.acknowledged_at}) is before submitted_at ({self.submitted_at})"
+            )
         return self
 
 
@@ -143,8 +149,8 @@ def make_submission_id(draft_id: str, attempt_ordinal: int) -> str:
             is not a positive integer.
     """
     if not draft_id:
-        raise ValueError("draft_id must be non-empty")
+        raise SubmissionValidationError("draft_id must be non-empty")
     if attempt_ordinal < 1:
-        raise ValueError(f"attempt_ordinal must be >= 1, got {attempt_ordinal}")
+        raise SubmissionValidationError(f"attempt_ordinal must be >= 1, got {attempt_ordinal}")
     payload = f"{draft_id}:{attempt_ordinal}".encode()
     return hashlib.sha256(payload).hexdigest()[:16]

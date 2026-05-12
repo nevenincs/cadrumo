@@ -1,24 +1,13 @@
-"""End-user composite workflow engine.
-
-The :mod:`aeat.application.workflow` subpackage owns the project's first
-*composite* end-user command: a single entry point that orchestrates
-the deadline engine, the filing draft builder, the submission engine,
-and the in-flight status / inbox / certificate surfaces into one
-ordered pipeline. The workflow is
-**read-only**: live AEAT submission is permanently forbidden, so the
-pipeline stops after preflight and never executes a real filing.
-
-Public API discipline: callers outside this subpackage must import only
-from :mod:`aeat.application.workflow`. The underscored modules are
-implementation detail and may change without notice.
-
-Examples:
-    >>> from aeat.application.workflow import default_engine
-    >>> engine = default_engine(submission_engine=..., deadline_engine=...)
-"""
+"""End-user composite workflow engine."""
 
 from __future__ import annotations
 
+# ---- review action re-exports -----------------------------------------------
+# Placed last: review._actions imports WorkflowState/WorkflowEvent/utc_now
+# from this package; all of those are already defined above.
+from ..review._actions import update_invoice_review, update_ledger_review
+
+# ---- adapters & engine (pull in auth / filing layers) -----------------------
 from ._adapters import (
     DeadlineEngineAdapter,
     FilingDraftBuilderAdapter,
@@ -27,20 +16,41 @@ from ._adapters import (
     default_engine,
 )
 from ._engine import WorkflowEngine
+
+# ---- errors (no application deps) -------------------------------------------
 from ._errors import (
     WorkflowAbortedError,
     WorkflowComponentError,
     WorkflowError,
 )
+
+# ---- core models first (no application-layer deps) -------------------------
+# These MUST be imported before _adapters, _engine, _persistence so that
+# when auth._actions / profile._actions / review._actions import
+# WorkflowState / utc_now from this package during their own module load,
+# those names are already present in the partially-initialised module.
 from ._models import (
+    DeclarationPointer,
     SiteHealthAlert,
     WorkflowAbortReason,
+    WorkflowEvent,
     WorkflowResult,
     WorkflowStage,
+    WorkflowState,
     WorkflowStep,
     compute_run_id,
+    declaration_key,
+    update_declaration_pointer,
+    utc_now,
 )
-from ._persistence import list_runs, load_run, save_run
+
+# ---- persistence (depends on _models only) ----------------------------------
+from ._persistence import (
+    WorkflowStateRepository,
+    workflow_state_repository,
+)
+
+# ---- protocols (no application deps) ----------------------------------------
 from ._protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
@@ -54,6 +64,7 @@ __all__ = [
     "CertificateBundleProtocol",
     "DeadlineEngineAdapter",
     "DeadlineEngineProtocol",
+    "DeclarationPointer",
     "FilingDraftBuilderAdapter",
     "FilingDraftBuilderProtocol",
     "FilingInputsProviderProtocol",
@@ -67,12 +78,18 @@ __all__ = [
     "WorkflowComponentError",
     "WorkflowEngine",
     "WorkflowError",
+    "WorkflowEvent",
     "WorkflowResult",
     "WorkflowStage",
+    "WorkflowState",
+    "WorkflowStateRepository",
     "WorkflowStep",
     "compute_run_id",
+    "declaration_key",
     "default_engine",
-    "list_runs",
-    "load_run",
-    "save_run",
+    "update_declaration_pointer",
+    "update_invoice_review",
+    "update_ledger_review",
+    "utc_now",
+    "workflow_state_repository",
 ]

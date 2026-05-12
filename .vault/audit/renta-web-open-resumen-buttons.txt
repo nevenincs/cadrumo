@@ -40,7 +40,7 @@
 === <a> link elements ===
   [0] text='Saltar al contenido principal' href='#acc-main'
   [1] text='Logotipo del Gobierno de España\nLogotipo de la Agencia Tributaria\nSede electrónica' href='https://sede.agenciatributaria.gob.es/Sede/inicio.html'
-  [2] text='08/05/2026 08:06:19\nHora oficial' href='https://sede.agenciatributaria.gob.es/Sede/Calendario_fecha_y_hora_oficial.html'
+  [2] text='10/05/2026 09:29:59\nHora oficial' href='https://sede.agenciatributaria.gob.es/Sede/Calendario_fecha_y_hora_oficial.html'
   [3] text='ÁREA PERSONAL' href='https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html'
   [4] text='Cambiar                                    usuario representado' href=''
   [5] text='Área personal' href='https://sede.agenciatributaria.gob.es/Sede/mi-area-personal.html'
@@ -131,8 +131,8 @@
   [4] type='text' title='Apellidos, Nombre:' placeholder=None name=None value='DECLARANTE PRUEBA'
   [5] type='text' title=None placeholder=None name=None value='01/01/1980'
   [6] type='text' title=None placeholder=None name=None value=' '
-  [7] type='radio' title=None placeholder=None name='pIbHba0' value='on'
-  [8] type='radio' title=None placeholder=None name='pIbHla0' value='on'
+  [7] type='radio' title=None placeholder=None name='dIiBba0' value='on'
+  [8] type='radio' title=None placeholder=None name='dIiBla0' value='on'
   [9] type='text' title=None placeholder=None name=None value=''
   [10] type='text' title=None placeholder=None name=None value=''
 

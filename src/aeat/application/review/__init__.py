@@ -24,6 +24,7 @@ Key exports:
 
 from __future__ import annotations
 
+from ._actions import update_invoice_review, update_ledger_review
 from ._adapters import (
     drafts_pending,
     invoices_pending,
@@ -69,6 +70,9 @@ from ._filter import (
 from ._models import (
     FindingReviewItem,
     InvoiceReviewItem,
+    InvoiceReviewRecord,
+    LedgerReviewRecord,
+    LedgerSplit,
     ReviewItem,
     TransactionReviewItem,
 )
@@ -88,13 +92,16 @@ __all__ = [
     "InvoiceReviewFilterKey",
     "InvoiceReviewFilterSpec",
     "InvoiceReviewItem",
+    "InvoiceReviewRecord",
     "InvoiceReviewStatus",
     "LedgerEditKey",
     "LedgerEditSpec",
     "LedgerReviewFilterKey",
     "LedgerReviewFilterSpec",
     "LedgerReviewIssue",
+    "LedgerReviewRecord",
     "LedgerReviewStatus",
+    "LedgerSplit",
     "ReviewError",
     "ReviewFormat",
     "ReviewItem",

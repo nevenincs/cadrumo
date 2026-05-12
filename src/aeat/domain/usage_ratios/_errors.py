@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from ...core.errors import AeatError
 
-__all__ = ["UsageRatioError", "UsageRatioPersistenceError"]
+__all__ = ["UsageRatioError", "UsageRatioPersistenceError", "UsageRatioValidationError"]
 
 
 class UsageRatioError(AeatError):
@@ -27,4 +27,12 @@ class UsageRatioPersistenceError(UsageRatioError):
     Surfaced by :func:`aeat.domain.usage_ratios.load_usage_ratios` and
     :func:`aeat.domain.usage_ratios.save_usage_ratios` for OS-level I/O
     failures and for envelope payloads that fail strict validation.
+    """
+
+
+class UsageRatioValidationError(UsageRatioError, ValueError):
+    """Raised when usage-ratio profiles violate domain invariants.
+
+    Inherits from ValueError to maintain compatibility with Pydantic
+    validators.
     """

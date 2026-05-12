@@ -20,6 +20,7 @@ from ..categories import (
     StatutoryCapPeriod,
     family_for,
 )
+from .errors import RentaValidationError
 
 LEDGER_RENTA_EXPENSE_SOURCE = "ledger_renta_expense_aggregation"
 
@@ -85,7 +86,7 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
         for category, ratio in value.items():
             _require_decimal(ratio, f"usage ratio for {category.value!r}")
             if not (Decimal("0") <= ratio <= Decimal("1")):
-                raise ValueError(f"usage ratio for {category.value!r} must be in [0, 1]")
+                raise RentaValidationError(f"usage ratio for {category.value!r} must be in [0, 1]")
         return {category: value[category] for category in sorted(value, key=lambda item: item.value)}
 
     @field_validator("statutory_cap_days")
@@ -124,11 +125,11 @@ class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
     @model_validator(mode="after")
     def _validate_invoice_and_direction(self) -> RentaDeductibleExpenseFact:
         if self.invoice_id is None and self.invoice_issue_date is not None:
-            raise ValueError("invoice_issue_date requires invoice_id")
+            raise RentaValidationError("invoice_issue_date requires invoice_id")
         if self.invoice_id is not None and self.invoice_issue_date is None:
-            raise ValueError("linked invoice facts require invoice_issue_date")
+            raise RentaValidationError("linked invoice facts require invoice_issue_date")
         if self.direction in {RentaExpenseDirection.REFUND, RentaExpenseDirection.REVERSAL} and self.invoice_id is None:
-            raise ValueError("refund and reversal facts must be linked to an invoice")
+            raise RentaValidationError("refund and reversal facts must be linked to an invoice")
         return self
 
     @property
@@ -174,7 +175,7 @@ class RentaDeductibilityResult(_RentaStrictFrozenModel):
     @model_validator(mode="after")
     def _validate_category_family(self) -> RentaDeductibilityResult:
         if self.category_family is not family_for(self.category):
-            raise ValueError("category_family must match category")
+            raise RentaValidationError("category_family must match category")
         return self
 
 
@@ -223,17 +224,17 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     @model_validator(mode="after")
     def _validate_period_and_invoice_state(self) -> RentaDeductibleExpenseObservation:
         if self.category_family is not family_for(self.category):
-            raise ValueError("category_family must match category")
+            raise RentaValidationError("category_family must match category")
         if self.target_casilla != RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.get(self.category):
-            raise ValueError("target_casilla must match the first-slice category mapping")
+            raise RentaValidationError("target_casilla must match the first-slice category mapping")
         if not (date(self.tax_year, 1, 1) <= self.filing_date < date(self.tax_year + 1, 1, 1)):
-            raise ValueError("filing_date must fall inside the observation tax year")
+            raise RentaValidationError("filing_date must fall inside the observation tax year")
         if self.invoice_id is None and self.invoice_issue_date is not None:
-            raise ValueError("invoice_issue_date requires invoice_id")
+            raise RentaValidationError("invoice_issue_date requires invoice_id")
         if self.invoice_id is None and self.invoice_evidence_status is not RentaInvoiceEvidenceStatus.NONE:
-            raise ValueError("transaction-only observations must not declare linked invoice evidence")
+            raise RentaValidationError("transaction-only observations must not declare linked invoice evidence")
         if self.invoice_id is not None and self.invoice_evidence_status is not RentaInvoiceEvidenceStatus.LINKED:
-            raise ValueError("linked invoice observations must declare linked invoice evidence")
+            raise RentaValidationError("linked invoice observations must declare linked invoice evidence")
         return self
 
 
@@ -253,7 +254,7 @@ def evaluate_renta_deductibility(
     """Evaluate one classified ledger fact against its category profile."""
 
     if profile.category is not fact.category:
-        raise ValueError(
+        raise RentaValidationError(
             f"profile category {profile.category.value!r} does not match fact category {fact.category.value!r}"
         )
     rule = profile.proportionality
@@ -305,7 +306,7 @@ def evaluate_renta_deductibility(
             applied_ratio = None
             deductible_abs = Decimal("0")
     else:  # pragma: no cover - closed enum exhaustiveness guard
-        raise ValueError(f"unsupported proportionality kind: {rule.kind.value}")
+        raise RentaValidationError(f"unsupported proportionality kind: {rule.kind.value}")
 
     signed_deductible = deductible_abs * fact.sign
     signed_non_deductible = (fact.gross_amount - deductible_abs) * fact.sign
@@ -336,14 +337,14 @@ def build_renta_deductible_expense_observation(
     """Build a first-slice Modelo 100 observation from an eligible result."""
 
     if result.status is not RentaDeductibilityStatus.ELIGIBLE:
-        raise ValueError(f"ineligible deductibility result cannot become an observation: {result.reason}")
+        raise RentaValidationError(f"ineligible deductibility result cannot become an observation: {result.reason}")
     if fact.category is not result.category:
-        raise ValueError("fact and result categories must match")
+        raise RentaValidationError("fact and result categories must match")
     target_casilla = RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.get(fact.category)
     if target_casilla is None:
-        raise ValueError(f"category {fact.category.value!r} is outside the first Renta expense slice")
+        raise RentaValidationError(f"category {fact.category.value!r} is outside the first Renta expense slice")
     if not (date(tax_year, 1, 1) <= fact.filing_date < date(tax_year + 1, 1, 1)):
-        raise ValueError("fact filing date falls outside the requested tax year")
+        raise RentaValidationError("fact filing date falls outside the requested tax year")
     invoice_status = (
         RentaInvoiceEvidenceStatus.LINKED if fact.invoice_id is not None else RentaInvoiceEvidenceStatus.NONE
     )
@@ -414,7 +415,7 @@ def _observation_id(fact: RentaDeductibleExpenseFact) -> str:
 
 def _require_decimal(value: Decimal, field_name: str) -> None:
     if isinstance(value, bool) or not isinstance(value, Decimal) or not value.is_finite():
-        raise ValueError(f"{field_name} must be a finite Decimal")
+        raise RentaValidationError(f"{field_name} must be a finite Decimal")
 
 
 __all__ = [

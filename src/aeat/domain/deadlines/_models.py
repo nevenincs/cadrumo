@@ -13,8 +13,11 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
+from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from ._errors import DeadlineValidationError
 
 
 class IVARegime(StrEnum):
@@ -170,9 +173,9 @@ class RecargoBand(BaseModel):
     legal_ref: str = Field(min_length=1, max_length=128)
 
     @model_validator(mode="after")
-    def _validate_window(self) -> RecargoBand:
+    def _validate_window(self) -> Self:
         if self.max_days_late is not None and self.max_days_late < self.min_days_late:
-            raise ValueError(
+            raise DeadlineValidationError(
                 f"RecargoBand {self.id}: max_days_late ({self.max_days_late}) "
                 f"is below min_days_late ({self.min_days_late})"
             )
@@ -253,9 +256,11 @@ class FilingObligation(BaseModel):
     def _check_window_order(self) -> FilingObligation:
         """Reject obligations whose ``opens_on`` is after ``closes_on``."""
         if self.opens_on > self.closes_on:
-            raise ValueError(f"opens_on ({self.opens_on}) is after closes_on ({self.closes_on})")
+            raise DeadlineValidationError(f"opens_on ({self.opens_on}) is after closes_on ({self.closes_on})")
         if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.closes_on:
-            raise ValueError(f"payment_cutoff_on ({self.payment_cutoff_on}) is after closes_on ({self.closes_on})")
+            raise DeadlineValidationError(
+                f"payment_cutoff_on ({self.payment_cutoff_on}) is after closes_on ({self.closes_on})"
+            )
         return self
 
 

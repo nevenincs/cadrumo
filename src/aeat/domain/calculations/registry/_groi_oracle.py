@@ -88,7 +88,7 @@ class GroiObservation(_GroiModel):
             normalized_nif = nif.strip().upper()
             normalized_verdict = verdict.strip().lower()
             if not normalized_nif or not normalized_verdict:
-                raise ValueError("GROI observations must not contain blank keys or values")
+                raise RegistryValidationError("GROI observations must not contain blank keys or values")
             cleaned[normalized_nif] = normalized_verdict
         return cleaned
 
