@@ -1,14 +1,13 @@
-"""Conceptual topic catalogue for ``aeat topic`` / ``aeat help <slug>``.
+"""Conceptual topic catalogue for ``aeat app topic``.
 
 Closes UX-015 from the 2026-05-08 CLI gap audit. A tax-naive operator
 hitting the CLI for the first time needs plain-language explanations of
 concepts (``iva-regime``, ``casilla``, ``pago-fraccionado`` …) without
 having to leave the terminal. The CLI exposes:
 
-- ``aeat topic`` -> list every registered slug + one-line summary.
-- ``aeat topic <slug>`` -> render the topic body + see_also pointers
-  + legal references.
-- ``aeat help <slug>`` -> alias of ``aeat topic <slug>``.
+- ``aeat app topic`` -> list every registered slug + one-line summary.
+- ``aeat app topic <slug>`` -> render the topic body + see_also
+  pointers + legal references.
 
 Topics live as TOML files under ``registry/aeat/topics/<slug>.toml``;
 title and body text live in the i18n catalogue under ``topic.<slug>.*``

@@ -1,15 +1,16 @@
-"""``aeat archive`` Typer group: portable export and import of every secure object.
+"""``aeat app archive`` Typer group: portable export and import of every secure object.
 
 Two verbs:
 
-- ``aeat archive export <path>`` — produce a JSON bundle covering every
-  registered namespace (or a ``--namespace``-filtered subset) and write
-  it to ``<path>``. Re-runnable; the bundle's records are sorted for
-  deterministic diffability.
-- ``aeat archive import <path>`` — restore a bundle into the encrypted
-  SQL backend under the active master key. The default conflict policy
-  is ``fail`` so colliding records abort the operation; ``--conflict
-  overwrite`` and ``--conflict keep`` switch the discipline.
+- ``aeat app archive export <path>`` — produce a JSON bundle covering
+  every registered namespace (or a ``--namespace``-filtered subset) and
+  write it to ``<path>``. Re-runnable; the bundle's records are sorted
+  for deterministic diffability.
+- ``aeat app archive import <path>`` — restore a bundle into the
+  encrypted SQL backend under the active master key. The default
+  conflict policy is ``fail`` so colliding records abort the operation;
+  ``--conflict overwrite`` and ``--conflict keep`` switch the
+  discipline.
 
 The bundle is the same JSON shape on every machine, regardless of
 master key, so an export taken on machine A round-trips on machine B
