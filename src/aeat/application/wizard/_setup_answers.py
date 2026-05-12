@@ -8,7 +8,7 @@ is EU/EEA-resident) live as model validators.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...domain.deadlines._models import IVARegime
 from ...domain.profile._ccaa import CCAA
@@ -75,6 +75,24 @@ class SetupAnswers(BaseModel):
 
     # ── notes ────────────────────────────────────────────────────────────
     notes: str = ""
+
+    @field_validator("iva_regime", mode="before")
+    @classmethod
+    def _parse_iva_regime(cls, value: object) -> IVARegime:
+        if isinstance(value, IVARegime):
+            return value
+        if isinstance(value, str):
+            return IVARegime(value)
+        raise TypeError("iva_regime must be an IVARegime member or string token")
+
+    @field_validator("tax_residence_ccaa", mode="before")
+    @classmethod
+    def _parse_tax_residence_ccaa(cls, value: object) -> CCAA:
+        if isinstance(value, CCAA):
+            return value
+        if isinstance(value, str):
+            return CCAA(value)
+        raise TypeError("tax_residence_ccaa must be a CCAA member or string token")
 
     @model_validator(mode="after")
     def _validate_spouse_fields_when_joint(self) -> SetupAnswers:
