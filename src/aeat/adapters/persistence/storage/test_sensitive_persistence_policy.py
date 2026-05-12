@@ -122,6 +122,11 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "tempfile.NamedTemporaryFile",
     ): "secret-store backend writes encrypted index metadata only",
     (
+        "src/aeat/application/auth/_acquisition_lock.py",
+        "acquire_auth_acquisition_lock",
+        "os.open",
+    ): "auth acquisition lock file; non-sensitive lock metadata only",
+    (
         "src/aeat/application/filing/_export.py",
         "export_draft",
         "output_path.write_bytes",
@@ -182,15 +187,15 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "manifest_path.write_text",
     ): "official manual corpus manifest",
     (
+        "src/aeat/entrypoints/cli/_archive.py",
+        "export_cmd",
+        "path.write_text",
+    ): "explicit user-directed portable archive export",
+    (
         "src/aeat/entrypoints/cli/_declaration.py",
         "declaration_validate",
         "output.write_text",
     ): "explicit user-directed validation report export",
-    (
-        "src/aeat/entrypoints/cli/drive.py",
-        "fetch",
-        "target.write_bytes",
-    ): "explicit user-directed Drive download",
     (
         "src/aeat/entrypoints/cli/registry.py",
         "verify_workbooks_cmd",

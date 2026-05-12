@@ -45,10 +45,17 @@ from ._models import (
     FilingObligation,
     IVARegime,
     ObligationStatus,
+    RecargoBand,
+    Recovery,
     Schedule,
 )
 from ._profiles import autonomo_profile_from_mapping
 from ._protocols import ModeloIdentifier
+from ._recargo import (
+    build_recovery_for_overdue,
+    load_recargo_bands,
+    resolve_recargo_band,
+)
 
 __all__ = [
     "AutonomoProfile",
@@ -61,10 +68,15 @@ __all__ = [
     "ModeloIdentifier",
     "ObligationStatus",
     "ProfileError",
+    "RecargoBand",
+    "Recovery",
     "Schedule",
     "ScheduleComputationError",
     "applies_to",
     "autonomo_profile_from_mapping",
+    "build_recovery_for_overdue",
     "explain",
+    "load_recargo_bands",
     "next_deadline",
+    "resolve_recargo_band",
 ]

@@ -229,6 +229,8 @@ class WorkflowResult(BaseModel):
     def _check_terminal_consistency(self) -> WorkflowResult:
         if self.ended_at < self.started_at:
             raise ValueError("ended_at precedes started_at")
+        if self.final_stage not in {WorkflowStage.DONE, WorkflowStage.ABORTED}:
+            raise ValueError(f"final_stage must be DONE or ABORTED; got {self.final_stage.value}")
         if self.final_stage is WorkflowStage.ABORTED and self.aborted_reason is None:
             raise ValueError("ABORTED results must carry an aborted_reason")
         if self.final_stage is WorkflowStage.DONE and self.aborted_reason is not None:

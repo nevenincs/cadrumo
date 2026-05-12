@@ -28,6 +28,7 @@ from ._models import (
     ObligationStatus,
     Schedule,
 )
+from ._recargo import build_recovery_for_overdue
 
 _logger = get_logger(__name__)
 
@@ -141,6 +142,23 @@ class DeadlineEngine:
             )
             if condition_text is None:
                 continue
+            obligation_status = _classify(
+                window.closes_on,
+                reference_today,
+                self.due_soon_days,
+            )
+            recovery = None
+            if obligation_status is ObligationStatus.OVERDUE:
+                days_late = (reference_today - window.closes_on).days
+                if days_late >= 1:
+                    try:
+                        recovery = build_recovery_for_overdue(
+                            days_late=days_late,
+                            modelo=modelo,
+                            period=window.period,
+                        )
+                    except (FileNotFoundError, ValueError):
+                        recovery = None
             obligations.append(
                 FilingObligation(
                     modelo=modelo,
@@ -148,13 +166,10 @@ class DeadlineEngine:
                     opens_on=window.opens_on,
                     closes_on=window.closes_on,
                     payment_cutoff_on=window.payment_cutoff_on,
-                    status=_classify(
-                        window.closes_on,
-                        reference_today,
-                        self.due_soon_days,
-                    ),
+                    status=obligation_status,
                     applies_because=condition_text,
                     boe_references=window.legal_refs,
+                    recovery=recovery,
                 )
             )
 
