@@ -71,7 +71,11 @@ def _compile_one(
     required_when_value: str | None = None
     if question.visible_when is not None:
         required_when_key, required_when_value = _resolve_condition(question.visible_when, by_id)
-    assert question.profile_key is not None
+    if question.profile_key is None:
+        raise WizardCompileError(
+            f"question {question.id!r} reached _compile_one without a profile_key",
+            context={"question_id": question.id},
+        )
     return ProfileKey(
         key=question.profile_key,
         requirement=requirement,
