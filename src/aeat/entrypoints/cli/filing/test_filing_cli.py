@@ -17,12 +17,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from ....adapters.persistence.storage import SensitivityClass
-from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.filing import FilingBuilderError, FilingOperatorProfile, build_draft, build_runtime_schema_provider
-from ....application.setup._env_writer import _PROFILE_NAMESPACE, _PROFILE_VERSION, _profile_object_key
 from ....core.config import PROJECT_ROOT
-from ....domain.deadlines import AutonomoProfile, IVARegime
 from ....domain.filing import FilingAmendmentRepository, FilingDraftRepository
 from ....domain.submission import SubmissionAttempt, SubmissionRepository, SubmissionStatus, SubmittedFiling
 from . import app
@@ -136,37 +132,40 @@ def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 @pytest.fixture
-def profile_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    profile = AutonomoProfile(
-        tax_id="00000000T",
-        iva_regime=IVARegime.GENERAL,
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
+def active_workflow_profile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Seed the workflow state with an active profile for filing-build tests."""
+
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'workflow.db').as_posix()}")
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    from ....adapters.persistence.storage.sql.engine import dispose_engine
+    from ....application.profile._actions import set_active_profile, set_profile_values
+    from ....application.workflow._persistence import workflow_state_repository
+
+    dispose_engine()
+    repository = workflow_state_repository()
+    repository.update(
+        lambda state: set_active_profile(
+            set_profile_values(
+                state,
+                "operator",
+                {"tax.id": "00000000T", "activity": "design", "iva.regime": "GENERAL"},
+            ),
+            "operator",
+        )
     )
-    target = tmp_path / "profile.json"
-    SecureObjectRepository().save(
-        namespace=_PROFILE_NAMESPACE,
-        object_key=_profile_object_key(target),
-        classification=SensitivityClass.IDENTITY,
-        schema_version=_PROFILE_VERSION,
-        written_at=datetime.now(UTC),
-        payload=profile.model_dump_json().encode("utf-8"),
-    )
-    monkeypatch.setenv("AEAT_DEFAULT_PROFILE_PATH", str(target))
-    return target
 
 
 class TestFilingCLI:
     """Smoke coverage for ``aeat filing`` build, show, validate, list, import paths."""
 
-    def test_build_uses_configured_profile_file(
+    def test_build_uses_active_workflow_profile(
         self,
         tmp_path: Path,
         drafts_dir: Path,
-        profile_path: Path,
+        active_workflow_profile: None,
     ) -> None:
+        del active_workflow_profile
         inputs = _write_inputs(tmp_path)
         modelo = _registry_modelo_calculable_without_inputs()
         result = runner.invoke(
@@ -179,8 +178,6 @@ class TestFilingCLI:
                 "2026Q1",
                 "--inputs",
                 str(inputs),
-                "--profile",
-                str(profile_path),
                 "--profile-name",
                 "Configured operator",
             ],
