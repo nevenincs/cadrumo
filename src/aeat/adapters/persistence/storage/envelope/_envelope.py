@@ -556,6 +556,8 @@ __all__ = [
     "EncryptionMetadata",
     "Envelope",
     "EnvelopeMigrator",
+    "_build_aad",
+    "_derive_envelope_key",
     "load_encrypted_envelope",
     "load_envelope",
     "reencrypt_envelope_file",

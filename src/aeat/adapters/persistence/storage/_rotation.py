@@ -42,8 +42,8 @@ from .crypto._crypto import decrypt_record, encrypt_record
 from .envelope._envelope import (
     CipherEnvelope,
     EncryptionMetadata,
-    _build_aad,  # type: ignore[attr-defined]
-    _derive_envelope_key,  # type: ignore[attr-defined]
+    _build_aad,
+    _derive_envelope_key,
 )
 from .errors import DecryptionError, EncryptionError
 from .master_key._master_key import MasterKeyProvider
