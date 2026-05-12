@@ -4,7 +4,7 @@ The five strict frozen pydantic v2 records below compose a closed,
 declarative description of an operator-facing configuration flow.
 ``WizardFlow`` is a tuple of ``WizardSection``s; a section is a tuple
 of ``WizardQuestion``s; each question binds zero-or-one
-``profile_key`` to the legacy registry, declares exactly one
+``profile_key`` to the profile registry, declares exactly one
 ``WizardWidget`` kind, and carries the prompt copy and the optional
 ``WizardCondition`` that gates its visibility. The descriptor is the
 single source of truth: the runtime, the Typer command factory, and

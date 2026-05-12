@@ -1,4 +1,4 @@
-"""Pure projection of the wizard descriptor catalogue into the legacy
+"""Pure projection of the wizard descriptor catalogue into the
 ``PROFILE_KEYS`` registry shape.
 
 ``compile_profile_keys`` walks every :class:`WizardFlow` in the
@@ -22,7 +22,7 @@ from ._models import WizardCondition, WizardFlow, WizardQuestion
 
 
 def compile_profile_keys(flows: Sequence[WizardFlow]) -> tuple[ProfileKey, ...]:
-    """Project the wizard catalogue into the legacy ``PROFILE_KEYS`` shape.
+    """Project the wizard catalogue into the ``PROFILE_KEYS`` shape.
 
     Args:
         flows: The wizard catalogue to walk.
