@@ -196,13 +196,13 @@ def load_default_filing_profile(
         FilingBuilderError: When no profile is active in the workflow
             state.
     """
-    from ..wizard._status import load_active_autonomo_profile
+    from ..wizard._status import WizardStatusError, load_active_autonomo_profile
     from ..workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     try:
         profile = load_active_autonomo_profile(state)
-    except ValueError as exc:
+    except WizardStatusError as exc:
         raise FilingBuilderError(str(exc)) from exc
     return filing_profile_from_autonomo(profile, display_name=display_name)
 

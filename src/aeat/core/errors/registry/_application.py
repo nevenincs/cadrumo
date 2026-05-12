@@ -476,4 +476,15 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.wizard._status.WizardStatusError",
+        ErrorCode(
+            code="REFUSED_WIZARD_STATUS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_wizard_status",
+            default_suggestion="aeat config setup --profile-name NAME --tax-id NIF",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

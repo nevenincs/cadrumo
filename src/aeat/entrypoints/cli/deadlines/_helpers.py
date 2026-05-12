@@ -32,13 +32,13 @@ def load_profile() -> AutonomoProfile:
         ProfileError: When no profile is active or required fields
             (``tax.id``) are missing.
     """
-    from ....application.wizard._status import load_active_autonomo_profile
+    from ....application.wizard._status import WizardStatusError, load_active_autonomo_profile
     from ....application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     try:
         return load_active_autonomo_profile(state)
-    except ValueError as exc:
+    except WizardStatusError as exc:
         raise ProfileError(str(exc)) from exc
     except (OSError, AeatError) as exc:  # pragma: no cover - defensive
         _logger.error("load_profile: failed to project active profile", exc_info=True)

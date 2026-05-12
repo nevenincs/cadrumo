@@ -234,27 +234,17 @@ def test_secure_object_unreadable_total_is_zero_on_clean_database(
     assert secure_object_unreadable_total() == 0
 
 
-def test_doctor_auth_session_predicate_agrees_with_setup_status(
+def test_doctor_auth_session_predicate_agrees_with_wizard_status(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
-    """``aeat config doctor`` and ``aeat setup status`` must read auth readiness from one source.
+    """``aeat config doctor`` and ``aeat config status`` must read auth readiness from one source.
 
-    UX-022 root cause: doctor checked ``state.auth.authenticated_at is
-    not None`` while ``aeat setup auth status`` ran a live session
-    probe that wrote a fresh authenticated_at on success and cleared
-    it on failure. When the live probe had not been refreshed the two
-    surfaces could disagree. The current contract is that BOTH
-    surfaces read the same ``authenticated_at`` field on the
-    ``SetupStatusReport``; this test pins that contract.
-
-    The test parametrises over three states:
-    - no provider configured -> doctor reports auth.provider warn,
-      both surfaces agree there is no readiness to evaluate;
-    - provider configured but no session -> doctor reports
-      auth.session warn, setup status reports login_ready=False;
-    - provider configured and session active -> doctor reports
-      auth.session ok, setup status reports login_ready=True.
+    Doctor and the wizard status surface share one projection: both
+    build a :class:`WizardStatusReport` and read its ``login_ready`` /
+    ``auth_provider`` fields. This test pins that contract by walking
+    three workflow states (no provider, provider only, fully
+    authenticated) and asserting the report shape across each.
     """
     from aeat.application.auth import update_auth
     from aeat.application.profile import set_active_profile, set_profile_values
@@ -278,12 +268,12 @@ def test_doctor_auth_session_predicate_agrees_with_setup_status(
     provider_only = update_auth(no_provider, provider="clave_movil")
     fully_authenticated = update_auth(provider_only, authenticated=True, subject="00000000T")
 
-    from aeat.application.setup_status import build_setup_status
+    from aeat.application.wizard._status import build_wizard_status
 
     for state in (no_provider, provider_only, fully_authenticated):
-        setup_report = build_setup_status(state)
-        # Mirror what doctor does: build the report from the same state by
-        # re-using the SetupStatusReport.login_ready field.
+        setup_report = build_wizard_status(state)
+        # The doctor renderer reads the same login_ready field; this
+        # assertion pins both surfaces against the shared projection.
         if state is no_provider:
             assert setup_report.login_ready is False
         elif state is provider_only:

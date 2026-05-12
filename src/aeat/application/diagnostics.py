@@ -17,7 +17,7 @@ from ..adapters.persistence.storage.sql.secure_objects import (
 from ..core.config import PROJECT_ROOT
 from ..core.logging import default_log_file_path
 from ..domain.calculations.registry import ValidatedRegistryAuthority
-from .setup_status import SetupStatusReport, build_setup_status
+from .wizard._status import WizardStatusReport, build_wizard_status
 from .workflow import workflow_state_repository
 
 DiagnosticStatus = Literal["ok", "warn", "fail"]
@@ -88,7 +88,7 @@ class ConfigDoctorReport(BaseModel):
     python_version: str
     log_file: str
     registry: RegistryVersionSummary
-    setup: SetupStatusReport | None
+    setup: WizardStatusReport | None
     secure_objects: SecureObjectIntegrityReport
     checks: tuple[DiagnosticCheck, ...]
 
@@ -138,11 +138,11 @@ def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDocto
         ),
     ]
 
-    setup_report: SetupStatusReport | None = None
+    setup_report: WizardStatusReport | None = None
     try:
         state = workflow_state_repository().load()
         checks.append(DiagnosticCheck(name="secure_state.load", status="ok", summary="state backend readable"))
-        setup_report = build_setup_status(state)
+        setup_report = build_wizard_status(state)
         checks.append(_profile_check(setup_report))
         checks.append(_auth_check(setup_report))
     except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
@@ -273,7 +273,7 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
     )
 
 
-def _profile_check(report: SetupStatusReport) -> DiagnosticCheck:
+def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
     if report.active_profile is None:
         return DiagnosticCheck(
             name="profile.active",
@@ -295,7 +295,7 @@ def _profile_check(report: SetupStatusReport) -> DiagnosticCheck:
     )
 
 
-def _auth_check(report: SetupStatusReport) -> DiagnosticCheck:
+def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
     if not report.auth_provider:
         return DiagnosticCheck(
             name="auth.provider",
