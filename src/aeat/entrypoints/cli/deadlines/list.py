@@ -7,29 +7,21 @@ requested year as a Rich table, in the order produced by
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import typer
 from rich.console import Console
 from rich.table import Table
 
 from .._i18n import tr
-from ._helpers import build_engine, load_profile, resolve_profile_path
+from ._helpers import build_engine, load_profile
 
 _CONSOLE = Console()
 
 
 def list_schedule(
     year: int = typer.Option(..., "--year", help=tr("cli.deadlines.list.year_help")),
-    profile: Path | None = typer.Option(
-        None,
-        "--profile",
-        help=tr("cli.deadlines.list.profile_help"),
-    ),
 ) -> None:
     """Print the full :class:`aeat.domain.deadlines.Schedule` for the given year."""
-    profile_path = resolve_profile_path(profile)
-    loaded_profile = load_profile(profile_path)
+    loaded_profile = load_profile()
     engine = build_engine()
     schedule = engine.compute(loaded_profile, year)
 

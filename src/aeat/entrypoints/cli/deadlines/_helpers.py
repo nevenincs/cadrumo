@@ -6,10 +6,6 @@ decision is delegated to :mod:`aeat.domain.deadlines`.
 
 from __future__ import annotations
 
-from pathlib import Path
-
-import typer
-
 from ....core.config import load_settings
 from ....core.errors import AeatError
 from ....core.logging import get_logger
@@ -18,41 +14,16 @@ from ....domain.deadlines import (
     DeadlineEngine,
     ProfileError,
 )
-from .._i18n import tr
 
 _logger = get_logger(__name__)
 
 
-def resolve_profile_path(explicit: Path | None) -> Path:
-    """Return the path to the profile JSON to load.
-
-    Args:
-        explicit: ``--profile`` value from the CLI, if any.
-
-    Returns:
-        The resolved path.
-
-    Raises:
-        typer.BadParameter: If neither ``--profile`` nor
-            ``AEAT_DEFAULT_PROFILE_PATH`` is set.
-    """
-    if explicit is not None:
-        return explicit
-    settings = load_settings()
-    if settings.aeat_default_profile_path is None:
-        raise typer.BadParameter(tr("cli.financial.profile.labels.no_active"))
-    return settings.aeat_default_profile_path
-
-
-def load_profile(path: Path) -> AutonomoProfile:
+def load_profile() -> AutonomoProfile:
     """Load and validate the active :class:`AutonomoProfile`.
 
     Reads the workflow's active profile values and projects them onto
-    the legacy ``AutonomoProfile`` record via the wizard descriptor's
-    typed projection. The on-disk JSON envelope is no longer used.
-
-    Args:
-        path: Ignored. Retained for source-compatibility.
+    the ``AutonomoProfile`` record via the wizard descriptor's typed
+    projection.
 
     Returns:
         The validated profile.
@@ -61,7 +32,6 @@ def load_profile(path: Path) -> AutonomoProfile:
         ProfileError: When no profile is active or required fields
             (``tax.id``) are missing.
     """
-    del path
     from ....application.wizard._status import load_active_autonomo_profile
     from ....application.workflow._persistence import workflow_state_repository
 

@@ -175,7 +175,6 @@ def filing_profile_from_autonomo(
 
 
 def load_default_filing_profile(
-    path: Path | None = None,
     *,
     display_name: str | None = None,
 ) -> FilingOperatorProfile:
@@ -187,8 +186,6 @@ def load_default_filing_profile(
     ``ProfileRecord`` are the single source of truth.
 
     Args:
-        path: Ignored; values are loaded from the active workflow
-            profile.
         display_name: Optional friendly label propagated to the
             returned profile.
 
@@ -199,7 +196,6 @@ def load_default_filing_profile(
         FilingBuilderError: When no profile is active in the workflow
             state.
     """
-    del path  # callers no longer drive this through a JSON envelope
     from ..wizard._status import load_active_autonomo_profile
     from ..workflow._persistence import workflow_state_repository
 
