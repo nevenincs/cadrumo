@@ -108,6 +108,97 @@ def test_capture_baseline_employee_replay_payload() -> None:
     assert persisted["observed"] == observed
 
 
+# Profile-variant scenarios that vary the synthetic identification
+# (autonomous_community, civil_status, sex) without touching casilla
+# inputs. The simulator recomputes mínimos personal y familiar based on
+# the profile; each variant lands a distinct replay payload anchoring
+# the corresponding modelo-100-2025-* chain.
+_PROFILE_VARIANT_CAPTURES: tuple[tuple[str, dict[str, str]], ...] = (
+    (
+        "modelo-100-2025-employee-default-minimo-madrid",
+        {"autonomous_community": "MADRID"},
+    ),
+    (
+        "modelo-100-2025-employee-default-minimo-cataluna",
+        {"autonomous_community": "CATALUÑA"},
+    ),
+    (
+        "modelo-100-2025-employee-default-minimo-galicia",
+        {"autonomous_community": "GALICIA"},
+    ),
+    (
+        "modelo-100-2025-employee-default-minimo-casado",
+        {"civil_status": "CASADO/A"},
+    ),
+)
+
+
+async def _capture_profile_variant_observation(profile_overrides: dict[str, str]) -> tuple[str, dict[str, str]]:
+    """Drive the live simulator with a varied synthetic profile."""
+
+    profile_kwargs: dict[str, object] = {**profile_overrides}
+    payload = (
+        RentaWebOpenLivePayload(
+            timeout_ms=90_000,
+            profile=RentaWebOpenLivePayload.model_fields["profile"].default_factory(**profile_kwargs)
+            if profile_kwargs
+            else RentaWebOpenLivePayload.model_fields["profile"].default_factory(),
+        )
+        .model_dump_json()
+        .encode("utf-8")
+    )
+    expected = {label: "0.00" for label in _BASELINE_EXPECTED}
+    observation = await collect_renta_web_open_observation(payload, expected=expected)
+    return observation.raw_evidence_locator or "", observation.values
+
+
+@pytest.mark.parametrize(
+    ("scenario_id", "profile_overrides"),
+    _PROFILE_VARIANT_CAPTURES,
+    ids=[entry[0] for entry in _PROFILE_VARIANT_CAPTURES],
+)
+def test_capture_profile_variant_replay_payload(
+    scenario_id: str,
+    profile_overrides: dict[str, str],
+) -> None:
+    """Live-only: capture each profile-variant scenario's Renta WEB Open observation.
+
+    Each variant exercises a different CCAA / civil status / age axis of
+    the synthetic profile. The simulator produces distinct mínimos that
+    anchor per-CCAA replay payloads under
+    ``corpus/parity_replays/renta_web_open/``.
+    """
+
+    requires_live_enabled()
+    import asyncio
+
+    locator, observed = asyncio.run(_capture_profile_variant_observation(profile_overrides))
+    assert observed, f"Renta WEB Open returned no observed values for {scenario_id}"
+
+    _REPLAY_DIR.mkdir(parents=True, exist_ok=True)
+    payload_path = _REPLAY_DIR / f"{scenario_id}.json"
+    expected_by_label = {label: str(value) for label, value in _BASELINE_EXPECTED.items()}
+    expected_by_casilla = {
+        _LABEL_TO_CASILLA[label]: str(value)
+        for label, value in _BASELINE_EXPECTED.items()
+        if label in _LABEL_TO_CASILLA
+    }
+    observed_by_casilla = {
+        _LABEL_TO_CASILLA[label]: value for label, value in observed.items() if label in _LABEL_TO_CASILLA
+    }
+    document = {
+        "scenario_id": scenario_id,
+        "profile_overrides": profile_overrides,
+        "expected": expected_by_label,
+        "observed": observed,
+        "expected_by_casilla": expected_by_casilla,
+        "observed_by_casilla": observed_by_casilla,
+        "raw_evidence_locator": locator,
+    }
+    payload_path.write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8")
+    assert payload_path.exists()
+
+
 # Per-scenario casilla overrides + scrape lists. Each entry mirrors the
 # matching ``_scenario_2025`` instance in
 # ``src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py``.
@@ -159,6 +250,22 @@ async def _capture_scenario_observation(
     return observation.raw_evidence_locator or "", observation.values
 
 
+@pytest.mark.xfail(
+    reason=(
+        "The chain-behaviour _scenario_2025 cases feed values into casilla "
+        "numbers that the registry treats as manual inputs but the AEAT "
+        "open-simulator computes from upstream profile + section inputs "
+        "(0511 mínimo contribuyente, 0003 trabajo, 0461 reducción TC, etc.). "
+        "Filling those casillas via Buscar casilla → form-page input fails "
+        "because the simulator renders them as read-only/derived. Closing "
+        "this capture batch requires either (a) rewriting the chain-behaviour "
+        "scenarios to use only user-editable simulator casillas, or (b) a "
+        "different capture strategy that varies profile inputs and reads "
+        "the derived casillas. Tracked under #169."
+    ),
+    strict=False,
+    raises=Exception,
+)
 @pytest.mark.parametrize(
     ("scenario_id", "overrides", "scrape"),
     _SCENARIO_CAPTURES,
