@@ -26,7 +26,7 @@ import logging
 import os
 import threading
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TextIO
+from typing import TYPE_CHECKING, TextIO
 
 from ._models import RunEvent
 
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 # time) into every CLI command's import chain. The cost of resolving
 # the rule set once is negligible compared with one-time Alembic
 # discovery.
-_DIAGNOSTIC_RULES: tuple[Any, ...] | None = None
+_DIAGNOSTIC_RULES: tuple[RedactionRule, ...] | None = None
 
 
 def _diagnostic_rules() -> tuple[RedactionRule, ...]:
@@ -55,7 +55,7 @@ def _diagnostic_rules() -> tuple[RedactionRule, ...]:
         from ..redaction import default_rules_for_class
 
         _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
-    return _DIAGNOSTIC_RULES  # type: ignore[return-value]
+    return _DIAGNOSTIC_RULES
 
 
 class JsonlRunSink(logging.Handler):

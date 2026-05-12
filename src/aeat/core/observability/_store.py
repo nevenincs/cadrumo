@@ -22,7 +22,7 @@ import json
 import re
 from collections.abc import Iterator
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 # Cached at first use so repeated emits do not repeatedly resolve the
 # substrate rule set.
-_DIAGNOSTIC_RULES: tuple[Any, ...] | None = None
+_DIAGNOSTIC_RULES: tuple[RedactionRule, ...] | None = None
 
 
 def _diagnostic_rules() -> tuple[RedactionRule, ...]:
@@ -54,7 +54,7 @@ def _diagnostic_rules() -> tuple[RedactionRule, ...]:
         from ..redaction import default_rules_for_class
 
         _DIAGNOSTIC_RULES = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
-    return _DIAGNOSTIC_RULES  # type: ignore[return-value]
+    return _DIAGNOSTIC_RULES
 
 
 _TRACE_FILENAME = "trace.json"
