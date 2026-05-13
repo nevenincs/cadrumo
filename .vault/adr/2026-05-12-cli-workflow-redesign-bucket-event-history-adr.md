@@ -140,7 +140,8 @@ that must emit bucket events:
   `auth.session.closed`, `auth.apoderado.configured`
 - filing calculate / verify / file pipeline — `modelo.calculation.created`,
   `modelo.verification.passed`, `modelo.verification.refused`,
-  `modelo.filed`, `modelo.amended`
+  `modelo.filed`, `modelo.filed_superseded`, `modelo.amended`,
+  `modelo.filing.imported`
 - filing-history repository — `modelo.history.entry_recorded`
 - review queue — `review.item.deferred`, `review.item.approved`
 - live-read snapshot capture — `live.notifications.snapshot_captured`,
