@@ -16,10 +16,10 @@ Recent feedback refocused this plan. Instead of moving all exception definitions
 
 ### Phase 1: Audit and Enforce Core Inheritance
 For the ~55 files containing custom exceptions (as inventoried in the research document), we will audit each definition and ensure it inherits directly or transitively from `AeatError`.
-- [ ] Audit `GoogleAuthUnavailableError` in `src/aeat/adapters/outbound/google/__init__.py` (currently inherits from `RuntimeError`).
-- [ ] Audit `UserProfileSchemaLoadError` in `src/aeat/domain/user_profile/_errors.py` (currently inherits from `ValueError`).
-- [ ] Audit `PathContainmentError` in `src/aeat/adapters/persistence/storage/errors.py` (currently inherits from `ValueError`).
-- [ ] Ensure all remaining exceptions correctly subclass `AeatError`.
+- [x] Audit `GoogleAuthUnavailableError` in `src/aeat/adapters/outbound/google/__init__.py` (currently inherits from `RuntimeError`).
+- [x] Audit `UserProfileSchemaLoadError` in `src/aeat/domain/user_profile/_errors.py` (currently inherits from `ValueError`).
+- [x] Audit `PathContainmentError` in `src/aeat/adapters/persistence/storage/errors.py` (currently inherits from `ValueError`).
+- [x] Ensure all remaining exceptions correctly subclass `AeatError`.
 
 ### Phase 2: Refactor Naked Exceptions
 We will progressively audit the codebase (where `grep` identified 500+ instances of naked exceptions such as `ValueError`, `RuntimeError`, `KeyError`, `TypeError`) and replace them with appropriate domain-specific, `AeatError`-derived subclasses.
@@ -39,10 +39,10 @@ We will progressively audit the codebase (where `grep` identified 500+ instances
 - [x] Define `TransactionValidationError` and `VatValidationError`.
 
 *Batch 3: Additional Domains (Normatives, Renta, User Profile)*
-- [ ] Audit and refactor naked exceptions in `src/aeat/domain/normatives/_schema.py`.
-- [ ] Audit and refactor naked exceptions in `src/aeat/domain/renta/_ledger_expenses.py`.
-- [ ] Audit and refactor naked exceptions in `src/aeat/domain/user_profile/_values.py` and `_schema.py`.
-- [ ] Define `NormativeValidationError`, `RentaValidationError`, `UserProfileValidationError`.
+- [x] Audit and refactor naked exceptions in `src/aeat/domain/normatives/_schema.py`.
+- [x] Audit and refactor naked exceptions in `src/aeat/domain/renta/_ledger_expenses.py`.
+- [x] Audit and refactor naked exceptions in `src/aeat/domain/user_profile/_values.py` and `_schema.py`.
+- [x] Define `NormativeValidationError`, `RentaValidationError`, `UserProfileValidationError`.
 
 *Batch 4: Auth Adapters (`src/aeat/adapters/outbound/aeat/auth/`)*
 - [x] Centralise shared errors in `auth/_errors.py`
@@ -66,5 +66,9 @@ We will progressively audit the codebase (where `grep` identified 500+ instances
 - [x] Audit `src/aeat/domain/models/` for naked exceptions
 
 ### Phase 3: Testing and Validation
-- [ ] Verify NO tautological calculation tests have been written regarding error shapes.
-- [ ] Write integration boundary test ensuring `AeatError` is properly caught, using a realistic setup instead of self-reaffirming conditions.
+- [x] Verify NO tautological calculation tests have been written regarding error shapes.
+- [x] Write integration boundary test ensuring `AeatError` is properly caught, using a realistic setup instead of self-reaffirming conditions.
+  - Implemented in `src/aeat/entrypoints/cli/test_error_boundary_integration.py`.
+  - Two parametrized probes: flag-collision (`--quiet --verbose`) and invalid env (`AEAT_LOG_LEVEL=NOT_A_VALID_LEVEL`).
+  - Expected exit codes read from live `get_error_exit_code()` — not hardcoded literals.
+  - No mocks, patches, stubs, or fakes.

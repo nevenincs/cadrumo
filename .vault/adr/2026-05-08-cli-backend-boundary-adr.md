@@ -13,6 +13,8 @@ date: '2026-05-08'
 # (e.g., "[[2026-02-04-feature-research]]")
 related:
   - "[[2026-05-08-cli-backend-boundary-research]]"
+  - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"
+  - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
@@ -25,6 +27,14 @@ related:
        class, or function, use inline backtick code: `src/module.py`. -->
 
 # `cli-backend-boundary` adr: `CLI backend boundary` | (**status:** `accepted`)
+
+## CLI Backend Boundary
+
+The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.
+
+CLI logging and error handling MUST use the central facilities: `aeat.core.logging.get_logger(__name__)`, `aeat.core.logging.SecretScrubbingFilter`, `aeat.core.errors.AeatError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `aeat.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
+
+CLI output MUST use the established emitters, including `aeat.entrypoints.cli._common._emit`, `aeat.entrypoints.cli._schemas.emit_json_success`, and `aeat.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
 
 ## Problem Statement
 
@@ -44,7 +54,8 @@ logic.
 ## Considerations
 
 - The codebase already contains domain and application packages for ledgers,
-  invoices, filing, deadlines, profile, registry, and diagnostics.
+  payable invoices, collectible invoices, purchase invoice evidence, filing,
+  deadlines, profile, registry, and diagnostics.
 - Several CLI modules currently duplicate or shadow backend concerns rather
   than exposing backend services.
 - Tests that assert CLI-owned business behavior produce regression risk
@@ -81,8 +92,9 @@ The CLI will be reduced to these allowed responsibilities:
 - Translation of typed backend exceptions into stable CLI diagnostics.
 
 Backend services will own import/export round trips, profile schema behavior,
-ledger and invoice parsing, matching, reconciliation, filing inputs, deadline
-readiness, registry queries, inventory calculations, and diagnostics.
+ledger financial transaction parsing, payable/collectible invoice parsing,
+purchase invoice evidence parsing, matching, reconciliation, filing inputs,
+deadline readiness, registry queries, inventory calculations, and diagnostics.
 
 ## Rationale
 

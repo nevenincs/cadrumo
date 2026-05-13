@@ -10,6 +10,7 @@ related:
   - '[[2026-04-27-modelo-100-renta-full-calc-research]]'
   - '[[2026-04-29-m100-per-ano-test-parity-research]]'
   - '[[2026-05-05-modelo-100-renta-source-dependency-reference]]'
+  - '[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]'
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
@@ -195,7 +196,7 @@ ParameterDefinition
 
 DataBindingDefinition
   id: BindingId
-  source: ledger | invoice | rental | vat | category | profile | previous_filing | manual_input
+  source: ledger_transaction | purchase_invoice_evidence | payable_invoice | collectible_invoice | rental | vat | category | profile | previous_filing | manual_input
   selector: dict[str, scalar]
   aggregation: AggregationSpec | null
   legal_refs: list[LegalRefId]
@@ -534,7 +535,7 @@ does not create a second source of truth.
 may reuse existing formula engine and ledger concepts only after they become
 registry-backed.
 
-`_bindings.py` defines typed data-source bindings for ledger, invoice, rental,
+`_bindings.py` defines typed data-source bindings for ledger financial transaction, purchase invoice evidence, payable invoice, collectible invoice, rental,
 VAT, category, previous-filing, manual-input, and profile inputs. Bindings are
 not formulas; they select and aggregate external factual inputs before formula
 execution. Names such as `vat` and `category` are factual input selectors only;
@@ -1241,7 +1242,7 @@ This ADR does not decide final migration ticket boundaries.
 Should export layout definitions live in the same modelo TOML file as casilla
 definitions, or in a sibling TOML file linked by modelo/version?
 
-Should data-source bindings for ledger, invoice, rental, VAT, and category
+Should data-source bindings for ledger financial transaction, purchase invoice evidence, payable invoice, collectible invoice, rental, VAT, and category
 aggregation be part of casilla definitions directly, or separate reusable
 binding definitions referenced by casillas?
 

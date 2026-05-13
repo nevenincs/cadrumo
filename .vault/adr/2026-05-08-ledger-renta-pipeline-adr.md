@@ -5,6 +5,8 @@ tags:
 date: '2026-05-08'
 related:
   - "[[2026-05-08-ledger-renta-pipeline-research]]"
+  - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"
+  - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
@@ -20,7 +22,7 @@ related:
 
 ## Problem Statement
 
-The codebase has a real ledger backend, invoice association model,
+The codebase has a real ledger backend, purchase invoice evidence association model,
 category/proportionality catalogue, calculation registry, and Renta
 formula surface, but these pieces are not connected into a persisted
 ledger-to-Renta calculation path.
@@ -40,15 +42,15 @@ minor wiring task or an extension of speculative autonomous work.
 Ledger-to-Renta integration will be implemented as a pre-calculation
 observation and binding pipeline.
 
-The transaction catalogue is the canonical classified ledger state for
+The ledger financial transaction catalogue is the canonical classified ledger state for
 calculation purposes. User CLI review overlays remain non-canonical
 until an explicit reconciliation path writes their classification and
-split choices into the transaction catalogue or into a reviewed,
+split choices into the ledger financial transaction catalogue or into a reviewed,
 typed, auditable bridge record.
 
 Renta calculations will consume strongly typed Renta ledger
 observations derived before registry calculation. These observations
-will be built from persisted transaction and invoice catalogue state,
+will be built from persisted ledger financial transaction and purchase invoice evidence catalogue state,
 validated category identifiers, category profile/proportionality rules,
 usage ratios where applicable, and filing-period filters.
 
@@ -63,7 +65,7 @@ binding values using the same side-effect-free pattern already used by
 IVA and OSS/IOSS ledger aggregation.
 
 The first executable slice will target a narrow Modelo 100
-direct-estimation expense path. Broader cases such as invoice
+direct-estimation expense path. Broader cases such as purchase invoice evidence
 precedence, refunds, retentions, payments, rental-specific bindings,
 and review-state reconciliation must either be decided in this ADR's
 plan or deferred explicitly.
@@ -72,14 +74,14 @@ plan or deferred explicitly.
 
 The research identified a mature precedent for ledger-shaped
 calculation data: `IvaLedgerObservation`,
-`OssIossLedgerObservation`, and `InvoiceObservation` are typed,
+`OssIossLedgerObservation`, and purchase invoice evidence observations are typed,
 side-effect-free records consumed by binding resolvers. They do not
 load repositories directly.
 
 The Renta surface differs from IVA because deductible amount is not
 always the transaction amount. Category proportionality, statutory
 caps, user usage ratios, exclusive-use gates, business classification,
-and invoice evidence may all change or block the deductible result.
+and purchase invoice evidence may all change or block the deductible result.
 
 The category registry is already the strongest legal substrate for
 deductibility because it carries citation-backed proportionality rules.
@@ -106,11 +108,11 @@ strings must be normalized to closed `SpendingCategory` members before
 they become calculation facts.
 
 Every deductible result must carry provenance back to source
-transaction, invoice when applicable, category, proportionality rule,
+transaction, purchase invoice evidence when applicable, category, proportionality rule,
 binding definition, and legal/source references.
 
 The aggregation path must prevent duplicate counting between linked
-invoice and transaction facts.
+purchase invoice evidence and ledger financial transaction facts.
 
 Date, period, sign, refund, reversal, and partial-payment semantics
 must be explicit before those cases are enabled.
@@ -145,7 +147,7 @@ category, proportionality result, legal citations, and source
 provenance.
 
 The fourth stage implements repository-backed aggregation before
-calculation. This layer loads the transaction and invoice catalogues,
+calculation. This layer loads the ledger financial transaction and purchase invoice evidence catalogues,
 applies period filters, reconciles facts, resolves category profiles,
 evaluates proportionality, and emits binding values and filing inputs.
 
@@ -163,7 +165,7 @@ Keeping repository loading outside the formula runtime preserves the
 registry architecture already used throughout the calculation backend.
 It also keeps calculation snapshots deterministic and testable.
 
-Using canonical transaction catalogue state prevents UI review overlays
+Using canonical ledger financial transaction catalogue state prevents UI review overlays
 from silently changing legal results without an auditable domain
 transition. If review-state reconciliation is needed, it becomes an
 explicit feature rather than hidden coupling.
@@ -185,7 +187,7 @@ The first implementation slices will add new domain and registry
 surface area rather than only wiring an existing module.
 
 The plan must resolve source-kind naming, observation shape,
-invoice-versus-transaction precedence, review-state reconciliation,
+purchase invoice evidence-versus-ledger financial transaction precedence, review-state reconciliation,
 period filtering, sign/refund handling, and legal-source refresh before
 the broader feature can claim completion.
 
@@ -195,5 +197,5 @@ observation, binding resolution, filing input aggregation, and
 calculation snapshot.
 
 The feature will likely expose inconsistencies between ledger review
-state and transaction catalogue state. Those inconsistencies must fail
+state and ledger financial transaction catalogue state. Those inconsistencies must fail
 loudly or remain outside calculation until reconciled.

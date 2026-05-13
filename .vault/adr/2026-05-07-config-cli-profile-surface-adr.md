@@ -28,6 +28,14 @@ related:
 
 # `config-cli-profile-surface` adr: `Config CLI Profile Operation Surface` | (**status:** `accepted`)
 
+## CLI Backend Boundary
+
+The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.
+
+CLI logging and error handling MUST use the central facilities: `aeat.core.logging.get_logger(__name__)`, `aeat.core.logging.SecretScrubbingFilter`, `aeat.core.errors.AeatError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `aeat.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
+
+CLI output MUST use the established emitters, including `aeat.entrypoints.cli._common._emit`, `aeat.entrypoints.cli._schemas.emit_json_success`, and `aeat.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
+
 ## Problem Statement
 
 The profile backend is not a one-time setup wizard. It is an ongoing operator
@@ -62,8 +70,9 @@ import, validate, and model/revision preflight.
 
 ## Constraints
 
-No `aeat setup` compatibility alias is preserved. Existing setup commands are
-replacement targets under `aeat config`.
+No `aeat setup` compatibility alias is preserved for supported UX. All
+setup/first-run/initialization command families are migrated to `aeat config`,
+and legacy setup roots are deprecated migration routes only.
 
 The CLI must not write plaintext profile files for live profile persistence.
 User-directed portable exports are explicit boundary crossings and must be
@@ -99,9 +108,13 @@ Implement command groups:
 | `aeat config profile validate` | Validate profile completeness and schema consistency. |
 | `aeat config profile preflight` | Validate profile readiness for a selected modelo/revision/year/period. |
 
-Move current setup initialization and profile mutation flows into config. The
-wizard may remain as `aeat config init` only if it writes through the central
-profile API and schema validation.
+Move setup initialization and profile mutation flows into `aeat config`:
+
+- onboarding/first-run initialization maps to `aeat config init` or explicit
+  config bootstrap under `aeat config`
+- profile lifecycle maps to `aeat config profile ...`
+- legacy root `aeat setup` entrypoints are deprecated and must not remain as
+  supported runtime behavior
 
 `aeat config profile remove` follows backend tombstone semantics. It disables
 the profile for new reads, selection, preflight, and filing/export work, while
