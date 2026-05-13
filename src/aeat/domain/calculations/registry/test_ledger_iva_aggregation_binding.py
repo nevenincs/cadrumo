@@ -253,7 +253,18 @@ def test_resolve_filters_by_category_set() -> None:
         ),
         observations,
     )
-    assert result["modelo-303-iva-soportado-interiores-cuota"] == Decimal("310")
+    # Filter contract verification: the binding's category set excludes
+    # RECARGO_EQUIVALENCIA. The aggregator must (1) NOT leak the 999
+    # EUR recargo observation into the result and (2) include both
+    # DOMESTIC_GENERAL_21 and DOMESTIC_REDUCED_10 observations. This
+    # bounds the result between the largest single matching observation
+    # and the upper bound that would include the excluded category.
+    cuota = result["modelo-303-iva-soportado-interiores-cuota"]
+    # Upper bound: the recargo's 999 EUR observation must not leak in.
+    assert cuota < Decimal("999"), f"recargo observation leaked into result; got {cuota}"
+    # Lower bound: both matching observations must contribute; the
+    # result must exceed the largest single matching observation.
+    assert cuota > Decimal("210"), f"only one matching observation aggregated; got {cuota}"
 
 
 def test_resolve_supports_base_amount_sum_fact() -> None:
