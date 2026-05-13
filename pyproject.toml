@@ -32,6 +32,15 @@ dependencies = [
   "cryptography>=47.0.0",
   # XML parsing.
   "defusedxml>=0.7.1",
+  # Google API client + OAuth flow for the Drive + Sheets integration
+  # (ADR `2026-05-08-google-oauth-adr`). The Desktop OAuth client uses
+  # loopback IP + PKCE via google-auth-oauthlib's InstalledAppFlow;
+  # the storage provider drives Drive v3 / Sheets v4 through the
+  # discovery client. google-auth-httplib2 is intentionally NOT pinned —
+  # transport is satisfied by `requests` (transitive via google-auth).
+  "google-auth>=2.50.0",
+  "google-auth-oauthlib>=1.3.1",
+  "google-api-python-client>=2.195.0",
   # HTTP client
   "httpx>=0.28.1",
   # OS-keychain abstraction for the master-key provider (Windows
