@@ -7,9 +7,9 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
-from typing import BinaryIO, Self
+from typing import BinaryIO
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -43,25 +43,6 @@ class AttachmentStore(BaseModel):
     """Encrypted SQL-backed content-addressed attachment store."""
 
     model_config = _STRICT_FROZEN
-
-    root: Path = Field()
-
-    @field_validator("root")
-    @classmethod
-    def _resolve_root(cls, value: Path) -> Path:
-        """Persist an absolute root only as a diagnostic compatibility marker."""
-
-        return Path(value).resolve()
-
-    @classmethod
-    def at(cls, root: Path) -> Self:
-        """Construct a store.
-
-        The ``root`` argument is retained as a diagnostic marker for callers
-        that still carry settings, but persistence is the secure SQL backend.
-        """
-
-        return cls(root=root)
 
     @property
     def blobs_dir(self) -> Path:
