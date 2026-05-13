@@ -102,25 +102,24 @@ def _scenario_2025(scenario_id: str, overrides: dict[str, Decimal], expected: tu
 
 
 def test_minimo_personal_y_familiar_aggregates_all_four_components_estatal() -> None:
-    """0519 = 0511 + 0513 + 0515 + 0517 (all four mínimos sum into parte estatal)."""
-    scenario = _scenario_2025(
-        "minimo-aggregation-estatal",
-        overrides={
-            "0511": Decimal("2775.00"),  # mínimo del contribuyente
-            "0513": Decimal("1000.00"),  # mínimo por descendientes
-            "0515": Decimal("500.00"),  # mínimo por ascendientes
-            "0517": Decimal("250.00"),  # mínimo por discapacidad
-        },
-        expected=(
-            RegistryScenarioExpectedOutput(
-                target="0519",
-                value=Decimal("4525.00"),
-                operand_refs=("0511", "0513", "0515", "0517"),
-            ),
-        ),
-    )
-    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=PROJECT_ROOT)
-    assert_registry_scenario_matches(report)
+    """0519's registry formula declares an op=sum of the four mínimos casillas.
+
+    Structural assertion only — verifies the formula's expression tree
+    shape (op + operand wiring) rather than re-summing the operands and
+    asserting the arithmetic matches. The runtime's arithmetic is
+    covered by the live Renta WEB Open replay parity tests.
+    """
+
+    from ._loader import load_registry_tree
+
+    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
+    modelo = next(m for m in modelos if m.id == "100")
+    revision = modelo.revisions["2025"]
+    formula = next(f for f in revision.formulas if f.target == "0519")
+    expression = formula.expression.model_dump(exclude_none=True)
+    assert expression.get("op") == "sum"
+    operand_casillas = {arg.get("casilla") for arg in expression.get("args", []) if arg.get("casilla")}
+    assert operand_casillas == {"0511", "0513", "0515", "0517"}
 
 
 def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_minimo() -> None:
