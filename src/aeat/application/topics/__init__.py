@@ -1,12 +1,12 @@
-"""Conceptual topic catalogue for ``aeat app topic``.
+"""Conceptual topic catalogue for ``aeat app registry citations``.
 
-Closes UX-015 from the 2026-05-08 CLI gap audit. A tax-naive operator
-hitting the CLI for the first time needs plain-language explanations of
-concepts (``iva-regime``, ``casilla``, ``pago-fraccionado`` …) without
-having to leave the terminal. The CLI exposes:
+A tax-naive operator hitting the CLI for the first time needs
+plain-language explanations of concepts (``iva-regime``, ``casilla``,
+``pago-fraccionado`` …) without having to leave the terminal. The
+CLI exposes:
 
-- ``aeat app topic`` -> list every registered slug + one-line summary.
-- ``aeat app topic <slug>`` -> render the topic body + see_also
+- ``aeat app registry citations`` -> list every registered slug + one-line summary.
+- ``aeat app registry citations <slug>`` -> render the topic body + see_also
   pointers + legal references.
 
 Topics live as TOML files under ``registry/aeat/topics/<slug>.toml``;

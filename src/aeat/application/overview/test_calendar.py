@@ -276,13 +276,12 @@ def test_calendar_omits_warnings_when_raw_values_not_supplied() -> None:
 def test_calendar_emits_warning_when_iva_regime_unset() -> None:
     """A profile with no iva.regime declared must produce a typed warning.
 
-    UX-008 root cause: the deadline engine's modelo-applicability
-    rules silently default to GENERAL when iva.regime is absent. The
-    operator who pulled the calendar got 303/390 entries computed
-    under those defaults but no signal that the regime was assumed.
-    The new contract: when raw_values omits iva.regime, the
+    The deadline engine's modelo-applicability rules default to GENERAL
+    when iva.regime is absent and would otherwise compute 303/390
+    entries under those defaults without signalling the assumption.
+    The contract verified here: when raw_values omits iva.regime, the
     aggregator emits a CalendarWarning whose code names the missing
-    key, fix_command supplies the literal aeat setup profile set
+    key, fix_command supplies the literal aeat config profile set
     command, and affected_modelos lists 303/390.
     """
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
@@ -294,7 +293,7 @@ def test_calendar_emits_warning_when_iva_regime_unset() -> None:
     warning = iva_warnings[0]
     assert "303" in warning.affected_modelos
     assert "390" in warning.affected_modelos
-    assert "aeat setup profile set iva.regime" in warning.fix_command
+    assert "aeat config profile set iva.regime" in warning.fix_command
 
 
 def test_calendar_completeness_lists_uncomputable_with_reason() -> None:

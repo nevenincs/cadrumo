@@ -23,10 +23,10 @@ When the caller supplies ``raw_values`` (the operator's user_cli
 profile values mapping), the aggregator additionally detects which
 deadline-engine-consumed keys are unset and surfaces a typed
 ``CalendarWarning`` per missing key plus a ``CalendarCompleteness``
-breakdown listing computable / under-default modelos. This closes
-UX-008 from the 2026-05-08 CLI gap audit recompile: the engine no
-longer silently computes obligations from its defaults without
-flagging that the operator never declared the gating field.
+breakdown listing computable / under-default modelos. The
+profile-completeness surface ensures the engine never silently
+computes obligations from its defaults without flagging that the
+operator never declared a gating field.
 """
 
 from __future__ import annotations
@@ -191,10 +191,10 @@ class CalendarWarning(BaseModel):
     the operator's user_cli state. The engine has already returned a
     schedule under default values for that key, so the calendar IS
     computable -- but the operator must verify the default matches
-    their actual regime / enrolment. The audit captured this as
-    UX-008 ("calendar silently omits modelos when profile facts are
-    absent"); the practical effect is "calendar computed under
-    defaults the operator never confirmed".
+    their actual regime / enrolment. The warning carries the
+    "calendar computed under defaults the operator never confirmed"
+    semantic so renderers can prompt the operator to declare the
+    gating field.
 
     Attributes:
         code: Stable warning identifier (e.g.
@@ -202,7 +202,7 @@ class CalendarWarning(BaseModel):
         message: Translation key the renderer feeds through ``tr``.
         fix_command: Concrete shell command the operator can run to
             address the warning (e.g.
-            ``aeat setup profile set iva.regime general``).
+            ``aeat config profile set iva.regime general``).
         affected_modelos: Tuple of modelo identifiers whose
             applicability rule reads the missing key.
     """
@@ -280,27 +280,27 @@ _GATING_FIELDS: MappingProxyType[str, tuple[tuple[str, ...], str, str]] = Mappin
         "iva.regime": (
             ("303", "390"),
             "cli.overview.warning.iva_regime_unset",
-            "aeat setup profile set iva.regime general",
+            "aeat config profile set iva.regime general",
         ),
         "does_intracomunitario": (
             ("349",),
             "cli.overview.warning.intracomunitario_unset",
-            "aeat setup profile set does_intracomunitario true",
+            "aeat config profile set does_intracomunitario true",
         ),
         "pays_professionals_with_retencion": (
             ("111",),
             "cli.overview.warning.retencion_profesionales_unset",
-            "aeat setup profile set pays_professionals_with_retencion true",
+            "aeat config profile set pays_professionals_with_retencion true",
         ),
         "pays_rent_with_retencion": (
             ("115",),
             "cli.overview.warning.retencion_arrendamientos_unset",
-            "aeat setup profile set pays_rent_with_retencion true",
+            "aeat config profile set pays_rent_with_retencion true",
         ),
         "uses_objective_estimation_irpf": (
             ("131",),
             "cli.overview.warning.estimacion_objetiva_unset",
-            "aeat setup profile set uses_objective_estimation_irpf true",
+            "aeat config profile set uses_objective_estimation_irpf true",
         ),
     }
 )

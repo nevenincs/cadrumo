@@ -193,10 +193,9 @@ def declaration_calculate(
 def _next_action_command(next_action: str, modelo: str, period: str) -> str:
     """Translate a ``DeclarationCalculateNextAction`` into a runnable CLI hint.
 
-    The audit (UX-021) flagged ``Siguiente: resolve-blockers`` as an
-    opaque recipe token. Each next-action value now maps to a literal
-    command the operator can copy and run, parameterised on the
-    current modelo and period.
+    Each next-action token maps to a literal command the operator can
+    copy and run, parameterised on the current modelo and period, so
+    no opaque recipe-shaped string ever lands in the rendered output.
     """
 
     if next_action == "resolve-blockers":

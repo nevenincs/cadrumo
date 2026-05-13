@@ -1033,12 +1033,11 @@ def _normalise_help_output(raw: str) -> str:
 
 
 def test_root_help_exposes_shell_completion_options() -> None:
-    """``aeat --help`` must expose Typer's completion install/show options (UX-013).
+    """``aeat --help`` must expose Typer's completion install/show options.
 
-    The audit's UX-013 listed shell completion as a separate feature
-    request. Typer ships the install/show completion flags out of the
-    box once ``add_completion=True`` is set on the root app. This test
-    pins that wiring so the completion surface cannot regress.
+    Typer ships the install/show completion flags out of the box once
+    ``add_completion=True`` is set on the root app. This test pins that
+    wiring so the completion surface cannot regress.
     """
     result = _invoke(["--help"])
     assert result.exit_code == 0, result.output
@@ -1053,12 +1052,11 @@ def test_declaration_calculate_enumerates_blockers_with_runnable_next_action(
 ) -> None:
     """Calculate output must enumerate blocker rows and a copy-paste next-action.
 
-    UX-021: the previous output reported only an aggregate count
-    ``Bloqueos: 2`` plus the recipe token ``Siguiente: resolve-blockers``,
-    leaving the operator no path to act. Now each blocker renders on
-    its own line as ``blocker\\tcasilla.<id>\\t<message>`` and the
-    Siguiente line carries a runnable command parameterised on the
-    current modelo and period.
+    Each blocker renders on its own line as
+    ``blocker\\tcasilla.<id>\\t<message>`` so the operator sees which
+    casillas are at fault, and the Siguiente line carries a runnable
+    command parameterised on the current modelo and period rather
+    than an opaque recipe token.
     """
     _isolate_user_cli(monkeypatch, tmp_path)
     _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
