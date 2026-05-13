@@ -173,6 +173,14 @@ class ExternalFilingImportError(ModeloError):
     reference)."""
 
 
+class AmendmentOverrideCasillaError(ModeloError):
+    """Raised when an amendment override targets a casilla id the
+    registry does not declare for the baseline's modelo / filing
+    year / period. The corrected revision is the legal basis of the
+    complementaria filing — fabricated casilla ids cannot be silently
+    accepted."""
+
+
 def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
     """Return the default display name for a fresh work unit.
 
@@ -666,6 +674,48 @@ def _registry_root() -> Path:
     from ...core.config import PROJECT_ROOT
 
     return PROJECT_ROOT / "registry" / "aeat"
+
+
+def _reject_unknown_override_casillas(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    overrides: Mapping[str, Decimal],
+) -> None:
+    """Refuse override casilla ids the registry does not declare for the modelo / year / period."""
+
+    if not overrides:
+        return
+
+    from ...core.config import PROJECT_ROOT
+    from ...domain.calculations.registry import (
+        RegistrySnapshotError,
+        ValidatedRegistryAuthority,
+    )
+
+    try:
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
+    except FileNotFoundError as exc:
+        raise AmendmentOverrideCasillaError(
+            f"registry root {_registry_root()} is missing; cannot validate amendment overrides"
+        ) from exc
+
+    try:
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+    except RegistrySnapshotError as exc:
+        raise AmendmentOverrideCasillaError(
+            f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
+            f"period={period!r}; cannot validate amendment overrides"
+        ) from exc
+
+    known = {str(casilla.id) for casilla in snapshot.revision.casillas}
+    unknown = sorted(casilla_id for casilla_id in overrides if casilla_id not in known)
+    if unknown:
+        raise AmendmentOverrideCasillaError(
+            f"amendment overrides target casilla ids that are not declared in registry "
+            f"modelo={modelo!r} filing_year={filing_year} period={period!r}: {unknown!r}"
+        )
 
 
 def _required_input_casillas_for_revision(
@@ -1256,6 +1306,13 @@ def amend_modelo_revision(
             f"baseline calculation revision {baseline.calculation_revision_id!r} is missing from the catalogue"
         )
 
+    _reject_unknown_override_casillas(
+        modelo=baseline.modelo,
+        filing_year=baseline.filing_year,
+        period=baseline.period,
+        overrides=overrides,
+    )
+
     now = clock or datetime.now(UTC)
     corrected_values: dict[str, Decimal] = dict(baseline_revision.casilla_values)
     corrected_values.update(overrides)
@@ -1578,6 +1635,7 @@ def import_external_filing_evidence(
 
 __all__ = [
     "AmendmentEvidenceMissingError",
+    "AmendmentOverrideCasillaError",
     "AmendmentTargetStateError",
     "CalculationRegistryUnavailableError",
     "CalculationRevisionNotFoundError",

@@ -24,6 +24,7 @@ from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.application.modelo import (
     AmendmentEvidenceMissingError,
+    AmendmentOverrideCasillaError,
     AmendmentTargetStateError,
     CalculationRevisionStateError,
     amend_modelo_revision,
@@ -333,6 +334,30 @@ def test_amend_refuses_no_op_overrides(repos) -> None:
             overrides={"01": Decimal("1000")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="duplicate filing attempt",
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T4,
+        )
+
+
+def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos) -> None:
+    """An override targeting a casilla id the registry does not declare
+    for the baseline modelo / filing_year / period is refused. The
+    corrected revision is the legal basis of the complementaria filing;
+    fabricated casillas cannot be silently accepted."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _, _, baseline = _seed_external_baseline(repos, casilla_values={"01": Decimal("1000")})
+
+    with pytest.raises(AmendmentOverrideCasillaError, match=r"9999|not declared"):
+        amend_modelo_revision(
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={"9999": Decimal("100")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="fabricated casilla rejected",
             actor="operator-A",
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
