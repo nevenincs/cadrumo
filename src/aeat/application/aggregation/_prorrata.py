@@ -149,13 +149,11 @@ def aggregate_prorrata_inputs(
     numerator and denominator.
 
     Raises :class:`AggregationPeriodError` if ``year`` is outside the
-    supported window (2000–2100).
+    supported window (2000-2100).
     """
 
     if year < 2000 or year > 2100:
-        raise AggregationPeriodError(
-            t(f"prorrata aggregation year out of supported range 2000..2100: {year}")
-        )
+        raise AggregationPeriodError(t(f"prorrata aggregation year out of supported range 2000..2100: {year}"))
 
     con_derecho = Decimal("0")
     sin_derecho = Decimal("0")
@@ -230,10 +228,7 @@ def aggregate_provisional_prorrata(
         )
     if not (period.startswith("Q") or period.startswith("M")):
         raise AggregationValidationError(
-            t(
-                f"provisional period must be a quarterly (Qn) or monthly (Mnn) "
-                f"token; got {period!r}"
-            )
+            t(f"provisional period must be a quarterly (Qn) or monthly (Mnn) token; got {period!r}")
         )
 
     aggregation = aggregate_prorrata_inputs(prior_year_operations, year=prior_year)

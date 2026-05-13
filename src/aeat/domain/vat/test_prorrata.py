@@ -233,7 +233,7 @@ def test_especial_mandatory_when_general_exceeds_especial_by_more_than_10_percen
 
 def test_especial_optional_when_general_does_not_exceed_especial_by_10_percent() -> None:
     """LIVA art. 103.Dos boundary at exactly +10%: especial is NOT
-    mandatory when general equals especial × 1.10 exactly (the rule is
+    mandatory when general equals especial * 1.10 exactly (the rule is
     'more than ten percent', strictly greater)."""
 
     assert is_especial_mandatory(Decimal("110.00"), Decimal("100.00")) is False
@@ -623,8 +623,8 @@ def test_no_parallel_prorrata_cli_surface_exists() -> None:
         '@app_app.command("prorrata"',
         '.command(name="prorrata"',
         # Add typer sub-app registration spelled `prorrata` as the name.
-        '.add_typer(_prorrata',
-        'add_typer(prorrata_module',
+        ".add_typer(_prorrata",
+        "add_typer(prorrata_module",
         'name="prorrata"',
     )
 
