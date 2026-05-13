@@ -295,7 +295,7 @@ class Settings(BaseSettings):
     )
     aeat_certificate_backend: CertificateBackendSetting = Field(
         default=CertificateBackendSetting.PLAYWRIGHT_CONTEXT,
-        description="Which cert backend to use (PLAYWRIGHT_CONTEXT by default)",
+        description="Which certificate backend to use: playwright_context or httpx_fallback",
     )
     aeat_certificate_verify_url: str = Field(
         default="https://sede.agenciatributaria.gob.es/",
@@ -332,7 +332,7 @@ class Settings(BaseSettings):
     aeat_auth_provider: AuthProviderKindSetting | None = Field(
         default=None,
         description=(
-            "Default auth provider for `aeat setup auth login` / `status` when "
+            "Default auth provider for `aeat config auth status` / `test` when "
             "--provider is omitted. When None, the CLI auto-selects the "
             "first configured provider from the canonical registry order."
         ),
@@ -342,7 +342,7 @@ class Settings(BaseSettings):
     aeat_clave_movil_dni_nie: str | None = Field(
         default=None,
         description=(
-            "Taxpayer DNI/NIE for `aeat setup auth login` using Clave Movil. "
+            "Taxpayer DNI/NIE for `aeat config auth configure --provider clave_movil`. "
             "Used to stamp the persisted session with the operator's "
             "identity and to pre-fill the non-QR fallback form. Not a "
             "secret on its own — the Cl@ve app on the operator's phone is "
@@ -578,16 +578,6 @@ class Settings(BaseSettings):
         """Treat blank env vars for optional secret fields as unset."""
         if isinstance(value, str) and value.strip() == "":
             return None
-        return value
-
-    @field_validator("aeat_certificate_backend", mode="before")
-    @classmethod
-    def _certificate_backend_accepts_adapter_enum_values(cls, value: object) -> object:
-        """Accept legacy adapter enum names while storing settings-shape values."""
-        if isinstance(value, str):
-            normalized = value.strip().lower()
-            if normalized in {"playwright_context", "httpx_fallback"}:
-                return normalized
         return value
 
     @field_validator("aeat_status_detail_url_template")
