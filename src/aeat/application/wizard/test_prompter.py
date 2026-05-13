@@ -53,7 +53,7 @@ def test_scripted_prompter_raises_on_underflow() -> None:
 
 def test_scripted_prompter_close_raises_on_overflow() -> None:
     prompter = ScriptedPrompter(["unused-token"])
-    with pytest.raises(WizardScriptOverflowError):
+    with pytest.raises(WizardScriptOverflowError, match=r"overflow|unused|script|drained"):
         prompter.close()
 
 

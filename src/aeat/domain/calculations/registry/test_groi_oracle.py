@@ -205,7 +205,7 @@ def test_register_default_test_environment_classification_supported() -> None:
     register_default(catalogue, environment="test_environment")
 
     assert catalogue.environment_of(GROI_ORACLE_ID) == "test_environment"
-    with pytest.raises(RegistryValidationError):
+    with pytest.raises(RegistryValidationError, match=r"environment|production|test_environment|oracle"):
         catalogue.lookup(GROI_ORACLE_ID, environment="production")
 
 

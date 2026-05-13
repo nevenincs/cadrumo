@@ -171,9 +171,9 @@ def test_aggregation_inputs_are_correctly_carried_into_the_result() -> None:
 
 
 def test_aggregate_rejects_year_outside_supported_range() -> None:
-    with pytest.raises(AggregationPeriodError):
+    with pytest.raises(AggregationPeriodError, match=r"year|1999|range"):
         aggregate_prorrata_inputs((), year=1999)
-    with pytest.raises(AggregationPeriodError):
+    with pytest.raises(AggregationPeriodError, match=r"year|2101|range"):
         aggregate_prorrata_inputs((), year=2101)
 
 
@@ -211,9 +211,9 @@ def test_provisional_orchestrator_rejects_non_advancing_year_pair() -> None:
     """current_year must be strictly greater than prior_year."""
 
     ops = (_op("p", year=2024, base_amount="10000.00", kind=VatOperationKind.GRANTS_DEDUCTION),)
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"prior_year|current_year|advance"):
         aggregate_provisional_prorrata(ops, prior_year=2024, current_year=2024, period="Q1")
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"prior_year|current_year|advance"):
         aggregate_provisional_prorrata(ops, prior_year=2025, current_year=2024, period="Q1")
 
 
@@ -222,7 +222,7 @@ def test_provisional_orchestrator_rejects_annual_period_token() -> None:
     quarterly (Qn) or monthly (Mnn)."""
 
     ops = (_op("p", year=2024, base_amount="10000.00", kind=VatOperationKind.GRANTS_DEDUCTION),)
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"period|annual|provisional|monthly|quarterly"):
         aggregate_provisional_prorrata(ops, prior_year=2024, current_year=2025, period="annual")
 
 

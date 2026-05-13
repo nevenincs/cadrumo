@@ -111,9 +111,9 @@ class TestPdfFilingImportError:
         assert issubclass(PdfFilingImportError, AeatError)
 
     def test_can_be_caught_as_aeat_error(self) -> None:
-        with pytest.raises(AeatError):
+        with pytest.raises(AeatError, match=r"test"):
             raise PdfFilingImportError("test")
 
     def test_can_be_caught_as_pdf_filing_import_error(self) -> None:
-        with pytest.raises(PdfFilingImportError):
+        with pytest.raises(PdfFilingImportError, match=r"test"):
             raise PdfFilingImportError("test")

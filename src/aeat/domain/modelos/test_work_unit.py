@@ -374,7 +374,7 @@ def test_list_work_units_filters_by_bucket_id() -> None:
 
 def test_get_work_unit_raises_when_id_is_absent() -> None:
     repo = _InMemoryWorkUnitRepository()
-    with pytest.raises(WorkUnitNotFoundError):
+    with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
         get_work_unit("missing", repository=repo)
 
 
@@ -398,7 +398,7 @@ def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at() -> None:
 
 def test_rename_work_unit_raises_when_id_is_absent() -> None:
     repo = _InMemoryWorkUnitRepository()
-    with pytest.raises(WorkUnitNotFoundError):
+    with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
         rename_work_unit("missing", "ignored", repository=repo)
 
 
@@ -447,7 +447,7 @@ def test_discard_work_unit_accepts_omitted_reason() -> None:
 
 def test_discard_work_unit_raises_on_missing_id() -> None:
     repo = _InMemoryWorkUnitRepository()
-    with pytest.raises(WorkUnitNotFoundError):
+    with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
         discard_work_unit("missing", actor="operator-A", repository=repo)
 
 
@@ -490,7 +490,7 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit() -> None:
         repository=repo,
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
-    with pytest.raises(WorkUnitMutationRefusedError):
+    with pytest.raises(WorkUnitMutationRefusedError, match=r"discard|DISCARDED|state|mutation"):
         rename_work_unit(unit.work_unit_id, "new-name", repository=repo)
 
 

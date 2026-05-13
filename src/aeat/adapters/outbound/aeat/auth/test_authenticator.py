@@ -214,7 +214,7 @@ def test_extract_nif_rejects_cif(tmp_path: Path) -> None:
             x509.NameAttribute(NameOID.COMMON_NAME, "EMPRESA SL"),
         ],
     )
-    with pytest.raises(CertificateNifParseError):
+    with pytest.raises(CertificateNifParseError, match=r"NIF|subject|certificate"):
         extract_nif_from_subject(cert)
 
 
@@ -226,7 +226,7 @@ def test_extract_nif_rejects_unparseable(tmp_path: Path) -> None:
             x509.NameAttribute(NameOID.COMMON_NAME, "NO-NIF-HERE"),
         ],
     )
-    with pytest.raises(CertificateNifParseError):
+    with pytest.raises(CertificateNifParseError, match=r"NIF|subject|certificate"):
         extract_nif_from_subject(cert)
 
 
@@ -683,7 +683,7 @@ async def test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts
     auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
     browser_session = _RecordingBrowserSession(cert_ok=True)
 
-    with pytest.raises(AeatLoginAssertionError):
+    with pytest.raises(AeatLoginAssertionError, match=r"storage|session|cert|login|probe"):
         await auth.resume_from_storage_state(
             storage_state_path,
             browser_session=cast(BrowserSessionLike, browser_session),
@@ -704,7 +704,7 @@ async def test_resume_from_storage_state_invalidates_failed_live_probe(
     auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
     browser_session = _RecordingBrowserSession(cert_ok=False)
 
-    with pytest.raises(AeatLoginAssertionError):
+    with pytest.raises(AeatLoginAssertionError, match=r"storage|session|cert|login|probe"):
         await auth.resume_from_storage_state(
             storage_state_path,
             browser_session=cast(BrowserSessionLike, browser_session),
@@ -881,7 +881,7 @@ async def test_verify_login_raises_without_context(tmp_path: Path, monkeypatch: 
             thumbprint="abc",
             subject="CN=x",
         )
-        with pytest.raises(AeatLoginAssertionError):
+        with pytest.raises(AeatLoginAssertionError, match=r"login|session|handshake|verify"):
             await auth.verify_login(session)
 
 
@@ -965,7 +965,7 @@ async def test_reauthenticate_does_not_deadlock(tmp_path: Path, monkeypatch: pyt
         # authenticate() without an injected browser_session_factory
         # raises AeatLoginAssertionError; we only care that the call
         # returns in bounded time (no deadlock).
-        with pytest.raises(AeatLoginAssertionError):
+        with pytest.raises(AeatLoginAssertionError, match=r"login|browser|session|factory|reauthenticate"):
             await asyncio.wait_for(auth.reauthenticate(session), timeout=5.0)
     assert verifier.calls == 1
 

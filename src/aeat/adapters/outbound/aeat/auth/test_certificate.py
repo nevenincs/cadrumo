@@ -147,7 +147,7 @@ def test_load_certificate_missing_env_var(
         password_env_var="AEAT_TEST_CERT_PW",
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
-    with pytest.raises(CertificatePasswordError):
+    with pytest.raises(CertificatePasswordError, match=r"password|env|AEAT_TEST_CERT_PW"):
         load_certificate(bundle)
 
 
@@ -162,7 +162,7 @@ def test_load_certificate_wrong_password(
         password_env_var="AEAT_TEST_CERT_PW",
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
-    with pytest.raises(CertificatePasswordError):
+    with pytest.raises(CertificatePasswordError, match=r"password|incorrect|wrong|decrypt"):
         load_certificate(bundle)
 
 

@@ -89,7 +89,7 @@ def test_load_calendar_2025_separates_national_from_ccaa() -> None:
 def test_load_calendar_missing_year_raises_validation_error() -> None:
     """A year with no registered TOML produces a recoverable error."""
 
-    with pytest.raises(DeadlineValidationError):
+    with pytest.raises(DeadlineValidationError, match=r"1999|year|calendar|range"):
         load_holiday_calendar(1999)
 
 
@@ -283,7 +283,7 @@ def test_shift_deadline_accepts_externally_supplied_calendar() -> None:
 
 
 def test_shift_deadline_rejects_empty_modelo_string() -> None:
-    with pytest.raises(DeadlineValidationError):
+    with pytest.raises(DeadlineValidationError, match=r"modelo|empty|blank"):
         shift_deadline(date(2025, 3, 4), modelo="", ccaa_code=None)
 
 

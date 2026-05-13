@@ -62,7 +62,7 @@ def test_text_strips_whitespace() -> None:
 
 def test_text_rejects_blank_required() -> None:
     question = _question(WizardWidget.TEXT)
-    with pytest.raises(WizardValidationError):
+    with pytest.raises(WizardValidationError, match=r"blank_text"):
         validate_widget_answer(question, "  ")
 
 
@@ -78,7 +78,7 @@ def test_secret_passthrough() -> None:
 
 def test_secret_rejects_blank_required() -> None:
     question = _question(WizardWidget.SECRET)
-    with pytest.raises(WizardValidationError):
+    with pytest.raises(WizardValidationError, match=r"blank_secret"):
         validate_widget_answer(question, "")
 
 
@@ -96,7 +96,7 @@ def test_confirm_accepts_false_tokens() -> None:
 
 def test_confirm_rejects_unknown_token() -> None:
     question = _question(WizardWidget.CONFIRM, answer_type=bool)
-    with pytest.raises(WizardValidationError):
+    with pytest.raises(WizardValidationError, match=r"invalid_confirm"):
         validate_widget_answer(question, "maybe")
 
 
@@ -115,13 +115,13 @@ def test_select_rejects_out_of_set_choice() -> None:
         WizardChoice(value="simplificado", label=Translatable("wizard.choices.simplificado")),
     )
     question = _question(WizardWidget.SELECT, choices=choices, prompt=_SELECT_PROMPT)
-    with pytest.raises(WizardValidationError):
+    with pytest.raises(WizardValidationError, match=r"select_unknown"):
         validate_widget_answer(question, "xyz")
 
 
 def test_select_rejects_when_no_choices_declared() -> None:
     question = _question(WizardWidget.SELECT, prompt=_SELECT_PROMPT)
-    with pytest.raises(WizardValidationError):
+    with pytest.raises(WizardValidationError, match=r"select_without_choices"):
         validate_widget_answer(question, "anything")
 
 
@@ -140,14 +140,14 @@ def test_checkbox_rejects_unknown_token() -> None:
         WizardChoice(value="irpf", label=Translatable("wizard.choices.irpf")),
     )
     question = _question(WizardWidget.CHECKBOX, choices=choices, prompt=_CHECKBOX_PROMPT)
-    with pytest.raises(WizardValidationError):
+    with pytest.raises(WizardValidationError, match=r"checkbox_unknown"):
         validate_widget_answer(question, "iva, nope")
 
 
 def test_checkbox_rejects_empty_required() -> None:
     choices = (WizardChoice(value="iva", label=Translatable("wizard.choices.iva")),)
     question = _question(WizardWidget.CHECKBOX, choices=choices, prompt=_CHECKBOX_PROMPT)
-    with pytest.raises(WizardValidationError):
+    with pytest.raises(WizardValidationError, match=r"checkbox_required"):
         validate_widget_answer(question, "")
 
 
@@ -159,7 +159,7 @@ def test_path_returns_expanded_string() -> None:
 
 def test_path_rejects_blank_required() -> None:
     question = _question(WizardWidget.PATH, prompt=_PATH_PROMPT, answer_type=Path)
-    with pytest.raises(WizardValidationError):
+    with pytest.raises(WizardValidationError, match=r"blank_path"):
         validate_widget_answer(question, "")
 
 
@@ -170,7 +170,7 @@ def test_integer_canonicalises_decimal() -> None:
 
 def test_integer_rejects_non_integer() -> None:
     question = _question(WizardWidget.INTEGER, prompt=_INTEGER_PROMPT, answer_type=int)
-    with pytest.raises(WizardValidationError):
+    with pytest.raises(WizardValidationError, match=r"invalid_integer|integer"):
         validate_widget_answer(question, "not-a-number")
 
 

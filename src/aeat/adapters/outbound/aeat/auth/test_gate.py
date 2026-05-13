@@ -70,14 +70,14 @@ def test_require_live_read_passes_when_enabled(monkeypatch: pytest.MonkeyPatch) 
 def test_require_live_read_raises_when_unset(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
     settings = _fresh_settings(monkeypatch)
-    with pytest.raises(AeatLiveReadNotEnabledError):
+    with pytest.raises(AeatLiveReadNotEnabledError, match=r"AEAT_LIVE_TESTS_ENABLED|live"):
         AeatAccessGate(settings).require_live_read()
 
 
 def test_require_live_read_raises_when_not_one(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "true")
     settings = _fresh_settings(monkeypatch, AEAT_LIVE_TESTS_ENABLED="true")
-    with pytest.raises(AeatLiveReadNotEnabledError):
+    with pytest.raises(AeatLiveReadNotEnabledError, match=r"AEAT_LIVE_TESTS_ENABLED|live"):
         AeatAccessGate(settings).require_live_read()
 
 

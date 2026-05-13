@@ -192,7 +192,7 @@ def test_validation_rejects_candidate_with_iva_off_by_six_euros_on_destination_d
         base=Decimal("100"),
         iva=Decimal("25"),
     )
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"iva|rate|tolerance|drift"):
         validate_oss_ioss_observation(candidate)
 
 
@@ -208,7 +208,7 @@ def test_validation_rejects_zero_iva_when_destination_rate_is_non_zero() -> None
         base=Decimal("100"),
         iva=Decimal("0"),
     )
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"iva|zero|rate|drift|tolerance"):
         validate_oss_ioss_observation(candidate)
 
 
@@ -238,7 +238,7 @@ def test_validation_rejects_beyond_tolerance_drift() -> None:
         base=Decimal("100"),
         iva=Decimal("19.02"),
     )
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"iva|tolerance|drift|exceed"):
         validate_oss_ioss_observation(candidate)
 
 
@@ -280,7 +280,7 @@ def test_validation_raises_rate_not_found_for_pre_registry_date() -> None:
         base=Decimal("100"),
         iva=Decimal("19"),
     )
-    with pytest.raises(VatRateNotFoundError):
+    with pytest.raises(VatRateNotFoundError, match=r"DE|1900|rate"):
         validate_oss_ioss_observation(candidate)
 
 
@@ -311,7 +311,7 @@ def test_batch_validation_raises_on_first_offending_candidate() -> None:
         _candidate(ledger_id="b", iva=Decimal("99")),  # bad
         _candidate(ledger_id="c", iva=Decimal("19")),
     ]
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"iva|tolerance|drift|exceed"):
         validate_oss_ioss_observations(candidates)
 
 
@@ -351,7 +351,7 @@ def test_aggregator_rejects_when_any_candidate_fails_rate_validation() -> None:
         _candidate(ledger_id="a", base=Decimal("100"), iva=Decimal("19")),
         _candidate(ledger_id="b", base=Decimal("200"), iva=Decimal("99")),  # bad
     ]
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"iva|tolerance|drift|exceed"):
         aggregate_oss_ioss_bindings(revision, candidates)
 
 

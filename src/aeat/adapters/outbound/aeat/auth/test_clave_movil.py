@@ -240,11 +240,11 @@ class TestIdentityClassification:
         assert _classify_identity("X1234567L") == "NIE"
 
     def test_rejects_cif(self) -> None:
-        with pytest.raises(ClaveMovilConfigurationError):
+        with pytest.raises(ClaveMovilConfigurationError, match=r"NIF|NIE|identity|CIF"):
             _classify_identity("B12345674")
 
     def test_rejects_empty(self) -> None:
-        with pytest.raises(ClaveMovilConfigurationError):
+        with pytest.raises(ClaveMovilConfigurationError, match=r"NIF|NIE|identity|empty"):
             _classify_identity("")
 
 
@@ -369,7 +369,7 @@ class TestAuthenticateFresh:
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilConfigurationError):
+            with pytest.raises(ClaveMovilConfigurationError, match=r"identity|NIF|NIE|configuration"):
                 await provider.authenticate(browser_session=browser_session)
 
         asyncio.run(run())
@@ -384,7 +384,7 @@ class TestAuthenticateFresh:
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilConfigurationError):
+            with pytest.raises(ClaveMovilConfigurationError, match=r"identity|NIF|NIE|configuration"):
                 await provider.authenticate(browser_session=browser_session)
 
         asyncio.run(run())

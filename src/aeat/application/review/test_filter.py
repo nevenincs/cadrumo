@@ -64,7 +64,7 @@ def test_parse_filter_clause_rejects_empty_value() -> None:
 
 
 def test_parse_filter_clause_rejects_blank_value() -> None:
-    with pytest.raises(FilterParseError):
+    with pytest.raises(FilterParseError, match=r"empty-value|blank"):
         parse_filter_clause("status=   ")
 
 

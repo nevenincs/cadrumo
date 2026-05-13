@@ -64,7 +64,7 @@ def test_parse_edit_clause_rejects_empty_value() -> None:
 
 
 def test_parse_edit_clause_rejects_blank_value() -> None:
-    with pytest.raises(EditParseError):
+    with pytest.raises(EditParseError, match=r"empty-value|blank"):
         parse_edit_clause("category=   ")
 
 
