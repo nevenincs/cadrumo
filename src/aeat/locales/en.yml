@@ -40,42 +40,36 @@ cli:
     modelo:
       app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
       bindings:
-        as_of_help: Resolve the modelo revision active on the supplied ISO date
-          (YYYY-MM-DD)
+        as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Fiscal period to scope the bindings (e.g. 2026Q1, 2026-01)
       casillas:
-        as_of_help: Resolve the modelo revision active on the supplied ISO date
-          (YYYY-MM-DD)
-        input_kind_help: Filter casillas by input kind (manual, bound, computed,
-          informational)
+        as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+        input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Fiscal period to scope the casillas (e.g. 2026Q1, 2026-01)
         required_help: Show only casillas the modelo marks as required
       describe:
-        as_of_help: Resolve the modelo revision active on the supplied ISO date
-          (YYYY-MM-DD)
+        as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Fiscal period to resolve the modelo revision against (e.g.
-          2026Q1, 2026-01)
+        period_help: Fiscal period to resolve the modelo revision against (e.g. 2026Q1,
+          2026-01)
       formulas:
-        as_of_help: Resolve the modelo revision active on the supplied ISO date
-          (YYYY-MM-DD)
+        as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Fiscal period to scope the formulas (e.g. 2026Q1, 2026-01)
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
   archive:
-    app_help: Export and import the encrypted local archive as portable JSON
-      bundles
+    app_help: Export and import the encrypted local archive as portable JSON bundles
     export:
       bundle_id_help: Override the auto-generated bundle identifier
       help: Write a portable JSON bundle of the secure object catalogue
       namespace_help: Restrict the bundle to one or more namespaces (repeatable)
       path_help: Destination path for the JSON bundle
     import:
-      conflict_help: 'Conflict policy when restoring colliding records: fail,
-        overwrite, or keep'
+      conflict_help: 'Conflict policy when restoring colliding records: fail, overwrite,
+        or keep'
       help: Restore an archive bundle into the encrypted secure object catalogue
       path_help: Path to the JSON bundle to restore
   browser:
@@ -106,6 +100,8 @@ cli:
       help: Configure the active authentication provider
       provider_help: Authentication provider id (e.g. certificado-electronico)
       providers_help: List supported authentication providers
+      reserved_provider: 'Authentication provider reserved but not yet available:
+        {{provider}}.'
       status_help: Show configured authentication state
       test_help: Check local authentication readiness
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
@@ -124,8 +120,8 @@ cli:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config init --tax-id <NIF>'
         first.
-      unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config profile list'' to
-        see the available keys.'
+      unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config profile
+        list'' to see the available keys.'
     get:
       help: Show the current value of one configuration key
       key_help: Key to read (e.g. tax.id, iva.regime)
@@ -208,7 +204,7 @@ cli:
       no_draft_for_period: No draft exists for the specified period
       not_approved_for_export: The declaration must be approved before being exported
       profile_tax_id_required: 'The active profile requires a configured Tax ID (NIF/CIF).
-        Run: aeat config set tax.id <NIF/NIE>'
+        Run: aeat config profile set tax.id <NIF/NIE>'
       set_parse_error: Error parsing the field assignment
     export_help: Export an approved declaration to a local AEAT-format file
     format_help: Output format (e.g. json, text, table)
@@ -322,6 +318,7 @@ cli:
       value: Value
     import:
       actual: Actual (Found)
+      año_help: Fiscal year for the import operation (YYYY)
       borrador_unsupported: Importing from official draft is not supported for this
         tax model
       casilla_label: Box
@@ -617,6 +614,52 @@ cli:
     json_help: JSON format output
     list_filed_data_help: List existing filings in AEAT for the specified year range
     list_filed_data_json_help: Output in JSON format for automation tools
+    metrics:
+      applicability_declaration_count: applicability_declaration_count
+      application_link_count: application_link_count
+      application_link_surfaces: application_link_surfaces
+      artefact_refs: artefact_refs
+      backend_exists: backend_exists
+      captured_count: captured_count
+      casilla_count: casilla_count
+      compared_casillas: compared_casillas
+      comparison_count: comparison_count
+      cross_reference_count: cross_reference_count
+      difference_count: difference_count
+      differences: differences
+      drift_count: drift_count
+      environment: environment
+      extraction_profile_count: extraction_profile_count
+      failed_count: failed_count
+      failure_count: failure_count
+      formula_count: formula_count
+      formula_workbook_count: formula_workbook_count
+      legal_reference_count: legal_reference_count
+      missing_filed_casillas: missing_filed_casillas
+      missing_local_casillas: missing_local_casillas
+      modelo: modelo
+      modelo_count: modelo_count
+      modelos: modelos
+      observation_paths: observation_paths
+      orphan_oracle_ids: orphan_oracle_ids
+      passed: passed
+      registered_oracle_ids: registered_oracle_ids
+      revision: revision
+      revision_count: revision_count
+      row_count: row_count
+      runner_detail: runner_detail
+      runner_status: runner_status
+      scanned_count: scanned_count
+      scenario_id: scenario_id
+      source_reference_count: source_reference_count
+      status: status
+      tape_path: tape_path
+      unsupported_xls_count: unsupported_xls_count
+      verification_expectation_count: verification_expectation_count
+      verified: verified
+      workbook_count: workbook_count
+      workbook_parity_ref_count: workbook_parity_ref_count
+      workbook_path: workbook_path
     modelo_help: Optional filter by tax model (e.g. 303, 130)
     observation_help: Encrypted filed-declaration observation manifest to verify
     output_root_help: Path to the output root directory for the records
@@ -645,6 +688,24 @@ cli:
     workbooks_timeout_help: Maximum timeout (in seconds) for the compilation
     workbooks_verify_help: Verify the integrity of the generated workbooks
     year_help: Fiscal year to query or process
+  review:
+    app_help: 'Operator review queue: triage transactions, invoices, and findings'
+    errors:
+      invalid_state: 'Invalid review state: {{state}}'
+    labels:
+      id: ID
+      kind: Kind
+      next: Next
+      severity: Severity
+    queue:
+      empty: No items pending review.
+      help: List items waiting for operator review
+      kind_help: Restrict the queue to one item kind
+      modelo_help: Restrict the queue to one modelo
+      state_help: Restrict the queue to one review state
+    show:
+      help: Show review details for a single item
+      id_help: Item id from the review queue
   root:
     app_app_help: Tax workspaces for ledgers, invoices, and declarations
     app_help: 'Spanish tax filing assistant
@@ -660,8 +721,8 @@ cli:
   topic:
     app_help: Show conceptual help about regimes, modelos, and AEAT processes
     errors:
-      not_found: 'Topic not found: %{slug}. Run ''aeat app registry citations'' to list registered
-        topics.'
+      not_found: 'Topic not found: %{slug}. Run ''aeat app registry citations'' to
+        list registered topics.'
     opts:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
   txs:
@@ -761,7 +822,7 @@ topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
       certificate (FNMT / equivalent). Configure a provider with 'aeat config auth
-      --provider certificate' and verify with 'aeat config status'.
+      configure --provider certificate' and verify with 'aeat config auth test'.
     title: Authentication with AEAT
   calendar:
     body: The calendar shows filing obligations (modelos and periods) within a range.
@@ -831,18 +892,20 @@ transactions:
     message: Month 2026-03 is missing from the imported file.
 wizard:
   errors:
-    blank_integer: 'Integer value required for %{prompt_key}.'
-    blank_path: 'Path required for %{prompt_key}.'
-    blank_secret: 'Secret value required for %{prompt_key}.'
-    blank_text: 'Value required for %{prompt_key}.'
-    checkbox_required: 'Select at least one option for %{prompt_key}.'
-    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options: %{choices}.'
-    checkbox_without_choices: 'Question %{prompt_key} declares no checkbox options.'
+    blank_integer: Integer value required for %{prompt_key}.
+    blank_path: Path required for %{prompt_key}.
+    blank_secret: Secret value required for %{prompt_key}.
+    blank_text: Value required for %{prompt_key}.
+    checkbox_required: Select at least one option for %{prompt_key}.
+    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
+    checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
     invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
     invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
-    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options: %{choices}.'
-    select_without_choices: 'Question %{prompt_key} declares no select options.'
+    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
+    select_without_choices: Question %{prompt_key} declares no select options.
   setup:
     description: Operator-facing setup wizard for tax filing readiness
     enrollment:
