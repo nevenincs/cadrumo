@@ -9,7 +9,6 @@ on disk.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from pathlib import Path
 
 from pydantic import ValidationError
 
@@ -28,10 +27,9 @@ _USAGE_RATIO_NAMESPACE = "aeat.domain.usage_ratios"
 _USAGE_RATIO_OBJECT_KEY = "profile"
 
 
-def load_usage_ratios(path: Path) -> UsageRatioProfile:
+def load_usage_ratios() -> UsageRatioProfile:
     """Load the operator's persisted usage-ratio profile, or return an empty one."""
 
-    del path
     objects = SecureObjectRepository()
     try:
         record = objects.load(
@@ -78,10 +76,9 @@ def _summarise_validation_errors(exc: ValidationError) -> str:
     return "\n".join(lines) if lines else "  - validation error"
 
 
-def save_usage_ratios(profile: UsageRatioProfile, path: Path) -> None:
+def save_usage_ratios(profile: UsageRatioProfile) -> None:
     """Persist the operator's usage-ratio profile in the encrypted database."""
 
-    del path
     envelope = Envelope[UsageRatioProfile](
         schema_version=_USAGE_RATIO_VERSION,
         written_at=datetime.now(UTC),
