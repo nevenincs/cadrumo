@@ -56,6 +56,15 @@ _DiscardReason = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
 ]
+_OptionalHex64 = Annotated[
+    str | None,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+    ),
+]
 
 _HEX_WORK_UNIT_ID_LENGTH = 64
 """Length of the SHA-256 hex digest used as the work-unit identifier."""
@@ -171,6 +180,9 @@ class WorkUnit(BaseModel):
     discarded_at: datetime | None = None
     discarded_by: _ActorLabel | None = None
     discard_reason: _DiscardReason | None = None
+    current_calculation_revision_id: _OptionalHex64 = None
+    filed_calculation_revision_id: _OptionalHex64 = None
+    current_filing_record_id: _OptionalHex64 = None
 
     @field_validator("modelo", mode="before")
     @classmethod

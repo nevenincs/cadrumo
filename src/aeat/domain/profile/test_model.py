@@ -19,9 +19,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 def test_tax_residence_profile_is_strict_frozen() -> None:
     residence = TaxResidenceProfile(ccaa=CCAA.MADRID)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen"):
         residence.__setattr__("ccaa", CCAA.CATALUNA)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         TaxResidenceProfile.model_validate({"ccaa": CCAA.MADRID, "extra": "nope"})
 
 
@@ -55,5 +55,5 @@ def test_parse_tax_region_accepts_accented_display_names() -> None:
 
 
 def test_parse_tax_region_refuses_accented_foral_alias() -> None:
-    with pytest.raises(ForalRegimeError):
+    with pytest.raises(ForalRegimeError, match=r"País Vasco"):
         parse_tax_region("País Vasco")

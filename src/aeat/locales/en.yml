@@ -74,22 +74,38 @@ cli:
         period_help: Fiscal period to scope the formulas (e.g. 2026Q1, 2026-01)
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
+      filing_record:
+        app_help: Inspect internal filing records
+        bucket_id_help: Filter by bucket
+        filing_record_id_help: Stable filing-record identifier
+        include_superseded_help: Include superseded filing records (excluded by default)
+        list_help: List registered filing records
+        show_help: Show one filing record by id
       work:
-        actor_help: Actor responsible for the discard (free-text label up to 64 chars)
+        actor_help: Actor responsible for the action (free-text label up to 64 chars)
         app_help: Manage the lifecycle of modelo work units
         bucket_id_help: Bucket identifier the work unit belongs to
+        calculate_help: Persist a new draft calculation revision for the work unit
+        calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
+          revision
+        casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable)
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
         discard_help: Mark a work unit as discarded (auditable state transition)
+        file_help: Mark a verified revision as internally filed. Does NOT submit to AEAT
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         list_help: List registered work units, optionally filtered by bucket
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
+        notes_help: Optional notes attached to the filing record
+        override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
         period_help: Filing period of the work unit (e.g. Q1, 4T, 0A, 01)
         reason_help: Optional free-text reason for the discard (up to 500 chars)
         rename_help: Update the display name of a work unit
         revision_help: Stable id of the targeted registry modelo revision
+        revisions_help: List calculation revisions, optionally filtered to one work unit
         status_help: Show the metadata of one work unit
+        verified_complete_help: Mark a draft calculation revision as verified-complete
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
   archive:

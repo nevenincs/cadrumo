@@ -9,15 +9,27 @@ from typing import Annotated, Any, Literal
 import typer
 
 from ...application.modelo import (
+    CalculationRevisionNotFoundError,
+    CalculationRevisionStateError,
+    FilingRecordNotFoundError,
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
+    calculate_modelo_revision,
     create_work_unit,
     discard_work_unit,
+    file_modelo_revision,
+    get_calculation_revision,
+    get_filing_record,
     get_work_unit,
+    list_calculation_revisions,
+    list_filing_records,
     list_work_units,
+    mark_revision_verified_complete,
     rename_work_unit,
 )
+from ...domain.modelos._calculation_revision import CalculationRevision
+from ...domain.modelos._filing_record import FilingRecord
 from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
 from ...domain.calculations.registry._errors import RegistrySnapshotError
@@ -603,6 +615,332 @@ def work_discard(
         **_work_unit_payload(unit),
     }
     lines = ["operation\tmodelo.work.discard", *_work_unit_lines(unit)]
+    _emit(ctx, payload, lines)
+
+
+filing_record_app = typer.Typer(
+    name="filing-record",
+    help=tr("cli.app.modelo.filing_record.app_help"),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(filing_record_app, name="filing-record")
+
+
+def _calculation_revision_payload(rev: CalculationRevision) -> dict[str, Any]:
+    return {
+        "calculation_revision_id": rev.calculation_revision_id,
+        "work_unit_id": rev.work_unit_id,
+        "state": rev.state.value,
+        "casilla_values": {k: str(v) for k, v in rev.casilla_values.items()},
+        "binding_overrides": dict(rev.binding_overrides),
+        "inputs_snapshot": dict(rev.inputs_snapshot),
+        "created_at": rev.created_at.isoformat(),
+        "updated_at": rev.updated_at.isoformat(),
+        "verified_at": rev.verified_at.isoformat() if rev.verified_at else None,
+        "verified_by": rev.verified_by,
+        "filed_at": rev.filed_at.isoformat() if rev.filed_at else None,
+        "filed_by": rev.filed_by,
+        "superseded_at": rev.superseded_at.isoformat() if rev.superseded_at else None,
+    }
+
+
+def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
+    lines = [
+        f"calculation_revision_id\t{rev.calculation_revision_id}",
+        f"work_unit_id\t{rev.work_unit_id}",
+        f"state\t{rev.state.value}",
+        f"created_at\t{rev.created_at.isoformat()}",
+        f"updated_at\t{rev.updated_at.isoformat()}",
+    ]
+    if rev.verified_at is not None:
+        lines.append(f"verified_at\t{rev.verified_at.isoformat()}")
+        lines.append(f"verified_by\t{rev.verified_by}")
+    if rev.filed_at is not None:
+        lines.append(f"filed_at\t{rev.filed_at.isoformat()}")
+        lines.append(f"filed_by\t{rev.filed_by}")
+    if rev.superseded_at is not None:
+        lines.append(f"superseded_at\t{rev.superseded_at.isoformat()}")
+    for casilla, value in sorted(rev.casilla_values.items()):
+        lines.append(f"casilla\t{casilla}\t{value}")
+    return lines
+
+
+def _filing_record_payload(record: FilingRecord) -> dict[str, Any]:
+    return {
+        "filing_record_id": record.filing_record_id,
+        "work_unit_id": record.work_unit_id,
+        "calculation_revision_id": record.calculation_revision_id,
+        "bucket_id": record.bucket_id,
+        "modelo": str(record.modelo),
+        "filing_year": record.filing_year,
+        "period": record.period,
+        "filed_at": record.filed_at.isoformat(),
+        "filed_by": record.filed_by,
+        "notes": record.notes,
+        "aeat_accepted": record.aeat_accepted,
+        "status": record.status.value,
+        "superseded_at": record.superseded_at.isoformat() if record.superseded_at else None,
+        "superseded_by_filing_record_id": record.superseded_by_filing_record_id,
+        "kind": "internal_filing",
+        "live_submission": False,
+    }
+
+
+def _filing_record_lines(record: FilingRecord) -> list[str]:
+    lines = [
+        f"filing_record_id\t{record.filing_record_id}",
+        f"work_unit_id\t{record.work_unit_id}",
+        f"calculation_revision_id\t{record.calculation_revision_id}",
+        f"bucket_id\t{record.bucket_id}",
+        f"modelo\t{record.modelo}",
+        f"filing_year\t{record.filing_year}",
+        f"period\t{record.period}",
+        f"filed_at\t{record.filed_at.isoformat()}",
+        f"filed_by\t{record.filed_by}",
+        f"status\t{record.status.value}",
+        f"aeat_accepted\t{str(record.aeat_accepted).lower()}",
+    ]
+    if record.notes is not None:
+        lines.append(f"notes\t{record.notes}")
+    if record.superseded_at is not None:
+        lines.append(f"superseded_at\t{record.superseded_at.isoformat()}")
+    if record.superseded_by_filing_record_id is not None:
+        lines.append(f"superseded_by_filing_record_id\t{record.superseded_by_filing_record_id}")
+    lines.append("kind\tinternal_filing")
+    lines.append("live_submission\tfalse")
+    return lines
+
+
+def _parse_casilla_override(spec: str) -> tuple[str, str]:
+    if "=" not in spec:
+        raise typer.BadParameter(f"--casilla must be ID=VALUE; got {spec!r}")
+    key, _, value = spec.partition("=")
+    key = key.strip()
+    if not key:
+        raise typer.BadParameter(f"--casilla key must be non-empty; got {spec!r}")
+    return key, value.strip()
+
+
+@work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
+def work_calculate(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+    casilla: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--casilla",
+            help=tr("cli.app.modelo.work.casilla_help"),
+        ),
+    ] = None,
+    binding: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--binding",
+            help=tr("cli.app.modelo.work.override_help"),
+        ),
+    ] = None,
+) -> None:
+    """Persist a new draft calculation revision for the work unit."""
+
+    from decimal import Decimal, InvalidOperation
+
+    casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
+    casilla_values: dict[str, Decimal] = {}
+    for k, v in casilla_pairs.items():
+        try:
+            casilla_values[k] = Decimal(v)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(f"--casilla value for {k!r} is not a decimal: {v!r}") from exc
+    binding_overrides = dict(_parse_casilla_override(spec) for spec in (binding or ()))
+
+    try:
+        revision = calculate_modelo_revision(
+            work_unit_id,
+            casilla_values=casilla_values,
+            binding_overrides=binding_overrides,
+        )
+    except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.work.calculate",
+        **_calculation_revision_payload(revision),
+    }
+    lines = ["operation\tmodelo.work.calculate", *_calculation_revision_lines(revision)]
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("revisions", help=tr("cli.app.modelo.work.revisions_help"))
+def work_revisions(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str | None,
+        typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ] = None,
+) -> None:
+    """List calculation revisions, optionally filtered to one work unit."""
+
+    revisions = list_calculation_revisions(work_unit_id=work_unit_id)
+    payload = {
+        "operation": "modelo.work.revisions",
+        "work_unit_id_filter": work_unit_id,
+        "revision_count": len(revisions),
+        "revisions": [_calculation_revision_payload(rev) for rev in revisions],
+    }
+    lines = [
+        "operation\tmodelo.work.revisions",
+        f"work_unit_id_filter\t{work_unit_id or ''}",
+        f"revision_count\t{len(revisions)}",
+        "calculation_revision_id\twork_unit_id\tstate\tcreated_at",
+    ]
+    lines.extend(
+        f"{rev.calculation_revision_id}\t{rev.work_unit_id}\t{rev.state.value}\t{rev.created_at.isoformat()}"
+        for rev in revisions
+    )
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("verified-complete", help=tr("cli.app.modelo.work.verified_complete_help"))
+def work_verified_complete(
+    ctx: typer.Context,
+    calculation_revision_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
+    ],
+    actor: Annotated[
+        str,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ],
+) -> None:
+    """Mark a draft calculation revision as verified complete."""
+
+    try:
+        revision = mark_revision_verified_complete(calculation_revision_id, actor=actor)
+    except (CalculationRevisionNotFoundError, CalculationRevisionStateError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.work.verified_complete",
+        **_calculation_revision_payload(revision),
+    }
+    lines = ["operation\tmodelo.work.verified_complete", *_calculation_revision_lines(revision)]
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("file", help=tr("cli.app.modelo.work.file_help"))
+def work_file(
+    ctx: typer.Context,
+    calculation_revision_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
+    ],
+    actor: Annotated[
+        str,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ],
+    notes: Annotated[
+        str | None,
+        typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
+    ] = None,
+) -> None:
+    """Mark a verified modelo revision as internally filed. Does NOT submit to AEAT."""
+
+    try:
+        record = file_modelo_revision(
+            calculation_revision_id,
+            actor=actor,
+            notes=notes,
+        )
+    except (
+        CalculationRevisionNotFoundError,
+        CalculationRevisionStateError,
+        WorkUnitNotFoundError,
+    ) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.work.file",
+        **_filing_record_payload(record),
+    }
+    lines = ["operation\tmodelo.work.file", *_filing_record_lines(record)]
+    lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
+    _emit(ctx, payload, lines)
+
+
+@filing_record_app.command("list", help=tr("cli.app.modelo.filing_record.list_help"))
+def filing_record_list(
+    ctx: typer.Context,
+    bucket_id: Annotated[
+        str | None,
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.filing_record.bucket_id_help")),
+    ] = None,
+    include_superseded: Annotated[
+        bool,
+        typer.Option(
+            "--include-superseded",
+            help=tr("cli.app.modelo.filing_record.include_superseded_help"),
+        ),
+    ] = False,
+) -> None:
+    """List filing records. Superseded records are excluded unless asked."""
+
+    records = list_filing_records(bucket_id=bucket_id, include_superseded=include_superseded)
+    payload = {
+        "operation": "modelo.filing_record.list",
+        "bucket_id_filter": bucket_id,
+        "include_superseded": include_superseded,
+        "record_count": len(records),
+        "records": [_filing_record_payload(record) for record in records],
+    }
+    lines = [
+        "operation\tmodelo.filing_record.list",
+        f"bucket_id_filter\t{bucket_id or ''}",
+        f"include_superseded\t{include_superseded}",
+        f"record_count\t{len(records)}",
+        "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                record.filing_record_id,
+                record.bucket_id,
+                str(record.modelo),
+                str(record.filing_year),
+                record.period,
+                record.status.value,
+                record.filed_at.isoformat(),
+                record.filed_by,
+            )
+        )
+        for record in records
+    )
+    _emit(ctx, payload, lines)
+
+
+@filing_record_app.command("show", help=tr("cli.app.modelo.filing_record.show_help"))
+def filing_record_show(
+    ctx: typer.Context,
+    filing_record_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.filing_record.filing_record_id_help")),
+    ],
+) -> None:
+    """Show one filing record by id."""
+
+    try:
+        record = get_filing_record(filing_record_id)
+    except FilingRecordNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.filing_record.show",
+        **_filing_record_payload(record),
+    }
+    lines = ["operation\tmodelo.filing_record.show", *_filing_record_lines(record)]
     _emit(ctx, payload, lines)
 
 
