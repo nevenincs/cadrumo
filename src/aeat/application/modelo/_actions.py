@@ -470,10 +470,12 @@ def calculate_modelo_revision(
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
 
     try:
-        authority = ValidatedRegistryAuthority.load(Path(_REGISTRY_ROOT_DEFAULT), source_root=Path("."))
+        from ...core.config import PROJECT_ROOT
+
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
-            f"registry root {_REGISTRY_ROOT_DEFAULT!r} is missing; cannot calculate"
+            f"registry root {_registry_root()} is missing; cannot calculate"
         ) from exc
     try:
         snapshot = authority.snapshot(
@@ -649,7 +651,21 @@ def mark_revision_verified_complete(
     return verified
 
 
-_REGISTRY_ROOT_DEFAULT = "registry/aeat"
+def _registry_root() -> Path:
+    """Resolve the registry root relative to the project root.
+
+    The previous string default ``"registry/aeat"`` plus
+    ``source_root=Path(".")`` was CWD-relative — running the action
+    from any directory that wasn't the repo root (production daemon,
+    background worker, wheel install, subprocess) raised
+    ``FileNotFoundError`` for every modelo. Routing through
+    ``aeat.core.config.PROJECT_ROOT`` makes the resolution
+    independent of the caller's working directory.
+    """
+
+    from ...core.config import PROJECT_ROOT
+
+    return PROJECT_ROOT / "registry" / "aeat"
 
 
 def _required_input_casillas_for_revision(
@@ -682,8 +698,10 @@ def _required_input_casillas_for_revision(
         ValidatedRegistryAuthority,
     )
 
+    from ...core.config import PROJECT_ROOT
+
     try:
-        authority = ValidatedRegistryAuthority.load(Path(_REGISTRY_ROOT_DEFAULT), source_root=Path("."))
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
     except FileNotFoundError:
         return None
 

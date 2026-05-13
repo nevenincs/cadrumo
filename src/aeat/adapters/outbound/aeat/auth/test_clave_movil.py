@@ -443,7 +443,7 @@ class TestPendingPetitionRefusal:
         page.url = "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/ObtenerClaveMovil?qAA=2"
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"clave|movil|approval|timeout") as excinfo:
+            with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"Cl@ve|pending|prior|refused") as excinfo:
                 await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=100)
             assert excinfo.value.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED
             assert excinfo.value.context is not None
