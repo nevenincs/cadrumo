@@ -67,6 +67,9 @@ Land the OAuth Desktop application surface end-to-end: dependencies, SecureObjec
 - [ ] `P01.S13` - implement unsecured-mode refusal when `aeat_secret_store_backend=unsecured` AND active profile carries a real NIF; `src/aeat/adapters/outbound/google/_oauth_flow.py`.
 - [ ] `P01.S14` - write colocated unit tests for OAuth records, login flow, refresh, revocation, error rendering; `src/aeat/adapters/outbound/google/_test_oauth_flow.py`.
 - [ ] `P01.S15` - write live tests gated by `AEAT_LIVE_TESTS_ENABLED` against operator-supplied OAuth client; `src/aeat/adapters/outbound/google/_test_oauth_live.py`.
+- [ ] `P01.S16` - promote `src/aeat/entrypoints/cli/_config.py` from single-module to package (`src/aeat/entrypoints/cli/_config/__init__.py` re-exporting the existing public surface) so that `_config/_google.py` (and future per-domain sub-CLIs) sit alongside as siblings; preserve every existing import path; no behaviour change; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P01.S17` - resolve the active `AEAT_PROFILE` at every `aeat config google ...` invocation through the existing `AeatProfile` resolver; raise `ProfileUnboundError` if the env var is unset and no `--profile` override is given; wire the resolver to every OAuth-record load/save path so the per-profile binding in ADR-0 §5 is enforced at one location; `src/aeat/adapters/outbound/google/_profile_binding.py`.
+- [ ] `P01.S18` - write a forbidden-import test asserting `src/aeat/adapters/outbound/google/` contains no module named `_oauth_legacy*`, `_gcloud*`, or anything outside the v1 module list from S00; `tests/import_contract/google/test_no_legacy_modules.py`.
 
 ### Phase `P02` - storage provider abstraction (ADR-1)
 
@@ -87,6 +90,9 @@ Define `StorageProvider` Protocol and ship both v1 implementations (`LocalFileSy
 - [ ] `P02.S13` - write colocated unit tests using `tmp_path` and the in-memory backend; `src/aeat/adapters/outbound/storage/_test_local.py` and `_test_in_memory.py`.
 - [ ] `P02.S14` - write live tests gated by `AEAT_LIVE_TESTS_ENABLED` against real Drive; `src/aeat/adapters/outbound/storage/_test_google_drive_live.py`.
 - [ ] `P02.S15` - extend `tests/import_contract/test_adr_layout_import_smoke.py` to assert `aeat.adapters.outbound.storage` and its public symbols; `tests/import_contract/test_adr_layout_import_smoke.py`.
+- [ ] `P02.S16` - add `aeat_storage_provider_kind` and `aeat_google_drive_root_folder_id` settings to `core/config.py` (pydantic-settings) with strict validation; both settings are per-profile-overridable; `aeat_storage_provider_kind` accepts only the `ProviderKind` enum values; `aeat_google_drive_root_folder_id` is required when kind is `google_drive`; `src/aeat/core/config.py`.
+- [ ] `P02.S17` - extend `get_storage_provider` factory to read `aeat_storage_provider_kind` + (when applicable) `aeat_google_drive_root_folder_id`, resolve the active `AEAT_PROFILE`, and instantiate the configured backend with credentials threaded through the P01.S17 profile binding; `src/aeat/adapters/outbound/storage/_factory.py`.
+- [ ] `P02.S18` - implement `GoogleDriveProvider` root-folder discovery: create the `aeat-vault/` folder under the operator-configured root folder ID on first probe if absent; reject if the operator-configured root folder ID points to a non-folder file; `src/aeat/adapters/outbound/storage/_google_drive.py`.
 
 ### Phase `P03` - drive bucket hierarchy, sync state, conflict resolution (ADR-2)
 
@@ -110,6 +116,8 @@ Land the operator-facing Drive layout and the local sync-state sidecar table; im
 - [ ] `P03.S16` - write operator-facing `aeat-vault/README.md` content as a string constant and arrange one-time upload on first push; `src/aeat/application/storage/sync/_bucket_readme.py`.
 - [ ] `P03.S17` - write colocated unit tests for the diff classifier, conflict refusal, and `--resolve` flags using the in-memory backend; `src/aeat/application/storage/sync/_test_coordinator.py`.
 - [ ] `P03.S18` - write live tests gated by `AEAT_LIVE_TESTS_ENABLED` against real Drive for full push / pull / status round-trips; `src/aeat/application/storage/sync/_test_coordinator_live.py`.
+- [ ] `P03.S19` - implement underscore-prefixed operator bucket initialization (`_probe/`, `_sync-state/`, `_workspace/`, `_inbound/{pending,processed,rejected}`) on first push if any subfolder is absent; idempotent; emit a `storage.bucket.initialised` log line per created folder; `src/aeat/application/storage/sync/_bucket_init.py`.
+- [ ] `P03.S20` - implement `_sync-state/` per-namespace sidecar writer so the local sync-state table is mirrored to Drive on every successful push (one JSON object per namespace, ciphertext-wrapped); `src/aeat/application/storage/sync/_sync_state_mirror.py`.
 
 ### Phase `P04` - snapshot encryption boundary and cross-machine restore (ADR-3)
 
@@ -153,6 +161,7 @@ Materialise the operator drop-zone semantics: bucket layout, ack via move, tripl
 - [ ] `P05.S16` - write inbound-bucket README content uploaded on first inbound run; `src/aeat/application/storage/inbound/_bucket_readme.py`.
 - [ ] `P05.S17` - write colocated unit tests for filename parser, dedup, validation, ack, rejection; `src/aeat/application/storage/inbound/_test_*.py`.
 - [ ] `P05.S18` - write live tests for inbound round-trips against real Drive; `src/aeat/application/storage/inbound/_test_inbound_live.py`.
+- [ ] `P05.S19` - implement source-kind prefix router registry mapping the four canonical filename prefixes (`purchase-invoice-evidence-`, `payable-invoice-`, `collectible-invoice-`, plus `justificante-`, `bank-statement-`) to their downstream parser handlers; the router refuses any unmapped prefix and any bare `invoice-` prefix per the cli-workflow-redesign invoice-domain-decoupling ADR; `src/aeat/application/storage/inbound/_prefix_router.py`.
 
 ### Phase `P06` - per-domain substrate hooks (ADR-5)
 
@@ -190,6 +199,9 @@ Land the substrate amendments and per-domain registrations required by the expor
 - [ ] `P06.S25` - implement `NamespaceAllowList` enforcing the never-export set; `src/aeat/application/storage/sync/_allow_list.py`.
 - [ ] `P06.S26` - extend the sensitive-persistence policy test to govern every new substrate hook; `src/aeat/adapters/persistence/storage/test_sensitive_persistence_policy.py`.
 - [ ] `P06.S27` - write colocated unit tests for each enumeration hook, reverse-merge gate, and label deriver; `src/aeat/<domain>/_test_*.py`.
+- [ ] `P06.S28` - define the canonical `SourceKind` enum carrying the four values from the cli-workflow-redesign invoice-domain-decoupling ADR (`ledger_transaction`, `purchase_invoice_evidence`, `payable_invoice`, `collectible_invoice`) plus the auxiliary kinds the v1 reverse-merge surfaces consume; every reverse-merge service, label deriver, prefix router, and bucket-event emitter consumes the enum from one location; `src/aeat/domain/source_kind/__init__.py`.
+- [ ] `P06.S29` - wire each reverse-merge service to the cli-workflow-redesign bucket-event-history dispatcher; events follow the `ledger.<source-kind>.correction.applied` shape with `source_kind`, `record_id`, `changed_fields`, `operator_actor`, `applied_at` fields; one event per applied row; failure to emit is a hard error, not a swallowed warning; `src/aeat/application/audit/_bucket_event_emitter.py`.
+- [ ] `P06.S30` - create the `src/aeat/entrypoints/cli/_app/` package skeleton (`__init__.py` + module-level Typer sub-app) consumed by P08 commands; the package mirrors `_config/` shape: no logic in `__init__.py`, one module per sub-CLI; `src/aeat/entrypoints/cli/_app/__init__.py`.
 
 ### Phase `P07` - calculation-to-sheets visualisation (ADR-6)
 
@@ -212,6 +224,8 @@ Land the four-sheet visualisation Spreadsheet per (modelo, period); hybrid formu
 - [ ] `P07.S15` - implement `aeat config google sync calc delete --modelo --period` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
 - [ ] `P07.S16` - write colocated unit tests for formula translator and per-sheet writers; `src/aeat/application/storage/calc_sheets/_test_*.py`.
 - [ ] `P07.S17` - write live tests for calc-sheet exports against real Drive Sheets API gated by `AEAT_LIVE_TESTS_ENABLED`; `src/aeat/application/storage/calc_sheets/_test_calc_live.py`.
+- [ ] `P07.S18` - link the calc-sheet formula translator to each Modelo's existing `workbook_parity_refs` so the translated formulas are validated against AEAT-published parity workbooks; a parity-divergence test runs per (modelo, period) in unit tests; `src/aeat/application/storage/calc_sheets/_parity_check.py`.
+- [ ] `P07.S19` - factor a dedicated `_sheets_service.py` thin client for the Sheets v4 API distinct from the Drive v3 client; the calc-sheets writers consume only this client; the Drive provider does not import it; `src/aeat/adapters/outbound/google/_sheets_service.py`.
 
 ### Phase `P08` - operator-facing CLI edit + CSV-corrections surfaces (ADR-7)
 
@@ -230,6 +244,8 @@ Ship the v1 CLI edit and CSV-corrections commands that operators use to correct 
 - [ ] `P08.S11` - implement audit logging on every CSV import row emitting both a `reverse_merge_audit` row and a `ledger.<source-kind>.correction.applied` bucket event per the cli-workflow-redesign bucket-event-history ADR; `src/aeat/application/audit/_reverse_merge_audit.py`.
 - [ ] `P08.S12` - document the four safety properties and the future-amendment surface in a contributor-facing README under the audit subpackage; `src/aeat/application/audit/README.md`.
 - [ ] `P08.S13` - write colocated unit tests for edit commands and CSV round-trips; `src/aeat/entrypoints/cli/_app/_test_ledger_*.py`.
+- [ ] `P08.S14` - write a forbidden-import test asserting no `sync pull --workspace-edits` (or any Sheets-pull) verb is registered under `aeat config google sync` in v1; the test introspects the Typer command tree and fails if any matching command exists; defends ADR-7's deferral invariant against future drift; `tests/import_contract/google/test_no_sheets_pull_verb.py`.
+- [ ] `P08.S15` - add Spanish CLI localisation strings for every new `aeat config google ...` and `aeat app ledger ...` command (help text, prompts, error messages) keyed off the existing `_i18n` resource module; coverage test asserts no untranslated key for any new command; `src/aeat/entrypoints/cli/_i18n/google.po` + `tests/entrypoints/cli/test_i18n_coverage.py`.
 
 ## Parallelization
 
@@ -263,3 +279,9 @@ The plan is complete when every Step is closed `[x]` and the following acceptanc
 - `aeat app ledger transaction edit <id> --category <cat>` updates the substrate row through the existing typed-validation path; the next `aeat config google sync push` reflects the change in Drive.
 - The sensitive-persistence policy test continues to pass with every new substrate hook governed.
 - No `aeat_enable_two_way_sync` settings flag exists in v1. The reverse-merge service is the unconditional v1 backend for `aeat app ledger <kind> edit` and CSV-corrections import; a future Sheets-pull entry-point would add a new CLI command via its own ADR amendment, not a flag flip.
+- `tests/import_contract/google/test_no_sheets_pull_verb.py` (P08.S14) asserts the Typer command tree contains no Sheets-pull verb under `aeat config google sync`; the test passes.
+- `tests/import_contract/google/test_no_legacy_modules.py` (P01.S18) asserts no legacy `_gcloud*` / `_oauth_legacy*` modules survive under `src/aeat/adapters/outbound/google/`; the test passes.
+- Every new CLI command registered under `aeat config google ...` and `aeat app ledger ...` has Spanish translations covered by `tests/entrypoints/cli/test_i18n_coverage.py`; the test passes.
+- The `SourceKind` enum (P06.S28) is the single source-kind registry; a structural test asserts every reverse-merge service, label deriver, prefix router, and bucket-event emitter imports its source-kind value from one location.
+- Every reverse-merge service emits a `ledger.<source-kind>.correction.applied` bucket event per applied row; a unit test asserts emission failure surfaces as a hard error, not a silent swallow.
+- The `aeat-vault/` Drive folder is created under `aeat_google_drive_root_folder_id` on first probe and the four underscore-prefixed operator buckets (`_probe/`, `_sync-state/`, `_workspace/`, `_inbound/{pending,processed,rejected}`) materialise on first push; idempotent on re-run.
