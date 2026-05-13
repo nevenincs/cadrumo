@@ -177,10 +177,10 @@ class TestMakeSubmissionId:
 
     def test_empty_draft_id_rejected(self) -> None:
         """Assert an empty ``draft_id`` raises :exc:`ValueError`."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"draft_id"):
             make_submission_id("", 1)
 
     def test_non_positive_ordinal_rejected(self) -> None:
         """Assert a non-positive ``ordinal`` raises :exc:`ValueError`."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"attempt_ordinal"):
             make_submission_id("draft-1", 0)

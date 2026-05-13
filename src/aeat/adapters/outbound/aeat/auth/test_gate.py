@@ -94,5 +94,5 @@ def test_access_gate_is_frozen(monkeypatch: pytest.MonkeyPatch) -> None:
     # Frozen dataclass rejects in-place mutation of declared fields.
     from dataclasses import FrozenInstanceError
 
-    with pytest.raises(FrozenInstanceError):
+    with pytest.raises(FrozenInstanceError, match=r"settings"):
         gate.__setattr__("settings", settings)

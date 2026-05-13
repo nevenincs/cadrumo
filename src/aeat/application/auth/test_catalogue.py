@@ -48,7 +48,7 @@ def test_get_auth_provider_raises_keyerror_for_unsupported_provider_id(provider_
 
 
 def test_listing_rejects_blank_id() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"id|at least 1 character|empty"):
         AuthProviderListing(
             id="",
             label=tr("label"),
@@ -57,7 +57,7 @@ def test_listing_rejects_blank_id() -> None:
 
 
 def test_listing_rejects_uppercase_id() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"id|lowercase|pattern"):
         AuthProviderListing(
             id="Certificate",
             label=tr("label"),

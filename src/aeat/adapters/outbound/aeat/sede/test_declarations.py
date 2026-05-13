@@ -360,12 +360,12 @@ class TestParsePresentedAt:
 
     def test_invalid_shape_raises_value_error(self) -> None:
         """Assert ISO-style timestamps are rejected."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"presented_at|format|does not match"):
             _parse_presented_at("2024-02-01 19:15:34")
 
     def test_partial_match_rejected(self) -> None:
         """Assert a date-only string (no time component) is rejected."""
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"presented_at|format|does not match"):
             _parse_presented_at("01/02/2024")
 
 

@@ -359,7 +359,7 @@ def test_export_result_round_trips_canonical_fields() -> None:
 
 
 def test_export_result_rejects_uppercase_digest() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"file_sha256|hex|lowercase"):
         DeclarationExportResult(
             draft_id="d",
             modelo="130",
@@ -374,7 +374,7 @@ def test_export_result_rejects_uppercase_digest() -> None:
 
 
 def test_export_result_rejects_non_hex_digest() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"file_sha256|hex"):
         DeclarationExportResult(
             draft_id="d",
             modelo="130",
@@ -433,7 +433,7 @@ def test_verify_result_drift_lists_mismatched_casillas() -> None:
 
 
 def test_verify_result_rejects_blank_casilla_ids() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"casilla|empty|at least 1 character"):
         DeclarationVerifyResult(
             draft_id="d",
             file_path=_OTHER_EXPORT_PATH,
@@ -445,7 +445,7 @@ def test_verify_result_rejects_blank_casilla_ids() -> None:
 
 
 def test_verify_result_rejects_padded_casilla_ids() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"casilla|whitespace|leading|trailing"):
         DeclarationVerifyResult(
             draft_id="d",
             file_path=_OTHER_EXPORT_PATH,
@@ -457,7 +457,7 @@ def test_verify_result_rejects_padded_casilla_ids() -> None:
 
 
 def test_verify_result_rejects_short_digest() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"file_sha256|hex|length"):
         DeclarationVerifyResult(
             draft_id="d",
             file_path=_OTHER_EXPORT_PATH,

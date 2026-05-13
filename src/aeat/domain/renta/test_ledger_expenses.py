@@ -311,7 +311,7 @@ def test_tax_year_mismatch_is_rejected_before_observation_creation() -> None:
 def test_category_normalization_accepts_closed_values_and_rejects_unknowns() -> None:
     assert normalize_spending_category("gastos_bancarios") is SpendingCategory.GASTOS_BANCARIOS
     assert normalize_spending_category(SpendingCategory.GASTOS_BANCARIOS) is SpendingCategory.GASTOS_BANCARIOS
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"SpendingCategory|not a valid|gastos_sin_catalogo"):
         normalize_spending_category("gastos_sin_catalogo")
 
 

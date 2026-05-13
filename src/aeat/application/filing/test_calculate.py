@@ -140,13 +140,13 @@ def test_repair_hints_required_for_resolve_blockers() -> None:
         status=FilingDraftStatus.VALIDATED,
         findings=(_finding(FilingFindingSeverity.ERROR, "blocker"),),
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"repair_hints"):
         summarise_calculation(draft, repair_hints=())
 
 
 def test_repair_hints_rejected_outside_resolve_blockers() -> None:
     draft = _make_draft(status=FilingDraftStatus.VALIDATED)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"repair_hints"):
         summarise_calculation(draft, repair_hints=(_hint(),))
 
 

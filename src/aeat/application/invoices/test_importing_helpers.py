@@ -234,5 +234,5 @@ def test_coerce_kind_handles_already_uppercase_string() -> None:
 def test_coerce_kind_raises_on_unknown_string() -> None:
     """A string that uppercases to an unknown member raises
     :class:`ValueError` (the StrEnum's own constructor error)."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"InvoiceKind|not a valid|NOT-A-KIND"):
         _coerce_kind("not-a-kind")

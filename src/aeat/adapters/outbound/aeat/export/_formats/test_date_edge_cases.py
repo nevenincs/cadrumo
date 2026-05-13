@@ -67,7 +67,7 @@ class TestDateDecodeRejection:
         ids=["alpha", "bad_month", "bad_day_dec", "bad_day_feb_leap_off", "non_numeric", "space_padded"],
     )
     def test_yyyymmdd_rejects_garbage(self, bad: bytes) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"time data|does not match|unconverted|out of range"):
             _decode_date(bad, DateFmt.YYYYMMDD)
 
     @pytest.mark.parametrize(
@@ -76,7 +76,7 @@ class TestDateDecodeRejection:
         ids=["alpha", "day_32", "day_00", "feb_31"],
     )
     def test_ddmmyyyy_rejects_garbage(self, bad: bytes) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"time data|does not match|unconverted|out of range"):
             _decode_date(bad, DateFmt.DDMMYYYY)
 
 
@@ -86,6 +86,6 @@ class TestDateFormatsAreNotInterchangeable:
         produce a clearly wrong date. The fail mode is defensive: callers
         must pass the correct format."""
         encoded = encode_date(date(2024, 3, 15), DateFmt.YYYYMMDD, encoding="cp1252")  # b"20240315"
-        # Decoded as DDMMYYYY: day=20, month=24 → ValueError (month > 12).
-        with pytest.raises(ValueError):
+        # Decoded as DDMMYYYY: day=20, month=24 → ValueError (out of range or unconverted).
+        with pytest.raises(ValueError, match=r"unconverted|out of range|does not match"):
             _decode_date(encoded, DateFmt.DDMMYYYY)

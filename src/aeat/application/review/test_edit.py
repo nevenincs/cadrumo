@@ -308,17 +308,17 @@ def test_ledger_spec_is_frozen() -> None:
 
 
 def test_ledger_spec_rejects_inconsistent_construction() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"clauses|category|inconsistent"):
         LedgerEditSpec(clauses=(), category="software")
 
 
 def test_invoice_spec_rejects_inconsistent_construction() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"clauses|base|inconsistent"):
         InvoiceEditSpec(clauses=(), base=Decimal("100.00"))
 
 
 def test_declaration_spec_rejects_inconsistent_construction() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"clauses|casilla_edits|inconsistent"):
         DeclarationEditSpec(clauses=(), casilla_edits={"71": Decimal("100.00")})
 
 

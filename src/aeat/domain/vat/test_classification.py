@@ -250,7 +250,7 @@ def test_classify_vat_is_deterministic() -> None:
 
 def test_eu_member_residency_requires_member_state() -> None:
     """Constructing a criteria with EU_MEMBER but no state is a ValidationError."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"member_state|EU_MEMBER|residency"):
         VATClassificationCriteria(
             transaction_date=date(2025, 6, 15),
             issuer_residency=IssuerResidency.EU_MEMBER,

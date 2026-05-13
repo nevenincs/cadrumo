@@ -53,7 +53,7 @@ def test_factory_round_trips_canonical_fields() -> None:
 
 
 def test_diagnostic_rejects_message_without_authoritative_spanish() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"message|authoritative|Spanish|spanish"):
         build_ledger_import_diagnostic(
             kind=LedgerImportDiagnosticKind.PARSER,
             severity=LedgerImportDiagnosticSeverity.ERROR,
@@ -62,7 +62,7 @@ def test_diagnostic_rejects_message_without_authoritative_spanish() -> None:
 
 
 def test_diagnostic_rejects_blank_source_locator() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"source_locator|blank|empty|whitespace"):
         build_ledger_import_diagnostic(
             kind=LedgerImportDiagnosticKind.PARSER,
             severity=LedgerImportDiagnosticSeverity.ERROR,

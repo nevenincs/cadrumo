@@ -80,7 +80,7 @@ def _build_pkcs12_bundle(
 
 
 def test_bundle_rejects_extra_fields(tmp_path: Path) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Extra inputs are not permitted|not_a_field"):
         CertificateBundle.model_validate(
             {
                 "path": tmp_path / "x.p12",
@@ -97,12 +97,12 @@ def test_bundle_is_frozen(tmp_path: Path) -> None:
         password_env_var="X",
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"frozen|Instance is frozen"):
         bundle.path = tmp_path / "y.p12"  # type: ignore[misc]
 
 
 def test_bundle_rejects_empty_env_var_name(tmp_path: Path) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"password_env_var|at least 1 character"):
         CertificateBundle(
             path=tmp_path / "x.p12",
             password_env_var="",
