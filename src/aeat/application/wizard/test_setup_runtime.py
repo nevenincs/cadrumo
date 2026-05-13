@@ -160,7 +160,7 @@ def test_run_flow_walks_joint_declaration_spouse_questions() -> None:
             "",  # taxpayer-disability-grade
             "",  # taxpayer-death-date
             # spouse joint-conditional questions are NOW visible
-            "87654321Y",  # spouse-tax-id
+            "87654321X",  # spouse-tax-id
             "Spouse",  # spouse-name
             "Doe",  # spouse-surnames
             "",  # spouse-birth-date
@@ -196,7 +196,7 @@ def test_run_flow_walks_joint_declaration_spouse_questions() -> None:
     assert "spouse-tax-id" in prompter.asked
     assert "spouse-name" in prompter.asked
     assert "spouse-eu-eea-resident" not in prompter.asked
-    assert answers.spouse_tax_id == "87654321Y"
+    assert answers.spouse_tax_id == "87654321X"
 
 
 def test_select_widget_default_is_set_during_runtime() -> None:
