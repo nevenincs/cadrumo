@@ -68,12 +68,6 @@ cli:
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Fiscal period to resolve the modelo revision against (e.g. 2026Q1,
           2026-01)
-      formulas:
-        as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
-        modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Fiscal period to scope the formulas (e.g. 2026Q1, 2026-01)
-      list:
-        year_help: Filter the modelo catalogue to a single fiscal year
       filing_record:
         app_help: Inspect internal filing records
         bucket_id_help: Filter by bucket
@@ -81,6 +75,19 @@ cli:
         include_superseded_help: Include superseded filing records (excluded by default)
         list_help: List registered filing records
         show_help: Show one filing record by id
+      formulas:
+        as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+        modelo_help: Tax form code (e.g. 303, 130, 100)
+        period_help: Fiscal period to scope the formulas (e.g. 2026Q1, 2026-01)
+      list:
+        year_help: Filter the modelo catalogue to a single fiscal year
+      verification_report:
+        app_help: Inspect recorded verification reports
+        list_help: List verification reports, optionally filtered to one calculation
+          revision
+        show_help: Show one verification report by id
+        verification_report_id_help: Stable 64-character SHA-256 identifier of a verification
+          report
       work:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
         app_help: Manage the lifecycle of modelo work units
@@ -91,7 +98,8 @@ cli:
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable)
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
         discard_help: Mark a work unit as discarded (auditable state transition)
-        file_help: Mark a verified revision as internally filed. Does NOT submit to AEAT
+        file_help: Mark a verified revision as internally filed. Does NOT submit to
+          AEAT
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         list_help: List registered work units, optionally filtered by bucket
@@ -103,20 +111,13 @@ cli:
         reason_help: Optional free-text reason for the discard (up to 500 chars)
         rename_help: Update the display name of a work unit
         revision_help: Stable id of the targeted registry modelo revision
-        revisions_help: List calculation revisions, optionally filtered to one work unit
+        revisions_help: List calculation revisions, optionally filtered to one work
+          unit
         status_help: Show the metadata of one work unit
-        verified_complete_help: Mark a draft calculation revision as verified-complete
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
-      verification_report:
-        app_help: Inspect recorded verification reports
-        list_help: List verification reports, optionally filtered to one calculation
-          revision
-        show_help: Show one verification report by id
-        verification_report_id_help: Stable 64-character SHA-256 identifier of a
-          verification report
   archive:
     app_help: Export and import the encrypted local archive as portable JSON bundles
     export:
@@ -162,6 +163,11 @@ cli:
       test_help: Check local authentication readiness
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
+    bucket:
+      bucket_id_help: Bucket identifier whose event history should be inspected
+      event_type_help: Filter the history to one or more event types (repeatable)
+      help: Inspect bucket-scoped storage and event history
+      history_help: Show the append-only event history for one bucket
     doctor:
       connectivity_help: Check browser and AEAT Sede connectivity
       help: Diagnose local configuration, registry, profile, auth, and logs
@@ -637,26 +643,43 @@ cli:
     drafts: Drafts
     from_help: Calendar start date (YYYY-MM-DD)
     header: "Model\tPeriod\tState\tOpens\tCloses"
-    integrity_warning: '%{count} local row(s) cannot be decrypted under the current
-      master key; run ''aeat config doctor'' for detail.'
-    invoices: Business-operation records
     period: Period
     period_help: Tax period to review (for example, 2026-Q1)
-    profile: Profile
+    status:
+      drafts_empty: No saved declaration drafts were found.
+      drafts_present: '%{count} saved declaration draft(s) exist in this local storage.
+        A fresh empty workspace normally has 0, so this profile/database already contains
+        local draft state.'
+      integrity_next: Run `aeat config doctor` for detail. Do not quarantine rows
+        unless you intentionally want to archive unreadable old local data.
+      invoices_empty: No business-operation records have been imported yet.
+      invoices_present: '%{count} business-operation record(s) are available for review.'
+      next_heading: What to type next
+      next_import_command: '  aeat app ledger import <bank-statement.csv> --provider
+        csv - import bank transactions.'
+      next_landing_command: '  aeat --help - return to the command guide.'
+      next_review_command: '  aeat app ledger review - review imported rows.'
+      profile_active: You are working in profile `%{profile}`.
+      profile_missing: No active profile is configured. Run `aeat config init` before
+        importing data.
+      storage_ok: Local encrypted storage is readable with the current master key.
+      storage_warning: '%{count} encrypted local storage row(s) cannot be read with
+        the current master key. These are not rows from your bank statement; you can
+        import new transactions, but check diagnostics before relying on older local
+        data.'
+      title: Workspace status
+      transactions_empty: No bank transactions have been imported yet.
+      transactions_present: '%{count} bank transaction(s) are available in the ledger.'
     status_help: Show profile, ledger, and modelo readiness
     to_help: Calendar end date (YYYY-MM-DD)
-    transactions: Transactions
     verbose_help: Show details and next action when available
   registry:
     app_help: Tax models registry management
     capture_filed_data_help: Capture data already filed with AEAT and update the local
       registry
-    capture_filed_data_json_help: Output in JSON format for automation tools
     capture_limit_help: Limit of records to process
     capture_source_filed_data_help: Capture filed source observations required by
       a target modelo calculation
-    capture_source_filed_data_json_help: Emit source filed-data capture report as
-      JSON
     casilla_help: Casilla id to compare; repeat to override the default computed casillas
     citations:
       app_help: Inspect the legal-norm corpus (Ley 37/1992, Ley 35/2006, ...)
@@ -666,16 +689,11 @@ cli:
       show_help: Show one normative and, optionally, one of its articles
       tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
       verify_help: Verify the legal-norm corpus integrity
-    errors:
-      invalid_year_range: Invalid year range
-      unknown_modelo: Registry has no modelo definition for {modelo}
     expediente_help: AEAT file number to capture
     from_year_help: Start year to capture or review records
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
-    json_help: JSON format output
     list_filed_data_help: List existing filings in AEAT for the specified year range
-    list_filed_data_json_help: Output in JSON format for automation tools
     manuals:
       app_help: Inspect AEAT Manual práctico records (Renta, IVA, Sociedades)
       errors:
@@ -793,9 +811,37 @@ cli:
 
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVITY'
+    app_help_help: Show app workflow help
     debug_help: Show internal debug logs on stderr
     detail_help: Also show the detailed registry summary
     format_help: Output format for command results
+    help_help: Show workflow-oriented help
+    landing:
+      headline: AEAT Tax Assistant
+      help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
+        --help`.'
+      quick_start_heading: Quick start
+      quick_start_import: '  3. `aeat app ledger import <bank-statement.csv> --provider
+        csv` - add your bank transactions.'
+      quick_start_review: '  4. `aeat app ledger review` - check and classify imported
+        rows.'
+      quick_start_setup_done: '  1. `aeat config profile status` - check the active
+        profile before operational work.'
+      quick_start_setup_needed: '  1. `aeat config init` - create your local tax profile
+        first.'
+      quick_start_status: '  2. `aeat app overview status` - read current workspace
+        status and diagnostics.'
+      section_config: '  config - profile setup, authentication, diagnostics'
+      section_ledger: '  app ledger - bank imports and transaction review'
+      section_modelo: '  app modelo - tax form catalogue and work units'
+      section_overview: '  app overview - workspace status and filing calendar'
+      section_registry: '  app registry - local AEAT registry data'
+      section_review: '  app review - items that need operator attention'
+      sections_heading: Main sections
+      tagline: Local-first Spanish tax workflow for autonomos.
+      welcome_no_profile: Welcome. No active profile is configured yet, so start with
+        setup.
+      welcome_profile: Welcome back. Active profile is `%{profile}`.
     quiet_help: Show only errors on stderr
     verbose_help: Show internal informational logs on stderr
     version_help: Show package version (add --detail for the full registry summary)
@@ -879,10 +925,9 @@ filing:
     schema_mismatch: Mismatch with expected schema
 profile:
   keys:
+    description: profile.keys.description
     tax:
       id: Tax identifier (NIF/NIE/CIF)
-  test_keys:
-    description_490119: x
 review:
   adapters:
     t_135562: internal transfer

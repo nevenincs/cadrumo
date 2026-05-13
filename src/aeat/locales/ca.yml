@@ -76,26 +76,34 @@ cli:
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         period_help: Període fiscal per resoldre la revisió del model (p. ex. 2026Q1,
           2026-01)
+      filing_record:
+        app_help: Inspeccionar els filing records interns registrats
+        bucket_id_help: Filtrar per bucket
+        filing_record_id_help: Identificador estable d'un filing record
+        include_superseded_help: Incloure els filing records superats (exclosos per
+          defecte)
+        list_help: Llistar els filing records registrats
+        show_help: Mostrar un filing record per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         period_help: Període fiscal per acotar les fórmules (p. ex. 2026Q1, 2026-01)
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
-      filing_record:
-        app_help: Inspeccionar els filing records interns registrats
-        bucket_id_help: Filtrar per bucket
-        filing_record_id_help: Identificador estable d'un filing record
-        include_superseded_help: Incloure els filing records superats (exclosos per defecte)
-        list_help: Llistar els filing records registrats
-        show_help: Mostrar un filing record per id
+      verification_report:
+        app_help: Inspeccionar els informes de verificació registrats
+        list_help: Llistar els informes de verificació, opcionalment filtrats per
+          revisió de càlcul
+        show_help: Mostrar un informe de verificació per id
+        verification_report_id_help: Identificador estable (SHA-256 de 64 caràcters)
+          d'un informe de verificació
       work:
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
           tributari
         bucket_id_help: Identificador del bucket al qual pertany la unitat de treball
-        calculate_help: Persistir una nova revisió draft de càlcul per a la unitat de
-          treball
+        calculate_help: Persistir una nova revisió draft de càlcul per a la unitat
+          de treball
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'una revisió de càlcul
         casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible)
@@ -103,8 +111,8 @@ cli:
           període, revisió)
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
-        file_help: Marcar una revisió verificada com a internament presentada. NO envia
-          a l'AEAT
+        file_help: Marcar una revisió verificada com a internament presentada. NO
+          envia a l'AEAT
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
@@ -120,18 +128,10 @@ cli:
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
         status_help: Mostrar les metadades d'una unitat de treball
-        verified_complete_help: Marcar una revisió draft com a verified-complete
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
-      verification_report:
-        app_help: Inspeccionar els informes de verificació registrats
-        list_help: Llistar els informes de verificació, opcionalment filtrats per
-          revisió de càlcul
-        show_help: Mostrar un informe de verificació per id
-        verification_report_id_help: Identificador estable (SHA-256 de 64 caràcters)
-          d'un informe de verificació
   archive:
     app_help: Exportar i importar l'arxiu local xifrat com a paquets JSON portables
     export:
@@ -178,6 +178,12 @@ cli:
       test_help: Comprovar la preparació d'autenticació local
       unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
         ''aeat config auth --help'' per veure els identificadors vàlids.'
+    bucket:
+      bucket_id_help: Identificador del bucket l'historial d'esdeveniments del qual
+        s'inspecciona
+      event_type_help: Filtrar l'historial per un o més tipus d'esdeveniment (repetible)
+      help: Inspeccionar l'emmagatzematge per bucket i el seu historial d'esdeveniments
+      history_help: Mostrar l'historial d'esdeveniments només-append d'un bucket
     doctor:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       help: Diagnosticar configuració local, registre, perfil, autenticació i logs
@@ -660,26 +666,44 @@ cli:
     drafts: Esborranys
     from_help: Data inicial del calendari (AAAA-MM-DD)
     header: "Model\tPeríode\tEstat\tObre\tTanca"
-    integrity_warning: '%{count} fila(es) locals no es poden desxifrar amb la clau
-      mestra actual; executeu ''aeat config doctor'' per al detall.'
-    invoices: Factures
     period: Període
     period_help: Període fiscal a revisar (per exemple, 2026-Q1)
-    profile: Perfil
+    status:
+      drafts_empty: No s'han trobat esborranys de declaracions desats.
+      drafts_present: '%{count} esborrany(s) de declaracions desats existeixen en
+        aquest emmagatzematge local. Un espai buit acabat de crear normalment en te
+        0, aixi que aquest perfil/base de dades ja conte estat local d''esborranys.'
+      integrity_next: Executeu `aeat config doctor` per veure el detall. No poseu
+        files en quarantena tret que vulgueu arxivar deliberadament dades locals antigues
+        illegibles.
+      invoices_empty: Encara no s'han importat operacions de negoci.
+      invoices_present: '%{count} operacio(ns) de negoci estan disponibles per revisar.'
+      next_heading: Que escriure ara
+      next_import_command: '  aeat app ledger import <extracte-bancari.csv> --provider
+        csv - importar moviments bancaris.'
+      next_landing_command: '  aeat --help - tornar a la guia de comandes.'
+      next_review_command: '  aeat app ledger review - revisar files importades.'
+      profile_active: Esteu treballant al perfil `%{profile}`.
+      profile_missing: No hi ha cap perfil actiu configurat. Executeu `aeat config
+        init` abans d'importar dades.
+      storage_ok: L'emmagatzematge local xifrat es pot llegir amb la clau mestra actual.
+      storage_warning: '%{count} fila(es) xifrades de l''emmagatzematge local no es
+        poden llegir amb la clau mestra actual. No son files del teu extracte bancari;
+        pots importar moviments nous, pero revisa diagnostics abans de confiar en
+        dades locals antigues.'
+      title: Estat de l'espai de treball
+      transactions_empty: Encara no s'han importat moviments bancaris.
+      transactions_present: '%{count} moviment(s) bancaris estan disponibles al llibre.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
     to_help: Data final del calendari (AAAA-MM-DD)
-    transactions: Moviments
     verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:
     app_help: Gestió del registre de models fiscals
     capture_filed_data_help: Capturar dades ja presentades a l'AEAT i actualitzar
       el registre local
-    capture_filed_data_json_help: Sortida en format JSON per a eines d'automatització
     capture_limit_help: Límit de registres a processar
     capture_source_filed_data_help: Capturar observacions font presentades requerides
       pel càlcul d'un model objectiu
-    capture_source_filed_data_json_help: Emetre l'informe de captura de dades font
-      presentades com a JSON
     casilla_help: Id de casella a comparar; repetiu-lo per substituir les caselles
       calculades per defecte
     citations:
@@ -690,17 +714,12 @@ cli:
       show_help: Mostrar una normativa i, opcionalment, un dels seus articles
       tag_help: Filtrar per etiqueta de domini fiscal (p. ex. 'irpf', 'iva')
       verify_help: Verificar la integritat del corpus normatiu
-    errors:
-      invalid_year_range: Rang d'anys no vàlid
-      unknown_modelo: El registre no conté cap definició del model {modelo}
     expediente_help: Número d'expedient de l'AEAT a capturar
     from_year_help: Any inicial per capturar o revisar registres
     inspect_help: Inspeccionar l'estat del registre i les referències
     inspect_registry_root_help: Ruta al directori arrel del registre
-    json_help: Sortida en format JSON
     list_filed_data_help: Llistar presentacions existents a l'AEAT per al rang d'anys
       especificat
-    list_filed_data_json_help: Sortida en format JSON per a eines d'automatització
     manuals:
       app_help: Inspeccionar els Manuals pràctics AEAT (Renda, IVA, Societats)
       errors:
@@ -818,9 +837,37 @@ cli:
 
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVITAT'
+    app_help_help: Mostrar ajuda del flux d'app
     debug_help: Mostrar logs interns de depuració a stderr
     detail_help: Also show the detailed registry summary
     format_help: Format de sortida per als resultats de l'ordre
+    help_help: Mostrar ajuda orientada al flux de treball
+    landing:
+      headline: Assistent fiscal AEAT
+      help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
+        app --help`.'
+      quick_start_heading: Inici rapid
+      quick_start_import: '  3. `aeat app ledger import <extracte-bancari.csv> --provider
+        csv` - afegir els moviments bancaris.'
+      quick_start_review: '  4. `aeat app ledger review` - revisar i classificar les
+        files importades.'
+      quick_start_setup_done: '  1. `aeat config profile status` - comprovar el perfil
+        actiu abans del treball operatiu.'
+      quick_start_setup_needed: '  1. `aeat config init` - crear primer el perfil
+        fiscal local.'
+      quick_start_status: '  2. `aeat app overview status` - llegir l''estat actual
+        de l''espai i els diagnostics.'
+      section_config: '  config - perfil, autenticacio i diagnostics'
+      section_ledger: '  app ledger - importacio bancaria i revisio de moviments'
+      section_modelo: '  app modelo - cataleg de models i unitats de treball'
+      section_overview: '  app overview - estat de l''espai i calendari fiscal'
+      section_registry: '  app registry - dades locals del registre AEAT'
+      section_review: '  app review - elements que necessiten atencio'
+      sections_heading: Seccions principals
+      tagline: Flux fiscal espanyol local-first per a autonoms.
+      welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat;
+        comenceu per la configuracio.
+      welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
     quiet_help: Mostrar només errors a stderr
     verbose_help: Mostrar logs interns informatius a stderr
     version_help: Mostrar la versió del paquet (afegeix --detail per al resum complet
@@ -905,10 +952,9 @@ filing:
     schema_mismatch: Discrepància amb l'esquema esperat
 profile:
   keys:
+    description: profile.keys.description
     tax:
       id: Tax identifier (NIF/NIE/CIF)
-  test_keys:
-    description_490119: x
 review:
   adapters:
     t_135562: traspàs intern

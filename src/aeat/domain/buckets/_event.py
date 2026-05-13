@@ -1,0 +1,221 @@
+"""Bucket-scoped append-only event records.
+
+A :class:`BucketEvent` captures one material workflow transition
+inside a bucket. Events are immutable, content-addressed by their
+(bucket_id, event_type, occurred_at, actor, object_type, object_id,
+payload) tuple, and grouped into a frozen catalogue.
+
+The closed :class:`BucketEventType` enum fixes the emission scope
+mandated by the bucket-event-history ADR. New event kinds enter the
+codebase as enum additions, never as ad-hoc strings.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from collections.abc import Mapping
+from datetime import datetime
+from enum import StrEnum
+from typing import Annotated, Any
+
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+
+from ._errors import BucketEventValidationError
+
+
+_HEX_64_PATTERN = r"^[0-9a-f]{64}$"
+
+_EventId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
+]
+_BucketId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
+]
+_ActorLabel = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
+]
+_ObjectId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
+]
+_PayloadKey = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
+]
+_PayloadValue = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=0, max_length=500),
+]
+
+
+class BucketEventType(StrEnum):
+    """Closed catalogue of bucket-event kinds.
+
+    The enum mirrors the per-service emission scope declared by the
+    bucket-event-history ADR. Emitters land incrementally with their
+    owning Waves; new kinds are added here only when a corresponding
+    ADR sanctions the emission.
+    """
+
+    # modelo lifecycle (Wave W14 + W39 + W40 + W42 + W43)
+    MODELO_CALCULATION_CREATED = "modelo.calculation.created"
+    MODELO_VERIFICATION_PASSED = "modelo.verification.passed"
+    MODELO_VERIFICATION_REFUSED = "modelo.verification.refused"
+    MODELO_FILED = "modelo.filed"
+    MODELO_FILED_SUPERSEDED = "modelo.filed_superseded"
+    MODELO_AMENDED = "modelo.amended"
+
+
+class BucketEventObjectType(StrEnum):
+    """Closed catalogue of object types a bucket event can reference."""
+
+    WORK_UNIT = "work_unit"
+    CALCULATION_REVISION = "calculation_revision"
+    VERIFICATION_REPORT = "verification_report"
+    FILING_RECORD = "filing_record"
+
+
+def _canonical_payload(payload: Mapping[str, str]) -> dict[str, str]:
+    return dict(sorted((k.strip(), v.strip()) for k, v in payload.items()))
+
+
+def derive_bucket_event_id(
+    *,
+    bucket_id: str,
+    event_type: BucketEventType,
+    occurred_at: datetime,
+    actor: str,
+    object_type: BucketEventObjectType,
+    object_id: str,
+    payload: Mapping[str, str],
+) -> str:
+    """Return the deterministic SHA-256 id for a bucket event."""
+
+    body = {
+        "bucket_id": bucket_id.strip(),
+        "event_type": event_type.value,
+        "occurred_at": occurred_at.isoformat(),
+        "actor": actor.strip(),
+        "object_type": object_type.value,
+        "object_id": object_id.strip(),
+        "payload": _canonical_payload(payload),
+    }
+    encoded = json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+class BucketEvent(BaseModel):
+    """One append-only bucket event.
+
+    Attributes:
+        event_id: Lowercase 64-char SHA-256 derived from the full
+            event body. Content-addressed: structurally identical
+            emissions collapse to the same id, making append
+            naturally idempotent.
+        bucket_id: Owning bucket identifier.
+        event_type: One of :class:`BucketEventType`.
+        occurred_at: UTC timestamp when the event was emitted.
+        actor: Actor label (free text up to 64 chars).
+        object_type: Type of the affected domain object.
+        object_id: Stable identifier of the affected object (e.g.
+            a 64-char SHA-256 work-unit / revision / filing-record id).
+        payload_version: Integer schema version of the payload
+            mapping. Bumped when the payload contract changes.
+        payload: Free-form structured details. Keys and values are
+            short strings; secrets / credentials must not appear.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    event_id: _EventId
+    bucket_id: _BucketId
+    event_type: BucketEventType
+    occurred_at: datetime
+    actor: _ActorLabel
+    object_type: BucketEventObjectType
+    object_id: _ObjectId
+    payload_version: int = Field(ge=1)
+    payload: Mapping[_PayloadKey, _PayloadValue] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _enforce_derived_id(self) -> BucketEvent:
+        derived = derive_bucket_event_id(
+            bucket_id=self.bucket_id,
+            event_type=self.event_type,
+            occurred_at=self.occurred_at,
+            actor=self.actor,
+            object_type=self.object_type,
+            object_id=self.object_id,
+            payload=self.payload,
+        )
+        if derived != self.event_id:
+            raise BucketEventValidationError(f"event_id {self.event_id!r} does not match the derived id {derived!r}")
+        return self
+
+
+class BucketEventHistoryCatalogue(BaseModel):
+    """Immutable catalogue of every bucket event in storage."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    events: Mapping[str, BucketEvent] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _enforce_keys_match(self) -> BucketEventHistoryCatalogue:
+        for key, event in self.events.items():
+            if key != event.event_id:
+                raise BucketEventValidationError(f"catalogue key {key!r} does not match event_id {event.event_id!r}")
+        return self
+
+    def get(self, event_id: str) -> BucketEvent | None:
+        return self.events.get(event_id)
+
+    def for_bucket(
+        self,
+        bucket_id: str,
+        *,
+        event_types: tuple[BucketEventType, ...] | None = None,
+    ) -> tuple[BucketEvent, ...]:
+        """Return every event recorded against ``bucket_id`` in
+        chronological (``occurred_at`` ascending) order, optionally
+        filtered to one or more event types."""
+
+        wanted = set(event_types) if event_types is not None else None
+        matching = (
+            e for e in self.events.values() if e.bucket_id == bucket_id and (wanted is None or e.event_type in wanted)
+        )
+        return tuple(sorted(matching, key=lambda e: e.occurred_at))
+
+    def for_object(
+        self,
+        *,
+        object_type: BucketEventObjectType,
+        object_id: str,
+    ) -> tuple[BucketEvent, ...]:
+        """Return every event recorded against one object, ordered by
+        ``occurred_at`` ascending."""
+
+        matching = (e for e in self.events.values() if e.object_type is object_type and e.object_id == object_id)
+        return tuple(sorted(matching, key=lambda e: e.occurred_at))
+
+    def values(self) -> Any:
+        return self.events.values()
+
+    def __iter__(self):  # type: ignore[override]
+        return iter(self.events.values())
+
+    def __len__(self) -> int:
+        return len(self.events)
+
+
+__all__ = [
+    "BucketEvent",
+    "BucketEventHistoryCatalogue",
+    "BucketEventObjectType",
+    "BucketEventType",
+    "derive_bucket_event_id",
+]

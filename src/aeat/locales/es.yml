@@ -80,20 +80,28 @@ cli:
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         period_help: Periodo fiscal para resolver la revisión del modelo (p. ej. 2026Q1,
           2026-01)
+      filing_record:
+        app_help: Inspeccionar las presentaciones internas (filing records) registradas
+        bucket_id_help: Filtrar por bucket
+        filing_record_id_help: Identificador estable de un filing record
+        include_superseded_help: Incluir los filing records superados (excluidos por
+          defecto)
+        list_help: Listar los filing records registrados
+        show_help: Mostrar un filing record por id
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         period_help: Periodo fiscal para acotar las fórmulas (p. ej. 2026Q1, 2026-01)
-      filing_record:
-        app_help: Inspeccionar las presentaciones internas (filing records) registradas
-        bucket_id_help: Filtrar por bucket
-        filing_record_id_help: Identificador estable de un filing record
-        include_superseded_help: Incluir los filing records superados (excluidos por defecto)
-        list_help: Listar los filing records registrados
-        show_help: Mostrar un filing record por id
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
+      verification_report:
+        app_help: Inspeccionar los informes de verificación registrados
+        list_help: Listar los informes de verificación, opcionalmente filtrados por
+          revisión de cálculo
+        show_help: Mostrar un informe de verificación por id
+        verification_report_id_help: Identificador estable (SHA-256 de 64 caracteres)
+          de un informe de verificación
       work:
         actor_help: Actor responsable de la acción (etiqueta libre de hasta 64 caracteres)
         app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
@@ -105,10 +113,10 @@ cli:
         casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible)
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
           periodo, revisión)
-        discard_help: Marcar una unidad de trabajo como descartada (transición de estado
-          auditable)
-        file_help: Marcar una revisión verificada como internamente presentada. NO envía
-          a la AEAT
+        discard_help: Marcar una unidad de trabajo como descartada (transición de
+          estado auditable)
+        file_help: Marcar una revisión verificada como internamente presentada. NO
+          envía a la AEAT
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
@@ -121,21 +129,13 @@ cli:
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
         revision_help: Identificador estable de la revisión registrada del modelo
-        revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas por
-          unidad de trabajo
+        revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
+          por unidad de trabajo
         status_help: Mostrar los metadatos de una unidad de trabajo
-        verified_complete_help: Marcar una revisión draft como verified-complete
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
-      verification_report:
-        app_help: Inspeccionar los informes de verificación registrados
-        list_help: Listar los informes de verificación, opcionalmente filtrados por
-          revisión de cálculo
-        show_help: Mostrar un informe de verificación por id
-        verification_report_id_help: Identificador estable (SHA-256 de 64 caracteres)
-          de un informe de verificación
   archive:
     app_help: Exportar e importar el archivo local cifrado como paquetes JSON portables
     export:
@@ -182,6 +182,11 @@ cli:
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
+    bucket:
+      bucket_id_help: Identificador del bucket cuyo historial de eventos se inspecciona
+      event_type_help: Filtrar el historial por uno o varios tipos de evento (repetible)
+      help: Inspeccionar el almacenamiento por bucket y su historial de eventos
+      history_help: Mostrar el historial de eventos solo-append de un bucket
     doctor:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       help: Diagnosticar configuración local, registro, perfil, autenticación y logs
@@ -667,26 +672,47 @@ cli:
     drafts: Borradores
     from_help: Fecha inicial del calendario (AAAA-MM-DD)
     header: "Modelo\tPeriodo\tEstado\tAbre\tCierra"
-    integrity_warning: '%{count} fila(s) locales no se pueden descifrar bajo la clave
-      maestra actual; ejecuta ''aeat config doctor'' para detalle.'
-    invoices: Operaciones de negocio
     period: Periodo
     period_help: Periodo fiscal a revisar (por ejemplo, 2026-Q1)
-    profile: Perfil
+    status:
+      drafts_empty: No se encontraron borradores de declaraciones guardados.
+      drafts_present: '%{count} borrador(es) de declaraciones guardados existen en
+        este almacenamiento local. Un espacio vacio recien creado normalmente tiene
+        0, asi que este perfil/base de datos ya contiene estado local de borradores.'
+      integrity_next: Ejecuta `aeat config doctor` para ver el detalle. No pongas
+        filas en cuarentena salvo que quieras archivar deliberadamente datos locales
+        antiguos ilegibles.
+      invoices_empty: Aun no se han importado operaciones de negocio.
+      invoices_present: '%{count} operacion(es) de negocio estan disponibles para
+        revisar.'
+      next_heading: Que escribir ahora
+      next_import_command: '  aeat app ledger import <extracto-bancario.csv> --provider
+        csv - importar movimientos bancarios.'
+      next_landing_command: '  aeat --help - volver a la guia de comandos.'
+      next_review_command: '  aeat app ledger review - revisar filas importadas.'
+      profile_active: Estas trabajando en el perfil `%{profile}`.
+      profile_missing: No hay un perfil activo configurado. Ejecuta `aeat config init`
+        antes de importar datos.
+      storage_ok: El almacenamiento local cifrado se puede leer con la clave maestra
+        actual.
+      storage_warning: '%{count} fila(s) cifradas del almacenamiento local no se pueden
+        leer con la clave maestra actual. No son filas de tu extracto bancario; puedes
+        importar movimientos nuevos, pero revisa diagnosticos antes de confiar en
+        datos locales antiguos.'
+      title: Estado del espacio de trabajo
+      transactions_empty: Aun no se han importado movimientos bancarios.
+      transactions_present: '%{count} movimiento(s) bancarios estan disponibles en
+        el libro.'
     status_help: Mostrar el estado del perfil, libro y modelos
     to_help: Fecha final del calendario (AAAA-MM-DD)
-    transactions: Movimientos
     verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:
     app_help: Gestión del registro de modelos fiscales
     capture_filed_data_help: Capturar datos ya presentados en la AEAT y actualizar
       el registro local
-    capture_filed_data_json_help: Salida en formato JSON para herramientas de automatización
     capture_limit_help: Límite de registros a procesar
     capture_source_filed_data_help: Capturar observaciones fuente presentadas requeridas
       por el cálculo de un modelo objetivo
-    capture_source_filed_data_json_help: Emitir el informe de captura de datos fuente
-      presentados como JSON
     casilla_help: Id de casilla a comparar; repetir para sustituir las casillas calculadas
       por defecto
     citations:
@@ -697,17 +723,12 @@ cli:
       show_help: Mostrar una normativa y, opcionalmente, uno de sus artículos
       tag_help: Filtrar por etiqueta de dominio fiscal (p. ej. 'irpf', 'iva')
       verify_help: Verificar la integridad del corpus normativo
-    errors:
-      invalid_year_range: Rango de años no válido
-      unknown_modelo: El registro no contiene una definición del modelo {modelo}
     expediente_help: Número de expediente de la AEAT a capturar
     from_year_help: Año inicial para capturar o revisar registros
     inspect_help: Inspeccionar el estado del registro y las referencias
     inspect_registry_root_help: Ruta al directorio raíz del registro
-    json_help: Salida en formato JSON
     list_filed_data_help: Listar presentaciones existentes en la AEAT para el rango
       de años especificado
-    list_filed_data_json_help: Salida en formato JSON para herramientas de automatización
     manuals:
       app_help: Inspeccionar los Manuales prácticos AEAT (Renta, IVA, Sociedades)
       errors:
@@ -829,9 +850,37 @@ cli:
 
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVIDAD'
+    app_help_help: Mostrar ayuda del flujo de app
     debug_help: Mostrar logs internos de depuración en stderr
     detail_help: Mostrar también el resumen detallado del registro
     format_help: Formato de salida para los resultados del comando
+    help_help: Mostrar ayuda orientada al flujo de trabajo
+    landing:
+      headline: Asistente fiscal AEAT
+      help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
+        --help`.'
+      quick_start_heading: Inicio rápido
+      quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider
+        csv` - añadir tus movimientos bancarios.'
+      quick_start_review: '  4. `aeat app ledger review` - revisar y clasificar las
+        filas importadas.'
+      quick_start_setup_done: '  1. `aeat config profile status` - comprobar el perfil
+        activo antes del trabajo operativo.'
+      quick_start_setup_needed: '  1. `aeat config init` - crear primero tu perfil
+        fiscal local.'
+      quick_start_status: '  2. `aeat app overview status` - leer el estado actual
+        del espacio y sus diagnosticos.'
+      section_config: '  config - perfil, autenticación y diagnósticos'
+      section_ledger: '  app ledger - importación bancaria y revisión de movimientos'
+      section_modelo: '  app modelo - catálogo de modelos y unidades de trabajo'
+      section_overview: '  app overview - estado del espacio y calendario fiscal'
+      section_registry: '  app registry - datos locales del registro AEAT'
+      section_review: '  app review - elementos que requieren atención'
+      sections_heading: Secciones principales
+      tagline: Flujo fiscal español local-first para autónomos.
+      welcome_no_profile: Bienvenido. Todavía no hay un perfil activo configurado;
+        empieza por la configuración.
+      welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
     quiet_help: Mostrar solo errores en stderr
     verbose_help: Mostrar logs internos informativos en stderr
     version_help: Mostrar la versión del paquete (añade --detail para el resumen completo
@@ -916,10 +965,9 @@ filing:
     schema_mismatch: Discrepancia con el esquema esperado
 profile:
   keys:
+    description: profile.keys.description
     tax:
       id: Identificador fiscal (NIF/NIE/CIF)
-  test_keys:
-    description_490119: x
 review:
   adapters:
     t_135562: traspaso interno

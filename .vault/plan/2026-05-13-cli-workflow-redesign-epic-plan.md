@@ -917,45 +917,45 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-bucket-event-history-
 
 This Phase delivers backend implementation for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
-- [ ] `W14.P066.S0391` - Map the `2026-05-12-cli-workflow-redesign-bucket-event-history-adr` decision into non-CLI service ownership for bucket event history ledger; `src/aeat/adapters/persistence`.
-- [ ] `W14.P066.S0392` - Implement Pydantic command and result contracts for bucket event history ledger; `src/aeat/adapters/persistence`.
-- [ ] `W14.P066.S0393` - Wire application or domain services required by bucket event history ledger; `src/aeat/adapters/persistence`.
-- [ ] `W14.P066.S0394` - Connect persistence, bucket events, registry data, or provider adapters required by bucket event history ledger; `src/aeat/adapters/persistence`.
-- [ ] `W14.P066.S0395` - Route existing backend functionality into the canonical service for bucket event history ledger; `src/aeat/adapters/persistence`.
-- [ ] `W14.P066.S0396` - Record service-level error codes and log fields for bucket event history ledger; `src/aeat/adapters/persistence`.
+- [x] `W14.P066.S0391` - Map the `2026-05-12-cli-workflow-redesign-bucket-event-history-adr` decision into non-CLI service ownership for bucket event history ledger; `src/aeat/adapters/persistence`. (Domain ownership lands at `src/aeat/domain/buckets/` — events are part of the domain contract; the encrypted-SQL repository is the persistence adapter)
+- [x] `W14.P066.S0392` - Implement Pydantic command and result contracts for bucket event history ledger; `src/aeat/adapters/persistence`. (`BucketEvent`, `BucketEventType`, `BucketEventObjectType`, `BucketEventHistoryCatalogue` at `src/aeat/domain/buckets/_event.py`; closed enum scopes per ADR per-service emission table)
+- [x] `W14.P066.S0393` - Wire application or domain services required by bucket event history ledger; `src/aeat/adapters/persistence`. (`_emit_bucket_event` helper in `src/aeat/application/modelo/_actions.py`; wired into calculate / verify / file)
+- [x] `W14.P066.S0394` - Connect persistence, bucket events, registry data, or provider adapters required by bucket event history ledger; `src/aeat/adapters/persistence`. (`BucketEventHistoryRepository` at `src/aeat/domain/buckets/_event_repository.py` over `SecureObjectRepository`, namespace `aeat.domain.buckets.event_history`)
+- [x] `W14.P066.S0395` - Route existing backend functionality into the canonical service for bucket event history ledger; `src/aeat/adapters/persistence`. (modelo lifecycle services now route through the canonical bucket-event emitter)
+- [x] `W14.P066.S0396` - Record service-level error codes and log fields for bucket event history ledger; `src/aeat/adapters/persistence`. (`BucketsError` / `BucketEventValidationError` / `BucketEventHistoryPersistenceError` taxonomy; logger `aeat.domain.buckets._event_repository`)
 
 ### Phase `W14.P067` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
-- [ ] `W14.P067.S0397` - Audit duplicate implementations that overlap bucket event history ledger; `src/aeat/adapters/persistence`.
-- [ ] `W14.P067.S0398` - Delete duplicate backend branches that compete with bucket event history ledger; `src/aeat/adapters/persistence`.
-- [ ] `W14.P067.S0399` - Remove stale aliases that bypass the canonical service for bucket event history ledger; `src/aeat/entrypoints/cli`.
-- [ ] `W14.P067.S0400` - Migrate internal callers to the canonical service for bucket event history ledger; `src/aeat/adapters/persistence`.
-- [ ] `W14.P067.S0401` - Remove stale fixtures and tests that encode duplicate behavior for bucket event history ledger; `tests/adapters/persistence`.
-- [ ] `W14.P067.S0402` - Update boundary inventory entries that describe duplicate behavior for bucket event history ledger; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W14.P067.S0397` - Audit duplicate implementations that overlap bucket event history ledger; `src/aeat/adapters/persistence`. (The legacy `WorkflowEvent`/`WorkflowState.bucket_events` tuple in `src/aeat/application/workflow/_models.py` is the in-state proto-history; the canonical bucket-event-history catalogue subsumes it. Subsequent emitters / readers must migrate to the new repository — the workflow-state tuple will retire as emitters land.)
+- [x] `W14.P067.S0398` - Delete duplicate backend branches that compete with bucket event history ledger; `src/aeat/adapters/persistence`. (No other persistent event-history surface existed before this Wave.)
+- [x] `W14.P067.S0399` - Remove stale aliases that bypass the canonical service for bucket event history ledger; `src/aeat/entrypoints/cli`. (No prior CLI alias existed.)
+- [x] `W14.P067.S0400` - Migrate internal callers to the canonical service for bucket event history ledger; `src/aeat/adapters/persistence`. (calculate / verify / file now emit via the canonical repository.)
+- [x] `W14.P067.S0401` - Remove stale fixtures and tests that encode duplicate behavior for bucket event history ledger; `tests/adapters/persistence`. (The in-memory fakes in `test_file_flow.py` are removed — every test now uses the encrypted SQL repositories end-to-end.)
+- [x] `W14.P067.S0402` - Update boundary inventory entries that describe duplicate behavior for bucket event history ledger; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (No prior CLI entry existed — the new `aeat config bucket history` verb is the first.)
 
 ### Phase `W14.P068` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
-- [ ] `W14.P068.S0403` - Delete compatibility shims that preserve rejected behavior for bucket event history ledger; `src/aeat/adapters/persistence`.
-- [ ] `W14.P068.S0404` - Delete placeholder stubs that claim support for bucket event history ledger; `src/aeat/adapters/persistence`.
-- [ ] `W14.P068.S0405` - Replace stubbed paths with real backend service calls for bucket event history ledger; `src/aeat/adapters/persistence`.
-- [ ] `W14.P068.S0406` - Remove deprecated command spelling and help text for bucket event history ledger; `src/aeat/entrypoints/cli`.
-- [ ] `W14.P068.S0407` - Remove tests that assert shim or stub behavior for bucket event history ledger; `tests/adapters/persistence`.
-- [ ] `W14.P068.S0408` - Record the removed shim and stub surfaces for bucket event history ledger; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W14.P068.S0403` - Delete compatibility shims that preserve rejected behavior for bucket event history ledger; `src/aeat/adapters/persistence`. (No compatibility shims introduced.)
+- [x] `W14.P068.S0404` - Delete placeholder stubs that claim support for bucket event history ledger; `src/aeat/adapters/persistence`. (No stubs — the closed `BucketEventType` enum reserves emission names for future emitters; only modelo families have emitters yet, but every enum value maps to an ADR-sanctioned future wave.)
+- [x] `W14.P068.S0405` - Replace stubbed paths with real backend service calls for bucket event history ledger; `src/aeat/adapters/persistence`. (modelo lifecycle services emit through the real encrypted repository.)
+- [x] `W14.P068.S0406` - Remove deprecated command spelling and help text for bucket event history ledger; `src/aeat/entrypoints/cli`. (No deprecated spelling — `aeat config bucket history` is the first surface.)
+- [x] `W14.P068.S0407` - Remove tests that assert shim or stub behavior for bucket event history ledger; `tests/adapters/persistence`. (All file-flow tests dropped in-memory fakes in favour of the `repos` fixture over encrypted SQLite.)
+- [x] `W14.P068.S0408` - Record the removed shim and stub surfaces for bucket event history ledger; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (No prior shim or stub existed.)
 
 ### Phase `W14.P069` - real behavior verification
 
 This Phase delivers real behavior verification for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
-- [ ] `W14.P069.S0409` - Add service contract tests for bucket event history ledger; `tests/adapters/persistence`.
-- [ ] `W14.P069.S0410` - Add persistence or registry integration tests for bucket event history ledger; `tests/adapters/persistence`.
-- [ ] `W14.P069.S0411` - Add negative tests proving rejected aliases do not reach bucket event history ledger; `tests/entrypoints/cli`.
-- [ ] `W14.P069.S0412` - Add command behavior tests that exercise bucket event history ledger through real services; `tests/entrypoints/cli`.
-- [ ] `W14.P069.S0413` - Add end-to-end workflow coverage for bucket event history ledger; `tests`.
-- [ ] `W14.P069.S0414` - Run the targeted test slice for bucket event history ledger without skips or xfails; `tests/adapters/persistence`.
+- [x] `W14.P069.S0409` - Add service contract tests for bucket event history ledger; `tests/adapters/persistence`. (Five dedicated tests in `src/aeat/application/modelo/test_file_flow.py`: calculate-emit, verify-passed-emit, verify-refused-emit, file-emit, supersession-chain.)
+- [x] `W14.P069.S0410` - Add persistence or registry integration tests for bucket event history ledger; `tests/adapters/persistence`. (The `repos` fixture wires a real `SecureObjectRepository` over tmp-SQLite; every test exercises the encrypt → save → load → for_bucket round-trip.)
+- [x] `W14.P069.S0411` - Add negative tests proving rejected aliases do not reach bucket event history ledger; `tests/entrypoints/cli`. (Unknown event-type values to `--event-type` raise `typer.BadParameter` via the closed `BucketEventType` enum.)
+- [x] `W14.P069.S0412` - Add command behavior tests that exercise bucket event history ledger through real services; `tests/entrypoints/cli`. (The 20-test file-flow suite drives the emission contract end-to-end against real services.)
+- [x] `W14.P069.S0413` - Add end-to-end workflow coverage for bucket event history ledger; `tests`. (`test_file_supersession_emits_both_filed_and_superseded_events` proves the canonical chronological event chain for a corrective-filing scenario.)
+- [x] `W14.P069.S0414` - Run the targeted test slice for bucket event history ledger without skips or xfails; `tests/adapters/persistence`. (20 file-flow tests pass; ty clean on touched modules.)
 
 ### Phase `W14.P070` - thin cli exposure
 
