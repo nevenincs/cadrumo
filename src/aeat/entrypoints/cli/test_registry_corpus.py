@@ -1,17 +1,17 @@
-"""Real-behaviour tests for the W31 normatives + manuals CLI exposure.
+"""Real-behaviour tests for the normatives + manuals CLI exposure.
 
-Tests exercise the new ``aeat app registry citations`` and
+Tests exercise the ``aeat app registry citations`` and
 ``aeat app registry manuals`` Typer surfaces end-to-end through the
 ``CliRunner``, against the committed corpus on disk. No mocks /
 fakes / fixtures — every command consumes the same domain APIs the
 production runtime uses (``aeat.domain.normatives.load_catalogue``,
 ``aeat.domain.manuals.load_manual``, etc.).
 
-The W31 ADR mandates the CLI exposure under ``aeat app registry``,
-not under a new root verb. The two boundary regression guards at
-the bottom of the file enforce that no ``aeat normatives`` or
-``aeat manual`` top-level verb is registered, and that no module
-re-implements the registry-corpus surface outside the canonical
+The CLI exposure lives under ``aeat app registry``, not under a new
+root verb. The two boundary regression guards at the bottom of the
+file enforce that no ``aeat normatives`` or ``aeat manual`` top-
+level verb is registered, and that no module re-implements the
+registry-corpus surface outside the canonical
 ``_registry_corpus.py`` module.
 """
 
@@ -140,16 +140,15 @@ def test_manuals_list_accepts_year_filter() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Boundary regression guards (W31 P157 + P158)
+# Boundary regression guards
 # ---------------------------------------------------------------------------
 
 
 def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
-    """Per the W31 ADR, the CLI root is restricted to ``aeat config``
-    and ``aeat app`` only. The redesign rejects a top-level
-    ``aeat normatives`` or ``aeat manual`` verb. This test asserts
-    no source file under ``entrypoints/cli/`` registers either name
-    at the root level."""
+    """The CLI root is restricted to ``aeat config`` and ``aeat app``
+    only. A top-level ``aeat normatives`` or ``aeat manual`` verb is
+    rejected. This test asserts no source file under
+    ``entrypoints/cli/`` registers either name at the root level."""
 
     cli_root = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
     forbidden_root_names = (
@@ -216,10 +215,10 @@ def test_no_parallel_registry_corpus_surface_exists() -> None:
 
 
 def test_no_aeat_normatives_or_manual_fetch_verb_under_app_registry() -> None:
-    """The ADR explicitly forbids exposing manual-fetch behaviour as
-    operator workflow — manual fetch writes PDFs and manifests and
-    is not bucket-scoped or evented. Assert that neither
-    ``citations fetch`` nor ``manuals fetch`` is registered."""
+    """Manual-fetch behaviour is not an operator workflow — manual
+    fetch writes PDFs and manifests and is not bucket-scoped or
+    evented. Assert that neither ``citations fetch`` nor ``manuals
+    fetch`` is registered."""
 
     cli_root = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
     forbidden_command_names = (

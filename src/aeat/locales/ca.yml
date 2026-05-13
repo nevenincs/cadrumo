@@ -52,9 +52,18 @@ cli:
     modelo:
       app_help: Inspeccionar el catàleg de models tributaris AEAT al registre
       bindings:
+        app_help: Inspeccionar i previsualitzar els bindings d'un model tributari
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
+        list_help: Llistar els bindings requerits i disponibles per a un model / exercici
+          / període
+        missing_help: Filtrar als bindings sense valor resolt (requereixen dades del
+          bucket / llibre / perfil)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Període fiscal per acotar els bindings (p. ex. 2026Q1, 2026-01)
+        override_help: 'Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)'
+        period_help: Període fiscal per acotar els bindings (p. ex. Q1, 2026-01)
+        preview_help: Previsualitzar els bindings amb sobreescriptures temporals sense
+          mutar l'estat
+        year_help: Exercici fiscal del model (p. ex. 2026)
       casillas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
@@ -544,7 +553,7 @@ cli:
       reason_help: Motiu de l'edició o correcció de l'entrada
       set_help: Establir valors de camps del llibre (camp=valor)
       skip_help: Marcar la fila com a exclosa o tornar-la a la revisió
-      split_help: Dividir la fila en percentatges d'ús professional i personal
+      split_help: Assignar la fila entre percentatges d'ús professional i personal
     errors:
       auto_detect_failed: Fallada en la detecció automàtica del format del llibre
       edit_requires_one: Es requereix almenys una modificació de camp per editar
@@ -989,8 +998,8 @@ wizard:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
-      declaration-type:
-        help: Codi del tipus de declaració
+      taxation-type:
+        help: Codi del tipus de tributació
       does-intracomunitario:
         help: Realitza operacions intracomunitàries
       enrollment-large-company:
@@ -1044,7 +1053,7 @@ wizard:
       surnames:
         help: Cognoms o raó social per a capçaleres d'exportació
       tax-id:
-        help: Identificador fiscal (NIF/NIE) per a declaracions
+        help: Identificador fiscal (NIF/NIE) del perfil actiu
       tax-residence-ccaa:
         help: Comunitat autònoma de residència fiscal
       taxpayer-birth-date:
@@ -1100,8 +1109,8 @@ wizard:
         prompt: Etiqueta d'activitat o clau controlada
       address-postcode:
         prompt: Codi postal del domicili fiscal
-      declaration-type:
-        prompt: Codi del tipus de declaració
+      taxation-type:
+        prompt: Codi del tipus de tributació
       iva-regime:
         choices:
           exento:

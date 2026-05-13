@@ -358,15 +358,14 @@ def test_ccaa_enum_has_19_members_covering_17_autonomies_plus_2_cities() -> None
 
 
 # ---------------------------------------------------------------------------
-# Boundary / non-existence assertions (W37.P182 + W37.P183).
+# Boundary / non-existence assertions.
 # ---------------------------------------------------------------------------
 
 
 def test_no_parallel_festivos_implementation_exists() -> None:
     """Only ``aeat.domain.deadlines._festivos`` owns festivos /
     business-day semantics. Any other module defining functions with
-    these names is a duplicate that re-introduces drift the ADR
-    rejects."""
+    these names is a duplicate that re-introduces drift."""
 
     from pathlib import Path
 
@@ -394,8 +393,8 @@ def test_no_parallel_festivos_implementation_exists() -> None:
 
 
 def test_no_hardcoded_festivos_table_in_cli() -> None:
-    """The ADR rejects hardcoded CLI calendar tables. The
-    ``entrypoints/cli/`` tree must not embed a holiday list; the
+    """The CLI tree must not embed a hardcoded calendar table. The
+    ``entrypoints/cli/`` source tree owns no holiday list; the
     calendar lives only under ``registry/aeat/calendars/``."""
 
     from pathlib import Path

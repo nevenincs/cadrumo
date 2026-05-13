@@ -53,9 +53,16 @@ cli:
     modelo:
       app_help: AEAT adóbevallás-modellek (modelos) regisztrációs katalógusának áttekintése
       bindings:
+        app_help: Egy AEAT adóbevallás bindingjeinek vizsgálata és előnézete
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
+        list_help: A modell / év / időszak szükséges és elérhető bindingjeinek listázása
+        missing_help: Szűrés azokra a bindingekre, amelyeknek nincs feloldott értékük
+          (bucket / nyilvántartás / profil adatra van szükségük)
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: Adóidőszak a bindingek szűkítéséhez (pl. 2026Q1, 2026-01)
+        override_help: 'Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)'
+        period_help: Adóidőszak a bindingek szűkítéséhez (pl. Q1, 2026-01)
+        preview_help: Bindingek előnézete ideiglenes felülírásokkal, állapotmutáció nélkül
+        year_help: A modell adóéve (pl. 2026)
       casillas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound, computed,
@@ -549,7 +556,7 @@ cli:
       reason_help: A bejegyzés szerkesztésének vagy javításának indoka
       set_help: Naplómező értékek beállítása (mező=érték)
       skip_help: A sor kizárása vagy visszaküldése felülvizsgálatra
-      split_help: A sor felosztása üzleti és személyes használati arányokra
+      split_help: A sor üzleti és személyes használati arányainak hozzárendelése
     errors:
       auto_detect_failed: A naplóformátum automatikus felismerése sikertelen
       edit_requires_one: A szerkesztéshez legalább egy mezőmódosítás szükséges
@@ -998,8 +1005,8 @@ wizard:
         help: Adózási cím irányítószáma
       bienes-extranjero-above-threshold:
         help: Külföldön tartott eszközök a törvényi küszöb felett
-      declaration-type:
-        help: Bevallás-típus kódja
+      taxation-type:
+        help: Adózási típus kódja
       does-intracomunitario:
         help: Közösségi műveleteket végez
       enrollment-large-company:
@@ -1053,7 +1060,7 @@ wizard:
       surnames:
         help: Vezetéknév vagy cégnév az exportfejlécekhez
       tax-id:
-        help: Adóazonosító (NIF/NIE) bevallásokhoz
+        help: Az aktív profil adóazonosítója (NIF/NIE)
       tax-residence-ccaa:
         help: Adóügyi rezidens autonóm közösség
       taxpayer-birth-date:
@@ -1101,7 +1108,7 @@ wizard:
         prompt: A szakmai jövedelem legalább 70%-a előzetes adólevonás alatt
       third-party-transactions-above-347-threshold:
         prompt: Harmadik felekkel folytatott műveletek meghaladják a Modelo 347 küszöböt
-      title: Bevallási kötelezettségek
+      title: Modelo-kötelezettségek
       uses-objective-estimation-irpf:
         prompt: IRPF-et becsült rendszerben adózza
     profile:
@@ -1109,8 +1116,8 @@ wizard:
         prompt: Tevékenységcímke vagy ellenőrzött kulcs
       address-postcode:
         prompt: Adózási cím irányítószáma
-      declaration-type:
-        prompt: Bevallás-típus kódja
+      taxation-type:
+        prompt: Adózási típus kódja
       iva-regime:
         choices:
           exento:

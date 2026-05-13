@@ -46,9 +46,16 @@ cli:
     modelo:
       app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
       bindings:
+        app_help: Inspect and preview the bindings of an AEAT tax form
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+        list_help: List the required and available bindings for a modelo / year / period
+        missing_help: Filter to bindings without a resolved value (require bucket /
+          ledger / profile data)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Fiscal period to scope the bindings (e.g. 2026Q1, 2026-01)
+        override_help: 'Temporary binding override with KEY=VALUE syntax (repeatable)'
+        period_help: Fiscal period to scope the bindings (e.g. Q1, 2026-01)
+        preview_help: Preview bindings with temporary overrides without mutating state
+        year_help: Tax year of the modelo (e.g. 2026)
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
@@ -531,7 +538,7 @@ cli:
       reason_help: Reason for the entry edit or correction
       set_help: Set ledger field values (field=value)
       skip_help: Mark the row excluded or return it to review
-      split_help: Split the row into business and personal-use shares
+      split_help: Allocate the row into business and personal-use shares
     errors:
       auto_detect_failed: Auto-detection of ledger format failed
       edit_requires_one: At least one field modification is required for editing
@@ -970,8 +977,8 @@ wizard:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
-      declaration-type:
-        help: Declaration type code
+      taxation-type:
+        help: Taxation type code
       does-intracomunitario:
         help: Conducts intracomunitario operations
       enrollment-large-company:
@@ -1025,7 +1032,7 @@ wizard:
       surnames:
         help: Surnames or company name for export headers
       tax-id:
-        help: Tax identifier (NIF/NIE) for declarations
+        help: Tax identifier (NIF/NIE) for the active profile
       tax-residence-ccaa:
         help: Tax-residence autonomous community
       taxpayer-birth-date:
@@ -1073,7 +1080,7 @@ wizard:
         prompt: At least 70% of professional income with prior retención
       third-party-transactions-above-347-threshold:
         prompt: Third-party transactions exceed Modelo 347 threshold
-      title: Filing obligations
+      title: Modelo obligations
       uses-objective-estimation-irpf:
         prompt: Files IRPF under objective estimation
     profile:
@@ -1081,8 +1088,8 @@ wizard:
         prompt: Business activity label or controlled key
       address-postcode:
         prompt: Tax address postcode
-      declaration-type:
-        prompt: Declaration type code
+      taxation-type:
+        prompt: Taxation type code
       iva-regime:
         choices:
           exento:
@@ -1098,7 +1105,7 @@ wizard:
       surnames:
         prompt: Surnames or company name for export headers
       tax-id:
-        prompt: Tax identifier (NIF/NIE) for declarations
+        prompt: Tax identifier (NIF/NIE) for the active profile
       title: Profile identity
     residence:
       ccaa:

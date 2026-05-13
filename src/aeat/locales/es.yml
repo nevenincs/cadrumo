@@ -53,10 +53,19 @@ cli:
     modelo:
       app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el registro
       bindings:
+        app_help: Inspeccionar y previsualizar los bindings de un modelo tributario
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
+        list_help: Listar los bindings requeridos y disponibles para un modelo / ejercicio
+          / periodo
+        missing_help: Filtrar a los bindings sin valor resuelto (requieren datos del
+          bucket / libro / perfil)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Periodo fiscal para acotar los bindings (p. ej. 2026Q1, 2026-01)
+        override_help: 'Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)'
+        period_help: Periodo fiscal para acotar los bindings (p. ej. Q1, 2026-01)
+        preview_help: Previsualizar bindings con sobrescrituras temporales sin mutar
+          el estado
+        year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casillas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
@@ -551,7 +560,7 @@ cli:
       reason_help: Motivo de la edición o corrección de la entrada
       set_help: Establecer valores de campos del libro (campo=valor)
       skip_help: Marcar la fila como excluida o volver a incluirla en la revisión
-      split_help: Dividir la fila en porcentajes de uso profesional y personal
+      split_help: Asignar la fila entre porcentajes de uso profesional y personal
     errors:
       auto_detect_failed: Fallo en la detección automática del formato del libro
       edit_requires_one: Se requiere al menos una modificación de campo para editar
@@ -615,11 +624,11 @@ cli:
     header: "Modelo\tPeriodo\tEstado\tAbre\tCierra"
     integrity_warning: '%{count} fila(s) locales no se pueden descifrar bajo la clave
       maestra actual; ejecuta ''aeat config doctor'' para detalle.'
-    invoices: Facturas
+    invoices: Operaciones de negocio
     period: Periodo
     period_help: Periodo fiscal a revisar (por ejemplo, 2026-Q1)
     profile: Perfil
-    status_help: Mostrar el estado del perfil, libro, facturas y declaraciones
+    status_help: Mostrar el estado del perfil, libro y modelos
     to_help: Fecha final del calendario (AAAA-MM-DD)
     transactions: Movimientos
     verbose_help: Mostrar detalles y siguiente acción cuando existan
@@ -744,8 +753,8 @@ cli:
     workbooks_verify_help: Verificar la integridad de los libros de trabajo generados
     year_help: Ejercicio fiscal a consultar o procesar
   review:
-    app_help: 'Cola de revisión del operador: clasifica transacciones, facturas e
-      incidencias'
+    app_help: 'Cola de revisión del operador: clasifica transacciones del libro,
+      justificantes de compra e incidencias de modelo'
     errors:
       invalid_state: 'Estado de revisión inválido: %{state}'
     labels:
@@ -769,7 +778,7 @@ cli:
       id_help: Identificador del elemento en la cola
   root:
     app_app_help: Espacio de trabajo fiscal para overview, ledger, modelo, registry y review
-    app_help: 'Asistente para preparar declaraciones tributarias españolas
+    app_help: 'Asistente de flujo fiscal español
 
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVIDAD'
@@ -1000,8 +1009,8 @@ wizard:
         help: Código postal del domicilio fiscal
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
-      declaration-type:
-        help: Código del tipo de declaración
+      taxation-type:
+        help: Código del tipo de tributación
       does-intracomunitario:
         help: Realiza operaciones intracomunitarias
       enrollment-large-company:
@@ -1055,7 +1064,7 @@ wizard:
       surnames:
         help: Apellidos o razón social para cabeceras de exportación
       tax-id:
-        help: Identificador fiscal (NIF/NIE) para declaraciones
+        help: Identificador fiscal (NIF/NIE) del perfil activo
       tax-residence-ccaa:
         help: Comunidad autónoma de residencia fiscal
       taxpayer-birth-date:
@@ -1111,8 +1120,8 @@ wizard:
         prompt: Etiqueta de actividad o clave controlada
       address-postcode:
         prompt: Código postal del domicilio fiscal
-      declaration-type:
-        prompt: Código del tipo de declaración
+      taxation-type:
+        prompt: Código del tipo de tributación
       iva-regime:
         choices:
           exento:
