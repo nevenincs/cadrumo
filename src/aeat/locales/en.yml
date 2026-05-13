@@ -923,6 +923,9 @@ wizard:
     unsupported_console: 'The interactive wizard requires cmd.exe or Windows Terminal.
       Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch
       terminals.'
+  progress:
+    question_prefix: '(question %{q_n}/%{q_total}) '
+    section_header: 'Section %{section_n}/%{section_total}: %{title}'
   setup:
     description: Operator-facing setup wizard for tax filing readiness
     enrollment:

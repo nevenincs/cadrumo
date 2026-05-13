@@ -11,6 +11,7 @@ operator interaction. Both speak the same canonical-token contract.
 
 from __future__ import annotations
 
+import sys
 from collections import deque
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
@@ -139,6 +140,18 @@ class QuestionaryPrompter:
     def __init__(self, *, input: Input | None = None, output: Output | None = None) -> None:
         self._input = input
         self._output = output
+
+    def emit_progress(self, text: str) -> None:
+        """Emit a progress line (section header or question prefix).
+
+        Called by the runtime between question prompts so operators see
+        their position in the flow. Writes to ``sys.stdout`` directly so
+        the line is readable on every TTY shape the prompter supports
+        without an additional CLI-layer dependency.
+        """
+
+        sys.stdout.write(f"{text}\n")
+        sys.stdout.flush()
 
     def ask(self, question: WizardQuestion, *, default: str | None) -> str:
         prompt = tr(str(question.prompt))
