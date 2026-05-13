@@ -83,9 +83,7 @@ def repos(tmp_path):
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     db_path = tmp_path / "modelo_amend_flow.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-    )
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
     Base.metadata.create_all(engine)
     try:
         objects = SecureObjectRepository(engine=engine)
@@ -232,9 +230,7 @@ def test_amend_refuses_when_baseline_already_superseded(repos) -> None:
     """A SUPERSEDED filing record cannot be amended."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    _, _, baseline = _seed_external_baseline(
-        repos, casilla_values={"01": Decimal("1000")}
-    )
+    _, _, baseline = _seed_external_baseline(repos, casilla_values={"01": Decimal("1000")})
     fake_successor = "f" * 64
     fr_repo.save(
         upsert_filing_record(
@@ -294,15 +290,11 @@ def test_amend_creates_complementaria_filing_supersedes_baseline(repos) -> None:
     assert new_filing.filed_at == _T4
     assert new_filing.filed_by == "operator-A"
 
-    refreshed_baseline = get_filing_record(
-        baseline.filing_record_id, filing_repository=fr_repo
-    )
+    refreshed_baseline = get_filing_record(baseline.filing_record_id, filing_repository=fr_repo)
     assert refreshed_baseline.status is FilingRecordStatus.SUPERSEDED
     assert refreshed_baseline.superseded_by_filing_record_id == new_filing.filing_record_id
 
-    new_revision = get_calculation_revision(
-        new_filing.calculation_revision_id, calculation_repository=cr_repo
-    )
+    new_revision = get_calculation_revision(new_filing.calculation_revision_id, calculation_repository=cr_repo)
     assert new_revision.state is CalculationRevisionState.FILED
     assert new_revision.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
     assert new_revision.amends_filing_record_id == baseline.filing_record_id
@@ -333,9 +325,7 @@ def test_amend_refuses_no_op_overrides(repos) -> None:
     a no-op amendment."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    _, _, baseline = _seed_external_baseline(
-        repos, casilla_values={"01": Decimal("1000")}
-    )
+    _, _, baseline = _seed_external_baseline(repos, casilla_values={"01": Decimal("1000")})
 
     with pytest.raises(CalculationRevisionStateError, match=r"already exists|no-op"):
         amend_modelo_revision(

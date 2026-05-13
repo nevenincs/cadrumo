@@ -1005,8 +1005,7 @@ def work_amend(
         amendment_kind = CalculationRevisionAmendmentKind(kind.strip())
     except ValueError as exc:
         raise typer.BadParameter(
-            f"--kind must be one of "
-            f"{', '.join(repr(k.value) for k in CalculationRevisionAmendmentKind)}; got {kind!r}"
+            f"--kind must be one of {', '.join(repr(k.value) for k in CalculationRevisionAmendmentKind)}; got {kind!r}"
         ) from exc
 
     overrides: dict[str, Decimal] = {}

@@ -806,6 +806,8 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     )
     from aeat.domain.modelos._calculation_revision import (
         CalculationRevision as _CR,
+    )
+    from aeat.domain.modelos._calculation_revision import (
         derive_calculation_revision_id as _derive_id,
     )
 

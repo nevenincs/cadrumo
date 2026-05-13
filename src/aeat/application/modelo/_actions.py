@@ -38,7 +38,6 @@ from ...domain.modelos._calculation_revision import (
 )
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._errors import ModeloError
-from ...domain.period import period_end_date
 from ...domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -72,6 +71,7 @@ from ...domain.modelos._work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
+from ...domain.period import period_end_date
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 
@@ -691,14 +691,12 @@ def _required_input_casillas_for_revision(
     bindings layer is responsible for them.
     """
 
-    from pathlib import Path
 
+    from ...core.config import PROJECT_ROOT
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
         ValidatedRegistryAuthority,
     )
-
-    from ...core.config import PROJECT_ROOT
 
     try:
         authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
@@ -1433,14 +1431,11 @@ def import_external_filing_evidence(
 
     if not casilla_values:
         raise ExternalFilingImportError(
-            "external-filing import requires at least one casilla value; "
-            "got an empty mapping"
+            "external-filing import requires at least one casilla value; got an empty mapping"
         )
     cleaned_reference = evidence_reference_id.strip()
     if not cleaned_reference:
-        raise ExternalFilingImportError(
-            "external-filing import requires a non-empty evidence_reference_id"
-        )
+        raise ExternalFilingImportError("external-filing import requires a non-empty evidence_reference_id")
 
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
@@ -1573,9 +1568,7 @@ def import_external_filing_evidence(
             "period": work_unit.period,
             "evidence_kind": evidence_kind.value,
             "evidence_reference_id": cleaned_reference,
-            "supersedes_filing_record_id": (
-                prior_current.filing_record_id if prior_current is not None else ""
-            ),
+            "supersedes_filing_record_id": (prior_current.filing_record_id if prior_current is not None else ""),
             "casilla_count": str(len(outputs)),
         },
     )
@@ -1597,7 +1590,6 @@ __all__ = [
     "WorkUnitNotFoundError",
     "amend_modelo_revision",
     "calculate_modelo_revision",
-    "import_external_filing_evidence",
     "create_work_unit",
     "discard_work_unit",
     "file_modelo_revision",
@@ -1605,6 +1597,7 @@ __all__ = [
     "get_filing_record",
     "get_verification_report",
     "get_work_unit",
+    "import_external_filing_evidence",
     "list_calculation_revisions",
     "list_filing_records",
     "list_verification_reports",

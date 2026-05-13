@@ -134,9 +134,7 @@ def test_global_language_flag_overrides_profile_for_invocation(
 
     _isolate(monkeypatch, tmp_path)
     _seed_profile()
-    workflow_state_repository().update(
-        lambda state: set_profile_values(state, "default", {"output.language": "ca"})
-    )
+    workflow_state_repository().update(lambda state: set_profile_values(state, "default", {"output.language": "ca"}))
 
     result = _invoke(["--language", "en", "--format", "json"])
 
