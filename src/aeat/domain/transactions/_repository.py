@@ -40,7 +40,7 @@ _TX_OBJECT_KEY = "catalogue"
 
 
 class ImportSummary(BaseModel):
-    """Frozen summary of one ``aeat financial ingest --persist`` invocation.
+    """Frozen summary of one ledger import persistence operation.
 
     Attributes:
         imported: Number of new transactions persisted by this call.
