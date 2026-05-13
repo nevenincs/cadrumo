@@ -264,10 +264,23 @@ def __getattr__(name: str):
         from ._validation import ProfileValidationService
 
         return ProfileValidationService
+    if name in (
+        "USER_PROFILE_SNAPSHOT_NAMESPACE",
+        "USER_PROFILE_VALUE_NAMESPACE",
+        "UserProfileLifecycleRepository",
+        "UserProfileSnapshotRepository",
+        "user_profile_snapshot_object_key",
+        "user_profile_value_object_key",
+    ):
+        from . import _repository
+
+        return getattr(_repository, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 __all__ = [
+    "USER_PROFILE_SNAPSHOT_NAMESPACE",
+    "USER_PROFILE_VALUE_NAMESPACE",
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
@@ -288,4 +301,8 @@ __all__ = [
     "ProfileValidationSeverity",
     "RegisterProfileCommand",
     "RemoveProfileCommand",
+    "UserProfileLifecycleRepository",
+    "UserProfileSnapshotRepository",
+    "user_profile_snapshot_object_key",
+    "user_profile_value_object_key",
 ]
