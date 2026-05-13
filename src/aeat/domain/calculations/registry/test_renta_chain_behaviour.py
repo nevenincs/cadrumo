@@ -143,27 +143,6 @@ def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_min
     assert_registry_scenario_matches(report)
 
 
-# Removed: test_cuota_integra_estatal_combines_general_and_ahorro_components,
-#          test_cuota_liquida_estatal_subtracts_state_side_deduction_columns,
-#          test_cuota_liquida_incrementada_adds_back_perdida_derecho_increments,
-#          test_cuota_liquida_total_sums_estatal_plus_autonomica.
-#
-# These four tests fed manual escala outputs (0528, 0529, 0530, 0531) as
-# inputs and asserted hand-computed cuota chain values that the registry
-# formulas would mechanically reproduce. Commits c47211b0 and 6eda5442
-# wired the lookup_bracket formulas that compute 0528/0530 from the
-# base liquidable and parameter table — supplying them as inputs is now
-# rejected at runtime, and the assertions duplicated the formula's
-# arithmetic (the no-tautological-calculation-tests rule forbids that
-# pattern). Replacement coverage paths:
-#   * Workbook parity against the AEAT-published dr.xls workbook
-#   * AEAT manual worked-examples extracted to scenario test inputs
-#   * Live oracle replay against Renta WEB Open
-# Filing those replacement tests is tracked separately; the tests above
-# were structurally redundant with test_renta_2025_synthetic_profile.py
-# coverage of the same chain anyway.
-
-
 def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> None:
     """0435 = 0432 - 0433 where 0433 is the AEAT-positive cap on the G/P loss."""
     # AEAT convention (per 2025 record-design dictionary HSALDO3 entry):

@@ -5,8 +5,7 @@ the BOE-published Resolución de fiestas laborales for that year (cited
 in the calendar TOML and re-cited inline here), the AEAT Calendario del
 Contribuyente shift rule, or a structural / wiring / error-path
 property. No test computes the expected adjusted date by re-applying
-the shift formula to a freshly-invented date — that would be
-tautological per ``.claude/rules/no-tautological-calculation-tests.md``.
+the shift formula to a freshly-invented date.
 
 The BOE-cited fixed dates used as anchors:
 

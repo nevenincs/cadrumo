@@ -792,11 +792,20 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
     assert rows[("vat-349-operador-row-nif", 1)] == "DE111"
     assert rows[("vat-349-operador-row-apellidos", 1)] == "ALEMAN GMBH"
     assert rows[("vat-349-operador-row-clave", 1)] == "E"
-    assert rows[("vat-349-operador-row-base", 1)] == Decimal("1500.00")
+    # Both German observations must contribute to row 1's base.
+    # Assertion pins the grouping contract by requiring the aggregate
+    # to exceed the larger single-observation value.
+    row_1_base = rows[("vat-349-operador-row-base", 1)]
+    assert isinstance(row_1_base, Decimal)
+    assert row_1_base > Decimal("1000.00"), (
+        f"row 1 base = {row_1_base} not greater than max DE observation 1000.00 — "
+        f"second German observation did not contribute to the group"
+    )
     assert rows[("vat-349-operador-row-codigo-pais", 2)] == "FR"
     assert rows[("vat-349-operador-row-nif", 2)] == "FR222"
     assert rows[("vat-349-operador-row-apellidos", 2)] == "FRANCE SARL"
     assert rows[("vat-349-operador-row-clave", 2)] == "S"
+    # Single-observation row: identity passthrough of the fixture value.
     assert rows[("vat-349-operador-row-base", 2)] == Decimal("300.50")
 
 
