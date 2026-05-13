@@ -287,7 +287,7 @@ def test_ensure_known_keys_raw_token_carries_offending_clause() -> None:
     allowed = {"base"}
     clauses = (_clause("nonsense", "value"),)
 
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"edit|parse") as exc_info:
         _ensure_known_keys(clauses, scope="invoice", allowed=allowed)
 
     assert "nonsense=value" in exc_info.value.raw_token

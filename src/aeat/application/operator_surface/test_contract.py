@@ -101,7 +101,7 @@ def test_retired_surface_suggestions_capture_rejected_roots() -> None:
 def test_require_accepted_root_uses_registered_application_error() -> None:
     assert require_accepted_root("config").name is RootSurfaceName.CONFIG
 
-    with pytest.raises(OperatorSurfaceContractError) as exc_info:
+    with pytest.raises(OperatorSurfaceContractError, match=r"operator|surface|contract") as exc_info:
         require_accepted_root("setup")
 
     error = exc_info.value
@@ -199,7 +199,8 @@ def test_help_documents_are_backend_owned_and_current_surface_only() -> None:
     assert "The CLI has exactly two roots: config and app." in root.paragraphs
     assert "aeat config init" in root_text
     assert "aeat app ledger import" in root_text
-    assert "aeat app live" not in root_text
+    assert "aeat app live filed list" in root_text
+    assert "aeat app live filed capture" in app_text
     assert "aeat config bucket" not in root_text
     assert "aeat app invoice" not in app_text
     assert "aeat app declaration" not in app_text

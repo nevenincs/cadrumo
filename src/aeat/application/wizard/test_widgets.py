@@ -176,7 +176,7 @@ def test_integer_rejects_non_integer() -> None:
 
 def test_error_carries_prompt_key_context() -> None:
     question = _question(WizardWidget.CONFIRM, answer_type=bool)
-    with pytest.raises(WizardValidationError) as excinfo:
+    with pytest.raises(WizardValidationError, match=r"wizard|validation") as excinfo:
         validate_widget_answer(question, "maybe")
     error = excinfo.value
     assert error.context is not None

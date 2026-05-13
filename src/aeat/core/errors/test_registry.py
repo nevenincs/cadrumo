@@ -31,7 +31,7 @@ def _sample_code(code: str) -> ErrorCode:
 
 def test_error_code_model_is_frozen() -> None:
     code = _sample_code("ERROR_TEST_SAMPLE")
-    with pytest.raises((ValidationError, TypeError)):
+    with pytest.raises((ValidationError, TypeError), match=r"frozen|Instance is frozen|attribute"):
         code.code = "ERROR_TEST_MUTATED"  # type: ignore[misc]
 
 

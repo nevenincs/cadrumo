@@ -48,7 +48,7 @@ class TestUnsignedCurrency13Byte:
 
     def test_overflow_raises(self) -> None:
         """Any value that would require > 13 digits of cents must raise."""
-        with pytest.raises((ValueError, OverflowError)):
+        with pytest.raises((ValueError, OverflowError), match=r"currency|length|overflow|exceed"):
             encode_currency(Decimal("100000000000.00"), length=13, encoding="cp1252")
 
 

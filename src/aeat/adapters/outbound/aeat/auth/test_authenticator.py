@@ -865,7 +865,7 @@ async def test_verify_login_raises_on_stale_session(tmp_path: Path, monkeypatch:
             thumbprint="abc",
             subject="CN=x",
         )
-        with pytest.raises(AeatSessionExpiredError):
+        with pytest.raises(AeatSessionExpiredError, match=r"aeat|session|expired"):
             await auth.verify_login(stale)
 
 

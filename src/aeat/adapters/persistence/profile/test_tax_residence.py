@@ -62,7 +62,7 @@ def test_atomic_write_replaces_existing_file(tmp_path: Path) -> None:
 
 def test_atomic_write_cleans_temp_file_when_serialization_fails(tmp_path: Path) -> None:
     target = tmp_path / "tax-residence.json"
-    with pytest.raises(TaxResidenceProfileError):
+    with pytest.raises(TaxResidenceProfileError, match=r"tax|residence|profile"):
         save_json({"schema_version": "1", "ccaa": object()}, target)
     assert not target.exists()
     assert not list(tmp_path.glob("*.tmp"))

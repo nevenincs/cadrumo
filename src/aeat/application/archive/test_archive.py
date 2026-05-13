@@ -366,7 +366,7 @@ class TestConflictPolicies:
         InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices([_invoice()]))
         bundle = create_archive(namespaces=("aeat.domain.invoices",))
 
-        with pytest.raises(ArchiveConflictError):
+        with pytest.raises(ArchiveConflictError, match=r"archive|conflict"):
             restore_archive(bundle, conflict_policy=ConflictPolicy.FAIL)
 
     def test_keep_policy_skips_existing_records(self) -> None:

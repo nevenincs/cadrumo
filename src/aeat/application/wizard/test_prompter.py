@@ -47,7 +47,7 @@ def test_scripted_prompter_records_asked_questions() -> None:
 
 def test_scripted_prompter_raises_on_underflow() -> None:
     prompter = ScriptedPrompter([])
-    with pytest.raises(WizardScriptUnderflowError):
+    with pytest.raises(WizardScriptUnderflowError, match=r"wizard|script|underflow"):
         prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
 
 
@@ -103,5 +103,5 @@ def test_questionary_prompter_translates_no_console_error() -> None:
 
     with create_pipe_input() as pipe_input:
         prompter = QuestionaryPrompter(input=pipe_input, output=_RaisingOutput())
-        with pytest.raises(WizardUnsupportedConsoleError):
+        with pytest.raises(WizardUnsupportedConsoleError, match=r"wizard|unsupported|console"):
             prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
