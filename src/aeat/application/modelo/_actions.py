@@ -38,6 +38,7 @@ from ...domain.modelos._calculation_revision import (
 )
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._errors import ModeloError
+from ...domain.period import period_end_date
 from ...domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -388,35 +389,6 @@ def discard_work_unit(
 # ---------------------------------------------------------------------------
 
 
-def _default_filing_period_date(*, year: int, period: str) -> date:
-    """Return the end-of-period date for ``date_context["filing_period"]``.
-
-    The registry uses this date to select date-versioned parameters
-    (legal-rate changes, autonomic scales). End-of-period is the
-    safe default — operator-provided ``as_of`` overrides it via the
-    ``filing_period_date`` action parameter when finer control is
-    needed (e.g., reconstructing a prior-rate calculation).
-    """
-
-    p = period.strip().upper()
-    if p in {"1T", "Q1"}:
-        return date(year, 3, 31)
-    if p in {"2T", "Q2"}:
-        return date(year, 6, 30)
-    if p in {"3T", "Q3"}:
-        return date(year, 9, 30)
-    if p in {"4T", "Q4"}:
-        return date(year, 12, 31)
-    if p == "0A":
-        return date(year, 12, 31)
-    if len(p) == 2 and p.isdigit():
-        from calendar import monthrange
-
-        month = int(p)
-        return date(year, month, monthrange(year, month)[1])
-    return date(year, 12, 31)
-
-
 def _canonical_decimal_str(value: Decimal) -> str:
     """Stable string form of a Decimal for content-addressing."""
 
@@ -516,8 +488,9 @@ def calculate_modelo_revision(
             f"could not be resolved: {exc}"
         ) from exc
 
-    period_date = filing_period_date or _default_filing_period_date(
-        year=work_unit.filing_year, period=work_unit.period
+    period_date = filing_period_date or period_end_date(
+        filing_year=work_unit.filing_year,
+        registry_period=work_unit.period,
     )
     resolved_bindings = dict(binding_values or {})
     resolved_enum_bindings = dict(enum_binding_values or {})
