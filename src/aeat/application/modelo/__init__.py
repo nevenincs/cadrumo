@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from ._actions import (
     AmendmentEvidenceMissingError,
+    AmendmentOverrideCasillaError,
     AmendmentTargetStateError,
     CalculationRegistryUnavailableError,
     CalculationRevisionNotFoundError,
@@ -48,6 +49,7 @@ from ._actions import (
 
 __all__ = [
     "AmendmentEvidenceMissingError",
+    "AmendmentOverrideCasillaError",
     "AmendmentTargetStateError",
     "CalculationRegistryUnavailableError",
     "CalculationRevisionNotFoundError",

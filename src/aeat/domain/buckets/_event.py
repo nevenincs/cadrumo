@@ -72,6 +72,8 @@ class BucketEventType(StrEnum):
     PROFILE_SELECTED = "profile.selected"
     PROFILE_VALUES_UPDATED = "profile.values.updated"
     PROFILE_VALUES_CLEARED = "profile.values.cleared"
+    # workflow-state recovery (config repair shape ADR)
+    WORKFLOW_STATE_RESET = "workflow_state.reset"
 
 
 class BucketEventObjectType(StrEnum):
@@ -82,6 +84,7 @@ class BucketEventObjectType(StrEnum):
     VERIFICATION_REPORT = "verification_report"
     FILING_RECORD = "filing_record"
     PROFILE = "profile"
+    WORKFLOW_STATE = "workflow_state"
 
 
 def _canonical_payload(payload: Mapping[str, str]) -> dict[str, str]:

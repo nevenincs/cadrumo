@@ -143,7 +143,7 @@ def verify_registry_cmd(
     )
 
 
-@app.command("audit-oracles", help="Surface live-parity oracle binding mismatches at startup.")
+@app.command("audit-oracles", help=tr("cli.registry.audit_oracles_help"))
 def audit_oracles_cmd(
     ctx: typer.Context,
     registry_root: Annotated[
@@ -161,7 +161,7 @@ def audit_oracles_cmd(
         str,
         typer.Option(
             "--environment",
-            help="Live parity catalogue environment to audit against: production / test_environment / both.",
+            help=tr("cli.registry.audit_oracles_environment_help"),
         ),
     ] = "production",
 ) -> None:

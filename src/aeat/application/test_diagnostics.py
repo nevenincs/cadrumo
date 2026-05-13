@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from pydantic import ValidationError
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
@@ -18,6 +19,7 @@ from aeat.core.classification import SensitivityClass
 from aeat.core.config import Settings
 
 from .diagnostics import (
+    DiagnosticCheck,
     build_config_doctor_report,
     quarantine_unreadable_secure_objects,
     render_config_doctor_text,
@@ -25,6 +27,72 @@ from .diagnostics import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def test_diagnostic_check_fail_without_recovery_field_raises_validation_error() -> None:
+    """A ``fail`` row with neither ``next_action`` nor ``dead_end`` is forbidden."""
+
+    with pytest.raises(ValidationError):
+        DiagnosticCheck(name="x", status="fail", summary="y")
+
+
+def test_diagnostic_check_warn_without_recovery_field_raises_validation_error() -> None:
+    """A ``warn`` row with neither ``next_action`` nor ``dead_end`` is forbidden."""
+
+    with pytest.raises(ValidationError):
+        DiagnosticCheck(name="x", status="warn", summary="y")
+
+
+def test_diagnostic_check_rejects_both_next_action_and_dead_end_simultaneously() -> None:
+    """A row may pick at most one of the two recovery roads."""
+
+    with pytest.raises(ValidationError):
+        DiagnosticCheck(
+            name="x",
+            status="fail",
+            summary="y",
+            next_action="aeat config repair",
+            dead_end="terminal",
+        )
+
+
+def test_diagnostic_check_ok_row_with_both_recovery_fields_none_constructs() -> None:
+    """An ``ok`` row carries neither recovery field — happy path constructs."""
+
+    check = DiagnosticCheck(name="x", status="ok", summary="y")
+    assert check.next_action is None
+    assert check.dead_end is None
+
+
+def test_diagnostic_check_ok_row_with_next_action_raises_validation_error() -> None:
+    """``ok`` rows must not advertise recovery; that surface is reserved for fail/warn."""
+
+    with pytest.raises(ValidationError):
+        DiagnosticCheck(name="x", status="ok", summary="y", next_action="aeat config repair")
+
+
+def test_diagnostic_check_fail_row_with_dead_end_only_constructs() -> None:
+    """A ``fail`` row populated with ``dead_end`` alone satisfies the contract."""
+
+    check = DiagnosticCheck(name="x", status="fail", summary="y", dead_end="terminal")
+    assert check.next_action is None
+    assert check.dead_end == "terminal"
+
+
+def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
+    """JSON rendering surfaces ``next_action`` and ``dead_end`` keys explicitly."""
+
+    populated = DiagnosticCheck(
+        name="x",
+        status="fail",
+        summary="y",
+        next_action="aeat config repair reset-state --yes",
+    )
+    dumped = populated.model_dump(mode="json")
+    assert "next_action" in dumped
+    assert "dead_end" in dumped
+    assert dumped["next_action"] == "aeat config repair reset-state --yes"
+    assert dumped["dead_end"] is None
 
 
 def test_config_doctor_report_contains_registry_and_setup_checks(
@@ -138,7 +206,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
         integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
         assert integrity_check.status == "warn"
         assert "unreadable row" in integrity_check.summary
-        assert integrity_check.next_action == "aeat config doctor quarantine --yes"
+        assert integrity_check.next_action == "aeat config repair quarantine --yes"
 
         ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)
         # Three rows sealed under the OLD ephemeral key should be unreadable

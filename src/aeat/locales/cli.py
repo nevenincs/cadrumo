@@ -7,9 +7,11 @@ from typing import Annotated
 
 import typer
 
+from aeat.core.i18n import tr
+
 from .manager import LocaleManager
 
-app = typer.Typer(name="locales", no_args_is_help=True)
+app = typer.Typer(name="locales", help=tr("cli.locales.app_help"), no_args_is_help=True)
 
 
 def _default_manager() -> LocaleManager:
@@ -48,7 +50,7 @@ def audit() -> None:
 def scaffold(
     check: Annotated[
         bool,
-        typer.Option("--check", help="Report drift without writing locale files."),
+        typer.Option("--check", help=tr("cli.locales.scaffold_check_help")),
     ] = False,
 ) -> None:
     """Update locale files so they match concrete codebase translation keys."""

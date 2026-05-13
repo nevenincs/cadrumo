@@ -42,12 +42,25 @@ class TestCompute:
     def test_registry_deadline_windows_drive_schedule(self) -> None:
         schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
 
-        assert [obligation.modelo for obligation in schedule.obligations] == ["130", "130", "130", "130"]
+        assert [obligation.modelo for obligation in schedule.obligations] == [
+            "130",
+            "303",
+            "130",
+            "303",
+            "130",
+            "303",
+            "130",
+            "303",
+        ]
         assert [obligation.period for obligation in schedule.obligations] == [
             "2026Q1",
+            "2026-1T",
             "2026Q2",
+            "2026-2T",
             "2026Q3",
+            "2026-3T",
             "2026Q4",
+            "2026-4T",
         ]
 
     def test_profile_condition_can_remove_registry_deadline(self) -> None:
@@ -57,7 +70,7 @@ class TestCompute:
             today=date(2026, 1, 1),
         )
 
-        assert schedule.obligations == ()
+        assert [obligation.modelo for obligation in schedule.obligations] == ["303", "303", "303", "303"]
 
     def test_registry_any_condition_can_add_withholding_deadline_for_employee_payer(self) -> None:
         schedule = _engine().compute(_profile(has_employees=True), 2026, today=date(2026, 1, 1))
@@ -65,12 +78,16 @@ class TestCompute:
         assert [obligation.modelo for obligation in schedule.obligations] == [
             "111",
             "130",
+            "303",
             "111",
             "130",
+            "303",
             "111",
             "130",
+            "303",
             "111",
             "130",
+            "303",
         ]
 
     def test_registry_any_condition_can_add_withholding_deadline_for_professional_payer(self) -> None:

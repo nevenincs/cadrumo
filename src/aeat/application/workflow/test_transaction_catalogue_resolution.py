@@ -14,6 +14,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository, create_e
 from ...adapters.persistence.storage.sql._orm import Base
 from ...core.config import Settings
 from ...domain.transactions import (
+    LedgerNoActiveBucketError,
     RawProvenance,
     RawTransaction,
     SourceFormat,
@@ -21,12 +22,7 @@ from ...domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from . import (
-    NoActiveProfileError,
-    ProfileBucketPointer,
-    WorkflowState,
-    active_transaction_catalogue_repository,
-)
+from . import ProfileBucketPointer, WorkflowState, active_transaction_catalogue_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -92,5 +88,5 @@ def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket
 
 
 def test_active_transaction_catalogue_repository_rejects_missing_active_bucket() -> None:
-    with pytest.raises(NoActiveProfileError, match="no active profile bucket"):
+    with pytest.raises(LedgerNoActiveBucketError, match="no active profile bucket"):
         active_transaction_catalogue_repository(WorkflowState())
