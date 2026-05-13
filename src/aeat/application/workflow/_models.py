@@ -37,12 +37,22 @@ class WorkflowEvent(BaseModel):
 
     action: str = Field(min_length=1)
     reason: str = ""
+    bucket_id: str | None = None
+    object_id: str | None = None
     at: datetime = Field(default_factory=utc_now)
 
     @field_validator("action", "reason")
     @classmethod
     def _trim_text(cls, value: str) -> str:
         return value.strip()
+
+    @field_validator("bucket_id", "object_id")
+    @classmethod
+    def _trim_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
 
 
 class WorkflowStage(StrEnum):
@@ -118,6 +128,7 @@ class WorkflowState(BaseModel):
     declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
     invoice_reviews: dict[str, Any] = Field(default_factory=dict)
     ledger_reviews: dict[str, Any] = Field(default_factory=dict)
+    bucket_events: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)
 
     def active_profile_record(self) -> Any | None:
