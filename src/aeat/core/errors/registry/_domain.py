@@ -845,7 +845,9 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_MODELO_WORK_UNIT_MUTATION_REFUSED",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_work_unit_mutation_refused",
-            default_suggestion="aeat app modelo work create --modelo MODELO --year YEAR --period PERIOD --revision REVISION",
+            default_suggestion=(
+                "aeat app modelo work create --modelo MODELO --year YEAR --period PERIOD --revision REVISION"
+            ),
             retryable=False,
             runbook_id=None,
         ),
@@ -900,6 +902,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_MODELO_FILING_RECORD_PERSISTENCE",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_modelo_filing_record_persistence",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.VerificationReportNotFoundError",
+        ErrorCode(
+            code="ERROR_MODELO_VERIFICATION_REPORT_NOT_FOUND",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_verification_report_not_found",
+            default_suggestion="aeat app modelo verification-report list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._verification_repository.VerificationReportPersistenceError",
+        ErrorCode(
+            code="FAIL_MODELO_VERIFICATION_REPORT_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_modelo_verification_report_persistence",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

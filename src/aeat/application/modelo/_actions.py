@@ -23,7 +23,6 @@ from ...domain.modelos._calculation_repository import (
 )
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
-    CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
@@ -31,7 +30,6 @@ from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import (
     FilingRecord,
-    FilingRecordCatalogue,
     FilingRecordStatus,
     derive_filing_record_id,
 )
@@ -42,6 +40,18 @@ from ...domain.modelos._filing_repository import (
 from ...domain.modelos._repository import (
     WorkUnitCatalogueRepository,
     upsert_work_unit,
+)
+from ...domain.modelos._verification_report import (
+    VerificationCompletenessStatus,
+    VerificationFinding,
+    VerificationFindingKind,
+    VerificationFindingSeverity,
+    VerificationReport,
+    derive_verification_report_id,
+)
+from ...domain.modelos._verification_repository import (
+    VerificationReportCatalogueRepository,
+    upsert_verification_report,
 )
 from ...domain.modelos._work_unit import (
     WorkUnit,
@@ -78,6 +88,10 @@ class CalculationRevisionStateError(ModeloError):
 
 class FilingRecordNotFoundError(ModeloError, KeyError):
     """Raised when a filing record lookup fails."""
+
+
+class VerificationReportNotFoundError(ModeloError, KeyError):
+    """Raised when a verification report lookup fails."""
 
 
 def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
@@ -327,13 +341,9 @@ def calculate_modelo_revision(
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
-        raise WorkUnitNotFoundError(
-            f"no modelo work unit with work_unit_id={work_unit_id!r}"
-        )
+        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
     if work_unit.state is WorkUnitState.DISCARDED:
-        raise WorkUnitMutationRefusedError(
-            f"work unit {work_unit_id!r} is discarded; cannot calculate"
-        )
+        raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
     inputs = dict(inputs_snapshot or {})
     overrides = dict(binding_overrides or {})
     outputs = dict(casilla_values)
@@ -391,9 +401,7 @@ def list_calculation_revisions(
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     catalogue = cr_repo.load()
     revisions = tuple(
-        revision
-        for revision in catalogue.values()
-        if work_unit_id is None or revision.work_unit_id == work_unit_id
+        revision for revision in catalogue.values() if work_unit_id is None or revision.work_unit_id == work_unit_id
     )
     return tuple(sorted(revisions, key=lambda r: (r.work_unit_id, r.created_at)))
 
@@ -409,9 +417,7 @@ def get_calculation_revision(
     catalogue = cr_repo.load()
     revision = catalogue.get(calculation_revision_id)
     if revision is None:
-        raise CalculationRevisionNotFoundError(
-            f"no calculation revision with id={calculation_revision_id!r}"
-        )
+        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
     return revision
 
 
@@ -439,9 +445,7 @@ def mark_revision_verified_complete(
     catalogue = cr_repo.load()
     existing = catalogue.get(calculation_revision_id)
     if existing is None:
-        raise CalculationRevisionNotFoundError(
-            f"no calculation revision with id={calculation_revision_id!r}"
-        )
+        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
     if existing.state is not CalculationRevisionState.DRAFT:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -458,6 +462,215 @@ def mark_revision_verified_complete(
     )
     cr_repo.save(upsert_calculation_revision(catalogue, verified))
     return verified
+
+
+_REGISTRY_ROOT_DEFAULT = "registry/aeat"
+
+
+def _required_input_casillas_for_revision(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> tuple[tuple[str, ...], tuple[str, ...]] | None:
+    """Resolve the registry's required and informational input casillas.
+
+    Returns a tuple of (required_casilla_ids, optional_input_casilla_ids)
+    drawn from the registry snapshot for the modelo / year / period.
+    Returns ``None`` when no registry snapshot can be resolved (e.g.
+    the modelo is not in the registry); the verifier treats this as
+    a blocking finding so the operator gets a clear refusal rather
+    than a silently-passed verification.
+
+    ``required`` casillas with ``input_kind="manual"`` are the
+    minimum the operator must supply. Casillas with
+    ``input_kind="bound"`` or ``"computed"`` are resolved by the
+    backend (bindings + formula engine); the current verify
+    implementation treats them as informational because the
+    bindings layer is responsible for them.
+    """
+
+    from pathlib import Path
+
+    from ...domain.calculations.registry import (
+        RegistrySnapshotError,
+        ValidatedRegistryAuthority,
+    )
+
+    try:
+        authority = ValidatedRegistryAuthority.load(Path(_REGISTRY_ROOT_DEFAULT), source_root=Path("."))
+    except FileNotFoundError:
+        return None
+
+    try:
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+    except RegistrySnapshotError:
+        return None
+
+    required: list[str] = []
+    optional: list[str] = []
+    for casilla in snapshot.revision.casillas:
+        casilla_id = str(casilla.id)
+        if casilla.input_kind == "manual" and casilla.required:
+            required.append(casilla_id)
+        elif casilla.input_kind in ("manual", "bound", "computed"):
+            optional.append(casilla_id)
+    return tuple(required), tuple(optional)
+
+
+def verify_modelo_revision(
+    calculation_revision_id: str,
+    *,
+    actor: str,
+    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    verification_repository: VerificationReportCatalogueRepository | None = None,
+    clock: datetime | None = None,
+) -> VerificationReport:
+    """Evaluate a draft revision against the verified-complete contract.
+
+    Pipeline:
+
+    1. Load the revision (must be DRAFT).
+    2. Resolve the registry snapshot for the parent work unit's
+       (modelo, year, period). On failure, emit a BLOCKING finding
+       and refuse the transition.
+    3. For each required-manual-input casilla in the registry:
+       check the revision's ``casilla_values`` contains it. Missing
+       entries become MISSING_REQUIRED_CASILLA findings of BLOCKING
+       severity.
+    4. Build a :class:`VerificationReport`. When zero blocking
+       findings are present and the completeness status is
+       ``COMPLETE``, ``granted_verified_complete`` is ``True`` and
+       the calculation revision transitions DRAFT →
+       VERIFIED_COMPLETE.
+    5. Persist the report in the verification-report catalogue.
+       Failed attempts persist so the audit trail explains why a
+       transition was refused.
+
+    Raises:
+        CalculationRevisionNotFoundError: When the revision id is
+            absent.
+        CalculationRevisionStateError: When the revision is not in
+            DRAFT state. Re-verifying a verified-complete or filed
+            revision is rejected because the state is immutable
+            from those points; the operator must produce a new
+            calculation revision (which lands as a fresh draft) to
+            verify again.
+    """
+
+    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    vr_repo = verification_repository or VerificationReportCatalogueRepository()
+
+    revisions = cr_repo.load()
+    target = revisions.get(calculation_revision_id)
+    if target is None:
+        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
+    if target.state is not CalculationRevisionState.DRAFT:
+        raise CalculationRevisionStateError(
+            f"calculation revision {calculation_revision_id!r} is in state "
+            f"{target.state.value!r}; only DRAFT revisions can be verified"
+        )
+
+    work_units = wu_repo.load()
+    work_unit = work_units.get(target.work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(
+            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
+        )
+
+    findings: list[VerificationFinding] = []
+    resolved_casillas: list[str] = []
+    missing_required: list[str] = []
+
+    registry_lookup = _required_input_casillas_for_revision(
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    if registry_lookup is None:
+        findings.append(
+            VerificationFinding(
+                kind=VerificationFindingKind.BLOCKING_RULE,
+                severity=VerificationFindingSeverity.BLOCKING,
+                message=(
+                    f"registry snapshot for modelo={work_unit.modelo!r} "
+                    f"year={work_unit.filing_year} period={work_unit.period!r} "
+                    f"could not be resolved"
+                ),
+                next_action="aeat app registry verify",
+            )
+        )
+    else:
+        required, _optional = registry_lookup
+        revision_keys = set(target.casilla_values)
+        for casilla_id in required:
+            if casilla_id in revision_keys:
+                resolved_casillas.append(casilla_id)
+            else:
+                missing_required.append(casilla_id)
+                findings.append(
+                    VerificationFinding(
+                        kind=VerificationFindingKind.MISSING_REQUIRED_CASILLA,
+                        severity=VerificationFindingSeverity.BLOCKING,
+                        casilla_id=casilla_id,
+                        message=(
+                            f"required casilla {casilla_id!r} is not present in "
+                            f"the calculation revision's casilla_values"
+                        ),
+                        next_action=(
+                            f"aeat app modelo work calculate {target.work_unit_id} --casilla {casilla_id}=VALUE"
+                        ),
+                    )
+                )
+
+    has_blocking = any(f.severity is VerificationFindingSeverity.BLOCKING for f in findings)
+    if has_blocking:
+        completeness = (
+            VerificationCompletenessStatus.INCOMPLETE
+            if missing_required and not any(f.kind is VerificationFindingKind.BLOCKING_RULE for f in findings)
+            else VerificationCompletenessStatus.BLOCKED
+        )
+        granted = False
+    else:
+        completeness = VerificationCompletenessStatus.COMPLETE
+        granted = True
+
+    now = clock or datetime.now(UTC)
+    report_id = derive_verification_report_id(
+        calculation_revision_id=calculation_revision_id,
+        run_at=now,
+        verified_by=actor.strip(),
+    )
+    report = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=calculation_revision_id,
+        completeness_status=completeness,
+        findings=tuple(findings),
+        resolved_casillas=tuple(resolved_casillas),
+        missing_required_casillas=tuple(missing_required),
+        run_at=now,
+        verified_by=actor.strip(),
+        granted_verified_complete=granted,
+    )
+
+    # Persist the report regardless of outcome — failed attempts
+    # are part of the audit trail.
+    vr_repo.save(upsert_verification_report(vr_repo.load(), report))
+
+    if granted:
+        verified = target.model_copy(
+            update={
+                "state": CalculationRevisionState.VERIFIED_COMPLETE,
+                "verified_at": now,
+                "verified_by": actor.strip(),
+                "updated_at": now,
+            }
+        )
+        cr_repo.save(upsert_calculation_revision(revisions, verified))
+
+    return report
 
 
 def file_modelo_revision(
@@ -505,9 +718,7 @@ def file_modelo_revision(
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
     if target is None:
-        raise CalculationRevisionNotFoundError(
-            f"no calculation revision with id={calculation_revision_id!r}"
-        )
+        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
     if target.state is not CalculationRevisionState.VERIFIED_COMPLETE:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -518,8 +729,7 @@ def file_modelo_revision(
     work_unit = work_units.get(target.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
-            f"calculation revision {calculation_revision_id!r} references missing "
-            f"work_unit_id={target.work_unit_id!r}"
+            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
         )
 
     now = clock or datetime.now(UTC)
@@ -652,16 +862,50 @@ def get_filing_record(
     catalogue = fr_repo.load()
     record = catalogue.get(filing_record_id)
     if record is None:
-        raise FilingRecordNotFoundError(
-            f"no filing record with id={filing_record_id!r}"
-        )
+        raise FilingRecordNotFoundError(f"no filing record with id={filing_record_id!r}")
     return record
+
+
+def list_verification_reports(
+    *,
+    calculation_revision_id: str | None = None,
+    verification_repository: VerificationReportCatalogueRepository | None = None,
+) -> tuple[VerificationReport, ...]:
+    """List verification reports, optionally filtered to one calculation revision.
+
+    Results are sorted by ``(calculation_revision_id, run_at)``.
+    """
+
+    vr_repo = verification_repository or VerificationReportCatalogueRepository()
+    catalogue = vr_repo.load()
+    reports = tuple(
+        r
+        for r in catalogue.values()
+        if calculation_revision_id is None or r.calculation_revision_id == calculation_revision_id
+    )
+    return tuple(sorted(reports, key=lambda r: (r.calculation_revision_id, r.run_at)))
+
+
+def get_verification_report(
+    verification_report_id: str,
+    *,
+    verification_repository: VerificationReportCatalogueRepository | None = None,
+) -> VerificationReport:
+    """Return one verification report by id, or raise."""
+
+    vr_repo = verification_repository or VerificationReportCatalogueRepository()
+    catalogue = vr_repo.load()
+    report = catalogue.get(verification_report_id)
+    if report is None:
+        raise VerificationReportNotFoundError(f"no verification report with id={verification_report_id!r}")
+    return report
 
 
 __all__ = [
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
     "FilingRecordNotFoundError",
+    "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",
     "WorkUnitNotFoundError",
@@ -671,10 +915,13 @@ __all__ = [
     "file_modelo_revision",
     "get_calculation_revision",
     "get_filing_record",
+    "get_verification_report",
     "get_work_unit",
     "list_calculation_revisions",
     "list_filing_records",
+    "list_verification_reports",
     "list_work_units",
     "mark_revision_verified_complete",
     "rename_work_unit",
+    "verify_modelo_revision",
 ]

@@ -12,6 +12,7 @@ from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     FilingRecordNotFoundError,
+    VerificationReportNotFoundError,
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
@@ -19,20 +20,22 @@ from ...application.modelo import (
     create_work_unit,
     discard_work_unit,
     file_modelo_revision,
-    get_calculation_revision,
     get_filing_record,
+    get_verification_report,
     get_work_unit,
     list_calculation_revisions,
     list_filing_records,
+    list_verification_reports,
     list_work_units,
-    mark_revision_verified_complete,
     rename_work_unit,
+    verify_modelo_revision,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._filing_record import FilingRecord
 from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
 from ...domain.calculations.registry._errors import RegistrySnapshotError
+from ...domain.modelos._calculation_revision import CalculationRevision
+from ...domain.modelos._filing_record import FilingRecord
+from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ._common import _emit, _parse_iso_date
 from ._i18n import tr
@@ -188,15 +191,11 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
     resolution layer downstream can coerce it per source type.
     """
     if "=" not in spec:
-        raise typer.BadParameter(
-            f"--binding must be KEY=VALUE; got {spec!r}"
-        )
+        raise typer.BadParameter(f"--binding must be KEY=VALUE; got {spec!r}")
     key, _, value = spec.partition("=")
     key = key.strip()
     if not key:
-        raise typer.BadParameter(
-            f"--binding key must be non-empty; got {spec!r}"
-        )
+        raise typer.BadParameter(f"--binding key must be non-empty; got {spec!r}")
     return key, value
 
 
@@ -233,9 +232,7 @@ def bindings_list(
     """
 
     scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
-    report = _run_query(
-        lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of))
-    )
+    report = _run_query(lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of)))
     rows = report.rows
     if missing:
         rows = tuple(row for row in rows if row.source != "constant_value")
@@ -268,8 +265,7 @@ def bindings_list(
         "binding_id\tsource\treadiness\ttyped_enum",
     ]
     lines.extend(
-        f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}"
-        for row in rows
+        f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}" for row in rows
     )
     _emit(ctx, payload, lines)
 
@@ -312,9 +308,7 @@ def bindings_preview(
 
     overrides = dict(_parse_binding_override(spec) for spec in (binding or ()))
     scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
-    report = _run_query(
-        lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of))
-    )
+    report = _run_query(lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of)))
     known_ids = {row.binding_id for row in report.rows}
     unknown_keys = sorted(set(overrides) - known_ids)
     if unknown_keys:
@@ -804,8 +798,64 @@ def work_revisions(
     _emit(ctx, payload, lines)
 
 
-@work_app.command("verified-complete", help=tr("cli.app.modelo.work.verified_complete_help"))
-def work_verified_complete(
+def _verification_report_payload(report: VerificationReport) -> dict[str, Any]:
+    return {
+        "verification_report_id": report.verification_report_id,
+        "calculation_revision_id": report.calculation_revision_id,
+        "completeness_status": report.completeness_status.value,
+        "granted_verified_complete": report.granted_verified_complete,
+        "resolved_casillas": list(report.resolved_casillas),
+        "missing_required_casillas": list(report.missing_required_casillas),
+        "run_at": report.run_at.isoformat(),
+        "verified_by": report.verified_by,
+        "findings": [
+            {
+                "kind": f.kind.value,
+                "severity": f.severity.value,
+                "casilla_id": f.casilla_id,
+                "expectation_id": f.expectation_id,
+                "message": f.message,
+                "next_action": f.next_action,
+            }
+            for f in report.findings
+        ],
+    }
+
+
+def _verification_report_lines(report: VerificationReport) -> list[str]:
+    lines = [
+        f"verification_report_id\t{report.verification_report_id}",
+        f"calculation_revision_id\t{report.calculation_revision_id}",
+        f"completeness_status\t{report.completeness_status.value}",
+        f"granted_verified_complete\t{str(report.granted_verified_complete).lower()}",
+        f"run_at\t{report.run_at.isoformat()}",
+        f"verified_by\t{report.verified_by}",
+        f"resolved_casilla_count\t{len(report.resolved_casillas)}",
+        f"missing_required_casilla_count\t{len(report.missing_required_casillas)}",
+        f"finding_count\t{len(report.findings)}",
+    ]
+    for casilla in report.missing_required_casillas:
+        lines.append(f"missing_casilla\t{casilla}")
+    for finding in report.findings:
+        next_action = finding.next_action or ""
+        casilla = finding.casilla_id or ""
+        lines.append(
+            "\t".join(
+                (
+                    "finding",
+                    finding.kind.value,
+                    finding.severity.value,
+                    casilla,
+                    finding.message,
+                    next_action,
+                )
+            )
+        )
+    return lines
+
+
+@work_app.command("verify", help=tr("cli.app.modelo.work.verify_help"))
+def work_verify(
     ctx: typer.Context,
     calculation_revision_id: Annotated[
         str,
@@ -816,19 +866,32 @@ def work_verified_complete(
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
     ],
 ) -> None:
-    """Mark a draft calculation revision as verified complete."""
+    """Verify a draft calculation revision against the verified-complete contract.
+
+    Produces a structured verification report. On success, the
+    revision transitions to ``verified_complete``. On failure, the
+    revision is not mutated and the report explains the missing
+    inputs or blocking findings.
+    """
 
     try:
-        revision = mark_revision_verified_complete(calculation_revision_id, actor=actor)
-    except (CalculationRevisionNotFoundError, CalculationRevisionStateError) as exc:
+        report = verify_modelo_revision(calculation_revision_id, actor=actor)
+    except (
+        CalculationRevisionNotFoundError,
+        CalculationRevisionStateError,
+        WorkUnitNotFoundError,
+    ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
     payload = {
-        "operation": "modelo.work.verified_complete",
-        **_calculation_revision_payload(revision),
+        "operation": "modelo.work.verify",
+        **_verification_report_payload(report),
     }
-    lines = ["operation\tmodelo.work.verified_complete", *_calculation_revision_lines(revision)]
+    lines = ["operation\tmodelo.work.verify", *_verification_report_lines(report)]
     _emit(ctx, payload, lines)
+
+    if not report.granted_verified_complete:
+        raise typer.Exit(code=1)
 
 
 @work_app.command("file", help=tr("cli.app.modelo.work.file_help"))
@@ -918,6 +981,80 @@ def filing_record_list(
         )
         for record in records
     )
+    _emit(ctx, payload, lines)
+
+
+verification_report_app = typer.Typer(
+    name="verification-report",
+    help=tr("cli.app.modelo.verification_report.app_help"),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(verification_report_app, name="verification-report")
+
+
+@verification_report_app.command("list", help=tr("cli.app.modelo.verification_report.list_help"))
+def verification_report_list(
+    ctx: typer.Context,
+    calculation_revision_id: Annotated[
+        str | None,
+        typer.Option(
+            "--calculation-revision-id",
+            help=tr("cli.app.modelo.work.calculation_revision_id_help"),
+        ),
+    ] = None,
+) -> None:
+    """List verification reports, optionally filtered to one revision."""
+
+    reports = list_verification_reports(calculation_revision_id=calculation_revision_id)
+    payload = {
+        "operation": "modelo.verification_report.list",
+        "calculation_revision_id_filter": calculation_revision_id,
+        "report_count": len(reports),
+        "reports": [_verification_report_payload(r) for r in reports],
+    }
+    lines = [
+        "operation\tmodelo.verification_report.list",
+        f"calculation_revision_id_filter\t{calculation_revision_id or ''}",
+        f"report_count\t{len(reports)}",
+        "verification_report_id\tcalculation_revision_id\tcompleteness_status\tgranted\trun_at\tverified_by",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                r.verification_report_id,
+                r.calculation_revision_id,
+                r.completeness_status.value,
+                str(r.granted_verified_complete).lower(),
+                r.run_at.isoformat(),
+                r.verified_by,
+            )
+        )
+        for r in reports
+    )
+    _emit(ctx, payload, lines)
+
+
+@verification_report_app.command("show", help=tr("cli.app.modelo.verification_report.show_help"))
+def verification_report_show(
+    ctx: typer.Context,
+    verification_report_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.verification_report.verification_report_id_help")),
+    ],
+) -> None:
+    """Show one verification report by id."""
+
+    try:
+        report = get_verification_report(verification_report_id)
+    except VerificationReportNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.verification_report.show",
+        **_verification_report_payload(report),
+    }
+    lines = ["operation\tmodelo.verification_report.show", *_verification_report_lines(report)]
     _emit(ctx, payload, lines)
 
 
