@@ -257,7 +257,7 @@ def _register_built_in_adapters() -> None:
     # digest and the restore writes it back through
     # ``save_with_raw_key``. Same-master-key round-trip only.
     for namespace, label, classification in (
-        (_PROFILE_NAMESPACE, "setup profile (autonomo identity)", SensitivityClass.IDENTITY),
+        (_PROFILE_NAMESPACE, "config profile (autonomo identity)", SensitivityClass.IDENTITY),
         ("aeat.persistence.profile.assets", "profile assets ledger", SensitivityClass.FINANCIAL),
         (
             "aeat.persistence.profile.assets.amortization",

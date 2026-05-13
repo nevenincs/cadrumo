@@ -74,11 +74,19 @@ def test_contract_source_kind_aliases_are_parser_only() -> None:
 
 def test_retired_surface_suggestions_capture_rejected_roots() -> None:
     setup = retired_surface_suggestion("setup")
+    deadlines = retired_surface_suggestion("deadlines")
+    browser = retired_surface_suggestion("browser")
     submit = retired_surface_suggestion("submit")
 
     assert setup is not None
     assert setup.replacement == "config"
     assert setup.suggestion == "aeat config init"
+    assert deadlines is not None
+    assert deadlines.replacement == "app overview"
+    assert deadlines.suggestion == "aeat app overview"
+    assert browser is not None
+    assert browser.replacement == "config doctor connectivity"
+    assert browser.suggestion == "aeat config doctor connectivity"
     assert submit is not None
     assert submit.replacement is None
     assert submit.reason == "live submission is permanently disabled"

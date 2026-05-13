@@ -32,7 +32,7 @@ _logger = get_logger(__name__)
 class StorageStatePaths(BaseModel):
     """Logical storage-state identifier for one provider's persisted AEAT session."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="ignore")
 
     storage_state: Path
 

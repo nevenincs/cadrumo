@@ -58,6 +58,12 @@ RETIRED_OPERATOR_SURFACES: tuple[RetiredOperatorSurface, ...] = (
         reason="ledger data operations belong under the app ledger workflow",
     ),
     RetiredOperatorSurface(
+        name="deadlines",
+        replacement="app overview",
+        suggestion="aeat app overview",
+        reason="deadline calendar and agenda behavior belongs under app overview",
+    ),
+    RetiredOperatorSurface(
         name="filing",
         replacement="app modelo",
         suggestion="aeat app modelo",
@@ -98,6 +104,12 @@ RETIRED_OPERATOR_SURFACES: tuple[RetiredOperatorSurface, ...] = (
         replacement="app registry",
         suggestion="aeat app registry citations",
         reason="topic content folds into registry citations and inline help",
+    ),
+    RetiredOperatorSurface(
+        name="browser",
+        replacement="config doctor connectivity",
+        suggestion="aeat config doctor connectivity",
+        reason="browser health probes belong under config diagnostics",
     ),
     RetiredOperatorSurface(
         name="submit",

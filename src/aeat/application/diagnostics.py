@@ -279,7 +279,7 @@ def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
             name="profile.active",
             status="warn",
             summary="no active profile",
-            next_action="aeat config setup --profile-name NAME --tax-id NIF",
+            next_action="aeat config init --profile NAME --tax-id NIF --activity TEXT --iva-regime REGIME",
         )
     if not report.profile_ready:
         return DiagnosticCheck(
@@ -301,14 +301,14 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
             name="auth.provider",
             status="warn",
             summary="no authentication provider configured",
-            next_action="aeat config auth --provider certificate --file PATH",
+            next_action="aeat config auth configure --provider certificate --certificate-path PATH",
         )
     if not report.login_ready:
         return DiagnosticCheck(
             name="auth.session",
             status="warn",
             summary=f"{report.auth_provider} configured but no active session",
-            next_action="aeat config auth --provider certificate",
+            next_action="aeat config auth test --provider certificate",
         )
     return DiagnosticCheck(name="auth.session", status="ok", summary=f"{report.auth_provider} session ready")
 

@@ -108,7 +108,7 @@ def _seed_profile(
 
     ``iva.regime`` defaults to ``GENERAL`` so the seeded profile
     matches the operator's state after a quiet, no-override
-    ``aeat config setup`` run.
+    ``aeat config init`` run.
     """
 
     from aeat.application.profile._actions import set_active_profile, set_profile_values
@@ -146,7 +146,7 @@ def test_root_surface_contains_config_and_app_only() -> None:
     ):
         # The substring may legitimately appear inside an option label
         # (e.g. ``--install-completion``) or another command name
-        # (e.g. ``config setup``); only the top-level Commands block
+        # (e.g. ``config init``); only the top-level Commands block
         # is checked here.
         commands_section = result.output.split("Commands", 1)[-1] if "Commands" in result.output else ""
         assert removed_command not in commands_section, removed_command
@@ -159,7 +159,7 @@ def test_root_no_args_renders_help_successfully() -> None:
     assert "config" in result.output
     assert "app" in result.output
     assert "--version" in result.output
-    assert "Quickstart: aeat config setup --profile-name NAME --tax-id NIF" in result.output
+    assert "Quickstart: aeat config init --profile NAME --tax-id NIF" in result.output
 
 
 def test_removed_developer_commands_are_not_registered() -> None:
@@ -284,7 +284,7 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
     commands = [
         ["--help"],
         ["config", "--help"],
-        ["config", "setup", "--help"],
+        ["config", "init", "--help"],
         ["config", "status", "--help"],
         ["config", "auth", "--help"],
         ["config", "set", "--help"],
@@ -362,9 +362,9 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
 ) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
 
-    configure = _invoke(["config", "auth", "--provider", "clave_movil"])
-    unsupported_spelling = _invoke(["config", "auth", "--provider", "clave-movil"])
-    unsupported = _invoke(["config", "auth", "--provider", "clave_permanente"])
+    configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
+    unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
+    unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_permanente"])
 
     assert configure.exit_code == 0, configure.output
     assert "clave_movil" in configure.output
@@ -723,7 +723,7 @@ def test_operator_n26_modelo_303_tape_builds_registry_draft_from_invoices(
         encoding="utf-8",
     )
     commands = [
-        ["config", "auth", "--provider", "clave_movil"],
+        ["config", "auth", "configure", "--provider", "clave_movil"],
         ["app", "ledger", "import", str(statement), "--provider", "n26", "--dry-run"],
         ["app", "ledger", "import", str(statement), "--provider", "n26", "--period", period, "--verify"],
     ]
