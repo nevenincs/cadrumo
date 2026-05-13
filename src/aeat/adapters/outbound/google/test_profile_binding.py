@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
 import pytest
 
 from aeat.adapters.outbound.google._errors import GoogleAuthProfileUnboundError
@@ -26,7 +24,9 @@ class _StubRepository:
 def _patch_repository(monkeypatch: pytest.MonkeyPatch, state: WorkflowState) -> None:
     """Wire `_StubRepository(state)` into the resolver's import path."""
 
-    factory: Callable[[], _StubRepository] = lambda: _StubRepository(state)
+    def factory() -> _StubRepository:
+        return _StubRepository(state)
+
     monkeypatch.setattr(
         "aeat.adapters.outbound.google._profile_binding.workflow_state_repository",
         factory,

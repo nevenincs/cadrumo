@@ -224,6 +224,19 @@ ignore = [
   "S106",
   "T20"
 ]
+# `_NAMESPACE_TOKEN` is a SecureObjectRepository namespace identifier,
+# not a password literal; ruff's S105 misreads the constant name.
+"src/aeat/adapters/outbound/google/_session_store.py" = ["S105"]
+# Google CLI tests use synthetic OAuth refresh_token + token_uri
+# fixtures and emit long inline kwargs that are easier to read on one
+# line than wrapped.
+"src/aeat/entrypoints/cli/_config/test_google.py" = [
+  "S101",
+  "S105",
+  "S106",
+  "T20",
+  "E501"
+]
 # `certificate_password_secret_var_name` is the NAME of an env var, not a
 # password. `_PASSWORD_COMMENT_PREFIX` is a file-format prefix, not a secret.
 "src/aeat/application/setup/_env_writer.py" = ["S105"]

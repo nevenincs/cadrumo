@@ -1,3 +1,7 @@
+access_gate:
+  errors:
+    default_translatable: Az élő AEAT-benyújtás véglegesen le van tiltva. Készítsd
+      el, ellenőrizd, exportáld, majd töltsd fel kézzel a fájlt az AEAT portálon.
 aggregation:
   models:
     errors:
@@ -203,6 +207,19 @@ cli:
     get:
       help: Egy konfigurációs kulcs aktuális értékének megjelenítése
       key_help: A kiolvasandó kulcs (pl. tax.id, iva.regime)
+    google:
+      client_json_help: A Cloud Console Desktop OAuth kliens JSON fájl útvonala
+      help: A Google OAuth Desktop integráció kezelése Drive és Sheets eléréshez
+      login_help: OAuth hozzájárulási folyamat futtatása (vagy meglévő hitelesítő
+        adat frissítése)
+      logout_help: A frissítő token és metaadatok törlése; a regisztrált kliens megőrzése
+      profile_help: AEAT profil neve (alapértelmezett = a munkafolyam állapotában aktív
+        profil)
+      refresh_only_help: A hozzájárulás kihagyása; csak meglévő hitelesítő adat frissítése
+      register_help: Cloud Console Desktop OAuth kliens JSON regisztrálása az aktív
+        profilhoz
+      status_help: A Google OAuth munkamenet aktuális állapotának megjelenítése az
+        aktív profilhoz
     list:
       help: Az összes konfigurációs kulcs és aktuális értékének listázása
     profile:
@@ -503,7 +520,7 @@ cli:
       headline: AEAT adoasszisztens
       help_line: 'Tovabbi segitseg: futtasd az `aeat --help`, `aeat config --help`
         vagy `aeat app --help` parancsot.'
-      quick_start_doctor: '  5. `aeat config repair` - konfiguracio, tarolo es helyi
+      quick_start_repair: '  5. `aeat config repair` - konfiguracio, tarolo es helyi
         allapot diagnosztikaja.'
       quick_start_heading: Gyors kezdes
       quick_start_import: '  3. `aeat app ledger import <banki-kivonat.csv> --provider

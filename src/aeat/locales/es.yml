@@ -1,3 +1,8 @@
+access_gate:
+  errors:
+    default_translatable: El envío en vivo a la AEAT está deshabilitado permanentemente.
+      Genera, verifica, exporta y sube el fichero manualmente en el portal de la
+      AEAT.
 aggregation:
   models:
     errors:
@@ -214,6 +219,21 @@ cli:
     get:
       help: Mostrar el valor actual de una clave de configuración
       key_help: Clave a leer (ej. tax.id, iva.regime)
+    google:
+      client_json_help: Ruta al archivo JSON del cliente OAuth Desktop de Cloud Console
+      help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
+      login_help: Ejecutar el flujo de consentimiento OAuth (o refrescar una credencial
+        existente)
+      logout_help: Limpiar el token de refresco y los metadatos; conservar el cliente
+        registrado
+      profile_help: Perfil AEAT a usar (por defecto = perfil activo del estado de
+        flujo)
+      refresh_only_help: Omitir el consentimiento y refrescar solo una credencial
+        existente
+      register_help: Registrar un JSON de cliente OAuth Desktop de Cloud Console para
+        el perfil activo
+      status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil
+        activo
     list:
       help: Listar todas las claves de configuración y sus valores actuales
     profile:
@@ -518,7 +538,7 @@ cli:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
         --help`.'
-      quick_start_doctor: '  5. `aeat config repair` - diagnosticar configuración,
+      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuración,
         almacenamiento y salud local.'
       quick_start_heading: Inicio rápido
       quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider
