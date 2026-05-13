@@ -1,0 +1,96 @@
+"""Tests for active-profile transaction catalogue resolution."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
+from ...adapters.persistence.storage.sql._orm import Base
+from ...core.config import Settings
+from ...domain.transactions import (
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
+    Transaction,
+    TransactionCatalogue,
+    TransactionDirection,
+)
+from . import (
+    NoActiveProfileError,
+    ProfileBucketPointer,
+    WorkflowState,
+    active_transaction_catalogue_repository,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+@pytest.fixture
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"))
+    Base.metadata.create_all(engine)
+    try:
+        yield SecureObjectRepository(engine=engine)
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
+
+
+def _state(*, profile: str, bucket_id: str) -> WorkflowState:
+    return WorkflowState(
+        active_profile=profile,
+        profiles={profile: ProfileBucketPointer(bucket_id=bucket_id)},
+    )
+
+
+def _transaction(provider_id: str) -> Transaction:
+    raw = RawTransaction(
+        transaction_id=provider_id,
+        booked_date=date(2026, 5, 1),
+        value_date=date(2026, 5, 1),
+        amount=Decimal("-42.00"),
+        currency="EUR",
+        counterparty="Proveedor SL",
+        description=f"bucket scoped row {provider_id}",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="c" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.CSV,
+            ingested_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
+            provider_name="CSV provider",
+        ),
+        raw_fields={"Concepto": provider_id},
+    )
+    return Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+
+
+def test_active_transaction_catalogue_repository_routes_by_active_profile_bucket(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    first_state = _state(profile="alpha", bucket_id="bucket-alpha")
+    second_state = _state(profile="beta", bucket_id="bucket-beta")
+    first_transaction = _transaction("same-provider-row")
+
+    active_transaction_catalogue_repository(first_state, objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((first_transaction,)),
+    )
+
+    first_catalogue = active_transaction_catalogue_repository(first_state, objects=secure_objects).load()
+    second_catalogue = active_transaction_catalogue_repository(second_state, objects=secure_objects).load()
+
+    assert tuple(first_catalogue.transactions) == (first_transaction.transaction_id,)
+    assert second_catalogue.transactions == {}
+
+
+def test_active_transaction_catalogue_repository_rejects_missing_active_bucket() -> None:
+    with pytest.raises(NoActiveProfileError, match="no active profile bucket"):
+        active_transaction_catalogue_repository(WorkflowState())

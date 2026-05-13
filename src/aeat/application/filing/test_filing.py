@@ -261,7 +261,7 @@ def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -
 def test_validate_draft_preserves_id_without_builder_dispatch() -> None:
     schema_provider = _schema_provider()
     draft = _draft(schema_provider)
-    refreshed = validate_draft(draft, schema_provider=schema_provider)
+    refreshed = validate_draft(draft, bucket_id="test", schema_provider=schema_provider)
     assert refreshed.draft_id == draft.draft_id
 
 
@@ -335,6 +335,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
 
     approved = approve_draft(
         draft,
+        bucket_id="test",
         approved_by="operator",
         schema_provider=schema_provider,
         transaction_catalogue=TransactionCatalogue(),
@@ -369,6 +370,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
 
     approved = approve_draft(
         draft,
+        bucket_id="test",
         approved_by="registry",
         schema_provider=schema_provider,
         transaction_catalogue=TransactionCatalogue(),
@@ -396,6 +398,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
 
     approved = approve_draft(
         draft,
+        bucket_id="test",
         approved_by="registry",
         schema_provider=schema_provider,
         transaction_catalogue=TransactionCatalogue(),
@@ -429,6 +432,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
 
     approved = approve_draft(
         draft,
+        bucket_id="test",
         approved_by="registry",
         schema_provider=schema_provider,
         transaction_catalogue=TransactionCatalogue(),
@@ -447,6 +451,7 @@ def test_approve_draft_rejects_schema_version_mismatch() -> None:
     with pytest.raises(FilingDraftError, match="registry review surface"):
         approve_draft(
             draft,
+            bucket_id="test",
             approved_by="operator",
             schema_provider=schema_provider,
             transaction_catalogue=TransactionCatalogue(),
@@ -464,6 +469,7 @@ def test_approve_draft_rejects_formula_trace_mismatch() -> None:
     with pytest.raises(FilingDraftError, match="registry review surface"):
         approve_draft(
             draft,
+            bucket_id="test",
             approved_by="operator",
             schema_provider=schema_provider,
             transaction_catalogue=TransactionCatalogue(),
@@ -483,6 +489,7 @@ def test_refresh_review_status_preserves_submitted_status_but_clears_stale_appro
     )
     refreshed = refresh_review_status(
         draft,
+        bucket_id="test",
         schema_provider=schema_provider,
         transaction_catalogue=TransactionCatalogue(),
     )

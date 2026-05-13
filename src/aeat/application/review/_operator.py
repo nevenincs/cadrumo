@@ -69,10 +69,16 @@ def project_review_queue(
     """Return review rows using accepted source-kind vocabulary."""
 
     selected = _resolve_internal_kinds((*tuple(kinds), *tuple(source_kinds)))
-    items = ReviewQueue.collect(settings or Settings(), kinds=selected, state=state, modelo=modelo)
+    bucket_id = _active_bucket_id()
+    items = ReviewQueue.collect(
+        settings or Settings(),
+        bucket_id=bucket_id,
+        kinds=selected,
+        state=state,
+        modelo=modelo,
+    )
     accepted_kinds = frozenset(kind.strip() for kind in kinds if kind.strip())
     accepted_source_kinds = frozenset(kind.strip() for kind in source_kinds if kind.strip())
-    bucket_id = _active_bucket_id()
     rows = tuple(
         row
         for item in items
@@ -182,10 +188,10 @@ def _render_summary(value: str) -> str:
 
 
 def _active_bucket_id() -> str:
+    from ..workflow._models import active_bucket_id_or_raise
     from ..workflow._persistence import workflow_state_repository
 
-    state = workflow_state_repository().load()
-    return state.active_profile_bucket_id() or "default"
+    return active_bucket_id_or_raise(workflow_state_repository().load())
 
 
 def _year_period(value: str) -> str:

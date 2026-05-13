@@ -378,6 +378,23 @@ class Transaction(BaseModel):
         return self
 
 
+class BucketTransactionRef(BaseModel):
+    """A transaction identifier qualified by its owning profile bucket."""
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str = Field(min_length=1, max_length=128)
+    transaction_id: str = Field(min_length=64, max_length=64)
+
+    @field_validator("bucket_id", "transaction_id")
+    @classmethod
+    def _trim_non_blank(cls, value: str) -> str:
+        trimmed = value.strip()
+        if not trimmed:
+            raise TransactionValidationError("bucket transaction reference fields must not be blank")
+        return trimmed
+
+
 class TransactionCatalogue(BaseModel):
     """Immutable catalogue keyed by ``transaction_id``.
 

@@ -16,7 +16,7 @@ import pytest
 
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...core.config import Settings
-from ...core.i18n import Translatable as tr
+from ...core.i18n import Translatable
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -87,8 +87,8 @@ def _build_settings(tmp_path: Path) -> Settings:
     )
 
 
-def _summary(text: str = "demo") -> tr:
-    return tr("translation")
+def _summary(text: str = "demo") -> Translatable:
+    return Translatable("translation")
 
 
 def _schema_version(modelo: str = "130") -> str:
@@ -136,7 +136,7 @@ def _transaction(
 
 def test_transactions_pending_returns_empty_when_source_missing(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    assert transactions_pending(settings) == ()
+    assert transactions_pending(settings, bucket_id="test") == ()
 
 
 def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
@@ -147,14 +147,23 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
             _transaction(source_row_index=2, classification=BusinessClassification.BUSINESS),
         )
     )
-    TransactionCatalogueRepository().save(catalogue)
-    items = transactions_pending(settings)
+    TransactionCatalogueRepository(bucket_id="test").save(catalogue)
+    items = transactions_pending(settings, bucket_id="test")
     assert len(items) == 1
     item = items[0]
     assert isinstance(item, TransactionReviewItem)
     assert item.severity is ReviewSeverity.NORMAL
     assert item.modelo is None
     assert item.source.business_classification is BusinessClassification.NOT_YET_PROCESSED
+
+
+def test_transactions_pending_reads_only_requested_bucket(tmp_path: Path) -> None:
+    settings = _build_settings(tmp_path)
+    other_bucket_catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1),))
+    TransactionCatalogueRepository(bucket_id="other-profile").save(other_bucket_catalogue)
+
+    assert transactions_pending(settings, bucket_id="active-profile") == ()
+    assert len(transactions_pending(settings, bucket_id="other-profile")) == 1
 
 
 @pytest.mark.parametrize(
@@ -172,8 +181,8 @@ def test_transactions_pending_severity_mapping(
 ) -> None:
     settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1, classification=state),))
-    TransactionCatalogueRepository().save(catalogue)
-    items = transactions_pending(settings)
+    TransactionCatalogueRepository(bucket_id="test").save(catalogue)
+    items = transactions_pending(settings, bucket_id="test")
     assert len(items) == 1
     assert items[0].severity is expected_severity
 
@@ -193,8 +202,8 @@ def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
             ),
         )
     )
-    TransactionCatalogueRepository().save(catalogue)
-    assert transactions_pending(settings) == ()
+    TransactionCatalogueRepository(bucket_id="test").save(catalogue)
+    assert transactions_pending(settings, bucket_id="test") == ()
 
 
 # ── invoices adapter ──────────────────────────────────────────────
@@ -408,7 +417,7 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
     assert items[0].draft_id == "d_stale"
     summary_key = items[0].summary
     assert summary_key == "review.adapters.t_787894"
-    assert items[0].drill_command.startswith("aeat review show ")
+    assert items[0].drill_command.startswith("aeat app review show ")
 
 
 def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> None:

@@ -478,6 +478,7 @@ def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, 
 
 def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_user_cli: Path) -> None:
     tmp_path = encrypted_user_cli
+    _seed_profile(tax_id="00000000T", name="kent", activity="design")
     canary = "CLI_ENCRYPTED_LEDGER_CANARY_5A2F"
     transaction_ref = "n26-secure-row-001"
     statement = tmp_path / "n26-secure.csv"
@@ -491,12 +492,15 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
         encoding="utf-8",
     )
 
-    imported = _invoke(["app", "ledger", "import", str(statement), "--provider", "n26"])
+    imported = _invoke(["--format", "json", "app", "ledger", "import", str(statement), "--provider", "n26"])
 
     assert imported.exit_code == 0, imported.output
+    import_payload = json.loads(_json_output(imported))
+    assert import_payload["bucket_id"] == "default"
+    assert import_payload["imported_transaction_refs"][0]["bucket_id"] == "default"
     assert not (tmp_path / "txs" / "transactions.envelope.json").exists()
     _assert_secure_database_payload(tmp_path, canary, transaction_ref)
-    catalogue = TransactionCatalogueRepository().load()
+    catalogue = TransactionCatalogueRepository(bucket_id="default").load()
     [stored] = list(catalogue.transactions.values())
     assert stored.raw.counterparty == canary
     assert stored.raw.transaction_id == transaction_ref

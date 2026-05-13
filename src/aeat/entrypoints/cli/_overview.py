@@ -48,7 +48,9 @@ def overview_status(
     """Render workspace state, calendar view, or per-period detail."""
     current = _state()
     if calendar:
-        transactions = _load_transactions()
+        from ...domain.transactions import TransactionCatalogue
+
+        transactions = _load_transactions(current) if current.active_profile_bucket_id() else TransactionCatalogue()
         invoices = _load_invoices()
         drafts = _load_drafts()
         if not from_date or not to_date:

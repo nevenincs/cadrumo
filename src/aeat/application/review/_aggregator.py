@@ -37,6 +37,7 @@ class ReviewQueue:
     def collect(
         settings: Settings,
         *,
+        bucket_id: str,
         kinds: frozenset[ReviewItemKind] | None = None,
         modelo: str | None = None,
         state: ReviewState = ReviewState.PENDING,
@@ -69,10 +70,12 @@ class ReviewQueue:
             A tuple sorted by ``(severity desc, since asc, item_id asc)``.
         """
         if confidence_below is not None:
-            items: list[ReviewItem] = list(transactions_low_confidence(settings, threshold=confidence_below))
+            items: list[ReviewItem] = list(
+                transactions_low_confidence(settings, bucket_id=bucket_id, threshold=confidence_below)
+            )
         else:
             items = [
-                *transactions_pending(settings),
+                *transactions_pending(settings, bucket_id=bucket_id),
                 *invoices_pending(settings),
                 *drafts_pending(settings),
             ]

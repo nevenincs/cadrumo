@@ -162,6 +162,8 @@ def test_app_ledger_import_reimport_edit_review_round_trips_state(
     tmp_path: Path,
 ) -> None:
     _isolate(monkeypatch, tmp_path)
+    init = _invoke(["config", "init", "--quiet", "--tax-id", "12345678Z", "--activity", "Test"])
+    assert init.exit_code == 0
     statement = tmp_path / "n26.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"

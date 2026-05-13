@@ -20,7 +20,7 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -28,6 +28,10 @@ from ..auth._models import AuthState
 from ._utils import utc_now
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+if TYPE_CHECKING:
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...domain.transactions import TransactionCatalogueRepository
 
 
 class WorkflowEvent(BaseModel):
@@ -166,6 +170,42 @@ class WorkflowState(BaseModel):
         if pointer is None:
             return None
         return pointer.bucket_id
+
+
+def active_bucket_id_or_raise(state: WorkflowState) -> str:
+    """Return the active profile's bucket id or raise :class:`NoActiveProfileError`.
+
+    Bucket-scoped repositories use this helper at construction time so
+    application services refuse to operate when no profile is selected.
+    """
+
+    bucket_id = state.active_profile_bucket_id()
+    if bucket_id is None:
+        from ._errors import NoActiveProfileError
+
+        raise NoActiveProfileError("no active profile bucket")
+    return bucket_id
+
+
+def active_transaction_catalogue_repository(
+    state: WorkflowState,
+    *,
+    objects: SecureObjectRepository | None = None,
+) -> TransactionCatalogueRepository:
+    """Return the transaction catalogue repository for the active profile bucket."""
+
+    from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository
+    from ._errors import NoActiveProfileError
+
+    try:
+        bucket_id = active_bucket_id_or_raise(state)
+    except NoActiveProfileError as exc:
+        raise LedgerNoActiveBucketError(
+            "no active profile bucket",
+            context={"repository": "transaction_catalogue", "operation": "resolve_active_bucket"},
+            suggestion="aeat config init --profile NAME",
+        ) from exc
+    return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
 
 
 def update_declaration_pointer(

@@ -90,6 +90,7 @@ def _per_lang_summary(template: str, **fields: str | Translatable) -> Translatab
 def transactions_pending(
     settings: Settings,
     *,
+    bucket_id: str,
     catalogue: TransactionCatalogue | None = None,
 ) -> tuple[TransactionReviewItem, ...]:
     """Return one :class:`TransactionReviewItem` per pending-review transaction.
@@ -99,7 +100,7 @@ def transactions_pending(
     final disposition and do not want the operator's attention.
     """
     if catalogue is None:
-        catalogue = _load_transactions(settings)
+        catalogue = _load_transactions(settings, bucket_id=bucket_id)
         if catalogue is None:
             return ()
     items: list[TransactionReviewItem] = []
@@ -114,6 +115,7 @@ def transactions_pending(
 def transactions_low_confidence(
     settings: Settings,
     *,
+    bucket_id: str,
     threshold: Decimal,
     catalogue: TransactionCatalogue | None = None,
 ) -> tuple[TransactionReviewItem, ...]:
@@ -129,7 +131,7 @@ def transactions_low_confidence(
     to filter against.
     """
     if catalogue is None:
-        catalogue = _load_transactions(settings)
+        catalogue = _load_transactions(settings, bucket_id=bucket_id)
         if catalogue is None:
             return ()
     items: list[TransactionReviewItem] = []
@@ -160,11 +162,11 @@ def _classify_transaction(state: BusinessClassification) -> ReviewSeverity | Non
     return ReviewSeverity.NORMAL
 
 
-def _load_transactions(settings: Settings) -> TransactionCatalogue | None:
+def _load_transactions(settings: Settings, *, bucket_id: str) -> TransactionCatalogue | None:
     from ...domain.transactions import TransactionCatalogueRepository
 
     del settings
-    repository = TransactionCatalogueRepository()
+    repository = TransactionCatalogueRepository(bucket_id=bucket_id)
     if not repository.exists():
         _LOGGER.debug("transactions catalogue secure object absent")
         return None
