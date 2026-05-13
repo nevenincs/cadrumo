@@ -185,9 +185,13 @@ per-modelo section, and shrink the list of open questions.
   storage-maintenance verbs.
 - CLI grammar is verb-noun. Every command supports `--format json`. Output
   rendering uses the `_emit` helper pattern (no Rich-only surfaces).
-- Profile reads route through `workflow_state_repository()`. The legacy
-  flat-file `load_profile_envelope` path is retired and removed from
-  operator-facing CLI code.
+- Profile reads use workflow state only to identify the active profile
+  pointer. `WorkflowState.profiles` stores pointer records such as
+  `{ "bucket_id": profile_name }`; profile values themselves live only in
+  `PROFILE_BUCKET_NAMESPACE = "aeat.application.profile.bucket"` as
+  `Envelope[ProfileBucket]` with `SensitivityClass.IDENTITY`, loaded
+  through `profile_bucket_repository().load(...)` from
+  `state.active_profile_record()`.
 - This apex is the complete CLI contract. The `related` frontmatter must be
   kept current as additional implementation records, audits, and execution
   plans land.
@@ -262,8 +266,14 @@ records, not in compatibility aliases or support surfaces.
   Root `--format json|text` is the only output selector. Rich-only
   retained surfaces, command-local `--json`, bespoke JSON emitters, and
   NDJSON are rejected.
-- **Profile read path (locked).** All command surfaces read profiles
-  through `workflow_state_repository()`. `--profile PATH`,
+- **Profile read path (locked).** All command surfaces use workflow state
+  only to identify the active profile pointer. `WorkflowState.profiles`
+  stores pointer records such as `{ "bucket_id": profile_name }`; profile
+  values live only in `PROFILE_BUCKET_NAMESPACE =
+  "aeat.application.profile.bucket"` as `Envelope[ProfileBucket]` with
+  `SensitivityClass.IDENTITY`, loaded through
+  `profile_bucket_repository().load(...)` from
+  `state.active_profile_record()`. `--profile PATH`,
   `AEAT_DEFAULT_PROFILE_PATH`, flat-file fallback reads, dual read paths,
   and profile-envelope compatibility surfaces are rejected.
 - **CLI observability wrapping (locked).** `_observability.py` helpers are
