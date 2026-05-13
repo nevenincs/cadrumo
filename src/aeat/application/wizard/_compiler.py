@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...domain.profile._keys import ProfileKey, ProfileKeyRequirement
 from ._errors import WizardCompileError
 from ._models import WizardCondition, WizardFlow, WizardQuestion
@@ -51,7 +51,7 @@ def compile_profile_keys(flows: Sequence[WizardFlow]) -> tuple[ProfileKey, ...]:
                     continue
                 if question.profile_key in keys:
                     raise WizardCompileError(
-                        f"duplicate profile_key {question.profile_key!r}",
+                        f"wizard compile duplicate profile_key {question.profile_key!r}",
                         context={"profile_key": question.profile_key, "question_id": question.id},
                     )
                 keys[question.profile_key] = _compile_one(question, by_id)
@@ -79,7 +79,7 @@ def _compile_one(
     return ProfileKey(
         key=question.profile_key,
         requirement=requirement,
-        description=Translatable(f"profile.keys.{question.profile_key}"),
+        description=tr(f"profile.keys.{question.profile_key}"),
         required_when_key=required_when_key,
         required_when_value=required_when_value,
     )

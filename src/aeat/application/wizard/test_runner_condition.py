@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ._models import WizardCondition, WizardQuestion, WizardWidget
 from ._runner import _condition_satisfied
 
@@ -39,7 +39,7 @@ def _question(
     return WizardQuestion(
         id=qid,
         widget=WizardWidget.TEXT,
-        prompt=Translatable("wizard.test.example.prompt"),
+        prompt=tr("wizard.test.example.prompt"),
         choices=(),
         default=None,
         visible_when=visible_when,

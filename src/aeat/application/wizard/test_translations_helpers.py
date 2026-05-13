@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ._models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from ._translations import (
     _FIXED_RUNTIME_KEYS,
@@ -41,15 +41,13 @@ def _build_minimal_flow(*, with_help: bool = False, with_choice_description: boo
     question = WizardQuestion(
         id="example",
         widget=WizardWidget.SELECT,
-        prompt=Translatable("wizard.test.example.prompt"),
-        help=Translatable("wizard.test.example.help") if with_help else None,
+        prompt=tr("wizard.test.example.prompt"),
+        help=tr("wizard.test.example.help") if with_help else None,
         choices=(
             WizardChoice(
                 value="yes",
-                label=Translatable("wizard.test.example.choices.yes.label"),
-                description=(
-                    Translatable("wizard.test.example.choices.yes.description") if with_choice_description else None
-                ),
+                label=tr("wizard.test.example.choices.yes.label"),
+                description=(tr("wizard.test.example.choices.yes.description") if with_choice_description else None),
             ),
         ),
         default="yes",
@@ -57,13 +55,13 @@ def _build_minimal_flow(*, with_help: bool = False, with_choice_description: boo
     )
     section = WizardSection(
         id="main",
-        title=Translatable("wizard.test.main.title"),
+        title=tr("wizard.test.main.title"),
         questions=(question,),
     )
     return WizardFlow(
         id="test",
-        title=Translatable("wizard.test.title"),
-        description=Translatable("wizard.test.description"),
+        title=tr("wizard.test.title"),
+        description=tr("wizard.test.description"),
         sections=(section,),
         answers_model=_DummyAnswers,
     )

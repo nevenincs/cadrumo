@@ -185,7 +185,7 @@ def _active_bucket_id() -> str:
     from ..workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
-    return state.active_profile or "default"
+    return state.active_profile_bucket_id() or "default"
 
 
 def _year_period(value: str) -> str:

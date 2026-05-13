@@ -14,15 +14,15 @@ from aeat.application.wizard._errors import (
 )
 from aeat.application.wizard._models import WizardQuestion, WizardWidget
 from aeat.application.wizard._prompter import Prompter, ScriptedPrompter
-from aeat.core.i18n import Translatable
+from aeat.core.i18n import Translatable as tr  # noqa: N813
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_PROMPT_TAX = Translatable("wizard.setup.profile.tax-id.prompt")
-_PROMPT_NAME = Translatable("wizard.setup.profile.name.prompt")
+_PROMPT_TAX = tr("wizard.setup.profile.tax-id.prompt")
+_PROMPT_NAME = tr("wizard.setup.profile.name.prompt")
 
 
-def _question(qid: str, prompt: Translatable) -> WizardQuestion:
+def _question(qid: str, prompt: tr) -> WizardQuestion:
     return WizardQuestion(
         id=qid,
         profile_key=None,

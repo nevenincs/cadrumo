@@ -5,7 +5,7 @@ from __future__ import annotations
 import unicodedata
 from typing import Literal, NamedTuple
 
-from ....core.i18n import Translatable
+from ....core.i18n import Translatable as tr  # noqa: N813
 
 CitationSource = Literal["ley", "real_decreto", "orden", "reglamento", "manual", "instruction"]
 
@@ -17,7 +17,7 @@ def _fold_diacritics(text: str) -> str:
 class KnownBadCitation(NamedTuple):
     source: CitationSource
     article: str
-    role_substring: Translatable
+    role_substring: tr
     reason: str
 
 
@@ -25,85 +25,85 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
     KnownBadCitation(
         "ley",
         "103",
-        Translatable("cuota diferencial"),
+        tr("cuota diferencial"),
         "LIRPF art. 103 is 'Liquidaciones provisionales'; cuota diferencial lives in art. 79.",
     ),
     KnownBadCitation(
         "ley",
         "77",
-        Translatable("cuota íntegra autonómica"),
+        tr("cuota íntegra autonómica"),
         "LIRPF art. 77 is 'Cuota líquida autonómica total'; cuota íntegra autonómica is art. 73.",
     ),
     KnownBadCitation(
         "ley",
         "67",
-        Translatable("cuota íntegra estatal"),
+        tr("cuota íntegra estatal"),
         "LIRPF art. 67 is 'Cuota líquida estatal'; cuota íntegra estatal is art. 62.",
     ),
     KnownBadCitation(
         "ley",
         "79",
-        Translatable("cuota líquida"),
+        tr("cuota líquida"),
         "LIRPF art. 79 is 'Cuota diferencial'; cuota líquida is art. 67 plus art. 77.",
     ),
     KnownBadCitation(
         "ley",
         "125",
-        Translatable("cuota líquida"),
+        tr("cuota líquida"),
         "LIS art. 125 is procedural; cuota líquida definition lives in LIS art. 30.",
     ),
     KnownBadCitation(
         "ley",
         "125",
-        Translatable("líquido a ingresar"),
+        tr("líquido a ingresar"),
         "LIS art. 125 is procedural; Modelo 200 final amount arithmetic needs LIS arts. 30 and 39.2.",
     ),
     KnownBadCitation(
         "ley",
         "71",
-        Translatable("resumen anual"),
+        tr("resumen anual"),
         "LIVA art. 71 is place-of-supply; Modelo 390 annual-summary obligation is RIVA art. 71.7.",
     ),
     KnownBadCitation(
         "reglamento",
         "100.3.a",
-        Translatable("arrendamientos"),
+        tr("arrendamientos"),
         "RIRPF art. 100 has no sub-letter structure; the 19% rate is in art. 100.1.",
     ),
     KnownBadCitation(
         "reglamento",
         "100.3.c",
-        Translatable("ganancias"),
+        tr("ganancias"),
         "RIRPF art. 100 has no sub-letter structure; pagos-a-cuenta obligation hook is art. 99.",
     ),
     KnownBadCitation(
         "reglamento",
         "105.1",
-        Translatable("premios"),
+        tr("premios"),
         "RIRPF art. 105 covers IIC transfers, not cash prizes.",
     ),
     KnownBadCitation(
         "reglamento",
         "110.2",
-        Translatable("agrícolas"),
+        tr("agrícolas"),
         "RIRPF art. 110.2 is the reduction clause; agricultural rates live in art. 110.1.c.",
     ),
     KnownBadCitation(
         "reglamento",
         "110.4",
-        Translatable("módulos"),
+        tr("módulos"),
         "RIRPF art. 110.4 is the low-income reduction clause; module rates live in art. 110.1.b.",
     ),
     KnownBadCitation(
         "reglamento",
         "100",
-        Translatable("capital mobiliario"),
+        tr("capital mobiliario"),
         "RIRPF art. 100 covers urban rentals; capital income withholding is RIRPF art. 90.",
     ),
     KnownBadCitation(
         "ley",
         "66",
-        Translatable("cuota íntegra general"),
+        tr("cuota íntegra general"),
         "LIRPF art. 66 is the savings-base tariff; general cuota íntegra starts at arts. 62 and 73.",
     ),
 )
