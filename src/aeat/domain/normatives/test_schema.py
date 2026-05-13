@@ -59,26 +59,31 @@ class TestArticulo:
         assert articulo.titulo  # populated translation key, not asserted on its rendered value
 
     def test_missing_spanish_title_rejected(self) -> None:
-        with pytest.raises(ValidationError):
+        # _require_spanish raises on empty / whitespace-only input. The test
+        # previously passed a non-empty literal "translation" and expected
+        # rejection — that silently DID NOT RAISE because _require_spanish
+        # only gates on emptiness. Empty input now actually triggers the
+        # validator path the test claims to exercise.
+        with pytest.raises(ValidationError, match=r"titulo: missing authoritative Spanish"):
             Articulo(
                 numero="32",
-                titulo="translation",
+                titulo="",
                 summary="normatives.test_schema.summary_132271",
                 permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"),
             )
 
     def test_missing_spanish_summary_rejected(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"summary: missing authoritative Spanish"):
             Articulo(
                 numero="32",
                 titulo="normatives.test_schema.titulo_466358",
-                summary="translation",
+                summary="",
                 permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32"),
             )
 
     def test_frozen(self) -> None:
         articulo = _articulo()
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"frozen"):
             articulo.notes = "mutated"  # type: ignore[misc]
 
 
@@ -91,7 +96,7 @@ class TestNormativeReference:
         assert ref.kind is NormativeKind.LEY
 
     def test_duplicate_articulo_numero_rejected(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"duplicate articulo numero"):
             _reference(articulos=(_articulo("32"), _articulo("32")))
 
     def test_permalink_without_boe_id_rejected(self) -> None:
@@ -101,11 +106,11 @@ class TestNormativeReference:
             summary="normatives.test_schema.summary_391415",
             permalink=AnyHttpUrl("https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a99"),
         )
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"does not reference boe_id"):
             _reference(articulos=(bad,))
 
     def test_extra_field_forbidden(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             NormativeReference.model_validate(
                 {
                     "id": "ley-35-2006",
