@@ -66,7 +66,7 @@ This mirrors the structural idiom of the substrate's existing `_rotation.py` (ro
 ```
 aeat config google sync push   [--profile <id>] [--batch] [--dry-run] [--namespace <ns>]
 aeat config google sync pull   [--profile <id>] [--batch] [--dry-run] [--namespace <ns>]
-aeat config google sync status [--profile <id>] [--json]
+aeat config google sync status [--profile <id>] [--format json|text]
 ```
 
 - `push` mirrors local → provider (writes new/changed records; deletes tombstoned per ADR-2's sync-state).
