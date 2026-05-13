@@ -187,7 +187,7 @@ class TestClassificationGate:
             written_at=bad.written_at,
             payload=bad.model_dump_json().encode("utf-8"),
         )
-        with pytest.raises(ClassificationError):
+        with pytest.raises(ClassificationError, match=r"classification"):
             repo.load(filing.submission_id)
 
 
