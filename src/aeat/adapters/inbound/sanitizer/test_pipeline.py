@@ -187,7 +187,7 @@ class TestRefuseIfAlreadySanitized:
         sha = hashlib.sha256(source).hexdigest()
         monkeypatch.setattr(_fixtures, "SANITIZED_SHAS", frozenset({sha}))
 
-        with pytest.raises(AlreadySanitizedError) as exc:
+        with pytest.raises(AlreadySanitizedError, match=r"already|sanitized") as exc:
             sanitize_pdf(source, TokenMap())
         assert exc.value.source_sha256 == sha
 

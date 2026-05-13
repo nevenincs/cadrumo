@@ -89,7 +89,7 @@ def test_missing_blob_and_invalid_digest_fail_closed(tmp_path: Path) -> None:
     store = AttachmentStore.at(tmp_path / "attachments")
     missing = "a" * 64
 
-    with pytest.raises(AttachmentNotFoundError):
+    with pytest.raises(AttachmentNotFoundError, match=r"attachment|not|found"):
         store.read_bytes(missing)
-    with pytest.raises(AttachmentValidationError):
+    with pytest.raises(AttachmentValidationError, match=r"attachment|validation"):
         store.read_bytes("../escape")

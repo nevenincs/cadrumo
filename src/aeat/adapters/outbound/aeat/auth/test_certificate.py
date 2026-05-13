@@ -182,7 +182,7 @@ def test_load_certificate_expired(
         password_env_var="AEAT_TEST_CERT_PW",
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
-    with pytest.raises(CertificateExpiredError):
+    with pytest.raises(CertificateExpiredError, match=r"certificate|expired"):
         load_certificate(bundle)
 
 
@@ -198,7 +198,7 @@ def test_load_certificate_garbage_bytes(
         password_env_var="AEAT_TEST_CERT_PW",
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
-    with pytest.raises((CertificateLoadError, CertificatePasswordError)):
+    with pytest.raises((CertificateLoadError, CertificatePasswordError), match=r"certificate|pkcs12|password|load"):
         load_certificate(bundle)
 
 
@@ -270,7 +270,7 @@ def test_verify_handshake_rejects_empty_url(
         backend=CertificateBackend.HTTPX_FALLBACK,
     )
     loaded = load_certificate(bundle)
-    with pytest.raises(CertificateHandshakeError):
+    with pytest.raises(CertificateHandshakeError, match=r"certificate|handshake"):
         verify_handshake(loaded, "")
 
 
@@ -316,7 +316,7 @@ def test_playwright_preload_rejects_unmarked_context(
     class _UnmarkedContext:
         pass
 
-    with pytest.raises(CertificateError):
+    with pytest.raises(CertificateError, match=r"certificate"):
         preload_into_browser_context(loaded, _UnmarkedContext())
 
 
@@ -434,5 +434,5 @@ def test_settings_rejects_removed_certificate_backends(monkeypatch: pytest.Monke
         model_config = SettingsConfigDict(env_file=None)
 
     monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", "MTLS_PROXY")
-    with pytest.raises(pydantic.ValidationError):
+    with pytest.raises(pydantic.ValidationError, match=r"aeat_certificate_backend|MTLS_PROXY|Input should be"):
         IsolatedSettings()

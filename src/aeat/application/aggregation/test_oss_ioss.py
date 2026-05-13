@@ -255,7 +255,7 @@ def test_validation_attaches_diagnostic_context_to_the_error() -> None:
         base=Decimal("100"),
         iva=Decimal("25"),
     )
-    with pytest.raises(AggregationValidationError) as exc_info:
+    with pytest.raises(AggregationValidationError, match=r"aggregation|validation") as exc_info:
         validate_oss_ioss_observation(candidate)
     context = exc_info.value.context
     assert context is not None

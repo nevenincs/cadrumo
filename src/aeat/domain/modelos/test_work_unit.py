@@ -216,7 +216,7 @@ def test_work_unit_rejects_id_that_does_not_match_derivation() -> None:
     ``work_unit_id`` that disagrees with the deterministic
     derivation is refused by the schema."""
 
-    with pytest.raises(ValidationError) as exc:
+    with pytest.raises(ValidationError, match=r"does not match the derived id") as exc:
         _build_unit(work_unit_id="0" * 64)
     assert "does not match the derived id" in str(exc.value)
 
@@ -247,7 +247,7 @@ def test_catalogue_from_work_units_rejects_duplicate_ids() -> None:
     the same id fails fast."""
 
     unit = _build_unit()
-    with pytest.raises(ModeloValidationError):
+    with pytest.raises(ModeloValidationError, match=r"duplicate work_unit_id"):
         WorkUnitCatalogue.from_work_units((unit, unit))
 
 
@@ -466,7 +466,7 @@ def test_discard_work_unit_raises_when_already_discarded() -> None:
         repository=repo,
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
-    with pytest.raises(WorkUnitAlreadyDiscardedError):
+    with pytest.raises(WorkUnitAlreadyDiscardedError, match=r"work|unit|already|discarded"):
         discard_work_unit(
             unit.work_unit_id,
             actor="operator-B",

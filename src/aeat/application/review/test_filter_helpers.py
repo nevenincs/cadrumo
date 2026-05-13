@@ -90,7 +90,7 @@ def test_ensure_unique_keys_scope_tag_composes_into_reason() -> None:
 def test_ensure_unique_keys_raw_token_carries_offending_clause() -> None:
     clauses = (_clause("status", "pending"), _clause("status", "reviewed"))
 
-    with pytest.raises(FilterParseError) as exc_info:
+    with pytest.raises(FilterParseError, match=r"filter|parse") as exc_info:
         _ensure_unique_keys(clauses, scope="ledger")
 
     assert "status=reviewed" in exc_info.value.raw_token
@@ -213,7 +213,7 @@ def test_enum_value_or_raise_case_fold_true_rejects_unknown_uppercase_value() ->
 def test_enum_value_or_raise_raw_token_carries_offending_clause() -> None:
     clause = _clause("status", "not-a-status")
 
-    with pytest.raises(FilterParseError) as exc_info:
+    with pytest.raises(FilterParseError, match=r"filter|parse") as exc_info:
         _enum_value_or_raise(clause, LedgerReviewStatus, scope="ledger")
 
     assert "status=not-a-status" in exc_info.value.raw_token

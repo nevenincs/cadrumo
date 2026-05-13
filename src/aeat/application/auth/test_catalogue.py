@@ -43,7 +43,7 @@ def test_get_auth_provider_returns_canonical_entry() -> None:
 
 @pytest.mark.parametrize("provider_id", ["not.a.provider", "clave-permanente", "clave_permanente", "clave-movil"])
 def test_get_auth_provider_raises_keyerror_for_unsupported_provider_id(provider_id: str) -> None:
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match=r"provider|unknown|not.a.provider|clave"):
         get_auth_provider(provider_id)
 
 

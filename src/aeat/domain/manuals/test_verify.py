@@ -185,5 +185,5 @@ class TestVerify:
             part=ManualPart.SINGLE,
             settings=settings,
         )
-        with pytest.raises(ManualReviewRequiredError):
+        with pytest.raises(ManualReviewRequiredError, match=r"manual|review|required"):
             raise_on_errors(report)

@@ -315,7 +315,7 @@ def test_iter_findings_threshold() -> None:
     assert finding_error in warnings_or_errors
     assert finding_info not in warnings_or_errors
     assert finding_info in list(iter_findings(draft, severity_at_least="INFO"))
-    with pytest.raises(FilingCalculateError):
+    with pytest.raises(FilingCalculateError, match=r"filing|calculate"):
         list(iter_findings(draft, severity_at_least="HUGE"))
 
 
