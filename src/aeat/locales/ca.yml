@@ -719,20 +719,25 @@ cli:
       invalid_state: 'Estat de revisió no vàlid: %{state}'
     labels:
       id: ID
+      affected_object_id: Objecte
+      bucket: Bucket
       kind: Tipus
       next: Següent
+      period: Període
       severity: Severitat
+      source_kind: Tipus d'origen
     queue:
       empty: No hi ha elements de revisió
       help: Llistar files de la cua de revisió
       kind_help: Filtrar per tipus d'origen
       modelo_help: Filtrar per model
+      source_kind_help: Filtrar per tipus d'origen
       state_help: Filtrar estat (pending o all)
     show:
       help: Mostrar un element de la cua de revisió
       id_help: Identificador de l'element de revisió
   root:
-    app_app_help: Espai de treball fiscal per a llibres, factures i declaracions
+    app_app_help: Espai de treball fiscal per a overview, ledger, modelo, registry i review
     app_help: 'Assistent per preparar declaracions tributàries espanyoles
 
 
@@ -741,8 +746,10 @@ cli:
     format_help: Format de sortida per als resultats de l'ordre
     quiet_help: Mostrar només errors a stderr
     verbose_help: Mostrar logs interns informatius a stderr
+    detail_help: Also show the detailed registry summary
     version_command_help: Mostrar la versió del paquet i el resum del registre
-    version_help: Mostrar la versió del paquet i el resum del registre
+    version_help: Mostrar la versió del paquet (afegeix --detail per al resum complet
+      del registre)
   topic:
     app_help: Mostrar ajuda conceptual sobre règims, models i processos AEAT
     errors:

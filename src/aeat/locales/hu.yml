@@ -724,20 +724,25 @@ cli:
       invalid_state: 'Érvénytelen felülvizsgálati állapot: %{state}'
     labels:
       id: ID
+      affected_object_id: Objektum
+      bucket: Bucket
       kind: Típus
       next: Következő
+      period: Időszak
       severity: Súlyosság
+      source_kind: Forrástípus
     queue:
       empty: Nincsenek felülvizsgálati elemek
       help: Felülvizsgálati sor elemeinek listázása
       kind_help: Szűrés forrástípus szerint
       modelo_help: Szűrés modelo szerint
+      source_kind_help: Szűrés forrástípus szerint
       state_help: Állapotszűrés (pending vagy all)
     show:
       help: Egy felülvizsgálati elem megjelenítése
       id_help: Felülvizsgálati elem azonosítója
   root:
-    app_app_help: Adózási munkaterület könyveléshez, számlákhoz és bevallásokhoz
+    app_app_help: Adózási munkaterület overview, ledger, modelo, registry és review számára
     app_help: 'Spanyol adóbevallási segéd
 
 
@@ -746,8 +751,10 @@ cli:
     format_help: A parancseredmények kimeneti formátuma
     quiet_help: Csak hibák megjelenítése stderr-en
     verbose_help: Belső információs naplók megjelenítése stderr-en
+    detail_help: Also show the detailed registry summary
     version_command_help: Csomagverzió és regiszter-összefoglaló megjelenítése
-    version_help: Csomagverzió és regiszter-összefoglaló megjelenítése
+    version_help: Csomagverzió megjelenítése (a --detail kapcsoló mutatja a teljes
+      regiszter-összefoglalót)
   topic:
     app_help: Konceptuális segítség megjelenítése a rezsimekről, modellekről és AEAT
       folyamatokról
