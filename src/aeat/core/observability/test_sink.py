@@ -84,7 +84,7 @@ class TestJsonlStoreRoundTrip:
         target = runs_dir() / evt.run_id / _EVENTS_FILENAME
         with target.open("a", encoding="utf-8") as handle:
             handle.write('{"not_a": "valid_run_event"}\n')
-        with pytest.raises(RunTraceValidationError):
+        with pytest.raises(RunTraceValidationError, match=r"failed strict validation"):
             load_events(evt.run_id)
 
 
@@ -180,11 +180,11 @@ class TestStoreRunIdValidation:
             "",
             "..",
         ):
-            with pytest.raises(RunTraceValidationError):
+            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
                 _validate_run_id(bad)
-            with pytest.raises(RunTraceValidationError):
+            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
                 load_trace(bad)
-            with pytest.raises(RunTraceValidationError):
+            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
                 load_events(bad)
 
     def test_load_trace_rejects_run_id_shape_without_creating_dir(
@@ -195,7 +195,7 @@ class TestStoreRunIdValidation:
         from . import load_trace
 
         monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        with pytest.raises(RunTraceValidationError):
+        with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
             load_trace("not-a-valid-run")
         # The crafted run_id must never have resulted in a new directory.
         assert not any(tmp_path.iterdir()), "rejected run_id must not create dirs"
@@ -209,7 +209,7 @@ class TestStoreRunIdValidation:
 
         monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
         # 16 hex chars — passes validation, but nothing on disk.
-        with pytest.raises(RunTraceValidationError):
+        with pytest.raises(RunTraceValidationError, match=r"trace\.json not found"):
             load_trace("0" * 16)
         assert not any(tmp_path.iterdir()), "missing trace lookup must not create dirs"
 
@@ -239,7 +239,7 @@ class TestIterEvents:
 
         monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
         # No .iter(), no .__next__() — the call itself must raise.
-        with pytest.raises(RunTraceValidationError):
+        with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
             iter_events("../escape")
 
     def test_streams_without_materialising_all(
