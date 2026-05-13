@@ -1029,17 +1029,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile._errors.ForalRegimeError",
-        ErrorCode(
-            code="ERROR_PROFILE_FORAL_REGIME",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_profile_foral_regime",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.domain.profile._errors.ProfileValidationError",
         ErrorCode(
             code="ERROR_PROFILE_VALIDATION",
