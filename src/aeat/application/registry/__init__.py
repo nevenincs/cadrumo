@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from calendar import monthrange
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -15,6 +14,7 @@ from ...adapters.outbound.aeat.sede import (
     registry_observation_from_filed_declaration,
 )
 from ...adapters.persistence.storage import MasterKeyProvider
+from ...domain.period import period_end_date
 from ...domain.calculations.registry import (
     calculate_registry_snapshot,
     generate_parity_tape_path,
@@ -284,7 +284,12 @@ def verify_filed_state(
     calculation = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
-        date_context={"filing_period": _filing_period_date(filed_observation.period, filed_observation.ejercicio)},
+        date_context={
+            "filing_period": period_end_date(
+                filing_year=filed_observation.ejercicio,
+                registry_period=filed_observation.period,
+            )
+        },
         binding_values=binding_values,
         relation_values=relation_values,
     )
@@ -433,22 +438,6 @@ def _revision_details(modelos) -> tuple[RegistryRevisionDetailReport, ...]:
 
 def _load_filed_observation(path: Path, *, master_key_provider: MasterKeyProvider | None = None):
     return FiledDeclarationObservationStore(path.parent, master_key_provider=master_key_provider).load_observation(path)
-
-
-def _filing_period_date(period: str, filing_year: int) -> date:
-    if period == "1T":
-        return date(filing_year, 3, 31)
-    if period == "2T":
-        return date(filing_year, 6, 30)
-    if period == "3T":
-        return date(filing_year, 9, 30)
-    if period in {"4T", "0A"}:
-        return date(filing_year, 12, 31)
-    if period.isdigit() and len(period) == 2:
-        month = int(period)
-        if 1 <= month <= 12:
-            return date(filing_year, month, monthrange(filing_year, month)[1])
-    return date(filing_year, 12, 31)
 
 
 __all__ = [
