@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
@@ -10,11 +12,19 @@ from pydantic import BaseModel, ConfigDict
 
 from aeat import __version__
 
+from ..adapters.outbound.aeat.browser import (
+    SiteHealthEvidence,
+    SiteHealthState,
+    SiteHealthStatus,
+    default_browser_session_factory,
+)
+from ..adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
 from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectNamespaceIntegrity,
     SecureObjectRepository,
 )
-from ..core.config import PROJECT_ROOT
+from ..core.config import PROJECT_ROOT, Settings
+from ..core.errors import SiteHealthError
 from ..core.logging import default_log_file_path, get_logger
 from ..domain.calculations.registry import ValidatedRegistryAuthority
 from .wizard._status import WizardStatusReport, build_wizard_status
@@ -173,6 +183,66 @@ def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDocto
     )
 
 
+def probe_browser_connectivity(settings: Settings | None = None) -> SiteHealthStatus:
+    """Probe the configured AEAT browser target through the browser adapter."""
+
+    resolved = settings or Settings()
+    return asyncio.run(_probe_browser_connectivity(resolved))
+
+
+def render_browser_connectivity_text(status: SiteHealthStatus) -> str:
+    """Render one site-health status as compact doctor output."""
+
+    markers = ", ".join(status.evidence.detected_markers) or "none"
+    lines = [
+        "target\tbrowser",
+        f"state\t{status.state.value}",
+        f"http_status\t{status.evidence.http_status}",
+        f"markers\t{markers}",
+        f"observed_at\t{status.observed_at.isoformat()}",
+    ]
+    if status.retry_after_seconds is not None:
+        lines.append(f"retry_after_seconds\t{status.retry_after_seconds}")
+    return "\n".join(lines) + "\n"
+
+
+async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
+    url = settings.site_health_probe_url
+    session = await default_browser_session_factory(settings)
+    context = None
+    try:
+        context = await session.create_context()
+        page = await context.new_page()
+        try:
+            await session.navigate(page, url)
+        except SiteHealthError as exc:
+            return exc.status
+        return _ok_site_health_status(url)
+    finally:
+        if context is not None:
+            try:
+                await context.close()
+            except Exception:
+                _log.warning("config doctor connectivity context close failed", exc_info=True)
+        try:
+            await session.close()
+        except Exception:
+            _log.warning("config doctor connectivity browser close failed", exc_info=True)
+
+
+def _ok_site_health_status(url: str) -> SiteHealthStatus:
+    return SiteHealthStatus(
+        state=SiteHealthState.OK,
+        evidence=SiteHealthEvidence(
+            url=_URL_ADAPTER.validate_python(url),
+            http_status=200,
+            html_fragment="",
+            detected_markers=("healthy",),
+        ),
+        observed_at=datetime.now(tz=UTC),
+    )
+
+
 def render_config_doctor_text(report: ConfigDoctorReport) -> str:
     """Render a compact human-readable doctor report."""
 
@@ -304,14 +374,14 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
             name="auth.provider",
             status="warn",
             summary="no authentication provider configured",
-            next_action="aeat config auth --provider certificate --file PATH",
+            next_action="aeat config auth configure --provider certificate --file PATH",
         )
     if not report.login_ready:
         return DiagnosticCheck(
             name="auth.session",
             status="warn",
             summary=f"{report.auth_provider} configured but no active session",
-            next_action="aeat config auth --provider certificate",
+            next_action="aeat config auth test --provider certificate",
         )
     return DiagnosticCheck(name="auth.session", status="ok", summary=f"{report.auth_provider} session ready")
 
@@ -391,7 +461,9 @@ __all__ = [
     "SecureObjectIntegrityReport",
     "build_cli_version_report",
     "build_config_doctor_report",
+    "probe_browser_connectivity",
     "quarantine_unreadable_secure_objects",
+    "render_browser_connectivity_text",
     "render_cli_version_text",
     "render_config_doctor_text",
     "secure_object_unreadable_total",
