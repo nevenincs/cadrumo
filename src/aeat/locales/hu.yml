@@ -118,8 +118,17 @@ cli:
           szűrve
         status_help: Egy munkaegység metaadatainak megjelenítése
         verified_complete_help: Egy draft kalkulációs revízió verified-complete-té jelölése
+        verify_help: Draft kalkulációs revízió verifikálása a verified-complete szerződés
+          ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
         year_help: A munkaegység adóéve (pl. 2026)
+      verification_report:
+        app_help: Rögzített verifikációs jelentések megtekintése
+        list_help: Verifikációs jelentések listázása, opcionálisan egy kalkulációs revízió
+          szerint szűrve
+        show_help: Egy verifikációs jelentés megjelenítése azonosító alapján
+        verification_report_id_help: Egy verifikációs jelentés stabil 64-karakteres
+          SHA-256 azonosítója
   archive:
     app_help: A helyi titkosított archívum exportálása és importálása hordozható JSON
       csomagként

@@ -106,8 +106,17 @@ cli:
         revisions_help: List calculation revisions, optionally filtered to one work unit
         status_help: Show the metadata of one work unit
         verified_complete_help: Mark a draft calculation revision as verified-complete
+        verify_help: Verify a draft calculation revision against the verified-complete
+          contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
+      verification_report:
+        app_help: Inspect recorded verification reports
+        list_help: List verification reports, optionally filtered to one calculation
+          revision
+        show_help: Show one verification report by id
+        verification_report_id_help: Stable 64-character SHA-256 identifier of a
+          verification report
   archive:
     app_help: Export and import the encrypted local archive as portable JSON bundles
     export:

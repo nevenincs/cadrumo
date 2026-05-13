@@ -125,9 +125,17 @@ cli:
           unidad de trabajo
         status_help: Mostrar los metadatos de una unidad de trabajo
         verified_complete_help: Marcar una revisión draft como verified-complete
+        verify_help: Verificar una revisión draft contra el contrato verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
+      verification_report:
+        app_help: Inspeccionar los informes de verificación registrados
+        list_help: Listar los informes de verificación, opcionalmente filtrados por
+          revisión de cálculo
+        show_help: Mostrar un informe de verificación por id
+        verification_report_id_help: Identificador estable (SHA-256 de 64 caracteres)
+          de un informe de verificación
   archive:
     app_help: Exportar e importar el archivo local cifrado como paquetes JSON portables
     export:

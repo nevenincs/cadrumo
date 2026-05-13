@@ -121,9 +121,17 @@ cli:
           unitat de treball
         status_help: Mostrar les metadades d'una unitat de treball
         verified_complete_help: Marcar una revisió draft com a verified-complete
+        verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
+      verification_report:
+        app_help: Inspeccionar els informes de verificació registrats
+        list_help: Llistar els informes de verificació, opcionalment filtrats per
+          revisió de càlcul
+        show_help: Mostrar un informe de verificació per id
+        verification_report_id_help: Identificador estable (SHA-256 de 64 caràcters)
+          d'un informe de verificació
   archive:
     app_help: Exportar i importar l'arxiu local xifrat com a paquets JSON portables
     export:

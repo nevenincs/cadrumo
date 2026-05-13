@@ -552,3 +552,282 @@ def test_get_calculation_revision_raises_on_missing_id() -> None:
             "0" * 64,
             calculation_repository=cr_repo,
         )
+
+
+# ---------------------------------------------------------------------------
+# verify_modelo_revision
+# ---------------------------------------------------------------------------
+
+
+from aeat.application.modelo import (  # noqa: E402
+    VerificationReportNotFoundError,
+    get_verification_report,
+    list_verification_reports,
+    verify_modelo_revision,
+)
+from aeat.domain.modelos._verification_report import (  # noqa: E402
+    VerificationCompletenessStatus,
+    VerificationFindingKind,
+    VerificationFindingSeverity,
+    VerificationReportCatalogue,
+)
+from aeat.domain.modelos._verification_repository import (  # noqa: E402
+    VerificationReportCatalogueRepository,
+)
+
+
+class _InMemoryVerificationRepository(VerificationReportCatalogueRepository):
+    def __init__(self) -> None:
+        self._catalogue = VerificationReportCatalogue()
+
+    def load(self) -> VerificationReportCatalogue:
+        return self._catalogue
+
+    def save(self, catalogue: VerificationReportCatalogue) -> None:
+        self._catalogue = catalogue
+
+
+def _stub_registry(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    required: tuple[str, ...] = ("01",),
+    optional: tuple[str, ...] = (),
+    missing: bool = False,
+) -> None:
+    """Override the registry lookup with a deterministic stub.
+
+    When ``missing`` is True the helper returns ``None`` to exercise
+    the registry-snapshot-not-found path. Otherwise it returns the
+    provided (required, optional) tuple.
+    """
+
+    def _fake(*, modelo: str, filing_year: int, period: str):
+        if missing:
+            return None
+        return (required, optional)
+
+    monkeypatch.setattr(
+        "aeat.application.modelo._actions._required_input_casillas_for_revision",
+        _fake,
+    )
+
+
+def test_verify_grants_when_all_required_casillas_present(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Happy path: every required casilla is satisfied. The verifier
+    grants verified-complete; the revision transitions DRAFT →
+    VERIFIED_COMPLETE; the report records zero findings."""
+
+    _stub_registry(monkeypatch, required=("01", "02"))
+
+    wu_repo, cr_repo, _ = _make_repos()
+    vr_repo = _InMemoryVerificationRepository()
+    work_unit = _seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_values={"01": Decimal("1000"), "02": Decimal("250")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        clock=_T1,
+    )
+
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        clock=_T2,
+    )
+
+    assert report.granted_verified_complete is True
+    assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
+    assert report.findings == ()
+    assert set(report.resolved_casillas) == {"01", "02"}
+    assert report.missing_required_casillas == ()
+
+    refreshed = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed.state is CalculationRevisionState.VERIFIED_COMPLETE
+    assert refreshed.verified_at == _T2
+    assert refreshed.verified_by == "operator-A"
+
+
+def test_verify_refuses_when_required_casilla_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A required casilla absent from ``casilla_values`` produces a
+    BLOCKING ``MISSING_REQUIRED_CASILLA`` finding. The verifier
+    refuses the transition; the revision stays DRAFT; the report is
+    still persisted so the audit trail records the refusal."""
+
+    _stub_registry(monkeypatch, required=("01", "02"))
+
+    wu_repo, cr_repo, _ = _make_repos()
+    vr_repo = _InMemoryVerificationRepository()
+    work_unit = _seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_values={"01": Decimal("1000")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        clock=_T1,
+    )
+
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        clock=_T2,
+    )
+
+    assert report.granted_verified_complete is False
+    assert report.completeness_status is VerificationCompletenessStatus.INCOMPLETE
+    assert any(
+        f.kind is VerificationFindingKind.MISSING_REQUIRED_CASILLA
+        and f.severity is VerificationFindingSeverity.BLOCKING
+        and f.casilla_id == "02"
+        for f in report.findings
+    )
+    assert "02" in report.missing_required_casillas
+
+    refreshed = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed.state is CalculationRevisionState.DRAFT
+
+    persisted = get_verification_report(
+        report.verification_report_id,
+        verification_repository=vr_repo,
+    )
+    assert persisted.verification_report_id == report.verification_report_id
+
+
+def test_verify_emits_blocking_rule_when_registry_unresolved(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When the registry snapshot cannot be resolved, the verifier
+    raises a BLOCKING_RULE finding and refuses to grant verified-
+    complete. The completeness status is BLOCKED."""
+
+    _stub_registry(monkeypatch, missing=True)
+
+    wu_repo, cr_repo, _ = _make_repos()
+    vr_repo = _InMemoryVerificationRepository()
+    work_unit = _seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_values={"01": Decimal("1000")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        clock=_T1,
+    )
+
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        clock=_T2,
+    )
+
+    assert report.granted_verified_complete is False
+    assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
+    assert any(
+        f.kind is VerificationFindingKind.BLOCKING_RULE for f in report.findings
+    )
+
+    refreshed = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed.state is CalculationRevisionState.DRAFT
+
+
+def test_verify_rejects_non_draft_revision(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Re-verifying a verified-complete revision is rejected with
+    ``CalculationRevisionStateError``. The operator must produce a
+    fresh draft revision (which lands as DRAFT) to verify again."""
+
+    _stub_registry(monkeypatch, required=("01",))
+
+    wu_repo, cr_repo, _ = _make_repos()
+    vr_repo = _InMemoryVerificationRepository()
+    work_unit = _seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_values={"01": Decimal("1000")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        clock=_T1,
+    )
+    verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        clock=_T2,
+    )
+
+    with pytest.raises(CalculationRevisionStateError):
+        verify_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            clock=_T3,
+        )
+
+
+def test_list_and_get_verification_reports(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reports are indexable by id and by calculation revision."""
+
+    _stub_registry(monkeypatch, required=("01",))
+
+    wu_repo, cr_repo, _ = _make_repos()
+    vr_repo = _InMemoryVerificationRepository()
+    work_unit = _seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_values={"01": Decimal("1000")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        clock=_T1,
+    )
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        clock=_T2,
+    )
+
+    listed = list_verification_reports(
+        calculation_revision_id=revision.calculation_revision_id,
+        verification_repository=vr_repo,
+    )
+    assert tuple(r.verification_report_id for r in listed) == (
+        report.verification_report_id,
+    )
+
+    fetched = get_verification_report(
+        report.verification_report_id,
+        verification_repository=vr_repo,
+    )
+    assert fetched.verification_report_id == report.verification_report_id
+
+    with pytest.raises(VerificationReportNotFoundError):
+        get_verification_report(
+            "0" * 64,
+            verification_repository=vr_repo,
+        )

@@ -1,0 +1,245 @@
+"""Structured verification report produced by ``aeat app modelo verify``.
+
+A :class:`VerificationReport` is the decision artifact the verify
+command persists for every run. It captures whether the target
+calculation revision meets the ``verified_complete`` contract,
+which blocking findings prevent that transition, which inputs are
+missing, which casillas are unresolved, which waivers were
+accepted, and what the operator should do next.
+
+The report is bucket-scoped and content-addressed by the parent
+calculation revision plus the run timestamp. Failed verification
+attempts produce a persisted report (so the audit trail explains
+why a transition was refused) without mutating the target
+revision.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from collections.abc import Mapping
+from datetime import datetime
+from enum import StrEnum
+from types import MappingProxyType
+from typing import Annotated, Any
+
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+
+from ._errors import ModeloValidationError
+
+
+_HEX_64_PATTERN = r"^[0-9a-f]{64}$"
+
+_ReportId = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
+]
+_CalculationRevisionId = _ReportId
+_ActorLabel = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
+]
+_FindingMessage = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
+]
+_CasillaRef = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
+]
+
+
+class VerificationCompletenessStatus(StrEnum):
+    """Top-level verdict from one verification run.
+
+    * ``COMPLETE`` — every required input resolved, zero blocking
+      findings. The revision transitions to ``VERIFIED_COMPLETE``.
+    * ``INCOMPLETE`` — required inputs missing or unresolved
+      casillas remain. Soft refusal: operator can act on the
+      missing-inputs list.
+    * ``BLOCKED`` — blocking validation findings exist (e.g.
+      reconciliation total mismatch over tolerance, schema
+      violation). Hard refusal: operator must fix the finding
+      before the revision can be verified.
+    """
+
+    COMPLETE = "complete"
+    INCOMPLETE = "incomplete"
+    BLOCKED = "blocked"
+
+
+class VerificationFindingKind(StrEnum):
+    """Closed catalogue of verification-finding kinds.
+
+    Maps to the readiness vocabulary mandated by the verify ADR:
+    bucket / ledger source / profile fact / prior filed revision /
+    live observation / casilla / waiver / blocking finding.
+    """
+
+    MISSING_REQUIRED_CASILLA = "missing_required_casilla"
+    RECONCILIATION_MISMATCH = "reconciliation_mismatch"
+    UNRESOLVED_BINDING = "unresolved_binding"
+    INVALID_WAIVER = "invalid_waiver"
+    BLOCKING_RULE = "blocking_rule"
+
+
+class VerificationFindingSeverity(StrEnum):
+    """Severity of one verification finding."""
+
+    BLOCKING = "blocking"
+    WARNING = "warning"
+
+
+class VerificationFinding(BaseModel):
+    """One verification finding.
+
+    Findings of ``BLOCKING`` severity force ``BLOCKED`` completeness
+    status. ``WARNING`` severity findings surface in the report but
+    do not block ``COMPLETE`` status on their own.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    kind: VerificationFindingKind
+    severity: VerificationFindingSeverity
+    casilla_id: _CasillaRef | None = None
+    expectation_id: _CasillaRef | None = None
+    message: _FindingMessage
+    next_action: _FindingMessage | None = None
+
+
+def derive_verification_report_id(
+    *,
+    calculation_revision_id: str,
+    run_at: datetime,
+    verified_by: str,
+) -> str:
+    """Deterministic 64-char SHA-256 id for a verification report."""
+
+    payload = {
+        "calculation_revision_id": calculation_revision_id.strip(),
+        "run_at": run_at.isoformat(),
+        "verified_by": verified_by.strip(),
+    }
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+class VerificationReport(BaseModel):
+    """Decision record of one verification run."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    verification_report_id: _ReportId
+    calculation_revision_id: _CalculationRevisionId
+    completeness_status: VerificationCompletenessStatus
+    findings: tuple[VerificationFinding, ...] = Field(default_factory=tuple)
+    resolved_casillas: tuple[_CasillaRef, ...] = Field(default_factory=tuple)
+    missing_required_casillas: tuple[_CasillaRef, ...] = Field(default_factory=tuple)
+    run_at: datetime
+    verified_by: _ActorLabel
+    granted_verified_complete: bool
+
+    @model_validator(mode="after")
+    def _enforce_invariants(self) -> VerificationReport:
+        derived = derive_verification_report_id(
+            calculation_revision_id=self.calculation_revision_id,
+            run_at=self.run_at,
+            verified_by=self.verified_by,
+        )
+        if derived != self.verification_report_id:
+            raise ModeloValidationError(
+                f"verification_report_id {self.verification_report_id!r} does not match the "
+                f"derived id {derived!r}"
+            )
+        # granted_verified_complete is a True iff completeness_status is COMPLETE
+        # AND no blocking findings exist.
+        has_blocking = any(
+            finding.severity is VerificationFindingSeverity.BLOCKING for finding in self.findings
+        )
+        if self.granted_verified_complete:
+            if self.completeness_status is not VerificationCompletenessStatus.COMPLETE:
+                raise ModeloValidationError(
+                    "granted_verified_complete=True requires completeness_status=COMPLETE"
+                )
+            if has_blocking:
+                raise ModeloValidationError(
+                    "granted_verified_complete=True requires no blocking findings"
+                )
+        else:
+            if (
+                self.completeness_status is VerificationCompletenessStatus.COMPLETE
+                and not has_blocking
+            ):
+                raise ModeloValidationError(
+                    "completeness_status=COMPLETE with no blocking findings must set "
+                    "granted_verified_complete=True"
+                )
+        # Required-casilla sets must be disjoint from resolved.
+        overlap = set(self.resolved_casillas) & set(self.missing_required_casillas)
+        if overlap:
+            raise ModeloValidationError(
+                f"casillas cannot be both resolved and missing: {sorted(overlap)!r}"
+            )
+        return self
+
+
+class VerificationReportCatalogue(BaseModel):
+    """Immutable catalogue of every verification report in storage."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    reports: Mapping[str, VerificationReport] = Field(default_factory=dict)
+
+    @field_validator("reports", mode="before")
+    @classmethod
+    def _freeze_reports(cls, value: Any) -> Mapping[str, VerificationReport]:
+        if isinstance(value, MappingProxyType):
+            return value
+        if isinstance(value, Mapping):
+            return MappingProxyType(dict(value))
+        raise ModeloValidationError(f"reports must be a Mapping, got {type(value).__name__}")
+
+    @model_validator(mode="after")
+    def _enforce_keys_match(self) -> VerificationReportCatalogue:
+        for key, report in self.reports.items():
+            if key != report.verification_report_id:
+                raise ModeloValidationError(
+                    f"catalogue key {key!r} does not match verification_report_id "
+                    f"{report.verification_report_id!r}"
+                )
+        return self
+
+    def get(self, verification_report_id: str) -> VerificationReport | None:
+        return self.reports.get(verification_report_id)
+
+    def for_calculation_revision(
+        self, calculation_revision_id: str
+    ) -> tuple[VerificationReport, ...]:
+        """Return every report against one calculation revision, ordered by run_at."""
+
+        matching = tuple(
+            r for r in self.reports.values() if r.calculation_revision_id == calculation_revision_id
+        )
+        return tuple(sorted(matching, key=lambda r: r.run_at))
+
+    def values(self):  # noqa: D401
+        return self.reports.values()
+
+    def __iter__(self):  # type: ignore[override]
+        return iter(self.reports.values())
+
+    def __len__(self) -> int:
+        return len(self.reports)
+
+
+__all__ = [
+    "VerificationCompletenessStatus",
+    "VerificationFinding",
+    "VerificationFindingKind",
+    "VerificationFindingSeverity",
+    "VerificationReport",
+    "VerificationReportCatalogue",
+    "derive_verification_report_id",
+]
