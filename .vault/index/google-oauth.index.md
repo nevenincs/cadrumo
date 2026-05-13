@@ -9,6 +9,8 @@ related:
   - '[[2026-05-06-google-oauth-research]]'
   - '[[2026-05-08-google-oauth-adr]]'
   - '[[2026-05-12-google-oauth-adr]]'
+  - '[[2026-05-13-google-oauth-W01-P01-S00-exec]]'
+  - '[[2026-05-13-google-oauth-W01-P01-S01-exec]]'
   - '[[2026-05-13-google-oauth-adr]]'
   - '[[2026-05-13-google-oauth-calc-sheets-adr]]'
   - '[[2026-05-13-google-oauth-inbound-adr]]'
@@ -38,6 +40,11 @@ Auto-generated index of all documents tagged with `#google-oauth`.
 ### audit
 
 - `2026-05-06-google-oauth-audit` - `google-oauth` audit: `google-oauth teardown audit: pre-excision baseline`
+
+### exec
+
+- `2026-05-13-google-oauth-W01-P01-S00-exec` - `google-oauth` `W01.P01.S00`
+- `2026-05-13-google-oauth-W01-P01-S01-exec` - `google-oauth` `W01.P01.S01`
 
 ### plan
 
