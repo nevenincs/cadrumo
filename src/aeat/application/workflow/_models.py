@@ -33,7 +33,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 class WorkflowEvent(BaseModel):
     """One operator-visible workflow event."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     action: str = Field(min_length=1)
     reason: str = ""
@@ -76,7 +76,7 @@ class WorkflowAbortReason(StrEnum):
 class DeclarationPointer(BaseModel):
     """Pointer to a persisted filing draft and its status."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: str
     period: str
@@ -110,7 +110,7 @@ class WorkflowState(BaseModel):
         updated_at: UTC timestamp of the last write.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     auth: AuthState = Field(default_factory=AuthState)
     profiles: dict[str, Any] = Field(default_factory=dict)  # str → ProfileRecord
