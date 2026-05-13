@@ -170,6 +170,7 @@ cli:
     status:
       empty_profile: No profile configured. Run `aeat config init` to get started.
       help: Az aktív konfigurációs profil készenlétének megjelenítése
+      next_step: 'Next step: `aeat app overview`'
     unset:
       help: Egy konfigurációs kulcshoz rendelt érték törlése
       key_help: A törlendő kulcs

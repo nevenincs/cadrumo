@@ -159,6 +159,7 @@ cli:
     status:
       empty_profile: No profile configured. Run `aeat config init` to get started.
       help: Show the readiness of the current configuration profile
+      next_step: 'Next step: `aeat app overview`'
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
