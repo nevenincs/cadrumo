@@ -28,7 +28,7 @@ def test_invoice_edit_iva_rate_accepts_canonical_substrate_slots(value: str) -> 
 
 @pytest.mark.parametrize("bad_value", ["5", "7", "12", "15", "16", "21.5", "100"])
 def test_invoice_edit_iva_rate_rejects_non_canonical_values(bad_value: str) -> None:
-    with pytest.raises(EditParseError) as excinfo:
+    with pytest.raises(EditParseError, match=r"unsupported-iva-rate") as excinfo:
         InvoiceEditSpec.from_strings([f"iva.rate={bad_value}"])
     assert "unsupported-iva-rate" in str(excinfo.value.reason)
 
@@ -51,7 +51,7 @@ def test_invoice_edit_retention_rate_accepts_values_in_range(value: str) -> None
 
 @pytest.mark.parametrize("bad_value", ["-1", "101", "150", "1000"])
 def test_invoice_edit_retention_rate_rejects_out_of_range_values(bad_value: str) -> None:
-    with pytest.raises(EditParseError) as excinfo:
+    with pytest.raises(EditParseError, match=r"retention-rate-out-of-range") as excinfo:
         InvoiceEditSpec.from_strings([f"retention.rate={bad_value}"])
     assert "retention-rate-out-of-range" in str(excinfo.value.reason)
 

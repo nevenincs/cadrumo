@@ -369,7 +369,7 @@ class TestAuthenticateFresh:
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilConfigurationError, match=r"identity|NIF|NIE|configuration"):
+            with pytest.raises(ClaveMovilConfigurationError, match=r"AEAT_CLAVE_MOVIL_DNI_FECHA|non-QR|fallback"):
                 await provider.authenticate(browser_session=browser_session)
 
         asyncio.run(run())
@@ -422,7 +422,7 @@ class TestPendingPetitionRefusal:
         page = _PendingPetitionPage(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilApprovalTimeoutError) as excinfo:
+            with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"Cl@ve|pending|prior|petition") as excinfo:
                 await provider._raise_if_pending_request_error(page)
             assert excinfo.value.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED
             assert excinfo.value.context is not None

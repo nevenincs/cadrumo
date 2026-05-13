@@ -45,20 +45,20 @@ def test_parse_edit_clause_trims_value() -> None:
 
 def test_parse_edit_clause_rejects_missing_equals() -> None:
     raw = "category software"
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"missing-equals") as exc:
         parse_edit_clause(raw)
     assert exc.value.reason == "missing-equals"
     assert exc.value.raw_token == raw
 
 
 def test_parse_edit_clause_rejects_empty_key() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"empty-key") as exc:
         parse_edit_clause("=software")
     assert exc.value.reason == "empty-key"
 
 
 def test_parse_edit_clause_rejects_empty_value() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"empty-value") as exc:
         parse_edit_clause("category=")
     assert exc.value.reason == "empty-value"
 
@@ -121,31 +121,31 @@ def test_ledger_spec_business_share_accepts_decimal_one() -> None:
 
 
 def test_ledger_spec_business_share_rejects_above_one() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"invalid-value-ledger-business-share") as exc:
         LedgerEditSpec.from_strings(["business.share=1.5"])
     assert exc.value.reason == "invalid-value-ledger-business-share"
 
 
 def test_ledger_spec_business_share_rejects_negative() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"invalid-value-ledger-business-share") as exc:
         LedgerEditSpec.from_strings(["business.share=-0.1"])
     assert exc.value.reason == "invalid-value-ledger-business-share"
 
 
 def test_ledger_spec_business_share_rejects_non_decimal() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"invalid-value-ledger-business-share") as exc:
         LedgerEditSpec.from_strings(["business.share=full"])
     assert exc.value.reason == "invalid-value-ledger-business-share"
 
 
 def test_ledger_spec_rejects_unknown_key() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"unknown-key-ledger") as exc:
         LedgerEditSpec.from_strings(["base=120.00"])
     assert exc.value.reason == "unknown-key-ledger"
 
 
 def test_ledger_spec_rejects_duplicate_key() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"duplicate-key-ledger") as exc:
         LedgerEditSpec.from_strings(["category=a", "category=b"])
     assert exc.value.reason == "duplicate-key-ledger"
 
@@ -195,19 +195,19 @@ def test_invoice_spec_parses_iva_category_as_free_text() -> None:
 
 
 def test_invoice_spec_rejects_unknown_key() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"unknown-key-invoice") as exc:
         InvoiceEditSpec.from_strings(["category=software"])
     assert exc.value.reason == "unknown-key-invoice"
 
 
 def test_invoice_spec_rejects_non_decimal_base() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"invalid-value-invoice-base") as exc:
         InvoiceEditSpec.from_strings(["base=tbd"])
     assert exc.value.reason == "invalid-value-invoice-base"
 
 
 def test_invoice_spec_rejects_duplicate_key() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"duplicate-key-invoice") as exc:
         InvoiceEditSpec.from_strings(["base=1.0", "base=2.0"])
     assert exc.value.reason == "duplicate-key-invoice"
 
@@ -259,31 +259,31 @@ def test_declaration_spec_parses_multi_casilla_edits() -> None:
 
 
 def test_declaration_spec_rejects_non_casilla_key() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"unknown-key-declaration") as exc:
         DeclarationEditSpec.from_strings(["category=software"])
     assert exc.value.reason == "unknown-key-declaration"
 
 
 def test_declaration_spec_rejects_short_casilla_id() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"unknown-key-declaration") as exc:
         DeclarationEditSpec.from_strings(["casilla.1=10"])
     assert exc.value.reason == "unknown-key-declaration"
 
 
 def test_declaration_spec_rejects_long_casilla_id() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"unknown-key-declaration") as exc:
         DeclarationEditSpec.from_strings(["casilla.123456=10"])
     assert exc.value.reason == "unknown-key-declaration"
 
 
 def test_declaration_spec_rejects_non_decimal_value() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"invalid-value-declaration-casilla") as exc:
         DeclarationEditSpec.from_strings(["casilla.71=tbd"])
     assert exc.value.reason == "invalid-value-declaration-casilla"
 
 
 def test_declaration_spec_rejects_duplicate_casilla_key() -> None:
-    with pytest.raises(EditParseError) as exc:
+    with pytest.raises(EditParseError, match=r"duplicate-key-declaration") as exc:
         DeclarationEditSpec.from_strings(["casilla.71=1.0", "casilla.71=2.0"])
     assert exc.value.reason == "duplicate-key-declaration"
 
