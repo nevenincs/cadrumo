@@ -14,8 +14,9 @@ service layer is unit-testable without a workflow-state fixture.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 from ...domain.buckets import (
     BucketEvent,
@@ -387,33 +388,104 @@ def discard_work_unit(
 # ---------------------------------------------------------------------------
 
 
+def _default_filing_period_date(*, year: int, period: str) -> date:
+    """Return the end-of-period date for ``date_context["filing_period"]``.
+
+    The registry uses this date to select date-versioned parameters
+    (legal-rate changes, autonomic scales). End-of-period is the
+    safe default — operator-provided ``as_of`` overrides it via the
+    ``filing_period_date`` action parameter when finer control is
+    needed (e.g., reconstructing a prior-rate calculation).
+    """
+
+    p = period.strip().upper()
+    if p in {"1T", "Q1"}:
+        return date(year, 3, 31)
+    if p in {"2T", "Q2"}:
+        return date(year, 6, 30)
+    if p in {"3T", "Q3"}:
+        return date(year, 9, 30)
+    if p in {"4T", "Q4"}:
+        return date(year, 12, 31)
+    if p == "0A":
+        return date(year, 12, 31)
+    if len(p) == 2 and p.isdigit():
+        from calendar import monthrange
+
+        month = int(p)
+        return date(year, month, monthrange(year, month)[1])
+    return date(year, 12, 31)
+
+
+def _canonical_decimal_str(value: Decimal) -> str:
+    """Stable string form of a Decimal for content-addressing."""
+
+    if value.is_zero():
+        return "0"
+    return format(value.normalize(), "f")
+
+
+class CalculationRegistryUnavailableError(ModeloError):
+    """Raised when the registry snapshot for a work unit's
+    (modelo, year, period) cannot be resolved at calculate time.
+
+    The calculate path runs the registry's formula engine against
+    the snapshot; if no snapshot exists for the work unit's axis
+    triple the action fails clearly rather than persisting a
+    revision with operator-supplied values that bypass formula
+    evaluation.
+    """
+
+
 def calculate_modelo_revision(
     work_unit_id: str,
     *,
     actor: str = "system",
-    inputs_snapshot: Mapping[str, str] | None = None,
-    binding_overrides: Mapping[str, str] | None = None,
-    casilla_values: Mapping[str, Decimal],
+    casilla_inputs: Mapping[str, Decimal],
+    binding_values: Mapping[str, Decimal] | None = None,
+    enum_binding_values: Mapping[str, str] | None = None,
+    relation_values: Mapping[str, Decimal] | None = None,
+    filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
-    """Persist a new draft calculation revision for ``work_unit_id``.
+    """Run the registry formula engine and persist a draft revision.
 
-    Records the operator-supplied or registry-computed casilla
-    values as the snapshot. The revision id is content-addressed
-    by the inputs + overrides + outputs, so a structurally
-    identical re-run is naturally idempotent (existing revision
-    returned, no duplicate persisted). The work unit's
-    ``current_calculation_revision_id`` pointer is advanced to the
-    newly-persisted revision.
+    Pipeline:
 
-    The work unit must exist and must not be in ``DISCARDED``
-    state. The revision starts in ``DRAFT`` state; callers must
-    run ``mark_verified_complete`` and ``file_modelo_revision``
-    explicitly to move it through the verified and filed states.
+    1. Load the work unit; refuse on DISCARDED.
+    2. Resolve the registry snapshot for ``(modelo, filing_year,
+       period)``. Failure to resolve raises
+       :exc:`CalculationRegistryUnavailableError` — the calculate
+       path runs the engine, so a missing snapshot is a hard refusal.
+    3. Run :func:`calculate_registry_snapshot` over the snapshot
+       with the operator-supplied manual casilla inputs, binding
+       values, enum-binding values, and relation values. The
+       engine evaluates every declared formula in dependency order
+       and returns the full ``casilla_values`` map (inputs ∪
+       formula outputs).
+    4. Build canonical-string ``inputs_snapshot`` and
+       ``binding_overrides`` from the engine inputs (so the
+       content-addressed revision id is stable across structurally
+       identical re-runs).
+    5. Persist the revision in ``DRAFT`` state; advance the work
+       unit's ``current_calculation_revision_id`` pointer; emit
+       ``modelo.calculation.created``.
+
+    The revision starts in DRAFT state; callers must run
+    ``verify_modelo_revision`` and ``file_modelo_revision``
+    explicitly to advance through the lifecycle.
     """
+
+    from ...domain.calculations.registry import (
+        RegistrySnapshotError,
+        ValidatedRegistryAuthority,
+    )
+    from ...domain.calculations.registry._formula_runtime import (
+        calculate_registry_snapshot,
+    )
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -424,34 +496,76 @@ def calculate_modelo_revision(
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
     if work_unit.state is WorkUnitState.DISCARDED:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
-    inputs = dict(inputs_snapshot or {})
-    overrides = dict(binding_overrides or {})
-    outputs = dict(casilla_values)
+
+    try:
+        authority = ValidatedRegistryAuthority.load(Path(_REGISTRY_ROOT_DEFAULT), source_root=Path("."))
+    except FileNotFoundError as exc:
+        raise CalculationRegistryUnavailableError(
+            f"registry root {_REGISTRY_ROOT_DEFAULT!r} is missing; cannot calculate"
+        ) from exc
+    try:
+        snapshot = authority.snapshot(
+            str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+        )
+    except RegistrySnapshotError as exc:
+        raise CalculationRegistryUnavailableError(
+            f"registry snapshot for modelo={work_unit.modelo!r} "
+            f"year={work_unit.filing_year} period={work_unit.period!r} "
+            f"could not be resolved: {exc}"
+        ) from exc
+
+    period_date = filing_period_date or _default_filing_period_date(
+        year=work_unit.filing_year, period=work_unit.period
+    )
+    resolved_bindings = dict(binding_values or {})
+    resolved_enum_bindings = dict(enum_binding_values or {})
+    resolved_relations = dict(relation_values or {})
+
+    engine_result = calculate_registry_snapshot(
+        snapshot,
+        inputs=dict(casilla_inputs),
+        date_context={"filing_period": period_date},
+        binding_values=resolved_bindings,
+        enum_binding_values=resolved_enum_bindings,
+        relation_values=resolved_relations,
+    )
+
+    inputs_snapshot: dict[str, str] = dict(
+        sorted((k.strip(), _canonical_decimal_str(v)) for k, v in casilla_inputs.items())
+    )
+    binding_overrides: dict[str, str] = dict(
+        sorted(
+            [(k.strip(), _canonical_decimal_str(v)) for k, v in resolved_bindings.items()]
+            + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
+        )
+    )
+    casilla_values: dict[str, Decimal] = dict(engine_result.values)
+
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
-        inputs_snapshot=inputs,
-        binding_overrides=overrides,
-        casilla_values=outputs,
+        inputs_snapshot=inputs_snapshot,
+        binding_overrides=binding_overrides,
+        casilla_values=casilla_values,
     )
     revisions = cr_repo.load()
     existing = revisions.get(revision_id)
     if existing is not None:
-        # Idempotent: structurally identical re-run, return the
-        # existing revision without re-persisting.
+        # Idempotent: structurally identical re-run.
         return existing
     now = clock or datetime.now(UTC)
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.DRAFT,
-        inputs_snapshot=inputs,
-        binding_overrides=overrides,
-        casilla_values=outputs,
+        inputs_snapshot=inputs_snapshot,
+        binding_overrides=binding_overrides,
+        casilla_values=casilla_values,
         created_at=now,
         updated_at=now,
     )
     cr_repo.save(upsert_calculation_revision(revisions, revision))
-    # Advance the work unit's current pointer to the new revision.
     wu_repo.save(
         upsert_work_unit(
             work_units,
@@ -476,7 +590,9 @@ def calculate_modelo_revision(
             "modelo": str(work_unit.modelo),
             "filing_year": str(work_unit.filing_year),
             "period": work_unit.period,
-            "input_casilla_count": str(len(outputs)),
+            "input_casilla_count": str(len(inputs_snapshot)),
+            "casilla_count": str(len(casilla_values)),
+            "formula_count": str(len(engine_result.entries)),
         },
     )
     return revision
@@ -702,7 +818,13 @@ def verify_modelo_revision(
         )
     else:
         required, _optional = registry_lookup
-        revision_keys = set(target.casilla_values)
+        # Check operator-supplied inputs, not engine output. With the
+        # formula engine wired into calculate, every declared casilla
+        # appears in ``casilla_values`` (engine-defaulted to zero for
+        # missing inputs). ``inputs_snapshot`` carries only the inputs
+        # the operator actually supplied — that is the right basis for
+        # the "missing required" gate.
+        revision_keys = set(target.inputs_snapshot)
         for casilla_id in required:
             if casilla_id in revision_keys:
                 resolved_casillas.append(casilla_id)
@@ -715,7 +837,7 @@ def verify_modelo_revision(
                         casilla_id=casilla_id,
                         message=(
                             f"required casilla {casilla_id!r} is not present in "
-                            f"the calculation revision's casilla_values"
+                            f"the calculation revision's inputs_snapshot"
                         ),
                         next_action=(
                             f"aeat app modelo work calculate {target.work_unit_id} --casilla {casilla_id}=VALUE"
@@ -1473,6 +1595,7 @@ def import_external_filing_evidence(
 __all__ = [
     "AmendmentEvidenceMissingError",
     "AmendmentTargetStateError",
+    "CalculationRegistryUnavailableError",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
     "ExternalFilingImportError",
