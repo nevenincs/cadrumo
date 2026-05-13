@@ -16,9 +16,40 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 import questionary
 
+from ...core.errors import AeatError
 from ...core.i18n import tr
 from ._errors import WizardScriptOverflowError, WizardScriptUnderflowError
 from ._models import WizardChoice, WizardQuestion, WizardWidget
+
+
+class WizardUnsupportedConsoleError(AeatError):
+    """Raised when the host terminal cannot host an interactive wizard.
+
+    Surfaces when ``prompt_toolkit`` rejects the active TTY (typically
+    ``prompt_toolkit.output.win32.NoConsoleScreenBufferError`` under
+    git-bash on Windows). The runtime catches this at the
+    :class:`QuestionaryPrompter` boundary and surfaces a translated
+    operator-facing message rather than a Python traceback.
+    """
+
+
+def _resolve_no_console_error_types() -> tuple[type[BaseException], ...]:
+    """Return the prompt_toolkit error classes that signal an
+    unsupported console host. Windows-only error is included when
+    importable; the OSError fallback covers POSIX TTY misconfiguration.
+    """
+
+    error_types: list[type[BaseException]] = [OSError]
+    try:
+        from prompt_toolkit.output.win32 import NoConsoleScreenBufferError as _Win32NoConsole
+
+        error_types.insert(0, _Win32NoConsole)
+    except ImportError:
+        pass
+    return tuple(error_types)
+
+
+_NO_CONSOLE_ERRORS: tuple[type[BaseException], ...] = _resolve_no_console_error_types()
 
 if TYPE_CHECKING:
     from prompt_toolkit.input import Input
@@ -111,21 +142,24 @@ class QuestionaryPrompter:
 
     def ask(self, question: WizardQuestion, *, default: str | None) -> str:
         prompt = tr(str(question.prompt))
-        match question.widget:
-            case WizardWidget.TEXT:
-                return self._ask_text(prompt, default)
-            case WizardWidget.SECRET:
-                return self._ask_secret(prompt)
-            case WizardWidget.CONFIRM:
-                return self._ask_confirm(prompt, default)
-            case WizardWidget.SELECT:
-                return self._ask_select(prompt, question, default)
-            case WizardWidget.CHECKBOX:
-                return self._ask_checkbox(prompt, question)
-            case WizardWidget.PATH:
-                return self._ask_path(prompt, default)
-            case WizardWidget.INTEGER:
-                return self._ask_integer(prompt, default)
+        try:
+            match question.widget:
+                case WizardWidget.TEXT:
+                    return self._ask_text(prompt, default)
+                case WizardWidget.SECRET:
+                    return self._ask_secret(prompt)
+                case WizardWidget.CONFIRM:
+                    return self._ask_confirm(prompt, default)
+                case WizardWidget.SELECT:
+                    return self._ask_select(prompt, question, default)
+                case WizardWidget.CHECKBOX:
+                    return self._ask_checkbox(prompt, question)
+                case WizardWidget.PATH:
+                    return self._ask_path(prompt, default)
+                case WizardWidget.INTEGER:
+                    return self._ask_integer(prompt, default)
+        except _NO_CONSOLE_ERRORS as exc:
+            raise WizardUnsupportedConsoleError(tr("wizard.errors.unsupported_console")) from exc
 
     def _ask_text(self, prompt: str, default: str | None) -> str:
         result = questionary.text(

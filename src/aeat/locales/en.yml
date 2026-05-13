@@ -32,6 +32,12 @@ auth:
     clave_movil_description: Push-approval authentication via the holder's phone registered
       with Cl@ve. Requires DNI/NIE, Cl@ve enrolment, and a paired device.
     clave_movil_label: Cl@ve Móvil
+    clave_permanente_description: Reserved closed provider slot for Cl@ve Permanente.
+    clave_permanente_label: Cl@ve Permanente
+    clave_pin_description: Reserved closed provider slot for Cl@ve PIN.
+    clave_pin_label: Cl@ve PIN
+    dnie_pkcs_description: Reserved closed provider slot for DNI-e PKCS.
+    dnie_pkcs_label: DNI-e PKCS
 categories:
   test_profile:
     display_label_851219: Display label 851219
@@ -100,8 +106,7 @@ cli:
       help: Configure the active authentication provider
       provider_help: Authentication provider id (e.g. certificado-electronico)
       providers_help: List supported authentication providers
-      reserved_provider: 'Authentication provider reserved but not yet available:
-        {{provider}}.'
+      reserved_provider: 'Authentication provider reserved but not available: %{provider}.'
       status_help: Show configured authentication state
       test_help: Check local authentication readiness
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
@@ -691,7 +696,7 @@ cli:
   review:
     app_help: 'Operator review queue: triage transactions, invoices, and findings'
     errors:
-      invalid_state: 'Invalid review state: {{state}}'
+      invalid_state: 'Invalid review state: %{state}'
     labels:
       id: ID
       kind: Kind
@@ -906,6 +911,9 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
+    unsupported_console: 'The interactive wizard requires cmd.exe or Windows Terminal.
+      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch
+      terminals.'
   setup:
     description: Operator-facing setup wizard for tax filing readiness
     enrollment:
