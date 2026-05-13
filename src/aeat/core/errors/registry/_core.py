@@ -4,6 +4,28 @@ from aeat.core.errors._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "aeat.core.output_rendering.OutputRenderingError",
+        ErrorCode(
+            code="INTERNAL_OUTPUT_RENDERING",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_output_rendering",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.core.output_rendering.OutputFormatRefusedError",
+        ErrorCode(
+            code="REFUSED_OUTPUT_FORMAT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_output_format",
+            default_suggestion="aeat --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.json_contract.OutputSchemaError",
         ErrorCode(
             code="INTEGRITY_CLI_OUTPUT_SCHEMA",

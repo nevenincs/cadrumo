@@ -74,7 +74,7 @@ def test_coerce_invoice_review_round_trips_dict_through_model_validate() -> None
     raw = {
         "invoice_id": "inv-1",
         "fields": {"PAYMENT.ID": "tx-1"},  # uppercase key
-        "updated_at": datetime(2026, 4, 5, tzinfo=UTC).isoformat(),
+        "updated_at": datetime(2026, 4, 5, tzinfo=UTC),
     }
 
     result = _coerce_invoice_review(raw)

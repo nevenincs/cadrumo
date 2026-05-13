@@ -759,14 +759,23 @@ class AeatAuthenticator:
                 available=False,
                 health_summary="AEAT_CERTIFICATE_PASSWORD_SECRET not set",
             )
+        # The certificate-health stack still reads the passphrase from
+        # ``os.environ[bundle.password_env_var]``. Scope the env-var write
+        # to this function's duration only — restore the prior value on
+        # exit so the secret does not persist in the process environment
+        # after the health-check returns. (Subprocesses spawned during
+        # the call may still inherit the value; the full fix is to pass
+        # ``SecretStr`` through ``CertificateBundle`` directly.)
+        _password_env_key = "AEAT_CERTIFICATE_PASSWORD_SECRET"
+        _prior_env_value = os.environ.get(_password_env_key)
+        os.environ[_password_env_key] = (
+            self._settings.aeat_certificate_password_secret.get_secret_value()
+        )
         try:
-            os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"] = (
-                self._settings.aeat_certificate_password_secret.get_secret_value()
-            )
             backend = CertificateBackend(self._settings.aeat_certificate_backend.name)
             health = self._certificate_health_check(
                 self._settings.aeat_certificate_path,
-                password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",
+                password_env_var=_password_env_key,
                 warn_days=self._settings.aeat_cert_warn_days,
                 critical_days=self._settings.aeat_cert_critical_days,
                 backend=backend,
@@ -814,6 +823,14 @@ class AeatAuthenticator:
                 available=False,
                 health_summary=f"{type(exc).__name__}: {exc}",
             )
+        finally:
+            # Restore the prior env-var value so the certificate
+            # passphrase does not leak past the health-check call. If
+            # the env var was unset before, remove it entirely.
+            if _prior_env_value is None:
+                os.environ.pop(_password_env_key, None)
+            else:
+                os.environ[_password_env_key] = _prior_env_value
 
     async def close(self) -> None:
         """Release the browser context + session. Idempotent.

@@ -259,6 +259,10 @@ def _registry_portal_bindings_for_modelo(code: ModeloCode) -> frozenset[Portal]:
         try:
             modelo = _registry_authority().validate_modelo(str(code))
         except RegistrySnapshotError:
+            _LOG.debug(
+                "portals: registry snapshot unavailable for modelo %s; no portal bindings",
+                code,
+            )
             return frozenset()
         bound: set[Portal] = set()
         for revision in modelo.revisions.values():

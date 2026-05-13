@@ -136,7 +136,7 @@ class McpLaunchError(AeatError):
     """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
-from ._registry import (  # noqa: E402
+from ._registry import (
     ERROR_REGISTRY,
     ErrorCategory,
     ErrorCode,

@@ -21,9 +21,12 @@ from openpyxl import load_workbook
 from openpyxl.formula import Tokenizer
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ....core.logging import get_logger
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
 from ._schema import RegistrySnapshot
+
+_log = get_logger(__name__)
 
 WorkbookKind = Literal[
     "formula_form",
@@ -339,6 +342,12 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
             started=started,
         )
     except Exception as exc:
+        _log.warning(
+            "workbook parity scan failed for %s: %s",
+            relative,
+            exc,
+            exc_info=True,
+        )
         return _failed_report(
             relative=relative,
             modelo=modelo,
@@ -448,7 +457,7 @@ def run_workbook_with_libreoffice(
         finally:
             workbook.close()
         try:
-            completed = subprocess.run(  # noqa: S603
+            completed = subprocess.run(
                 [
                     str(runner),
                     "--headless",
@@ -592,7 +601,7 @@ def _converted_binary_xls_path(
         output_dir.mkdir()
         user_installation = (tmp_path / "lo-profile").resolve().as_uri()
         try:
-            completed = subprocess.run(  # noqa: S603
+            completed = subprocess.run(
                 [
                     str(runner),
                     "--headless",
@@ -1002,7 +1011,12 @@ def _formula_references(sheet: str, formula: str, remaining: int) -> tuple[Workb
     try:
         tokens = Tokenizer(formula).items
         token_values = (token.value for token in tokens)
-    except Exception:
+    except Exception as exc:
+        _log.debug(
+            "workbook parity: openpyxl Tokenizer failed on formula %r; falling back to regex (%s)",
+            formula[:80],
+            exc,
+        )
         token_values = (match.group(0) for match in _CELL_REF_PATTERN.finditer(formula))
     for value in token_values:
         for match in _CELL_REF_PATTERN.finditer(value):
@@ -1155,7 +1169,7 @@ def _registry_decimal_value(input_id: str, value: Decimal | int | str | bool) ->
         return Decimal(value)
     try:
         return Decimal(value)
-    except Exception as exc:
+    except (ArithmeticError, ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"synthetic input {input_id!r} cannot feed non-decimal value into registry calculation"
         ) from exc

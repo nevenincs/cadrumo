@@ -11,7 +11,6 @@ from ...core.logging import get_logger
 from ._errors import ModeloError
 from ._filing_record import FilingRecord, FilingRecordCatalogue
 
-
 _LOGGER = get_logger(__name__)
 _FILING_NAMESPACE = "aeat.domain.modelos.filing_records"
 _FILING_OBJECT_KEY = "catalogue"
@@ -46,13 +45,10 @@ class FilingRecordCatalogueRepository:
             ) from exc
         if record is None:
             return FilingRecordCatalogue()
-        envelope = Envelope[FilingRecordCatalogue].model_validate_json(
-            record.payload.decode("utf-8")
-        )
+        envelope = Envelope[FilingRecordCatalogue].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.FINANCIAL:
             raise FilingRecordPersistenceError(
-                f"filing-record catalogue has classification {envelope.classification}; "
-                f"FINANCIAL expected"
+                f"filing-record catalogue has classification {envelope.classification}; FINANCIAL expected"
             )
         if envelope.schema_version > _FILING_CATALOGUE_VERSION:
             raise FilingRecordPersistenceError(
@@ -78,9 +74,7 @@ class FilingRecordCatalogueRepository:
         )
 
 
-def upsert_filing_record(
-    catalogue: FilingRecordCatalogue, record: FilingRecord
-) -> FilingRecordCatalogue:
+def upsert_filing_record(catalogue: FilingRecordCatalogue, record: FilingRecord) -> FilingRecordCatalogue:
     """Return a new catalogue with ``record`` inserted or replaced."""
     mapping = dict(catalogue.records)
     mapping[record.filing_record_id] = record

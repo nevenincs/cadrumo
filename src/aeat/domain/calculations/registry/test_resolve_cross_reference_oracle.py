@@ -72,7 +72,7 @@ def test_raises_when_cross_reference_has_no_binding() -> None:
 def test_unknown_oracle_error_names_cross_reference_and_oracle() -> None:
     catalogue = LiveParityCatalogue()  # empty
 
-    with pytest.raises(RegistryValidationError, match=r"registry|validation") as exc_info:
+    with pytest.raises(RegistryValidationError, match=r"oracle|cross-reference|applicable") as exc_info:
         resolve_cross_reference_oracle(
             cross_reference_id="modelo-349-nif-iva-check",
             oracle_id="aeat-nif-iva-checker",
@@ -88,7 +88,7 @@ def test_unknown_oracle_error_names_cross_reference_and_oracle() -> None:
 def test_environment_mismatch_error_names_cross_reference_and_oracle() -> None:
     catalogue = _catalogue_with_test_environment_oracle()
 
-    with pytest.raises(RegistryValidationError, match=r"registry|validation") as exc_info:
+    with pytest.raises(RegistryValidationError, match=r"oracle|cross-reference|applicable") as exc_info:
         resolve_cross_reference_oracle(
             cross_reference_id="modelo-100-test-only-binding",
             oracle_id=ORACLE_ID,
@@ -158,7 +158,7 @@ def test_resolver_raises_when_applicability_gate_says_not_applicable() -> None:
     catalogue = _catalogue_with_production_oracle()
     decision = _gated_decision()
 
-    with pytest.raises(RegistryValidationError, match=r"registry|validation") as exc_info:
+    with pytest.raises(RegistryValidationError, match=r"oracle|cross-reference|applicable") as exc_info:
         resolve_cross_reference_oracle(
             cross_reference_id=decision.id,
             oracle_id=ORACLE_ID,

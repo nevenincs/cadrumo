@@ -975,8 +975,8 @@ def resolve_ledger_oss_aggregation_binding_values(
 # ---------------------------------------------------------------------------
 
 
-from ...vat import VATCategory  # noqa: E402 — substrate-typed selector
-from ...vat._flow import IvaFlowDirection  # noqa: E402
+from ...vat import VATCategory
+from ...vat._flow import IvaFlowDirection
 
 
 class IvaLedgerObservation(BaseModel):

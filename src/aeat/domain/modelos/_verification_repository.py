@@ -11,7 +11,6 @@ from ...core.logging import get_logger
 from ._errors import ModeloError
 from ._verification_report import VerificationReport, VerificationReportCatalogue
 
-
 _LOGGER = get_logger(__name__)
 _VERIFICATION_NAMESPACE = "aeat.domain.modelos.verification_reports"
 _VERIFICATION_OBJECT_KEY = "catalogue"
@@ -46,13 +45,10 @@ class VerificationReportCatalogueRepository:
             ) from exc
         if record is None:
             return VerificationReportCatalogue()
-        envelope = Envelope[VerificationReportCatalogue].model_validate_json(
-            record.payload.decode("utf-8")
-        )
+        envelope = Envelope[VerificationReportCatalogue].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.FINANCIAL:
             raise VerificationReportPersistenceError(
-                f"verification-report catalogue has classification {envelope.classification}; "
-                f"FINANCIAL expected"
+                f"verification-report catalogue has classification {envelope.classification}; FINANCIAL expected"
             )
         if envelope.schema_version > _VERIFICATION_CATALOGUE_VERSION:
             raise VerificationReportPersistenceError(

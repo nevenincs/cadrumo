@@ -19,6 +19,9 @@ import time
 from pathlib import Path
 
 from ..config import Settings
+from ..logging import get_logger
+
+_log = get_logger(__name__)
 
 
 def _file_sha256(path: Path) -> str:
@@ -75,7 +78,13 @@ def _hash_tree(
             file_path = dir_path / fname
             try:
                 rel = file_path.relative_to(root).as_posix()
-            except ValueError:
+            except ValueError as rel_exc:
+                _log.debug(
+                    "observability fingerprint: skipping %s — not under root %s (%s)",
+                    file_path,
+                    root,
+                    rel_exc,
+                )
                 continue
             try:
                 sha = _file_sha256(file_path)

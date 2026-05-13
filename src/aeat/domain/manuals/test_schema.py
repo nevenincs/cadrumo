@@ -136,7 +136,7 @@ class TestStrictSchema:
 
     def test_rule_rejects_missing_spanish_statement(self) -> None:
         """A rule with an empty statement must fail validation."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Rule.statement: missing authoritative Spanish text"):
             Rule(
                 rule_id="renta-2025-part1-cap5-sec2-rule0002",
                 manual_id=ManualId.RENTA,
@@ -158,7 +158,7 @@ class TestStrictSchema:
 
     def test_rule_rejects_invalid_casilla_reference(self) -> None:
         """Casilla references must match the MODELO_NNN[:CODE] pattern."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"references_casillas"):
             Rule(
                 rule_id="renta-2025-part1-cap5-sec2-rule0003",
                 manual_id=ManualId.RENTA,
@@ -180,7 +180,7 @@ class TestStrictSchema:
 
     def test_rule_rejects_empty_reviewer(self) -> None:
         """Reviewer metadata must be a non-empty trimmed string."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"at least 1 character"):
             Rule(
                 rule_id="renta-2025-part1-cap5-sec2-rule0004",
                 manual_id=ManualId.RENTA,
@@ -202,7 +202,7 @@ class TestStrictSchema:
 
     def test_manual_rejects_year_below_2000(self) -> None:
         """Year bounds guard against obviously bogus values."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"greater than or equal to 2000"):
             Manual(
                 manual_id=ManualId.RENTA,
                 year=1999,
@@ -230,7 +230,7 @@ class TestStrictSchema:
 
     def test_fetched_manifest_rejects_bad_sha256(self) -> None:
         """sha256 must be a 64-char lower-case hex string."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"sha256"):
             FetchedManualPart(
                 manual_id=ManualId.IVA,
                 year=2025,

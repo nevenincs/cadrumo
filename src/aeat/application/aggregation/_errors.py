@@ -16,8 +16,14 @@ from ...core.i18n import Translatable as tr
 class AggregationError(AeatError):
     """Base class for financial transaction aggregation failures.
 
-    The :attr:`message` field is a translation key resolved by the
-    internationalization system at runtime.
+    The :attr:`translated_message` field is a translation key resolved by
+    the internationalization system at runtime. The same key is also
+    routed through the positional ``message=`` arg so ``str(exc)``
+    returns the key (rather than the empty string) for diagnostic
+    surfaces, structured logs, and operator error envelopes that
+    render exceptions via ``str``. Without this routing, every
+    operator-facing display of an aggregation error showed the empty
+    string.
     """
 
     def __init__(
@@ -27,7 +33,12 @@ class AggregationError(AeatError):
         context: Mapping[str, object] | None = None,
         suggestion: str | None = None,
     ) -> None:
-        super().__init__(translated_message=message, context=context, suggestion=suggestion)
+        super().__init__(
+            str(message),
+            translated_message=message,
+            context=context,
+            suggestion=suggestion,
+        )
 
 
 class AggregationPeriodError(AggregationError):

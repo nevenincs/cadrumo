@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ._errors import ProfileError
 from ._models import AutonomoProfile, FilingEnrollment, FilingIVAProfile, IVARegime
 
 
@@ -53,7 +54,7 @@ def autonomo_profile_from_mapping(
 
     typed = project_answers(SETUP_FLOW, padded)
     if not isinstance(typed, SetupAnswers):
-        raise TypeError("setup flow projection did not yield a SetupAnswers instance")
+        raise ProfileError("setup flow projection did not yield a SetupAnswers instance")
 
     tax_id = canonical.get("tax.id") or tax_id_default
     iva_regime = _resolve_iva_regime(canonical.get("iva.regime"), iva_regime_default)

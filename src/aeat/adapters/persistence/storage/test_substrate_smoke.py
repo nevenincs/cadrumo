@@ -135,7 +135,7 @@ def test_path_safety_rejects_traversal(tmp_path: Path) -> None:
     """The substrate's typed path helpers refuse traversal attempts."""
     from . import PathContainmentError
 
-    with pytest.raises(PathContainmentError, match=r"path|containment"):
+    with pytest.raises(PathContainmentError, match=r"owning root|within|stay"):
         safe_subpath(tmp_path, "../escape", context="smoke")
 
 

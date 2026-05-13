@@ -15,6 +15,50 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.registry._errors.RegistryApplicationError",
+        ErrorCode(
+            code="ERROR_APPLICATION_REGISTRY",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_application_registry",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.registry._errors.RegistryApplicationInputError",
+        ErrorCode(
+            code="REFUSED_APPLICATION_REGISTRY_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_application_registry_input",
+            default_suggestion="aeat app registry --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.live._errors.LiveApplicationError",
+        ErrorCode(
+            code="ERROR_APPLICATION_LIVE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_application_live",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.live._errors.LiveApplicationInputError",
+        ErrorCode(
+            code="REFUSED_APPLICATION_LIVE_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_application_live_input",
+            default_suggestion="aeat app live --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._acquisition_lock.AuthAcquisitionLockedError",
         ErrorCode(
             code="LOCKED_AUTH_ACQUISITION",
@@ -22,6 +66,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             message_key="errors.locked.locked_auth_acquisition",
             default_suggestion="aeat config status --format json",
             retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.config_reset.ConfigResetUnconfirmedError",
+        ErrorCode(
+            code="REFUSED_CONFIG_RESET_UNCONFIRMED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_config_reset_unconfirmed",
+            default_suggestion="aeat config reset --scope all --yes",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.profile._repository.ProfileBucketPersistenceError",
+        ErrorCode(
+            code="ERROR_PROFILE_BUCKET_PERSISTENCE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_profile_bucket_persistence",
+            default_suggestion="aeat config profile status",
+            retryable=False,
             runbook_id=None,
         ),
     ),
@@ -42,7 +108,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_TOPIC_NOT_FOUND",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_topic_not_found",
-            default_suggestion="aeat app topic",
+            default_suggestion="aeat app registry citations",
             retryable=False,
             runbook_id=None,
         ),
@@ -213,50 +279,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.archive._errors.ArchiveError",
-        ErrorCode(
-            code="ERROR_ARCHIVE",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_archive",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.archive._errors.ArchiveAdapterMissingError",
-        ErrorCode(
-            code="REFUSED_ARCHIVE_ADAPTER_MISSING",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_archive_adapter_missing",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.archive._errors.ArchiveBundleSchemaError",
-        ErrorCode(
-            code="REFUSED_ARCHIVE_BUNDLE_SCHEMA",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_archive_bundle_schema",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.archive._errors.ArchiveConflictError",
-        ErrorCode(
-            code="REFUSED_ARCHIVE_CONFLICT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_archive_conflict",
-            default_suggestion="aeat app archive import <path> --conflict overwrite",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.application.auth._sessions.CorruptAuthSessionError",
         ErrorCode(
             code="AUTH_SESSION_CORRUPT",
@@ -312,17 +334,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli._common.JsonEncodingError",
-        ErrorCode(
-            code="INTERNAL_CLI_JSON_ENCODING",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_cli_json_encoding",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.entrypoints.cli._log_levels.LogLevelResolutionError",
         ErrorCode(
             code="REFUSED_CLI_LOG_LEVEL_RESOLUTION",
@@ -372,50 +383,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_CLI_BOUNDARY",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_cli_boundary",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.entrypoints.cli.auth._registry.NoConfiguredProviderError",
-        ErrorCode(
-            code="REFUSED_CLI_AUTH_NO_CONFIGURED_PROVIDER",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_cli_auth_no_configured_provider",
-            default_suggestion="aeat config auth --provider certificate",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.entrypoints.cli.auth._registry.UnknownProviderError",
-        ErrorCode(
-            code="REFUSED_CLI_AUTH_UNKNOWN_PROVIDER",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_cli_auth_unknown_provider",
-            default_suggestion="aeat config auth --provider certificate",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.entrypoints.cli.auth._registry.ProviderUnavailableError",
-        ErrorCode(
-            code="FAIL_CLI_AUTH_PROVIDER_UNAVAILABLE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_cli_auth_provider_unavailable",
-            default_suggestion="aeat config status",
-            retryable=True,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.entrypoints.cli.financial.txs.TxsArgumentError",
-        ErrorCode(
-            code="REFUSED_CLI_TXS_ARGUMENT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_cli_txs_argument",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -488,12 +455,23 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.wizard._prompter.WizardUnsupportedConsoleError",
+        ErrorCode(
+            code="REFUSED_WIZARD_UNSUPPORTED_CONSOLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_wizard_unsupported_console",
+            default_suggestion="aeat config init --quiet --tax-id NIF --activity ACTIVITY",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.wizard._status.WizardStatusError",
         ErrorCode(
             code="REFUSED_WIZARD_STATUS",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_wizard_status",
-            default_suggestion="aeat config setup --profile-name NAME --tax-id NIF",
+            default_suggestion="aeat config init --profile NAME --tax-id NIF",
             retryable=False,
             runbook_id=None,
         ),

@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ._protocols import (
     CasillaCollection,

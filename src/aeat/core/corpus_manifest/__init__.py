@@ -332,7 +332,7 @@ def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
     # Capture tmp_path BEFORE the ``with`` so cleanup works when
     # context entry raises. NamedTemporaryFile raising means no file
     # was created; the outer except re-raises cleanly.
-    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+    handle = tempfile.NamedTemporaryFile(
         mode="w",
         encoding="utf-8",
         dir=resolved.parent,

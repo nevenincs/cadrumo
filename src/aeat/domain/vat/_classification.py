@@ -487,7 +487,7 @@ def _r17_oss_union_goods_distance_sale(criteria: VATClassificationCriteria) -> b
 
 
 def _r18_oss_union_goods_interface_facilitated(criteria: VATClassificationCriteria) -> bool:
-    """Match an ES to EU_MEMBER B2C OSS-Unión interior supply facilitated by an electronic interface (LIVA art. 163 unvicies)."""
+    """Match ES to EU_MEMBER B2C OSS-Unión interface-facilitated goods."""
     return (
         criteria.issuer_residency is IssuerResidency.ES_MAINLAND
         and criteria.customer_residency is CustomerResidency.EU_MEMBER

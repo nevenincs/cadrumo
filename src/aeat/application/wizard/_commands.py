@@ -196,7 +196,7 @@ def _python_parameter(
             }
             if question.choices:
                 option_kwargs["click_type"] = click.Choice([choice.value for choice in question.choices])
-            option = typer.Option(flag, **option_kwargs)
+            option = typer.Option(flag, **option_kwargs)  # ty: ignore[no-matching-overload]
             annotation = Annotated[str | None, option]
             default = None
     return inspect.Parameter(

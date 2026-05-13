@@ -4,7 +4,7 @@ Single source of truth for all environment variables. Every field in
 :class:`Settings` maps 1:1 to an uppercase environment variable
 (e.g. ``aeat_base_url`` → ``AEAT_BASE_URL``).
 
-The companion test ``tests/test_config.py`` enforces that ``.env.example``
+The companion test ``src/aeat/tests/test_config.py`` enforces that ``.env.example``
 and this module stay fully aligned.
 """
 
@@ -107,14 +107,6 @@ class Settings(BaseSettings):
         default="",
         description="Optional default CLI log level override: quiet, default, verbose, or debug",
     )
-    aeat_tax_residence_profile_path: Path | None = Field(
-        default=None,
-        description=(
-            "Optional override for the operator's tax-residence profile JSON. "
-            "When unset, aeat.adapters.persistence.profile uses the OS config directory."
-        ),
-    )
-
     # ── Financial ingest ───────────────────────────────────────────────────
     financial_base_currency: str = Field(
         default="EUR",
@@ -147,7 +139,7 @@ class Settings(BaseSettings):
 
     # ── Multilingual i18n ───────────────────────────────────────────────────
     aeat_output_language: str = Field(
-        default="es",
+        default="en",
         description="Target ISO 639-1 language code for user-facing content.",
     )
     aeat_authoritative_language_aeat_terms: str = Field(
@@ -449,13 +441,6 @@ class Settings(BaseSettings):
     )
 
     # ── Filing-deadline engine ──────────────────────────────────────────────
-    aeat_default_profile_path: Path | None = Field(
-        default=None,
-        description=(
-            "Optional path to a JSON file with the default AutonomoProfile "
-            "loaded by the filing-deadline engine when a profile path is omitted"
-        ),
-    )
     aeat_deadline_due_soon_days: int = Field(
         default=14,
         description=(
@@ -495,14 +480,6 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "workflow-runs",
         description="Directory where WorkflowResult JSON audit records are persisted",
     )
-    aeat_workflow_draft_inputs_path: Path | None = Field(
-        default=None,
-        description=(
-            "Optional path to a JSON file carrying the user's casilla input values "
-            "consumed by the workflow engine's BUILDING_DRAFT stage"
-        ),
-    )
-
     # ── Filing draft engine ─────────────────────────────────────────────────
     aeat_drafts_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "drafts",
@@ -580,9 +557,6 @@ class Settings(BaseSettings):
 
     @field_validator(
         "aeat_certificate_path",
-        "aeat_default_profile_path",
-        "aeat_tax_residence_profile_path",
-        "aeat_workflow_draft_inputs_path",
         mode="before",
     )
     @classmethod
@@ -692,14 +666,11 @@ class Settings(BaseSettings):
         "aeat_certificate_path",
         "aeat_llm_cache_dir",
         "aeat_llm_usage_dir",
-        "aeat_default_profile_path",
-        "aeat_tax_residence_profile_path",
         "aeat_submissions_dir",
         "aeat_submission_browser_trace_dir",
         "aeat_inbox_dir",
         "aeat_inbox_pdf_dir",
         "aeat_workflow_runs_dir",
-        "aeat_workflow_draft_inputs_path",
         "aeat_drafts_dir",
         "aeat_runs_dir",
         "aeat_status_cache_dir",

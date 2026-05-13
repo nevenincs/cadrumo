@@ -72,49 +72,14 @@ _KNOWN_FINDINGS: tuple[BoundaryFinding, ...] = (
         owner="application.transactions",
     ),
     BoundaryFinding(
-        row_id="CLI-003",
-        source="src/aeat/entrypoints/cli/_invoice.py",
-        symbols=("invoice_import", "invoice_review"),
-        backend_gap="API-003",
-        owner="application.invoices",
-    ),
-    BoundaryFinding(
-        row_id="CLI-004",
-        source="src/aeat/entrypoints/cli/financial/profile.py",
-        symbols=("set_ratio_cmd", "unset_ratio_cmd", "_resolve_key", "_parse_ratio", "_save_profile"),
-        backend_gap="API-004",
-        owner="application.profile",
-    ),
-    BoundaryFinding(
-        row_id="CLI-005",
-        source="src/aeat/entrypoints/cli/financial/txs.py",
-        symbols=("classify_cmd", "classify_llm_cmd", "build_cmd"),
-        backend_gap="API-002",
-        owner="application.transactions",
-    ),
-    BoundaryFinding(
-        row_id="CLI-006",
-        source="src/aeat/entrypoints/cli/financial/invoices.py",
-        symbols=("reconcile_cmd", "link_cmd"),
-        backend_gap="API-003",
-        owner="application.invoices",
-    ),
-    BoundaryFinding(
         row_id="CLI-007",
-        source="src/aeat/entrypoints/cli/filing/__init__.py",
-        symbols=("_handle_declaracion_import",),
-        backend_gap="API-005",
-        owner="application.filing",
-    ),
-    BoundaryFinding(
-        row_id="CLI-008",
         source="src/aeat/entrypoints/cli/_overview.py",
         symbols=("overview_status",),
         backend_gap="API-008",
         owner="application.overview",
     ),
     BoundaryFinding(
-        row_id="CLI-010",
+        row_id="CLI-008",
         source="src/aeat/entrypoints/cli/data/ledgers/inventory.py",
         symbols=("create_inventory", "add_movement", "_money"),
         backend_gap="API-007",
@@ -170,17 +135,17 @@ def test_boundary_plan_tracks_every_known_cli_finding_and_backend_gap() -> None:
     assert offences == [], "boundary docs missing tracked rows:\n  " + "\n  ".join(offences)
 
 
-def test_declaration_review_has_no_command_local_format_selector() -> None:
-    """Root ``--format`` is the only output selector for declaration review."""
+def test_removed_workflow_shim_modules_stay_absent() -> None:
+    """Rejected operator surfaces must not keep importable Typer shims."""
 
-    tree = _parse_source("src/aeat/entrypoints/cli/_declaration.py")
-    declaration_review = next(
-        node
-        for node in ast.iter_child_nodes(tree)
-        if isinstance(node, ast.FunctionDef) and node.name == "declaration_review"
+    removed = (
+        "src/aeat/entrypoints/cli/_declaration.py",
+        "src/aeat/entrypoints/cli/_invoice.py",
+        "src/aeat/entrypoints/cli/_topic.py",
+        "src/aeat/entrypoints/cli/auth/__init__.py",
+        "src/aeat/entrypoints/cli/auth/_registry.py",
     )
-    parameter_names = {arg.arg for arg in declaration_review.args.args}
-    assert "format_" not in parameter_names
+    assert [path for path in removed if (PROJECT_ROOT / path).exists()] == []
 
 
 def test_cli_observability_wrapper_module_is_absent_from_command_tree() -> None:

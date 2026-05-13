@@ -853,6 +853,56 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
     assert captured["friendly_name"] == "operator cert"
 
 
+def test_describe_does_not_leak_password_to_environ_after_call(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regression for the production env-leak fix.
+
+    ``AeatAuthenticator.describe()`` previously wrote
+    ``self._settings.aeat_certificate_password_secret`` into
+    ``os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"]`` and never
+    cleaned it up — the secret persisted across every subsequent
+    log dump, subprocess spawn, and diagnostic surface. The fix
+    bounds the env-var write to the function's duration and
+    restores the prior value on exit. This test pins that contract.
+    """
+
+    import os as _os
+
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_for(bundle_path, monkeypatch)
+    # Clear the env var so the test starts from a known absent state.
+    monkeypatch.delenv("AEAT_CERTIFICATE_PASSWORD_SECRET", raising=False)
+    assert _os.environ.get("AEAT_CERTIFICATE_PASSWORD_SECRET") is None
+
+    description = AeatAuthenticator(settings).describe()
+    assert description.available is True
+
+    assert (
+        _os.environ.get("AEAT_CERTIFICATE_PASSWORD_SECRET") is None
+    ), "describe() leaked the certificate passphrase into os.environ"
+
+
+def test_describe_restores_prior_env_value_when_already_set(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When the env var is already set by the operator, ``describe()``
+    must restore the operator-supplied value on exit, not the value
+    derived from ``Settings``. Pins the save/restore contract."""
+
+    import os as _os
+
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_for(bundle_path, monkeypatch)
+    monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", "operator-supplied-value")
+
+    AeatAuthenticator(settings).describe()
+
+    assert _os.environ.get("AEAT_CERTIFICATE_PASSWORD_SECRET") == "operator-supplied-value"
+
+
 @pytest.mark.asyncio
 async def test_verify_login_raises_on_stale_session(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     bundle_path = _build_bundle(tmp_path)

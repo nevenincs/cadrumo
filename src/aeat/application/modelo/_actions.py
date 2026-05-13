@@ -38,6 +38,7 @@ from ...domain.modelos._calculation_revision import (
 )
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._errors import ModeloError
+from ...domain.period import period_end_date
 from ...domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -388,35 +389,6 @@ def discard_work_unit(
 # ---------------------------------------------------------------------------
 
 
-def _default_filing_period_date(*, year: int, period: str) -> date:
-    """Return the end-of-period date for ``date_context["filing_period"]``.
-
-    The registry uses this date to select date-versioned parameters
-    (legal-rate changes, autonomic scales). End-of-period is the
-    safe default — operator-provided ``as_of`` overrides it via the
-    ``filing_period_date`` action parameter when finer control is
-    needed (e.g., reconstructing a prior-rate calculation).
-    """
-
-    p = period.strip().upper()
-    if p in {"1T", "Q1"}:
-        return date(year, 3, 31)
-    if p in {"2T", "Q2"}:
-        return date(year, 6, 30)
-    if p in {"3T", "Q3"}:
-        return date(year, 9, 30)
-    if p in {"4T", "Q4"}:
-        return date(year, 12, 31)
-    if p == "0A":
-        return date(year, 12, 31)
-    if len(p) == 2 and p.isdigit():
-        from calendar import monthrange
-
-        month = int(p)
-        return date(year, month, monthrange(year, month)[1])
-    return date(year, 12, 31)
-
-
 def _canonical_decimal_str(value: Decimal) -> str:
     """Stable string form of a Decimal for content-addressing."""
 
@@ -498,10 +470,12 @@ def calculate_modelo_revision(
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
 
     try:
-        authority = ValidatedRegistryAuthority.load(Path(_REGISTRY_ROOT_DEFAULT), source_root=Path("."))
+        from ...core.config import PROJECT_ROOT
+
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
     except FileNotFoundError as exc:
         raise CalculationRegistryUnavailableError(
-            f"registry root {_REGISTRY_ROOT_DEFAULT!r} is missing; cannot calculate"
+            f"registry root {_registry_root()} is missing; cannot calculate"
         ) from exc
     try:
         snapshot = authority.snapshot(
@@ -516,8 +490,9 @@ def calculate_modelo_revision(
             f"could not be resolved: {exc}"
         ) from exc
 
-    period_date = filing_period_date or _default_filing_period_date(
-        year=work_unit.filing_year, period=work_unit.period
+    period_date = filing_period_date or period_end_date(
+        filing_year=work_unit.filing_year,
+        registry_period=work_unit.period,
     )
     resolved_bindings = dict(binding_values or {})
     resolved_enum_bindings = dict(enum_binding_values or {})
@@ -676,7 +651,21 @@ def mark_revision_verified_complete(
     return verified
 
 
-_REGISTRY_ROOT_DEFAULT = "registry/aeat"
+def _registry_root() -> Path:
+    """Resolve the registry root relative to the project root.
+
+    The previous string default ``"registry/aeat"`` plus
+    ``source_root=Path(".")`` was CWD-relative — running the action
+    from any directory that wasn't the repo root (production daemon,
+    background worker, wheel install, subprocess) raised
+    ``FileNotFoundError`` for every modelo. Routing through
+    ``aeat.core.config.PROJECT_ROOT`` makes the resolution
+    independent of the caller's working directory.
+    """
+
+    from ...core.config import PROJECT_ROOT
+
+    return PROJECT_ROOT / "registry" / "aeat"
 
 
 def _required_input_casillas_for_revision(
@@ -709,8 +698,10 @@ def _required_input_casillas_for_revision(
         ValidatedRegistryAuthority,
     )
 
+    from ...core.config import PROJECT_ROOT
+
     try:
-        authority = ValidatedRegistryAuthority.load(Path(_REGISTRY_ROOT_DEFAULT), source_root=Path("."))
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
     except FileNotFoundError:
         return None
 

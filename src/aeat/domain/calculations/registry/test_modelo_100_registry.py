@@ -57,17 +57,17 @@ def test_modelo_100_revisions_match_record_design_manifest() -> None:
 
     assert set(modelo.revisions) == years_with_complete_layout
 
-    for year in years_with_complete_layout:
-        revision = modelo.revisions[year]
+    for year_str in years_with_complete_layout:
+        revision = modelo.revisions[year_str]
         expected_sources = {
-            f"aeat-dr-100-{year}-dictionary",
-            f"aeat-dr-100-{year}-input-dictionary",
-            f"aeat-dr-100-{year}-xsd",
+            f"aeat-dr-100-{year_str}-dictionary",
+            f"aeat-dr-100-{year_str}-input-dictionary",
+            f"aeat-dr-100-{year_str}-xsd",
         }
 
         assert expected_sources.issubset(revision.source_refs)
         assert expected_sources.issubset(catalogues.sources)
-        assert revision.period_selector.years == (int(year),)
+        assert revision.period_selector.years == (int(year_str),)
         assert revision.period_selector.periods == ("0A",)
 
 

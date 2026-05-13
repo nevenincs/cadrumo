@@ -15,7 +15,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ..submission import FilingFindingSeverity
 
 APPROVAL_BASIS_VERSION = "review-basis-v1"

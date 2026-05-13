@@ -26,9 +26,9 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.domain.invoices._service import (
+    _HEX_TRANSACTION_ID_LENGTH,
     LinkInconsistency,
     ReconciliationSuggestion,
-    _HEX_TRANSACTION_ID_LENGTH,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

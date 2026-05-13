@@ -187,7 +187,7 @@ class TestLoader:
             bad_section,
         )
         manual = load_manual(ManualId.IVA, 2025, ManualPart.SINGLE, settings=settings)
-        with pytest.raises(ManualParseError, match=r"manual|parse"):
+        with pytest.raises(ManualParseError, match=r"section.+validation failed"):
             load_section(
                 settings.aeat_manuals_root / "iva" / "2025",
                 manual.chapters[0].sections[0],

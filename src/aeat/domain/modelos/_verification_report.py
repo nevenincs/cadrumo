@@ -21,12 +21,11 @@ import json
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from ._errors import ModeloValidationError
-
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 
@@ -149,38 +148,25 @@ class VerificationReport(BaseModel):
         )
         if derived != self.verification_report_id:
             raise ModeloValidationError(
-                f"verification_report_id {self.verification_report_id!r} does not match the "
-                f"derived id {derived!r}"
+                f"verification_report_id {self.verification_report_id!r} does not match the derived id {derived!r}"
             )
         # granted_verified_complete is a True iff completeness_status is COMPLETE
         # AND no blocking findings exist.
-        has_blocking = any(
-            finding.severity is VerificationFindingSeverity.BLOCKING for finding in self.findings
-        )
+        has_blocking = any(finding.severity is VerificationFindingSeverity.BLOCKING for finding in self.findings)
         if self.granted_verified_complete:
             if self.completeness_status is not VerificationCompletenessStatus.COMPLETE:
-                raise ModeloValidationError(
-                    "granted_verified_complete=True requires completeness_status=COMPLETE"
-                )
+                raise ModeloValidationError("granted_verified_complete=True requires completeness_status=COMPLETE")
             if has_blocking:
-                raise ModeloValidationError(
-                    "granted_verified_complete=True requires no blocking findings"
-                )
+                raise ModeloValidationError("granted_verified_complete=True requires no blocking findings")
         else:
-            if (
-                self.completeness_status is VerificationCompletenessStatus.COMPLETE
-                and not has_blocking
-            ):
+            if self.completeness_status is VerificationCompletenessStatus.COMPLETE and not has_blocking:
                 raise ModeloValidationError(
-                    "completeness_status=COMPLETE with no blocking findings must set "
-                    "granted_verified_complete=True"
+                    "completeness_status=COMPLETE with no blocking findings must set granted_verified_complete=True"
                 )
         # Required-casilla sets must be disjoint from resolved.
         overlap = set(self.resolved_casillas) & set(self.missing_required_casillas)
         if overlap:
-            raise ModeloValidationError(
-                f"casillas cannot be both resolved and missing: {sorted(overlap)!r}"
-            )
+            raise ModeloValidationError(f"casillas cannot be both resolved and missing: {sorted(overlap)!r}")
         return self
 
 
@@ -196,25 +182,20 @@ class VerificationReportCatalogue(BaseModel):
         for key, report in self.reports.items():
             if key != report.verification_report_id:
                 raise ModeloValidationError(
-                    f"catalogue key {key!r} does not match verification_report_id "
-                    f"{report.verification_report_id!r}"
+                    f"catalogue key {key!r} does not match verification_report_id {report.verification_report_id!r}"
                 )
         return self
 
     def get(self, verification_report_id: str) -> VerificationReport | None:
         return self.reports.get(verification_report_id)
 
-    def for_calculation_revision(
-        self, calculation_revision_id: str
-    ) -> tuple[VerificationReport, ...]:
+    def for_calculation_revision(self, calculation_revision_id: str) -> tuple[VerificationReport, ...]:
         """Return every report against one calculation revision, ordered by run_at."""
 
-        matching = tuple(
-            r for r in self.reports.values() if r.calculation_revision_id == calculation_revision_id
-        )
+        matching = tuple(r for r in self.reports.values() if r.calculation_revision_id == calculation_revision_id)
         return tuple(sorted(matching, key=lambda r: r.run_at))
 
-    def values(self):  # noqa: D401
+    def values(self):
         return self.reports.values()
 
     def __iter__(self):  # type: ignore[override]
