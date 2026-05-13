@@ -253,7 +253,7 @@ def test_definitiva_orchestrator_skips_other_year_operations() -> None:
         _op("noise", year=2024, base_amount="9999.00", kind=VatOperationKind.GRANTS_DEDUCTION),
         _op("target", year=2025, base_amount="50000.00", kind=VatOperationKind.GRANTS_DEDUCTION),
     )
-    result, aggregation = aggregate_definitiva_prorrata(ops, year=2025)
+    _result, aggregation = aggregate_definitiva_prorrata(ops, year=2025)
     assert aggregation.inputs.operaciones_con_derecho_deduccion == Decimal("50000.00")
     assert aggregation.operation_count_con_derecho == 1
 
