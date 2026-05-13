@@ -46,19 +46,26 @@ class TestNifReplacement:
     """Synthetic NIF/NIE values must pass the AEAT checksum."""
 
     def test_accepts_valid_synthetic_nie(self) -> None:
-        NifReplacement(
+        replacement = NifReplacement(
             real=SecretStr("Y4113523X"),
             synthetic="Y0000001S",
             surface_label="taxpayer NIE",
         )
+        # A silent-acceptance regression would still match "no exception
+        # raised"; pinning the synthetic and real fields catches a
+        # validator that wrongly normalises (trim, lowercase) the input.
+        assert replacement.synthetic == "Y0000001S"
+        assert replacement.real.get_secret_value() == "Y4113523X"
 
     def test_accepts_valid_synthetic_nif(self) -> None:
         # 12345678 % 23 == 14 → letter Z
-        NifReplacement(
+        replacement = NifReplacement(
             real=SecretStr("99999999R"),
             synthetic="12345678Z",
             surface_label="taxpayer NIF",
         )
+        assert replacement.synthetic == "12345678Z"
+        assert replacement.real.get_secret_value() == "99999999R"
 
     def test_rejects_synthetic_with_bad_checksum(self) -> None:
         # validate_spanish_tax_id raises IdentityError, which does NOT
@@ -88,11 +95,12 @@ class TestNameReplacement:
     """Synthetic names must be uppercase and digit-free."""
 
     def test_accepts_uppercased_name(self) -> None:
-        NameReplacement(
+        replacement = NameReplacement(
             real=SecretStr("Wootsch Gergely Domokos"),
             synthetic="APELLIDO APELLIDO NOMBRE",
             surface_label="taxpayer name",
         )
+        assert replacement.synthetic == "APELLIDO APELLIDO NOMBRE"
 
     def test_rejects_mixed_case(self) -> None:
         with pytest.raises(ValidationError, match=r"synthetic name must be uppercase"):
@@ -115,11 +123,12 @@ class TestExpedienteReplacement:
     """Expediente synthetic must be alphanumeric and length-bounded."""
 
     def test_accepts_alphanumeric(self) -> None:
-        ExpedienteReplacement(
+        replacement = ExpedienteReplacement(
             real=SecretStr("ABC2024-0042"),
             synthetic="9999202400000001",
             surface_label="expediente id",
         )
+        assert replacement.synthetic == "9999202400000001"
 
     def test_rejects_with_punctuation(self) -> None:
         with pytest.raises(ValidationError, match=r"synthetic expediente must be alphanumeric"):
@@ -134,11 +143,13 @@ class TestCsvReplacement:
     """Synthetic CSV must be exactly 16 chars uppercase alphanumeric."""
 
     def test_accepts_canonical_shape(self) -> None:
-        CsvReplacement(
+        replacement = CsvReplacement(
             real=SecretStr("FNBB57PE9KZ5TN4R"),
             synthetic="SANITIZED1002021",
             surface_label="csv",
         )
+        assert replacement.synthetic == "SANITIZED1002021"
+        assert len(replacement.synthetic) == 16
 
     def test_rejects_short(self) -> None:
         with pytest.raises(ValidationError, match=r"synthetic CSV must be exactly 16 characters"):
@@ -161,11 +172,13 @@ class TestNrcReplacement:
     """NRC synthetic must be 16-32 alphanumeric."""
 
     def test_accepts_pad_pattern(self) -> None:
-        NrcReplacement(
+        replacement = NrcReplacement(
             real=SecretStr("ABCDEFGHIJKLMNOP"),
             synthetic="0000000000000XXXXXXXXX",
             surface_label="nrc",
         )
+        assert replacement.synthetic == "0000000000000XXXXXXXXX"
+        assert 16 <= len(replacement.synthetic) <= 32
 
     def test_rejects_too_long(self) -> None:
         with pytest.raises(ValidationError, match=r"synthetic NRC must be 16-32 characters"):
@@ -181,11 +194,13 @@ class TestIbanReplacement:
 
     def test_accepts_valid_es_iban(self) -> None:
         # ES80 2310 0001 1800 0001 2345 — known-valid mod-97 sample.
-        IbanReplacement(
+        replacement = IbanReplacement(
             real=SecretStr("ES7621000418401234567891"),
             synthetic="ES8023100001180000012345",
             surface_label="bank account",
         )
+        assert replacement.synthetic == "ES8023100001180000012345"
+        assert replacement.synthetic.startswith("ES")
 
     def test_rejects_bad_checksum(self) -> None:
         with pytest.raises(ValidationError, match=r"synthetic IBAN fails the ISO 13616 mod-97 check"):
@@ -200,18 +215,22 @@ class TestImporteReplacement:
     """Synthetic IMPORTE must follow AEAT comma-decimal shape."""
 
     def test_accepts_thousands_dotted(self) -> None:
-        ImporteReplacement(
+        replacement = ImporteReplacement(
             real=SecretStr("9.876,54"),
             synthetic="1.000,00",
             surface_label="importe",
         )
+        assert replacement.synthetic == "1.000,00"
+        assert "," in replacement.synthetic, "AEAT comma-decimal shape must be preserved"
 
     def test_accepts_negative(self) -> None:
-        ImporteReplacement(
+        replacement = ImporteReplacement(
             real=SecretStr("9.876,54"),
             synthetic="-1.000,00",
             surface_label="importe",
         )
+        assert replacement.synthetic == "-1.000,00"
+        assert replacement.synthetic.startswith("-")
 
     def test_rejects_dot_decimal(self) -> None:
         with pytest.raises(ValidationError, match=r"synthetic IMPORTE must contain a decimal comma"):
@@ -234,11 +253,13 @@ class TestArbitraryReplacement:
     """Arbitrary entries pass through any non-empty synthetic."""
 
     def test_accepts_any_non_empty(self) -> None:
-        ArbitraryReplacement(
+        replacement = ArbitraryReplacement(
             real=SecretStr("opaque-fingerprint"),
             synthetic="SANITIZED-OPAQUE",
             surface_label="ad-hoc",
         )
+        assert replacement.synthetic == "SANITIZED-OPAQUE"
+        assert replacement.synthetic, "non-empty synthetic must survive validation"
 
     def test_rejects_blank(self) -> None:
         # Same _NonEmptyStr field-type constraint as NifReplacement —
@@ -255,11 +276,13 @@ class TestAddressReplacement:
     """Address replacement has no shape constraint beyond non-empty."""
 
     def test_accepts_canonical_synthetic(self) -> None:
-        AddressReplacement(
+        replacement = AddressReplacement(
             real=SecretStr("CALLE DEL SOL 12 28010 MADRID"),
             synthetic="CALLE CALLE 0 0 CIUDAD (PROVINCIA)",
             surface_label="address",
         )
+        assert replacement.synthetic == "CALLE CALLE 0 0 CIUDAD (PROVINCIA)"
+        assert replacement.real.get_secret_value() == "CALLE DEL SOL 12 28010 MADRID"
 
 
 class TestTokenMapShape:

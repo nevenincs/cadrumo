@@ -24,6 +24,7 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-config-doctor-shape-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]'
+  - '[[2026-05-13-cli-workflow-redesign-profile-output-language-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-apoderado-scope-vocabulary-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]'
@@ -127,19 +128,78 @@ This Phase delivers real behavior verification for apex root and lifecycle contr
 - [x] `W01.P004.S0020` - Add persistence or registry integration tests for apex root and lifecycle contract; `tests/application`.
 - [x] `W01.P004.S0021` - Add negative tests proving rejected aliases do not reach apex root and lifecycle contract; `tests/entrypoints/cli`.
 - [x] `W01.P004.S0022` - Add command behavior tests that exercise apex root and lifecycle contract through real services; `tests/entrypoints/cli`.
-- [ ] `W01.P004.S0023` - Add end-to-end workflow coverage for apex root and lifecycle contract; `tests`.
-- [ ] `W01.P004.S0024` - Run the targeted test slice for apex root and lifecycle contract without skips or xfails; `tests/application`.
+- [x] `W01.P004.S0023` - Add end-to-end workflow coverage for apex root and lifecycle contract; `tests`.
+- [x] `W01.P004.S0024` - Run the targeted test slice for apex root and lifecycle contract without skips or xfails; `tests/application`.
 
 ### Phase `W01.P005` - thin cli exposure
 
 This Phase delivers thin cli exposure for apex root and lifecycle contract as required by `2026-05-12-cli-workflow-redesign-adr`.
 
-- [ ] `W01.P005.S0025` - Expose accepted command handlers for apex root and lifecycle contract under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W01.P005.S0026` - Keep argument parsing for apex root and lifecycle contract separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W01.P005.S0027` - Delegate apex root and lifecycle contract execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W01.P005.S0028` - Render apex root and lifecycle contract results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W01.P005.S0029` - Handle apex root and lifecycle contract failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W01.P005.S0030` - Validate help text for apex root and lifecycle contract uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W01.P005.S0025` - Expose accepted command handlers for apex root and lifecycle contract under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W01.P005.S0026` - Keep argument parsing for apex root and lifecycle contract separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W01.P005.S0027` - Delegate apex root and lifecycle contract execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W01.P005.S0028` - Render apex root and lifecycle contract results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W01.P005.S0029` - Handle apex root and lifecycle contract failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W01.P005.S0030` - Validate help text for apex root and lifecycle contract uses accepted vocabulary only; `tests/entrypoints/cli`.
+
+## Wave `W60` - profile output language
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-profile-output-language-adr` decision for profile-owned output language. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services. This Wave is physically placed after W01 so the next execution pass handles profile language before continuing to the broader backlog.
+
+### Phase `W60.P296` - backend implementation
+
+This Phase delivers backend implementation for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
+
+- [ ] `W60.P296.S1771` - Map the `2026-05-13-cli-workflow-redesign-profile-output-language-adr` decision into non-CLI service ownership for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/application/wizard`, `src/aeat/domain/profile`.
+- [ ] `W60.P296.S1772` - Implement Pydantic command and result contracts for profile-owned output language; `src/aeat/application/wizard`, `src/aeat/domain/profile`.
+- [ ] `W60.P296.S1773` - Wire application or domain services required by profile-owned output language; `src/aeat/application/wizard`, `src/aeat/application/profile`.
+- [ ] `W60.P296.S1774` - Connect persistence, bucket events, registry data, or provider adapters required by profile-owned output language; `src/aeat/application/workflow`, `src/aeat/application/profile`.
+- [ ] `W60.P296.S1775` - Route existing backend functionality into the canonical service for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
+- [ ] `W60.P296.S1776` - Record service-level error codes and log fields for profile-owned output language; `src/aeat/core/errors/registry`, `src/aeat/application/profile`.
+
+### Phase `W60.P297` - shadow duplicate removal
+
+This Phase delivers shadow duplicate removal for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
+
+- [ ] `W60.P297.S1777` - Audit duplicate implementations that overlap profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/entrypoints/cli`.
+- [ ] `W60.P297.S1778` - Delete duplicate backend branches that compete with profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
+- [ ] `W60.P297.S1779` - Remove stale aliases that bypass the canonical service for profile-owned output language; `src/aeat/entrypoints/cli`.
+- [ ] `W60.P297.S1780` - Migrate internal callers to the canonical service for profile-owned output language; `src/aeat/core`, `src/aeat/application`, `src/aeat/entrypoints/cli`.
+- [ ] `W60.P297.S1781` - Remove stale fixtures and tests that encode duplicate behavior for profile-owned output language; `tests`, `src/aeat/**/test_*.py`.
+- [ ] `W60.P297.S1782` - Update boundary inventory entries that describe duplicate behavior for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W60.P298` - de-shim and de-stub cleanup
+
+This Phase delivers de-shim and de-stub cleanup for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
+
+- [ ] `W60.P298.S1783` - Delete compatibility shims that preserve rejected behavior for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/entrypoints/cli`.
+- [ ] `W60.P298.S1784` - Delete placeholder stubs that claim support for profile-owned output language; `src/aeat/application/wizard`, `src/aeat/domain/profile`.
+- [ ] `W60.P298.S1785` - Replace stubbed paths with real backend service calls for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
+- [ ] `W60.P298.S1786` - Remove deprecated command spelling and help text for profile-owned output language; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
+- [ ] `W60.P298.S1787` - Remove tests that assert shim or stub behavior for profile-owned output language; `tests`, `src/aeat/**/test_*.py`.
+- [ ] `W60.P298.S1788` - Record the removed shim and stub surfaces for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W60.P299` - real behavior verification
+
+This Phase delivers real behavior verification for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
+
+- [ ] `W60.P299.S1789` - Add service contract tests for profile-owned output language; `tests/application`, `src/aeat/core/i18n`.
+- [ ] `W60.P299.S1790` - Add persistence or registry integration tests for profile-owned output language; `tests/application`, `src/aeat/application/wizard`.
+- [ ] `W60.P299.S1791` - Add negative tests proving rejected aliases do not reach profile-owned output language; `tests/entrypoints/cli`.
+- [ ] `W60.P299.S1792` - Add command behavior tests that exercise profile-owned output language through real services; `tests/entrypoints/cli`.
+- [ ] `W60.P299.S1793` - Add end-to-end workflow coverage for profile-owned output language; `tests`.
+- [ ] `W60.P299.S1794` - Run the targeted test slice for profile-owned output language without skips or xfails; `tests/application`, `tests/entrypoints/cli`.
+
+### Phase `W60.P300` - thin cli exposure
+
+This Phase delivers thin cli exposure for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
+
+- [ ] `W60.P300.S1795` - Expose accepted command handlers for profile-owned output language under `aeat config`; `src/aeat/entrypoints/cli`.
+- [ ] `W60.P300.S1796` - Keep argument parsing for profile-owned output language separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [ ] `W60.P300.S1797` - Delegate profile-owned output language execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [ ] `W60.P300.S1798` - Render profile-owned output language results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [ ] `W60.P300.S1799` - Handle profile-owned output language failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [ ] `W60.P300.S1800` - Validate help text for profile-owned output language uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W02` - cli backend boundary
 
@@ -2273,56 +2333,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-work-units-adr
 
 This Phase delivers backend implementation for modelo work unit lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-work-units-adr`.
 
-- [ ] `W38.P186.S1111` - Map the `2026-05-12-cli-workflow-redesign-modelo-work-units-adr` decision into non-CLI service ownership for modelo work unit lifecycle; `src/aeat/application/modelo`.
-- [ ] `W38.P186.S1112` - Implement Pydantic command and result contracts for modelo work unit lifecycle; `src/aeat/application/modelo`.
-- [ ] `W38.P186.S1113` - Wire application or domain services required by modelo work unit lifecycle; `src/aeat/application/modelo`.
-- [ ] `W38.P186.S1114` - Connect persistence, bucket events, registry data, or provider adapters required by modelo work unit lifecycle; `src/aeat/application/modelo`.
-- [ ] `W38.P186.S1115` - Route existing backend functionality into the canonical service for modelo work unit lifecycle; `src/aeat/application/modelo`.
-- [ ] `W38.P186.S1116` - Record service-level error codes and log fields for modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P186.S1111` - Map the `2026-05-12-cli-workflow-redesign-modelo-work-units-adr` decision into non-CLI service ownership for modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P186.S1112` - Implement Pydantic command and result contracts for modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P186.S1113` - Wire application or domain services required by modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P186.S1114` - Connect persistence, bucket events, registry data, or provider adapters required by modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P186.S1115` - Route existing backend functionality into the canonical service for modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P186.S1116` - Record service-level error codes and log fields for modelo work unit lifecycle; `src/aeat/application/modelo`.
 
 ### Phase `W38.P187` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for modelo work unit lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-work-units-adr`.
 
-- [ ] `W38.P187.S1117` - Audit duplicate implementations that overlap modelo work unit lifecycle; `src/aeat/application/modelo`.
-- [ ] `W38.P187.S1118` - Delete duplicate backend branches that compete with modelo work unit lifecycle; `src/aeat/application/modelo`.
-- [ ] `W38.P187.S1119` - Remove stale aliases that bypass the canonical service for modelo work unit lifecycle; `src/aeat/entrypoints/cli`.
-- [ ] `W38.P187.S1120` - Migrate internal callers to the canonical service for modelo work unit lifecycle; `src/aeat/application/modelo`.
-- [ ] `W38.P187.S1121` - Remove stale fixtures and tests that encode duplicate behavior for modelo work unit lifecycle; `tests/application/modelo`.
-- [ ] `W38.P187.S1122` - Update boundary inventory entries that describe duplicate behavior for modelo work unit lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W38.P187.S1117` - Audit duplicate implementations that overlap modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P187.S1118` - Delete duplicate backend branches that compete with modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P187.S1119` - Remove stale aliases that bypass the canonical service for modelo work unit lifecycle; `src/aeat/entrypoints/cli`.
+- [x] `W38.P187.S1120` - Migrate internal callers to the canonical service for modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P187.S1121` - Remove stale fixtures and tests that encode duplicate behavior for modelo work unit lifecycle; `tests/application/modelo`.
+- [x] `W38.P187.S1122` - Update boundary inventory entries that describe duplicate behavior for modelo work unit lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W38.P188` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for modelo work unit lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-work-units-adr`.
 
-- [ ] `W38.P188.S1123` - Delete compatibility shims that preserve rejected behavior for modelo work unit lifecycle; `src/aeat/application/modelo`.
-- [ ] `W38.P188.S1124` - Delete placeholder stubs that claim support for modelo work unit lifecycle; `src/aeat/application/modelo`.
-- [ ] `W38.P188.S1125` - Replace stubbed paths with real backend service calls for modelo work unit lifecycle; `src/aeat/application/modelo`.
-- [ ] `W38.P188.S1126` - Remove deprecated command spelling and help text for modelo work unit lifecycle; `src/aeat/entrypoints/cli`.
-- [ ] `W38.P188.S1127` - Remove tests that assert shim or stub behavior for modelo work unit lifecycle; `tests/application/modelo`.
-- [ ] `W38.P188.S1128` - Record the removed shim and stub surfaces for modelo work unit lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W38.P188.S1123` - Delete compatibility shims that preserve rejected behavior for modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P188.S1124` - Delete placeholder stubs that claim support for modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P188.S1125` - Replace stubbed paths with real backend service calls for modelo work unit lifecycle; `src/aeat/application/modelo`.
+- [x] `W38.P188.S1126` - Remove deprecated command spelling and help text for modelo work unit lifecycle; `src/aeat/entrypoints/cli`.
+- [x] `W38.P188.S1127` - Remove tests that assert shim or stub behavior for modelo work unit lifecycle; `tests/application/modelo`.
+- [x] `W38.P188.S1128` - Record the removed shim and stub surfaces for modelo work unit lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W38.P189` - real behavior verification
 
 This Phase delivers real behavior verification for modelo work unit lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-work-units-adr`.
 
-- [ ] `W38.P189.S1129` - Add service contract tests for modelo work unit lifecycle; `tests/application/modelo`.
-- [ ] `W38.P189.S1130` - Add persistence or registry integration tests for modelo work unit lifecycle; `tests/application/modelo`.
-- [ ] `W38.P189.S1131` - Add negative tests proving rejected aliases do not reach modelo work unit lifecycle; `tests/entrypoints/cli`.
-- [ ] `W38.P189.S1132` - Add command behavior tests that exercise modelo work unit lifecycle through real services; `tests/entrypoints/cli`.
-- [ ] `W38.P189.S1133` - Add end-to-end workflow coverage for modelo work unit lifecycle; `tests`.
-- [ ] `W38.P189.S1134` - Run the targeted test slice for modelo work unit lifecycle without skips or xfails; `tests/application/modelo`.
+- [x] `W38.P189.S1129` - Add service contract tests for modelo work unit lifecycle; `tests/application/modelo`.
+- [x] `W38.P189.S1130` - Add persistence or registry integration tests for modelo work unit lifecycle; `tests/application/modelo`.
+- [x] `W38.P189.S1131` - Add negative tests proving rejected aliases do not reach modelo work unit lifecycle; `tests/entrypoints/cli`.
+- [x] `W38.P189.S1132` - Add command behavior tests that exercise modelo work unit lifecycle through real services; `tests/entrypoints/cli`.
+- [x] `W38.P189.S1133` - Add end-to-end workflow coverage for modelo work unit lifecycle; `tests`.
+- [x] `W38.P189.S1134` - Run the targeted test slice for modelo work unit lifecycle without skips or xfails; `tests/application/modelo`.
 
 ### Phase `W38.P190` - thin cli exposure
 
 This Phase delivers thin cli exposure for modelo work unit lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-work-units-adr`.
 
-- [ ] `W38.P190.S1135` - Expose accepted command handlers for modelo work unit lifecycle under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W38.P190.S1136` - Keep argument parsing for modelo work unit lifecycle separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W38.P190.S1137` - Delegate modelo work unit lifecycle execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W38.P190.S1138` - Render modelo work unit lifecycle results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W38.P190.S1139` - Handle modelo work unit lifecycle failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W38.P190.S1140` - Validate help text for modelo work unit lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W38.P190.S1135` - Expose accepted command handlers for modelo work unit lifecycle under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W38.P190.S1136` - Keep argument parsing for modelo work unit lifecycle separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W38.P190.S1137` - Delegate modelo work unit lifecycle execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W38.P190.S1138` - Render modelo work unit lifecycle results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W38.P190.S1139` - Handle modelo work unit lifecycle failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W38.P190.S1140` - Validate help text for modelo work unit lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W39` - modelo calculate revisions
 
