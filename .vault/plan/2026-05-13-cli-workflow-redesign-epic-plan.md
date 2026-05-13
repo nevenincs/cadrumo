@@ -19,6 +19,8 @@ related:
   - '[[2026-05-10-eliminate-user-cli-shim]]'
   - '[[2026-05-12-cli-workflow-redesign-bucket-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]'
+  - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-research]]'
+  - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]'
   - '[[2026-04-21-auth-cli-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]'
@@ -115,7 +117,7 @@ This Phase delivers shadow duplicate removal for apex root and lifecycle contrac
 
 This Phase delivers de-shim and de-stub cleanup for apex root and lifecycle contract as required by `2026-05-12-cli-workflow-redesign-adr`.
 
-- [ ] `W01.P003.S0013` - Delete compatibility shims that preserve rejected behavior for apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P003.S0013` - Delete compatibility shims that preserve rejected behavior for apex root and lifecycle contract; `src/aeat/application`.
 - [ ] `W01.P003.S0014` - Delete placeholder stubs that claim support for apex root and lifecycle contract; `src/aeat/application`.
 - [ ] `W01.P003.S0015` - Replace stubbed paths with real backend service calls for apex root and lifecycle contract; `src/aeat/application`.
 - [x] `W01.P003.S0016` - Remove deprecated command spelling and help text for apex root and lifecycle contract; `src/aeat/entrypoints/cli`.
@@ -152,45 +154,45 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-profile-output-langua
 
 This Phase delivers backend implementation for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
 
-- [x] `W60.P296.S1771` - Map the `2026-05-13-cli-workflow-redesign-profile-output-language-adr` decision into non-CLI service ownership for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/application/wizard`, `src/aeat/domain/profile`.
-- [x] `W60.P296.S1772` - Implement Pydantic command and result contracts for profile-owned output language; `src/aeat/application/wizard`, `src/aeat/domain/profile`.
-- [x] `W60.P296.S1773` - Wire application or domain services required by profile-owned output language; `src/aeat/application/wizard`, `src/aeat/application/profile`.
-- [x] `W60.P296.S1774` - Connect persistence, bucket events, registry data, or provider adapters required by profile-owned output language; `src/aeat/application/workflow`, `src/aeat/application/profile`.
-- [x] `W60.P296.S1775` - Route existing backend functionality into the canonical service for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
-- [x] `W60.P296.S1776` - Record service-level error codes and log fields for profile-owned output language; `src/aeat/core/errors/registry`, `src/aeat/application/profile`.
+- [x] `W60.P296.S1771` - Map the `2026-05-13-cli-workflow-redesign-profile-output-language-adr` decision into non-CLI service ownership for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors, src/aeat/application/wizard, src/aeat/domain/profile`.
+- [x] `W60.P296.S1772` - Implement Pydantic command and result contracts for profile-owned output language; `src/aeat/application/wizard, src/aeat/domain/profile`.
+- [x] `W60.P296.S1773` - Wire application or domain services required by profile-owned output language; `src/aeat/application/wizard, src/aeat/application/profile`.
+- [x] `W60.P296.S1774` - Connect persistence, bucket events, registry data, or provider adapters required by profile-owned output language; `src/aeat/application/workflow, src/aeat/application/profile`.
+- [x] `W60.P296.S1775` - Route existing backend functionality into the canonical service for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors`.
+- [x] `W60.P296.S1776` - Record service-level error codes and log fields for profile-owned output language; `src/aeat/core/errors/registry, src/aeat/application/profile`.
 
 ### Phase `W60.P297` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
 
-- [x] `W60.P297.S1777` - Audit duplicate implementations that overlap profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/entrypoints/cli`.
-- [x] `W60.P297.S1778` - Delete duplicate backend branches that compete with profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
+- [x] `W60.P297.S1777` - Audit duplicate implementations that overlap profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors, src/aeat/entrypoints/cli`.
+- [x] `W60.P297.S1778` - Delete duplicate backend branches that compete with profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors`.
 - [x] `W60.P297.S1779` - Remove stale aliases that bypass the canonical service for profile-owned output language; `src/aeat/entrypoints/cli`.
-- [x] `W60.P297.S1780` - Migrate internal callers to the canonical service for profile-owned output language; `src/aeat/core`, `src/aeat/application`, `src/aeat/entrypoints/cli`.
-- [x] `W60.P297.S1781` - Remove stale fixtures and tests that encode duplicate behavior for profile-owned output language; `tests`, `src/aeat/**/test_*.py`.
+- [x] `W60.P297.S1780` - Migrate internal callers to the canonical service for profile-owned output language; `src/aeat/core, src/aeat/application, src/aeat/entrypoints/cli`.
+- [x] `W60.P297.S1781` - Remove stale fixtures and tests that encode duplicate behavior for profile-owned output language; `tests, src/aeat/**/test_*.py`.
 - [x] `W60.P297.S1782` - Update boundary inventory entries that describe duplicate behavior for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W60.P298` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
 
-- [x] `W60.P298.S1783` - Delete compatibility shims that preserve rejected behavior for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/entrypoints/cli`.
-- [x] `W60.P298.S1784` - Delete placeholder stubs that claim support for profile-owned output language; `src/aeat/application/wizard`, `src/aeat/domain/profile`.
-- [x] `W60.P298.S1785` - Replace stubbed paths with real backend service calls for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
-- [x] `W60.P298.S1786` - Remove deprecated command spelling and help text for profile-owned output language; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
-- [x] `W60.P298.S1787` - Remove tests that assert shim or stub behavior for profile-owned output language; `tests`, `src/aeat/**/test_*.py`.
+- [x] `W60.P298.S1783` - Delete compatibility shims that preserve rejected behavior for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors, src/aeat/entrypoints/cli`.
+- [x] `W60.P298.S1784` - Delete placeholder stubs that claim support for profile-owned output language; `src/aeat/application/wizard, src/aeat/domain/profile`.
+- [x] `W60.P298.S1785` - Replace stubbed paths with real backend service calls for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors`.
+- [x] `W60.P298.S1786` - Remove deprecated command spelling and help text for profile-owned output language; `src/aeat/entrypoints/cli, src/aeat/locales`.
+- [x] `W60.P298.S1787` - Remove tests that assert shim or stub behavior for profile-owned output language; `tests, src/aeat/**/test_*.py`.
 - [x] `W60.P298.S1788` - Record the removed shim and stub surfaces for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W60.P299` - real behavior verification
 
 This Phase delivers real behavior verification for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
 
-- [x] `W60.P299.S1789` - Add service contract tests for profile-owned output language; `tests/application`, `src/aeat/core/i18n`.
-- [x] `W60.P299.S1790` - Add persistence or registry integration tests for profile-owned output language; `tests/application`, `src/aeat/application/wizard`.
+- [x] `W60.P299.S1789` - Add service contract tests for profile-owned output language; `tests/application, src/aeat/core/i18n`.
+- [x] `W60.P299.S1790` - Add persistence or registry integration tests for profile-owned output language; `tests/application, src/aeat/application/wizard`.
 - [x] `W60.P299.S1791` - Add negative tests proving rejected aliases do not reach profile-owned output language; `tests/entrypoints/cli`.
 - [x] `W60.P299.S1792` - Add command behavior tests that exercise profile-owned output language through real services; `tests/entrypoints/cli`.
 - [x] `W60.P299.S1793` - Add end-to-end workflow coverage for profile-owned output language; `tests`.
-- [x] `W60.P299.S1794` - Run the targeted test slice for profile-owned output language without skips or xfails; `tests/application`, `tests/entrypoints/cli`.
+- [x] `W60.P299.S1794` - Run the targeted test slice for profile-owned output language without skips or xfails; `tests/application, tests/entrypoints/cli`.
 
 ### Phase `W60.P300` - thin cli exposure
 
@@ -561,27 +563,27 @@ This Phase delivers thin cli exposure for central logging and error observabilit
 
 This Wave implements the `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr` decision for profile-associated secure buckets. Profile values are stored only in `PROFILE_BUCKET_NAMESPACE` as `Envelope[ProfileBucket]` with `SensitivityClass.IDENTITY`; `WorkflowState` stores active profile pointers only. It delivers backend behavior before CLI exposure, removes shadow paths, proves the behavior with real tests, and exposes only thin CLI adapters that call centralized tested Pydantic backend, storage, error, and output services.
 
-Implementation note: W08 corrected secure profile persistence so profile values live only in `PROFILE_BUCKET_NAMESPACE = "aeat.application.profile.bucket"` as `Envelope[ProfileBucket]` with `SensitivityClass.IDENTITY`. `WorkflowState.profiles` stores pointer records only; profile-bound reads resolve the active pointer through `state.active_profile_record()` before loading values with `profile_bucket_repository().load(...)`. Wizard persistence writes profile-bound answers through `set_profile_values` into the profile bucket. Config/setup reset delete both workflow pointers and actual profile buckets. The filing CLI no longer exposes `filing build --inputs`; retained filing commands are `validate`, `show`, `list`, `import`, and `complementaria build`. Verification: `uv run --no-sync pytest src/aeat/application/profile/test_actions.py src/aeat/application/archive/test_archive.py src/aeat/application/workflow/test_adapters.py src/aeat/application/wizard/test_status.py src/aeat/application/wizard/test_status_next_action.py src/aeat/application/test_config_reset.py src/aeat/application/test_setup_reset.py src/aeat/application/test_config_parity.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/test_backend_boundary.py src/aeat/entrypoints/cli/test_workflow_surface.py::test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_bucket src/aeat/tests/test_config.py -q` reported 93 passed in 138.99s.
+Implementation note: W08 corrected secure profile persistence so profile values live only in `PROFILE_BUCKET_NAMESPACE = "aeat.application.profile.bucket"` as `Envelope[ProfileBucket]` with `SensitivityClass.IDENTITY`. `WorkflowState.profiles` stores strict `ProfileBucketPointer` records only; profile-bound reads resolve the active pointer through `state.active_profile_record()` before loading values with `profile_bucket_repository().load(pointer.bucket_id)`. `WorkflowStateRepository.save` revalidates copied state before writing, so value-bearing profile payloads are refused at the persistence boundary. Wizard persistence writes profile-bound answers through `set_profile_values` into the profile bucket. Config/setup reset delete both workflow pointers and actual profile buckets by bucket id. The filing CLI no longer exposes `filing build --inputs`; retained filing commands are `validate`, `show`, `list`, `import`, and `complementaria build`. Verification: `uv run --no-sync pytest src/aeat/application/profile/test_actions.py src/aeat/application/archive/test_archive.py src/aeat/application/workflow/test_adapters.py src/aeat/application/wizard/test_status.py src/aeat/application/wizard/test_status_next_action.py src/aeat/application/test_config_reset.py src/aeat/application/test_setup_reset.py src/aeat/application/test_config_parity.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/test_backend_boundary.py src/aeat/entrypoints/cli/test_workflow_surface.py::test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_bucket src/aeat/tests/test_config.py -q` reported 98 passed in 128.38s.
 
 ### Phase `W08.P036` - backend implementation
 
 This Phase delivers backend implementation for profile-associated secure buckets as required by `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr`.
 
-- [x] `W08.P036.S0211` - Map the ADR decision into non-CLI service ownership for profile-associated secure buckets; `src/aeat/application/profile`, `src/aeat/application/workflow`.
+- [x] `W08.P036.S0211` - Map the ADR decision into non-CLI service ownership for profile-associated secure buckets; `src/aeat/application/profile, src/aeat/application/workflow`.
 - [x] `W08.P036.S0212` - Implement strict Pydantic profile bucket contracts and repository APIs for `PROFILE_BUCKET_NAMESPACE`; `src/aeat/application/profile`.
 - [x] `W08.P036.S0213` - Wire wizard persistence so profile-bound answers persist through the profile bucket repository; `src/aeat/application/wizard`.
-- [x] `W08.P036.S0214` - Connect secure-object persistence, bucket events, reset deletion, and archive registration for profile buckets; `src/aeat/application/profile`, `src/aeat/application/config_reset.py`, `src/aeat/application/setup_reset.py`, `src/aeat/application/archive/_registry.py`.
-- [x] `W08.P036.S0215` - Route active profile reads through workflow-state active profile pointers followed by `profile_bucket_repository().load(...)`; `src/aeat/application/workflow`, `src/aeat/application/filing`.
+- [x] `W08.P036.S0214` - Connect secure-object persistence, bucket events, reset deletion, and archive registration for profile buckets; `src/aeat/application/profile, src/aeat/application/config_reset.py, src/aeat/application/setup_reset.py, src/aeat/application/archive/_registry.py`.
+- [x] `W08.P036.S0215` - Route active profile reads through workflow-state active profile pointers followed by `profile_bucket_repository().load(...)`; `src/aeat/application/workflow, src/aeat/application/filing`.
 - [x] `W08.P036.S0216` - Record service-level error handling and log fields through existing `AeatError` and central logging facilities; `src/aeat/application/profile`.
 
 ### Phase `W08.P037` - shadow duplicate removal
 
 This Phase removes duplicate profile value paths that compete with profile-associated secure buckets.
 
-- [x] `W08.P037.S0217` - Audit duplicate implementations that store profile values in workflow state, profile JSON, profile files, profile paths, or flat-file inputs; `src/aeat/application`, `src/aeat/adapters`, `src/aeat/entrypoints/cli`.
-- [x] `W08.P037.S0218` - Delete backend branches that persist profile-bound values outside profile buckets; `src/aeat/application/profile`, `src/aeat/adapters/persistence/profile`.
-- [x] `W08.P037.S0219` - Remove CLI aliases and settings that expose profile JSON, profile file/path storage, or JSON draft input providers; `src/aeat/entrypoints/cli`, `src/aeat/core/config.py`.
-- [x] `W08.P037.S0220` - Migrate internal callers to the active pointer plus profile bucket read pattern; `src/aeat/application/workflow`, `src/aeat/application/wizard`, `src/aeat/application/filing`.
+- [x] `W08.P037.S0217` - Audit duplicate implementations that store profile values in workflow state, profile JSON, profile files, profile paths, or flat-file inputs; `src/aeat/application, src/aeat/adapters, src/aeat/entrypoints/cli`.
+- [x] `W08.P037.S0218` - Delete backend branches that persist profile-bound values outside profile buckets; `src/aeat/application/profile, src/aeat/adapters/persistence/profile`.
+- [x] `W08.P037.S0219` - Remove CLI aliases and settings that expose profile JSON, profile file/path storage, or JSON draft input providers; `src/aeat/entrypoints/cli, src/aeat/core/config.py`.
+- [x] `W08.P037.S0220` - Migrate internal callers to the active pointer plus profile bucket read pattern; `src/aeat/application/workflow, src/aeat/application/wizard, src/aeat/application/filing`.
 - [x] `W08.P037.S0221` - Remove fixtures and tests that assert profile values stored in shared workflow state or read from JSON/path storage; `src/aeat`.
 - [x] `W08.P037.S0222` - Update boundary inventory entries that describe rejected profile value paths; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
@@ -589,10 +591,10 @@ This Phase removes duplicate profile value paths that compete with profile-assoc
 
 This Phase removes rejected compatibility surfaces and placeholder behavior for profile-associated secure buckets.
 
-- [x] `W08.P038.S0223` - Delete compatibility surfaces for profile JSON, profile files, profile paths, profile envelopes, and flat-file fallback; `src/aeat/application`, `src/aeat/adapters`, `src/aeat/entrypoints/cli`.
-- [x] `W08.P038.S0224` - Delete placeholder paths that claim profile bucket support without secure-object persistence; `src/aeat/application/profile`, `src/aeat/application/workflow`.
-- [x] `W08.P038.S0225` - Replace remaining placeholder paths with real profile bucket repository calls; `src/aeat/application/profile`, `src/aeat/application/wizard`, `src/aeat/application/filing`.
-- [x] `W08.P038.S0226` - Remove command spelling and help text that implies profile path or JSON storage; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
+- [x] `W08.P038.S0223` - Delete compatibility surfaces for profile JSON, profile files, profile paths, profile envelopes, and flat-file fallback; `src/aeat/application, src/aeat/adapters, src/aeat/entrypoints/cli`.
+- [x] `W08.P038.S0224` - Delete placeholder paths that claim profile bucket support without secure-object persistence; `src/aeat/application/profile, src/aeat/application/workflow`.
+- [x] `W08.P038.S0225` - Replace remaining placeholder paths with real profile bucket repository calls; `src/aeat/application/profile, src/aeat/application/wizard, src/aeat/application/filing`.
+- [x] `W08.P038.S0226` - Remove command spelling and help text that implies profile path or JSON storage; `src/aeat/entrypoints/cli, src/aeat/locales`.
 - [x] `W08.P038.S0227` - Remove tests that assert rejected JSON/path/profile-value-in-workflow behavior; `src/aeat`.
 - [x] `W08.P038.S0228` - Record removed rejected surfaces in CLI/backend boundary tests; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
@@ -600,12 +602,12 @@ This Phase removes rejected compatibility surfaces and placeholder behavior for 
 
 This Phase verifies real profile bucket behavior with secure-object persistence and negative coverage for rejected paths.
 
-- [x] `W08.P039.S0229` - Add service contract tests for profile bucket write, load, update, clear, and active pointer dereference; `src/aeat/application/profile`, `src/aeat/application/wizard`.
-- [x] `W08.P039.S0230` - Add secure-object persistence and archive adapter tests for profile buckets; `src/aeat/application/profile`, `src/aeat/application/archive`.
-- [x] `W08.P039.S0231` - Add negative tests proving profile JSON, profile file/path storage, JSON draft input providers, and workflow-state profile values are rejected; `src/aeat/entrypoints/cli`, `src/aeat/application`.
+- [x] `W08.P039.S0229` - Add service contract tests for profile bucket write, load, update, clear, and active pointer dereference; `src/aeat/application/profile, src/aeat/application/wizard`.
+- [x] `W08.P039.S0230` - Add secure-object persistence and archive adapter tests for profile buckets; `src/aeat/application/profile, src/aeat/application/archive`.
+- [x] `W08.P039.S0231` - Add negative tests proving profile JSON, profile file/path storage, JSON draft input providers, and workflow-state profile values are rejected; `src/aeat/entrypoints/cli, src/aeat/application`.
 - [x] `W08.P039.S0232` - Add command behavior tests that exercise profile bucket reads and writes through real services; `src/aeat/entrypoints/cli`.
 - [x] `W08.P039.S0233` - Add end-to-end workflow coverage for config init, config profile set/get/status, deadlines, and filing runtime using bucket-backed profile values; `src/aeat`.
-- [x] `W08.P039.S0234` - Run the targeted test slice for profile bucket behavior without skips or xfails; `src/aeat/application/profile`, `src/aeat/application/workflow`, `src/aeat/entrypoints/cli`, `src/aeat/tests`.
+- [x] `W08.P039.S0234` - Run the targeted test slice for profile bucket behavior without skips or xfails; `src/aeat/application/profile, src/aeat/application/workflow, src/aeat/entrypoints/cli, src/aeat/tests`.
 
 ### Phase `W08.P040` - thin cli exposure
 
@@ -615,8 +617,67 @@ This Phase verifies the retained CLI surfaces are thin adapters over profile buc
 - [x] `W08.P040.S0236` - Keep CLI argument parsing separate from profile bucket behavior; `src/aeat/entrypoints/cli`.
 - [x] `W08.P040.S0237` - Delegate profile reads and writes to centralized profile, wizard, workflow, and filing backend services; `src/aeat/entrypoints/cli`.
 - [x] `W08.P040.S0238` - Render profile bucket results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [x] `W08.P040.S0239` - Handle profile bucket failures through the central command error boundary and registered `AeatError` types; `src/aeat/entrypoints/cli`, `src/aeat/core/errors`.
-- [x] `W08.P040.S0240` - Validate help text uses accepted vocabulary and does not imply profile JSON/path storage or CLI-owned business logic; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
+- [x] `W08.P040.S0239` - Handle profile bucket failures through the central command error boundary and registered `AeatError` types; `src/aeat/entrypoints/cli, src/aeat/core/errors`.
+- [x] `W08.P040.S0240` - Validate help text uses accepted vocabulary and does not imply profile JSON/path storage or CLI-owned business logic; `src/aeat/entrypoints/cli, src/aeat/locales`.
+
+## Wave `W61` - manual ledger bucket lifecycle
+
+This Wave implements the 2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr decision as a bespoke bridge after profile bucket hardening. It makes manual ledger transactions first-class bucket-scoped app data before downstream profile schema, aggregation, review, or ledger command expansion can rely on them.
+
+### Phase `W61.P301` - ledger bucket storage review
+
+This Phase audits and fixes the transaction catalogue storage boundary so every ledger read and write resolves through the active profile bucket before manual data entry is exposed.
+
+- [ ] `W61.P301.S1801` - Audit active profile bucket and transaction catalogue storage ownership; `src/aeat/application/profile, src/aeat/domain/transactions`.
+- [ ] `W61.P301.S1802` - Define bucket-scoped transaction catalogue repository contracts; `src/aeat/domain/transactions`.
+- [ ] `W61.P301.S1803` - Implement active profile bucket resolution for transaction catalogue reads and writes; `src/aeat/domain/transactions, src/aeat/application/workflow`.
+- [ ] `W61.P301.S1804` - Prevent cross-profile transaction collisions for manual and imported rows; `src/aeat/domain/transactions`.
+- [ ] `W61.P301.S1805` - Migrate ledger import and review projections to bucket-scoped transaction storage; `src/aeat/application/review, src/aeat/application/ledger`.
+- [ ] `W61.P301.S1806` - Register bucket-scoped ledger storage errors and log fields; `src/aeat/domain/transactions, src/aeat/core/errors`.
+
+### Phase `W61.P302` - manual transaction api
+
+This Phase creates backend-owned manual ledger mutation contracts that persist complete aggregation-visible transaction facts instead of workflow review overlays.
+
+- [ ] `W61.P302.S1807` - Define manual transaction command and result contracts; `src/aeat/application/ledger`.
+- [ ] `W61.P302.S1808` - Implement create read list and update service operations for manual ledger rows; `src/aeat/application/ledger`.
+- [ ] `W61.P302.S1809` - Persist aggregation-visible base IVA category classification and business percentage fields; `src/aeat/domain/transactions`.
+- [ ] `W61.P302.S1810` - Validate direction zero amount transfer and correction semantics in backend policy; `src/aeat/application/ledger`.
+- [ ] `W61.P302.S1811` - Separate durable ledger mutations from workflow review annotations; `src/aeat/application/review, src/aeat/application/ledger`.
+- [ ] `W61.P302.S1812` - Capture evidence provenance actor and edit lineage for manual transactions; `src/aeat/application/ledger, src/aeat/domain/attachments`.
+
+### Phase `W61.P303` - iva proportionality and aggregation routing
+
+This Phase wires manual ledger facts into IVA base, IVA amount, business-private proportionality, usage-ratio, prorrata-reference, and modelo aggregation paths without conflating distinct tax substrates.
+
+- [ ] `W61.P303.S1813` - Project bucket-local manual ledger facts into Renta aggregation; `src/aeat/application/aggregation`.
+- [ ] `W61.P303.S1814` - Project taxable base IVA amount and IVA rate facts into IVA ledger observations; `src/aeat/application/aggregation, src/aeat/domain/calculations/registry`.
+- [ ] `W61.P303.S1815` - Attach usage ratio references for mixed private and business usage; `src/aeat/domain/usage_ratios, src/aeat/application/ledger`.
+- [ ] `W61.P303.S1816` - Carry prorrata references without conflating them with usage ratios; `src/aeat/application/aggregation, src/aeat/domain/vat`.
+- [ ] `W61.P303.S1817` - Report missing base IVA proportionality category and classification facts in preflight; `src/aeat/application/ledger, src/aeat/application/aggregation`.
+- [ ] `W61.P303.S1818` - Route modelo aggregation through bucket-local transaction catalogues; `src/aeat/application/modelo, src/aeat/application/aggregation`.
+
+### Phase `W61.P304` - ledger events removal archive and export
+
+This Phase adds auditable ledger lifecycle semantics for edit, allocation, evidence attachment, removal, reset, archive, stash, and export operations within the active bucket.
+
+- [ ] `W61.P304.S1819` - Extend bucket event types and object types for ledger transaction mutations; `src/aeat/domain/buckets`.
+- [ ] `W61.P304.S1820` - Emit ledger events for create import edit classify allocate attach remove reset archive and export operations; `src/aeat/application/ledger`.
+- [ ] `W61.P304.S1821` - Implement archive and stash semantics with auditable transaction lineage; `src/aeat/application/archive, src/aeat/application/ledger`.
+- [ ] `W61.P304.S1822` - Implement bucket-local removal and reset protections for ledger data; `src/aeat/application/ledger, src/aeat/application/config_reset.py, src/aeat/application/setup_reset.py`.
+- [ ] `W61.P304.S1823` - Export ledger rows from the canonical bucket-scoped catalogue; `src/aeat/application/export, src/aeat/application/ledger`.
+- [ ] `W61.P304.S1824` - Replace stale review queue drill commands with app ledger lifecycle commands; `src/aeat/application/review`.
+
+### Phase `W61.P305` - manual ledger cli lifecycle
+
+This Phase exposes the manual ledger lifecycle under aeat app ledger as thin commands after backend storage, mutation, audit, and aggregation contracts exist.
+
+- [ ] `W61.P305.S1825` - Expose manual transaction creation under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W61.P305.S1826` - Expose ledger read list status and tracking commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W61.P305.S1827` - Expose edit classify allocate and proportionality commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W61.P305.S1828` - Expose attach remove reset stash archive and export commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W61.P305.S1829` - Delegate every manual ledger command to centralized backend services and schema emitters; `src/aeat/entrypoints/cli, src/aeat/application/ledger`.
+- [ ] `W61.P305.S1830` - Validate command vocabulary help text and boundary inventory for manual ledger lifecycle; `src/aeat/entrypoints/cli, src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ## Wave `W09` - user profile backend schema
 
@@ -923,56 +984,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-bucket-event-history-
 
 This Phase delivers backend implementation for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
-- [x] `W14.P066.S0391` - Map the `2026-05-12-cli-workflow-redesign-bucket-event-history-adr` decision into non-CLI service ownership for bucket event history ledger; `src/aeat/adapters/persistence`. (Domain ownership lands at `src/aeat/domain/buckets/` — events are part of the domain contract; the encrypted-SQL repository is the persistence adapter)
-- [x] `W14.P066.S0392` - Implement Pydantic command and result contracts for bucket event history ledger; `src/aeat/adapters/persistence`. (`BucketEvent`, `BucketEventType`, `BucketEventObjectType`, `BucketEventHistoryCatalogue` at `src/aeat/domain/buckets/_event.py`; closed enum scopes per ADR per-service emission table)
-- [x] `W14.P066.S0393` - Wire application or domain services required by bucket event history ledger; `src/aeat/adapters/persistence`. (`_emit_bucket_event` helper in `src/aeat/application/modelo/_actions.py`; wired into calculate / verify / file / amend / import — the full modelo lifecycle.)
-- [x] `W14.P066.S0394` - Connect persistence, bucket events, registry data, or provider adapters required by bucket event history ledger; `src/aeat/adapters/persistence`. (`BucketEventHistoryRepository` at `src/aeat/domain/buckets/_event_repository.py` over `SecureObjectRepository`, namespace `aeat.domain.buckets.event_history`)
-- [x] `W14.P066.S0395` - Route existing backend functionality into the canonical service for bucket event history ledger; `src/aeat/adapters/persistence`. (modelo lifecycle services — calculate, verify, file, amend, import — all route through the canonical `_emit_bucket_event` helper. The closed `BucketEventType` enum now covers `MODELO_CALCULATION_CREATED`, `MODELO_VERIFICATION_PASSED`, `MODELO_VERIFICATION_REFUSED`, `MODELO_FILED`, `MODELO_FILED_SUPERSEDED`, `MODELO_AMENDED`, `MODELO_FILING_IMPORTED`. Per-service emitters for non-modelo families — transactions, invoices, rental, etc. — land with their own waves and are scoped out of W14.)
-- [x] `W14.P066.S0396` - Record service-level error codes and log fields for bucket event history ledger; `src/aeat/adapters/persistence`. (`BucketsError` / `BucketEventValidationError` / `BucketEventHistoryPersistenceError` taxonomy; logger `aeat.domain.buckets._event_repository`)
+- [x] `W14.P066.S0391` - Map the `2026-05-12-cli-workflow-redesign-bucket-event-history-adr` decision into non-CLI service ownership for bucket event history ledger (Domain ownership lands at `src/aeat/domain/buckets/` - events are part of the domain contract, the encrypted-SQL repository is the persistence adapter); `src/aeat/adapters/persistence`.
+- [x] `W14.P066.S0392` - Implement Pydantic command and result contracts for bucket event history ledger (`BucketEvent`, `BucketEventType`, `BucketEventObjectType`, `BucketEventHistoryCatalogue` at `src/aeat/domain/buckets/_event.py`, closed enum scopes per ADR per-service emission table); `src/aeat/adapters/persistence`.
+- [x] `W14.P066.S0393` - Wire application or domain services required by bucket event history ledger (`_emit_bucket_event` helper in `src/aeat/application/modelo/_actions.py`, wired into calculate / verify / file / amend / import - the full modelo lifecycle.); `src/aeat/adapters/persistence`.
+- [x] `W14.P066.S0394` - Connect persistence, bucket events, registry data, or provider adapters required by bucket event history ledger (`BucketEventHistoryRepository` at `src/aeat/domain/buckets/_event_repository.py` over `SecureObjectRepository`, namespace `aeat.domain.buckets.event_history`); `src/aeat/adapters/persistence`.
+- [x] `W14.P066.S0395` - Route existing backend functionality into the canonical service for bucket event history ledger (modelo lifecycle services - calculate, verify, file, amend, import - all route through the canonical `_emit_bucket_event` helper. The closed `BucketEventType` enum now covers `MODELO_CALCULATION_CREATED`, `MODELO_VERIFICATION_PASSED`, `MODELO_VERIFICATION_REFUSED`, `MODELO_FILED`, `MODELO_FILED_SUPERSEDED`, `MODELO_AMENDED`, `MODELO_FILING_IMPORTED`. Per-service emitters for non-modelo families - transactions, invoices, rental, etc. - land with their own waves and are scoped out of W14.); `src/aeat/adapters/persistence`.
+- [x] `W14.P066.S0396` - Record service-level error codes and log fields for bucket event history ledger (`BucketsError` / `BucketEventValidationError` / `BucketEventHistoryPersistenceError` taxonomy, logger `aeat.domain.buckets._event_repository`); `src/aeat/adapters/persistence`.
 
 ### Phase `W14.P067` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
-- [x] `W14.P067.S0397` - Audit duplicate implementations that overlap bucket event history ledger; `src/aeat/adapters/persistence`. (The legacy `WorkflowEvent`/`WorkflowState.bucket_events` tuple in `src/aeat/application/workflow/_models.py` is the in-state proto-history; the canonical bucket-event-history catalogue subsumes it. Subsequent emitters / readers must migrate to the new repository — the workflow-state tuple will retire as emitters land.)
-- [x] `W14.P067.S0398` - Delete duplicate backend branches that compete with bucket event history ledger; `src/aeat/adapters/persistence`. (No other persistent event-history surface existed before this Wave.)
-- [x] `W14.P067.S0399` - Remove stale aliases that bypass the canonical service for bucket event history ledger; `src/aeat/entrypoints/cli`. (No prior CLI alias existed.)
-- [x] `W14.P067.S0400` - Migrate internal callers to the canonical service for bucket event history ledger; `src/aeat/adapters/persistence`. (calculate / verify / file now emit via the canonical repository.)
-- [x] `W14.P067.S0401` - Remove stale fixtures and tests that encode duplicate behavior for bucket event history ledger; `tests/adapters/persistence`. (The in-memory fakes in `test_file_flow.py` are removed — every test now uses the encrypted SQL repositories end-to-end.)
-- [x] `W14.P067.S0402` - Update boundary inventory entries that describe duplicate behavior for bucket event history ledger; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (No prior CLI entry existed — the new `aeat config bucket history` verb is the first.)
+- [x] `W14.P067.S0397` - Audit duplicate implementations that overlap bucket event history ledger (The legacy `WorkflowEvent`/`WorkflowState.bucket_events` tuple in `src/aeat/application/workflow/_models.py` is the in-state proto-history, the canonical bucket-event-history catalogue subsumes it. Subsequent emitters / readers must migrate to the new repository - the workflow-state tuple will retire as emitters land.); `src/aeat/adapters/persistence`.
+- [x] `W14.P067.S0398` - Delete duplicate backend branches that compete with bucket event history ledger (No other persistent event-history surface existed before this Wave.); `src/aeat/adapters/persistence`.
+- [x] `W14.P067.S0399` - Remove stale aliases that bypass the canonical service for bucket event history ledger (No prior CLI alias existed.); `src/aeat/entrypoints/cli`.
+- [x] `W14.P067.S0400` - Migrate internal callers to the canonical service for bucket event history ledger (calculate / verify / file now emit via the canonical repository.); `src/aeat/adapters/persistence`.
+- [x] `W14.P067.S0401` - Remove stale fixtures and tests that encode duplicate behavior for bucket event history ledger (The in-memory fakes in `test_file_flow.py` are removed - every test now uses the encrypted SQL repositories end-to-end.); `tests/adapters/persistence`.
+- [x] `W14.P067.S0402` - Update boundary inventory entries that describe duplicate behavior for bucket event history ledger (No prior CLI entry existed - the new `aeat config bucket history` verb is the first.); `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W14.P068` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
-- [x] `W14.P068.S0403` - Delete compatibility shims that preserve rejected behavior for bucket event history ledger; `src/aeat/adapters/persistence`. (No compatibility shims introduced.)
-- [x] `W14.P068.S0404` - Delete placeholder stubs that claim support for bucket event history ledger; `src/aeat/adapters/persistence`. (No stubs — the closed `BucketEventType` enum reserves emission names for future emitters; only modelo families have emitters yet, but every enum value maps to an ADR-sanctioned future wave.)
-- [x] `W14.P068.S0405` - Replace stubbed paths with real backend service calls for bucket event history ledger; `src/aeat/adapters/persistence`. (modelo lifecycle services emit through the real encrypted repository.)
-- [x] `W14.P068.S0406` - Remove deprecated command spelling and help text for bucket event history ledger; `src/aeat/entrypoints/cli`. (No deprecated spelling — `aeat config bucket history` is the first surface.)
-- [x] `W14.P068.S0407` - Remove tests that assert shim or stub behavior for bucket event history ledger; `tests/adapters/persistence`. (All file-flow tests dropped in-memory fakes in favour of the `repos` fixture over encrypted SQLite.)
-- [x] `W14.P068.S0408` - Record the removed shim and stub surfaces for bucket event history ledger; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (No prior shim or stub existed.)
+- [x] `W14.P068.S0403` - Delete compatibility shims that preserve rejected behavior for bucket event history ledger (No compatibility shims introduced.); `src/aeat/adapters/persistence`.
+- [x] `W14.P068.S0404` - Delete placeholder stubs that claim support for bucket event history ledger (No stubs - the closed `BucketEventType` enum reserves emission names for future emitters, only modelo families have emitters yet, but every enum value maps to an ADR-sanctioned future wave.); `src/aeat/adapters/persistence`.
+- [x] `W14.P068.S0405` - Replace stubbed paths with real backend service calls for bucket event history ledger (modelo lifecycle services emit through the real encrypted repository.); `src/aeat/adapters/persistence`.
+- [x] `W14.P068.S0406` - Remove deprecated command spelling and help text for bucket event history ledger (No deprecated spelling - `aeat config bucket history` is the first surface.); `src/aeat/entrypoints/cli`.
+- [x] `W14.P068.S0407` - Remove tests that assert shim or stub behavior for bucket event history ledger (All file-flow tests dropped in-memory fakes in favour of the `repos` fixture over encrypted SQLite.); `tests/adapters/persistence`.
+- [x] `W14.P068.S0408` - Record the removed shim and stub surfaces for bucket event history ledger (No prior shim or stub existed.); `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W14.P069` - real behavior verification
 
 This Phase delivers real behavior verification for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
-- [x] `W14.P069.S0409` - Add service contract tests for bucket event history ledger; `tests/adapters/persistence`. (Five dedicated tests in `src/aeat/application/modelo/test_file_flow.py`: calculate-emit, verify-passed-emit, verify-refused-emit, file-emit, supersession-chain.)
-- [x] `W14.P069.S0410` - Add persistence or registry integration tests for bucket event history ledger; `tests/adapters/persistence`. (The `repos` fixture wires a real `SecureObjectRepository` over tmp-SQLite; every test exercises the encrypt → save → load → for_bucket round-trip.)
-- [x] `W14.P069.S0411` - Add negative tests proving rejected aliases do not reach bucket event history ledger; `tests/entrypoints/cli`. (Unknown event-type values to `--event-type` raise `typer.BadParameter` via the closed `BucketEventType` enum.)
-- [x] `W14.P069.S0412` - Add command behavior tests that exercise bucket event history ledger through real services; `tests/entrypoints/cli`. (The 20-test file-flow suite drives the emission contract end-to-end against real services.)
-- [x] `W14.P069.S0413` - Add end-to-end workflow coverage for bucket event history ledger; `tests`. (`test_file_supersession_emits_both_filed_and_superseded_events` proves the canonical chronological event chain for a corrective-filing scenario.)
-- [x] `W14.P069.S0414` - Run the targeted test slice for bucket event history ledger without skips or xfails; `tests/adapters/persistence`. (20 file-flow tests pass; ty clean on touched modules.)
+- [x] `W14.P069.S0409` - Add service contract tests for bucket event history ledger (Five dedicated tests in `src/aeat/application/modelo/test_file_flow.py`: calculate-emit, verify-passed-emit, verify-refused-emit, file-emit, supersession-chain.); `tests/adapters/persistence`.
+- [x] `W14.P069.S0410` - Add persistence or registry integration tests for bucket event history ledger (The `repos` fixture wires a real `SecureObjectRepository` over tmp-SQLite, every test exercises the encrypt → save → load → for_bucket round-trip.); `tests/adapters/persistence`.
+- [x] `W14.P069.S0411` - Add negative tests proving rejected aliases do not reach bucket event history ledger (Unknown event-type values to `--event-type` raise `typer.BadParameter` via the closed `BucketEventType` enum.); `tests/entrypoints/cli`.
+- [x] `W14.P069.S0412` - Add command behavior tests that exercise bucket event history ledger through real services (The 20-test file-flow suite drives the emission contract end-to-end against real services.); `tests/entrypoints/cli`.
+- [x] `W14.P069.S0413` - Add end-to-end workflow coverage for bucket event history ledger (`test_file_supersession_emits_both_filed_and_superseded_events` proves the canonical chronological event chain for a corrective-filing scenario.); `tests`.
+- [x] `W14.P069.S0414` - Run the targeted test slice for bucket event history ledger without skips or xfails (20 file-flow tests pass, ty clean on touched modules.); `tests/adapters/persistence`.
 
 ### Phase `W14.P070` - thin cli exposure
 
 This Phase delivers thin cli exposure for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
-- [x] `W14.P070.S0415` - Expose accepted command handlers for bucket event history ledger under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`. (`aeat config bucket history BUCKET_ID [--event-type ...]` lives at `src/aeat/entrypoints/cli/_config.py`.)
-- [x] `W14.P070.S0416` - Keep argument parsing for bucket event history ledger separate from backend behavior; `src/aeat/entrypoints/cli`. (CLI parses `--event-type` strings into the closed `BucketEventType` enum; backend takes typed enum tuples.)
-- [x] `W14.P070.S0417` - Delegate bucket event history ledger execution to centralized backend services; `src/aeat/entrypoints/cli`. (CLI calls `BucketEventHistoryRepository().load().for_bucket(...)`; no business logic at entrypoint.)
-- [x] `W14.P070.S0418` - Render bucket event history ledger results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`. (`_emit(ctx, payload, lines)` produces text + JSON output.)
-- [x] `W14.P070.S0419` - Handle bucket event history ledger failures through the central command error boundary; `src/aeat/entrypoints/cli`. (Unknown event-type strings raise `typer.BadParameter` against the closed enum.)
-- [x] `W14.P070.S0420` - Validate help text for bucket event history ledger uses accepted vocabulary only; `tests/entrypoints/cli`. (Locale audit clean across ca / en / es / hu.)
+- [x] `W14.P070.S0415` - Expose accepted command handlers for bucket event history ledger under `aeat config` or `aeat app` (`aeat config bucket history BUCKET_ID [--event-type ...]` lives at `src/aeat/entrypoints/cli/_config.py`.); `src/aeat/entrypoints/cli`.
+- [x] `W14.P070.S0416` - Keep argument parsing for bucket event history ledger separate from backend behavior (CLI parses `--event-type` strings into the closed `BucketEventType` enum, backend takes typed enum tuples.); `src/aeat/entrypoints/cli`.
+- [x] `W14.P070.S0417` - Delegate bucket event history ledger execution to centralized backend services (CLI calls `BucketEventHistoryRepository().load().for_bucket(...)`, no business logic at entrypoint.); `src/aeat/entrypoints/cli`.
+- [x] `W14.P070.S0418` - Render bucket event history ledger results with `_emit` or schema emitters (`_emit(ctx, payload, lines)` produces text + JSON output.); `src/aeat/entrypoints/cli`.
+- [x] `W14.P070.S0419` - Handle bucket event history ledger failures through the central command error boundary (Unknown event-type strings raise `typer.BadParameter` against the closed enum.); `src/aeat/entrypoints/cli`.
+- [x] `W14.P070.S0420` - Validate help text for bucket event history ledger uses accepted vocabulary only (Locale audit clean across ca / en / es / hu.); `tests/entrypoints/cli`.
 
 ## Wave `W15` - config init shape
 
@@ -2461,56 +2522,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-verify-adr` de
 
 This Phase delivers backend implementation for modelo verification lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-verify-adr`.
 
-- [x] `W40.P196.S1171` - Map the `2026-05-12-cli-workflow-redesign-modelo-verify-adr` decision into non-CLI service ownership for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
-- [x] `W40.P196.S1172` - Implement Pydantic command and result contracts for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa; `VerificationReport` / `VerificationFinding` / `VerificationReportCatalogue` at `src/aeat/domain/modelos/_verification_report.py`)
-- [x] `W40.P196.S1173` - Wire application or domain services required by modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa; `verify_modelo_revision` at `src/aeat/application/modelo/_actions.py`)
-- [x] `W40.P196.S1174` - Connect persistence, bucket events, registry data, or provider adapters required by modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa; encrypted catalogue at `src/aeat/domain/modelos/_verification_repository.py`; real `ValidatedRegistryAuthority` snapshot consumption)
-- [x] `W40.P196.S1175` - Route existing backend functionality into the canonical service for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
-- [x] `W40.P196.S1176` - Record service-level error codes and log fields for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa; 2 new codes in `src/aeat/core/errors/registry/_domain.py`)
+- [x] `W40.P196.S1171` - Map the `2026-05-12-cli-workflow-redesign-modelo-verify-adr` decision into non-CLI service ownership for modelo verification lifecycle (commit 44697aa); `src/aeat/application/modelo`.
+- [x] `W40.P196.S1172` - Implement Pydantic command and result contracts for modelo verification lifecycle (commit 44697aa, `VerificationReport` / `VerificationFinding` / `VerificationReportCatalogue` at `src/aeat/domain/modelos/_verification_report.py`); `src/aeat/application/modelo`.
+- [x] `W40.P196.S1173` - Wire application or domain services required by modelo verification lifecycle (commit 44697aa, `verify_modelo_revision` at `src/aeat/application/modelo/_actions.py`); `src/aeat/application/modelo`.
+- [x] `W40.P196.S1174` - Connect persistence, bucket events, registry data, or provider adapters required by modelo verification lifecycle (commit 44697aa, encrypted catalogue at `src/aeat/domain/modelos/_verification_repository.py`, real `ValidatedRegistryAuthority` snapshot consumption); `src/aeat/application/modelo`.
+- [x] `W40.P196.S1175` - Route existing backend functionality into the canonical service for modelo verification lifecycle (commit 44697aa); `src/aeat/application/modelo`.
+- [x] `W40.P196.S1176` - Record service-level error codes and log fields for modelo verification lifecycle (commit 44697aa, 2 new codes in `src/aeat/core/errors/registry/_domain.py`); `src/aeat/application/modelo`.
 
 ### Phase `W40.P197` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for modelo verification lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-verify-adr`.
 
-- [x] `W40.P197.S1177` - Audit duplicate implementations that overlap modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa; only prior `mark_revision_verified_complete` covered the verified-complete transition — `verify` is the canonical verifier going forward)
-- [x] `W40.P197.S1178` - Delete duplicate backend branches that compete with modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
-- [x] `W40.P197.S1179` - Remove stale aliases that bypass the canonical service for modelo verification lifecycle; `src/aeat/entrypoints/cli`. (commit 44697aa; CLI no longer exposes `work verified-complete` — only `work verify`)
-- [x] `W40.P197.S1180` - Migrate internal callers to the canonical service for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
-- [x] `W40.P197.S1181` - Remove stale fixtures and tests that encode duplicate behavior for modelo verification lifecycle; `tests/application/modelo`. (commit 44697aa)
-- [x] `W40.P197.S1182` - Update boundary inventory entries that describe duplicate behavior for modelo verification lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (commit 44697aa)
+- [x] `W40.P197.S1177` - Audit duplicate implementations that overlap modelo verification lifecycle (commit 44697aa, only prior `mark_revision_verified_complete` covered the verified-complete transition - `verify` is the canonical verifier going forward); `src/aeat/application/modelo`.
+- [x] `W40.P197.S1178` - Delete duplicate backend branches that compete with modelo verification lifecycle (commit 44697aa); `src/aeat/application/modelo`.
+- [x] `W40.P197.S1179` - Remove stale aliases that bypass the canonical service for modelo verification lifecycle (commit 44697aa, CLI no longer exposes `work verified-complete` - only `work verify`); `src/aeat/entrypoints/cli`.
+- [x] `W40.P197.S1180` - Migrate internal callers to the canonical service for modelo verification lifecycle (commit 44697aa); `src/aeat/application/modelo`.
+- [x] `W40.P197.S1181` - Remove stale fixtures and tests that encode duplicate behavior for modelo verification lifecycle (commit 44697aa); `tests/application/modelo`.
+- [x] `W40.P197.S1182` - Update boundary inventory entries that describe duplicate behavior for modelo verification lifecycle (commit 44697aa); `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W40.P198` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for modelo verification lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-verify-adr`.
 
-- [x] `W40.P198.S1183` - Delete compatibility shims that preserve rejected behavior for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
-- [x] `W40.P198.S1184` - Delete placeholder stubs that claim support for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
-- [x] `W40.P198.S1185` - Replace stubbed paths with real backend service calls for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
-- [x] `W40.P198.S1186` - Remove deprecated command spelling and help text for modelo verification lifecycle; `src/aeat/entrypoints/cli`. (commit 44697aa; replaced `verified-complete` verb with `verify` across all four locale files)
-- [x] `W40.P198.S1187` - Remove tests that assert shim or stub behavior for modelo verification lifecycle; `tests/application/modelo`. (catalogue-level `mode="before"` MappingProxyType validators removed in follow-up commit because they blocked real-storage JSON round-trip — the genuine bug surfaced by real-e2e coverage)
-- [x] `W40.P198.S1188` - Record the removed shim and stub surfaces for modelo verification lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (commit 44697aa)
+- [x] `W40.P198.S1183` - Delete compatibility shims that preserve rejected behavior for modelo verification lifecycle (commit 44697aa); `src/aeat/application/modelo`.
+- [x] `W40.P198.S1184` - Delete placeholder stubs that claim support for modelo verification lifecycle (commit 44697aa); `src/aeat/application/modelo`.
+- [x] `W40.P198.S1185` - Replace stubbed paths with real backend service calls for modelo verification lifecycle (commit 44697aa); `src/aeat/application/modelo`.
+- [x] `W40.P198.S1186` - Remove deprecated command spelling and help text for modelo verification lifecycle (commit 44697aa, replaced `verified-complete` verb with `verify` across all four locale files); `src/aeat/entrypoints/cli`.
+- [x] `W40.P198.S1187` - Remove tests that assert shim or stub behavior for modelo verification lifecycle (catalogue-level `mode="before"` MappingProxyType validators removed in follow-up commit because they blocked real-storage JSON round-trip - the genuine bug surfaced by real-e2e coverage); `tests/application/modelo`.
+- [x] `W40.P198.S1188` - Record the removed shim and stub surfaces for modelo verification lifecycle (commit 44697aa); `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W40.P199` - real behavior verification
 
 This Phase delivers real behavior verification for modelo verification lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-verify-adr`.
 
-- [x] `W40.P199.S1189` - Add service contract tests for modelo verification lifecycle; `tests/application/modelo`. (`test_verify_*_real_registry` suite at `src/aeat/application/modelo/test_file_flow.py` — no monkeypatch, no fakes)
-- [x] `W40.P199.S1190` - Add persistence or registry integration tests for modelo verification lifecycle; `tests/application/modelo`. (`real_repos` fixture wires real `SecureObjectRepository` over tmp-SQLite with `EphemeralMasterKeyProvider`; verify round-trips encrypt → persist → decrypt)
-- [x] `W40.P199.S1191` - Add negative tests proving rejected aliases do not reach modelo verification lifecycle; `tests/entrypoints/cli`. (CLI exposes only `work verify`; `verified-complete` verb removed)
-- [x] `W40.P199.S1192` - Add command behavior tests that exercise modelo verification lifecycle through real services; `tests/entrypoints/cli`. (`work verify` resolves modelo 180 / 2024 / 0A via real registry then transitions DRAFT → VERIFIED_COMPLETE on encrypted catalogue)
-- [x] `W40.P199.S1193` - Add end-to-end workflow coverage for modelo verification lifecycle; `tests`. (5 e2e tests cover granted / missing-casilla refusal / registry-unresolved BLOCKING_RULE / non-DRAFT rejection / list+get indexing)
-- [x] `W40.P199.S1194` - Run the targeted test slice for modelo verification lifecycle without skips or xfails; `tests/application/modelo`. (58 modelo tests pass; ty clean)
+- [x] `W40.P199.S1189` - Add service contract tests for modelo verification lifecycle (`test_verify_*_real_registry` suite at `src/aeat/application/modelo/test_file_flow.py` - no monkeypatch, no fakes); `tests/application/modelo`.
+- [x] `W40.P199.S1190` - Add persistence or registry integration tests for modelo verification lifecycle (`real_repos` fixture wires real `SecureObjectRepository` over tmp-SQLite with `EphemeralMasterKeyProvider`, verify round-trips encrypt → persist → decrypt); `tests/application/modelo`.
+- [x] `W40.P199.S1191` - Add negative tests proving rejected aliases do not reach modelo verification lifecycle (CLI exposes only `work verify`, `verified-complete` verb removed); `tests/entrypoints/cli`.
+- [x] `W40.P199.S1192` - Add command behavior tests that exercise modelo verification lifecycle through real services (`work verify` resolves modelo 180 / 2024 / 0A via real registry then transitions DRAFT → VERIFIED_COMPLETE on encrypted catalogue); `tests/entrypoints/cli`.
+- [x] `W40.P199.S1193` - Add end-to-end workflow coverage for modelo verification lifecycle (5 e2e tests cover granted / missing-casilla refusal / registry-unresolved BLOCKING_RULE / non-DRAFT rejection / list+get indexing); `tests`.
+- [x] `W40.P199.S1194` - Run the targeted test slice for modelo verification lifecycle without skips or xfails (58 modelo tests pass, ty clean); `tests/application/modelo`.
 
 ### Phase `W40.P200` - thin cli exposure
 
 This Phase delivers thin cli exposure for modelo verification lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-verify-adr`.
 
-- [x] `W40.P200.S1195` - Expose accepted command handlers for modelo verification lifecycle under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`. (commit 44697aa; `aeat app modelo work verify` + `aeat app modelo verification-report list / show`)
-- [x] `W40.P200.S1196` - Keep argument parsing for modelo verification lifecycle separate from backend behavior; `src/aeat/entrypoints/cli`. (commit 44697aa)
-- [x] `W40.P200.S1197` - Delegate modelo verification lifecycle execution to centralized backend services; `src/aeat/entrypoints/cli`. (commit 44697aa; CLI calls `verify_modelo_revision`)
-- [x] `W40.P200.S1198` - Render modelo verification lifecycle results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`. (commit 44697aa; `_emit(ctx, payload, lines)` for verify + verification-report)
-- [x] `W40.P200.S1199` - Handle modelo verification lifecycle failures through the central command error boundary; `src/aeat/entrypoints/cli`. (commit 44697aa; exit 1 when `granted_verified_complete=False`; typed errors mapped to `typer.BadParameter`)
-- [x] `W40.P200.S1200` - Validate help text for modelo verification lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`. (commit 44697aa; locale parity improved from 6 missing to 1 missing — the remaining 1 is pre-existing and not from this Wave)
+- [x] `W40.P200.S1195` - Expose accepted command handlers for modelo verification lifecycle under `aeat config` or `aeat app` (commit 44697aa, `aeat app modelo work verify` + `aeat app modelo verification-report list / show`); `src/aeat/entrypoints/cli`.
+- [x] `W40.P200.S1196` - Keep argument parsing for modelo verification lifecycle separate from backend behavior (commit 44697aa); `src/aeat/entrypoints/cli`.
+- [x] `W40.P200.S1197` - Delegate modelo verification lifecycle execution to centralized backend services (commit 44697aa, CLI calls `verify_modelo_revision`); `src/aeat/entrypoints/cli`.
+- [x] `W40.P200.S1198` - Render modelo verification lifecycle results with `_emit` or schema emitters (commit 44697aa, `_emit(ctx, payload, lines)` for verify + verification-report); `src/aeat/entrypoints/cli`.
+- [x] `W40.P200.S1199` - Handle modelo verification lifecycle failures through the central command error boundary (commit 44697aa, exit 1 when `granted_verified_complete=False`, typed errors mapped to `typer.BadParameter`); `src/aeat/entrypoints/cli`.
+- [x] `W40.P200.S1200` - Validate help text for modelo verification lifecycle uses accepted vocabulary only (commit 44697aa, locale parity improved from 6 missing to 1 missing - the remaining 1 is pre-existing and not from this Wave); `tests/entrypoints/cli`.
 
 ## Wave `W41` - verified complete
 
@@ -2577,7 +2638,7 @@ This Phase delivers thin cli exposure for verified complete state as required by
 
 This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-file-adr` decision for internal filed state. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
 
-> **Completion note.** `file_modelo_revision` at `src/aeat/application/modelo/_actions.py` performs the FILED transition, builds the `FilingRecord`, supersedes any prior current filing for the tuple, and advances the work-unit pointers atomically. CLI verb `aeat app modelo work file` carries `filing_disambiguation = "(internal only — does not submit to AEAT)"` to keep operators from confusing the internal filed flag for live submission. The W14 follow-up wired `MODELO_FILED` / `MODELO_FILED_SUPERSEDED` bucket events; W49 added the `amends_filing_record_id` link used by the amend path.
+> **Completion note.** `file_modelo_revision` at `src/aeat/application/modelo/_actions.py` performs the FILED transition, builds the `FilingRecord`, supersedes any prior current filing for the tuple, and advances the work-unit pointers atomically. CLI verb `aeat app modelo work file` carries `filing_disambiguation = "(internal only - does not submit to AEAT)"` to keep operators from confusing the internal filed flag for live submission. The W14 follow-up wired `MODELO_FILED` / `MODELO_FILED_SUPERSEDED` bucket events; W49 added the `amends_filing_record_id` link used by the amend path.
 
 ### Phase `W42.P206` - backend implementation
 
@@ -2998,108 +3059,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-complementaria-extern
 
 This Phase delivers backend implementation for external filing amend path as required by `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr`.
 
-- [x] `W49.P241.S1441` - Map the `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr` decision into non-CLI service ownership for external filing amend path; `src/aeat/application/filing`. (Ownership lives at `src/aeat/application/modelo/_actions.amend_modelo_revision` per the ADR's `aeat app modelo amend` shape.)
-- [x] `W49.P241.S1442` - Implement Pydantic command and result contracts for external filing amend path; `src/aeat/application/filing`. (New `ExternalEvidence`, `ExternalEvidenceKind`, `CalculationRevisionAmendmentKind` types; new fields `FilingRecord.external_evidence`, `FilingRecord.amends_filing_record_id`, `CalculationRevision.amendment_kind` / `.amends_filing_record_id` / `.amendment_reason`.)
-- [x] `W49.P241.S1443` - Wire application or domain services required by external filing amend path; `src/aeat/application/filing`. (`amend_modelo_revision` orchestrates load-baseline → derive corrected revision → verify → file → emit chain.)
-- [x] `W49.P241.S1444` - Connect persistence, bucket events, registry data, or provider adapters required by external filing amend path; `src/aeat/application/filing`. (All catalogue writes flow through `SecureObjectRepository`; `modelo.amended` event emitted on the bucket-event-history catalogue.)
-- [x] `W49.P241.S1445` - Route existing backend functionality into the canonical service for external filing amend path; `src/aeat/application/filing`. (Legacy `FilingAmendment` / `build_complementaria` under `src/aeat/domain/filing/_amendment.py` remains as the export-format complement; modelo-amend is the canonical UX entry point.)
-- [x] `W49.P241.S1446` - Record service-level error codes and log fields for external filing amend path; `src/aeat/application/filing`. (`AmendmentEvidenceMissingError` / `AmendmentTargetStateError` in `src/aeat/application/modelo/_actions.py`.)
+- [x] `W49.P241.S1441` - Map the `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr` decision into non-CLI service ownership for external filing amend path (Ownership lives at `src/aeat/application/modelo/_actions.amend_modelo_revision` per the ADR's `aeat app modelo amend` shape.); `src/aeat/application/filing`.
+- [x] `W49.P241.S1442` - Implement Pydantic command and result contracts for external filing amend path (New `ExternalEvidence`, `ExternalEvidenceKind`, `CalculationRevisionAmendmentKind` types, new fields `FilingRecord.external_evidence`, `FilingRecord.amends_filing_record_id`, `CalculationRevision.amendment_kind` / `.amends_filing_record_id` / `.amendment_reason`.); `src/aeat/application/filing`.
+- [x] `W49.P241.S1443` - Wire application or domain services required by external filing amend path (`amend_modelo_revision` orchestrates load-baseline → derive corrected revision → verify → file → emit chain.); `src/aeat/application/filing`.
+- [x] `W49.P241.S1444` - Connect persistence, bucket events, registry data, or provider adapters required by external filing amend path (All catalogue writes flow through `SecureObjectRepository`, `modelo.amended` event emitted on the bucket-event-history catalogue.); `src/aeat/application/filing`.
+- [x] `W49.P241.S1445` - Route existing backend functionality into the canonical service for external filing amend path (Legacy `FilingAmendment` / `build_complementaria` under `src/aeat/domain/filing/_amendment.py` remains as the export-format complement, modelo-amend is the canonical UX entry point.); `src/aeat/application/filing`.
+- [x] `W49.P241.S1446` - Record service-level error codes and log fields for external filing amend path (`AmendmentEvidenceMissingError` / `AmendmentTargetStateError` in `src/aeat/application/modelo/_actions.py`.); `src/aeat/application/filing`.
 
 ### Phase `W49.P242` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for external filing amend path as required by `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr`.
 
-- [x] `W49.P242.S1447` - Audit duplicate implementations that overlap external filing amend path; `src/aeat/application/filing`. (The legacy `FilingAmendment` chain remains useful for the BOE export format; the new modelo-amend path is the canonical lifecycle entry point — no duplicate path was created.)
-- [x] `W49.P242.S1448` - Delete duplicate backend branches that compete with external filing amend path; `src/aeat/application/filing`. (No competing branches introduced.)
-- [x] `W49.P242.S1449` - Remove stale aliases that bypass the canonical service for external filing amend path; `src/aeat/entrypoints/cli`. (`aeat filing complementaria submit` was already rejected by the ADR's "no legacy" constraint; the new CLI verb is `aeat app modelo work amend`.)
-- [x] `W49.P242.S1450` - Migrate internal callers to the canonical service for external filing amend path; `src/aeat/application/filing`. (No prior modelo-lifecycle caller of the amend semantic existed.)
-- [x] `W49.P242.S1451` - Remove stale fixtures and tests that encode duplicate behavior for external filing amend path; `tests/application/filing`. (None present.)
-- [x] `W49.P242.S1452` - Update boundary inventory entries that describe duplicate behavior for external filing amend path; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (The new verb is the first surface.)
+- [x] `W49.P242.S1447` - Audit duplicate implementations that overlap external filing amend path (The legacy `FilingAmendment` chain remains useful for the BOE export format, the new modelo-amend path is the canonical lifecycle entry point - no duplicate path was created.); `src/aeat/application/filing`.
+- [x] `W49.P242.S1448` - Delete duplicate backend branches that compete with external filing amend path (No competing branches introduced.); `src/aeat/application/filing`.
+- [x] `W49.P242.S1449` - Remove stale aliases that bypass the canonical service for external filing amend path (`aeat filing complementaria submit` was already rejected by the ADR's "no legacy" constraint, the new CLI verb is `aeat app modelo work amend`.); `src/aeat/entrypoints/cli`.
+- [x] `W49.P242.S1450` - Migrate internal callers to the canonical service for external filing amend path (No prior modelo-lifecycle caller of the amend semantic existed.); `src/aeat/application/filing`.
+- [x] `W49.P242.S1451` - Remove stale fixtures and tests that encode duplicate behavior for external filing amend path (None present.); `tests/application/filing`.
+- [x] `W49.P242.S1452` - Update boundary inventory entries that describe duplicate behavior for external filing amend path (The new verb is the first surface.); `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W49.P243` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for external filing amend path as required by `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr`.
 
-- [x] `W49.P243.S1453` - Delete compatibility shims that preserve rejected behavior for external filing amend path; `src/aeat/application/filing`. (None introduced.)
-- [x] `W49.P243.S1454` - Delete placeholder stubs that claim support for external filing amend path; `src/aeat/application/filing`. (None introduced.)
-- [x] `W49.P243.S1455` - Replace stubbed paths with real backend service calls for external filing amend path; `src/aeat/application/filing`. (`amend_modelo_revision` calls real catalogue repositories end to end.)
-- [x] `W49.P243.S1456` - Remove deprecated command spelling and help text for external filing amend path; `src/aeat/entrypoints/cli`. (No deprecated spelling — `aeat app modelo work amend` is the first surface.)
-- [x] `W49.P243.S1457` - Remove tests that assert shim or stub behavior for external filing amend path; `tests/application/filing`. (None present.)
-- [x] `W49.P243.S1458` - Record the removed shim and stub surfaces for external filing amend path; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (No prior surface to remove.)
+- [x] `W49.P243.S1453` - Delete compatibility shims that preserve rejected behavior for external filing amend path (None introduced.); `src/aeat/application/filing`.
+- [x] `W49.P243.S1454` - Delete placeholder stubs that claim support for external filing amend path (None introduced.); `src/aeat/application/filing`.
+- [x] `W49.P243.S1455` - Replace stubbed paths with real backend service calls for external filing amend path (`amend_modelo_revision` calls real catalogue repositories end to end.); `src/aeat/application/filing`.
+- [x] `W49.P243.S1456` - Remove deprecated command spelling and help text for external filing amend path (No deprecated spelling - `aeat app modelo work amend` is the first surface.); `src/aeat/entrypoints/cli`.
+- [x] `W49.P243.S1457` - Remove tests that assert shim or stub behavior for external filing amend path (None present.); `tests/application/filing`.
+- [x] `W49.P243.S1458` - Record the removed shim and stub surfaces for external filing amend path (No prior surface to remove.); `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W49.P244` - real behavior verification
 
 This Phase delivers real behavior verification for external filing amend path as required by `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr`.
 
-- [x] `W49.P244.S1459` - Add service contract tests for external filing amend path; `tests/application/filing`. (Four e2e tests at `src/aeat/application/modelo/test_amend_flow.py`: evidence-missing refusal, superseded-baseline refusal, happy-path complementaria, no-op overrides refusal.)
-- [x] `W49.P244.S1460` - Add persistence or registry integration tests for external filing amend path; `tests/application/filing`. (The `repos` fixture wires a real encrypted SQLite store; every test round-trips through `SecureObjectRepository`.)
-- [x] `W49.P244.S1461` - Add negative tests proving rejected aliases do not reach external filing amend path; `tests/entrypoints/cli`. (Unknown `--kind` values raise `typer.BadParameter` via the closed `CalculationRevisionAmendmentKind` enum.)
-- [x] `W49.P244.S1462` - Add command behavior tests that exercise external filing amend path through real services; `tests/entrypoints/cli`. (Test suite drives `amend_modelo_revision` end to end.)
-- [x] `W49.P244.S1463` - Add end-to-end workflow coverage for external filing amend path; `tests`. (Happy-path test asserts the full chain: baseline supersession, new revision FILED state, work-unit pointer advance, `modelo.amended` event emission.)
-- [x] `W49.P244.S1464` - Run the targeted test slice for external filing amend path without skips or xfails; `tests/application/filing`. (4 amend tests pass; 79 modelo-slice tests pass overall; ty clean.)
+- [x] `W49.P244.S1459` - Add service contract tests for external filing amend path (Four e2e tests at `src/aeat/application/modelo/test_amend_flow.py`: evidence-missing refusal, superseded-baseline refusal, happy-path complementaria, no-op overrides refusal.); `tests/application/filing`.
+- [x] `W49.P244.S1460` - Add persistence or registry integration tests for external filing amend path (The `repos` fixture wires a real encrypted SQLite store, every test round-trips through `SecureObjectRepository`.); `tests/application/filing`.
+- [x] `W49.P244.S1461` - Add negative tests proving rejected aliases do not reach external filing amend path (Unknown `--kind` values raise `typer.BadParameter` via the closed `CalculationRevisionAmendmentKind` enum.); `tests/entrypoints/cli`.
+- [x] `W49.P244.S1462` - Add command behavior tests that exercise external filing amend path through real services (Test suite drives `amend_modelo_revision` end to end.); `tests/entrypoints/cli`.
+- [x] `W49.P244.S1463` - Add end-to-end workflow coverage for external filing amend path (Happy-path test asserts the full chain: baseline supersession, new revision FILED state, work-unit pointer advance, `modelo.amended` event emission.); `tests`.
+- [x] `W49.P244.S1464` - Run the targeted test slice for external filing amend path without skips or xfails (4 amend tests pass, 79 modelo-slice tests pass overall, ty clean.); `tests/application/filing`.
 
 ### Phase `W49.P245` - thin cli exposure
 
 This Phase delivers thin cli exposure for external filing amend path as required by `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr`.
 
-- [x] `W49.P245.S1465` - Expose accepted command handlers for external filing amend path under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`. (`aeat app modelo work amend --from-filing-record ID --kind complementaria --set CASILLA=VALUE --reason TEXT --by ACTOR`.)
-- [x] `W49.P245.S1466` - Keep argument parsing for external filing amend path separate from backend behavior; `src/aeat/entrypoints/cli`. (`_parse_amendment_casilla` lives in the CLI module; backend takes already-typed `Mapping[str, Decimal]`.)
-- [x] `W49.P245.S1467` - Delegate external filing amend path execution to centralized backend services; `src/aeat/entrypoints/cli`. (CLI calls `amend_modelo_revision`; no business logic at the entrypoint.)
-- [x] `W49.P245.S1468` - Render external filing amend path results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`. (`_emit(ctx, payload, lines)` produces text + JSON output.)
-- [x] `W49.P245.S1469` - Handle external filing amend path failures through the central command error boundary; `src/aeat/entrypoints/cli`. (Typed errors mapped to `typer.BadParameter` at the boundary.)
-- [x] `W49.P245.S1470` - Validate help text for external filing amend path uses accepted vocabulary only; `tests/entrypoints/cli`. (Locale audit clean across all four languages; `aeat-locales audit` returns ok for ca / en / es / hu.)
-
-## Wave `W49b` - modelo external filing import
-
-This Wave implements the `2026-05-13-cli-workflow-redesign-modelo-external-filing-import-adr` decision. It is the production source of `FilingRecord.external_evidence` and unlocks the amend path end to end: an operator imports an AEAT-attested baseline (justificante PDF, CSV register, live capture), then `aeat app modelo work amend` can build a complementaria over it.
-
-### Phase `W49b.P246` - backend implementation
-
-- [x] `W49b.P246.S1471` - Map the external-evidence import contract into the modelo lifecycle service namespace; `src/aeat/application/modelo`. (`import_external_filing_evidence` lives next to `file_modelo_revision` and `amend_modelo_revision`.)
-- [x] `W49b.P246.S1472` - Implement Pydantic command and result contracts; `src/aeat/application/modelo`. (Reuses the existing `FilingRecord` / `ExternalEvidence` / `ExternalEvidenceKind` shapes that W49 introduced.)
-- [x] `W49b.P246.S1473` - Wire the application service; `src/aeat/application/modelo/_actions.py`. (`import_external_filing_evidence` orchestrates validate-inputs → derive-revision → build-filing-record → supersede-prior-current → advance-pointers → emit chain.)
-- [x] `W49b.P246.S1474` - Connect persistence and bucket-event emission; `src/aeat/application/modelo`. (Encrypted SQL via existing repositories; new closed enum value `BucketEventType.MODELO_FILING_IMPORTED`.)
-- [x] `W49b.P246.S1475` - Route the action through the canonical supersession chain; `src/aeat/application/modelo`. (Same chain `file_modelo_revision` uses — second import for the same tuple supersedes the prior current.)
-- [x] `W49b.P246.S1476` - Record service-level error codes; `src/aeat/application/modelo`. (`ExternalFilingImportError` for empty values / empty evidence reference.)
-
-### Phase `W49b.P247` - real behavior verification
-
-- [x] `W49b.P247.S1477` - Add service contract tests covering import happy path, supersession, evidence-reference validation, casilla validation, and discarded-work-unit refusal; `src/aeat/application/modelo/test_import_flow.py`. (8 tests pass over real encrypted SQLite.)
-- [x] `W49b.P247.S1478` - Prove the import path unlocks the amend gate end to end; `src/aeat/application/modelo/test_import_flow.py`. (`test_import_then_amend_unlocks_amendment_path` exercises the chain in production shape and asserts the chronological bucket-event sequence `MODELO_FILING_IMPORTED → MODELO_AMENDED`.)
-- [x] `W49b.P247.S1479` - Prove the amend gate still refuses locally-filed records after the import path lands; `src/aeat/application/modelo/test_import_flow.py`. (`test_amend_locally_filed_still_refused_after_import_path_exists` regression-pins the gate.)
-
-### Phase `W49b.P248` - thin cli exposure
-
-- [x] `W49b.P248.S1480` - Expose the action under `aeat app modelo filing-record import`; `src/aeat/entrypoints/cli/_modelo.py`. (Verb takes `WORK_UNIT_ID --evidence-kind X --evidence-id Y --set CASILLA=VALUE ... --by ACTOR`.)
-- [x] `W49b.P248.S1481` - Keep argument parsing separate from backend behavior; `src/aeat/entrypoints/cli/_modelo.py`. (`_parse_amendment_casilla` is reused; `ExternalEvidenceKind` parsing maps unknown values to `typer.BadParameter` via the closed enum.)
-- [x] `W49b.P248.S1482` - Render results with `_emit`; `src/aeat/entrypoints/cli/_modelo.py`. (`filing_disambiguation = "(imported AEAT-attested baseline)"` distinguishes the import from live submission.)
-- [x] `W49b.P248.S1483` - Handle failures through the central error boundary; `src/aeat/entrypoints/cli/_modelo.py`. (Typed errors mapped to `typer.BadParameter`.)
-- [x] `W49b.P248.S1484` - Validate help-text vocabulary; locale audit clean across ca / en / es / hu.
-
-## Wave `W39b` - modelo calculate engine wiring
-
-This Wave implements the `2026-05-13-cli-workflow-redesign-modelo-calculate-engine-wiring-adr` decision. It elevates `calculate_modelo_revision` from a store-as-given persistence path to a real-registry computation path: every locally-computed revision runs through the registry's `calculate_registry_snapshot` formula engine and the persisted `casilla_values` reflects what the modelo's formulas produce.
-
-### Phase `W39b.P249` - backend implementation
-
-- [x] `W39b.P249.S1485` - Map the engine-wiring contract into `calculate_modelo_revision`; `src/aeat/application/modelo/_actions.py`. (New required `casilla_inputs` parameter replaces operator-provided `casilla_values`; new `binding_values`, `enum_binding_values`, `relation_values`, `filing_period_date` parameters thread through to `calculate_registry_snapshot`.)
-- [x] `W39b.P249.S1486` - Resolve the registry snapshot at calculate time; `src/aeat/application/modelo/_actions.py`. (`ValidatedRegistryAuthority.load(...).snapshot(modelo, filing_year, period)`; failure raises `CalculationRegistryUnavailableError`.)
-- [x] `W39b.P249.S1487` - Run the formula engine and use its full output as the persisted `casilla_values`; `src/aeat/application/modelo/_actions.py`. (`engine_result.values` includes every declared casilla — operator inputs ∪ formula targets.)
-- [x] `W39b.P249.S1488` - Canonicalise `inputs_snapshot` and `binding_overrides` (sorted, decimal-normalised) so the content-addressed revision id is stable across re-runs; `src/aeat/application/modelo/_actions.py`.
-- [x] `W39b.P249.S1489` - Switch verify's "missing required casilla" check from `casilla_values` to `inputs_snapshot`; `src/aeat/application/modelo/_actions.py`. (With the engine wired, `casilla_values` carries every declared casilla — operator intent lives in `inputs_snapshot`.)
-- [x] `W39b.P249.S1490` - Extend the `modelo.calculation.created` bucket-event payload with `formula_count` and `casilla_count` so audit history records the engine outcome; `src/aeat/application/modelo/_actions.py`.
-
-### Phase `W39b.P250` - real behavior verification
-
-- [x] `W39b.P250.S1491` - Add a dedicated engine-wiring assertion; `src/aeat/application/modelo/test_file_flow.py`. (`test_calculate_runs_registry_formula_engine` proves: inputs in `inputs_snapshot`, formula outputs in `casilla_values`, casilla 03 = 01 - 02 = 7000, ≥19 casillas in the output, bucket-event payload reports `formula_count` and `casilla_count` from the engine.)
-- [x] `W39b.P250.S1492` - Add the registry-unresolvable refusal; `src/aeat/application/modelo/test_file_flow.py`. (`test_calculate_refuses_when_registry_snapshot_unresolvable` exercises modelo 130 / year 2010 — the year predates the registry's earliest revision; the action raises `CalculationRegistryUnavailableError`.)
-- [x] `W39b.P250.S1493` - Move the file-flow / amend-flow / import-flow fixtures from registry-unresolvable 303/Q1 to registry-resolvable 130/1T; `src/aeat/application/modelo/test_*_flow.py`. (Default `_seed_work_unit` is now modelo 130 1T 2026; binding values default to `_DEFAULT_130_BINDING_VALUES`. Verify-section continues to use modelo 180 with its declared bindings + relations.)
-- [x] `W39b.P250.S1494` - Run the targeted modelo slice without skips or xfails; 89/89 modelo-slice tests pass; ty clean on touched modules.
-
-### Phase `W39b.P251` - thin cli exposure
-
-- [x] `W39b.P251.S1495` - Wire the CLI verb to the new action shape; `src/aeat/entrypoints/cli/_modelo.py`. (`aeat app modelo work calculate` routes `--casilla` into `casilla_inputs`; `--binding KEY=VALUE` routes into `binding_values` when the value parses as Decimal, otherwise into `enum_binding_values`.)
-- [x] `W39b.P251.S1496` - Map `CalculationRegistryUnavailableError` to `typer.BadParameter` at the boundary; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W49.P245.S1465` - Expose accepted command handlers for external filing amend path under `aeat config` or `aeat app` (`aeat app modelo work amend --from-filing-record ID --kind complementaria --set CASILLA=VALUE --reason TEXT --by ACTOR`.); `src/aeat/entrypoints/cli`.
+- [x] `W49.P245.S1466` - Keep argument parsing for external filing amend path separate from backend behavior (`_parse_amendment_casilla` lives in the CLI module, backend takes already-typed `Mapping[str, Decimal]`.); `src/aeat/entrypoints/cli`.
+- [x] `W49.P245.S1467` - Delegate external filing amend path execution to centralized backend services (CLI calls `amend_modelo_revision`, no business logic at the entrypoint.); `src/aeat/entrypoints/cli`.
+- [x] `W49.P245.S1468` - Render external filing amend path results with `_emit` or schema emitters (`_emit(ctx, payload, lines)` produces text + JSON output.); `src/aeat/entrypoints/cli`.
+- [x] `W49.P245.S1469` - Handle external filing amend path failures through the central command error boundary (Typed errors mapped to `typer.BadParameter` at the boundary.); `src/aeat/entrypoints/cli`.
+- [x] `W49.P245.S1470` - Validate help text for external filing amend path uses accepted vocabulary only (Locale audit clean across all four languages, `aeat-locales audit` returns ok for ca / en / es / hu.); `tests/entrypoints/cli`.
 
 ## Wave `W50` - modelo 036 037 foundation
 

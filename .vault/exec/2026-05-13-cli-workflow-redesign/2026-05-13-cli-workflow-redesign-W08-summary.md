@@ -41,4 +41,4 @@ tax-residence profile-path adapter, JSON draft input providers, and filing
 
 `uv run --no-sync pytest src/aeat/application/profile/test_actions.py src/aeat/application/archive/test_archive.py src/aeat/application/workflow/test_adapters.py src/aeat/application/wizard/test_status.py src/aeat/application/wizard/test_status_next_action.py src/aeat/application/test_config_reset.py src/aeat/application/test_setup_reset.py src/aeat/application/test_config_parity.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/test_backend_boundary.py src/aeat/entrypoints/cli/test_workflow_surface.py::test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_bucket src/aeat/tests/test_config.py -q`
 
-Result: 93 passed in 138.99s.
+Result: 98 passed in 128.38s.
