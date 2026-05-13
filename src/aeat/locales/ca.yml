@@ -150,17 +150,6 @@ cli:
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
-  browser:
-    app_help: Gestió de l'automatització del navegador (Playwright)
-    health:
-      json_help: Mostrar l'estat de salut del navegador en format JSON
-    health_help: Comprovar l'estat de salut i connectivitat del navegador
-    labels:
-      http_status: Estat HTTP
-      markers: Marcadors detectats
-      none: Cap
-      retry_after_seconds: Reintentar després (segons)
-      state: Estat operatiu
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
@@ -192,6 +181,7 @@ cli:
       history_help: Mostrar l'historial d'esdeveniments només-append d'un bucket
     doctor:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
+      connectivity_target_help: Objectiu de connectivitat que cal comprovar
       help: Diagnosticar configuració local, registre, perfil, autenticació i logs
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
@@ -242,171 +232,6 @@ cli:
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
-  data:
-    app_help: Gestió de dades i registres fiscals
-    ledgers:
-      app_help: Gestió de Llibres Registre d'IVA i IRPF
-      inventory_help: Llistar l'inventari de Llibres Registre disponibles
-    ledgers_help: Gestió de Llibres Registre de l'AEAT
-  deadlines:
-    app_help: Gestió del calendari i terminis del contribuent
-    explain:
-      modelo_help: Número del model tributari (ex. 303, 111)
-    explain_help: Explicar els terminis i obligacions per a un model i perfil específics
-    list:
-      closes_on_col: Tancament el
-      labels:
-        tax_deadlines: Terminis Tributaris
-      modelo_col: Model
-      opens_on_col: Obertura el
-      period_col: Període
-      status_col: Estat
-      table_title: Calendari de Terminis Tributaris
-      year_help: Exercici fiscal a consultar
-    list_help: Llistar els terminis tributaris per a un exercici fiscal
-    next:
-      labels:
-        closes: Tanca
-        no_upcoming: No hi ha terminis propers
-      year_help: Exercici fiscal a consultar
-    next_help: Mostrar el proper termini tributari rellevant
-  filing:
-    amendment:
-      delta_table_title: Diferències de la declaració complementària
-      title: Declaració Complementària / Rectificativa
-    app_help: Gestió i presentació de declaracions tributàries
-    build:
-      modelo_help: Model tributari a construir (p. ex., 303, 111, 130)
-      period_help: Periode fiscal (p. ex., 1T, 2T, 01, 12)
-    complementaria:
-      app_help: Gestió de declaracions complementàries i rectificativas
-      build:
-        delta_json_help: Arxiu JSON amb les diferències (delta) per a la declaració
-          complementària
-    draft:
-      approved_by_you: Aprovat per vostè
-      next_steps_label: Propers passos
-      title: Esborrany de la declaració
-      values_table_title: Valors de les caselles de la declaració
-    errors:
-      amendment_success: Declaració complementària processada correctament
-      casilla_key_not_string: La clau de la casella ha de ser una cadena de text (string)
-      failed_to_load_draft: Fallada en carregar l'esborrany de la declaració
-      inputs_not_object: Les dades d'entrada han de ser un objecte (JSON)
-      invalid_json: Arxiu JSON no vàlid
-      invalid_status: Estat de la declaració no vàlid
-      missing_import_source: Falta la font d'importació
-      missing_original_submission_id: Falta l'ID de la presentació original
-      missing_updated_inputs: Falten els fitxers d'entrada actualitzats
-      modelo_mismatch: El model tributari no coincideix
-      multiple_import_sources: S'han trobat múltiples fonts d'importació
-      period_mismatch: El periode fiscal no coincideix
-      reasons_not_object: Els motius han de ser un objecte (JSON)
-      submission_not_found: Presentació no trobada
-      submission_validation_failed: Fallada en la validació de la presentació
-      unsupported_value_type: Tipus de valor no suportat
-    field:
-      approved_at: Aprovat el
-      approved_by: Aprovat per
-      casilla: Casella
-      code: Codi
-      created_at: Creat el
-      draft_id: ID de l'esborrany
-      kind: Tipus / Classe
-      message: Missatge
-      modelo: Model
-      new: Nou
-      old: Antic
-      original_csv: CSV Original
-      path: Ruta
-      period: Periode
-      profile_tax_id: NIF del Perfil
-      reason: Motiu
-      review_checksum: Suma de comprovació de la revisió
-      schema_version: Versió de l'esquema
-      severity: Gravetat
-      source: Origen / Font
-      stale_reason: Motiu d'obsolescència
-      status: Estat
-      submission_id: ID de la presentació
-      updated_at: Actualitzat el
-      value: Valor
-    import:
-      actual: Actual (Trobat)
-      año_help: Fiscal year for the import operation (YYYY)
-      borrador_unsupported: La importació des de l'esborrany oficial no està suportada
-        per a aquest model
-      casilla_label: Casella
-      cause: Causa / Motiu
-      expected: Esperat
-      extraction_complete: Extracció completada correctament
-      from_borrador_help: Importar dades des d'un esborrany oficial (PDF de l'AEAT)
-      from_declaracion_help: Importar dades des d'una declaració presentada (PDF de
-        l'AEAT)
-      from_justificante_help: Importar dades des d'un justificant de presentació (PDF
-        de l'AEAT)
-      importing_declaration: Important declaració...
-      justificante_success: Justificant importat correctament
-      modelo_help: Model tributari de la declaració a importar
-      scaffold_created: Andamiatge (scaffold) d'importació creat correctament
-      verification_result: Resultat de la verificació
-      warning_label: ADVERTÈNCIA
-      warnings_found: S'han trobat advertències durant el procés
-    init:
-      findings_table_title: Resultats de la detecció inicial
-    list:
-      modelo_help: Filtrar per model tributari
-      status_help: Filtrar per estat de la declaració
-      table_title: Llistat de declaracions
-    show:
-      findings_only_help: Mostrar només les troballes (findings) de la declaració
-    validate:
-      draft_path_help: Ruta a l'arxiu d'esborrany a validar
-      success: Validació completada correctament. La declaració és vàlida.
-  inventory:
-    app_help: Gestió d'inventari d'actius i existències
-    create:
-      actividad_help: Codi de l'activitat econòmica relacionada
-      help: Registrar un nou element a l'inventari
-      opening_quantity_help: Quantitat inicial (obertura) a l'inventari
-      opening_stock_help: Valor de les existències inicials
-      opening_unit_cost_help: Cost unitari inicial
-      sku_help: Codi SKU de l'element
-      valuation_method_help: Mètode de valoració (p. ex., PMP, FIFO, LIFO)
-      year_help: Any fiscal relacionat
-    errors:
-      invalid_valuation: Valoració d'inventari no vàlida
-      ledger_not_found: Llibre d'inventari no trobat
-      missing_opening_fields: Falten camps obligatoris per a les existències inicials
-      valuation_failed: Fallada en el procés de valoració de l'inventari
-    labels:
-      ledger_created: Llibre d'inventari creat correctament
-      ledger_empty: El llibre d'inventari està buit
-      movement_added: Moviment d'inventari afegit correctament
-    list:
-      help: Llistar elements de l'inventari
-      opening_label: Obertura
-    movement:
-      actividad_help: Codi de l'activitat econòmica relacionada amb el moviment
-      add_help: Afegir un nou moviment d'inventari (compra, venda, etc.)
-      date_help: Data del moviment (AAAA-MM-DD)
-      kind_help: Tipus de moviment (entrada o sortida)
-      movement_id_help: Identificador del moviment d'inventari
-      quantity_help: Quantitat involucrada en el moviment
-      sku_help: Codi SKU de l'element del moviment
-      taxable_base_help: Base imposable del moviment
-      unit_cost_help: Cost unitari del moviment
-      vat_rate_help: Tipus d'IVA aplicat
-      year_help: Any fiscal del moviment
-    movement_help: Gestió de moviments d'inventari
-    valuation:
-      actividad_help: Codi de l'activitat econòmica relacionada amb la valoració
-      closing_label: Tancament
-      cogs_label: Cost de Vendes
-      preview_help: Previsualitzar l'informe de valoració abans de generar-lo
-      preview_line: 'Previsualització: {sku} - {method}'
-      year_help: Any fiscal per a l'informe de valoració
-    valuation_help: Gestió de valoració d'existències (PMP, FIFO, LIFO)
   ledger:
     app_help: Gestió de llibres comptables i registres d'IVA
     edit:

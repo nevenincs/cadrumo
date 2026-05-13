@@ -136,17 +136,6 @@ cli:
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
-  browser:
-    app_help: Browser automation management (Playwright)
-    health:
-      json_help: Show browser health status in JSON format
-    health_help: Check the health and connectivity of the browser automation
-    labels:
-      http_status: HTTP Status
-      markers: Detected markers
-      none: None
-      retry_after_seconds: Retry after (seconds)
-      state: Operational State
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
@@ -176,6 +165,7 @@ cli:
       history_help: Show the append-only event history for one bucket
     doctor:
       connectivity_help: Check browser and AEAT Sede connectivity
+      connectivity_target_help: Connectivity target to probe
       help: Diagnose local configuration, registry, profile, auth, and logs
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
@@ -225,170 +215,6 @@ cli:
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
-  data:
-    app_help: Management of tax data and records
-    ledgers:
-      app_help: Management of VAT and IRPF Record Books (Ledgers)
-      inventory_help: List the inventory of available Record Books (Ledgers)
-    ledgers_help: Management of AEAT Record Books (Ledgers)
-  deadlines:
-    app_help: Management of the taxpayer calendar and deadlines
-    explain:
-      modelo_help: Tax form number (e.g. 303, 111)
-    explain_help: Explain the deadlines and obligations for a specific tax form and
-      profile
-    list:
-      closes_on_col: Closes On
-      labels:
-        tax_deadlines: Tax Deadlines
-      modelo_col: Form
-      opens_on_col: Opens On
-      period_col: Period
-      status_col: Status
-      table_title: Tax Deadline Calendar
-      year_help: Fiscal year to query
-    list_help: List tax deadlines for a fiscal year
-    next:
-      labels:
-        closes: Closes
-        no_upcoming: No upcoming deadlines
-      year_help: Fiscal year to query
-    next_help: Show the next relevant tax deadline
-  filing:
-    amendment:
-      delta_table_title: Amendment Delta (Differences)
-      title: Amendment / Supplementary Return
-    app_help: Management and submission of tax filings
-    build:
-      modelo_help: Tax model to build (e.g., 303, 111, 130)
-      period_help: Tax period (e.g., 1T, 2T, 01, 12)
-    complementaria:
-      app_help: Management of supplementary and corrective filings
-      build:
-        delta_json_help: JSON file containing the differences (delta) for the supplementary
-          filing
-    draft:
-      approved_by_you: Approved by you
-      next_steps_label: Next steps
-      title: Filing Draft
-      values_table_title: Filing Box Values
-    errors:
-      amendment_success: Supplementary filing successfully processed
-      casilla_key_not_string: Box (casilla) key must be a string
-      failed_to_load_draft: Failed to load filing draft
-      inputs_not_object: Input data must be an object (JSON)
-      invalid_json: Invalid JSON file
-      invalid_status: Invalid filing status
-      missing_import_source: Missing import source
-      missing_original_submission_id: Missing original submission ID
-      missing_updated_inputs: Missing updated input files
-      modelo_mismatch: Tax model mismatch
-      multiple_import_sources: Multiple import sources found
-      period_mismatch: Tax period mismatch
-      reasons_not_object: Reasons must be an object (JSON)
-      submission_not_found: Submission not found
-      submission_validation_failed: Submission validation failed
-      unsupported_value_type: Unsupported value type
-    field:
-      approved_at: Approved at
-      approved_by: Approved by
-      casilla: Box
-      code: Code
-      created_at: Created at
-      draft_id: Draft ID
-      kind: Kind / Type
-      message: Message
-      modelo: Tax Model
-      new: New
-      old: Old
-      original_csv: Original CSV
-      path: Path
-      period: Period
-      profile_tax_id: Profile Tax ID (NIF)
-      reason: Reason
-      review_checksum: Review Checksum
-      schema_version: Schema Version
-      severity: Severity
-      source: Source
-      stale_reason: Stale Reason
-      status: Status
-      submission_id: Submission ID
-      updated_at: Updated at
-      value: Value
-    import:
-      actual: Actual (Found)
-      año_help: Fiscal year for the import operation (YYYY)
-      borrador_unsupported: Importing from official draft is not supported for this
-        tax model
-      casilla_label: Box
-      cause: Cause / Reason
-      expected: Expected
-      extraction_complete: Extraction successfully completed
-      from_borrador_help: Import data from an official draft (AEAT PDF)
-      from_declaracion_help: Import data from a submitted filing (AEAT PDF)
-      from_justificante_help: Import data from a submission receipt (AEAT PDF)
-      importing_declaration: Importing filing...
-      justificante_success: Receipt successfully imported
-      modelo_help: Tax model of the filing to import
-      scaffold_created: Import scaffold successfully created
-      verification_result: Verification Result
-      warning_label: WARNING
-      warnings_found: Warnings found during the process
-    init:
-      findings_table_title: Initial Detection Findings
-    list:
-      modelo_help: Filter by tax model
-      status_help: Filter by filing status
-      table_title: Filing List
-    show:
-      findings_only_help: Show only filing findings
-    validate:
-      draft_path_help: Path to the draft file to validate
-      success: Validation completed successfully. The filing is valid.
-  inventory:
-    app_help: Management of asset and stock inventory
-    create:
-      actividad_help: Related economic activity code
-      help: Register a new item in the inventory
-      opening_quantity_help: Initial quantity (opening stock) in inventory
-      opening_stock_help: Initial stock value
-      opening_unit_cost_help: Initial unit cost
-      sku_help: SKU code of the item
-      valuation_method_help: Valuation method (e.g., PMP, FIFO, LIFO)
-      year_help: Related fiscal year
-    errors:
-      invalid_valuation: Invalid inventory valuation
-      ledger_not_found: Inventory ledger not found
-      missing_opening_fields: Required opening stock fields are missing
-      valuation_failed: Inventory valuation process failed
-    labels:
-      ledger_created: Inventory ledger successfully created
-      ledger_empty: The inventory ledger is empty
-      movement_added: Inventory movement successfully added
-    list:
-      help: List inventory items
-      opening_label: Opening
-    movement:
-      actividad_help: Economic activity code related to the movement
-      add_help: Add a new inventory movement (purchase, sale, etc.)
-      date_help: Movement date (YYYY-MM-DD)
-      kind_help: Movement type (entry or exit)
-      movement_id_help: Inventory movement identifier
-      quantity_help: Quantity involved in the movement
-      sku_help: SKU code of the item in the movement
-      taxable_base_help: Taxable base of the movement
-      unit_cost_help: Unit cost of the movement
-      vat_rate_help: VAT rate applied
-      year_help: Fiscal year of the movement
-    movement_help: Management of inventory movements
-    valuation:
-      actividad_help: Economic activity code related to the valuation
-      closing_label: Closing
-      cogs_label: COGS (Cost of Goods Sold)
-      preview_help: Preview the valuation report before generating it
-      preview_line: 'Preview: {sku} - {method}'
-      year_help: Fiscal year for the valuation report
-    valuation_help: Stock valuation management (PMP, FIFO, LIFO)
   ledger:
     app_help: Management of accounting ledgers and VAT records
     edit:
