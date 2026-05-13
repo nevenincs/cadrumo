@@ -1,0 +1,129 @@
+"""Canonical projections from :class:`UserProfileRecord` to consumer shapes.
+
+The schema-driven user-profile backend is the canonical authority. Every
+existing consumer (deadlines, filing runtime, overview calendar,
+wizard, workflow adapters) reads through one of these projection
+helpers — never directly from the legacy ``ProfileRecord.values`` map
+or the legacy ``aeat.application.profile`` package.
+
+The projections compose against a *fact map* (``path -> str(value)``)
+derived from the record. The legacy ``autonomo_profile_from_mapping``
+helper accepts the same flat shape, so the deadline-engine projection
+simply pipes through it. This keeps the field-level coercion logic in
+one place while the legacy mapping callers migrate to the canonical
+boundary.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+
+from ...domain.deadlines import AutonomoProfile, autonomo_profile_from_mapping
+from ...domain.deadlines._models import IVARegime
+from ...domain.user_profile import (
+    DEFAULT_USER_PROFILE_SCHEMA_PATH,
+    ProfileSchemaDefinition,
+    UserProfileFact,
+    UserProfileRecord,
+    UserProfileSnapshot,
+    load_user_profile_schema,
+)
+
+_DEFAULT_SCHEMA: ProfileSchemaDefinition | None = None
+
+
+def _default_schema() -> ProfileSchemaDefinition:
+    global _DEFAULT_SCHEMA
+    if _DEFAULT_SCHEMA is None:
+        _DEFAULT_SCHEMA = load_user_profile_schema(DEFAULT_USER_PROFILE_SCHEMA_PATH)
+    return _DEFAULT_SCHEMA
+
+
+def _selector_index(schema: ProfileSchemaDefinition) -> dict[str, tuple[str, ...]]:
+    """Map ``section.field`` paths to their declared ``model_selectors`` tuple."""
+
+    index: dict[str, tuple[str, ...]] = {}
+    for section in schema.sections:
+        for field in section.fields:
+            index[f"{section.key}.{field.key}"] = tuple(field.model_selectors)
+    return index
+
+
+def facts_to_values(
+    facts: tuple[UserProfileFact, ...],
+    *,
+    schema: ProfileSchemaDefinition | None = None,
+) -> dict[str, str]:
+    """Project a tuple of profile facts into the flat ``selector -> str(value)`` map.
+
+    The flat shape is the legacy mapping shape consumed by
+    :func:`autonomo_profile_from_mapping` and similar coercers. Each
+    schema field's ``model_selectors`` are honored: a fact at
+    ``identity.tax_id`` whose schema declares
+    ``model_selectors = ["tax.id"]`` is emitted under the key
+    ``tax.id``. Facts whose path is not in the schema fall through
+    untranslated.
+    """
+
+    selector_index = _selector_index(schema or _default_schema())
+    values: dict[str, str] = {}
+    for fact in facts:
+        if fact.value is None:
+            continue
+        selectors = selector_index.get(fact.path, (fact.path,))
+        rendered = str(fact.value)
+        for selector in selectors or (fact.path,):
+            values[selector] = rendered
+    return values
+
+
+def record_to_values(
+    record: UserProfileRecord,
+    *,
+    schema: ProfileSchemaDefinition | None = None,
+) -> dict[str, str]:
+    """Project a live profile record into the legacy flat values mapping."""
+
+    return facts_to_values(record.facts, schema=schema)
+
+
+def snapshot_to_values(
+    snapshot: UserProfileSnapshot,
+    *,
+    schema: ProfileSchemaDefinition | None = None,
+) -> dict[str, str]:
+    """Project an immutable filing snapshot into the legacy flat values mapping."""
+
+    return facts_to_values(snapshot.facts, schema=schema)
+
+
+def projection_for_autonomo(
+    facts: Mapping[str, object] | UserProfileRecord | UserProfileSnapshot,
+    *,
+    tax_id_default: str = "00000000T",
+    iva_regime_default: IVARegime = IVARegime.GENERAL,
+    schema: ProfileSchemaDefinition | None = None,
+) -> AutonomoProfile:
+    """Return the deadline-engine :class:`AutonomoProfile` for the supplied profile facts.
+
+    Accepts either a live record, an immutable snapshot, or a
+    pre-projected flat mapping. The single coercion path goes through
+    :func:`autonomo_profile_from_mapping` so canonical-token semantics
+    stay in lockstep with the wizard descriptor.
+    """
+
+    if isinstance(facts, UserProfileRecord):
+        mapping = record_to_values(facts, schema=schema)
+    elif isinstance(facts, UserProfileSnapshot):
+        mapping = snapshot_to_values(facts, schema=schema)
+    else:
+        mapping = {str(key): str(value) for key, value in facts.items() if value is not None}
+    return autonomo_profile_from_mapping(mapping, tax_id_default=tax_id_default, iva_regime_default=iva_regime_default)
+
+
+__all__ = [
+    "facts_to_values",
+    "projection_for_autonomo",
+    "record_to_values",
+    "snapshot_to_values",
+]
