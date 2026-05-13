@@ -43,15 +43,15 @@ class TestNif:
         assert validate_identity("12345678-Z") is IdentityDocument.NIF
 
     def test_wrong_check_letter_rejected(self) -> None:
-        with pytest.raises(IdentityError):
+        with pytest.raises(IdentityError, match=r"NIF check letter mismatch"):
             validate_identity("12345678A")
 
     def test_too_short_rejected(self) -> None:
-        with pytest.raises(IdentityError):
+        with pytest.raises(IdentityError, match=r"not a valid NIF shape"):
             validate_identity("1234567Z")
 
     def test_too_long_rejected(self) -> None:
-        with pytest.raises(IdentityError):
+        with pytest.raises(IdentityError, match=r"not a valid NIF shape"):
             validate_identity("123456789Z")
 
 
@@ -77,12 +77,16 @@ class TestNie:
         assert validate_identity("x1234567L") is IdentityDocument.NIE
 
     def test_wrong_check_letter_rejected(self) -> None:
-        with pytest.raises(IdentityError):
+        with pytest.raises(IdentityError, match=r"NIE check letter mismatch"):
             validate_identity("X1234567Z")
 
     def test_invalid_prefix_rejected(self) -> None:
-        with pytest.raises(IdentityError):
-            validate_identity("W1234567L")  # W is a CIF kind, not a NIE prefix
+        # W is a CIF kind-letter (letter-only family), not a NIE prefix.
+        # The validator routes W to CIF; the CIF regex constrains the
+        # control character to ``[0-9A-J]`` and 'L' is outside that set,
+        # so the shape regex fails before any checksum runs.
+        with pytest.raises(IdentityError, match=r"not a valid CIF shape"):
+            validate_identity("W1234567L")
 
 
 class TestCif:
@@ -108,14 +112,14 @@ class TestCif:
         assert validate_identity("C1234567D") is IdentityDocument.CIF
 
     def test_wrong_check_rejected(self) -> None:
-        with pytest.raises(IdentityError):
+        with pytest.raises(IdentityError, match=r"CIF check digit mismatch"):
             validate_identity("A12345670")
 
     def test_invalid_kind_letter_rejected(self) -> None:
         # I, K, O, T, X, Y, Z are not valid CIF kind letters.
-        # I should be misinterpreted as a NIF first because of leading-letter logic;
-        # NIF requires 8 digits. So this still raises.
-        with pytest.raises(IdentityError):
+        # I is not in _CIF_KIND_LETTERS, so the validator falls through
+        # to NIF dispatch — NIF requires 8 digits, so the regex fails.
+        with pytest.raises(IdentityError, match=r"not a valid NIF shape"):
             validate_identity("I12345674")
 
 
@@ -123,21 +127,25 @@ class TestRejection:
     """Non-strings, empty values, and arbitrary garbage are rejected."""
 
     def test_empty_string_rejected(self) -> None:
-        with pytest.raises(IdentityError):
+        with pytest.raises(IdentityError, match=r"identity document is empty"):
             validate_identity("")
 
     def test_whitespace_only_rejected(self) -> None:
-        with pytest.raises(IdentityError):
+        with pytest.raises(IdentityError, match=r"identity document is empty"):
             validate_identity("   ")
 
     def test_non_string_rejected(self) -> None:
         from typing import cast
 
-        with pytest.raises(IdentityError):
+        with pytest.raises(IdentityError, match=r"validate_identity expects str"):
             validate_identity(cast(str, 12345))
 
     def test_arbitrary_garbage_rejected(self) -> None:
-        with pytest.raises(IdentityError):
+        # "not-an-identity-doc" upper-cases to "NOTANIDENTITYDOC"; leading
+        # 'N' is in _CIF_KIND_LETTERS so the validator dispatches to CIF,
+        # whose regex expects exactly [kind-letter][7 digits][char] — the
+        # garbage shape fails the CIF regex.
+        with pytest.raises(IdentityError, match=r"not a valid CIF shape"):
             validate_identity("not-an-identity-doc")
 
 
