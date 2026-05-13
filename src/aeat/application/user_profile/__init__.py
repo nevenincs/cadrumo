@@ -253,6 +253,20 @@ class ProfileImportResult(BaseModel):
     issues: tuple[ProfileValidationIssue, ...] = ()
 
 
+def __getattr__(name: str):
+    """Lazy-import the service modules to keep the contract surface light."""
+
+    if name == "ProfilePreflightService":
+        from ._preflight import ProfilePreflightService
+
+        return ProfilePreflightService
+    if name == "ProfileValidationService":
+        from ._validation import ProfileValidationService
+
+        return ProfileValidationService
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
 __all__ = [
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
@@ -264,11 +278,13 @@ __all__ = [
     "ProfileListing",
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
+    "ProfilePreflightService",
     "ProfileSnapshot",
     "ProfileSnapshotRequest",
     "ProfileStaleCheckReport",
     "ProfileValidationIssue",
     "ProfileValidationReport",
+    "ProfileValidationService",
     "ProfileValidationSeverity",
     "RegisterProfileCommand",
     "RemoveProfileCommand",
