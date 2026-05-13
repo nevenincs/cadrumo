@@ -28,7 +28,7 @@ from ...domain.deadlines import AutonomoProfile, autonomo_profile_from_mapping
 from ...domain.filing import FilingDraft, FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.profile import ProfileKey
-from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
+from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogue, TransactionCatalogueRepository
 from ._i18n import tr
 
 # ---------------------------------------------------------------------
@@ -153,7 +153,7 @@ def _active_bucket_id_or_bad(state: WorkflowState) -> str:
 def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
     try:
         return active_transaction_catalogue_repository(state)
-    except NoActiveProfileError as exc:
+    except LedgerNoActiveBucketError as exc:
         raise _bad(tr("cli.common.errors.no_active_profile")) from exc
 
 

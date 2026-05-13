@@ -10,16 +10,17 @@ import typer
 
 from ...application.live import capture_filed_data, capture_source_filed_data, list_filed_data
 from ._common import _emit
+from ._i18n import tr
 
 app = typer.Typer(
     name="live",
-    help="Read-only AEAT live observation commands.",
+    help=tr("cli.app.live.app_help"),
     no_args_is_help=True,
     add_completion=False,
 )
 filed_app = typer.Typer(
     name="filed",
-    help="Read-only filed declaration observations.",
+    help=tr("cli.app.live.filed_app_help"),
     no_args_is_help=True,
     add_completion=False,
 )
@@ -30,12 +31,12 @@ def _metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
 
 
-@filed_app.command("list", help="List filed declaration rows without downloading artefacts.")
+@filed_app.command("list", help=tr("cli.app.live.filed.list_help"))
 def filed_list_cmd(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Option("--modelo", help="Modelo code.")],
-    year_from: Annotated[int, typer.Option("--from-year", min=2000, max=2099, help="First filing year.")],
-    year_to: Annotated[int, typer.Option("--to-year", min=2000, max=2099, help="Last filing year.")],
+    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help"))],
+    year_from: Annotated[int, typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help"))],
+    year_to: Annotated[int, typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help"))],
 ) -> None:
     """List filed-declaration rows without downloading justificantes or submitted files."""
 
@@ -69,11 +70,11 @@ def filed_list_cmd(
     _emit(ctx, report, lines)
 
 
-@filed_app.command("capture", help="Capture filed declaration data from AEAT.")
+@filed_app.command("capture", help=tr("cli.app.live.filed.capture_help"))
 def filed_capture_cmd(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Option("--modelo", help="Modelo code.")],
-    year: Annotated[int, typer.Option("--year", min=2000, max=2099, help="Filing year.")],
+    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help"))],
+    year: Annotated[int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help"))],
     output_root: Annotated[
         Path,
         typer.Option(
@@ -81,12 +82,12 @@ def filed_capture_cmd(
             file_okay=False,
             dir_okay=True,
             writable=True,
-            help="Directory for captured filed-declaration observations.",
+            help=tr("cli.app.live.output_root_help"),
         ),
     ] = Path("var/aeat/filed-declarations"),
-    period: Annotated[str | None, typer.Option("--period", help="Filing period.")] = None,
-    expediente_id: Annotated[str | None, typer.Option("--expediente", help="Expediente id.")] = None,
-    limit: Annotated[int | None, typer.Option("--limit", min=1, help="Maximum rows to capture.")] = None,
+    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.live.period_help"))] = None,
+    expediente_id: Annotated[str | None, typer.Option("--expediente", help=tr("cli.app.live.expediente_help"))] = None,
+    limit: Annotated[int | None, typer.Option("--limit", min=1, help=tr("cli.app.live.limit_help"))] = None,
 ) -> None:
     """Capture filed-declaration data from the authenticated AEAT register."""
 
@@ -112,12 +113,12 @@ def filed_capture_cmd(
     )
 
 
-@filed_app.command("capture-sources", help="Capture filed observations required by a target filing.")
+@filed_app.command("capture-sources", help=tr("cli.app.live.filed.capture_sources_help"))
 def filed_capture_sources_cmd(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Option("--modelo", help="Modelo code.")],
-    year: Annotated[int, typer.Option("--year", min=2000, max=2099, help="Filing year.")],
-    period: Annotated[str, typer.Option("--period", help="Filing period.")],
+    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help"))],
+    year: Annotated[int, typer.Option("--year", min=2000, max=2099, help=tr("cli.app.live.year_help"))],
+    period: Annotated[str, typer.Option("--period", help=tr("cli.app.live.period_help"))],
     output_root: Annotated[
         Path,
         typer.Option(
@@ -125,7 +126,7 @@ def filed_capture_sources_cmd(
             file_okay=False,
             dir_okay=True,
             writable=True,
-            help="Directory for captured filed-declaration observations.",
+            help=tr("cli.app.live.output_root_help"),
         ),
     ] = Path("var/aeat/filed-declarations"),
     registry_root: Annotated[
@@ -136,7 +137,7 @@ def filed_capture_sources_cmd(
             file_okay=False,
             dir_okay=True,
             readable=True,
-            help="Registry root.",
+            help=tr("cli.app.live.registry_root_help"),
         ),
     ] = Path("registry/aeat"),
     source_root: Annotated[
@@ -147,7 +148,7 @@ def filed_capture_sources_cmd(
             file_okay=False,
             dir_okay=True,
             readable=True,
-            help="Project source root.",
+            help=tr("cli.app.live.source_root_help"),
         ),
     ] = Path("."),
 ) -> None:

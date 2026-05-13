@@ -121,7 +121,7 @@ passes the explicit `--with-live` option.
 
 `overview` summarizes after bucket snapshots.
 
-`config doctor` diagnoses readiness only.
+`config repair` diagnoses readiness only.
 
 Persisted captures and snapshots emit:
 
@@ -145,7 +145,7 @@ overview, or config diagnostics.
 
 Registry should describe and validate local schemas. Modelo should consume
 captured observations inside calculate/verify/file workflows. Overview should
-summarize snapshots. Config doctor should diagnose readiness. None of those
+summarize snapshots. Config repair should diagnose readiness. None of those
 surfaces should become the general AEAT session traversal entry point.
 
 ## Consequences
@@ -164,6 +164,6 @@ Rejected alternatives:
 
 - Put everything under `registry`.
 - Distribute live reads into `modelo`.
-- Put live reads under `config doctor`.
+- Put live reads under `config repair`.
 - Source notifications under `overview`.
 - Add root-level `aeat live`.

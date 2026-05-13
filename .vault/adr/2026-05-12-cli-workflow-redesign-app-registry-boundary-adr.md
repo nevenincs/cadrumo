@@ -39,7 +39,7 @@ Apex §4.5 assigns registry authority to local registry inspection and
 verification. Static modelo introspection belongs under `aeat app modelo`.
 
 The app-live-shape ADR accepts filed declaration workflows under
-`aeat app live filed`. Config doctor is limited to readiness, connectivity, and
+`aeat app live filed`. Config repair is limited to readiness, connectivity, and
 integrity diagnosis.
 
 ## Considerations
@@ -59,7 +59,7 @@ accepted `app live` boundary.
 
 - No compatibility aliases or shims are allowed.
 - No root `aeat live` is introduced.
-- `config doctor` receives no filed-data, NIF-IVA/TGVI operational read, or
+- `config repair` receives no filed-data, NIF-IVA/TGVI operational read, or
   registry parity workflow.
 - All retained and moved commands use shared `--format json|text` and `_emit`
   typed reports.
@@ -137,7 +137,7 @@ filed grammar is present.
 Rejected alternatives:
 
 - Keep filed-data reads under `app registry`.
-- Put filed-data reads under `config doctor`.
+- Put filed-data reads under `config repair`.
 - Add root `aeat live`.
 - Keep compatibility aliases from old registry filed-data verbs.
 - Preserve legacy `--json` on redesigned registry/live commands.

@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from aeat import __version__
 
@@ -61,7 +61,14 @@ class CliVersionReport(BaseModel):
 
 
 class DiagnosticCheck(BaseModel):
-    """One concrete config doctor check."""
+    """One concrete config doctor check.
+
+    A failing or warning row MUST carry exactly one of ``next_action`` (an
+    exact ``aeat ...`` command string the operator can run) or ``dead_end``
+    (a short explanation of why no automated route exists). A row that
+    supplies neither, or both, is a :class:`pydantic.ValidationError` at
+    construction time. ``ok`` rows MUST carry neither.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -70,6 +77,28 @@ class DiagnosticCheck(BaseModel):
     summary: str
     detail: str | None = None
     next_action: str | None = None
+    dead_end: str | None = None
+
+    @model_validator(mode="after")
+    def _enforce_actionable_contract(self) -> "DiagnosticCheck":
+        next_action = self.next_action if self.next_action else None
+        dead_end = self.dead_end if self.dead_end else None
+        if next_action is not None and dead_end is not None:
+            raise ValueError(
+                "DiagnosticCheck may set at most one of `next_action` or `dead_end`, not both"
+            )
+        if self.status in {"fail", "warn"}:
+            if next_action is None and dead_end is None:
+                raise ValueError(
+                    f"DiagnosticCheck(status={self.status!r}) must populate one of "
+                    "`next_action` or `dead_end`; silent failing rows are forbidden"
+                )
+        else:  # status == "ok"
+            if next_action is not None or dead_end is not None:
+                raise ValueError(
+                    "DiagnosticCheck(status='ok') must not carry `next_action` or `dead_end`"
+                )
+        return self
 
 
 class SecureObjectIntegrityReport(BaseModel):
@@ -147,6 +176,11 @@ def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDocto
                 else "registry unavailable"
             ),
             detail=registry.error,
+            dead_end=(
+                None
+                if registry.available
+                else "registry is bundled with aeat; reinstall the package to recover."
+            ),
         ),
     ]
 
@@ -164,6 +198,7 @@ def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDocto
                 status="fail",
                 summary="state backend unreadable",
                 detail=f"{type(exc).__name__}: {exc}",
+                next_action="aeat config repair reset-state --yes",
             )
         )
 
@@ -265,6 +300,8 @@ def render_config_doctor_text(report: ConfigDoctorReport) -> str:
             lines.append(f"detail\t{check.detail}")
         if check.next_action:
             lines.append(f"next\t{check.next_action}")
+        if check.dead_end:
+            lines.append(f"note\t{check.dead_end}")
     return "\n".join(lines) + "\n"
 
 
@@ -342,7 +379,7 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
             f"{report.readable_total} row(s) decryptable"
         ),
         detail=affected,
-        next_action="aeat config doctor quarantine --yes",
+        next_action="aeat config repair quarantine --yes",
     )
 
 
@@ -352,14 +389,14 @@ def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
             name="profile.active",
             status="warn",
             summary="no active profile",
-            next_action="aeat config init --profile NAME --tax-id NIF",
+            next_action="aeat config init --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
     if not report.profile_ready:
         return DiagnosticCheck(
             name="profile.required_keys",
             status="warn",
             summary=f"missing required keys: {', '.join(report.missing_required)}",
-            next_action=report.next_action,
+            next_action="aeat config init --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
     return DiagnosticCheck(
         name="profile.required_keys",
@@ -374,14 +411,14 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
             name="auth.provider",
             status="warn",
             summary="no authentication provider configured",
-            next_action="aeat config auth configure --provider certificate --file PATH",
+            next_action="aeat config auth setup",
         )
     if not report.login_ready:
         return DiagnosticCheck(
             name="auth.session",
             status="warn",
             summary=f"{report.auth_provider} configured but no active session",
-            next_action="aeat config auth test --provider certificate",
+            next_action="aeat config auth setup",
         )
     return DiagnosticCheck(name="auth.session", status="ok", summary=f"{report.auth_provider} session ready")
 
@@ -416,8 +453,8 @@ def secure_object_unreadable_total() -> int:
     Lightweight wrapper over :func:`_probe_secure_objects_integrity` for
     consumers (notably ``aeat app overview status``) that want to surface
     a concise "N rows unreadable" pointer towards
-    ``aeat config doctor`` without rendering the per-namespace breakdown
-    themselves. The full breakdown remains the authority of doctor.
+    ``aeat config repair`` without rendering the per-namespace breakdown
+    themselves. The full breakdown remains the authority of repair.
     """
     return _probe_secure_objects_integrity().unreadable_total
 

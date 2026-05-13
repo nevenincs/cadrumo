@@ -43,6 +43,23 @@ categories:
     display_label_851219: Display label 851219
 cli:
   app:
+    live:
+      app_help: Read-only AEAT live observation commands
+      expediente_help: AEAT expediente identifier
+      filed:
+        capture_help: Capture filed declaration data from AEAT
+        capture_sources_help: Capture filed observations required by a target filing
+        list_help: List filed declaration rows without downloading artefacts
+      filed_app_help: Read-only filed declaration observations
+      from_year_help: First filing year
+      limit_help: Maximum rows to capture
+      modelo_help: Modelo code
+      output_root_help: Directory for captured filed-declaration observations
+      period_help: Filing period
+      registry_root_help: Registry root
+      source_root_help: Project source root
+      to_year_help: Last filing year
+      year_help: Filing year
     modelo:
       app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
       bindings:
@@ -52,9 +69,10 @@ cli:
           period
         missing_help: Filter to bindings without a resolved value (require bucket
           / ledger / profile data)
+        missing_required_options: 'Missing required options: %{options}'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
-        period_help: Fiscal period to scope the bindings (e.g. Q1, 2026-01)
+        period_help: Fiscal period to scope the bindings (e.g. 2026Q1, 2026-01)
         preview_help: Preview bindings with temporary overrides without mutating state
         year_help: Tax year of the modelo (e.g. 2026)
       casillas:
@@ -139,6 +157,8 @@ cli:
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
+      no_active_profile: No active profile. Run `aeat config init` before using profile-scoped
+        data commands.
       period_empty: Tax period cannot be empty
       period_unrecognised: Unrecognized period
   config:
@@ -163,17 +183,6 @@ cli:
       event_type_help: Filter the history to one or more event types (repeatable)
       help: Inspect bucket-scoped storage and event history
       history_help: Show the append-only event history for one bucket
-    doctor:
-      connectivity_help: Check browser and AEAT Sede connectivity
-      connectivity_target_help: Connectivity target to probe
-      help: Diagnose local configuration, registry, profile, auth, and logs
-      logs_help: Show the log file path and recent lines
-      logs_lines_help: Number of recent log lines to show
-      quarantine_help: Move undecryptable rows into a quarantine table (destructive;
-        requires --yes)
-      quarantine_requires_yes: This operation is destructive. Re-run with --yes to
-        confirm.
-      quarantine_yes_help: Explicitly confirm the quarantine operation
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config init --tax-id <NIF>'
@@ -187,6 +196,25 @@ cli:
       help: List every configuration key with its current value
     profile:
       help: Manage active profile configuration values
+    repair:
+      connectivity_help: Check browser and AEAT Sede connectivity
+      connectivity_target_help: Connectivity target to probe
+      help: Diagnose and repair local configuration, registry, profile, auth,
+        and logs
+      logs_help: Show the log file path and recent lines
+      logs_lines_help: Number of recent log lines to show
+      quarantine_help: Move undecryptable rows into a quarantine table (destructive;
+        requires --yes)
+      quarantine_requires_yes: This operation is destructive. Re-run with --yes to
+        confirm.
+      quarantine_yes_help: Explicitly confirm the quarantine operation
+      reset_state_help: Drop the unreadable workflow-state envelope (destructive;
+        requires --yes)
+      reset_state_requires_yes: This operation is destructive. Re-run with --yes
+        to confirm or pass --dry-run to inspect the fingerprint.
+      reset_state_yes_help: Explicitly confirm the workflow-state reset
+      reset_state_dry_run_help: Report the envelope fingerprint without deleting
+        the row
     reset:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
@@ -206,15 +234,16 @@ cli:
       profile_name_help: Profile name to write the answers into
       quiet_help: Run the flow non-interactively using only the supplied flag values
       success:
-        next_step: 'Next step: run `aeat app overview` to review your next obligation.'
+        next_step: 'Next step: run `aeat app overview status` to review your workspace.'
         saved: Profile '%{profile_name}' saved.
     status:
       empty_profile: No profile configured. Run `aeat config init` to get started.
       help: Show the readiness of the current configuration profile
-      next_step: 'Next step: `aeat app overview`'
+      next_step: 'Next step: `aeat app overview status`'
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
+    workflow_help: Show config workflow help
   ledger:
     app_help: Management of accounting ledgers and VAT records
     edit:
@@ -271,6 +300,9 @@ cli:
       id_help: Identifier of the specific entry to review
       no_rows: No ledger entries pending review
       verbose_help: Show detailed information during review
+  locales:
+    app_help: Audit and scaffold locale catalogues
+    scaffold_check_help: Report drift without writing locale files
   overview:
     allow_incomplete_help: Allow the calendar to be computed under defaults when regime
       keys are unset. Without this flag the calendar is refused when warnings exist.
@@ -290,7 +322,7 @@ cli:
       drafts_present: '%{count} saved declaration draft(s) exist in this local storage.
         A fresh empty workspace normally has 0, so this profile/database already contains
         local draft state.'
-      integrity_next: Run `aeat config doctor` for detail. Do not quarantine rows
+      integrity_next: Run `aeat config repair` for detail. Do not quarantine rows
         unless you intentionally want to archive unreadable old local data.
       invoices_empty: No business-operation records have been imported yet.
       invoices_present: '%{count} business-operation record(s) are available for review.'
@@ -315,6 +347,9 @@ cli:
     verbose_help: Show details and next action when available
   registry:
     app_help: Tax models registry management
+    audit_oracles_environment_help: Live parity catalogue environment to audit against
+      (production, test_environment, or both)
+    audit_oracles_help: Surface live-parity oracle binding mismatches at startup
     casilla_help: Casilla id to compare; repeat to override the default computed casillas
     citations:
       app_help: Inspect the legal-norm corpus (Ley 37/1992, Ley 35/2006, ...)
@@ -447,7 +482,7 @@ cli:
       headline: AEAT Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
         --help`.'
-      quick_start_doctor: '  5. `aeat config doctor` - diagnose configuration, storage,
+      quick_start_doctor: '  5. `aeat config repair` - diagnose configuration, storage,
         and local health.'
       quick_start_heading: Quick start
       quick_start_import: '  3. `aeat app ledger import <bank-statement.csv> --provider
@@ -473,6 +508,8 @@ cli:
       welcome_profile: Welcome back. Active profile is `%{profile}`.
     language_help: Output language for this command (overrides the active profile)
     quiet_help: Show only errors on stderr
+    unavailable_app_help: App commands are unavailable because an optional dependency
+      is missing
     verbose_help: Show internal informational logs on stderr
     version_help: Show package version (add --detail for the full registry summary)
   topic:
@@ -494,25 +531,6 @@ profile:
     description: profile.keys.description
     tax:
       id: Tax identifier (NIF/NIE/CIF)
-review:
-  adapters:
-    t_135562: internal transfer
-    t_142007: business
-    t_145612: Official validation result
-    t_167733: overdue
-    t_189155: reason
-    t_298389: payment pending
-    t_352338: failed validation
-    t_352928: partially paid
-    t_551826: unmatched
-    t_607122: skipped by rule
-    t_619063: mixed
-    t_629803: outgoing
-    t_754183: unprocessed
-    t_787894: approval stale — re-review required (status=APPROVAL_STALE)
-    t_791512: processed unclassified
-    t_870243: personal
-    t_968325: incoming
 topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
@@ -613,11 +631,10 @@ wizard:
     select_without_choices: Question %{prompt_key} declares no select options.
     unsupported_console: "The guided setup could not open an interactive prompt in\
       \ this run.\nNothing has been saved yet.\n\nTry the guided setup again from\
-      \ an interactive terminal session:\n  aeat config init\n\nOr start with the\
-      \ two required values:\n  aeat config init --quiet --tax-id 12345678Z --activity\
-      \ \"software development\"\n\nActivity can be a plain description of your work\
-      \ or the IAE heading if you know it.\nRun `aeat config init --help` to see every\
-      \ setup field."
+      \ an interactive terminal session:\n  aeat config init\n\nIf this profile state\
+      \ may be stale or corrupt, inspect it first:\n  aeat config repair\n\nTo discard\
+      \ only local profile state and start over:\n  aeat config reset --scope profile\
+      \ --yes"
   other:
     description: wizard.other.description
     section:

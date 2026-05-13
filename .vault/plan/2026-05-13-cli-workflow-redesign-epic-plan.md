@@ -25,6 +25,7 @@ related:
   - '[[2026-04-21-auth-cli-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-config-doctor-shape-adr]]'
+  - '[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-profile-output-language-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr]]'
@@ -1097,15 +1098,15 @@ This Phase delivers thin cli exposure for authentication configuration surface a
 - [ ] `W17.P085.S0509` - Handle authentication configuration surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
 - [ ] `W17.P085.S0510` - Validate help text for authentication configuration surface uses accepted vocabulary only; `tests/entrypoints/cli`.
 
-## Wave `W18` - config doctor shape
+## Wave `W18` - config repair shape
 
-This Wave implements the `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr` decision for diagnostic and integrity surface. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
+This Wave implements the `2026-05-13-cli-workflow-redesign-config-repair-shape-adr` decision (which supersedes the earlier `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`) for the diagnostic, integrity, and maintenance surface. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
 
 ### Phase `W18.P086` - backend implementation
 
-This Phase delivers backend implementation for diagnostic and integrity surface as required by `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`.
+This Phase delivers backend implementation for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
-- [ ] `W18.P086.S0511` - Map the `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr` decision into non-CLI service ownership for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [ ] `W18.P086.S0511` - Map the `2026-05-13-cli-workflow-redesign-config-repair-shape-adr` decision into non-CLI service ownership for diagnostic, integrity, and maintenance surface; `src/aeat/application/diagnostics`.
 - [ ] `W18.P086.S0512` - Implement Pydantic command and result contracts for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
 - [ ] `W18.P086.S0513` - Wire application or domain services required by diagnostic and integrity surface; `src/aeat/application/diagnostics`.
 - [ ] `W18.P086.S0514` - Connect persistence, bucket events, registry data, or provider adapters required by diagnostic and integrity surface; `src/aeat/application/diagnostics`.
@@ -1114,7 +1115,7 @@ This Phase delivers backend implementation for diagnostic and integrity surface 
 
 ### Phase `W18.P087` - shadow duplicate removal
 
-This Phase delivers shadow duplicate removal for diagnostic and integrity surface as required by `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`.
+This Phase delivers shadow duplicate removal for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
 - [ ] `W18.P087.S0517` - Audit duplicate implementations that overlap diagnostic and integrity surface; `src/aeat/application/diagnostics`.
 - [ ] `W18.P087.S0518` - Delete duplicate backend branches that compete with diagnostic and integrity surface; `src/aeat/application/diagnostics`.
@@ -1125,7 +1126,7 @@ This Phase delivers shadow duplicate removal for diagnostic and integrity surfac
 
 ### Phase `W18.P088` - de-shim and de-stub cleanup
 
-This Phase delivers de-shim and de-stub cleanup for diagnostic and integrity surface as required by `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`.
+This Phase delivers de-shim and de-stub cleanup for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
 - [ ] `W18.P088.S0523` - Delete compatibility shims that preserve rejected behavior for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
 - [ ] `W18.P088.S0524` - Delete placeholder stubs that claim support for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
@@ -1136,7 +1137,7 @@ This Phase delivers de-shim and de-stub cleanup for diagnostic and integrity sur
 
 ### Phase `W18.P089` - real behavior verification
 
-This Phase delivers real behavior verification for diagnostic and integrity surface as required by `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`.
+This Phase delivers real behavior verification for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
 - [ ] `W18.P089.S0529` - Add service contract tests for diagnostic and integrity surface; `tests/entrypoints/cli`.
 - [ ] `W18.P089.S0530` - Add persistence or registry integration tests for diagnostic and integrity surface; `tests/entrypoints/cli`.
@@ -1147,7 +1148,7 @@ This Phase delivers real behavior verification for diagnostic and integrity surf
 
 ### Phase `W18.P090` - thin cli exposure
 
-This Phase delivers thin cli exposure for diagnostic and integrity surface as required by `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`.
+This Phase delivers thin cli exposure for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
 - [ ] `W18.P090.S0535` - Expose accepted command handlers for diagnostic and integrity surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
 - [ ] `W18.P090.S0536` - Keep argument parsing for diagnostic and integrity surface separate from backend behavior; `src/aeat/entrypoints/cli`.

@@ -154,7 +154,7 @@ def _root(
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
     failed_app = typer.Typer(
         name=name,
-        help=f"Unavailable: missing dependency {_missing_dependency_name(error)!r}",
+        help=tr("cli.root.unavailable_app_help"),
         no_args_is_help=False,
         invoke_without_command=True,
     )
@@ -173,7 +173,7 @@ def _emit_startup_import_error(error: ModuleNotFoundError) -> None:
 
 def _startup_import_error_text(error: ModuleNotFoundError) -> str:
     dependency = _missing_dependency_name(error)
-    return f"Cannot start AEAT command surface: missing dependency {dependency!r}.\nRun: aeat config doctor\n"
+    return f"Cannot start AEAT command surface: missing dependency {dependency!r}.\nRun: aeat config repair\n"
 
 
 def _missing_dependency_name(error: ModuleNotFoundError) -> str:

@@ -26,6 +26,7 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-doctor-shape-adr]]"
+  - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-overview-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-live-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-registry-boundary-adr]]"
@@ -234,7 +235,7 @@ records, not in compatibility aliases or support surfaces.
 - `aeat filing` → `aeat app modelo` (calculate, verify, file, amend,
   reconcile, export, import, filing-record, history). The unmounted
   `filing/__init__.py` becomes implementation harvest only.
-- `aeat browser` → `aeat config doctor connectivity` (health probe folded
+- `aeat browser` → `aeat config repair connectivity` (health probe folded
   into the diagnostics surface).
 - `aeat data` (ledgers/inventory) → `aeat app ledger inventory`. `data`
   is retired, not aliased. `app modelo` may consume inventory-derived
@@ -439,54 +440,73 @@ Append-only event history view per bucket-event-history ADR. Verbs:
 
 Event payloads are versioned. Stable rendering for stable history output.
 
-#### 3.6 `aeat config doctor` (locked by config-doctor-shape ADR)
+#### 3.6 `aeat config repair` (locked by config-repair-shape ADR, supersedes config-doctor-shape ADR)
 
-Diagnostics, integrity, connectivity, secure-object inventory, quarantine, and
-logs surface.
+Configuration health, storage integrity, secure-object inventory, persisted
+maintenance (quarantine, workflow-state reset), and recent logs surface.
+
+The namespace is named for the operator's vocabulary, not the maintenance
+taxonomy: first-time users blocked by a stuck install reach for "repair" or
+"fix", not "doctor". Diagnose and act share one root because the operator's
+mental model is unified; safety is preserved by requiring explicit `--yes`
+on the mutating subcommands.
 
 Canonical commands:
 
 ```text
-aeat config doctor [--format json|text]
+aeat config repair [--format json|text]
 
-aeat config doctor connectivity
+aeat config repair connectivity
     [--target browser|auth|sede|all]
     [--format json|text]
 
-aeat config doctor integrity
+aeat config repair integrity
     [--namespace NAMESPACE]
     [--format json|text]
 
-aeat config doctor list <namespace>
+aeat config repair list <namespace>
     [--all|--unreadable]
     [--format json|text]
 
-aeat config doctor quarantine
+aeat config repair quarantine
     [--namespace NAMESPACE]
     [--dry-run]
     --yes
     [--format json|text]
 
-aeat config doctor logs
+aeat config repair reset-state
+    [--dry-run]
+    --yes
+    [--format json|text]
+
+aeat config repair logs
     [--lines N]
     [--format json|text]
 ```
 
-The `connectivity` command absorbs the historical browser health probe.
-The `integrity` and `list` commands expose AES-256-GCM secure-object
-tag-verification and namespace inventory. `quarantine` is the only accepted
-persisted mutation in the current diagnostics design; it is bucket-scoped and
-emits `secure_object.quarantined`.
+`connectivity` absorbs the historical browser health probe.
+`integrity` and `list` expose AES-256-GCM secure-object tag-verification
+and namespace inventory. `quarantine` is bucket-scoped and emits
+`secure_object.quarantined`. `reset-state` drops the single unreadable
+`WorkflowState` envelope (namespace `aeat.workflow`, key `state`) and
+emits `workflow_state.reset`; it touches no other namespace.
 
-The bare `aeat config doctor` invocation (no subcommand) runs the
-`connectivity`, `integrity`, and `logs` checks as a single composite health
-report, returning a summary across all three. This is the canonical "is
-everything OK?" entry point. Subcommands run the same checks with finer
-control.
+The bare `aeat config repair` invocation (no subcommand) runs the
+composite health report — `connectivity`, `integrity`, registry load,
+secure-state load, profile and auth readiness, and recent logs — as a
+single rollup. This is the canonical "is everything OK?" entry point.
 
-Every redesigned doctor command renders through `_emit`. Legacy `--json`,
-root `aeat browser`, root `aeat doctor`, app-scoped quarantine, app-scoped
-bucket maintenance, and compatibility aliases are rejected.
+Every diagnostic row whose status is `fail` or `warn` MUST populate
+either `next_action` (a runnable `aeat …` command string) or `dead_end`
+(a short reason no automated route exists). This is a Pydantic
+discriminated-union contract on `DiagnosticCheck`, enforced by
+construction; silent failing rows are unreachable by type.
+
+Every redesigned repair command renders through `_emit`. Legacy `--json`,
+root `aeat doctor`, root `aeat repair`, root `aeat browser`, app-scoped
+quarantine, app-scoped reset-state, app-scoped bucket maintenance, and
+all compatibility aliases (including `aeat config doctor` and its
+historical subcommands) are rejected.
 
 ### 4. `aeat app` mini-app requirements
 
@@ -781,7 +801,7 @@ bucket-linked and emit:
 - `live.borrador100.snapshot_captured`
 
 `app modelo` consumes observations and snapshots but does not own live session
-traversal. `app overview` summarizes captured snapshots. `config doctor`
+traversal. `app overview` summarizes captured snapshots. `config repair`
 diagnoses live-read readiness only.
 
 #### 4.5 `aeat app registry` (locked by app-registry-boundary + domain-harvest-normatives ADRs)
@@ -816,7 +836,7 @@ and emit no bucket events. Operator-facing manual fetch is rejected.
 Implementation mandate: filed live reads move to `app live filed`; registry
 retains only local registry authority, structural verification,
 oracle/workbook/parity, and local filed-state verification.
-No compatibility aliases or shims survive. `config doctor` receives no filed
+No compatibility aliases or shims survive. `config repair` receives no filed
 list/capture, NIF-IVA/TGVI operational read, or registry parity workflow.
 
 #### 4.6 `aeat app review` (locked by app-review-queue-execution ADR)

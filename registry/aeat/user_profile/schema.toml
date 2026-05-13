@@ -271,6 +271,7 @@ effective_dated = true
 description = "IVA regime used by obligation and classification projections."
 enum_values = ["GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "EXENTO"]
 model_selectors = ["iva.regime"]
+schedule_predicates = ["iva.regime"]
 
 [[sections.fields]]
 key = "does_intracomunitario"

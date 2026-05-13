@@ -44,6 +44,7 @@ from pydantic import ValidationError
 
 from ...core.errors import (
     AeatError,
+    ErrorCategory,
     build_error_envelope,
     get_error_exit_code,
     get_registered_error_code,
@@ -86,11 +87,11 @@ class CliValidationBoundaryError(AeatError):
         """
 
         super().__init__(
-            "The command input failed validation.",
+            "The command input failed validation. Run `aeat config repair` or reset the profile state.",
             context={
-                "error_type": type(error).__name__,
-                "detail": str(error),
+                "recovery": "aeat config repair",
             },
+            suggestion="aeat config repair",
         )
         self.original_exception: ValidationError = error
 
@@ -118,9 +119,9 @@ class CliUnexpectedBoundaryError(AeatError):
         super().__init__(
             "The command failed due to an unexpected internal error.",
             context={
-                "error_type": type(error).__name__,
-                "detail": str(error) or type(error).__name__,
+                "recovery": "aeat config repair",
             },
+            suggestion="aeat config repair",
         )
         self.original_exception: Exception = error
 

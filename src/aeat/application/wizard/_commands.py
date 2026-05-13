@@ -61,6 +61,170 @@ def _help_key(flow: WizardFlow, question: WizardQuestion) -> str:
     return f"wizard.{flow.id}.flags.{question.id}.help"
 
 
+_SETUP_OPTION_INFOS: dict[str, object] = {
+    "tax-id": typer.Option("--tax-id", help=tr("wizard.setup.flags.tax-id.help")),
+    "name": typer.Option("--name", help=tr("wizard.setup.flags.name.help")),
+    "surnames": typer.Option("--surnames", help=tr("wizard.setup.flags.surnames.help")),
+    "activity": typer.Option("--activity", help=tr("wizard.setup.flags.activity.help")),
+    "address-postcode": typer.Option("--address-postcode", help=tr("wizard.setup.flags.address-postcode.help")),
+    "taxation-type": typer.Option(
+        "--taxation-type",
+        click_type=click.Choice(["1", "2"]),
+        help=tr("wizard.setup.flags.taxation-type.help"),
+    ),
+    "output-language": typer.Option(
+        "--output-language",
+        click_type=click.Choice(["es", "en", "ca", "hu"]),
+        help=tr("wizard.setup.flags.output-language.help"),
+    ),
+    "taxpayer-sex": typer.Option(
+        "--taxpayer-sex",
+        click_type=click.Choice(["H", "M"]),
+        help=tr("wizard.setup.flags.taxpayer-sex.help"),
+    ),
+    "taxpayer-marital-status": typer.Option(
+        "--taxpayer-marital-status",
+        click_type=click.Choice(["1", "2", "3", "4"]),
+        help=tr("wizard.setup.flags.taxpayer-marital-status.help"),
+    ),
+    "taxpayer-birth-date": typer.Option(
+        "--taxpayer-birth-date",
+        help=tr("wizard.setup.flags.taxpayer-birth-date.help"),
+    ),
+    "taxpayer-disability-grade": typer.Option(
+        "--taxpayer-disability-grade",
+        click_type=click.Choice(["1", "2", "3", "4"]),
+        help=tr("wizard.setup.flags.taxpayer-disability-grade.help"),
+    ),
+    "taxpayer-death-date": typer.Option(
+        "--taxpayer-death-date",
+        help=tr("wizard.setup.flags.taxpayer-death-date.help"),
+    ),
+    "spouse-tax-id": typer.Option("--spouse-tax-id", help=tr("wizard.setup.flags.spouse-tax-id.help")),
+    "spouse-name": typer.Option("--spouse-name", help=tr("wizard.setup.flags.spouse-name.help")),
+    "spouse-surnames": typer.Option("--spouse-surnames", help=tr("wizard.setup.flags.spouse-surnames.help")),
+    "spouse-birth-date": typer.Option(
+        "--spouse-birth-date",
+        help=tr("wizard.setup.flags.spouse-birth-date.help"),
+    ),
+    "spouse-sex": typer.Option(
+        "--spouse-sex",
+        click_type=click.Choice(["H", "M"]),
+        help=tr("wizard.setup.flags.spouse-sex.help"),
+    ),
+    "spouse-disability-grade": typer.Option(
+        "--spouse-disability-grade",
+        click_type=click.Choice(["1", "2", "3", "4"]),
+        help=tr("wizard.setup.flags.spouse-disability-grade.help"),
+    ),
+    "spouse-non-resident-irpf": typer.Option(
+        "--spouse-non-resident-irpf/--no-spouse-non-resident-irpf",
+        help=tr("wizard.setup.flags.spouse-non-resident-irpf.help"),
+    ),
+    "spouse-eu-eea-resident": typer.Option(
+        "--spouse-eu-eea-resident/--no-spouse-eu-eea-resident",
+        help=tr("wizard.setup.flags.spouse-eu-eea-resident.help"),
+    ),
+    "spouse-eu-eea-country": typer.Option(
+        "--spouse-eu-eea-country",
+        help=tr("wizard.setup.flags.spouse-eu-eea-country.help"),
+    ),
+    "family-descendants-eu-eea-deduction": typer.Option(
+        "--family-descendants-eu-eea-deduction/--no-family-descendants-eu-eea-deduction",
+        help=tr("wizard.setup.flags.family-descendants-eu-eea-deduction.help"),
+    ),
+    "family-minor-children-in-unit": typer.Option(
+        "--family-minor-children-in-unit/--no-family-minor-children-in-unit",
+        help=tr("wizard.setup.flags.family-minor-children-in-unit.help"),
+    ),
+    "iva-regime": typer.Option(
+        "--iva-regime",
+        click_type=click.Choice(["GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "EXENTO"]),
+        help=tr("wizard.setup.flags.iva-regime.help"),
+    ),
+    "iva-roi-enrolled": typer.Option(
+        "--iva-roi-enrolled/--no-iva-roi-enrolled",
+        help=tr("wizard.setup.flags.iva-roi-enrolled.help"),
+    ),
+    "iva-oss-enrolled": typer.Option(
+        "--iva-oss-enrolled/--no-iva-oss-enrolled",
+        help=tr("wizard.setup.flags.iva-oss-enrolled.help"),
+    ),
+    "iva-intracommunity-operations-exceed-50000-eur": typer.Option(
+        "--iva-intracommunity-operations-exceed-50000-eur/--no-iva-intracommunity-operations-exceed-50000-eur",
+        help=tr("wizard.setup.flags.iva-intracommunity-operations-exceed-50000-eur.help"),
+    ),
+    "enrollment-large-company": typer.Option(
+        "--enrollment-large-company/--no-enrollment-large-company",
+        help=tr("wizard.setup.flags.enrollment-large-company.help"),
+    ),
+    "enrollment-public-administration-budget-gt-6000000": typer.Option(
+        "--enrollment-public-administration-budget-gt-6000000/--no-enrollment-public-administration-budget-gt-6000000",
+        help=tr("wizard.setup.flags.enrollment-public-administration-budget-gt-6000000.help"),
+    ),
+    "has-employees": typer.Option(
+        "--has-employees/--no-has-employees",
+        help=tr("wizard.setup.flags.has-employees.help"),
+    ),
+    "pays-professionals-with-retencion": typer.Option(
+        "--pays-professionals-with-retencion/--no-pays-professionals-with-retencion",
+        help=tr("wizard.setup.flags.pays-professionals-with-retencion.help"),
+    ),
+    "professional-income-withholding-ge-70pct": typer.Option(
+        "--professional-income-withholding-ge-70pct/--no-professional-income-withholding-ge-70pct",
+        help=tr("wizard.setup.flags.professional-income-withholding-ge-70pct.help"),
+    ),
+    "pays-rent-with-retencion": typer.Option(
+        "--pays-rent-with-retencion/--no-pays-rent-with-retencion",
+        help=tr("wizard.setup.flags.pays-rent-with-retencion.help"),
+    ),
+    "pays-capital-income-with-retencion": typer.Option(
+        "--pays-capital-income-with-retencion/--no-pays-capital-income-with-retencion",
+        help=tr("wizard.setup.flags.pays-capital-income-with-retencion.help"),
+    ),
+    "uses-objective-estimation-irpf": typer.Option(
+        "--uses-objective-estimation-irpf/--no-uses-objective-estimation-irpf",
+        help=tr("wizard.setup.flags.uses-objective-estimation-irpf.help"),
+    ),
+    "does-intracomunitario": typer.Option(
+        "--does-intracomunitario/--no-does-intracomunitario",
+        help=tr("wizard.setup.flags.does-intracomunitario.help"),
+    ),
+    "third-party-transactions-above-347-threshold": typer.Option(
+        "--third-party-transactions-above-347-threshold/--no-third-party-transactions-above-347-threshold",
+        help=tr("wizard.setup.flags.third-party-transactions-above-347-threshold.help"),
+    ),
+    "bienes-extranjero-above-threshold": typer.Option(
+        "--bienes-extranjero-above-threshold/--no-bienes-extranjero-above-threshold",
+        help=tr("wizard.setup.flags.bienes-extranjero-above-threshold.help"),
+    ),
+    "tax-residence-ccaa": typer.Option(
+        "--tax-residence-ccaa",
+        click_type=click.Choice(
+            [
+                "andalucia",
+                "aragon",
+                "asturias",
+                "baleares",
+                "canarias",
+                "cantabria",
+                "castilla_la_mancha",
+                "castilla_y_leon",
+                "cataluna",
+                "comunidad_valenciana",
+                "extremadura",
+                "galicia",
+                "la_rioja",
+                "madrid",
+                "murcia",
+            ]
+        ),
+        help=tr("wizard.setup.flags.tax-residence-ccaa.help"),
+    ),
+    "notes": typer.Option("--notes", help=tr("wizard.setup.flags.notes.help")),
+}
+
+
 def _required_flag_questions(flow: WizardFlow) -> tuple[WizardQuestion, ...]:
     """Return the questions whose value must be supplied in ``--quiet`` mode."""
 
@@ -142,61 +306,33 @@ def _python_parameter(
     """
 
     flag = _flag_name(question)
-    help_text = tr(_help_key(flow, question))
+    del section_title
+    try:
+        option = _SETUP_OPTION_INFOS[question.id]
+    except KeyError as exc:
+        raise KeyError(_help_key(flow, question)) from exc
     annotation: object
     default: object
     match question.widget:
         case WizardWidget.CONFIRM:
-            option = typer.Option(
-                f"{flag}/{_no_flag_name(question)}",
-                help=help_text,
-                rich_help_panel=section_title,
-            )
             annotation = Annotated[bool | None, option]
             default = None
         case WizardWidget.SELECT:
-            option = typer.Option(
-                flag,
-                click_type=click.Choice([choice.value for choice in question.choices]),
-                help=help_text,
-                rich_help_panel=section_title,
-            )
             annotation = Annotated[str | None, option]
             default = None
         case WizardWidget.CHECKBOX:
-            option = typer.Option(
-                flag,
-                click_type=click.Choice([choice.value for choice in question.choices]),
-                help=help_text,
-                rich_help_panel=section_title,
-            )
             annotation = Annotated[list[str], option]
             default = []
         case WizardWidget.INTEGER:
-            option = typer.Option(flag, help=help_text, rich_help_panel=section_title)
             annotation = Annotated[int | None, option]
             default = None
         case WizardWidget.PATH:
-            option = typer.Option(flag, help=help_text, rich_help_panel=section_title)
             annotation = Annotated[Path | None, option]
             default = None
         case WizardWidget.SECRET:
-            option = typer.Option(
-                flag,
-                help=help_text,
-                hide_input=True,
-                rich_help_panel=section_title,
-            )
             annotation = Annotated[str | None, option]
             default = None
         case WizardWidget.TEXT:
-            option_kwargs: dict[str, object] = {
-                "help": help_text,
-                "rich_help_panel": section_title,
-            }
-            if question.choices:
-                option_kwargs["click_type"] = click.Choice([choice.value for choice in question.choices])
-            option = typer.Option(flag, **option_kwargs)  # ty: ignore[no-matching-overload]
             annotation = Annotated[str | None, option]
             default = None
     return inspect.Parameter(

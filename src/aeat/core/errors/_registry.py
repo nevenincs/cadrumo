@@ -292,7 +292,7 @@ def _merge_error_context(
     if isinstance(error_context, Mapping):
         merged.update(error_context)
     for key, value in vars(error).items():
-        if key.startswith("_") or key in {"code", "context", "translated_message", "suggestion"}:
+        if key.startswith("_") or key in {"code", "context", "translated_message", "suggestion", "original_exception"}:
             continue
         merged[key] = value
     if context:

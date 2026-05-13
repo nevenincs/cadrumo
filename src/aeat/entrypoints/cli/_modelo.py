@@ -207,17 +207,17 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
 def bindings_list(
     ctx: typer.Context,
     modelo: Annotated[
-        str,
+        str | None,
         typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
-    ],
+    ] = None,
     year: Annotated[
-        int,
+        int | None,
         typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
-    ],
+    ] = None,
     period: Annotated[
-        str,
+        str | None,
         typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
-    ],
+    ] = None,
     missing: Annotated[
         bool,
         typer.Option("--missing", help=tr("cli.app.modelo.bindings.missing_help")),
@@ -235,6 +235,10 @@ def bindings_list(
     prior filing / live observation to resolve).
     """
 
+    _require_binding_scope(modelo=modelo, year=year, period=period)
+    assert modelo is not None
+    assert year is not None
+    assert period is not None
     scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
     report = _run_query(lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of)))
     rows = report.rows
@@ -278,17 +282,17 @@ def bindings_list(
 def bindings_preview(
     ctx: typer.Context,
     modelo: Annotated[
-        str,
+        str | None,
         typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
-    ],
+    ] = None,
     year: Annotated[
-        int,
+        int | None,
         typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
-    ],
+    ] = None,
     period: Annotated[
-        str,
+        str | None,
         typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
-    ],
+    ] = None,
     binding: Annotated[
         list[str] | None,
         typer.Option(
@@ -310,6 +314,10 @@ def bindings_preview(
     suggestion list sourced from the same catalogue.
     """
 
+    _require_binding_scope(modelo=modelo, year=year, period=period)
+    assert modelo is not None
+    assert year is not None
+    assert period is not None
     overrides = dict(_parse_binding_override(spec) for spec in (binding or ()))
     scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
     report = _run_query(lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of)))
@@ -362,6 +370,18 @@ def bindings_preview(
         for row in report.rows
     )
     _emit(ctx, payload, lines)
+
+
+def _require_binding_scope(*, modelo: str | None, year: int | None, period: str | None) -> None:
+    """Report every missing required binding-scope option at once."""
+
+    missing = [
+        option
+        for option, value in (("--modelo", modelo), ("--year", year), ("--period", period))
+        if value is None or (isinstance(value, str) and not value.strip())
+    ]
+    if missing:
+        raise typer.BadParameter(tr("cli.app.modelo.bindings.missing_required_options", options=", ".join(missing)))
 
 
 @app.command("formulas")

@@ -74,7 +74,7 @@ def test_backend_declared_command_families_are_mounted_in_cli() -> None:
 
     config_children = mounted["config"]
     app_children = mounted["app"]
-    assert {"init", "profile", "auth", "doctor"}.issubset(config_children)
+    assert {"init", "profile", "auth", "repair"}.issubset(config_children)
     assert {"overview", "ledger", "modelo", "registry", "review"}.issubset(app_children)
 
 

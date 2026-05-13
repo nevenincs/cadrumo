@@ -92,7 +92,7 @@ def _root_help() -> HelpDocument:
             ),
             _section(
                 "Diagnostics",
-                _entry("aeat config doctor", "Run local health checks"),
+                _entry("aeat config repair", "Run local health checks"),
                 _entry("aeat app overview status", "Show cross-domain readiness"),
                 _entry("aeat app live filed list", "List filed declarations through an explicit live-read command"),
                 _entry("aeat app review queue", "List items needing attention"),
@@ -131,9 +131,10 @@ def _config_help() -> HelpDocument:
             ),
             _section(
                 "Diagnostics",
-                _entry("aeat config doctor", "Run local health checks"),
-                _entry("aeat config doctor logs", "Show log file details"),
-                _entry("aeat config doctor quarantine", "Quarantine unreadable secure rows"),
+                _entry("aeat config repair", "Run local health checks"),
+                _entry("aeat config repair logs", "Show log file details"),
+                _entry("aeat config repair quarantine", "Quarantine unreadable secure rows"),
+                _entry("aeat config repair reset-state", "Reset the workflow-state envelope"),
             ),
         ),
         footer="Run aeat --help for the full overview.",

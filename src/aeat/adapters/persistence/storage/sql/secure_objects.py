@@ -47,6 +47,25 @@ class SecureObjectRecord(BaseModel):
     payload: bytes
 
 
+class SecureObjectMetadata(BaseModel):
+    """Row-level metadata for one stored secure object, decryption-free.
+
+    Surfaced by :meth:`SecureObjectRepository.peek_metadata` so callers
+    (notably the workflow-state reset recovery path) can fingerprint a
+    row's wire envelope without decrypting it. Carries the columns the
+    database stores alongside the ciphertext payload plus the raw
+    payload byte length.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    namespace: str = Field(min_length=1)
+    classification: str = Field(min_length=1)
+    schema_version: int = Field(ge=1)
+    written_at: datetime
+    byte_length: int = Field(ge=0)
+
+
 class SecureObjectUnreadable(BaseModel):
     """One stored secure object that cannot be decrypted under the current master key.
 
@@ -567,6 +586,48 @@ class SecureObjectRepository:
                 raise RepositoryError(
                     f"secure object upsert failed for {namespace}/<key>: {exc.orig}",
                 ) from exc
+
+    def peek_metadata(self, namespace: str, object_key: str) -> SecureObjectMetadata | None:
+        """Return row-level metadata for one object without decrypting it.
+
+        Returns ``None`` when no row matches. Never decrypts the payload
+        column; callers use this to fingerprint an envelope they intend
+        to discard (e.g. the workflow-state reset recovery path).
+        """
+
+        # Resolve the row id through the ORM so the HashedLookup column
+        # binding hashes ``object_key`` consistently with the rest of
+        # the repository, then read the raw row through ``text()`` so
+        # the encrypted payload column is not auto-decrypted.
+        with session_scope(self._engine) as session:
+            row_id = session.execute(
+                select(_orm.SecureObjectRow.id).where(
+                    _orm.SecureObjectRow.namespace == namespace,
+                    _orm.SecureObjectRow.object_key == object_key,
+                )
+            ).scalar_one_or_none()
+            if row_id is None:
+                return None
+            stmt = (
+                text(
+                    "SELECT classification, schema_version, written_at, payload "
+                    "FROM secure_objects WHERE id = :row_id"
+                )
+                .bindparams(bindparam("row_id", value=int(row_id)))
+                .columns(
+                    classification=_orm.SecureObjectRow.__table__.c.classification.type,
+                    schema_version=_orm.SecureObjectRow.__table__.c.schema_version.type,
+                    written_at=_orm.SecureObjectRow.__table__.c.written_at.type,
+                )
+            )
+            raw = session.execute(stmt).one()
+        return SecureObjectMetadata(
+            namespace=namespace,
+            classification=str(raw.classification),
+            schema_version=int(raw.schema_version),
+            written_at=raw.written_at,
+            byte_length=len(bytes(raw.payload)),
+        )
 
     def delete(self, namespace: str, object_key: str) -> bool:
         """Delete one object if it exists."""

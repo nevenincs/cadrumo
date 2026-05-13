@@ -4,28 +4,6 @@ from aeat.core.errors._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
-        "aeat.entrypoints.cli._errors.CliValidationBoundaryError",
-        ErrorCode(
-            code="INTEGRITY_CLI_VALIDATION",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_cli_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.entrypoints.cli._errors.CliUnexpectedBoundaryError",
-        ErrorCode(
-            code="INTERNAL_CLI_UNEXPECTED_EXCEPTION",
-            category=ErrorCategory.INTERNAL,
-            message_key="errors.internal.internal_cli_unexpected_exception",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.entrypoints.cli._errors.CliRefusedBoundaryError",
         ErrorCode(
             code="REFUSED_CLI_BOUNDARY",
@@ -44,39 +22,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             message_key="errors.refused.refused_cli_log_level_resolution",
             default_suggestion=None,
             retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.entrypoints.cli._tty.NonTtyRefusedError",
-        ErrorCode(
-            code="REFUSED_CLI_TTY_REQUIRED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_cli_tty_required",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.auth._sessions.CorruptAuthSessionError",
-        ErrorCode(
-            code="INTEGRITY_CLI_AUTH_SESSION_CORRUPT_AUTH_SESSION",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_cli_auth_session_corrupt_auth_session",
-            default_suggestion="aeat config auth --provider certificate",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.auth._sessions.AuthSessionUnavailableError",
-        ErrorCode(
-            code="AUTH_CLI_AUTH_SESSION_UNAVAILABLE",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_cli_auth_session_unavailable",
-            default_suggestion="aeat config auth --provider certificate",
-            retryable=True,
             runbook_id=None,
         ),
     ),
