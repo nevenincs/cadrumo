@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from ......core.logging import get_logger
+from .._errors import AuthConfigurationError
 from ._base import _CertBackend
 
 if TYPE_CHECKING:
@@ -43,9 +44,9 @@ class HttpxFallbackBackend(_CertBackend):
             context: Ignored.
 
         Raises:
-            RuntimeError: Always.
+            AuthConfigurationError: Always.
         """
-        raise RuntimeError(
+        raise AuthConfigurationError(
             "HTTPX_FALLBACK has no browser path; use PLAYWRIGHT_CONTEXT "
             "for interactive sessions. HTTPX_FALLBACK is verify-only."
         )

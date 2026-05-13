@@ -14,9 +14,11 @@ from re import compile
 from typing import Any
 from unicodedata import category, normalize
 
+from .....core.logging import get_logger
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ._errors import SedeFailureMode, SedeParseError
 
+_log = get_logger(__name__)
 _WHITESPACE_RE = compile(r"\s+")
 
 
@@ -58,7 +60,13 @@ async def first_visible_locator(
         locator = page.locator(selector).first
         try:
             await locator.wait_for(state="visible", timeout=probe_timeout)
-        except (PlaywrightError, PlaywrightTimeoutError):
+        except (PlaywrightError, PlaywrightTimeoutError) as probe_exc:
+            _log.debug(
+                "%s: selector %r not visible during probe (%s); trying next",
+                surface_label,
+                selector,
+                probe_exc,
+            )
             continue
         return locator
     raise SedeParseError(

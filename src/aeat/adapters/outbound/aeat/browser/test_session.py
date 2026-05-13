@@ -6,7 +6,9 @@ from typing import ClassVar, cast
 import pytest
 from playwright.async_api import BrowserContext, Page, Playwright
 
-from .....core.config import PROJECT_ROOT, Settings
+from aeat.tests import FIXTURES_DIR
+
+from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from ._site_health import SiteHealthState
 from ._site_health_probe import probe_response
@@ -16,7 +18,7 @@ from .session import BrowserError, BrowserFailureMode, BrowserSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
-_FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
+_FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 _PROBE_URL = "https://sede.agenciatributaria.gob.es/"
 
 
@@ -34,7 +36,7 @@ class DummyEvasion(EvasionStrategy):
 class RecordingContext:
     """Concrete context capturing the kwargs it was created with."""
 
-    def __init__(self, kwargs: dict) -> None:
+    def __init__(self, kwargs: dict[str, object]) -> None:
         self.kwargs = kwargs
         self.close_calls = 0
 
@@ -194,11 +196,11 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
         evasion_strategy=evasion,
     )
 
-    context = await session.create_context()
+    context = cast(RecordingContext, await session.create_context())
     assert evasion.called
-    assert context.kwargs["locale"] == "es-ES"  # ty: ignore[unresolved-attribute]
-    assert context.kwargs["timezone_id"] == "Europe/Madrid"  # ty: ignore[unresolved-attribute]
-    assert "storage_state" not in context.kwargs  # ty: ignore[unresolved-attribute]
+    assert context.kwargs["locale"] == "es-ES"
+    assert context.kwargs["timezone_id"] == "Europe/Madrid"
+    assert "storage_state" not in context.kwargs
     assert not hasattr(context, "_aeat_certificate_thumbprint")
 
 
@@ -240,8 +242,8 @@ async def test_browser_session_uses_existing_storage_state_file(tmp_path: Path) 
         evasion_strategy=DummyEvasion(),
     )
 
-    context = await session.create_context()
-    assert context.kwargs["storage_state"] == str(storage_state_path)  # ty: ignore[unresolved-attribute]
+    context = cast(RecordingContext, await session.create_context())
+    assert context.kwargs["storage_state"] == str(storage_state_path)
 
 
 @pytest.mark.asyncio
@@ -258,8 +260,8 @@ async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Pat
         evasion_strategy=DummyEvasion(),
     )
 
-    context = await session.create_context(storage_state_path=override_path)
-    assert context.kwargs["storage_state"] == str(override_path)  # ty: ignore[unresolved-attribute]
+    context = cast(RecordingContext, await session.create_context(storage_state_path=override_path))
+    assert context.kwargs["storage_state"] == str(override_path)
 
 
 @pytest.mark.asyncio
@@ -315,7 +317,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     loaded = load_certificate(
         CertificateBundle(
             path=bundle_path,
-            password_env_var="AEAT_BROWSER_TEST_PW",  # noqa: S106 — env var NAME
+            password_env_var="AEAT_BROWSER_TEST_PW",
             friendly_name=None,
             backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
         )
@@ -342,7 +344,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     assert isinstance(cc, list) and len(cc) == 1
     client_certificates = cast(list[dict[str, str]], cc)
     assert client_certificates[0]["pfxPath"] == str(bundle_path)
-    assert client_certificates[0]["passphrase"] == "pw"  # noqa: S105 — test fixture
+    assert client_certificates[0]["passphrase"] == "pw"
     marker = getattr(context, CERTIFICATE_CONTEXT_MARKER, None)
     assert marker == loaded.sha256_thumbprint
 

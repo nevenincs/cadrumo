@@ -2,7 +2,7 @@
 
 Drives :func:`aeat.adapters.outbound.aeat.browser.evaluate_response` and the
 underlying :mod:`._site_health_parsers` against real HTML strings loaded off disk
-under ``tests/fixtures/site_health/``. No test doubles — the parsers are exercised
+under ``src/aeat/tests/fixtures/site_health/``. No test doubles — the parsers are exercised
 end-to-end so a fixture-side regression surfaces here first.
 
 The module is marked ``unit`` / ``domain_outbound`` so it stays inside the
@@ -19,7 +19,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core.config import PROJECT_ROOT
+from aeat.tests import FIXTURES_DIR
+
 from . import (
     SiteHealthEvidence,
     SiteHealthState,
@@ -34,7 +35,7 @@ from ._site_health_parsers import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
-_FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
+_FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 _PROBE_URL = "https://sede.agenciatributaria.gob.es/"
 _RATE_LIMIT_DEFAULT = 300
 

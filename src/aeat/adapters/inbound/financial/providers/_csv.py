@@ -305,9 +305,12 @@ class CsvProvider(FinancialProvider):
             seen.add(normalized)
             try:
                 return source_bytes.decode(candidate), candidate
-            except LookupError:
-                continue
-            except UnicodeDecodeError:
+            except (LookupError, UnicodeDecodeError) as decode_exc:
+                _logger.debug(
+                    "csv provider: encoding candidate %r rejected (%s); trying next",
+                    candidate,
+                    decode_exc,
+                )
                 continue
         raise InvalidFinancialSourceError("CSV source could not be decoded as utf-8/cp1252/iso-8859-1")
 

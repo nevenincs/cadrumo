@@ -187,7 +187,7 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             await mostrar_btn.click(timeout=10_000)
             await page.wait_for_timeout(1_500)
         except Exception as exc:
-            print(f"explore: Mostrar opciones unreachable: {type(exc).__name__}: {exc}")  # noqa: T201
+            print(f"explore: Mostrar opciones unreachable: {type(exc).__name__}: {exc}")
 
         buscar_btn = page.locator("button").filter(has_text="Buscar casilla").first
         try:
@@ -206,7 +206,7 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             buscar_dialog_snapshot = await _snapshot_zk_layer(page, "buscar-casilla")
         except Exception as exc:
             # Soft-fail — DOM will still capture without dialog.
-            print(f"explore: buscar casilla unreachable: {type(exc).__name__}: {exc}")  # noqa: T201
+            print(f"explore: buscar casilla unreachable: {type(exc).__name__}: {exc}")
             buscar_dialog_snapshot = (
                 f"=== ZK layer snapshot: buscar-casilla ===\n(unreachable: {type(exc).__name__}: {exc})"
             )
@@ -240,7 +240,7 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             await page.wait_for_timeout(2_500)
             apartados_dialog_snapshot = await _snapshot_zk_layer(page, "apartados")
         except Exception as exc:
-            print(f"explore: apartados unreachable: {type(exc).__name__}: {exc}")  # noqa: T201
+            print(f"explore: apartados unreachable: {type(exc).__name__}: {exc}")
             apartados_dialog_snapshot = (
                 f"=== ZK layer snapshot: apartados ===\n(unreachable: {type(exc).__name__}: {exc})"
             )

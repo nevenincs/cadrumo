@@ -252,7 +252,13 @@ def parse_date_value(value: object, *, day_first: bool = True) -> date:
     for candidate in formats:
         try:
             return datetime.strptime(raw, candidate).date()
-        except ValueError:
+        except ValueError as fmt_exc:
+            LOGGER.debug(
+                "financial provider: date format %r did not match %r (%s); trying next",
+                candidate,
+                raw,
+                fmt_exc,
+            )
             continue
     raise FinancialValidationError(f"unsupported date format: {raw!r}")
 

@@ -881,7 +881,7 @@ async def test_verify_login_raises_without_context(tmp_path: Path, monkeypatch: 
             thumbprint="abc",
             subject="CN=x",
         )
-        with pytest.raises(AeatLoginAssertionError, match=r"login|session|handshake|verify"):
+        with pytest.raises(AeatLoginAssertionError, match=r"browser context|authenticate"):
             await auth.verify_login(session)
 
 
