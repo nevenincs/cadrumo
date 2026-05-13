@@ -11,7 +11,7 @@ from typing import Any, cast
 
 from pydantic import ValidationError
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...core.paths import PROJECT_ROOT
 from ._schema import VATCatalogue, VATCategory, VatCitation, VatCitationSource, VATRegulation
 from .errors import VatCatalogueError
@@ -81,10 +81,10 @@ def _parse_regulation(raw_regulation: Mapping[str, Any]) -> VATRegulation:
     return VATRegulation.model_validate(
         {
             "category": category,
-            "label": Translatable(str(raw_regulation.get("label"))),
-            "description": Translatable(str(raw_regulation.get("description"))),
-            "triggers_when": Translatable(str(raw_regulation.get("triggers_when"))),
-            "iva_treatment": Translatable(str(raw_regulation.get("iva_treatment"))),
+            "label": tr(str(raw_regulation.get("label"))),
+            "description": tr(str(raw_regulation.get("description"))),
+            "triggers_when": tr(str(raw_regulation.get("triggers_when"))),
+            "iva_treatment": tr(str(raw_regulation.get("iva_treatment"))),
             "requires_reverse_charge": raw_regulation.get("requires_reverse_charge"),
             "requires_supplier_vat_id": raw_regulation.get("requires_supplier_vat_id"),
             "boe_references": tuple(raw_regulation.get("boe_references", ())),
@@ -105,7 +105,7 @@ def _parse_citation(raw_citation: Mapping[str, Any]) -> VatCitation:
             "source": source,
             "article": raw_citation.get("article"),
             "url": raw_citation.get("url"),
-            "quoted_text": Translatable(str(raw_citation.get("quoted_text"))),
+            "quoted_text": tr(str(raw_citation.get("quoted_text"))),
             "retrieval_date": raw_citation.get("retrieval_date"),
         }
     )

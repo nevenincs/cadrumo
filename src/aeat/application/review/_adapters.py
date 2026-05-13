@@ -16,7 +16,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ...core.config import Settings
-from ...core.i18n import Translatable as tr
+from ...core.i18n import Translatable
 from ...core.logging import get_logger
 from ...domain.invoices import (
     Invoice,
@@ -52,36 +52,36 @@ _SUMMARY_MAX = 80
 _LANGS: tuple[str, ...] = ("es", "en", "ca", "hu")
 
 
-def t(message: str) -> tr:
+def t(message: str) -> Translatable:
     """Build a multilingual :class:`aeat.core.i18n.tr` message payload."""
-    return tr(message)
+    return Translatable(message)
 
 
-_DIRECTION_LABELS: dict[TransactionDirection, tr] = {
-    TransactionDirection.INCOMING: tr("review.adapters.t_968325"),
-    TransactionDirection.OUTGOING: tr("review.adapters.t_629803"),
-    TransactionDirection.INTERNAL_TRANSFER: tr("review.adapters.t_135562"),
+_DIRECTION_LABELS: dict[TransactionDirection, Translatable] = {
+    TransactionDirection.INCOMING: Translatable("review.adapters.t_968325"),
+    TransactionDirection.OUTGOING: Translatable("review.adapters.t_629803"),
+    TransactionDirection.INTERNAL_TRANSFER: Translatable("review.adapters.t_135562"),
 }
-_CLASSIFICATION_LABELS: dict[BusinessClassification, tr] = {
-    BusinessClassification.BUSINESS: tr("review.adapters.t_142007"),
-    BusinessClassification.PERSONAL: tr("review.adapters.t_870243"),
-    BusinessClassification.MIXED: tr("review.adapters.t_619063"),
-    BusinessClassification.NOT_YET_PROCESSED: tr("review.adapters.t_754183"),
-    BusinessClassification.PROCESSED_UNCLASSIFIED: tr("review.adapters.t_791512"),
-    BusinessClassification.SKIPPED_BY_RULE: tr("review.adapters.t_607122"),
-    BusinessClassification.FAILED_VALIDATION: tr("review.adapters.t_352338"),
+_CLASSIFICATION_LABELS: dict[BusinessClassification, Translatable] = {
+    BusinessClassification.BUSINESS: Translatable("review.adapters.t_142007"),
+    BusinessClassification.PERSONAL: Translatable("review.adapters.t_870243"),
+    BusinessClassification.MIXED: Translatable("review.adapters.t_619063"),
+    BusinessClassification.NOT_YET_PROCESSED: Translatable("review.adapters.t_754183"),
+    BusinessClassification.PROCESSED_UNCLASSIFIED: Translatable("review.adapters.t_791512"),
+    BusinessClassification.SKIPPED_BY_RULE: Translatable("review.adapters.t_607122"),
+    BusinessClassification.FAILED_VALIDATION: Translatable("review.adapters.t_352338"),
 }
-_INVOICE_REASON_LABELS: dict[str, tr] = {
-    "unmatched": tr("review.adapters.t_551826"),
-    "overdue": tr("review.adapters.t_167733"),
-    "payment-pending": tr("review.adapters.t_298389"),
-    "partially-paid": tr("review.adapters.t_352928"),
+_INVOICE_REASON_LABELS: dict[str, Translatable] = {
+    "unmatched": Translatable("review.adapters.t_551826"),
+    "overdue": Translatable("review.adapters.t_167733"),
+    "payment-pending": Translatable("review.adapters.t_298389"),
+    "partially-paid": Translatable("review.adapters.t_352928"),
 }
 
 
-def _per_lang_summary(template: str, **fields: str | tr) -> tr:
+def _per_lang_summary(template: str, **fields: str | Translatable) -> Translatable:
     """Return the abstract translation key."""
-    return tr(template)
+    return Translatable(template)
 
 
 # ── transactions ──────────────────────────────────────────────────
@@ -199,7 +199,7 @@ def _to_transaction_item(
         modelo=None,
         severity=severity,
         summary=summary,
-        drill_command=f"aeat financial txs classify {transaction.transaction_id} --as ...",
+        drill_command=f"aeat app ledger edit --id {transaction.transaction_id} --set category=... --reason ...",
         since=since,
         source=transaction,
     )
@@ -259,7 +259,7 @@ def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str)
     grand_total = format(invoice.grand_total.normalize(), "f") if not invoice.grand_total.is_zero() else "0"
     reason_label = _INVOICE_REASON_LABELS.get(
         reason,
-        tr("review.adapters.t_189155"),
+        Translatable("review.adapters.t_189155"),
     )
     summary = _per_lang_summary(
         "review.adapters.t_122028",
@@ -276,7 +276,7 @@ def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str)
         modelo=None,
         severity=severity,
         summary=summary,
-        drill_command=f"aeat financial invoices show {invoice.invoice_id}",
+        drill_command=f"aeat app review show {invoice.invoice_id}",
         since=since,
         source=invoice,
     )
@@ -363,13 +363,13 @@ def _to_finding_item(
 ) -> FindingReviewItem:
     casilla = finding.casilla_id or "-"
     _first_translation(finding.message) or finding.code
-    summary = tr("review.adapters.t_145612")
+    summary = Translatable("review.adapters.t_145612")
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:{finding.code}:{casilla}",
         modelo=draft.modelo,
         severity=_classify_finding(finding.severity),
         summary=summary,
-        drill_command=f"aeat filing show {path_str} --findings-only",
+        drill_command=f"aeat app review show {draft.draft_id}:{finding.code}:{casilla}",
         since=draft.updated_at,
         source=finding,
         draft_id=draft.draft_id,
@@ -387,7 +387,7 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
         modelo=draft.modelo,
         severity=ReviewSeverity.NORMAL,
         summary=summary,
-        drill_command=f"aeat filing show {path_str}",
+        drill_command=f"aeat app review show {draft.draft_id}:_status:{draft.status.value}",
         since=draft.updated_at,
         source=None,
         draft_id=draft.draft_id,
@@ -397,13 +397,13 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
 
 def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
     """Emit a high-severity item for drafts whose stored approval is stale."""
-    summary = tr("review.adapters.t_787894")
+    summary = Translatable("review.adapters.t_787894")
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:APPROVAL_STALE",
         modelo=draft.modelo,
         severity=ReviewSeverity.HIGH,
         summary=summary,
-        drill_command=f"aeat review show {path_str}",
+        drill_command=f"aeat app review show {draft.draft_id}:_status:APPROVAL_STALE",
         since=draft.updated_at,
         source=None,
         draft_id=draft.draft_id,

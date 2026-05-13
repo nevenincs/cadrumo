@@ -11,7 +11,7 @@ from typing import Any, cast
 
 from pydantic import ValidationError
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...core.paths import PROJECT_ROOT
 from ._errors import CategoryValidationError
 from ._profile import CategoryProfile, VatCategory
@@ -97,7 +97,7 @@ def _parse_profile(raw_profile: Mapping[str, Any]) -> CategoryProfile:
     return CategoryProfile.model_validate(
         {
             "category": category,
-            "display_label": Translatable(str(raw_profile.get("display_label"))),
+            "display_label": tr(str(raw_profile.get("display_label"))),
             "proportionality": _parse_rule(cast("Mapping[str, Any]", raw_rule)),
             "vat_hint": VatCategory(str(raw_vat_hint)) if raw_vat_hint is not None else None,
         }
@@ -125,7 +125,7 @@ def _parse_rule(raw_rule: Mapping[str, Any]) -> ProportionalityRule:
             "citations": tuple(
                 _parse_citation(cast("Mapping[str, Any]", raw_citation)) for raw_citation in raw_citations
             ),
-            "notes": Translatable(str(raw_rule.get("notes"))),
+            "notes": tr(str(raw_rule.get("notes"))),
         }
     )
 
@@ -134,7 +134,7 @@ def _parse_cap_variant(raw_variant: Mapping[str, Any]) -> StatutoryCapVariant:
     return StatutoryCapVariant.model_validate(
         {
             "id": raw_variant.get("id"),
-            "label": Translatable(str(raw_variant.get("label"))),
+            "label": tr(str(raw_variant.get("label"))),
             "statutory_cap_eur_per_day": _decimal_or_none(raw_variant.get("statutory_cap_eur_per_day")),
         }
     )
@@ -150,7 +150,7 @@ def _parse_citation(raw_citation: Mapping[str, Any]) -> CategoryCitation:
             "reference": raw_citation.get("reference"),
             "locator": raw_citation.get("locator"),
             "url": parse_http_url(url),
-            "quote": Translatable(str(raw_citation.get("quote"))),
+            "quote": tr(str(raw_citation.get("quote"))),
         }
     )
 

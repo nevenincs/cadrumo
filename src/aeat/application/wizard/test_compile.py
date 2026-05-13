@@ -25,7 +25,7 @@ from aeat.application.wizard._models import (
     WizardSection,
     WizardWidget,
 )
-from aeat.core.i18n import Translatable
+from aeat.core.i18n import Translatable as tr  # noqa: N813
 from aeat.domain.profile._keys import ProfileKeyRequirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -46,7 +46,7 @@ def _question(
         id=qid,
         profile_key=profile_key,
         widget=WizardWidget.TEXT,
-        prompt=Translatable(f"wizard.demo.section.{qid}.prompt"),
+        prompt=tr(f"wizard.demo.section.{qid}.prompt"),
         required=required,
         visible_when=visible_when,
         answer_type=str,
@@ -56,12 +56,12 @@ def _question(
 def _flow(questions: tuple[WizardQuestion, ...]) -> WizardFlow:
     return WizardFlow(
         id="demo",
-        title=Translatable("wizard.demo.title"),
-        description=Translatable("wizard.demo.description"),
+        title=tr("wizard.demo.title"),
+        description=tr("wizard.demo.description"),
         sections=(
             WizardSection(
                 id="section",
-                title=Translatable("wizard.demo.section.title"),
+                title=tr("wizard.demo.section.title"),
                 questions=questions,
             ),
         ),
@@ -135,18 +135,18 @@ def test_duplicate_profile_key_raises() -> None:
     flow_a = _flow((_question("tax-id-a", profile_key="tax.id"),))
     flow_b = WizardFlow(
         id="other",
-        title=Translatable("wizard.other.title"),
-        description=Translatable("wizard.other.description"),
+        title=tr("wizard.other.title"),
+        description=tr("wizard.other.description"),
         sections=(
             WizardSection(
                 id="section",
-                title=Translatable("wizard.other.section.title"),
+                title=tr("wizard.other.section.title"),
                 questions=(
                     WizardQuestion(
                         id="tax-id-b",
                         profile_key="tax.id",
                         widget=WizardWidget.TEXT,
-                        prompt=Translatable("wizard.other.section.tax-id-b.prompt"),
+                        prompt=tr("wizard.other.section.tax-id-b.prompt"),
                         answer_type=str,
                     ),
                 ),
@@ -186,7 +186,7 @@ def test_wizard_flows_carry_only_frozen_literals() -> None:
     def _assert_literal(value: object, path: str) -> None:
         if isinstance(value, permitted_primitives):
             return
-        if isinstance(value, Translatable):
+        if isinstance(value, tr):
             return
         if isinstance(value, tuple):
             for index, item in enumerate(value):

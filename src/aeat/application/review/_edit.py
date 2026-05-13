@@ -266,7 +266,7 @@ class LedgerEditKey(StrEnum):
 
 
 class InvoiceEditKey(StrEnum):
-    """Closed catalogue of ``aeat app invoice edit --set`` keys.
+    """Closed catalogue of invoice-evidence edit keys.
 
     Attributes:
         BASE: Decimal taxable base amount.
@@ -372,7 +372,7 @@ class LedgerEditSpec(BaseModel):
 
 
 class InvoiceEditSpec(BaseModel):
-    """Typed ``aeat app invoice edit --set`` spec.
+    """Typed invoice-evidence edit spec.
 
     Attributes:
         clauses: Raw clauses in input order.
@@ -477,7 +477,7 @@ class InvoiceEditSpec(BaseModel):
 
 
 class DeclarationEditSpec(BaseModel):
-    """Typed ``aeat app declaration edit --set`` spec.
+    """Typed modelo casilla edit spec.
 
     The declaration edit grammar uses the dotted prefix
     ``casilla.NN`` for casilla-value overrides — every key MUST match

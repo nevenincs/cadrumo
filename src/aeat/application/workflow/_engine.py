@@ -148,8 +148,8 @@ def _classify_cert_expiry(
     return (CertificateHealthSeverity.OK, days_until_expiry)
 
 
-def _t(en: str) -> str:
-    """Build a :class:`str` carrying a single English message."""
+def _summary_text(en: str) -> str:
+    """Build a workflow summary string."""
     return en
 
 
@@ -391,12 +391,12 @@ class WorkflowEngine:
 
         summary: str
         if final_stage is WorkflowStage.DONE:
-            summary = _t(f"Workflow completed: modelo={modelo_for_hash} period={period_for_hash}")
+            summary = _summary_text(f"Workflow completed: modelo={modelo_for_hash} period={period_for_hash}")
         elif abort_summary is not None:
             summary = abort_summary
         else:
             reason_text = aborted_reason.value if aborted_reason is not None else "unknown"
-            summary = _t(f"Workflow aborted: {reason_text}")
+            summary = _summary_text(f"Workflow aborted: {reason_text}")
 
         return WorkflowResult(
             run_id=run_id,
@@ -431,7 +431,7 @@ class WorkflowEngine:
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_t(f"Loaded profile tax_id={profile.tax_id}"),
+                summary=_summary_text(f"Loaded profile tax_id={profile.tax_id}"),
             )
         )
 
@@ -477,7 +477,7 @@ class WorkflowEngine:
             obligation = next_deadline(schedule, today=today)
 
         if obligation is None:
-            no_summary = _t("No pending filing obligation for this profile")
+            no_summary = _summary_text("No pending filing obligation for this profile")
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.COMPUTING_DEADLINES,
@@ -493,7 +493,7 @@ class WorkflowEngine:
             )
 
         if obligation.closes_on < today:
-            closed_summary = _t(
+            closed_summary = _summary_text(
                 f"Deadline for modelo={obligation.modelo} "
                 f"period={obligation.period} closed on {obligation.closes_on.isoformat()}"
             )
@@ -522,7 +522,7 @@ class WorkflowEngine:
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_t(
+                summary=_summary_text(
                     f"Next obligation modelo={obligation.modelo} "
                     f"period={obligation.period} closes_on={obligation.closes_on.isoformat()}"
                 ),
@@ -558,7 +558,7 @@ class WorkflowEngine:
                     started_at=started,
                     ended_at=_utcnow(),
                     success=True,
-                    summary=_t("Inbox skipped (not wired)"),
+                    summary=_summary_text("Inbox skipped (not wired)"),
                     details={"skipped": "not_wired"},
                 )
             )
@@ -581,7 +581,9 @@ class WorkflowEngine:
             )
         blockers = tuple(n for n in snapshot.rows if n.tipo == "notificacion" and n.leida is not True)
         if blockers:
-            blocked_summary = _t(f"Inbox has {len(blockers)} blocking requerimiento(s) for modelo={obligation.modelo}")
+            blocked_summary = _summary_text(
+                f"Inbox has {len(blockers)} blocking requerimiento(s) for modelo={obligation.modelo}"
+            )
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.CHECKING_INBOX,
@@ -606,7 +608,7 @@ class WorkflowEngine:
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_t("Inbox clear"),
+                summary=_summary_text("Inbox clear"),
             )
         )
 
@@ -658,7 +660,7 @@ class WorkflowEngine:
                     obligation.period,
                     len(already),
                 )
-                already_summary = _t(f"Already filed: modelo={obligation.modelo} period={obligation.period}")
+                already_summary = _summary_text(f"Already filed: modelo={obligation.modelo} period={obligation.period}")
                 steps.append(
                     WorkflowStep(
                         stage=WorkflowStage.BUILDING_DRAFT,
@@ -733,7 +735,7 @@ class WorkflowEngine:
         }
         if _enum_value(draft.status) not in ready_statuses:
             status_value = _enum_value(draft.status)
-            status_summary = _t(f"Draft {draft.draft_id} not ready: status={status_value}")
+            status_summary = _summary_text(f"Draft {draft.draft_id} not ready: status={status_value}")
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.BUILDING_DRAFT,
@@ -755,7 +757,7 @@ class WorkflowEngine:
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_t(f"Draft built draft_id={draft.draft_id}"),
+                summary=_summary_text(f"Draft built draft_id={draft.draft_id}"),
                 details={"draft_id": draft.draft_id},
             )
         )
@@ -787,7 +789,7 @@ class WorkflowEngine:
         if not mismatches:
             return
 
-        summary = _t(f"Draft {draft.draft_id} does not match registry-backed workflow obligation")
+        summary = _summary_text(f"Draft {draft.draft_id} does not match registry-backed workflow obligation")
         steps.append(
             WorkflowStep(
                 stage=WorkflowStage.BUILDING_DRAFT,
@@ -823,7 +825,7 @@ class WorkflowEngine:
             f for f in draft.findings if _enum_value(getattr(f, "severity", None)) == FilingFindingSeverity.ERROR
         )
         if error_findings:
-            errors_summary = _t(f"Draft {draft.draft_id} has {len(error_findings)} ERROR finding(s)")
+            errors_summary = _summary_text(f"Draft {draft.draft_id} has {len(error_findings)} ERROR finding(s)")
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.VALIDATING_DRAFT,
@@ -844,7 +846,7 @@ class WorkflowEngine:
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_t("Draft validation clean"),
+                summary=_summary_text("Draft validation clean"),
             )
         )
 
@@ -867,7 +869,7 @@ class WorkflowEngine:
             try:
                 certificate = self._certificate_bundle.describe()
             except Exception as exc:
-                cert_summary = _t(f"Certificate load failed: {type(exc).__name__}")
+                cert_summary = _summary_text(f"Certificate load failed: {type(exc).__name__}")
                 steps.append(
                     WorkflowStep(
                         stage=WorkflowStage.RUNNING_PREFLIGHT,
@@ -890,7 +892,7 @@ class WorkflowEngine:
                 "provider_operator_impact": describe_provider_operator_impact(certificate),
             }
             if not certificate.configured or not certificate.available:
-                provider_summary = _t(
+                provider_summary = _summary_text(
                     f"Auth provider unavailable: kind={certificate.kind.value} "
                     f"configured={certificate.configured} available={certificate.available}. "
                     f"{describe_provider_operator_impact(certificate)}"
@@ -926,7 +928,7 @@ class WorkflowEngine:
                 CertificateHealthSeverity.EXPIRED,
                 CertificateHealthSeverity.CRITICAL,
             ):
-                expiry_summary = _t(
+                expiry_summary = _summary_text(
                     f"Certificate pre-expiry gate: severity={cert_severity.value} "
                     f"days_until_expiry={days_until_expiry} "
                     f"kind={certificate.kind.value}"
@@ -964,7 +966,7 @@ class WorkflowEngine:
                 steps=steps,
             )
         except SubmissionPreflightError as exc:
-            preflight_summary = _t(f"Preflight failed: {exc}")
+            preflight_summary = _summary_text(f"Preflight failed: {exc}")
             steps.append(
                 WorkflowStep(
                     stage=WorkflowStage.RUNNING_PREFLIGHT,
@@ -993,7 +995,7 @@ class WorkflowEngine:
                 started_at=started,
                 ended_at=_utcnow(),
                 success=True,
-                summary=_t("Preflight OK"),
+                summary=_summary_text("Preflight OK"),
                 details=cert_details,
             )
         )
@@ -1034,7 +1036,7 @@ class WorkflowEngine:
         Centralises the wrap-and-record ritual so every stage method
         surfaces an unexpected exception identically.
         """
-        unhandled_summary = _t(f"Unhandled {type(exc).__name__} at stage={stage.value}: {exc}")
+        unhandled_summary = _summary_text(f"Unhandled {type(exc).__name__} at stage={stage.value}: {exc}")
         steps.append(
             WorkflowStep(
                 stage=stage,
@@ -1066,7 +1068,7 @@ class WorkflowEngine:
         """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
 
         alert_run_id = self._compute_current_run_id() or "-"
-        summary = _t(f"AEAT site unavailable at stage={stage.value}: {exc.status.state.value}")
+        summary = _summary_text(f"AEAT site unavailable at stage={stage.value}: {exc.status.state.value}")
         steps.append(
             WorkflowStep(
                 stage=stage,

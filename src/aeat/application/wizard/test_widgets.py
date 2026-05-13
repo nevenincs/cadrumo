@@ -22,15 +22,15 @@ from aeat.application.wizard._models import (
     WizardWidget,
 )
 from aeat.application.wizard._widgets import validate_widget_answer
-from aeat.core.i18n import Translatable
+from aeat.core.i18n import Translatable as tr  # noqa: N813
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_TEXT_PROMPT = Translatable("wizard.setup.profile.tax-id.prompt")
-_SELECT_PROMPT = Translatable("wizard.setup.profile.iva-regime.prompt")
-_PATH_PROMPT = Translatable("wizard.setup.certificate.path.prompt")
-_INTEGER_PROMPT = Translatable("wizard.setup.profile.employee-count.prompt")
-_CHECKBOX_PROMPT = Translatable("wizard.setup.profile.regimes.prompt")
+_TEXT_PROMPT = tr("wizard.setup.profile.tax-id.prompt")
+_SELECT_PROMPT = tr("wizard.setup.profile.iva-regime.prompt")
+_PATH_PROMPT = tr("wizard.setup.certificate.path.prompt")
+_INTEGER_PROMPT = tr("wizard.setup.profile.employee-count.prompt")
+_CHECKBOX_PROMPT = tr("wizard.setup.profile.regimes.prompt")
 _CONDITION = WizardCondition(question_id="declaration-type", equals="2")
 
 
@@ -40,7 +40,7 @@ def _question(
     choices: tuple[WizardChoice, ...] = (),
     required: bool = True,
     visible_when: WizardCondition | None = None,
-    prompt: Translatable = _TEXT_PROMPT,
+    prompt: tr = _TEXT_PROMPT,
     answer_type: type[str] | type[bool] | type[int] | type[Path] = str,
 ) -> WizardQuestion:
     return WizardQuestion(
@@ -102,8 +102,8 @@ def test_confirm_rejects_unknown_token() -> None:
 
 def test_select_accepts_declared_choice() -> None:
     choices = (
-        WizardChoice(value="general", label=Translatable("wizard.choices.general")),
-        WizardChoice(value="simplificado", label=Translatable("wizard.choices.simplificado")),
+        WizardChoice(value="general", label=tr("wizard.choices.general")),
+        WizardChoice(value="simplificado", label=tr("wizard.choices.simplificado")),
     )
     question = _question(WizardWidget.SELECT, choices=choices, prompt=_SELECT_PROMPT)
     assert validate_widget_answer(question, "general") == "general"
@@ -111,8 +111,8 @@ def test_select_accepts_declared_choice() -> None:
 
 def test_select_rejects_out_of_set_choice() -> None:
     choices = (
-        WizardChoice(value="general", label=Translatable("wizard.choices.general")),
-        WizardChoice(value="simplificado", label=Translatable("wizard.choices.simplificado")),
+        WizardChoice(value="general", label=tr("wizard.choices.general")),
+        WizardChoice(value="simplificado", label=tr("wizard.choices.simplificado")),
     )
     question = _question(WizardWidget.SELECT, choices=choices, prompt=_SELECT_PROMPT)
     with pytest.raises(WizardValidationError, match=r"select_unknown"):
@@ -127,8 +127,8 @@ def test_select_rejects_when_no_choices_declared() -> None:
 
 def test_checkbox_accepts_multi_token_membership() -> None:
     choices = (
-        WizardChoice(value="iva", label=Translatable("wizard.choices.iva")),
-        WizardChoice(value="irpf", label=Translatable("wizard.choices.irpf")),
+        WizardChoice(value="iva", label=tr("wizard.choices.iva")),
+        WizardChoice(value="irpf", label=tr("wizard.choices.irpf")),
     )
     question = _question(WizardWidget.CHECKBOX, choices=choices, prompt=_CHECKBOX_PROMPT)
     assert validate_widget_answer(question, "iva, irpf") == "iva,irpf"
@@ -136,8 +136,8 @@ def test_checkbox_accepts_multi_token_membership() -> None:
 
 def test_checkbox_rejects_unknown_token() -> None:
     choices = (
-        WizardChoice(value="iva", label=Translatable("wizard.choices.iva")),
-        WizardChoice(value="irpf", label=Translatable("wizard.choices.irpf")),
+        WizardChoice(value="iva", label=tr("wizard.choices.iva")),
+        WizardChoice(value="irpf", label=tr("wizard.choices.irpf")),
     )
     question = _question(WizardWidget.CHECKBOX, choices=choices, prompt=_CHECKBOX_PROMPT)
     with pytest.raises(WizardValidationError, match=r"checkbox_unknown"):
@@ -145,7 +145,7 @@ def test_checkbox_rejects_unknown_token() -> None:
 
 
 def test_checkbox_rejects_empty_required() -> None:
-    choices = (WizardChoice(value="iva", label=Translatable("wizard.choices.iva")),)
+    choices = (WizardChoice(value="iva", label=tr("wizard.choices.iva")),)
     question = _question(WizardWidget.CHECKBOX, choices=choices, prompt=_CHECKBOX_PROMPT)
     with pytest.raises(WizardValidationError, match=r"checkbox_required"):
         validate_widget_answer(question, "")

@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ._models import WizardChoice, WizardQuestion, WizardWidget
 from ._persistence import _canonicalise, _parse_canonical, _resolve_canonical
 
@@ -47,7 +47,7 @@ def _question(
         id="example",
         profile_key=profile_key,
         widget=widget,
-        prompt=Translatable("wizard.test.example.prompt"),
+        prompt=tr("wizard.test.example.prompt"),
         choices=choices,
         default=default,
         answer_type=answer_type,
