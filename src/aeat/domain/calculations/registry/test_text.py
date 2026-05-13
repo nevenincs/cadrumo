@@ -11,10 +11,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 def test_math_notation_less_than_does_not_swallow_prose() -> None:
     """AEAT manuals use ``< 500 euros`` and ``< 3 años`` as inline math
-    notation. The previous ``<[^>]+>`` stripper regex matched across
-    lines and ate everything between an unbalanced ``<`` and the next
-    ``>``, silently truncating the corpus available to required-text
-    citation checks. The tightened regex must leave such prose intact.
+    notation. ``normalise_corpus_text`` must preserve such inline math
+    in the corpus so required-text citation checks see the literal
+    AEAT prose, not a truncated form where stretches between ``<``
+    and ``>`` were stripped as if HTML tags.
     """
     corpus = "Reducción aplicable cuando el importe es < 500 euros y el plazo es < 3 años."
 

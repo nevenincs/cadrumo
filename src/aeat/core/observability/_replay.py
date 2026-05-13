@@ -25,7 +25,8 @@ from ._store import load_trace
 # re-entered CLI call so run_context can label the child trace.
 REPLAY_ACTIVE_ENV_VAR = "AEAT_REPLAY_ACTIVE"
 
-# Legacy flags removed from the workflow CLI surface.
+# Flag tokens the replay scrubber strips from a recorded command so the
+# replayed invocation cannot promote a dry run into a live write.
 _REMOVED_WRITE_FLAG_NAMES: frozenset[str] = frozenset(
     {
         "no-dry-run",
