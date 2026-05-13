@@ -168,6 +168,7 @@ cli:
     status:
       empty_profile: No profile configured. Run `aeat config init` to get started.
       help: Mostrar l'estat del perfil de configuració actiu
+      next_step: 'Next step: `aeat app overview`'
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar

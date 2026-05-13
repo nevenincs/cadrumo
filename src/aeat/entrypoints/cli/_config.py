@@ -303,6 +303,7 @@ def config_status(ctx: typer.Context) -> None:
     typer.echo(f"activity\t{values.get('activity', '<unset>')}")
     typer.echo(f"iva.regime\t{values.get('iva.regime', '<unset>')}")
     typer.echo(f"tax.residence.ccaa\t{values.get('tax.residence.ccaa', '<unset>')}")
+    typer.echo(tr("cli.config.status.next_step"))
     del projection
 
 

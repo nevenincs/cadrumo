@@ -173,6 +173,7 @@ cli:
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config init` para empezar.
       help: Mostrar el estado del perfil de configuración activo
+      next_step: 'Próximo paso: `aeat app overview`'
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
