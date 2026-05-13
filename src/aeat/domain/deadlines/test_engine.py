@@ -255,7 +255,7 @@ class TestRegistryApplicability:
         assert "estimacion directa" in text
 
     def test_unknown_modelo_raises(self) -> None:
-        with pytest.raises(ScheduleComputationError):
+        with pytest.raises(ScheduleComputationError, match=r"No registry deadline windows registered for modelo"):
             explain(_profile(), "999")
 
 
@@ -278,11 +278,11 @@ class TestEnginePurity:
 
 class TestComputeFailures:
     def test_missing_registry_year_raises(self) -> None:
-        with pytest.raises(ScheduleComputationError):
+        with pytest.raises(ScheduleComputationError, match=r"No registry deadline windows registered for year"):
             _engine().compute(_profile(), 1999, today=date(1999, 1, 1))
 
     def test_negative_due_soon_days_rejected(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"due_soon_days must be >= 0"):
             DeadlineEngine(due_soon_days=-1)
 
 
