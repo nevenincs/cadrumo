@@ -8,18 +8,20 @@ from pathlib import Path
 import click
 import typer
 
-from ...application.auth import implemented_auth_provider_ids, known_auth_provider_ids
-from ...application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES, parse_config_reset_scope
-from ...application.diagnostics import (
+from ....application.auth._catalogue import implemented_auth_provider_ids, known_auth_provider_ids
+from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES, parse_config_reset_scope
+from ....application.diagnostics import (
     build_config_doctor_report,
+    probe_browser_connectivity,
     quarantine_unreadable_secure_objects,
+    render_browser_connectivity_text,
     render_config_doctor_text,
 )
-from ...application.operator_surface import build_help_document, render_help_text
-from ...core.logging import default_log_file_path
-from ._common import _emit
-from ._errors import CliRefusedBoundaryError, write_stderr
-from ._i18n import tr
+from ....application.operator_surface import build_help_document, render_help_text
+from ....core.logging import default_log_file_path
+from .._common import _emit
+from .._errors import CliRefusedBoundaryError, write_stderr
+from .._i18n import tr
 
 app = typer.Typer(
     name="config",
@@ -111,20 +113,34 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     return tuple(path.read_text(encoding="utf-8", errors="replace").splitlines()[-count:])
 
 
-def _register_doctor_connectivity(target: typer.Typer) -> None:
-    """Mount the browser/site-health diagnostic under config doctor."""
+@doctor_app.command("connectivity", help=tr("cli.config.doctor.connectivity_help"))
+def doctor_connectivity(
+    ctx: typer.Context,
+    target: typing.Annotated[
+        str,
+        typer.Option(
+            "--target",
+            click_type=click.Choice(("browser",)),
+            help=tr("cli.config.doctor.connectivity_target_help"),
+        ),
+    ] = "browser",
+) -> None:
+    """Probe outbound browser connectivity through the diagnostics backend."""
 
-    from .browser.health import health_cmd
+    del target
+    status = probe_browser_connectivity()
+    _emit(
+        ctx,
+        {"target": "browser", "status": status.model_dump(mode="json")},
+        render_browser_connectivity_text(status).splitlines(),
+    )
 
-    target.command("connectivity", help=tr("cli.config.doctor.connectivity_help"))(health_cmd)
 
-
-_register_doctor_connectivity(doctor_app)
 app.add_typer(doctor_app, name="doctor")
 
 
 def _profile_state():
-    from ...application.workflow._persistence import workflow_state_repository
+    from ....application.workflow._persistence import workflow_state_repository
 
     return workflow_state_repository()
 
@@ -133,7 +149,7 @@ def _profile_state():
 def config_list(ctx: typer.Context) -> None:
     """List every profile key with its current value (or ``<unset>``)."""
 
-    from ...domain.profile import PROFILE_KEYS
+    from ....domain.profile import PROFILE_KEYS
 
     state = _profile_state().load()
     record = state.active_profile_record()
@@ -156,7 +172,7 @@ def config_list(ctx: typer.Context) -> None:
 def config_get(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.config.get.key_help"))) -> None:
     """Return one profile key's current value."""
 
-    from ...domain.profile import get_profile_key
+    from ....domain.profile import get_profile_key
 
     try:
         get_profile_key(key)
@@ -172,7 +188,7 @@ def config_get(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.c
 def _question_for_profile_key(profile_key: str):
     """Return the descriptor's question for ``profile_key``, or ``None``."""
 
-    from ...application.wizard._catalogue import WIZARD_FLOWS
+    from ....application.wizard._catalogue import WIZARD_FLOWS
 
     for flow in WIZARD_FLOWS:
         for section in flow.sections:
@@ -190,10 +206,10 @@ def config_set(
 ) -> None:
     """Write one profile key value, validated through the wizard descriptor."""
 
-    from ...application.profile._actions import set_profile_values
-    from ...application.wizard._errors import WizardValidationError
-    from ...application.wizard._widgets import validate_widget_answer
-    from ...domain.profile import get_profile_key
+    from ....application.profile._actions import set_profile_values
+    from ....application.wizard._errors import WizardValidationError
+    from ....application.wizard._widgets import validate_widget_answer
+    from ....domain.profile import get_profile_key
 
     try:
         registered = get_profile_key(key)
@@ -226,8 +242,8 @@ def config_set(
 def config_unset(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.config.unset.key_help"))) -> None:
     """Clear one profile key value through the shared application backend."""
 
-    from ...application.profile._actions import clear_profile_values
-    from ...domain.profile import get_profile_key
+    from ....application.profile._actions import clear_profile_values
+    from ....domain.profile import get_profile_key
 
     try:
         get_profile_key(key)
@@ -245,10 +261,10 @@ def config_unset(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli
 def _register_wizard_commands(target: typer.Typer) -> None:
     """Register every wizard flow as a sub-command of ``target``."""
 
-    from ...application.wizard._catalogue import WIZARD_FLOWS
-    from ...application.wizard._commands import build_wizard_command
-    from ...application.wizard._errors import WizardMissingFlagError
-    from ...application.wizard._prompter import WizardUnsupportedConsoleError
+    from ....application.wizard._catalogue import WIZARD_FLOWS
+    from ....application.wizard._commands import build_wizard_command
+    from ....application.wizard._errors import WizardMissingFlagError
+    from ....application.wizard._prompter import WizardUnsupportedConsoleError
 
     for flow in WIZARD_FLOWS:
         command_callable = build_wizard_command(flow)
@@ -291,9 +307,9 @@ def config_status(ctx: typer.Context) -> None:
 
     from pydantic import ValidationError
 
-    from ...application.wizard._catalogue import SETUP_FLOW
-    from ...application.wizard._persistence import project_answers
-    from ...application.workflow._persistence import workflow_state_repository
+    from ....application.wizard._catalogue import SETUP_FLOW
+    from ....application.wizard._persistence import project_answers
+    from ....application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
@@ -354,7 +370,7 @@ def config_reset(
 ) -> None:
     """Reset operator-entered configuration scopes."""
 
-    from ...application.config_reset import reset_config
+    from ....application.config_reset import reset_config
 
     if not yes:
         raise CliRefusedBoundaryError(tr("cli.config.reset.requires_yes"))
@@ -375,7 +391,7 @@ def config_reset(
 def auth_providers(ctx: typer.Context) -> None:
     """List supported authentication providers from the backend catalogue."""
 
-    from ...application.auth import list_operator_auth_providers
+    from ....application.auth import list_operator_auth_providers
 
     report = list_operator_auth_providers()
     payload = report.model_dump(mode="json")
@@ -402,7 +418,7 @@ def auth_configure(
 ) -> None:
     """Configure the active authentication provider."""
 
-    from ...application.auth import AuthProviderReservedError, configure_operator_auth
+    from ....application.auth import AuthProviderReservedError, configure_operator_auth
 
     try:
         result = configure_operator_auth(provider, certificate_path=file)
@@ -420,7 +436,7 @@ def auth_status(
 ) -> None:
     """Show the configured local authentication state."""
 
-    from ...application.auth import inspect_operator_auth
+    from ....application.auth import inspect_operator_auth
 
     try:
         result = inspect_operator_auth(provider)
@@ -437,7 +453,7 @@ def auth_test(
 ) -> None:
     """Render auth readiness through the application-owned auth state."""
 
-    from ...application.auth import test_operator_auth
+    from ....application.auth import test_operator_auth
 
     try:
         result = test_operator_auth(provider)
@@ -457,7 +473,7 @@ def auth_clear(
 ) -> None:
     """Clear local auth metadata, persisted sessions, and auth locks."""
 
-    from ...application.auth import AuthProviderReservedError, clear_operator_auth
+    from ....application.auth import AuthProviderReservedError, clear_operator_auth
 
     try:
         result = clear_operator_auth(provider=provider, all_providers=all_providers, sessions=sessions, locks=locks)
@@ -493,7 +509,7 @@ def bucket_history(
 ) -> None:
     """Browse the append-only bucket-event history."""
 
-    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+    from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     repository = BucketEventHistoryRepository()
     catalogue = repository.load()
