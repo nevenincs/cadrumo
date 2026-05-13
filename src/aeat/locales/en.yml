@@ -97,12 +97,21 @@ cli:
   config:
     app_help: Manage local configuration and diagnostics
     auth:
+      clear_all_help: Clear all configured auth providers
+      clear_help: Clear local authentication metadata
+      clear_locks_help: Clear auth acquisition locks
+      clear_sessions_help: Clear persisted AEAT auth sessions
+      configure_help: Configure the active authentication provider
       file_help: Path to the credential file (certificate or key)
       help: Configure the active authentication provider
       provider_help: Authentication provider id (e.g. certificado-electronico)
+      providers_help: List supported authentication providers
+      status_help: Show configured authentication state
+      test_help: Check local authentication readiness
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
     doctor:
+      connectivity_help: Check browser and AEAT Sede connectivity
       help: Diagnose local configuration, registry, profile, auth, and logs
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
@@ -113,15 +122,17 @@ cli:
       quarantine_yes_help: Explicitly confirm the quarantine operation
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
-      no_active_profile: No active profile. Run 'aeat config setup --tax-id <NIF>'
+      no_active_profile: No active profile. Run 'aeat config init --tax-id <NIF>'
         first.
-      unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config list'' to
+      unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config profile list'' to
         see the available keys.'
     get:
       help: Show the current value of one configuration key
       key_help: Key to read (e.g. tax.id, iva.regime)
     list:
       help: List every configuration key with its current value
+    profile:
+      help: Manage active profile configuration values
     reset:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
@@ -142,6 +153,7 @@ cli:
       profile_name_help: Profile name to write the answers into
       quiet_help: Run the flow non-interactively using only the supplied flag values
     status:
+      empty_profile: No profile configured. Run `aeat config init` to get started.
       help: Show the readiness of the current configuration profile
     unset:
       help: Clear the value of one configuration key
@@ -568,7 +580,7 @@ cli:
     app_help: Review the current filing workspace
     calendar_help: Show the obligations calendar for a date range
     calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
-      setup profile set <key> <value>'' or pass --allow-incomplete to see the calendar
+      config profile set <key> <value>'' or pass --allow-incomplete to see the calendar
       computed under defaults.'
     calendar_requires_dates: Use --from and --to when showing the calendar
     drafts: Drafts
@@ -638,7 +650,7 @@ cli:
     app_help: 'Spanish tax filing assistant
 
 
-      Quickstart: aeat config setup --profile-name NAME --tax-id NIF'
+      Quickstart: aeat config init --profile NAME --tax-id NIF'
     debug_help: Show internal debug logs on stderr
     format_help: Output format for command results
     quiet_help: Show only errors on stderr
@@ -648,7 +660,7 @@ cli:
   topic:
     app_help: Show conceptual help about regimes, modelos, and AEAT processes
     errors:
-      not_found: 'Topic not found: %{slug}. Run ''aeat app topic'' to list registered
+      not_found: 'Topic not found: %{slug}. Run ''aeat app registry citations'' to list registered
         topics.'
     opts:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
@@ -787,11 +799,11 @@ topic:
   profile:
     body: The local profile carries your tax id (NIF), main activity, IVA/IRPF regime,
       and optional enrolments (SII, Verifactu, intracomunitario). Edit it with 'aeat
-      setup profile set <key> <value>'.
+      config profile set <key> <value>'.
     title: Taxpayer profile
   providers:
     body: Supported authentication providers; each has distinct prerequisites. 'aeat
-      setup auth providers' lists them with requirements.
+      config auth providers' lists them with requirements.
     title: Authentication providers
   recargo-extemporaneo:
     body: Filing after the deadline without prior AEAT notice accrues 1% per month

@@ -111,12 +111,21 @@ cli:
   config:
     app_help: Gestionar configuración local y diagnósticos
     auth:
+      clear_all_help: Limpiar todos los proveedores de autenticación configurados
+      clear_help: Limpiar metadatos locales de autenticación
+      clear_locks_help: Limpiar bloqueos de adquisición de autenticación
+      clear_sessions_help: Limpiar sesiones AEAT persistidas
+      configure_help: Configurar el proveedor de autenticación activo
       file_help: Ruta al archivo de credenciales (certificado o clave)
       help: Configurar el proveedor de autenticación activo
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
+      providers_help: Listar proveedores de autenticación soportados
+      status_help: Mostrar el estado de autenticación configurado
+      test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
     doctor:
+      connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       help: Diagnosticar configuración local, registro, perfil, autenticación y logs
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
@@ -127,15 +136,17 @@ cli:
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
-      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config setup --tax-id
+      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config init --tax-id
         <NIF>' primero.
       unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
-        list'' para ver las claves disponibles.'
+        profile list'' para ver las claves disponibles.'
     get:
       help: Mostrar el valor actual de una clave de configuración
       key_help: Clave a leer (ej. tax.id, iva.regime)
     list:
       help: Listar todas las claves de configuración y sus valores actuales
+    profile:
+      help: Gestionar valores de configuración del perfil activo
     reset:
       help: Reiniciar ámbitos de configuración introducidos por el operador
       invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
@@ -157,6 +168,7 @@ cli:
       quiet_help: Ejecutar el flujo sin interacción usando solo los valores de las
         banderas
     status:
+      empty_profile: Sin perfil configurado. Ejecuta `aeat config init` para empezar.
       help: Mostrar el estado del perfil de configuración activo
     unset:
       help: Eliminar el valor asignado a una clave de configuración
@@ -665,7 +677,7 @@ cli:
     app_help: 'Asistente para preparar declaraciones tributarias españolas
 
 
-      Quickstart: aeat config setup --profile-name NAME --tax-id NIF'
+      Quickstart: aeat config init --profile NAME --tax-id NIF'
     debug_help: Mostrar logs internos de depuración en stderr
     format_help: Formato de salida para los resultados del comando
     quiet_help: Mostrar solo errores en stderr
@@ -675,7 +687,7 @@ cli:
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
-      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat app topic'' para listar
+      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat app registry citations'' para listar
         los temas registrados.'
     opts:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
