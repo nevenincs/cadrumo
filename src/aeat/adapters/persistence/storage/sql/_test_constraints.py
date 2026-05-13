@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 from .....core.config import Settings
 from ..errors import RepositoryError
@@ -78,7 +79,10 @@ def test_portal_auth_method_check_constraint(tmp_path: Path) -> None:
     try:
         with session_scope(engine) as session:
             modelo = ModeloRepository(session).upsert(ModeloRecord(identifier="MODELO_303", name="IVA"))
-        with pytest.raises(Exception) as excinfo, session_scope(engine) as session:
+        with (
+            pytest.raises(IntegrityError, match=r"CHECK constraint failed: ck_portals_auth_method"),
+            session_scope(engine) as session,
+        ):
             session.execute(
                 text(
                     "insert into portals (identifier, base_url, auth_method, modelo_id, label)"
@@ -86,7 +90,6 @@ def test_portal_auth_method_check_constraint(tmp_path: Path) -> None:
                 ),
                 {"mid": modelo.id},
             )
-        assert "constraint" in str(excinfo.value).lower() or "check" in str(excinfo.value).lower()
     finally:
         engine.dispose()
 
