@@ -149,7 +149,7 @@ cli:
       errors:
         missing_required_flags: Missing required flags for --quiet wizard run; supply
           a value for every required question.
-      help: Guided initial setup of the tax profile
+      help: Initialize the active tax profile and storage bucket
       profile_name_help: Profile name to write the answers into
       quiet_help: Run the flow non-interactively using only the supplied flag values
       success:
@@ -582,7 +582,7 @@ cli:
   overview:
     allow_incomplete_help: Allow the calendar to be computed under defaults when regime
       keys are unset. Without this flag the calendar is refused when warnings exist.
-    app_help: Review the current filing workspace
+    app_help: Review the active tax workspace
     calendar_help: Show the obligations calendar for a date range
     calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
       config profile set <key> <value>'' or pass --allow-incomplete to see the calendar
@@ -593,11 +593,11 @@ cli:
     header: "Model\tPeriod\tState\tOpens\tCloses"
     integrity_warning: '%{count} local row(s) cannot be decrypted under the current
       master key; run ''aeat config doctor'' for detail.'
-    invoices: Invoices
+    invoices: Business-operation records
     period: Period
     period_help: Tax period to review (for example, 2026-Q1)
     profile: Profile
-    status_help: Show profile, ledger, invoice, and declaration readiness
+    status_help: Show profile, ledger, and modelo readiness
     to_help: Calendar end date (YYYY-MM-DD)
     transactions: Transactions
     verbose_help: Show details and next action when available
@@ -612,6 +612,27 @@ cli:
     capture_source_filed_data_json_help: Emit source filed-data capture report as
       JSON
     casilla_help: Casilla id to compare; repeat to override the default computed casillas
+    citations:
+      app_help: Inspect the legal-norm corpus (Ley 37/1992, Ley 35/2006, ...)
+      articulo_help: Specific article to show (e.g. 91.Uno.2.1º)
+      list_help: List the normatives codified in the legal corpus
+      normative_id_help: Stable normative id (e.g. ley-37-1992)
+      show_help: Show one normative and, optionally, one of its articles
+      tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
+      verify_help: Verify the legal-norm corpus integrity
+    manuals:
+      app_help: Inspect AEAT Manual práctico records (Renta, IVA, Sociedades)
+      errors:
+        unknown_section: Section {section} was not found in the manual
+      kind_help: Filter by manual rule kind
+      list_help: List manual parts available locally
+      manual_help: Manual identifier (renta, iva, sociedades)
+      part_help: Manual volume (single, part1, part2-deducciones-autonomicas, part3)
+      rules_help: List the rules codified in a manual
+      section_help: Optional section identifier to show
+      show_help: Show a manual structure and, optionally, one section
+      verify_help: Verify the manual integrity against its contract
+      year_help: Tax year of the manual (e.g. 2024)
     errors:
       invalid_year_range: Invalid year range
       unknown_modelo: Registry has no modelo definition for {modelo}
@@ -697,7 +718,7 @@ cli:
     workbooks_verify_help: Verify the integrity of the generated workbooks
     year_help: Fiscal year to query or process
   review:
-    app_help: 'Operator review queue: triage transactions, invoices, and findings'
+    app_help: 'Operator review queue: triage ledger transactions, purchase evidence, and modelo findings'
     errors:
       invalid_state: 'Invalid review state: %{state}'
     labels:
@@ -721,7 +742,7 @@ cli:
       id_help: Item id from the review queue
   root:
     app_app_help: Tax workspace for overview, ledger, modelo, registry, and review
-    app_help: 'Spanish tax filing assistant
+    app_help: 'Spanish tax workflow assistant
 
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVITY'

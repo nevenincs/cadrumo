@@ -633,6 +633,27 @@ cli:
       kiírása JSON-ként
     casilla_help: Összehasonlítandó casilla azonosító; ismételhető az alapértelmezett
       számított casillák felülírásához
+    citations:
+      app_help: Jogszabály-korpusz vizsgálata (Ley 37/1992, Ley 35/2006, ...)
+      articulo_help: Megjelenítendő konkrét cikk (pl. 91.Uno.2.1º)
+      list_help: A jogi korpuszban rögzített jogszabályok listázása
+      normative_id_help: Stabil jogszabály-azonosító (pl. ley-37-1992)
+      show_help: Egy jogszabály és opcionálisan az egyik cikke megjelenítése
+      tag_help: Szűrés adónemtag szerint (pl. 'irpf', 'iva')
+      verify_help: Jogi korpusz integritásának ellenőrzése
+    manuals:
+      app_help: AEAT Manual práctico bejegyzések vizsgálata (Renta, IVA, Sociedades)
+      errors:
+        unknown_section: 'A(z) {section} szakasz nem található a kézikönyvben'
+      kind_help: Szűrés kézikönyvi szabálytípus szerint
+      list_help: Helyben elérhető kézikönyvrészek listázása
+      manual_help: Kézikönyv-azonosító (renta, iva, sociedades)
+      part_help: Kézikönyvkötet (single, part1, part2-deducciones-autonomicas, part3)
+      rules_help: Egy kézikönyvben kódolt szabályok listázása
+      section_help: Opcionális szakasz-azonosító megjelenítéshez
+      show_help: Kézikönyv struktúrájának és opcionálisan egy szakaszának megjelenítése
+      verify_help: Kézikönyv integritásának ellenőrzése a szerződésével szemben
+      year_help: 'A kézikönyv adóéve (pl. 2024)'
     errors:
       invalid_year_range: Érvénytelen évtartomány
       unknown_modelo: 'A registry nem tartalmaz definíciót ehhez a modellhez: {modelo}'
