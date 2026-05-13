@@ -38,38 +38,46 @@ categories:
 cli:
   app:
     modelo:
-      app_help: cli.app.modelo.app_help
+      app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
       bindings:
-        as_of_help: cli.app.modelo.bindings.as_of_help
-        modelo_help: cli.app.modelo.bindings.modelo_help
-        period_help: cli.app.modelo.bindings.period_help
+        as_of_help: Resolve the modelo revision active on the supplied ISO date
+          (YYYY-MM-DD)
+        modelo_help: Tax form code (e.g. 303, 130, 100)
+        period_help: Fiscal period to scope the bindings (e.g. 2026Q1, 2026-01)
       casillas:
-        as_of_help: cli.app.modelo.casillas.as_of_help
-        input_kind_help: cli.app.modelo.casillas.input_kind_help
-        modelo_help: cli.app.modelo.casillas.modelo_help
-        period_help: cli.app.modelo.casillas.period_help
-        required_help: cli.app.modelo.casillas.required_help
+        as_of_help: Resolve the modelo revision active on the supplied ISO date
+          (YYYY-MM-DD)
+        input_kind_help: Filter casillas by input kind (manual, bound, computed,
+          informational)
+        modelo_help: Tax form code (e.g. 303, 130, 100)
+        period_help: Fiscal period to scope the casillas (e.g. 2026Q1, 2026-01)
+        required_help: Show only casillas the modelo marks as required
       describe:
-        as_of_help: cli.app.modelo.describe.as_of_help
-        modelo_help: cli.app.modelo.describe.modelo_help
-        period_help: cli.app.modelo.describe.period_help
+        as_of_help: Resolve the modelo revision active on the supplied ISO date
+          (YYYY-MM-DD)
+        modelo_help: Tax form code (e.g. 303, 130, 100)
+        period_help: Fiscal period to resolve the modelo revision against (e.g.
+          2026Q1, 2026-01)
       formulas:
-        as_of_help: cli.app.modelo.formulas.as_of_help
-        modelo_help: cli.app.modelo.formulas.modelo_help
-        period_help: cli.app.modelo.formulas.period_help
+        as_of_help: Resolve the modelo revision active on the supplied ISO date
+          (YYYY-MM-DD)
+        modelo_help: Tax form code (e.g. 303, 130, 100)
+        period_help: Fiscal period to scope the formulas (e.g. 2026Q1, 2026-01)
       list:
-        year_help: cli.app.modelo.list.year_help
+        year_help: Filter the modelo catalogue to a single fiscal year
   archive:
-    app_help: cli.archive.app_help
+    app_help: Export and import the encrypted local archive as portable JSON
+      bundles
     export:
-      bundle_id_help: cli.archive.export.bundle_id_help
-      help: cli.archive.export.help
-      namespace_help: cli.archive.export.namespace_help
-      path_help: cli.archive.export.path_help
+      bundle_id_help: Override the auto-generated bundle identifier
+      help: Write a portable JSON bundle of the secure object catalogue
+      namespace_help: Restrict the bundle to one or more namespaces (repeatable)
+      path_help: Destination path for the JSON bundle
     import:
-      conflict_help: cli.archive.import.conflict_help
-      help: cli.archive.import.help
-      path_help: cli.archive.import.path_help
+      conflict_help: 'Conflict policy when restoring colliding records: fail,
+        overwrite, or keep'
+      help: Restore an archive bundle into the encrypted secure object catalogue
+      path_help: Path to the JSON bundle to restore
   browser:
     app_help: Browser automation management (Playwright)
     health:
@@ -88,6 +96,12 @@ cli:
       period_unrecognised: Unrecognized period
   config:
     app_help: Manage local configuration and diagnostics
+    auth:
+      file_help: Path to the credential file (certificate or key)
+      help: Configure the active authentication provider
+      provider_help: Authentication provider id (e.g. certificado-electronico)
+      unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
+        config auth --help'' for valid ids.'
     doctor:
       help: Diagnose local configuration, registry, profile, auth, and logs
       logs_help: Show the log file path and recent lines
@@ -97,6 +111,41 @@ cli:
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
+    errors:
+      invalid_value: 'Invalid value for %{name}: %{value}'
+      no_active_profile: No active profile. Run 'aeat config setup --tax-id <NIF>'
+        first.
+      unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config list'' to
+        see the available keys.'
+    get:
+      help: Show the current value of one configuration key
+      key_help: Key to read (e.g. tax.id, iva.regime)
+    list:
+      help: List every configuration key with its current value
+    reset:
+      help: Reset operator-entered configuration scopes
+      invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
+      requires_yes: Reset is destructive. Re-run with --yes to confirm.
+      scope_help: Scope to reset (all, profile, auth)
+      yes_help: Explicitly confirm the reset operation
+    set:
+      help: Assign a value to one configuration key
+      key_help: Key to assign (e.g. iva.regime)
+      value_help: Value to assign (text, true/false, amount depending on the key)
+    setup:
+      accept_defaults_help: Accept the descriptor's defaults without prompting
+      errors:
+        missing_required_flags: Missing required flags for --quiet wizard run; supply
+          a value for every required question.
+      help: Run the schema-driven setup wizard interactively or via flag-driven quiet
+        mode
+      profile_name_help: Profile name to write the answers into
+      quiet_help: Run the flow non-interactively using only the supplied flag values
+    status:
+      help: Show the readiness of the current configuration profile
+    unset:
+      help: Clear the value of one configuration key
+      key_help: Key to clear
   data:
     app_help: Management of tax data and records
     ledgers:
@@ -147,7 +196,7 @@ cli:
       no_draft_for_period: No draft exists for the specified period
       not_approved_for_export: The declaration must be approved before being exported
       profile_tax_id_required: 'The active profile requires a configured Tax ID (NIF/CIF).
-        Run: aeat setup profile set tax.id <NIF/NIE>'
+        Run: aeat config set tax.id <NIF/NIE>'
       set_parse_error: Error parsing the field assignment
     export_help: Export an approved declaration to a local AEAT-format file
     format_help: Output format (e.g. json, text, table)
@@ -589,7 +638,7 @@ cli:
     app_help: 'Spanish tax filing assistant
 
 
-      Quickstart: aeat setup init --name NAME --tax-id NIF'
+      Quickstart: aeat config setup --profile-name NAME --tax-id NIF'
     debug_help: Show internal debug logs on stderr
     format_help: Output format for command results
     quiet_help: Show only errors on stderr
@@ -599,7 +648,7 @@ cli:
   topic:
     app_help: Show conceptual help about regimes, modelos, and AEAT processes
     errors:
-      not_found: 'Topic not found: %{slug}. Run ''aeat topic'' to list registered
+      not_found: 'Topic not found: %{slug}. Run ''aeat app topic'' to list registered
         topics.'
     opts:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
@@ -699,8 +748,8 @@ review:
 topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
-      certificate (FNMT / equivalent). Configure a provider with 'aeat setup auth
-      configure' and verify with 'aeat setup auth status'.
+      certificate (FNMT / equivalent). Configure a provider with 'aeat config auth
+      --provider certificate' and verify with 'aeat config status'.
     title: Authentication with AEAT
   calendar:
     body: The calendar shows filing obligations (modelos and periods) within a range.
@@ -785,6 +834,85 @@ wizard:
       family-minor-children-in-unit:
         prompt: Minor children in family unit
       title: Family unit
+    flags:
+      activity:
+        help: Business activity label or controlled key
+      address-postcode:
+        help: Tax address postcode
+      bienes-extranjero-above-threshold:
+        help: Foreign-held assets above legal threshold
+      declaration-type:
+        help: Declaration type code
+      does-intracomunitario:
+        help: Conducts intracomunitario operations
+      enrollment-large-company:
+        help: Large-company enrollment
+      enrollment-public-administration-budget-gt-6000000:
+        help: Public administration budget over 6,000,000
+      family-descendants-eu-eea-deduction:
+        help: EU/EEA descendants in family-unit deduction
+      family-minor-children-in-unit:
+        help: Minor children in family unit
+      has-employees:
+        help: Has employees and pays salaries with retención
+      iva-intracommunity-operations-exceed-50000-eur:
+        help: Intra-community operations exceed 50,000 EUR
+      iva-oss-enrolled:
+        help: Enrolled in OSS
+      iva-regime:
+        help: IVA regime
+      iva-roi-enrolled:
+        help: Enrolled in ROI
+      name:
+        help: Display name shown in local reviews
+      notes:
+        help: Operator notes (not consumed by the engine)
+      pays-capital-income-with-retencion:
+        help: Pays capital income with retención
+      pays-professionals-with-retencion:
+        help: Pays professionals with retención
+      pays-rent-with-retencion:
+        help: Pays local rent with retención
+      professional-income-withholding-ge-70pct:
+        help: At least 70% of professional income with prior retención
+      spouse-birth-date:
+        help: Spouse birth date
+      spouse-disability-grade:
+        help: Spouse disability code
+      spouse-eu-eea-country:
+        help: Spouse EU/EEA country
+      spouse-eu-eea-resident:
+        help: Spouse is EU/EEA resident
+      spouse-name:
+        help: Spouse given name
+      spouse-non-resident-irpf:
+        help: Spouse is non-resident IRPF
+      spouse-sex:
+        help: Spouse sex code
+      spouse-surnames:
+        help: Spouse surnames
+      spouse-tax-id:
+        help: Spouse NIF/NIE
+      surnames:
+        help: Surnames or company name for export headers
+      tax-id:
+        help: Tax identifier (NIF/NIE) for declarations
+      tax-residence-ccaa:
+        help: Tax-residence autonomous community
+      taxpayer-birth-date:
+        help: First taxpayer birth date
+      taxpayer-death-date:
+        help: First taxpayer death date
+      taxpayer-disability-grade:
+        help: First taxpayer disability code
+      taxpayer-marital-status:
+        help: First taxpayer marital status
+      taxpayer-sex:
+        help: First taxpayer sex code
+      third-party-transactions-above-347-threshold:
+        help: Third-party transactions exceed Modelo 347 threshold
+      uses-objective-estimation-irpf:
+        help: Files IRPF under objective estimation
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intra-community operations exceed 50,000 EUR

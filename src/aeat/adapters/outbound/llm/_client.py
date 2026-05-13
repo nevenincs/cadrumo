@@ -38,7 +38,7 @@ class LLMClient:
         prompt_registry: Optional prompt registry override.
         caller: Stable caller identifier recorded in usage logs.
         prompt_id: Stable prompt identifier recorded in usage logs.
-        _adapter: Optional adapter override for tests and controlled flows.
+        adapter_override: Optional adapter override for tests and controlled flows.
     """
 
     def __init__(
@@ -50,7 +50,7 @@ class LLMClient:
         prompt_registry: PromptRegistry | None = None,
         caller: str = "aeat.adapters.outbound.llm.client",
         prompt_id: str = "adhoc",
-        _adapter: _ProviderAdapter | None = None,
+        adapter_override: _ProviderAdapter | None = None,
     ) -> None:
         self.settings = settings or Settings()
         self.cache = cache or LLMCache(root_dir=self.settings.aeat_llm_cache_dir)
@@ -58,7 +58,7 @@ class LLMClient:
         self.prompt_registry = prompt_registry or PromptRegistry.seeded()
         self.caller = caller
         self.prompt_id = prompt_id
-        self._adapter_override = _adapter
+        self._adapter_override = adapter_override
 
     async def complete(self, request: LLMRequest) -> LLMResponse:
         """Complete a prompt request.

@@ -3,8 +3,8 @@
 The tests use Typer's ``CliRunner`` to exercise the live command
 surface: invalid choice tokens are rejected at the CLI boundary,
 descriptor-validated values pass through to ``ProfileRecord.values``,
-and the eventual case-insensitive lookup (closed in W12) is gated as
-an ``xfail`` until that Step lands.
+and the case-insensitive lookup resolves ``TAX.ID`` and ``tax.id`` to
+the same descriptor entry.
 """
 
 from __future__ import annotations
@@ -51,8 +51,9 @@ def test_config_set_tax_residence_ccaa_accepts_madrid(cli_runner: CliRunner) -> 
     assert "tax.residence.ccaa\tmadrid" in result.output
 
 
-@pytest.mark.xfail(reason="case-insensitive ProfileKey.from_key lands in W12", strict=True)
 def test_config_set_tax_id_is_case_insensitive(cli_runner: CliRunner) -> None:
+    """``ProfileKey.from_key`` resolves ``TAX.ID`` and ``tax.id`` to the same entry."""
+
     _seed_active_profile()
     upper = cli_runner.invoke(app, ["set", "TAX.ID", "12345678Z"])
     lower = cli_runner.invoke(app, ["set", "tax.id", "12345678Z"])

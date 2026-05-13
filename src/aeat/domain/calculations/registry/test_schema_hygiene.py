@@ -187,9 +187,7 @@ def test_renta_synthetic_scenarios_do_not_pass_with_pure_zero_inputs_to_zero_out
     """
 
     offences: list[str] = []
-    renta_test_files = (
-        PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py",
-    )
+    renta_test_files = (PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py",)
     for path in renta_test_files:
         if not path.exists():
             continue
@@ -241,15 +239,21 @@ def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
 
     replay_dir = PROJECT_ROOT / "corpus" / "parity_replays" / "renta_web_open"
     captured = {p.stem for p in replay_dir.glob("*.json")} if replay_dir.exists() else set()
-    chain_test = PROJECT_ROOT / "src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py"
+    capture_replay_test = PROJECT_ROOT / "src/aeat/adapters/outbound/aeat/sede/test_renta_web_open_capture_replay.py"
     declared: set[str] = set()
-    for path in (chain_test,):
+    # Only the capture-replay test inventory counts as the live-grounded
+    # baseline set: its scenario ids are the ones the driver actually
+    # captures (chain-behaviour scenarios feed values into derived
+    # casillas the open-simulator renders read-only and can't capture).
+    for path in (capture_replay_test,):
         if not path.exists():
             continue
         text = path.read_text(encoding="utf-8")
-        for match in re.finditer(r'_scenario_2025\(\s*"([^"]+)"', text):
-            declared.add(match.group(1))
-        for match in re.finditer(r'id\s*=\s*"(modelo-100-[^"]+)"', text):
+        # Match bare scenario ids only (no filename extensions or path
+        # fragments). The capture-replay test references the same id in
+        # the parametrized scenario tuple and as a payload filename via
+        # f-string; either occurrence must round-trip identically.
+        for match in re.finditer(r'"(modelo-100-[^".]+)"', text):
             declared.add(match.group(1))
     uncovered = sorted(declared - captured)
     metrics_path = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-replay-coverage.txt"
@@ -268,12 +272,11 @@ def test_every_renta_chain_scenario_has_renta_web_open_replay_payload() -> None:
         ),
         encoding="utf-8",
     )
-    # Hard-fail threshold: once ≥80% of declared scenarios carry payloads,
-    # the gate flips to enforce the remaining captures. Below that, the
-    # metrics file inventories progress without breaking CI on partial
-    # capture batches.
-    coverage_ratio = (len(declared & captured) / len(declared)) if declared else 1.0
-    if captured and uncovered and coverage_ratio >= 0.8:
+    # Hard-fail mode (#171): every declared baseline-scenario id must
+    # carry a captured replay payload. Once a capture exists, the gate
+    # is strict — adding a new declared scenario without its capture
+    # breaks CI immediately rather than waiting for the 80% threshold.
+    if captured and uncovered:
         raise AssertionError(
             "Renta chain scenarios without Renta WEB Open replay payload "
             "(capture via AEAT_LIVE_TESTS_ENABLED=1):\n  " + "\n  ".join(uncovered)

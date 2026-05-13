@@ -33,9 +33,16 @@ def _individual_answers(**overrides: object) -> SetupAnswers:
     return SetupAnswers.model_validate(defaults)
 
 
-def test_verify_emits_seven_findings() -> None:
+def test_verify_emits_one_finding_per_registered_check() -> None:
     report = verify_setup_answers(_individual_answers())
-    assert len(report.findings) == 7
+    names = [finding.name for finding in report.findings]
+    assert names == [
+        "tax_id_present",
+        "activity_present",
+        "spouse_consistency",
+        "eu_eea_country_consistency",
+        "obligations_consistency",
+    ]
 
 
 def test_verifier_is_green_on_well_formed_individual() -> None:

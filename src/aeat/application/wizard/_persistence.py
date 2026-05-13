@@ -2,9 +2,10 @@
 
 Serialises a typed answers model back to canonical-token strings, calls
 ``set_profile_values`` to mutate the workflow state, and dispatches the
-side-effect persistence (e.g. ``save_tax_residence``) that legacy
-profile keys carry. The reverse projection (``project_answers``) builds
-the typed answers model from a raw canonical-token dict.
+linked side-effect persistence (e.g. ``save_tax_residence``) that
+specific profile keys carry. The reverse projection
+(``project_answers``) builds the typed answers model from a raw
+canonical-token dict.
 """
 
 from __future__ import annotations
@@ -81,8 +82,8 @@ def persist_answers(
     Each profile-bound question contributes one canonical-token entry to
     the active ``ProfileRecord.values``. When the flow writes
     ``tax.residence.ccaa``, the side-effect
-    ``save_tax_residence`` adapter is invoked so the legacy
-    ``TaxResidenceProfile`` stays in sync.
+    ``save_tax_residence`` adapter is invoked so the
+    ``TaxResidenceProfile`` storage surface stays in sync.
     """
 
     canonical = serialise_answers(flow, answers)
@@ -92,7 +93,7 @@ def persist_answers(
 
 
 def _maybe_save_tax_residence(canonical: Mapping[str, str]) -> None:
-    """Persist tax residence through the legacy storage adapter if present."""
+    """Persist tax residence through the tax-residence storage adapter."""
 
     ccaa_value = canonical.get("tax.residence.ccaa")
     if not ccaa_value:

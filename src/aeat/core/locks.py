@@ -176,10 +176,8 @@ def exclusive_file_lock(
     # extend the lock's lifetime to the child process and could deadlock
     # an unrelated writer if the child outlives the parent.
     open_flags = os.O_RDWR | os.O_CREAT
-    if hasattr(os, "O_CLOEXEC"):
-        open_flags |= os.O_CLOEXEC
-    if hasattr(os, "O_NOINHERIT"):
-        open_flags |= os.O_NOINHERIT  # type: ignore[attr-defined]
+    open_flags |= getattr(os, "O_CLOEXEC", 0)
+    open_flags |= getattr(os, "O_NOINHERIT", 0)
     fd = os.open(lock_path, open_flags, 0o600)
     try:
         deadline = time.monotonic() + timeout

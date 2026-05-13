@@ -213,28 +213,53 @@ def extract_renta_web_open_summary_value(body_text: str, label: str) -> str | No
 async def _navigate_to_casilla(page: Any, casilla_number: str, *, timeout_ms: int) -> None:
     """Open the Buscar casilla dialog, enter the casilla number, jump to the page.
 
-    The Resumen view exposes a "Buscar casilla" button that opens a modal
-    dialog with a 4-char "Número de casilla" input and an "Ir a la página"
-    button. Typing a valid casilla number enables both the search button
-    and the navigation button; clicking "Ir a la página" navigates the form
-    to the page containing that casilla.
+    On the Resumen view the "Buscar casilla" button lives on a secondary
+    toolbar that is collapsed by default; we expand it via the
+    "Mostrar opciones" toggle first. Once visible, clicking Buscar opens
+    a modal dialog with a 4-char "Número de casilla" input and an
+    "Ir a la página" button. Typing a valid casilla number enables both
+    the search button and the navigation button; clicking "Ir a la
+    página" navigates the form to the page containing that casilla.
     """
 
+    # Expand the secondary toolbar (idempotent — already expanded is fine).
+    # If the locator isn't visible (toolbar already expanded), skip silently
+    # without clicking — _click_expected raises rather than no-ops, which is
+    # the contract we need to gate on visibility first.
+    mostrar = page.locator('button[title="Mostrar opciones"]').first
+    try:
+        await mostrar.wait_for(state="visible", timeout=10_000)
+    except Exception as exc:
+        logger.debug("mostrar opciones already expanded or unavailable: %s", exc)
+    else:
+        await _click_expected(
+            mostrar,
+            stage=f"navigate-to-casilla:{casilla_number}:mostrar-opciones",
+            description="Mostrar opciones toolbar expander",
+            timeout_ms=10_000,
+        )
     await _click_expected(
-        page.get_by_role("button", name="Buscar casilla").first,
+        page.locator('button[title="Buscar casilla"]').first,
         stage=f"navigate-to-casilla:{casilla_number}:open-dialog",
         description="Buscar casilla button",
         timeout_ms=timeout_ms,
     )
+    casilla_input = page.locator('input.estiloAlfanumerico[maxlength="4"]').first
     await _fill_expected(
-        page.locator('input.estiloAlfanumerico[maxlength="4"]').first,
+        casilla_input,
         casilla_number,
         stage=f"navigate-to-casilla:{casilla_number}:type-number",
         description="Buscar casilla number input",
         timeout_ms=timeout_ms,
     )
+    # Pressing Enter (or Tab) commits the value and triggers ZK validation
+    # so the inline "Buscar casilla" lupa button enables.
+    await casilla_input.press("Enter", timeout=timeout_ms)
+    # After validation the "Ir a la página" button becomes enabled.
+    ir_pagina = page.locator('button:has-text("Ir a la página")').first
+    await ir_pagina.wait_for(state="visible", timeout=timeout_ms)
     await _click_expected(
-        page.get_by_role("button", name="Ir a la página").first,
+        ir_pagina,
         stage=f"navigate-to-casilla:{casilla_number}:jump-to-page",
         description="Ir a la página button",
         timeout_ms=timeout_ms,
@@ -245,7 +270,7 @@ async def _navigate_to_resumen(page: Any, *, timeout_ms: int) -> None:
     """Return to the Resumen view after editing form casillas."""
 
     await _click_expected(
-        page.get_by_role("button", name="Resumen", exact=True).first,
+        page.locator('button:has-text("Resumen")').first,
         stage="navigate-to-resumen",
         description="Resumen button",
         timeout_ms=timeout_ms,
@@ -258,6 +283,27 @@ async def _navigate_to_resumen(page: Any, *, timeout_ms: int) -> None:
     )
 
 
+async def _locate_casilla_input(page: Any, casilla_number: str, *, timeout_ms: int) -> Any:
+    """Locate the editable input for a given casilla number on the form page.
+
+    The Buscar casilla dialog's "Ir a la página" navigation auto-focuses
+    the target casilla's input field. We first try the focused-element
+    fast path, then fall back to a wider search by the casilla number's
+    nearby label text. ZK form widgets carry the casilla number as a
+    sibling span/label rather than on the input itself.
+    """
+
+    # Fast path: the navigation auto-focuses the casilla input.
+    focused_input = page.locator("input:focus").first
+    try:
+        await focused_input.wait_for(state="visible", timeout=2_000)
+        return focused_input
+    except Exception as exc:
+        logger.debug("focused-input fast path unavailable for %s: %s", casilla_number, exc)
+    # Fallback: locate an input adjacent to a label containing the casilla number.
+    return page.locator(f"xpath=//*[normalize-space(text())='{casilla_number}']/following::input[1]").first
+
+
 async def _apply_casilla_overrides(
     page: Any,
     overrides: Mapping[str, str],
@@ -267,16 +313,15 @@ async def _apply_casilla_overrides(
     """Apply each (casilla, value) override by navigating to the casilla and filling it.
 
     Uses the Buscar casilla dialog to jump to each casilla's page, then
-    locates the input field associated with that casilla number and fills
-    it with the requested value. The Renta WEB Open form pages label each
-    editable input with a `title` attribute that includes the casilla
-    number (e.g. ``title="0511 ..."``); the locator matches by title-prefix.
+    fills the auto-focused input (or the input near the casilla number's
+    label) with the requested value.
     """
 
     for casilla_number, value in overrides.items():
         await _navigate_to_casilla(page, casilla_number, timeout_ms=timeout_ms)
+        locator = await _locate_casilla_input(page, casilla_number, timeout_ms=timeout_ms)
         await _fill_expected(
-            page.locator(f'input[title^="{casilla_number}"]').first,
+            locator,
             value,
             stage=f"apply-casilla-override:{casilla_number}",
             description=f"casilla {casilla_number} input",
@@ -301,8 +346,8 @@ async def _scrape_casilla_form_value(
         await _navigate_to_casilla(page, casilla_number, timeout_ms=timeout_ms)
     except SedeNavigationError:
         return None
-    locator = page.locator(f'input[title^="{casilla_number}"]').first
     try:
+        locator = await _locate_casilla_input(page, casilla_number, timeout_ms=timeout_ms)
         return cast(str, await locator.input_value(timeout=timeout_ms))
     except Exception:
         return None

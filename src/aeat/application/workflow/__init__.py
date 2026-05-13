@@ -2,11 +2,6 @@
 
 from __future__ import annotations
 
-# ---- review action re-exports -----------------------------------------------
-# Placed last: review._actions imports WorkflowState/WorkflowEvent/utc_now
-# from this package; all of those are already defined above.
-from ..review._actions import update_invoice_review, update_ledger_review
-
 # ---- adapters & engine (pull in auth / filing layers) -----------------------
 from ._adapters import (
     DeadlineEngineAdapter,
@@ -94,8 +89,6 @@ __all__ = [
     "load_run",
     "save_run",
     "update_declaration_pointer",
-    "update_invoice_review",
-    "update_ledger_review",
     "utc_now",
     "workflow_state_repository",
 ]

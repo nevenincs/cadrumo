@@ -12,11 +12,11 @@ its declared ``answer_type``, and returns the flow's
 from __future__ import annotations
 
 from collections.abc import Mapping
-from pathlib import Path
 
 from pydantic import BaseModel
 
 from ._models import WizardFlow, WizardQuestion
+from ._persistence import _parse_canonical
 from ._prompter import Prompter
 from ._widgets import validate_widget_answer
 
@@ -30,21 +30,6 @@ def _condition_satisfied(question: WizardQuestion, canonical: Mapping[str, str])
     if parent is None:
         return False
     return parent == question.visible_when.equals
-
-
-def _parse_canonical(question: WizardQuestion, raw: str) -> object:
-    """Project a canonical-token answer back into its declared answer type."""
-
-    answer_type = question.answer_type
-    if answer_type is bool:
-        return raw == "true"
-    if answer_type is int:
-        if not raw:
-            return 0
-        return int(raw)
-    if answer_type is Path:
-        return Path(raw) if raw else Path()
-    return raw
 
 
 def run_flow(

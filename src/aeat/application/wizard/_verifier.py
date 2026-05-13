@@ -6,9 +6,8 @@ the typed projection and emits one :class:`WizardCheckFinding` per
 check. Findings carry a severity and a translation key so renderers
 can localise the outcome.
 
-The check shape replaces the legacy ``Verifier`` orchestrator. Each
-check is a pure function ``(BaseModel) -> WizardCheckFinding``; the
-verifier accumulates the per-check findings into a
+Each check is a pure function ``(BaseModel) -> WizardCheckFinding``;
+the verifier accumulates the per-check findings into a
 :class:`WizardCheckReport` and returns it as a frozen record.
 """
 
@@ -108,24 +107,6 @@ def _check_eu_eea_country_consistency(answers: SetupAnswers) -> WizardCheckFindi
     )
 
 
-def _check_residence_ccaa(answers: SetupAnswers) -> WizardCheckFinding:
-    del answers
-    return WizardCheckFinding(
-        name="residence_ccaa",
-        severity=WizardCheckSeverity.OK,
-        message_key="wizard.setup.verifier.residence_ccaa_ok",
-    )
-
-
-def _check_iva_regime(answers: SetupAnswers) -> WizardCheckFinding:
-    del answers
-    return WizardCheckFinding(
-        name="iva_regime",
-        severity=WizardCheckSeverity.OK,
-        message_key="wizard.setup.verifier.iva_regime_ok",
-    )
-
-
 def _check_obligations_consistency(answers: SetupAnswers) -> WizardCheckFinding:
     if answers.professional_income_withholding_ge_70pct and not answers.pays_professionals_with_retencion:
         return WizardCheckFinding(
@@ -145,8 +126,6 @@ _SETUP_CHECKS: tuple[Callable[[SetupAnswers], WizardCheckFinding], ...] = (
     _check_activity_present,
     _check_spouse_consistency,
     _check_eu_eea_country_consistency,
-    _check_residence_ccaa,
-    _check_iva_regime,
     _check_obligations_consistency,
 )
 

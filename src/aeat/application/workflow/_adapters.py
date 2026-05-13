@@ -20,10 +20,12 @@ import json
 from collections.abc import Mapping
 from datetime import date
 from pathlib import Path
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from ...adapters.outbound.aeat.auth import AeatSession
 from ...core.config import Settings, load_settings
+
+if TYPE_CHECKING:
+    from ...adapters.outbound.aeat.auth import AeatSession
 from ...core.logging import get_logger
 from ...domain.deadlines import (
     AutonomoProfile,

@@ -24,8 +24,9 @@ from ...application.review import (
     LedgerReviewFilterSpec,
     LedgerReviewRecord,
     LedgerSplit,
+    update_ledger_review,
 )
-from ...application.workflow import WorkflowState, update_ledger_review, workflow_state_repository
+from ...application.workflow import WorkflowState, workflow_state_repository
 from ...domain.transactions import (
     Transaction,
     TransactionDirection,

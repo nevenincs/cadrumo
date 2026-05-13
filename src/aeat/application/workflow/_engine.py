@@ -15,16 +15,16 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import UTC, date, datetime
-from typing import NoReturn
+from typing import TYPE_CHECKING, NoReturn
 
 from ...adapters.outbound.aeat import sede as _sede
-from ...adapters.outbound.aeat.auth import (
-    AeatSession,
-    CertificateHealthSeverity,
-)
+from ...adapters.outbound.aeat.auth import CertificateHealthSeverity
 from ...adapters.outbound.aeat.export import DraftStatus, FilingFindingSeverity
 from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot
 from ...application.auth import describe_provider_operator_impact
+
+if TYPE_CHECKING:
+    from ...adapters.outbound.aeat.auth import AeatSession
 from ...core.config import Settings
 from ...core.errors import SiteHealthError
 from ...core.logging import get_logger
@@ -52,10 +52,10 @@ from ._protocols import (
     SubmissionEngineProtocol,
 )
 
-ExpedientesSource = Callable[[AeatSession, str | None], Awaitable[tuple[Expediente, ...]]]
+ExpedientesSource = Callable[["AeatSession", str | None], Awaitable[tuple[Expediente, ...]]]
 """Async callable that returns expedientes for a session, optionally filtered by ``modelo``."""
 
-NotificationsSource = Callable[[AeatSession], Awaitable[NotificationsSnapshot]]
+NotificationsSource = Callable[["AeatSession"], Awaitable[NotificationsSnapshot]]
 """Async callable that returns the full notifications snapshot for a session."""
 
 

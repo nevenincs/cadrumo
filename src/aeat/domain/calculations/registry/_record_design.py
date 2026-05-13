@@ -15,7 +15,10 @@ import pdfplumber
 import pypdfium2 as pdfium
 import xlrd
 from openpyxl import load_workbook
+from openpyxl.worksheet.worksheet import Worksheet
+from pdfplumber.page import Page
 from pydantic import ConfigDict
+from xlrd.sheet import Sheet as XlrdSheet
 
 from ._errors import RegistryValidationError
 from ._schema import RegistryModel
@@ -255,7 +258,7 @@ def _extract_record_design_pdf_stream(
         raise
 
 
-def _extract_sheet(worksheet) -> RecordDesignSheet:  # type: ignore[no-untyped-def]
+def _extract_sheet(worksheet: Worksheet) -> RecordDesignSheet:
     header = _find_header(worksheet)
     return _extract_sheet_rows(
         worksheet.title,
@@ -267,7 +270,7 @@ def _extract_sheet(worksheet) -> RecordDesignSheet:  # type: ignore[no-untyped-d
     )
 
 
-def _extract_xls_sheet(worksheet) -> RecordDesignSheet:  # type: ignore[no-untyped-def]
+def _extract_xls_sheet(worksheet: XlrdSheet) -> RecordDesignSheet:
     header = _find_xls_header(worksheet)
     return _extract_sheet_rows(
         worksheet.name,
@@ -334,7 +337,7 @@ def _is_blank_row(values: tuple[object, ...]) -> bool:
     return all(value is None or str(value).strip() == "" for value in values)
 
 
-def _find_header(worksheet) -> _WorkbookHeader:  # type: ignore[no-untyped-def]
+def _find_header(worksheet: Worksheet) -> _WorkbookHeader:
     for row_number, row in enumerate(worksheet.iter_rows(min_row=1, max_row=10, values_only=True), start=1):
         values = tuple(row)
         if _normalise_header_cell(_cell(values, 0)) not in {"no", "n"}:
@@ -360,7 +363,7 @@ def _find_header(worksheet) -> _WorkbookHeader:  # type: ignore[no-untyped-def]
     raise RegistryValidationError(f"{worksheet.title!r} has no record-design header")
 
 
-def _find_xls_header(worksheet) -> _WorkbookHeader:  # type: ignore[no-untyped-def]
+def _find_xls_header(worksheet: XlrdSheet) -> _WorkbookHeader:
     for rowx in range(min(10, worksheet.nrows)):
         values = tuple(worksheet.row_values(rowx))
         if _normalise_header_cell(_cell(values, 0)) not in {"no", "n"}:
@@ -643,7 +646,7 @@ def _uses_page_record_layout(lines: tuple[str, ...]) -> bool:
     return any(_pdf_page_name(_clean_pdf_line(line)) is not None for line in lines)
 
 
-def _snapshot_pdf_page(page) -> _PdfPageSnapshot:  # type: ignore[no-untyped-def]
+def _snapshot_pdf_page(page: Page) -> _PdfPageSnapshot:
     return _PdfPageSnapshot(
         lines=_extract_pdf_page_lines(page),
         words=tuple(
@@ -671,7 +674,7 @@ def _snapshot_pdf_page(page) -> _PdfPageSnapshot:  # type: ignore[no-untyped-def
     )
 
 
-def _extract_pdf_page_lines(page) -> tuple[str, ...]:  # type: ignore[no-untyped-def]
+def _extract_pdf_page_lines(page: Page) -> tuple[str, ...]:
     text = page.extract_text() or ""
     return tuple(text.splitlines())
 

@@ -17,8 +17,8 @@ from ...domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ..review import InvoiceReviewFilterSpec
-from ..workflow import WorkflowState, update_invoice_review
+from ..review import InvoiceReviewFilterSpec, update_invoice_review
+from ..workflow import WorkflowState
 from . import apply_manual_invoice_match, project_invoice_payment_matches, project_invoice_reviews
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

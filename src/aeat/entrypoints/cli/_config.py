@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import typing
 from pathlib import Path
 
 import typer
@@ -189,7 +190,8 @@ def config_set(
     except KeyError as exc:
         raise typer.BadParameter(tr("cli.config.errors.unknown_key", name=key)) from exc
 
-    question = _question_for_profile_key(registered.key)
+    canonical_key = registered.key
+    question = _question_for_profile_key(canonical_key)
     if question is not None:
         try:
             value = validate_widget_answer(question, value)
@@ -204,16 +206,16 @@ def config_set(
     profile_name = state.active_profile
     if profile_name is None:
         raise typer.BadParameter(tr("cli.config.errors.no_active_profile"))
-    updated = repository.update(lambda current: set_profile_values(current, profile_name, {key: value}))
+    updated = repository.update(lambda current: set_profile_values(current, profile_name, {canonical_key: value}))
     record = updated.active_profile_record()
-    stored_value = record.values.get(key, "") if record is not None else ""
-    payload = {"key": key, "value": stored_value}
+    stored_value = record.values.get(canonical_key, "") if record is not None else ""
+    payload = {"key": canonical_key, "value": stored_value}
     if _format_of(ctx) == _FORMAT_JSON:
         import json as _json
 
         typer.echo(_json.dumps(payload, ensure_ascii=False))
         return
-    typer.echo(f"{key}\t{stored_value}")
+    typer.echo(f"{canonical_key}\t{stored_value}")
 
 
 @app.command("unset", help=tr("cli.config.unset.help"))
@@ -239,45 +241,44 @@ def config_unset(
     typer.echo(f"{key}\t<unset>")
 
 
-@app.command("setup", help=tr("cli.config.setup.help"))
-def config_setup(
-    profile_name: str = typer.Option(
-        "default",
-        "--profile-name",
-        help=tr("cli.config.setup.profile_name_help"),
-    ),
-    quiet: bool = typer.Option(False, "--quiet", help=tr("cli.config.setup.quiet_help")),
-    accept_defaults: bool = typer.Option(
-        False,
-        "--accept-defaults",
-        help=tr("cli.config.setup.accept_defaults_help"),
-    ),
-    tax_id: str | None = typer.Option(None, "--tax-id", help=tr("cli.config.setup.tax_id_help")),
-    activity: str | None = typer.Option(None, "--activity", help=tr("cli.config.setup.activity_help")),
-) -> None:
-    """Run the schema-driven setup wizard interactively or via flag-driven quiet mode."""
+def _register_wizard_commands(target: typer.Typer) -> None:
+    """Register every wizard flow as a sub-command of ``target``.
 
-    from ...application.wizard._catalogue import SETUP_FLOW
+    Walks ``WIZARD_FLOWS`` once and binds the descriptor-derived
+    closure under ``aeat config <flow.id>``. Each flow contributes one
+    Typer command with per-question flags derived from the descriptor
+    plus the three mode flags (``--profile-name``, ``--quiet``,
+    ``--accept-defaults``).
+    """
+
+    from ...application.wizard._catalogue import WIZARD_FLOWS
     from ...application.wizard._commands import build_wizard_command
     from ...application.wizard._errors import WizardMissingFlagError
 
-    flag_values: dict[str, str] = {}
-    if tax_id is not None:
-        flag_values["tax-id"] = tax_id
-    if activity is not None:
-        flag_values["activity"] = activity
+    for flow in WIZARD_FLOWS:
+        command_callable = build_wizard_command(flow)
+        original = typing.cast(typing.Any, command_callable)
 
-    command = build_wizard_command(SETUP_FLOW)
-    try:
-        command(
-            profile_name=profile_name,
-            quiet=quiet,
-            accept_defaults=accept_defaults,
-            flag_values=flag_values,
-        )
-    except WizardMissingFlagError as exc:
-        translated = exc.translated_message or tr("cli.config.setup.errors.missing_required_flags")
-        raise typer.BadParameter(translated) from exc
+        def _wrapped(
+            *args: object,
+            _callable: typing.Callable[..., None] = command_callable,
+            **kwargs: object,
+        ) -> None:
+            try:
+                _callable(*args, **kwargs)
+            except WizardMissingFlagError as exc:
+                translated = exc.translated_message or tr("cli.config.setup.errors.missing_required_flags")
+                raise typer.BadParameter(translated) from exc
+
+        wrapped = typing.cast(typing.Any, _wrapped)
+        wrapped.__signature__ = original.__signature__
+        wrapped.__annotations__ = original.__annotations__
+        wrapped.__name__ = original.__name__
+        wrapped.__doc__ = original.__doc__
+        target.command(name=flow.id, help=tr(f"cli.config.{flow.id}.help"))(_wrapped)
+
+
+_register_wizard_commands(app)
 
 
 @app.command("status", help=tr("cli.config.status.help"))

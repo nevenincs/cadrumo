@@ -59,7 +59,7 @@ def _emit(sink: JsonlRunSink, event: RunEvent) -> None:
         args=None,
         exc_info=None,
     )
-    record.run_event = event  # type: ignore[attr-defined]
+    record.run_event = event
     sink.emit(record)
     sink.close()
 

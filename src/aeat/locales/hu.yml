@@ -44,38 +44,48 @@ categories:
 cli:
   app:
     modelo:
-      app_help: cli.app.modelo.app_help
+      app_help: AEAT adóbevallás-modellek (modelos) regisztrációs katalógusának
+        áttekintése
       bindings:
-        as_of_help: cli.app.modelo.bindings.as_of_help
-        modelo_help: cli.app.modelo.bindings.modelo_help
-        period_help: cli.app.modelo.bindings.period_help
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
+          feloldása
+        modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
+        period_help: 'Adóidőszak a bindingek szűkítéséhez (pl. 2026Q1, 2026-01)'
       casillas:
-        as_of_help: cli.app.modelo.casillas.as_of_help
-        input_kind_help: cli.app.modelo.casillas.input_kind_help
-        modelo_help: cli.app.modelo.casillas.modelo_help
-        period_help: cli.app.modelo.casillas.period_help
-        required_help: cli.app.modelo.casillas.required_help
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
+          feloldása
+        input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound,
+          computed, informational)
+        modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
+        period_help: 'Adóidőszak a cellák szűkítéséhez (pl. 2026Q1, 2026-01)'
+        required_help: Csak a kötelezőként megjelölt cellák megjelenítése
       describe:
-        as_of_help: cli.app.modelo.describe.as_of_help
-        modelo_help: cli.app.modelo.describe.modelo_help
-        period_help: cli.app.modelo.describe.period_help
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
+          feloldása
+        modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
+        period_help: Adóidőszak a modellrevízió feloldásához (pl. 2026Q1,
+          2026-01)
       formulas:
-        as_of_help: cli.app.modelo.formulas.as_of_help
-        modelo_help: cli.app.modelo.formulas.modelo_help
-        period_help: cli.app.modelo.formulas.period_help
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
+          feloldása
+        modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
+        period_help: 'Adóidőszak a képletek szűkítéséhez (pl. 2026Q1, 2026-01)'
       list:
-        year_help: cli.app.modelo.list.year_help
+        year_help: Modellkatalógus szűrése egyetlen adóévre
   archive:
-    app_help: cli.archive.app_help
+    app_help: A helyi titkosított archívum exportálása és importálása hordozható
+      JSON csomagként
     export:
-      bundle_id_help: cli.archive.export.bundle_id_help
-      help: cli.archive.export.help
-      namespace_help: cli.archive.export.namespace_help
-      path_help: cli.archive.export.path_help
+      bundle_id_help: Az automatikusan generált csomag-azonosító felülírása
+      help: Hordozható JSON csomag írása a biztonságos objektumkatalógusból
+      namespace_help: A csomag szűkítése egy vagy több névtérre (ismételhető)
+      path_help: A JSON csomag cél elérési útja
     import:
-      conflict_help: cli.archive.import.conflict_help
-      help: cli.archive.import.help
-      path_help: cli.archive.import.path_help
+      conflict_help: 'Ütközéskezelési szabály ütköző rekordok visszaállításakor:
+        fail, overwrite vagy keep'
+      help: Archívumcsomag visszaállítása a titkosított biztonságos
+        objektumkatalógusba
+      path_help: A visszaállítandó JSON csomag elérési útja
   browser:
     app_help: Böngésző automatizálási feladatok kezelése (Playwright)
     health:
@@ -94,6 +104,12 @@ cli:
       period_unrecognised: Ismeretlen időszak
   config:
     app_help: Helyi konfiguráció és diagnosztika kezelése
+    auth:
+      file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs)
+      help: Az aktív hitelesítési szolgáltató beállítása
+      provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico)
+      unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd
+        az ''aeat config auth --help'' parancsot az érvényes azonosítókért.'
     doctor:
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
@@ -103,6 +119,43 @@ cli:
       quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
         a megerősítéshez.
       quarantine_yes_help: A karantén művelet kifejezett megerősítése
+    errors:
+      invalid_value: 'Érvénytelen érték a %{name} kulcshoz: %{value}'
+      no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config setup
+        --tax-id <NIF>' parancsot.
+      unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Az ''aeat config list''
+        listázza az érvényes kulcsokat.'
+    get:
+      help: Egy konfigurációs kulcs aktuális értékének megjelenítése
+      key_help: A kiolvasandó kulcs (pl. tax.id, iva.regime)
+    list:
+      help: Az összes konfigurációs kulcs és aktuális értékének listázása
+    reset:
+      help: Operátor által megadott konfigurációs hatókörök visszaállítása
+      invalid_scope: 'Érvénytelen hatókör: %{scope}. Az érvényes hatókörök: %{valid}.'
+      requires_yes: A visszaállítás romboló. Futtasd újra a --yes kapcsolóval a megerősítéshez.
+      scope_help: A visszaállítandó hatókör (all, profile, auth)
+      yes_help: A visszaállítási művelet kifejezett megerősítése
+    set:
+      help: Érték hozzárendelése egy konfigurációs kulcshoz
+      key_help: A beállítandó kulcs (pl. iva.regime)
+      value_help: A beállítandó érték (szöveg, true/false, összeg a kulcstól függően)
+    setup:
+      accept_defaults_help: A leíró alapértelmezett értékeinek elfogadása kérdezés
+        nélkül
+      errors:
+        missing_required_flags: Hiányoznak a kötelező kapcsolók a --quiet módhoz;
+          adj meg értéket minden kötelező kérdéshez.
+      help: A séma-vezérelt beállítási varázsló futtatása interaktívan vagy kapcsoló-vezérelt
+        csendes módban
+      profile_name_help: A profil neve, ahova a válaszok kerülnek
+      quiet_help: A folyamat futtatása interakció nélkül, csak a kapcsolók értékeit
+        használva
+    status:
+      help: Az aktív konfigurációs profil készenlétének megjelenítése
+    unset:
+      help: Egy konfigurációs kulcshoz rendelt érték törlése
+      key_help: A törlendő kulcs
   data:
     app_help: Adóadatok és nyilvántartások kezelése
     ledgers:
@@ -534,7 +587,7 @@ cli:
     app_help: Az aktuális adózási munkaterület áttekintése
     calendar_help: Kötelezettségi naptár megjelenítése dátumtartományra
     calendar_refused_incomplete: 'A profil nem deklarálja ezeket a kulcsokat: %{keys}.
-      Futtasd: ''aeat setup profile set <kulcs> <érték>'' vagy add meg --allow-incomplete
+      Futtasd: ''aeat config set <kulcs> <érték>'' vagy add meg --allow-incomplete
       a naptár alapértelmezett értékekkel történő számításához.'
     calendar_requires_dates: Naptárhoz használja a --from és --to opciókat
     drafts: Tervezetek
@@ -606,7 +659,7 @@ cli:
     app_help: 'Spanyol adóbevallási segéd
 
 
-      Quickstart: aeat setup init --name NAME --tax-id NIF'
+      Quickstart: aeat config setup --profile-name NAME --tax-id NIF'
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     format_help: A parancseredmények kimeneti formátuma
     quiet_help: Csak hibák megjelenítése stderr-en
@@ -617,7 +670,7 @@ cli:
     app_help: Konceptuális segítség megjelenítése a rezsimekről, modellekről és AEAT
       folyamatokról
     errors:
-      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat topic'' a regisztrált
+      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat app topic'' a regisztrált
         témák listájához.'
     opts:
       slug: Téma azonosító (kebab-case, pl. iva-regime)
@@ -718,8 +771,8 @@ review:
 topic:
   authentication:
     body: 'Az AEAT hitelesítés Cl@ve Móvilt (push a regisztrált mobilra) vagy digitális
-      tanúsítványt (FNMT / megfelelő) használ. Állíts be szolgáltatót az ''aeat setup
-      auth configure'' paranccsal és ellenőrizd: ''aeat setup auth status''.'
+      tanúsítványt (FNMT / megfelelő) használ. Állíts be szolgáltatót az ''aeat config
+      auth --provider certificate'' paranccsal és ellenőrizd: ''aeat config status''.'
     title: AEAT hitelesítés
   calendar:
     body: A naptár megjeleníti a benyújtási kötelezettségeket (modellek és időszakok)
@@ -758,11 +811,11 @@ topic:
   profile:
     body: 'A helyi profil tartalmazza az adóazonosítódat (NIF), fő tevékenységedet,
       ÁFA / IRPF rezsimedet és opcionális regisztrációkat (SII, Verifactu, intracomunitario).
-      Szerkeszd: ''aeat setup profile set <kulcs> <érték>''.'
+      Szerkeszd: ''aeat config set <kulcs> <érték>''.'
     title: Adózói profil
   providers:
     body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő követelményei
-      vannak. 'aeat setup auth providers' felsorolja őket a követelményekkel együtt.
+      vannak. 'aeat config auth --help' felsorolja őket a követelményekkel együtt.
     title: Hitelesítési szolgáltatók
   recargo-extemporaneo:
     body: Határidő utáni benyújtás az AEAT előzetes felszólítása nélkül havi 1%-os
@@ -806,6 +859,85 @@ wizard:
       family-minor-children-in-unit:
         prompt: Kiskorú gyermekek a családi egységben
       title: Családi egység
+    flags:
+      activity:
+        help: Tevékenységcímke vagy ellenőrzött kulcs
+      address-postcode:
+        help: Adózási cím irányítószáma
+      bienes-extranjero-above-threshold:
+        help: Külföldön tartott eszközök a törvényi küszöb felett
+      declaration-type:
+        help: Bevallás-típus kódja
+      does-intracomunitario:
+        help: Közösségi műveleteket végez
+      enrollment-large-company:
+        help: Nagyvállalat besorolás
+      enrollment-public-administration-budget-gt-6000000:
+        help: Közigazgatási költségvetés 6 000 000 felett
+      family-descendants-eu-eea-deduction:
+        help: EU/EGT leszármazottak családi egység kedvezményében
+      family-minor-children-in-unit:
+        help: Kiskorú gyermekek a családi egységben
+      has-employees:
+        help: Van alkalmazottja és bérleti adóelőleget von
+      iva-intracommunity-operations-exceed-50000-eur:
+        help: Közösségi műveletek meghaladják az 50 000 EUR küszöböt
+      iva-oss-enrolled:
+        help: OSS bejegyzés
+      iva-regime:
+        help: ÁFA-rezsim
+      iva-roi-enrolled:
+        help: ROI bejegyzés
+      name:
+        help: A helyi áttekintésben megjelenő név
+      notes:
+        help: Operátori jegyzetek (a motor nem dolgozza fel)
+      pays-capital-income-with-retencion:
+        help: Tőkejövedelmeket adóelőleggel fizet
+      pays-professionals-with-retencion:
+        help: Szakembereket adóelőleggel fizet
+      pays-rent-with-retencion:
+        help: Helyiségbérletet adóelőleggel fizet
+      professional-income-withholding-ge-70pct:
+        help: A szakmai jövedelem legalább 70%-a előzetes adólevonás alatt
+      spouse-birth-date:
+        help: A házastárs születési dátuma
+      spouse-disability-grade:
+        help: A házastárs fogyatékossági kódja
+      spouse-eu-eea-country:
+        help: A házastárs EU/EGT országa
+      spouse-eu-eea-resident:
+        help: Házastárs EU/EGT rezidens
+      spouse-name:
+        help: A házastárs keresztneve
+      spouse-non-resident-irpf:
+        help: Házastárs nem rezidens IRPF
+      spouse-sex:
+        help: A házastárs neme
+      spouse-surnames:
+        help: A házastárs vezetéknevei
+      spouse-tax-id:
+        help: A házastárs NIF/NIE azonosítója
+      surnames:
+        help: Vezetéknév vagy cégnév az exportfejlécekhez
+      tax-id:
+        help: Adóazonosító (NIF/NIE) bevallásokhoz
+      tax-residence-ccaa:
+        help: Adóügyi rezidens autonóm közösség
+      taxpayer-birth-date:
+        help: Az első adózó születési dátuma
+      taxpayer-death-date:
+        help: Az első adózó halálozási dátuma
+      taxpayer-disability-grade:
+        help: Az első adózó fogyatékossági kódja
+      taxpayer-marital-status:
+        help: Az első adózó családi állapota
+      taxpayer-sex:
+        help: Az első adózó neme
+      third-party-transactions-above-347-threshold:
+        help: Harmadik felekkel folytatott műveletek meghaladják a Modelo 347 küszöböt
+      uses-objective-estimation-irpf:
+        help: IRPF-et becsült rendszerben adózza
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Közösségi műveletek meghaladják az 50 000 EUR küszöböt

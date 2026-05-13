@@ -42,8 +42,8 @@ from .crypto._crypto import decrypt_record, encrypt_record
 from .envelope._envelope import (
     CipherEnvelope,
     EncryptionMetadata,
-    _build_aad,  # type: ignore[attr-defined]
-    _derive_envelope_key,  # type: ignore[attr-defined]
+    _build_aad,
+    _derive_envelope_key,
 )
 from .errors import DecryptionError, EncryptionError
 from .master_key._master_key import MasterKeyProvider
@@ -341,6 +341,8 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
     context. Operators with custom directories / additional consumers
     pass an extended plan to :func:`rotate_master_key` directly.
     """
+    from ....application.profile._storage_namespaces import _PROFILE_HKDF_CONTEXT
+
     return (
         RotationPlanEntry(
             store_dir=Path(settings.aeat_financial_txs_dir),
@@ -413,7 +415,7 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
                 if settings.aeat_default_profile_path is not None
                 else Path(settings.aeat_secret_store_dir) / "setup"
             ),
-            hkdf_context=b"aeat.application.setup.profile.v1",
+            hkdf_context=_PROFILE_HKDF_CONTEXT,
             target_filename=(
                 Path(settings.aeat_default_profile_path).name
                 if settings.aeat_default_profile_path is not None

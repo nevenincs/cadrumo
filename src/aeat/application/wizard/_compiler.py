@@ -1,4 +1,4 @@
-"""Pure projection of the wizard descriptor catalogue into the legacy
+"""Pure projection of the wizard descriptor catalogue into the
 ``PROFILE_KEYS`` registry shape.
 
 ``compile_profile_keys`` walks every :class:`WizardFlow` in the
@@ -22,7 +22,7 @@ from ._models import WizardCondition, WizardFlow, WizardQuestion
 
 
 def compile_profile_keys(flows: Sequence[WizardFlow]) -> tuple[ProfileKey, ...]:
-    """Project the wizard catalogue into the legacy ``PROFILE_KEYS`` shape.
+    """Project the wizard catalogue into the ``PROFILE_KEYS`` shape.
 
     Args:
         flows: The wizard catalogue to walk.
@@ -71,7 +71,11 @@ def _compile_one(
     required_when_value: str | None = None
     if question.visible_when is not None:
         required_when_key, required_when_value = _resolve_condition(question.visible_when, by_id)
-    assert question.profile_key is not None
+    if question.profile_key is None:
+        raise WizardCompileError(
+            f"question {question.id!r} reached _compile_one without a profile_key",
+            context={"question_id": question.id},
+        )
     return ProfileKey(
         key=question.profile_key,
         requirement=requirement,

@@ -17,7 +17,7 @@ from ..adapters.persistence.storage.sql.secure_objects import (
 from ..core.config import PROJECT_ROOT
 from ..core.logging import default_log_file_path
 from ..domain.calculations.registry import ValidatedRegistryAuthority
-from .setup_status import SetupStatusReport, build_setup_status
+from .wizard._status import WizardStatusReport, build_wizard_status
 from .workflow import workflow_state_repository
 
 DiagnosticStatus = Literal["ok", "warn", "fail"]
@@ -88,7 +88,7 @@ class ConfigDoctorReport(BaseModel):
     python_version: str
     log_file: str
     registry: RegistryVersionSummary
-    setup: SetupStatusReport | None
+    setup: WizardStatusReport | None
     secure_objects: SecureObjectIntegrityReport
     checks: tuple[DiagnosticCheck, ...]
 
@@ -138,11 +138,11 @@ def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDocto
         ),
     ]
 
-    setup_report: SetupStatusReport | None = None
+    setup_report: WizardStatusReport | None = None
     try:
         state = workflow_state_repository().load()
         checks.append(DiagnosticCheck(name="secure_state.load", status="ok", summary="state backend readable"))
-        setup_report = build_setup_status(state)
+        setup_report = build_wizard_status(state)
         checks.append(_profile_check(setup_report))
         checks.append(_auth_check(setup_report))
     except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
@@ -273,13 +273,13 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
     )
 
 
-def _profile_check(report: SetupStatusReport) -> DiagnosticCheck:
+def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
     if report.active_profile is None:
         return DiagnosticCheck(
             name="profile.active",
             status="warn",
             summary="no active profile",
-            next_action="aeat setup init --name NAME --tax-id NIF",
+            next_action="aeat config setup --profile-name NAME --tax-id NIF",
         )
     if not report.profile_ready:
         return DiagnosticCheck(
@@ -295,20 +295,20 @@ def _profile_check(report: SetupStatusReport) -> DiagnosticCheck:
     )
 
 
-def _auth_check(report: SetupStatusReport) -> DiagnosticCheck:
+def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
     if not report.auth_provider:
         return DiagnosticCheck(
             name="auth.provider",
             status="warn",
             summary="no authentication provider configured",
-            next_action="aeat setup auth configure --provider certificate --file PATH",
+            next_action="aeat config auth --provider certificate --file PATH",
         )
     if not report.login_ready:
         return DiagnosticCheck(
             name="auth.session",
             status="warn",
             summary=f"{report.auth_provider} configured but no active session",
-            next_action="aeat setup auth login",
+            next_action="aeat config auth --provider certificate",
         )
     return DiagnosticCheck(name="auth.session", status="ok", summary=f"{report.auth_provider} session ready")
 

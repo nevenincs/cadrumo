@@ -45,38 +45,53 @@ categories:
 cli:
   app:
     modelo:
-      app_help: cli.app.modelo.app_help
+      app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el
+        registro
       bindings:
-        as_of_help: cli.app.modelo.bindings.as_of_help
-        modelo_help: cli.app.modelo.bindings.modelo_help
-        period_help: cli.app.modelo.bindings.period_help
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
+          indicada (AAAA-MM-DD)
+        modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        period_help: Periodo fiscal para acotar los bindings (p. ej. 2026Q1,
+          2026-01)
       casillas:
-        as_of_help: cli.app.modelo.casillas.as_of_help
-        input_kind_help: cli.app.modelo.casillas.input_kind_help
-        modelo_help: cli.app.modelo.casillas.modelo_help
-        period_help: cli.app.modelo.casillas.period_help
-        required_help: cli.app.modelo.casillas.required_help
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
+          indicada (AAAA-MM-DD)
+        input_kind_help: Filtrar las casillas por tipo de entrada (manual,
+          bound, computed, informational)
+        modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        period_help: Periodo fiscal para acotar las casillas (p. ej. 2026Q1,
+          2026-01)
+        required_help: Mostrar solo las casillas marcadas como obligatorias
       describe:
-        as_of_help: cli.app.modelo.describe.as_of_help
-        modelo_help: cli.app.modelo.describe.modelo_help
-        period_help: cli.app.modelo.describe.period_help
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
+          indicada (AAAA-MM-DD)
+        modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        period_help: Periodo fiscal para resolver la revisión del modelo (p. ej.
+          2026Q1, 2026-01)
       formulas:
-        as_of_help: cli.app.modelo.formulas.as_of_help
-        modelo_help: cli.app.modelo.formulas.modelo_help
-        period_help: cli.app.modelo.formulas.period_help
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
+          indicada (AAAA-MM-DD)
+        modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        period_help: Periodo fiscal para acotar las fórmulas (p. ej. 2026Q1,
+          2026-01)
       list:
-        year_help: cli.app.modelo.list.year_help
+        year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
   archive:
-    app_help: cli.archive.app_help
+    app_help: Exportar e importar el archivo local cifrado como paquetes JSON
+      portables
     export:
-      bundle_id_help: cli.archive.export.bundle_id_help
-      help: cli.archive.export.help
-      namespace_help: cli.archive.export.namespace_help
-      path_help: cli.archive.export.path_help
+      bundle_id_help: Sobrescribir el identificador de paquete generado
+        automáticamente
+      help: Escribir un paquete JSON portable del catálogo de objetos seguros
+      namespace_help: Restringir el paquete a uno o varios espacios de nombres
+        (repetible)
+      path_help: Ruta de destino del paquete JSON
     import:
-      conflict_help: cli.archive.import.conflict_help
-      help: cli.archive.import.help
-      path_help: cli.archive.import.path_help
+      conflict_help: 'Política de conflicto al restaurar registros colisionantes:
+        fail, overwrite o keep'
+      help: Restaurar un paquete de archivo en el catálogo cifrado de objetos
+        seguros
+      path_help: Ruta del paquete JSON a restaurar
   browser:
     app_help: Gestión de la automatización del navegador (Playwright)
     health:
@@ -95,6 +110,12 @@ cli:
       period_unrecognised: Periodo no reconocido
   config:
     app_help: Gestionar configuración local y diagnósticos
+    auth:
+      file_help: Ruta al archivo de credenciales (certificado o clave)
+      help: Configurar el proveedor de autenticación activo
+      provider_help: Identificador del proveedor (p.ej. certificado-electronico)
+      unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
+        ''aeat config auth --help'' para ver los identificadores válidos.'
     doctor:
       help: Diagnosticar configuración local, registro, perfil, autenticación y logs
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
@@ -105,8 +126,9 @@ cli:
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
     errors:
-      no_active_profile: No hay un perfil activo. Ejecuta 'aeat setup init --name
-        NAME --tax-id NIF' primero.
+      invalid_value: 'Valor inválido para %{name}: %{value}'
+      no_active_profile: No hay un perfil activo. Ejecuta 'aeat config setup --tax-id
+        <NIF>' primero.
       unknown_key: 'Clave de configuración desconocida: %{name}. Ejecuta ''aeat config
         list'' para ver las claves disponibles.'
     get:
@@ -114,10 +136,28 @@ cli:
       key_help: Clave a leer (ej. tax.id, iva.regime)
     list:
       help: Listar todas las claves de configuración y sus valores actuales
+    reset:
+      help: Reiniciar ámbitos de configuración introducidos por el operador
+      invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
+      requires_yes: El reinicio es destructivo. Vuelve a ejecutar con --yes para confirmar.
+      scope_help: Ámbito a reiniciar (all, profile, auth)
+      yes_help: Confirmar explícitamente la operación de reinicio
     set:
       help: Asignar un valor a una clave de configuración
       key_help: Clave a asignar (ej. iva.regime)
       value_help: Valor a asignar (texto, true/false, importe segun la clave)
+    setup:
+      accept_defaults_help: Aceptar los valores por defecto del descriptor sin preguntar
+      errors:
+        missing_required_flags: Faltan banderas obligatorias para el modo --quiet;
+          proporciona un valor para cada pregunta obligatoria.
+      help: Ejecutar el asistente de configuración basado en esquema de forma interactiva
+        o usando banderas
+      profile_name_help: Nombre del perfil donde guardar las respuestas
+      quiet_help: Ejecutar el flujo sin interacción usando solo los valores de las
+        banderas
+    status:
+      help: Mostrar el estado del perfil de configuración activo
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
@@ -551,7 +591,7 @@ cli:
     app_help: Revisar el estado actual del espacio de trabajo fiscal
     calendar_help: Mostrar calendario de obligaciones para un rango de fechas
     calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta
-      ''aeat setup profile set <clave> <valor>'' o usa --allow-incomplete para ver
+      ''aeat config set <clave> <valor>'' o usa --allow-incomplete para ver
       el calendario calculado bajo valores por defecto.'
     calendar_requires_dates: Use --from y --to al consultar el calendario
     drafts: Borradores
@@ -625,7 +665,7 @@ cli:
     app_help: 'Asistente para preparar declaraciones tributarias españolas
 
 
-      Quickstart: aeat setup init --name NAME --tax-id NIF'
+      Quickstart: aeat config setup --profile-name NAME --tax-id NIF'
     debug_help: Mostrar logs internos de depuración en stderr
     format_help: Formato de salida para los resultados del comando
     quiet_help: Mostrar solo errores en stderr
@@ -635,7 +675,7 @@ cli:
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
-      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat topic'' para listar
+      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat app topic'' para listar
         los temas registrados.'
     opts:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
@@ -735,8 +775,8 @@ review:
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
-      digital (FNMT / equivalente). Configura un proveedor con 'aeat setup auth configure'
-      y verifica con 'aeat setup auth status'.
+      digital (FNMT / equivalente). Configura un proveedor con 'aeat config auth --provider certificate'
+      y verifica con 'aeat config status'.
     title: Autenticación con la AEAT
   calendar:
     body: El calendario muestra las obligaciones de presentación (modelos y periodos)
@@ -775,11 +815,11 @@ topic:
   profile:
     body: El perfil local contiene tu identificación fiscal (NIF), actividad principal,
       régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
-      Edítalo con 'aeat setup profile set <clave> <valor>'.
+      Edítalo con 'aeat config set <clave> <valor>'.
     title: Perfil del contribuyente
   providers:
     body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
-      'aeat setup auth providers' lista los proveedores con sus prerrequisitos.
+      'aeat config auth --help' lista los proveedores con sus prerrequisitos.
     title: Proveedores de autenticación
   recargo-extemporaneo:
     body: La presentación fuera de plazo sin requerimiento previo de la AEAT acumula
@@ -823,6 +863,85 @@ wizard:
       family-minor-children-in-unit:
         prompt: Hijos menores en unidad familiar
       title: Unidad familiar
+    flags:
+      activity:
+        help: Etiqueta de actividad o clave controlada
+      address-postcode:
+        help: Código postal del domicilio fiscal
+      bienes-extranjero-above-threshold:
+        help: Bienes en el extranjero superan el umbral legal
+      declaration-type:
+        help: Código del tipo de declaración
+      does-intracomunitario:
+        help: Realiza operaciones intracomunitarias
+      enrollment-large-company:
+        help: Empresa de gran volumen
+      enrollment-public-administration-budget-gt-6000000:
+        help: Presupuesto administración pública superior a 6.000.000
+      family-descendants-eu-eea-deduction:
+        help: Descendientes UE/EEE en deducción de unidad familiar
+      family-minor-children-in-unit:
+        help: Hijos menores en unidad familiar
+      has-employees:
+        help: Tiene empleados y paga salarios con retención
+      iva-intracommunity-operations-exceed-50000-eur:
+        help: Operaciones intracomunitarias superan 50.000 EUR
+      iva-oss-enrolled:
+        help: Alta en OSS
+      iva-regime:
+        help: Régimen IVA
+      iva-roi-enrolled:
+        help: Alta en ROI
+      name:
+        help: Nombre visible mostrado en revisiones locales
+      notes:
+        help: Notas del operador (no consumidas por el motor)
+      pays-capital-income-with-retencion:
+        help: Paga rentas de capital con retención
+      pays-professionals-with-retencion:
+        help: Paga a profesionales con retención
+      pays-rent-with-retencion:
+        help: Paga alquiler de local con retención
+      professional-income-withholding-ge-70pct:
+        help: Al menos 70% de los ingresos profesionales con retención previa
+      spouse-birth-date:
+        help: Fecha de nacimiento del cónyuge
+      spouse-disability-grade:
+        help: Clave de discapacidad del cónyuge
+      spouse-eu-eea-country:
+        help: País UE/EEE del cónyuge
+      spouse-eu-eea-resident:
+        help: Cónyuge residente UE/EEE
+      spouse-name:
+        help: Nombre del cónyuge
+      spouse-non-resident-irpf:
+        help: Cónyuge no residente IRPF
+      spouse-sex:
+        help: Sexo del cónyuge
+      spouse-surnames:
+        help: Apellidos del cónyuge
+      spouse-tax-id:
+        help: NIF/NIE del cónyuge
+      surnames:
+        help: Apellidos o razón social para cabeceras de exportación
+      tax-id:
+        help: Identificador fiscal (NIF/NIE) para declaraciones
+      tax-residence-ccaa:
+        help: Comunidad autónoma de residencia fiscal
+      taxpayer-birth-date:
+        help: Fecha de nacimiento del primer declarante
+      taxpayer-death-date:
+        help: Fecha de fallecimiento del primer declarante
+      taxpayer-disability-grade:
+        help: Clave de discapacidad del primer declarante
+      taxpayer-marital-status:
+        help: Estado civil del primer declarante
+      taxpayer-sex:
+        help: Sexo del primer declarante
+      third-party-transactions-above-347-threshold:
+        help: Operaciones con terceros superan el umbral del Modelo 347
+      uses-objective-estimation-irpf:
+        help: Tributa IRPF en estimación objetiva
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operaciones intracomunitarias superan 50.000 EUR

@@ -175,7 +175,6 @@ def filing_profile_from_autonomo(
 
 
 def load_default_filing_profile(
-    path: Path | None = None,
     *,
     display_name: str | None = None,
 ) -> FilingOperatorProfile:
@@ -183,14 +182,10 @@ def load_default_filing_profile(
 
     Resolves the active workflow profile via the wizard descriptor's
     typed projection and re-shapes it as a runtime
-    :class:`FilingOperatorProfile`. The legacy on-disk profile envelope
-    is no longer consulted; the operator's profile values stored in
+    :class:`FilingOperatorProfile`. Operator profile values stored in
     ``ProfileRecord`` are the single source of truth.
 
     Args:
-        path: Ignored. Retained for source-compatibility with the
-            historical signature; values now come from the active
-            workflow profile.
         display_name: Optional friendly label propagated to the
             returned profile.
 
@@ -201,14 +196,13 @@ def load_default_filing_profile(
         FilingBuilderError: When no profile is active in the workflow
             state.
     """
-    del path  # callers no longer drive this through a JSON envelope
-    from ..wizard._status import load_active_autonomo_profile
+    from ..wizard._status import WizardStatusError, load_active_autonomo_profile
     from ..workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     try:
         profile = load_active_autonomo_profile(state)
-    except ValueError as exc:
+    except WizardStatusError as exc:
         raise FilingBuilderError(str(exc)) from exc
     return filing_profile_from_autonomo(profile, display_name=display_name)
 

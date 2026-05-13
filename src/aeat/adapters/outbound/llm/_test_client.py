@@ -68,7 +68,7 @@ def test_client_uses_cache_before_calling_provider(tmp_path: Path) -> None:
         settings=settings,
         cache=LLMCache(root_dir=tmp_path / "cache"),
         usage_recorder=UsageRecorder(root_dir=tmp_path / "usage"),
-        _adapter=adapter,
+        adapter_override=adapter,
     )
     request = LLMRequest(prompt="hello")
     first = asyncio.run(client.complete(request))
@@ -91,7 +91,7 @@ def test_client_surfaces_provider_error(tmp_path: Path) -> None:
         settings=settings,
         cache=LLMCache(root_dir=tmp_path / "cache"),
         usage_recorder=UsageRecorder(root_dir=tmp_path / "usage"),
-        _adapter=_DeterministicAdapter(error_mode="provider"),
+        adapter_override=_DeterministicAdapter(error_mode="provider"),
     )
     with pytest.raises(LLMProviderError):
         asyncio.run(client.complete(LLMRequest(prompt="hello")))
@@ -110,7 +110,7 @@ def test_client_surfaces_rate_limit_error(tmp_path: Path) -> None:
         settings=settings,
         cache=LLMCache(root_dir=tmp_path / "cache"),
         usage_recorder=UsageRecorder(root_dir=tmp_path / "usage"),
-        _adapter=_DeterministicAdapter(error_mode="rate-limit"),
+        adapter_override=_DeterministicAdapter(error_mode="rate-limit"),
     )
     with pytest.raises(LLMRateLimitError):
         asyncio.run(client.complete(LLMRequest(prompt="hello")))

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
+from ._live_parity import ParityFieldComparison
 from ._remote_state_guard import (
     RemoteStateGuardPolicy,
     remote_state_policy_from_cross_reference,
@@ -11,6 +14,9 @@ from ._remote_state_guard import (
 from ._renta_web_open_oracle import (
     RENTA_WEB_OPEN_LANDING_URL,
     RentaWebOpenOracle,
+    _overall_verdict,
+    _parse_decimal_text,
+    equivalent_renta_web_open_value,
 )
 from ._schema import LiveCrossReferenceDecision
 
@@ -84,3 +90,103 @@ def test_verify_payload_without_driver_is_unverifiable_not_live_implementation()
 
     assert result.verdict == "unverifiable"
     assert "browser driver is not configured" in result.narrative
+
+
+# ---------------------------------------------------------------------------
+# _parse_decimal_text — Spanish-locale-aware decimal parser
+# ---------------------------------------------------------------------------
+
+
+def test_parse_decimal_text_returns_none_for_empty_input() -> None:
+    assert _parse_decimal_text("") is None
+    assert _parse_decimal_text("   ") is None
+
+
+def test_parse_decimal_text_parses_plain_integer() -> None:
+    assert _parse_decimal_text("1234") == Decimal("1234")
+
+
+def test_parse_decimal_text_parses_dot_decimal() -> None:
+    assert _parse_decimal_text("1234.56") == Decimal("1234.56")
+
+
+def test_parse_decimal_text_parses_comma_decimal_with_thousands_separator() -> None:
+    """AEAT Renta WEB Open renders amounts as ``1.234,56`` (Spanish locale).
+    The parser must drop ``.`` thousands separators and treat ``,`` as the
+    decimal point."""
+    assert _parse_decimal_text("1.234,56") == Decimal("1234.56")
+
+
+def test_parse_decimal_text_strips_non_breaking_space() -> None:
+    """AEAT's rendering uses ``\\xa0`` (NBSP) before the EUR suffix and
+    sometimes as a thousands separator."""
+    assert _parse_decimal_text("1\xa0234,56") == Decimal("1234.56")
+
+
+def test_parse_decimal_text_returns_none_for_malformed_input() -> None:
+    assert _parse_decimal_text("not-a-number") is None
+    assert _parse_decimal_text("12,34,56") is None
+
+
+def test_parse_decimal_text_tolerates_multiple_dot_thousands_groups() -> None:
+    """When a comma is present, every ``.`` is stripped before parsing,
+    so multi-group thousands renderings like ``1.234.567,89`` parse
+    cleanly (and so do degenerate inputs the parser opts to accept)."""
+    assert _parse_decimal_text("1.234.567,89") == Decimal("1234567.89")
+
+
+# ---------------------------------------------------------------------------
+# equivalent_renta_web_open_value — match dot-vs-comma renderings
+# ---------------------------------------------------------------------------
+
+
+def test_equivalent_renta_web_open_value_matches_identical_strings() -> None:
+    assert equivalent_renta_web_open_value("1234.56", "1234.56") is True
+
+
+def test_equivalent_renta_web_open_value_matches_dot_vs_comma_rendering() -> None:
+    """Registry-side produces ``1234.56``; Renta WEB Open returns
+    ``1.234,56``. Both must compare as equivalent so true matches do not
+    surface as spurious mismatches."""
+    assert equivalent_renta_web_open_value("1234.56", "1.234,56") is True
+
+
+def test_equivalent_renta_web_open_value_matches_scale_normalisation() -> None:
+    """Decimal normalises trailing zeros so ``0.00`` equals ``0``."""
+    assert equivalent_renta_web_open_value("0.00", "0") is True
+
+
+def test_equivalent_renta_web_open_value_returns_false_for_distinct_values() -> None:
+    assert equivalent_renta_web_open_value("1234.56", "1234.57") is False
+
+
+def test_equivalent_renta_web_open_value_returns_false_when_either_side_unparseable() -> None:
+    assert equivalent_renta_web_open_value("1234.56", "no-such-amount") is False
+    assert equivalent_renta_web_open_value("no-such-amount", "1234.56") is False
+
+
+# ---------------------------------------------------------------------------
+# _overall_verdict — composes per-field verdicts into a single verdict
+# ---------------------------------------------------------------------------
+
+
+_MATCH_FIELD = ParityFieldComparison(name="probe", expected="x", observed="x", verdict="match")
+_MISMATCH_FIELD = ParityFieldComparison(name="probe", expected="x", observed="y", verdict="mismatch")
+_UNVERIFIABLE_FIELD = ParityFieldComparison(name="probe", expected="x", observed="", verdict="unverifiable")
+
+
+def test_overall_verdict_match_when_all_fields_match() -> None:
+    assert _overall_verdict((_MATCH_FIELD,)) == "match"
+    assert _overall_verdict((_MATCH_FIELD, _MATCH_FIELD)) == "match"
+
+
+def test_overall_verdict_unverifiable_when_some_fields_unverifiable_and_none_mismatched() -> None:
+    assert _overall_verdict((_MATCH_FIELD, _UNVERIFIABLE_FIELD)) == "unverifiable"
+    assert _overall_verdict((_UNVERIFIABLE_FIELD,)) == "unverifiable"
+
+
+def test_overall_verdict_mismatch_when_any_field_mismatched_even_with_unverifiable_present() -> None:
+    """Mismatch outranks unverifiable in the precedence chain."""
+    assert _overall_verdict((_MATCH_FIELD, _MISMATCH_FIELD)) == "mismatch"
+    assert _overall_verdict((_UNVERIFIABLE_FIELD, _MISMATCH_FIELD)) == "mismatch"
+    assert _overall_verdict((_MATCH_FIELD, _UNVERIFIABLE_FIELD, _MISMATCH_FIELD)) == "mismatch"
