@@ -87,7 +87,7 @@ def _observation(
 
 
 def test_invoice_observation_validates_country_and_clave_enums() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"country_code must be uppercase"):
         InvoiceObservation(
             invoice_id="inv-1",
             party_tax_id="DE123",
@@ -95,7 +95,7 @@ def test_invoice_observation_validates_country_and_clave_enums() -> None:
             transaction_date=date(2026, 1, 1),
             base_amount=Decimal("1"),
         )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"intracommunity_clave .* is not an AEAT clave de operacion"):
         InvoiceObservation(
             invoice_id="inv-1",
             party_tax_id="DE123",
@@ -107,7 +107,9 @@ def test_invoice_observation_validates_country_and_clave_enums() -> None:
 
 
 def test_invoice_observation_rejects_inconsistent_rectification_metadata() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(
+        ValidationError, match=r"rectification observation must declare rectified_year and rectified_period"
+    ):
         InvoiceObservation(
             invoice_id="inv-1",
             party_tax_id="DE1",
@@ -116,7 +118,9 @@ def test_invoice_observation_rejects_inconsistent_rectification_metadata() -> No
             base_amount=Decimal("1"),
             is_rectification=True,
         )
-    with pytest.raises(ValidationError):
+    with pytest.raises(
+        ValidationError, match=r"non-rectification observation must not declare rectified_base_previous"
+    ):
         InvoiceObservation(
             invoice_id="inv-1",
             party_tax_id="DE1",
@@ -241,13 +245,15 @@ def test_resolve_invoice_binding_values_computes_rectification_delta_sum() -> No
 
 def test_resolve_invoice_binding_values_rejects_unsupported_fact() -> None:
     revision = _revision(_with_selector(_binding("vat-349-declarante-importe-operaciones"), fact="not_a_fact"))
-    with pytest.raises(RegistryValidationError):
+    with pytest.raises(RegistryValidationError, match=r"declares unsupported invoice fact 'not_a_fact'"):
         resolve_invoice_binding_values(revision, ())
 
 
 def test_resolve_invoice_binding_values_rejects_op_mismatch_for_fact() -> None:
     revision = _revision(_with_aggregation(_binding("vat-349-declarante-numero-operadores"), "sum"))
-    with pytest.raises(RegistryValidationError):
+    with pytest.raises(
+        RegistryValidationError, match=r"fact 'operator_count' requires aggregation op 'count_distinct'"
+    ):
         resolve_invoice_binding_values(revision, ())
 
 
@@ -435,7 +441,7 @@ def test_row_binding_rejects_inconsistent_grouping_for_period_only_field() -> No
             rectification_scope="only_rectifications",
         ),
     )
-    with pytest.raises(RegistryValidationError):
+    with pytest.raises(RegistryValidationError, match=r"requires grouping 'operator_clave_period'"):
         resolve_invoice_binding_row_values(revision, ())
 
 
@@ -447,7 +453,7 @@ def test_row_binding_requires_only_rectifications_for_period_field() -> None:
             rectification_scope="exclude_rectifications",
         ),
     )
-    with pytest.raises(RegistryValidationError):
+    with pytest.raises(RegistryValidationError, match=r"requires rectification_scope 'only_rectifications'"):
         resolve_invoice_binding_row_values(revision, ())
 
 
@@ -460,5 +466,5 @@ def test_row_binding_period_grouping_requires_rectification_scope() -> None:
             rectification_scope="exclude_rectifications",
         ),
     )
-    with pytest.raises(RegistryValidationError):
+    with pytest.raises(RegistryValidationError, match=r"grouping 'operator_clave_period' requires"):
         resolve_invoice_binding_row_values(revision, ())
