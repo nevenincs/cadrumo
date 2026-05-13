@@ -59,7 +59,7 @@ class TestArgumentRecord:
         assert rebuilt == record
 
     def test_strict_rejects_extra(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             ArgumentRecord.model_validate(
                 {"name": "x", "value": "y", "source": "FLAG", "leak": True},
             )
@@ -86,11 +86,11 @@ class TestRunEventPayload:
             assert rebuilt == payload
 
     def test_zero_variants_rejected(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"must set exactly one variant"):
             RunEventPayload()
 
     def test_two_variants_rejected(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"must set exactly one variant"):
             RunEventPayload(
                 navigation=NavigationPayload(url="https://x"),
                 error=ErrorPayload(error_type="E", message="m"),
