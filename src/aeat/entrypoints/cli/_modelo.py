@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date
+from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any, Literal
 
 import typer
@@ -36,8 +37,6 @@ from ...application.modelo import (
 from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
 from ...domain.calculations.registry._errors import RegistrySnapshotError
-from decimal import Decimal, InvalidOperation
-
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import FilingRecord
 from ...domain.modelos._verification_report import VerificationReport
@@ -1181,6 +1180,93 @@ def filing_record_show(
         **_filing_record_payload(record),
     }
     lines = ["operation\tmodelo.filing_record.show", *_filing_record_lines(record)]
+    _emit(ctx, payload, lines)
+
+
+@filing_record_app.command("import", help=tr("cli.app.modelo.filing_record.import_help"))
+def filing_record_import(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+    evidence_kind: Annotated[
+        str,
+        typer.Option(
+            "--evidence-kind",
+            help=tr("cli.app.modelo.filing_record.evidence_kind_help"),
+        ),
+    ],
+    evidence_reference_id: Annotated[
+        str,
+        typer.Option(
+            "--evidence-id",
+            help=tr("cli.app.modelo.filing_record.evidence_reference_id_help"),
+        ),
+    ],
+    actor: Annotated[
+        str,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ] = "aeat-import",
+    set_overrides: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--set",
+            help=tr("cli.app.modelo.filing_record.import_casilla_help"),
+        ),
+    ] = None,
+) -> None:
+    """Persist an externally-filed return as a baseline filing record."""
+
+    from ...application.modelo import (
+        ExternalFilingImportError,
+        import_external_filing_evidence,
+    )
+    from ...domain.modelos._filing_record import ExternalEvidenceKind
+
+    try:
+        kind = ExternalEvidenceKind(evidence_kind.strip())
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"--evidence-kind must be one of "
+            f"{', '.join(repr(k.value) for k in ExternalEvidenceKind)}; got {evidence_kind!r}"
+        ) from exc
+
+    casilla_values: dict[str, Decimal] = {}
+    for spec in set_overrides or ():
+        key, value = _parse_amendment_casilla(spec)
+        casilla_values[key] = value
+    if not casilla_values:
+        raise typer.BadParameter("--set is required at least once for an import")
+
+    try:
+        record = import_external_filing_evidence(
+            work_unit_id=work_unit_id,
+            casilla_values=casilla_values,
+            evidence_kind=kind,
+            evidence_reference_id=evidence_reference_id,
+            actor=actor,
+        )
+    except (
+        WorkUnitNotFoundError,
+        WorkUnitMutationRefusedError,
+        ExternalFilingImportError,
+    ) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.filing_record.import",
+        "evidence_kind": kind.value,
+        "evidence_reference_id": evidence_reference_id,
+        **_filing_record_payload(record),
+    }
+    lines = [
+        "operation\tmodelo.filing_record.import",
+        f"evidence_kind\t{kind.value}",
+        f"evidence_reference_id\t{evidence_reference_id}",
+        *_filing_record_lines(record),
+    ]
+    lines.append("filing_disambiguation\t(imported AEAT-attested baseline)")
     _emit(ctx, payload, lines)
 
 

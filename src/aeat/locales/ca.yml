@@ -79,7 +79,15 @@ cli:
       filing_record:
         app_help: Inspeccionar els filing records interns registrats
         bucket_id_help: Filtrar per bucket
+        evidence_kind_help: Tipus d'evidència importada (aeat_justificante_pdf,
+          aeat_csv_register, aeat_live_capture)
+        evidence_reference_id_help: Identificador estable de l'evidència importada
+          (número de justificant, id del registre CSV, id de captura en viu)
         filing_record_id_help: Identificador estable d'un filing record
+        import_casilla_help: Valor de casella importat amb sintaxi CASILLA=DECIMAL
+          (repetible; almenys un requerit)
+        import_help: Persistir una declaració presentada externament com a filing
+          record base amb evidència oficial importada de l'AEAT
         include_superseded_help: Incloure els filing records superats (exclosos per
           defecte)
         list_help: Llistar els filing records registrats
@@ -99,9 +107,9 @@ cli:
           d'un informe de verificació
       work:
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
-        amend_help: Construir una declaració complementària sobre una declaració
-          presentada externament. Requereix un filing record amb evidència oficial
-          importada de l'AEAT
+        amend_help: Construir una declaració complementària sobre una declaració presentada
+          externament. Requereix un filing record amb evidència oficial importada
+          de l'AEAT
         amendment_kind_help: Tipus legal de l'amendació (complementaria o sustitutiva)
         amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
@@ -118,9 +126,9 @@ cli:
           auditable)
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
-        from_filing_record_help: Identificador estable del filing record base a
-          amendar. Ha de portar evidència externa importada (justificant / CSV /
-          captura en viu)
+        from_filing_record_help: Identificador estable del filing record base a amendar.
+          Ha de portar evidència externa importada (justificant / CSV / captura en
+          viu)
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
@@ -135,8 +143,8 @@ cli:
         revision_help: Identificador estable de la revisió registrada del model
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
-        set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL
-          (repetible; almenys un requerit)
+        set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible;
+          almenys un requerit)
         status_help: Mostrar les metadades d'una unitat de treball
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
@@ -341,12 +349,8 @@ cli:
       title: Declaració Complementària / Rectificativa
     app_help: Gestió i presentació de declaracions tributàries
     build:
-      inputs_help: Fitxers o directoris d'entrada per construir la declaració
       modelo_help: Model tributari a construir (p. ex., 303, 111, 130)
       period_help: Periode fiscal (p. ex., 1T, 2T, 01, 12)
-      profile_name_help: Nom del perfil de contribuent
-      profile_tax_id_help: NIF del contribuent
-      success: Declaració construïda correctament
     complementaria:
       app_help: Gestió de declaracions complementàries i rectificativas
       build:
@@ -361,7 +365,6 @@ cli:
       amendment_success: Declaració complementària processada correctament
       casilla_key_not_string: La clau de la casella ha de ser una cadena de text (string)
       failed_to_load_draft: Fallada en carregar l'esborrany de la declaració
-      inputs_not_found: No s'han trobat els fitxers d'entrada
       inputs_not_object: Les dades d'entrada han de ser un objecte (JSON)
       invalid_json: Arxiu JSON no vàlid
       invalid_status: Estat de la declaració no vàlid

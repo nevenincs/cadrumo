@@ -23,7 +23,6 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_vali
 
 from ._errors import BucketEventValidationError
 
-
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 
 _EventId = Annotated[
@@ -68,6 +67,11 @@ class BucketEventType(StrEnum):
     MODELO_FILED = "modelo.filed"
     MODELO_FILED_SUPERSEDED = "modelo.filed_superseded"
     MODELO_AMENDED = "modelo.amended"
+    MODELO_FILING_IMPORTED = "modelo.filing.imported"
+    PROFILE_BUCKET_CREATED = "profile.bucket.created"
+    PROFILE_SELECTED = "profile.selected"
+    PROFILE_VALUES_UPDATED = "profile.values.updated"
+    PROFILE_VALUES_CLEARED = "profile.values.cleared"
 
 
 class BucketEventObjectType(StrEnum):
@@ -77,6 +81,7 @@ class BucketEventObjectType(StrEnum):
     CALCULATION_REVISION = "calculation_revision"
     VERIFICATION_REPORT = "verification_report"
     FILING_RECORD = "filing_record"
+    PROFILE = "profile"
 
 
 def _canonical_payload(payload: Mapping[str, str]) -> dict[str, str]:
