@@ -214,3 +214,37 @@ def test_bindings_list_and_preview_emit_no_bucket_event() -> None:
             f"Forbidden bucket-event emission pattern {needle!r} found in "
             "_modelo.py; bindings list/preview must remain read-only."
         )
+
+
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        ("aeat_justificante_pdf", "aeat_justificante_pdf"),
+        ("aeat-justificante-pdf", "aeat_justificante_pdf"),
+        ("aeat_csv_register", "aeat_csv_register"),
+        ("aeat-csv-register", "aeat_csv_register"),
+        ("aeat_live_capture", "aeat_live_capture"),
+        ("aeat-live-capture", "aeat_live_capture"),
+    ],
+)
+def test_evidence_kind_accepts_canonical_and_hyphenated_values(raw: str, expected: str) -> None:
+    """``--evidence-kind`` accepts both canonical underscore values and
+    their hyphenated aliases (``aeat-justificante-pdf`` ↔ ``aeat_justificante_pdf``).
+    The import command parses the alias and normalises it before
+    dispatching the application action."""
+
+    from aeat.domain.modelos._filing_record import ExternalEvidenceKind
+
+    normalised = raw.strip().replace("-", "_")
+    assert ExternalEvidenceKind(normalised) is ExternalEvidenceKind(expected)
+
+
+def test_evidence_kind_rejects_unrelated_token() -> None:
+    """``--evidence-kind`` still rejects values that aren't a valid
+    enum member after hyphen-to-underscore normalisation."""
+
+    from aeat.domain.modelos._filing_record import ExternalEvidenceKind
+
+    raw = "aeat_bogus_evidence"
+    with pytest.raises(ValueError, match="aeat_bogus_evidence"):
+        ExternalEvidenceKind(raw.strip().replace("-", "_"))

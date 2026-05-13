@@ -1257,12 +1257,15 @@ def filing_record_import(
     )
     from ...domain.modelos._filing_record import ExternalEvidenceKind
 
+    raw_evidence_kind = evidence_kind.strip().replace("-", "_")
     try:
-        kind = ExternalEvidenceKind(evidence_kind.strip())
+        kind = ExternalEvidenceKind(raw_evidence_kind)
     except ValueError as exc:
+        canonical = ", ".join(repr(k.value) for k in ExternalEvidenceKind)
+        hyphenated = ", ".join(repr(k.value.replace("_", "-")) for k in ExternalEvidenceKind)
         raise typer.BadParameter(
-            f"--evidence-kind must be one of "
-            f"{', '.join(repr(k.value) for k in ExternalEvidenceKind)}; got {evidence_kind!r}"
+            f"--evidence-kind must be one of {canonical} "
+            f"(hyphenated aliases also accepted: {hyphenated}); got {evidence_kind!r}"
         ) from exc
 
     casilla_values: dict[str, Decimal] = {}
