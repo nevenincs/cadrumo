@@ -127,8 +127,19 @@ def _canonical_from_flag_value(question: WizardQuestion, value: Any) -> str | No
     return str(value)
 
 
-def _python_parameter(flow: WizardFlow, question: WizardQuestion) -> inspect.Parameter:
-    """Build the ``inspect.Parameter`` Typer reads to register a flag."""
+def _python_parameter(
+    flow: WizardFlow,
+    question: WizardQuestion,
+    *,
+    section_title: str | None = None,
+) -> inspect.Parameter:
+    """Build the ``inspect.Parameter`` Typer reads to register a flag.
+
+    ``section_title`` becomes the ``rich_help_panel`` so Typer renders
+    each ``WizardSection`` as its own group in the ``--help`` output;
+    this groups the 42-flag surface visually and stops the column
+    wrapper from ellipsising long flag names.
+    """
 
     flag = _flag_name(question)
     help_text = tr(_help_key(flow, question))
@@ -137,6 +148,7 @@ def _python_parameter(flow: WizardFlow, question: WizardQuestion) -> inspect.Par
             option = typer.Option(
                 f"{flag}/{_no_flag_name(question)}",
                 help=help_text,
+                rich_help_panel=section_title,
             )
             annotation = Annotated[bool | None, option]
             default = None
@@ -145,6 +157,7 @@ def _python_parameter(flow: WizardFlow, question: WizardQuestion) -> inspect.Par
                 flag,
                 click_type=click.Choice([choice.value for choice in question.choices]),
                 help=help_text,
+                rich_help_panel=section_title,
             )
             annotation = Annotated[str | None, option]
             default = None
@@ -153,23 +166,29 @@ def _python_parameter(flow: WizardFlow, question: WizardQuestion) -> inspect.Par
                 flag,
                 click_type=click.Choice([choice.value for choice in question.choices]),
                 help=help_text,
+                rich_help_panel=section_title,
             )
             annotation = Annotated[list[str], option]
             default = []
         case WizardWidget.INTEGER:
-            option = typer.Option(flag, help=help_text)
+            option = typer.Option(flag, help=help_text, rich_help_panel=section_title)
             annotation = Annotated[int | None, option]
             default = None
         case WizardWidget.PATH:
-            option = typer.Option(flag, help=help_text)
+            option = typer.Option(flag, help=help_text, rich_help_panel=section_title)
             annotation = Annotated[Path | None, option]
             default = None
         case WizardWidget.SECRET:
-            option = typer.Option(flag, help=help_text, hide_input=True)
+            option = typer.Option(
+                flag,
+                help=help_text,
+                hide_input=True,
+                rich_help_panel=section_title,
+            )
             annotation = Annotated[str | None, option]
             default = None
         case WizardWidget.TEXT:
-            option = typer.Option(flag, help=help_text)
+            option = typer.Option(flag, help=help_text, rich_help_panel=section_title)
             annotation = Annotated[str | None, option]
             default = None
     return inspect.Parameter(
@@ -191,6 +210,7 @@ def _mode_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
         annotation=Annotated[
             str,
             typer.Option(
+                "--profile",
                 "--profile-name",
                 help=tr("cli.config.setup.profile_name_help"),
             ),
@@ -218,9 +238,19 @@ def _mode_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
 
 
 def _question_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
-    """Build one ``inspect.Parameter`` per descriptor question."""
+    """Build one ``inspect.Parameter`` per descriptor question.
 
-    return tuple(_python_parameter(flow, question) for section in flow.sections for question in section.questions)
+    Each question's ``rich_help_panel`` is the section's translated
+    title so ``aeat config init --help`` renders one help panel per
+    :class:`WizardSection`.
+    """
+
+    parameters: list[inspect.Parameter] = []
+    for section in flow.sections:
+        section_title = tr(str(section.title))
+        for question in section.questions:
+            parameters.append(_python_parameter(flow, question, section_title=section_title))
+    return tuple(parameters)
 
 
 def _collect_flag_values(
