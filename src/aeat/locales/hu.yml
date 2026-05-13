@@ -146,17 +146,6 @@ cli:
           ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
         year_help: A munkaegység adóéve (pl. 2026)
-  browser:
-    app_help: Böngésző automatizálási feladatok kezelése (Playwright)
-    health:
-      json_help: A böngésző egészségi állapotának megjelenítése JSON formátumban
-    health_help: A böngésző automatizálás egészségi állapotának és kapcsolatának ellenőrzése
-    labels:
-      http_status: HTTP állapot
-      markers: Észlelt jelölők
-      none: Nincs
-      retry_after_seconds: Újrapróbálkozás ennyi másodperc után
-      state: Működési állapot
   common:
     errors:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges
@@ -187,6 +176,7 @@ cli:
       history_help: Egy bucket csak-hozzáfűz eseménytörténetének megjelenítése
     doctor:
       connectivity_help: Böngésző és AEAT Sede kapcsolat ellenőrzése
+      connectivity_target_help: Ellenőrizendő kapcsolati cél
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
       logs_lines_help: Megjelenítendő friss naplósorok száma
@@ -238,172 +228,6 @@ cli:
     unset:
       help: Egy konfigurációs kulcshoz rendelt érték törlése
       key_help: A törlendő kulcs
-  data:
-    app_help: Adóadatok és nyilvántartások kezelése
-    ledgers:
-      app_help: ÁFA és IRPF nyilvántartási könyvek (főkönyvek) kezelése
-      inventory_help: Az elérhető nyilvántartási könyvek (főkönyvek) leltárának listázása
-    ledgers_help: Az AEAT nyilvántartási könyveinek (főkönyvek) kezelése
-  deadlines:
-    app_help: Az adózói naptár és a határidők kezelése
-    explain:
-      modelo_help: Adónyomtatvány száma (pl. 303, 111)
-    explain_help: Határidők és kötelezettségek ismertetése egy adott nyomtatványhoz
-      és profilhoz
-    list:
-      closes_on_col: Határidő
-      labels:
-        tax_deadlines: Adózási határidők
-      modelo_col: Nyomtatvány
-      opens_on_col: Kezdés
-      period_col: Időszak
-      status_col: Állapot
-      table_title: Adózási határidők naptára
-      year_help: Lekérdezendő adóév
-    list_help: Adózási határidők listázása egy adott adóévre
-    next:
-      labels:
-        closes: Lezárul
-        no_upcoming: Nincsenek közelgő határidők
-      year_help: Lekérdezendő adóév
-    next_help: A következő releváns adózási határidő megjelenítése
-  filing:
-    amendment:
-      delta_table_title: Módosító bevallás különbségei (delta)
-      title: Módosító / Önellenőrző bevallás
-    app_help: Adóbevallások kezelése és benyújtása
-    build:
-      modelo_help: Összeállítandó adómodell (pl. 303, 111, 130)
-      period_help: Adózási időszak (pl. 1T, 2T, 01, 12)
-    complementaria:
-      app_help: Módosító és önellenőrző bevallások kezelése
-      build:
-        delta_json_help: JSON fájl, amely a módosító bevallás különbségeit (delta)
-          tartalmazza
-    draft:
-      approved_by_you: Ön által jóváhagyva
-      next_steps_label: Következő lépések
-      title: Bevallás tervezete
-      values_table_title: A bevallás mezőinek (casillas) értékei
-    errors:
-      amendment_success: A módosító bevallás feldolgozása sikeres
-      casilla_key_not_string: A mező (casilla) kulcsának szövegesnek (string) kell
-        lennie
-      failed_to_load_draft: A bevallás tervezetének betöltése sikertelen
-      inputs_not_object: A bemeneti adatoknak objektumnak (JSON) kell lenniük
-      invalid_json: Érvénytelen JSON fájl
-      invalid_status: Érvénytelen bevallási állapot
-      missing_import_source: Hiányzó importálási forrás
-      missing_original_submission_id: Hiányzik az eredeti benyújtás azonosítója
-      missing_updated_inputs: Hiányoznak a frissített bemeneti fájlok
-      modelo_mismatch: Az adómodell nem egyezik
-      multiple_import_sources: Több importálási forrás is található
-      period_mismatch: Az adózási időszak nem egyezik
-      reasons_not_object: Az indokoknak objektumnak (JSON) kell lenniük
-      submission_not_found: Benyújtás nem található
-      submission_validation_failed: A benyújtás ellenőrzése sikertelen
-      unsupported_value_type: Nem támogatott értéktípus
-    field:
-      approved_at: Jóváhagyva ekkor
-      approved_by: Jóváhagyta
-      casilla: Mező
-      code: Kód
-      created_at: Létrehozva ekkor
-      draft_id: Tervezet azonosító
-      kind: Típus / Jelleg
-      message: Üzenet
-      modelo: Adómodell
-      new: Új
-      old: Régi
-      original_csv: Eredeti CSV (biztonsági ellenőrző kód)
-      path: Útvonal
-      period: Időszak
-      profile_tax_id: Profil adószáma (NIF)
-      reason: Indok
-      review_checksum: Ellenőrző összeg (checksum)
-      schema_version: Séma verziója
-      severity: Súlyosság
-      source: Forrás
-      stale_reason: Elavulás oka
-      status: Állapot
-      submission_id: Benyújtás azonosító
-      updated_at: Frissítve ekkor
-      value: Érték
-    import:
-      actual: Tényleges (Talált)
-      año_help: Fiscal year for the import operation (YYYY)
-      borrador_unsupported: Hivatalos tervezetből történő importálás nem támogatott
-        ennél a modellnél
-      casilla_label: Mező
-      cause: Ok / Indok
-      expected: Várható
-      extraction_complete: Az adatkivonás sikeresen befejeződött
-      from_borrador_help: Adatok importálása hivatalos tervezetből (AEAT PDF)
-      from_declaracion_help: Adatok importálása egy benyújtott bevallásból (AEAT PDF)
-      from_justificante_help: Adatok importálása egy benyújtási igazolásból (AEAT
-        PDF)
-      importing_declaration: Bevallás importálása...
-      justificante_success: Igazolás sikeresen importálva
-      modelo_help: Az importálandó bevallás adómodellje
-      scaffold_created: Az importálási sablon (scaffold) sikeresen létrejött
-      verification_result: Ellenőrzés eredménye
-      warning_label: FIGYELMEZTETÉS
-      warnings_found: Figyelmeztetések találhatók a folyamat során
-    init:
-      findings_table_title: Kezdeti észlelés eredményei
-    list:
-      modelo_help: Szűrés adómodell szerint
-      status_help: Szűrés bevallási állapot szerint
-      table_title: Bevallások listája
-    show:
-      findings_only_help: Csak a bevallási észlelések (findings) megjelenítése
-    validate:
-      draft_path_help: Az ellenőrizendő tervezetfájl útvonala
-      success: Az ellenőrzés sikeresen befejeződött. A bevallás érvényes.
-  inventory:
-    app_help: Eszköz- és készletnyilvántartás kezelése
-    create:
-      actividad_help: Kapcsolódó gazdasági tevékenység kódja
-      help: Új tétel rögzítése a nyilvántartásban
-      opening_quantity_help: Kezdő mennyiség (nyitókészlet) a nyilvántartásban
-      opening_stock_help: Nyitókészlet értéke
-      opening_unit_cost_help: Kezdeti egységnyi költség
-      sku_help: A tétel SKU kódja
-      valuation_method_help: Értékelési módszer (pl. PMP, FIFO, LIFO)
-      year_help: Kapcsolódó adóév
-    errors:
-      invalid_valuation: Érvénytelen készletértékelés
-      ledger_not_found: Készletnyilvántartó könyv nem található
-      missing_opening_fields: Hiányoznak a nyitókészlet kötelező mezői
-      valuation_failed: A készletértékelési folyamat sikertelen
-    labels:
-      ledger_created: Készletnyilvántartó könyv sikeresen létrejött
-      ledger_empty: A készletnyilvántartó könyv üres
-      movement_added: Készletmozgás sikeresen hozzáadva
-    list:
-      help: Nyilvántartási tételek listázása
-      opening_label: Nyitó
-    movement:
-      actividad_help: A mozgáshoz kapcsolódó gazdasági tevékenység kódja
-      add_help: Új készletmozgás hozzáadása (vásárlás, eladás stb.)
-      date_help: Mozgás dátuma (ÉÉÉÉ-HH-NN)
-      kind_help: Mozgás típusa (bevételezés vagy kiadás)
-      movement_id_help: Készletmozgás azonosítója
-      quantity_help: A mozgásban érintett mennyiség
-      sku_help: A mozgásban érintett tétel SKU kódja
-      taxable_base_help: A mozgás adóalapja
-      unit_cost_help: A mozgás egységnyi költsége
-      vat_rate_help: Alkalmazott ÁFA-kulcs
-      year_help: A mozgás adóéve
-    movement_help: Készletmozgások kezelése
-    valuation:
-      actividad_help: Az értékeléshez kapcsolódó gazdasági tevékenység kódja
-      closing_label: Záró
-      cogs_label: ELÁBÉ (Eladott áruk beszerzési értéke)
-      preview_help: Az értékelési jelentés előnézete a létrehozás előtt
-      preview_line: 'Előnézet: {sku} - {method}'
-      year_help: Az értékelési jelentés adóéve
-    valuation_help: Készletértékelés kezelése (PMP, FIFO, LIFO)
   ledger:
     app_help: Könyvelési naplók és ÁFA-nyilvántartások kezelése
     edit:

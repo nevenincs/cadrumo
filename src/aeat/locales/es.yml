@@ -155,17 +155,6 @@ cli:
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
-  browser:
-    app_help: Gestión de la automatización del navegador (Playwright)
-    health:
-      json_help: Mostrar el estado de salud del navegador en formato JSON
-    health_help: Comprobar el estado de salud y conectividad del navegador
-    labels:
-      http_status: Estado HTTP
-      markers: Marcadores detectados
-      none: Ninguno
-      retry_after_seconds: Reintentar después (segundos)
-      state: Estado operativo
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
@@ -196,6 +185,7 @@ cli:
       history_help: Mostrar el historial de eventos solo-append de un bucket
     doctor:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
+      connectivity_target_help: Objetivo de conectividad que se debe comprobar
       help: Diagnosticar configuración local, registro, perfil, autenticación y logs
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
@@ -247,172 +237,6 @@ cli:
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
-  data:
-    app_help: Gestión de datos y registros fiscales
-    ledgers:
-      app_help: Gestión de Libros Registro de IVA e IRPF
-      inventory_help: Listar el inventario de Libros Registro disponibles
-    ledgers_help: Gestión de Libros Registro de la AEAT
-  deadlines:
-    app_help: Gestión del calendario y plazos del contribuyente
-    explain:
-      modelo_help: Número del modelo tributario (ej. 303, 111)
-    explain_help: Explicar los plazos y obligaciones para un modelo y perfil específicos
-    list:
-      closes_on_col: Cierre el
-      labels:
-        tax_deadlines: Plazos Tributarios
-      modelo_col: Modelo
-      opens_on_col: Apertura el
-      period_col: Periodo
-      status_col: Estado
-      table_title: Calendario de Plazos Tributarios
-      year_help: Ejercicio fiscal a consultar
-    list_help: Listar los plazos tributarios para un ejercicio fiscal
-    next:
-      labels:
-        closes: Cierra
-        no_upcoming: No hay plazos próximos
-      year_help: Ejercicio fiscal a consultar
-    next_help: Mostrar el próximo plazo tributario relevante
-  filing:
-    amendment:
-      delta_table_title: Diferencias de la declaración complementaria
-      title: Declaración Complementaria / Rectificativa
-    app_help: Gestión y presentación de declaraciones tributarias
-    build:
-      modelo_help: Modelo tributario a construir (p. ej., 303, 111, 130)
-      period_help: Periodo fiscal (p. ej., 1T, 2T, 01, 12)
-    complementaria:
-      app_help: Gestión de declaraciones complementarias y rectificativas
-      build:
-        delta_json_help: Archivo JSON con las diferencias (delta) para la declaración
-          complementaria
-    draft:
-      approved_by_you: Aprobado por usted
-      next_steps_label: Próximos pasos
-      title: Borrador de la declaración
-      values_table_title: Valores de las casillas de la declaración
-    errors:
-      amendment_success: Declaración complementaria procesada correctamente
-      casilla_key_not_string: La clave de la casilla debe ser una cadena de texto
-        (string)
-      failed_to_load_draft: Fallo al cargar el borrador de la declaración
-      inputs_not_object: Los datos de entrada deben ser un objeto (JSON)
-      invalid_json: Archivo JSON no válido
-      invalid_status: Estado de la declaración no válido
-      missing_import_source: Falta la fuente de importación
-      missing_original_submission_id: Falta el ID de la presentación original
-      missing_updated_inputs: Faltan los archivos de entrada actualizados
-      modelo_mismatch: El modelo tributario no coincide
-      multiple_import_sources: Se encontraron múltiples fuentes de importación
-      period_mismatch: El periodo fiscal no coincide
-      reasons_not_object: Los motivos deben ser un objeto (JSON)
-      submission_not_found: Presentación no encontrada
-      submission_validation_failed: Fallo en la validación de la presentación
-      unsupported_value_type: Tipo de valor no soportado
-    field:
-      approved_at: Aprobado el
-      approved_by: Aprobado por
-      casilla: Casilla
-      code: Código
-      created_at: Creado el
-      draft_id: ID del borrador
-      kind: Tipo / Clase
-      message: Mensaje
-      modelo: Modelo
-      new: Nuevo
-      old: Anterior
-      original_csv: CSV Original
-      path: Ruta
-      period: Periodo
-      profile_tax_id: NIF del Perfil
-      reason: Motivo
-      review_checksum: Suma de comprobación de la revisión
-      schema_version: Versión del esquema
-      severity: Gravedad
-      source: Origen / Fuente
-      stale_reason: Motivo de obsolescencia
-      status: Estado
-      submission_id: ID de la presentación
-      updated_at: Actualizado el
-      value: Valor
-    import:
-      actual: Actual (Encontrado)
-      año_help: Año fiscal para la operación de importación (AAAA)
-      borrador_unsupported: La importación desde borrador oficial no está soportada
-        para este modelo
-      casilla_label: Casilla
-      cause: Causa / Motivo
-      expected: Esperado
-      extraction_complete: Extracción completada correctamente
-      from_borrador_help: Importar datos desde un borrador oficial (PDF de la AEAT)
-      from_declaracion_help: Importar datos desde una declaración presentada (PDF
-        de la AEAT)
-      from_justificante_help: Importar datos desde un justificante de presentación
-        (PDF de la AEAT)
-      importing_declaration: Importando declaración...
-      justificante_success: Justificante importado correctamente
-      modelo_help: Modelo tributario de la declaración a importar
-      scaffold_created: Andamiaje (scaffold) de importación creado correctamente
-      verification_result: Resultado de la verificación
-      warning_label: ADVERTENCIA
-      warnings_found: Se encontraron advertencias durante el proceso
-    init:
-      findings_table_title: Resultados de la detección inicial
-    list:
-      modelo_help: Filtrar por modelo tributario
-      status_help: Filtrar por estado de la declaración
-      table_title: Listado de declaraciones
-    show:
-      findings_only_help: Mostrar solo los hallazgos (findings) de la declaración
-    validate:
-      draft_path_help: Ruta al archivo de borrador a validar
-      success: Validación completada correctamente. La declaración es válida.
-  inventory:
-    app_help: Gestión de inventario de activos y existencias
-    create:
-      actividad_help: Código de la actividad económica relacionada
-      help: Registrar un nuevo elemento en el inventario
-      opening_quantity_help: Cantidad inicial (apertura) en inventario
-      opening_stock_help: Valor de las existencias iniciales
-      opening_unit_cost_help: Coste unitario inicial
-      sku_help: Código SKU del elemento
-      valuation_method_help: Método de valoración (p. ej., PMP, FIFO, LIFO)
-      year_help: Año fiscal relacionado
-    errors:
-      invalid_valuation: Valoración de inventario no válida
-      ledger_not_found: Libro de inventario no encontrado
-      missing_opening_fields: Faltan campos obligatorios para las existencias iniciales
-      valuation_failed: Fallo en el proceso de valoración del inventario
-    labels:
-      ledger_created: Libro de inventario creado correctamente
-      ledger_empty: El libro de inventario está vacío
-      movement_added: Movimiento de inventario añadido correctamente
-    list:
-      help: Listar elementos del inventario
-      opening_label: Apertura
-    movement:
-      actividad_help: Código de la actividad económica relacionada con el movimiento
-      add_help: Añadir un nuevo movimiento de inventario (compra, venta, etc.)
-      date_help: Fecha del movimiento (AAAA-MM-DD)
-      kind_help: Tipo de movimiento (entrada o salida)
-      movement_id_help: Identificador del movimiento de inventario
-      quantity_help: Cantidad involucrada en el movimiento
-      sku_help: Código SKU del elemento del movimiento
-      taxable_base_help: Base imponible del movimiento
-      unit_cost_help: Coste unitario del movimiento
-      vat_rate_help: Tipo de IVA aplicado
-      year_help: Año fiscal del movimiento
-    movement_help: Gestión de movimientos de inventario
-    valuation:
-      actividad_help: Código de la actividad económica relacionada con la valoración
-      closing_label: Cierre
-      cogs_label: Coste de Ventas
-      preview_help: Previsualizar el informe de valoración antes de generarlo
-      preview_line: 'Previsualización: {sku} - {method}'
-      year_help: Año fiscal para el informe de valoración
-    valuation_help: Gestión de valoración de existencias (PMP, FIFO, LIFO)
   ledger:
     app_help: Gestión de libros contables y registros de IVA
     edit:
