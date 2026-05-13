@@ -1,0 +1,192 @@
+"""Focused unit tests for wizard._persistence canonical-token helpers.
+
+`_persistence` ships three private helpers that gate the canonical-
+token round-trip between typed answers models and the profile-record
+string-dict storage:
+
+- ``_canonicalise(question, value)`` — typed value → canonical token.
+- ``_parse_canonical(question, raw)`` — canonical token → typed value.
+- ``_resolve_canonical(question, values)`` — choose the token to
+  project (values entry vs. descriptor default).
+
+Currently exercised only indirectly through the
+``test_persist_answers_round_trip_via_project_answers`` integration
+test. A regression in any branch (swapping bool ``"true"`` ↔
+``"false"`` renderings, returning ``Path("")`` instead of ``Path()``,
+or skipping the descriptor-default fallback in `_resolve_canonical`)
+would silently corrupt every operator's persisted wizard answers.
+
+Tests here pin each helper's documented branch behaviour;
+assertions are round-trip-contract assertions, not calculation
+tautologies.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from ...core.i18n import Translatable
+from ._models import WizardChoice, WizardQuestion, WizardWidget
+from ._persistence import _canonicalise, _parse_canonical, _resolve_canonical
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def _question(
+    *,
+    answer_type: type[str] | type[bool] | type[int] | type[Path] = str,
+    profile_key: str | None = None,
+    default: str | None = None,
+    choices: tuple[WizardChoice, ...] = (),
+    widget: WizardWidget = WizardWidget.TEXT,
+) -> WizardQuestion:
+    """Build a minimal WizardQuestion with wizard.test.* prefixed prompt."""
+    return WizardQuestion(
+        id="example",
+        profile_key=profile_key,
+        widget=widget,
+        prompt=Translatable("wizard.test.example.prompt"),
+        choices=choices,
+        default=default,
+        answer_type=answer_type,
+    )
+
+
+# ---------------------------------------------------------------------------
+# _canonicalise
+# ---------------------------------------------------------------------------
+
+
+def test_canonicalise_none_returns_empty_string() -> None:
+    question = _question(answer_type=str)
+    assert _canonicalise(question, None) == ""
+
+
+def test_canonicalise_bool_true_returns_lowercase_true_token() -> None:
+    question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
+    assert _canonicalise(question, True) == "true"
+
+
+def test_canonicalise_bool_false_returns_lowercase_false_token() -> None:
+    question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
+    assert _canonicalise(question, False) == "false"
+
+
+def test_canonicalise_path_returns_str_form() -> None:
+    question = _question(answer_type=Path, widget=WizardWidget.PATH)
+    path_value = Path("project/data/example.txt")
+    assert _canonicalise(question, path_value) == str(path_value)
+
+
+def test_canonicalise_int_returns_decimal_string() -> None:
+    question = _question(answer_type=int, widget=WizardWidget.INTEGER)
+    assert _canonicalise(question, 42) == "42"
+
+
+def test_canonicalise_str_passes_through_unchanged() -> None:
+    question = _question(answer_type=str)
+    assert _canonicalise(question, "madrid") == "madrid"
+
+
+def test_canonicalise_empty_string_passes_through_as_empty() -> None:
+    question = _question(answer_type=str)
+    assert _canonicalise(question, "") == ""
+
+
+# ---------------------------------------------------------------------------
+# _parse_canonical
+# ---------------------------------------------------------------------------
+
+
+def test_parse_canonical_bool_true_token_returns_true() -> None:
+    question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
+    assert _parse_canonical(question, "true") is True
+
+
+def test_parse_canonical_bool_false_token_returns_false() -> None:
+    question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
+    assert _parse_canonical(question, "false") is False
+
+
+def test_parse_canonical_bool_non_true_token_returns_false() -> None:
+    """Any token other than the exact ``"true"`` literal is treated as
+    False; this guards against partial-match drift (e.g., accepting
+    ``"True"`` or ``"TRUE"`` would silently corrupt the round-trip)."""
+    question = _question(answer_type=bool, widget=WizardWidget.CONFIRM)
+    assert _parse_canonical(question, "True") is False
+    assert _parse_canonical(question, "") is False
+    assert _parse_canonical(question, "yes") is False
+
+
+def test_parse_canonical_int_returns_int_value() -> None:
+    question = _question(answer_type=int, widget=WizardWidget.INTEGER)
+    assert _parse_canonical(question, "42") == 42
+    assert _parse_canonical(question, "-7") == -7
+
+
+def test_parse_canonical_int_empty_string_returns_zero() -> None:
+    """Empty canonical token short-circuits to 0 rather than raising
+    ValueError — supports the "field never collected" round-trip
+    where the persisted dict has no value for this question."""
+    question = _question(answer_type=int, widget=WizardWidget.INTEGER)
+    assert _parse_canonical(question, "") == 0
+
+
+def test_parse_canonical_path_returns_path_value() -> None:
+    question = _question(answer_type=Path, widget=WizardWidget.PATH)
+    assert _parse_canonical(question, "project/data/example.txt") == Path("project/data/example.txt")
+
+
+def test_parse_canonical_path_empty_string_returns_empty_path() -> None:
+    """Empty canonical token returns ``Path()`` rather than
+    ``Path("")`` — ``Path()`` is the canonical no-path sentinel."""
+    question = _question(answer_type=Path, widget=WizardWidget.PATH)
+    assert _parse_canonical(question, "") == Path()
+
+
+def test_parse_canonical_str_passes_through_unchanged() -> None:
+    question = _question(answer_type=str)
+    assert _parse_canonical(question, "madrid") == "madrid"
+
+
+def test_parse_canonical_str_empty_string_passes_through_as_empty() -> None:
+    question = _question(answer_type=str)
+    assert _parse_canonical(question, "") == ""
+
+
+# ---------------------------------------------------------------------------
+# _resolve_canonical
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_canonical_returns_values_entry_when_profile_key_matches() -> None:
+    question = _question(answer_type=str, profile_key="tax.residence.ccaa", default="madrid")
+    values = {"tax.residence.ccaa": "cataluna"}
+
+    assert _resolve_canonical(question, values) == "cataluna"
+
+
+def test_resolve_canonical_falls_back_to_descriptor_default_when_key_absent() -> None:
+    """profile_key set but key absent from values → descriptor default."""
+    question = _question(answer_type=str, profile_key="tax.residence.ccaa", default="madrid")
+    values = {"unrelated.key": "value"}
+
+    assert _resolve_canonical(question, values) == "madrid"
+
+
+def test_resolve_canonical_falls_back_to_descriptor_default_when_profile_key_none() -> None:
+    """profile_key=None means the question is non-persistent; resolve
+    falls straight through to the descriptor default."""
+    question = _question(answer_type=str, profile_key=None, default="madrid")
+    values = {"any.key": "value"}
+
+    assert _resolve_canonical(question, values) == "madrid"
+
+
+def test_resolve_canonical_returns_none_when_no_profile_key_and_no_default() -> None:
+    """profile_key=None + default=None → returns None (no projection)."""
+    question = _question(answer_type=str, profile_key=None, default=None)
+
+    assert _resolve_canonical(question, {}) is None
