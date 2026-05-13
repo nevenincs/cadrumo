@@ -39,7 +39,7 @@ def test_valid_filing_entry_constructs() -> None:
 
 def test_url_scheme_must_be_https() -> None:
     """Non-HTTPS URLs are rejected."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"url scheme must be https"):
         PortalMetadata.model_validate(
             _base_kwargs(url="http://sede.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml")
         )
@@ -47,7 +47,7 @@ def test_url_scheme_must_be_https() -> None:
 
 def test_url_host_must_match_subdomain() -> None:
     """A mismatch between URL host and declared subdomain fails."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"does not match subdomain"):
         PortalMetadata.model_validate(
             _base_kwargs(url="https://www1.agenciatributaria.gob.es/Sede/procedimientoini/G414.shtml")
         )
@@ -55,7 +55,7 @@ def test_url_host_must_match_subdomain() -> None:
 
 def test_filing_url_must_match_gcode_pattern() -> None:
     """Active FILING URL path must match the G-code regex."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"url path must match"):
         PortalMetadata.model_validate(
             _base_kwargs(url="https://sede.agenciatributaria.gob.es/Sede/something-else.html")
         )
@@ -63,7 +63,7 @@ def test_filing_url_must_match_gcode_pattern() -> None:
 
 def test_census_url_must_match_gcode_pattern() -> None:
     """Active CENSUS URL path must match the G-code regex."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"url path must match"):
         PortalMetadata.model_validate(
             _base_kwargs(
                 portal=Portal.PORTAL_M036_CENSAL,
@@ -90,7 +90,7 @@ def test_retired_filing_skips_gcode_check() -> None:
 
 def test_anonymous_is_exclusive() -> None:
     """AuthMethod.ANONYMOUS cannot coexist with any other method."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"AuthMethod.ANONYMOUS must be the sole method"):
         PortalMetadata.model_validate(
             _base_kwargs(auth_methods=frozenset({AuthMethod.ANONYMOUS, AuthMethod.CERTIFICATE}))
         )
@@ -98,13 +98,13 @@ def test_anonymous_is_exclusive() -> None:
 
 def test_auth_methods_cannot_be_empty() -> None:
     """Empty ``auth_methods`` is rejected."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"at least 1 item"):
         PortalMetadata.model_validate(_base_kwargs(auth_methods=frozenset()))
 
 
 def test_external_binding_fields_are_rejected() -> None:
     """Portal metadata rejects non-schema binding fields."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         PortalMetadata.model_validate(
             _base_kwargs(
                 modelo="303",
@@ -114,31 +114,31 @@ def test_external_binding_fields_are_rejected() -> None:
 
 def test_label_rejects_non_string_payload() -> None:
     """Label keys must be strings."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"valid string"):
         PortalMetadata.model_validate(_base_kwargs(label={"en": "x", "hu": "x"}))
 
 
 def test_label_rejects_blank_string() -> None:
     """Whitespace-only label keys fail."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"label must not be empty or whitespace-only"):
         PortalMetadata.model_validate(_base_kwargs(label=" "))
 
 
 def test_purpose_must_not_be_blank() -> None:
     """Whitespace-only ``purpose`` is rejected."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"purpose must not be empty or whitespace-only"):
         PortalMetadata.model_validate(_base_kwargs(purpose="   "))
 
 
 def test_active_with_replaced_by_is_rejected() -> None:
     """``replaced_by`` must be ``None`` when ``active is True``."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"replaced_by must be None when active is True"):
         PortalMetadata.model_validate(_base_kwargs(replaced_by=Portal.PORTAL_M036_CENSAL))
 
 
 def test_retired_without_replacement_requires_notes() -> None:
     """A retired portal without ``replaced_by`` must carry non-empty notes."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"retired portal without replaced_by must carry a non-empty notes"):
         PortalMetadata.model_validate(
             _base_kwargs(
                 portal=Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
@@ -170,5 +170,5 @@ def test_retired_without_replacement_with_notes_is_valid() -> None:
 def test_metadata_is_frozen() -> None:
     """Instances reject post-construction attribute mutation."""
     metadata = PortalMetadata.model_validate(_base_kwargs())
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen"):
         metadata.active = False  # type: ignore[misc]
