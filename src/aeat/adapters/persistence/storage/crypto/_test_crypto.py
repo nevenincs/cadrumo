@@ -34,8 +34,12 @@ class TestEncryptDecryptRoundTrip:
             b"hello",
             "movimientos bancarios — autónomo, NIF 12345678Z, año 2025".encode(),
             b"\x00\x01\x02\xff\xfe\xfd",
-            secrets.token_bytes(4096),
+            # Deterministic 4096-byte payload (bytes 0..255 repeated); a fixed
+            # value keeps pytest-xdist's collection identical across workers
+            # without sacrificing the "large-payload round-trip" coverage.
+            bytes(i % 256 for i in range(4096)),
         ],
+        ids=["empty", "ascii", "unicode", "raw-bytes", "large-4096"],
     )
     def test_round_trip(self, plaintext: bytes) -> None:
         """Encrypt-then-decrypt returns the original bytes for varied payloads."""
