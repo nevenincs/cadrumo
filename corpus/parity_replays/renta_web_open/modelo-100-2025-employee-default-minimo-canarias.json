@@ -4,10 +4,10 @@
     "autonomous_community": "CANARIAS"
   },
   "expected": {
-    "Resultado de la declaración": "0.00",
+    "Cuota diferencial": "0.00",
+    "Mínimo personal y familiar. Parte autonómica": "5606.00",
     "Mínimo personal y familiar. Parte estatal": "5550.00",
-    "Mínimo personal y familiar. Parte autonómica": "5790.00",
-    "Cuota diferencial": "0.00"
+    "Resultado de la declaración": "0.00"
   },
   "observed": {
     "Cuota diferencial": "0,00",
@@ -16,10 +16,10 @@
     "Resultado de la declaración": "0,00"
   },
   "expected_by_casilla": {
-    "0670": "0.00",
+    "0610": "0.00",
+    "0520": "5606.00",
     "0519": "5550.00",
-    "0520": "5790.00",
-    "0610": "0.00"
+    "0670": "0.00"
   },
   "observed_by_casilla": {
     "0610": "0,00",
