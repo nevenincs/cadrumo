@@ -576,7 +576,7 @@ This Phase delivers backend implementation for profile backend schema as require
 - [x] `W09.P041.S0242` - Implement Pydantic command and result contracts for profile backend schema; `src/aeat/application/profile`.
 - [x] `W09.P041.S0243` - Wire application or domain services required by profile backend schema; `src/aeat/application/profile`.
 - [x] `W09.P041.S0244` - Connect persistence, bucket events, registry data, or provider adapters required by profile backend schema; `src/aeat/application/profile`.
-- [ ] `W09.P041.S0245` - Route existing backend functionality into the canonical service for profile backend schema; `src/aeat/application/profile`.
+- [x] `W09.P041.S0245` - Route existing backend functionality into the canonical service for profile backend schema; `src/aeat/application/profile`.
 - [x] `W09.P041.S0246` - Record service-level error codes and log fields for profile backend schema; `src/aeat/application/profile`.
 
 ### Phase `W09.P042` - shadow duplicate removal
