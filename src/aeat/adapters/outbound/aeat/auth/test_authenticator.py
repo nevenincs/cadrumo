@@ -879,9 +879,9 @@ def test_describe_does_not_leak_password_to_environ_after_call(
     description = AeatAuthenticator(settings).describe()
     assert description.available is True
 
-    assert (
-        _os.environ.get("AEAT_CERTIFICATE_PASSWORD_SECRET") is None
-    ), "describe() leaked the certificate passphrase into os.environ"
+    assert _os.environ.get("AEAT_CERTIFICATE_PASSWORD_SECRET") is None, (
+        "describe() leaked the certificate passphrase into os.environ"
+    )
 
 
 def test_describe_restores_prior_env_value_when_already_set(

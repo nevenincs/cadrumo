@@ -64,7 +64,6 @@ from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
@@ -83,9 +82,7 @@ def repos(tmp_path):
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     db_path = tmp_path / "modelo_import_flow.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-    )
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
     Base.metadata.create_all(engine)
     try:
         objects = SecureObjectRepository(engine=engine)
@@ -152,9 +149,7 @@ def test_import_persists_filing_with_external_evidence(repos) -> None:
     assert filing.amends_filing_record_id is None
     assert filing.filed_at == _T1
 
-    revision = get_calculation_revision(
-        filing.calculation_revision_id, calculation_repository=cr_repo
-    )
+    revision = get_calculation_revision(filing.calculation_revision_id, calculation_repository=cr_repo)
     assert revision.state is CalculationRevisionState.FILED
     assert revision.casilla_values["01"] == Decimal("1500")
     assert revision.casilla_values["02"] == Decimal("300")
@@ -216,9 +211,7 @@ def test_import_supersedes_prior_current_filing(repos) -> None:
     assert refreshed_first.status is FilingRecordStatus.SUPERSEDED
     assert refreshed_first.superseded_by_filing_record_id == second.filing_record_id
 
-    refreshed_first_revision = get_calculation_revision(
-        first.calculation_revision_id, calculation_repository=cr_repo
-    )
+    refreshed_first_revision = get_calculation_revision(first.calculation_revision_id, calculation_repository=cr_repo)
     assert refreshed_first_revision.state is CalculationRevisionState.FILED_SUPERSEDED
 
     assert second.status is FilingRecordStatus.CURRENT
@@ -271,9 +264,7 @@ def test_import_then_amend_unlocks_amendment_path(repos) -> None:
     )
 
     assert amended.amends_filing_record_id == imported.filing_record_id
-    refreshed_baseline = get_filing_record(
-        imported.filing_record_id, filing_repository=fr_repo
-    )
+    refreshed_baseline = get_filing_record(imported.filing_record_id, filing_repository=fr_repo)
     assert refreshed_baseline.status is FilingRecordStatus.SUPERSEDED
     assert refreshed_baseline.superseded_by_filing_record_id == amended.filing_record_id
 

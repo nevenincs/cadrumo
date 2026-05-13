@@ -251,8 +251,7 @@ class CalculationRevision(BaseModel):
         )
         if any(amendment_set) and not all(amendment_set):
             raise ModeloValidationError(
-                "amendment_kind, amends_filing_record_id, and amendment_reason must "
-                "all be set together or all be None"
+                "amendment_kind, amends_filing_record_id, and amendment_reason must all be set together or all be None"
             )
         return self
 

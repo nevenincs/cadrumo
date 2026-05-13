@@ -768,9 +768,7 @@ class AeatAuthenticator:
         # ``SecretStr`` through ``CertificateBundle`` directly.)
         _password_env_key = "AEAT_CERTIFICATE_PASSWORD_SECRET"
         _prior_env_value = os.environ.get(_password_env_key)
-        os.environ[_password_env_key] = (
-            self._settings.aeat_certificate_password_secret.get_secret_value()
-        )
+        os.environ[_password_env_key] = self._settings.aeat_certificate_password_secret.get_secret_value()
         try:
             backend = CertificateBackend(self._settings.aeat_certificate_backend.name)
             health = self._certificate_health_check(

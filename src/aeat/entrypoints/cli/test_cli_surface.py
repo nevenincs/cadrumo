@@ -218,6 +218,7 @@ def test_app_ledger_import_reimport_edit_review_round_trips_state(
     assert edited_payload["review"]["split"]["business_share"] == "0.75"
     assert edited_payload["review"]["split"]["personal_share"] == "0.25"
 
+
 def test_app_ledger_review_filter_rejects_unknown_key(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
