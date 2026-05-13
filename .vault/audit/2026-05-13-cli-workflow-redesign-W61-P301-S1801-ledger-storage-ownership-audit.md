@@ -48,6 +48,56 @@ Concretely the contract for S1802 should mirror the profile bucket: a `transacti
 
 `ImportSummary.catalogue_path = f"db://secure_objects/{_TX_NAMESPACE}/{_TX_OBJECT_KEY}"` (line 207) hardcodes the global object key into the import-result envelope. Operators reading import receipts today see `db://secure_objects/aeat.domain.transactions/catalogue`; after bucket-scoping, the URI should carry the bucket id (e.g., `db://secure_objects/aeat.domain.transactions.bucket/transaction-catalogue:OPERATOR_42`) so that the receipt is unambiguous about which profile bucket received the rows.
 
+## Contract Specification (W61.P301.S1802)
+
+The bucket-scoped transaction catalogue repository contract is fixed as follows. S1803-S1806 must adopt it verbatim.
+
+**Namespace**
+
+`TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket"` — a module-level constant exported from `aeat.domain.transactions`.
+
+**Object key helper**
+
+```python
+def transaction_catalogue_object_key(bucket_id: str) -> str:
+    trimmed = bucket_id.strip()
+    if not trimmed:
+        raise ValueError("bucket_id must not be blank")
+    return f"transaction-catalogue:{trimmed}"
+```
+
+**Repository constructor**
+
+`TransactionCatalogueRepository.__init__(*, bucket_id: str, objects: SecureObjectRepository | None = None)`. `bucket_id` is required, non-blank, validated by `transaction_catalogue_object_key`. Every read and write resolves through `TX_BUCKET_NAMESPACE` + `transaction_catalogue_object_key(bucket_id)`; `_TX_NAMESPACE` and `_TX_OBJECT_KEY` are removed.
+
+**Bucket id property**
+
+`TransactionCatalogueRepository.bucket_id: str` — read-only accessor for observability and assertion sites.
+
+**Import summary URI**
+
+`ImportSummary.catalogue_path = f"db://secure_objects/{TX_BUCKET_NAMESPACE}/{transaction_catalogue_object_key(bucket_id)}"`.
+
+**Active bucket resolution**
+
+`aeat.application.workflow` exports `active_bucket_id_or_raise(state: WorkflowState) -> str` (or equivalent named helper) that returns `state.active_profile_bucket_id()` or raises a typed error (Finding F below) when no profile is active. CLI entrypoints call this helper before constructing a repository; pure-application helpers receive `bucket_id` as a required keyword argument.
+
+**Application-layer signatures**
+
+Every `aeat.application.*` helper that today fabricates a `TransactionCatalogueRepository()` fallback when its caller passed `None` must take `bucket_id: str` as a required keyword argument and pass it through to the fallback. Affected: `aggregate_renta_ledger_expenses_from_repositories`, `aeat.application.overview` build_overview, `aeat.application.invoices._reconciliation`, `_linking`, `_queries`, `aeat.application.review._adapters`, `aeat.application.filing._review._load_transaction_catalogue_cached` and `_read_transaction_catalogue`.
+
+**Cache shape**
+
+`@lru_cache(maxsize=8)` on `_load_transaction_catalogue_cached` is keyed on `bucket_id` (the only argument) so per-bucket loads are cached independently and profile switches naturally select a different cache entry.
+
+**Tx-id uniqueness**
+
+`derive_transaction_id(raw_transaction)` remains content-derived. Uniqueness is contract-scoped to one bucket. Cross-bucket consumers MUST qualify with `(bucket_id, tx_id)`.
+
+## Finding W61-P301-S1801-F | MEDIUM | No typed error exists for "ledger operation requested with no active profile".
+
+Today the absence of an active profile is signalled either by `_active_profile_or_exit` (typer.Exit(2)) at the CLI layer or by a generic `_bad(...)` at later boundaries. The bucket-scoped contract needs a typed `LedgerStorageError` subclass (or equivalent typed error in `aeat.core.errors`) so non-CLI callers — application services and tests — can distinguish "no active bucket" from "catalogue empty" or "catalogue corrupted". S1806 should register this error code and log fields.
+
 ## Recommendation
 
 S1802 should introduce a `bucket_id: str` constructor argument on `TransactionCatalogueRepository`, with a helper `transaction_catalogue_object_key(bucket_id)` mirroring the profile-bucket helper. S1803 should thread `WorkflowState.active_profile_bucket_id()` into every call-site listed under Finding B, refusing to operate when there is no active profile. S1804 should narrow the `tx_id` uniqueness contract to per-bucket. S1805 should migrate the review and import projections to obtain a repository bound to the active bucket. S1806 should add a dedicated error code (e.g., `ledger.no_active_bucket`) for the "ledger operation requested with no active profile" path.

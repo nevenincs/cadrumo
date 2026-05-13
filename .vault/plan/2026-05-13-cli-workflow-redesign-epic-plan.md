@@ -69,6 +69,8 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-workflow-engine-harvest-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr]]'
+  - '[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-audit-research]]'
+  - '[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr]]'
 ---
 
 <!-- LINK RULES:
@@ -629,7 +631,7 @@ This Wave implements the 2026-05-13-cli-workflow-redesign-manual-ledger-storage-
 This Phase audits and fixes the transaction catalogue storage boundary so every ledger read and write resolves through the active profile bucket before manual data entry is exposed.
 
 - [x] `W61.P301.S1801` - Audit active profile bucket and transaction catalogue storage ownership; `src/aeat/application/profile, src/aeat/domain/transactions`.
-- [ ] `W61.P301.S1802` - Define bucket-scoped transaction catalogue repository contracts; `src/aeat/domain/transactions`.
+- [x] `W61.P301.S1802` - Define bucket-scoped transaction catalogue repository contracts; `src/aeat/domain/transactions`.
 - [ ] `W61.P301.S1803` - Implement active profile bucket resolution for transaction catalogue reads and writes; `src/aeat/domain/transactions, src/aeat/application/workflow`.
 - [ ] `W61.P301.S1804` - Prevent cross-profile transaction collisions for manual and imported rows; `src/aeat/domain/transactions`.
 - [ ] `W61.P301.S1805` - Migrate ledger import and review projections to bucket-scoped transaction storage; `src/aeat/application/review, src/aeat/application/ledger`.
