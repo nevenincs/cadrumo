@@ -79,8 +79,8 @@ cli:
       filing_record:
         app_help: Inspeccionar els filing records interns registrats
         bucket_id_help: Filtrar per bucket
-        evidence_kind_help: Tipus d'evidència importada (aeat_justificante_pdf,
-          aeat_csv_register, aeat_live_capture)
+        evidence_kind_help: Tipus d'evidència importada (aeat_justificante_pdf, aeat_csv_register,
+          aeat_live_capture)
         evidence_reference_id_help: Identificador estable de l'evidència importada
           (número de justificant, id del registre CSV, id de captura en viu)
         filing_record_id_help: Identificador estable d'un filing record
@@ -150,18 +150,6 @@ cli:
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
-  archive:
-    app_help: Exportar i importar l'arxiu local xifrat com a paquets JSON portables
-    export:
-      bundle_id_help: Sobrescriure l'identificador de paquet generat automàticament
-      help: Escriure un paquet JSON portable del catàleg d'objectes segurs
-      namespace_help: Restringir el paquet a un o més espais de noms (repetible)
-      path_help: Ruta de destinació del paquet JSON
-    import:
-      conflict_help: 'Política de conflicte en restaurar registres col·lidents: fail,
-        overwrite o keep'
-      help: Restaurar un paquet d'arxiu al catàleg xifrat d'objectes segurs
-      path_help: Ruta del paquet JSON a restaurar
   browser:
     app_help: Gestió de l'automatització del navegador (Playwright)
     health:
@@ -1049,6 +1037,16 @@ transactions:
   test_diagnostics:
     message: Falta el mes 2026-03 a l'arxiu importat.
 wizard:
+  choices:
+    general: wizard.choices.general
+    irpf: wizard.choices.irpf
+    iva: wizard.choices.iva
+    simplificado: wizard.choices.simplificado
+  demo:
+    description: wizard.demo.description
+    section:
+      title: wizard.demo.section.title
+    title: wizard.demo.title
   errors:
     blank_integer: Integer value required for %{prompt_key}.
     blank_path: Path required for %{prompt_key}.
@@ -1071,10 +1069,18 @@ wizard:
       \ --activity \"software development\"\n\nActivity can be a plain description\
       \ of your work or the IAE heading if you know it.\nRun `aeat config init --help`\
       \ to see every setup field."
+  other:
+    description: wizard.other.description
+    section:
+      title: wizard.other.section.title
+    title: wizard.other.title
   progress:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
+    certificate:
+      path:
+        prompt: wizard.setup.certificate.path.prompt
     codes:
       disability-grade:
         choices:
@@ -1263,6 +1269,8 @@ wizard:
           hu:
             label: Hongarès
         prompt: Idioma de sortida de la CLI per a aquest perfil
+      regimes:
+        prompt: wizard.setup.profile.regimes.prompt
       surnames:
         prompt: Cognoms o raó social per a capçaleres d'exportació
       tax-id:
@@ -1273,7 +1281,8 @@ wizard:
             description: Useu aquest valor quan presenteu només la declaració individual
             label: 1 - individual
           joint:
-            description: Useu aquest valor només per a tributació conjunta de la unitat familiar
+            description: Useu aquest valor només per a tributació conjunta de la unitat
+              familiar
             label: 2 - conjunta
         prompt: Codi del tipus de tributació
       title: Identitat del perfil
@@ -1355,3 +1364,15 @@ wizard:
         prompt: Sexe del primer declarant
       title: Primer declarant
     title: Auxiliar de configuració
+  test:
+    description: wizard.test.description
+    example:
+      choices:
+        'yes':
+          description: wizard.test.example.choices.yes.description
+          label: wizard.test.example.choices.yes.label
+      help: wizard.test.example.help
+      prompt: wizard.test.example.prompt
+    main:
+      title: wizard.test.main.title
+    title: wizard.test.title

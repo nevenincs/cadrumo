@@ -71,13 +71,13 @@ cli:
       filing_record:
         app_help: Inspect internal filing records
         bucket_id_help: Filter by bucket
-        evidence_kind_help: Kind of imported evidence (aeat_justificante_pdf,
-          aeat_csv_register, aeat_live_capture)
-        evidence_reference_id_help: Stable reference id of the imported evidence
-          (justificante number, CSV register id, live capture id)
+        evidence_kind_help: Kind of imported evidence (aeat_justificante_pdf, aeat_csv_register,
+          aeat_live_capture)
+        evidence_reference_id_help: Stable reference id of the imported evidence (justificante
+          number, CSV register id, live capture id)
         filing_record_id_help: Stable filing-record identifier
-        import_casilla_help: Imported casilla value with CASILLA=DECIMAL syntax
-          (repeatable; at least one required)
+        import_casilla_help: Imported casilla value with CASILLA=DECIMAL syntax (repeatable;
+          at least one required)
         import_help: Persist an externally-filed return as a baseline filing record
           carrying imported AEAT-attested evidence
         include_superseded_help: Include superseded filing records (excluded by default)
@@ -136,18 +136,6 @@ cli:
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
-  archive:
-    app_help: Export and import the encrypted local archive as portable JSON bundles
-    export:
-      bundle_id_help: Override the auto-generated bundle identifier
-      help: Write a portable JSON bundle of the secure object catalogue
-      namespace_help: Restrict the bundle to one or more namespaces (repeatable)
-      path_help: Destination path for the JSON bundle
-    import:
-      conflict_help: 'Conflict policy when restoring colliding records: fail, overwrite,
-        or keep'
-      help: Restore an archive bundle into the encrypted secure object catalogue
-      path_help: Path to the JSON bundle to restore
   browser:
     app_help: Browser automation management (Playwright)
     health:
@@ -1022,6 +1010,16 @@ transactions:
   test_diagnostics:
     message: Month 2026-03 is missing from the imported file.
 wizard:
+  choices:
+    general: wizard.choices.general
+    irpf: wizard.choices.irpf
+    iva: wizard.choices.iva
+    simplificado: wizard.choices.simplificado
+  demo:
+    description: wizard.demo.description
+    section:
+      title: wizard.demo.section.title
+    title: wizard.demo.title
   errors:
     blank_integer: Integer value required for %{prompt_key}.
     blank_path: Path required for %{prompt_key}.
@@ -1044,10 +1042,18 @@ wizard:
       \ \"software development\"\n\nActivity can be a plain description of your work\
       \ or the IAE heading if you know it.\nRun `aeat config init --help` to see every\
       \ setup field."
+  other:
+    description: wizard.other.description
+    section:
+      title: wizard.other.section.title
+    title: wizard.other.title
   progress:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
+    certificate:
+      path:
+        prompt: wizard.setup.certificate.path.prompt
     codes:
       disability-grade:
         choices:
@@ -1236,6 +1242,8 @@ wizard:
           hu:
             label: Hungarian
         prompt: CLI output language for this profile
+      regimes:
+        prompt: wizard.setup.profile.regimes.prompt
       surnames:
         prompt: Surnames or company name for export headers
       tax-id:
@@ -1328,3 +1336,15 @@ wizard:
         prompt: First taxpayer sex code
       title: First taxpayer
     title: Setup wizard
+  test:
+    description: wizard.test.description
+    example:
+      choices:
+        'yes':
+          description: wizard.test.example.choices.yes.description
+          label: wizard.test.example.choices.yes.label
+      help: wizard.test.example.help
+      prompt: wizard.test.example.prompt
+    main:
+      title: wizard.test.main.title
+    title: wizard.test.title

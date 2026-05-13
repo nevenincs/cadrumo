@@ -39,6 +39,5 @@ def test_cli_keys_extracted_from_source_are_non_empty() -> None:
     # Spot-check: representative keys from distinct namespaces are extracted.
     assert "cli.config.set.help" in keys
     assert "cli.config.errors.no_active_profile" in keys
-    assert "cli.archive.app_help" in keys
     assert "cli.app.modelo.app_help" in keys
     assert "cli.topic.app_help" in keys

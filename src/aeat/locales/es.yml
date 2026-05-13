@@ -83,8 +83,8 @@ cli:
       filing_record:
         app_help: Inspeccionar las presentaciones internas (filing records) registradas
         bucket_id_help: Filtrar por bucket
-        evidence_kind_help: Tipo de evidencia importada (aeat_justificante_pdf,
-          aeat_csv_register, aeat_live_capture)
+        evidence_kind_help: Tipo de evidencia importada (aeat_justificante_pdf, aeat_csv_register,
+          aeat_live_capture)
         evidence_reference_id_help: Identificador estable de la evidencia importada
           (número de justificante, id del registro CSV, id de captura en vivo)
         filing_record_id_help: Identificador estable de un filing record
@@ -155,18 +155,6 @@ cli:
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
-  archive:
-    app_help: Exportar e importar el archivo local cifrado como paquetes JSON portables
-    export:
-      bundle_id_help: Sobrescribir el identificador de paquete generado automáticamente
-      help: Escribir un paquete JSON portable del catálogo de objetos seguros
-      namespace_help: Restringir el paquete a uno o varios espacios de nombres (repetible)
-      path_help: Ruta de destino del paquete JSON
-    import:
-      conflict_help: 'Política de conflicto al restaurar registros colisionantes:
-        fail, overwrite o keep'
-      help: Restaurar un paquete de archivo en el catálogo cifrado de objetos seguros
-      path_help: Ruta del paquete JSON a restaurar
   browser:
     app_help: Gestión de la automatización del navegador (Playwright)
     health:
@@ -1064,6 +1052,16 @@ transactions:
   test_diagnostics:
     message: Falta el mes 2026-03 en el archivo importado.
 wizard:
+  choices:
+    general: wizard.choices.general
+    irpf: wizard.choices.irpf
+    iva: wizard.choices.iva
+    simplificado: wizard.choices.simplificado
+  demo:
+    description: wizard.demo.description
+    section:
+      title: wizard.demo.section.title
+    title: wizard.demo.title
   errors:
     blank_integer: Valor entero requerido para %{prompt_key}.
     blank_path: Ruta requerida para %{prompt_key}.
@@ -1086,10 +1084,18 @@ wizard:
       \n\nLa actividad puede ser una descripción normal de tu trabajo o el epígrafe\
       \ IAE si lo conoces.\nEjecuta `aeat config init --help` para ver todos los campos\
       \ de configuración."
+  other:
+    description: wizard.other.description
+    section:
+      title: wizard.other.section.title
+    title: wizard.other.title
   progress:
     question_prefix: Pregunta %{q_n} de %{q_total}
     section_header: 'Paso %{section_n} de %{section_total}: %{title}'
   setup:
+    certificate:
+      path:
+        prompt: wizard.setup.certificate.path.prompt
     codes:
       disability-grade:
         choices:
@@ -1278,6 +1284,8 @@ wizard:
           hu:
             label: Húngaro
         prompt: Idioma de salida de la CLI para este perfil
+      regimes:
+        prompt: wizard.setup.profile.regimes.prompt
       surnames:
         prompt: Apellidos o razón social para cabeceras de exportación
       tax-id:
@@ -1370,3 +1378,15 @@ wizard:
         prompt: Sexo del primer declarante
       title: Primer declarante
     title: Asistente de configuración
+  test:
+    description: wizard.test.description
+    example:
+      choices:
+        'yes':
+          description: wizard.test.example.choices.yes.description
+          label: wizard.test.example.choices.yes.label
+      help: wizard.test.example.help
+      prompt: wizard.test.example.prompt
+    main:
+      title: wizard.test.main.title
+    title: wizard.test.title

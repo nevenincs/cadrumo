@@ -78,15 +78,15 @@ cli:
       filing_record:
         app_help: Belső bejelentési rekordok (filing records) vizsgálata
         bucket_id_help: Szűrés bucket szerint
-        evidence_kind_help: Importált evidencia típusa (aeat_justificante_pdf,
-          aeat_csv_register, aeat_live_capture)
-        evidence_reference_id_help: Az importált evidencia stabil hivatkozási
-          azonosítója (justificante szám, CSV regiszter id, élő rögzítés id)
+        evidence_kind_help: Importált evidencia típusa (aeat_justificante_pdf, aeat_csv_register,
+          aeat_live_capture)
+        evidence_reference_id_help: Az importált evidencia stabil hivatkozási azonosítója
+          (justificante szám, CSV regiszter id, élő rögzítés id)
         filing_record_id_help: Filing record stabil azonosítója
-        import_casilla_help: Importált cellaérték CASILLA=DECIMAL szintaxissal
-          (ismételhető; legalább egy kötelező)
-        import_help: Külsőleg leadott bevallás rögzítése alap filing recordként,
-          importált AEAT-hitelesített evidenciával
+        import_casilla_help: Importált cellaérték CASILLA=DECIMAL szintaxissal (ismételhető;
+          legalább egy kötelező)
+        import_help: Külsőleg leadott bevallás rögzítése alap filing recordként, importált
+          AEAT-hitelesített evidenciával
         include_superseded_help: A felülírt filing recordokat is mutassa (alapértelmezetten
           kihagyva)
         list_help: Regisztrált filing recordok listázása
@@ -146,19 +146,6 @@ cli:
           ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
         year_help: A munkaegység adóéve (pl. 2026)
-  archive:
-    app_help: A helyi titkosított archívum exportálása és importálása hordozható JSON
-      csomagként
-    export:
-      bundle_id_help: Az automatikusan generált csomag-azonosító felülírása
-      help: Hordozható JSON csomag írása a biztonságos objektumkatalógusból
-      namespace_help: A csomag szűkítése egy vagy több névtérre (ismételhető)
-      path_help: A JSON csomag cél elérési útja
-    import:
-      conflict_help: 'Ütközéskezelési szabály ütköző rekordok visszaállításakor: fail,
-        overwrite vagy keep'
-      help: Archívumcsomag visszaállítása a titkosított biztonságos objektumkatalógusba
-      path_help: A visszaállítandó JSON csomag elérési útja
   browser:
     app_help: Böngésző automatizálási feladatok kezelése (Playwright)
     health:
@@ -1052,6 +1039,16 @@ transactions:
   test_diagnostics:
     message: A 2026-03 hónap hiányzik az importált fájlból.
 wizard:
+  choices:
+    general: wizard.choices.general
+    irpf: wizard.choices.irpf
+    iva: wizard.choices.iva
+    simplificado: wizard.choices.simplificado
+  demo:
+    description: wizard.demo.description
+    section:
+      title: wizard.demo.section.title
+    title: wizard.demo.title
   errors:
     blank_integer: Integer value required for %{prompt_key}.
     blank_path: Path required for %{prompt_key}.
@@ -1074,10 +1071,18 @@ wizard:
       \ \"software development\"\n\nActivity can be a plain description of your work\
       \ or the IAE heading if you know it.\nRun `aeat config init --help` to see every\
       \ setup field."
+  other:
+    description: wizard.other.description
+    section:
+      title: wizard.other.section.title
+    title: wizard.other.title
   progress:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
+    certificate:
+      path:
+        prompt: wizard.setup.certificate.path.prompt
     codes:
       disability-grade:
         choices:
@@ -1267,6 +1272,8 @@ wizard:
           hu:
             label: Magyar
         prompt: A profil CLI-kimenetének nyelve
+      regimes:
+        prompt: wizard.setup.profile.regimes.prompt
       surnames:
         prompt: Vezetéknév vagy cégnév az exportfejlécekhez
       tax-id:
@@ -1359,3 +1366,15 @@ wizard:
         prompt: Az első adózó neme
       title: Az első adózó
     title: Beállítás varázsló
+  test:
+    description: wizard.test.description
+    example:
+      choices:
+        'yes':
+          description: wizard.test.example.choices.yes.description
+          label: wizard.test.example.choices.yes.label
+      help: wizard.test.example.help
+      prompt: wizard.test.example.prompt
+    main:
+      title: wizard.test.main.title
+    title: wizard.test.title
