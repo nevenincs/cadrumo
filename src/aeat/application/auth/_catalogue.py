@@ -1,17 +1,19 @@
-"""Typed catalogue for ``aeat setup auth providers``."""
+"""Typed catalogue for ``aeat config auth providers``."""
 
 from __future__ import annotations
+
+from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.i18n import Translatable as tr  # noqa: N813
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_STRICT_FROZEN: Final[ConfigDict] = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
 
 
 class AuthProviderListing(BaseModel):
-    """One row in the ``aeat setup auth providers`` catalogue.
+    """One row in the ``aeat config auth providers`` catalogue.
 
     Attributes:
         id: Stable lowercase identifier (``"certificate"``,
@@ -28,6 +30,7 @@ class AuthProviderListing(BaseModel):
     id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_-]*$")
     label: tr
     description: tr
+    implemented: bool = True
 
 
 AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
@@ -40,6 +43,24 @@ AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
         id="clave_movil",
         label=tr("auth.catalogue.clave_movil_label"),
         description=tr("auth.catalogue.clave_movil_description"),
+    ),
+    AuthProviderListing(
+        id="clave_pin",
+        label=tr("auth.catalogue.clave_pin_label"),
+        description=tr("auth.catalogue.clave_pin_description"),
+        implemented=False,
+    ),
+    AuthProviderListing(
+        id="clave_permanente",
+        label=tr("auth.catalogue.clave_permanente_label"),
+        description=tr("auth.catalogue.clave_permanente_description"),
+        implemented=False,
+    ),
+    AuthProviderListing(
+        id="dnie_pkcs",
+        label=tr("auth.catalogue.dnie_pkcs_label"),
+        description=tr("auth.catalogue.dnie_pkcs_description"),
+        implemented=False,
     ),
 )
 """Catalogue of auth provider entries in display order."""

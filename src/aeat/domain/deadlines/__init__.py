@@ -38,6 +38,18 @@ from ._errors import (
     ProfileError,
     ScheduleComputationError,
 )
+from ._festivos import (
+    CCAA,
+    MODELOS_WITHOUT_SHIFT,
+    DeadlineShift,
+    Holiday,
+    HolidayCalendar,
+    HolidayJurisdiction,
+    is_business_day,
+    load_holiday_calendar,
+    next_business_day,
+    shift_deadline,
+)
 from ._models import (
     AutonomoProfile,
     FilingEnrollment,
@@ -59,12 +71,18 @@ from ._recargo import (
 
 __all__ = [
     "AutonomoProfile",
+    "CCAA",
     "DeadlineEngine",
     "DeadlineError",
+    "DeadlineShift",
     "FilingEnrollment",
     "FilingIVAProfile",
     "FilingObligation",
+    "Holiday",
+    "HolidayCalendar",
+    "HolidayJurisdiction",
     "IVARegime",
+    "MODELOS_WITHOUT_SHIFT",
     "ModeloIdentifier",
     "ObligationStatus",
     "ProfileError",
@@ -76,7 +94,11 @@ __all__ = [
     "autonomo_profile_from_mapping",
     "build_recovery_for_overdue",
     "explain",
+    "is_business_day",
+    "load_holiday_calendar",
     "load_recargo_bands",
+    "next_business_day",
     "next_deadline",
     "resolve_recargo_band",
+    "shift_deadline",
 ]

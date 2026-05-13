@@ -4,12 +4,10 @@ from typing import Any
 
 import yaml
 
+from aeat.core.errors import AeatError
 from aeat.core.logging import get_logger
 
 _log = get_logger(__name__)
-
-
-from aeat.core.errors import AeatError
 
 
 class LocaleError(AeatError):
@@ -36,11 +34,22 @@ class LocaleManager:
     def __init__(self, src_dir: Path, locales_dir: Path):
         self.src_dir = src_dir
         self.locales_dir = locales_dir
-        self.pattern = re.compile(r'\b(?:tr|t)\(\s*["\']([a-zA-Z0-9_]+(?:\.[a-zA-Z0-9_]+)+)["\']')
+        self.pattern = re.compile(r'\b(?:tr|t)\(\s*["\'](\w+(?:\.\w+)+)["\']', re.UNICODE)
 
     def get_codebase_keys(self) -> set[str]:
-        """Extract all dot-notated translation keys from the codebase."""
-        keys = set()
+        """Extract all dot-notated translation keys from the codebase.
+
+        Combines the regex scanner (``tr("…")`` / ``t("…")`` literal
+        call sites) with the AST scanner that catches programmatic
+        emissions like
+        ``WizardValidationError("wizard.errors.select_unknown")`` and
+        dynamic f-string namespaces like
+        ``tr(f"cli.registry.metrics.{key}")``.
+        """
+
+        from aeat.locales._ast_scanner import scan_source_tree
+
+        keys: set[str] = set()
         for py_file in self.src_dir.rglob("*.py"):
             if py_file.name == "test_parity.py" or py_file.name == "manager.py":
                 continue
@@ -51,6 +60,7 @@ class LocaleManager:
                 continue
             for match in self.pattern.finditer(content):
                 keys.add(match.group(1))
+        keys.update(scan_source_tree(self.src_dir))
         return keys
 
     def get_yaml_keys(self, d: dict[str, Any], current_path: str = "") -> set[str]:
