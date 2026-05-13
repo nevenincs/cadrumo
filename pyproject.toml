@@ -215,6 +215,15 @@ ignore = [
   "S106",
   "T20"
 ]
+# Google OAuth tests use synthetic OAuth client_secret + refresh_token
+# literals as fixtures; ruff's S105/S106 heuristic flags every fake
+# `GOCSPX-*` and `1//*` token even though they're documented test data.
+"src/aeat/adapters/outbound/google/test_*.py" = [
+  "S101",
+  "S105",
+  "S106",
+  "T20"
+]
 # `certificate_password_secret_var_name` is the NAME of an env var, not a
 # password. `_PASSWORD_COMMENT_PREFIX` is a file-format prefix, not a secret.
 "src/aeat/application/setup/_env_writer.py" = ["S105"]
