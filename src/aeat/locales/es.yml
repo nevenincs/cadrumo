@@ -39,6 +39,12 @@ auth:
     clave_movil_description: Autenticación con aprobación push en el móvil del titular
       registrado en Cl@ve. Requiere DNI/NIE, registro en Cl@ve, y el dispositivo emparejado.
     clave_movil_label: Cl@ve Móvil
+    clave_permanente_description: Slot reservado y cerrado para Cl@ve Permanente.
+    clave_permanente_label: Cl@ve Permanente
+    clave_pin_description: Slot reservado y cerrado para Cl@ve PIN.
+    clave_pin_label: Cl@ve PIN
+    dnie_pkcs_description: Slot reservado y cerrado para DNI-e PKCS.
+    dnie_pkcs_label: DNI-e PKCS
 categories:
   test_profile:
     display_label_851219: Etiqueta de visualización 851219
@@ -120,6 +126,8 @@ cli:
       help: Configurar el proveedor de autenticación activo
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
       providers_help: Listar proveedores de autenticación soportados
+      reserved_provider: 'Proveedor de autenticación reservado pero no implementado:
+        %{provider}.'
       status_help: Mostrar el estado de autenticación configurado
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
@@ -619,6 +627,24 @@ cli:
     to_help: Fecha final del calendario (AAAA-MM-DD)
     transactions: Movimientos
     verbose_help: Mostrar detalles y siguiente acción cuando existan
+  review:
+    app_help: Cola de revisión humana para registros que requieren criterio del operador
+    errors:
+      invalid_state: 'Estado de revisión inválido: %{state}'
+    labels:
+      id: ID
+      kind: Tipo
+      next: Siguiente
+      severity: Severidad
+    queue:
+      empty: No hay elementos de revisión
+      help: Listar filas de la cola de revisión
+      kind_help: Filtrar por tipo de origen
+      modelo_help: Filtrar por modelo
+      state_help: Filtrar estado (pending o all)
+    show:
+      help: Mostrar un elemento de la cola de revisión
+      id_help: Identificador del elemento de revisión
   registry:
     app_help: Gestión del registro de modelos fiscales
     capture_filed_data_help: Capturar datos ya presentados en la AEAT y actualizar

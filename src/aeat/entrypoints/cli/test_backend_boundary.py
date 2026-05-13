@@ -21,6 +21,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 _PLAN_PATH = PROJECT_ROOT / ".vault" / "plan" / "2026-05-08-cli-backend-boundary-plan.md"
 _REFERENCE_PATH = PROJECT_ROOT / ".vault" / "reference" / "2026-05-08-cli-backend-boundary-reference.md"
 _CLI_ROOT = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
+_APPLICATION_ROOT = PROJECT_ROOT / "src" / "aeat" / "application"
+_LOCALES_ROOT = PROJECT_ROOT / "src" / "aeat" / "locales"
+_APPLICATION_ERROR_REGISTRY = PROJECT_ROOT / "src" / "aeat" / "core" / "errors" / "registry" / "_application.py"
 
 _FORBIDDEN_TEST_PROCESS_LANGUAGE = (
     "aspirational",
@@ -44,6 +47,48 @@ _LIVE_TEST_FILES = frozenset(
     {
         "src/aeat/entrypoints/cli/test_setup_auth_live.py",
     }
+)
+
+_W01_P002_OPERATOR_GUIDANCE_FILES = (
+    _CLI_ROOT / "_common.py",
+    _CLI_ROOT / "_config.py",
+    _APPLICATION_ROOT / "archive" / "_registry.py",
+    _APPLICATION_ROOT / "auth" / "__init__.py",
+    _APPLICATION_ROOT / "auth" / "_acquisition_lock.py",
+    _APPLICATION_ROOT / "auth" / "_catalogue.py",
+    _APPLICATION_ROOT / "auth" / "_sessions.py",
+    _APPLICATION_ROOT / "diagnostics.py",
+    _APPLICATION_ROOT / "filing" / "_calculate.py",
+    _APPLICATION_ROOT / "filing" / "_export.py",
+    _APPLICATION_ROOT / "operator_surface" / "_contract.py",
+    _APPLICATION_ROOT / "overview" / "__init__.py",
+    _APPLICATION_ROOT / "profile" / "__init__.py",
+    _APPLICATION_ROOT / "review" / "_adapters.py",
+    _APPLICATION_ROOT / "review" / "_edit.py",
+    _APPLICATION_ROOT / "review" / "_filter.py",
+    _APPLICATION_ROOT / "topics" / "__init__.py",
+    _APPLICATION_ROOT / "wizard" / "_commands.py",
+    _APPLICATION_ROOT / "wizard" / "_status.py",
+    _APPLICATION_ERROR_REGISTRY,
+    _LOCALES_ROOT / "ca.yml",
+    _LOCALES_ROOT / "en.yml",
+    _LOCALES_ROOT / "es.yml",
+    _LOCALES_ROOT / "hu.yml",
+)
+
+_W01_P002_RETIRED_GUIDANCE = re.compile(
+    r"aeat\s+config\s+setup|"
+    r"aeat\s+setup|"
+    r"aeat\s+app\s+topic|"
+    r"aeat\s+app\s+archive|"
+    r"aeat\s+app\s+invoice|"
+    r"aeat\s+app\s+declaration|"
+    r"aeat\s+filing|"
+    r"aeat\s+financial|"
+    r"aeat\s+review\s+show|"
+    r"setup_reset|"
+    r"SetupReset|"
+    r"reset_setup"
 )
 
 
@@ -195,3 +240,17 @@ def test_cli_unit_tests_do_not_contain_process_state_or_xfail_language() -> None
         if re.search(r"(?<![a-z0-9_])pytest\.skip(?![a-z0-9_])", text):
             offences.append(f"{rel} contains pytest.skip")
     assert offences == [], "CLI tests contain process-state or skip language:\n  " + "\n  ".join(offences)
+
+
+def test_w01_p002_operator_guidance_uses_accepted_roots() -> None:
+    """Accepted config/app guidance must not point operators at retired command roots."""
+
+    offences: list[str] = []
+    for path in _W01_P002_OPERATOR_GUIDANCE_FILES:
+        rel = path.relative_to(PROJECT_ROOT).as_posix()
+        text = path.read_text(encoding="utf-8")
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            if _W01_P002_RETIRED_GUIDANCE.search(line):
+                offences.append(f"{rel}:{line_number}: {line.strip()}")
+
+    assert offences == [], "retired operator guidance found:\n  " + "\n  ".join(offences)

@@ -62,10 +62,10 @@ def test_active_profile_with_identity_and_iva_regime_is_profile_ready() -> None:
     assert report.missing_enrolment == ()
 
 
-def test_next_action_for_empty_state_directs_to_aeat_config_setup() -> None:
+def test_next_action_for_empty_state_directs_to_aeat_config_init() -> None:
     state = WorkflowState()
     report = build_wizard_status(state)
-    assert report.next_action.startswith("aeat config setup")
+    assert report.next_action.startswith("aeat config init")
 
 
 def test_report_is_strict_frozen_pydantic_v2() -> None:

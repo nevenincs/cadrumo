@@ -199,7 +199,7 @@ def _to_transaction_item(
         modelo=None,
         severity=severity,
         summary=summary,
-        drill_command=f"aeat financial txs classify {transaction.transaction_id} --as ...",
+        drill_command=f"aeat app ledger classify {transaction.transaction_id} --as ...",
         since=since,
         source=transaction,
     )
@@ -276,7 +276,7 @@ def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str)
         modelo=None,
         severity=severity,
         summary=summary,
-        drill_command=f"aeat financial invoices show {invoice.invoice_id}",
+        drill_command=f"aeat app review show {invoice.invoice_id}",
         since=since,
         source=invoice,
     )
@@ -364,12 +364,13 @@ def _to_finding_item(
     casilla = finding.casilla_id or "-"
     _first_translation(finding.message) or finding.code
     summary = tr("review.adapters.t_145612")
+    item_id = f"{draft.draft_id}:{finding.code}:{casilla}"
     return FindingReviewItem(
-        item_id=f"{draft.draft_id}:{finding.code}:{casilla}",
+        item_id=item_id,
         modelo=draft.modelo,
         severity=_classify_finding(finding.severity),
         summary=summary,
-        drill_command=f"aeat filing show {path_str} --findings-only",
+        drill_command=f"aeat app review show {item_id}",
         since=draft.updated_at,
         source=finding,
         draft_id=draft.draft_id,
@@ -382,12 +383,13 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
         "review.adapters.t_397611",
         status=draft.status.value,
     )
+    item_id = f"{draft.draft_id}:_status:{draft.status.value}"
     return FindingReviewItem(
-        item_id=f"{draft.draft_id}:_status:{draft.status.value}",
+        item_id=item_id,
         modelo=draft.modelo,
         severity=ReviewSeverity.NORMAL,
         summary=summary,
-        drill_command=f"aeat filing show {path_str}",
+        drill_command=f"aeat app review show {item_id}",
         since=draft.updated_at,
         source=None,
         draft_id=draft.draft_id,
@@ -398,12 +400,13 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
 def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
     """Emit a high-severity item for drafts whose stored approval is stale."""
     summary = tr("review.adapters.t_787894")
+    item_id = f"{draft.draft_id}:_status:APPROVAL_STALE"
     return FindingReviewItem(
-        item_id=f"{draft.draft_id}:_status:APPROVAL_STALE",
+        item_id=item_id,
         modelo=draft.modelo,
         severity=ReviewSeverity.HIGH,
         summary=summary,
-        drill_command=f"aeat review show {path_str}",
+        drill_command=f"aeat app review show {item_id}",
         since=draft.updated_at,
         source=None,
         draft_id=draft.draft_id,

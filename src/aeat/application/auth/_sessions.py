@@ -63,7 +63,7 @@ class AuthenticatedAeatSessionResult(BaseModel):
 class PersistedAuthSession(BaseModel):
     """Provider-neutral view of encrypted AEAT session metadata."""
 
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+    model_config = ConfigDict(frozen=True, extra="ignore")
 
     provider_kind: AuthProviderKind = Field(
         description="Provider that produced the session metadata.",

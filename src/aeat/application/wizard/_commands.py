@@ -191,6 +191,7 @@ def _mode_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
         annotation=Annotated[
             str,
             typer.Option(
+                "--profile",
                 "--profile-name",
                 help=tr("cli.config.setup.profile_name_help"),
             ),

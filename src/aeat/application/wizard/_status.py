@@ -122,15 +122,15 @@ def _next_wizard_action(
     login_ready: bool,
 ) -> str:
     if not has_profile:
-        return "aeat config setup --profile-name NAME"
+        return "aeat config init --profile NAME"
     if missing_required:
-        return f"aeat config set {missing_required[0]} VALUE"
+        return f"aeat config profile set {missing_required[0]} VALUE"
     if missing_enrolment:
-        return f"aeat config set {missing_enrolment[0]} GENERAL"
+        return f"aeat config profile set {missing_enrolment[0]} GENERAL"
     if not auth_provider:
-        return "aeat config auth --provider certificate --file PATH"
+        return "aeat config auth configure --provider certificate --file PATH"
     if not login_ready:
-        return "aeat config auth --provider certificate"
+        return "aeat config auth test --provider certificate"
     return "aeat app overview status"
 
 
