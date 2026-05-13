@@ -1,1 +1,0 @@
-"""Adapter import-contract tests."""

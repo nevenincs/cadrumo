@@ -1,1 +1,0 @@
-"""Transaction import-contract tests."""

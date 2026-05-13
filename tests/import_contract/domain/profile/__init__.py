@@ -1,1 +1,0 @@
-"""Profile import-contract tests."""
