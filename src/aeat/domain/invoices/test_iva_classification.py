@@ -236,19 +236,14 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
         ),
     )
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    # Structural wiring verification: each binding key MUST be present in
-    # the resolver output. Each per-rate single-observation result is an
-    # identity passthrough of the synthetic iva_amount; the rule's
-    # identity-round-trip carve-out allows the equality assertions
-    # because they verify the routing wiring (not the arithmetic).
-    # Arithmetic verification routes through the live Renta WEB Open /
-    # AEAT-published workbook parity tests in the calculations registry.
-    assert "modelo-303-iva-repercutido-general-cuota" in result
-    assert "modelo-303-iva-repercutido-reducido-cuota" in result
-    assert "modelo-303-iva-soportado-interiores-cuota" in result
-    # Identity passthrough: a single matching observation routes its
-    # iva_amount through the resolver. These are NOT arithmetic
-    # tautologies; they are routing-id verifications.
-    assert result["modelo-303-iva-repercutido-general-cuota"] == Decimal("210")
-    assert result["modelo-303-iva-repercutido-reducido-cuota"] == Decimal("50")
-    assert result["modelo-303-iva-soportado-interiores-cuota"] == Decimal("84")
+    # Routing wiring: each per-rate single-observation result threads the
+    # originating observation's iva_amount through the resolver. The
+    # assertions read the iva_amount off the source observation rather
+    # than carrying a hand-written literal, so a future author changing
+    # a synthetic input cannot accidentally make the test agree with a
+    # silently-broken resolver. Arithmetic of base_amount vs iva_amount
+    # is verified against AEAT authority through the workbook parity
+    # tests in the calculations registry.
+    assert result["modelo-303-iva-repercutido-general-cuota"] == observations[0].iva_amount
+    assert result["modelo-303-iva-repercutido-reducido-cuota"] == observations[1].iva_amount
+    assert result["modelo-303-iva-soportado-interiores-cuota"] == observations[2].iva_amount
