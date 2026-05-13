@@ -1,0 +1,275 @@
+"""Application-layer command and result contracts for the user profile backend.
+
+This package owns the lifecycle API contracts for the centralised
+schema-driven profile backend defined by the
+``2026-05-07-user-profile-backend-schema-adr``. The domain layer
+(``aeat.domain.user_profile``) owns the schema, value records, and
+registry-contract validation; this package owns the application-layer
+service surface: strict Pydantic command and result records that flow
+between the CLI thin adapters, the secure-storage persistence wiring,
+and the calculation/filing/aggregation consumers.
+
+The records here have no business logic — they are the typed contract.
+Subsequent W09 plan rows wire the service implementations
+(``ProfileLifecycleService``, ``ProfileSnapshotService``,
+``ProfileValidationService``, ``ProfilePreflightService``) and the
+secure-storage adapters that consume these records.
+"""
+
+from __future__ import annotations
+
+from datetime import date, datetime
+from enum import StrEnum
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from ...domain.user_profile import (
+    ProfileFactValue,
+    UserProfileFact,
+    UserProfileRecord,
+    UserProfileStatus,
+)
+
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+# ---------------------------------------------------------------------------
+# Lifecycle commands
+# ---------------------------------------------------------------------------
+
+
+class RegisterProfileCommand(BaseModel):
+    """Register a new active profile root in the secure DB backend."""
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: str = Field(min_length=1, max_length=96)
+    display_name: str = Field(min_length=1, max_length=160)
+    facts: tuple[UserProfileFact, ...] = ()
+
+
+class EditProfileFieldCommand(BaseModel):
+    """Upsert one effective-dated profile fact."""
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: str = Field(min_length=1, max_length=96)
+    path: str = Field(min_length=3, max_length=192)
+    value: ProfileFactValue
+    valid_from: date | None = None
+    valid_to: date | None = None
+    source: str = Field(default="manual_cli", min_length=1, max_length=80)
+
+
+class EditProfileSectionCommand(BaseModel):
+    """Bulk-upsert every fact in one schema section."""
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: str = Field(min_length=1, max_length=96)
+    section_key: str = Field(min_length=1, max_length=64)
+    facts: tuple[UserProfileFact, ...]
+    source: str = Field(default="manual_cli", min_length=1, max_length=80)
+
+
+class RemoveProfileCommand(BaseModel):
+    """Tombstone the live profile root (immutable filing snapshots are retained)."""
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: str = Field(min_length=1, max_length=96)
+
+
+class DuplicateProfileCommand(BaseModel):
+    """Copy an existing profile under a new id and display name."""
+
+    model_config = _STRICT_FROZEN
+
+    source_profile_id: str = Field(min_length=1, max_length=96)
+    target_profile_id: str = Field(min_length=1, max_length=96)
+    target_display_name: str = Field(min_length=1, max_length=160)
+
+
+# ---------------------------------------------------------------------------
+# Lifecycle results
+# ---------------------------------------------------------------------------
+
+
+class ProfileLifecycleResult(BaseModel):
+    """Result of a lifecycle mutation (register / edit / remove / duplicate)."""
+
+    model_config = _STRICT_FROZEN
+
+    profile: UserProfileRecord
+    applied_at: datetime
+
+
+class ProfileListing(BaseModel):
+    """One row of a profile-listing result."""
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: str = Field(min_length=1, max_length=96)
+    display_name: str = Field(min_length=1, max_length=160)
+    status: UserProfileStatus
+    created_at: datetime
+    updated_at: datetime
+
+
+class ProfileListResult(BaseModel):
+    """Frozen tuple of profile listings returned by `list_profiles`."""
+
+    model_config = _STRICT_FROZEN
+
+    profiles: tuple[ProfileListing, ...] = ()
+
+
+# ---------------------------------------------------------------------------
+# Validation and preflight
+# ---------------------------------------------------------------------------
+
+
+class ProfileValidationSeverity(StrEnum):
+    """Severity levels emitted by `ProfileValidationService`."""
+
+    ERROR = "error"
+    WARNING = "warning"
+    INFO = "info"
+
+
+class ProfileValidationIssue(BaseModel):
+    """One validation finding raised against a profile snapshot."""
+
+    model_config = _STRICT_FROZEN
+
+    severity: ProfileValidationSeverity
+    code: str = Field(min_length=1, max_length=64)
+    path: str | None = None
+    message: str = Field(min_length=1, max_length=512)
+
+
+class ProfileValidationReport(BaseModel):
+    """Aggregate validation report for a profile or a registration command."""
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: str = Field(min_length=1, max_length=96)
+    schema_version: int = Field(ge=1)
+    issues: tuple[ProfileValidationIssue, ...] = ()
+
+
+class ProfilePreflightRequirement(BaseModel):
+    """One required-but-missing profile selector for a modelo / revision."""
+
+    model_config = _STRICT_FROZEN
+
+    selector: str = Field(min_length=1, max_length=128)
+    section_key: str = Field(min_length=1, max_length=64)
+    field_key: str = Field(min_length=1, max_length=128)
+
+
+class ProfilePreflightReport(BaseModel):
+    """Per-`(modelo, revision, filing_year, period)` profile readiness report."""
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: str = Field(min_length=1, max_length=96)
+    modelo: str = Field(min_length=1, max_length=16)
+    revision_id: str = Field(min_length=1, max_length=64)
+    filing_year: int = Field(ge=2000, le=2100)
+    period: str = Field(min_length=1, max_length=8)
+    missing: tuple[ProfilePreflightRequirement, ...] = ()
+    ready: bool
+
+
+# ---------------------------------------------------------------------------
+# Filing snapshots
+# ---------------------------------------------------------------------------
+
+
+class ProfileSnapshotRequest(BaseModel):
+    """Request an immutable filing-time snapshot of one profile."""
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: str = Field(min_length=1, max_length=96)
+    modelo: str = Field(min_length=1, max_length=16)
+    revision_id: str = Field(min_length=1, max_length=64)
+    filing_year: int = Field(ge=2000, le=2100)
+    period: str = Field(min_length=1, max_length=8)
+
+
+class ProfileSnapshot(BaseModel):
+    """Immutable filing-time snapshot of one profile's projection."""
+
+    model_config = _STRICT_FROZEN
+
+    snapshot_id: str = Field(min_length=1, max_length=128)
+    profile_id: str = Field(min_length=1, max_length=96)
+    schema_version: int = Field(ge=1)
+    modelo: str = Field(min_length=1, max_length=16)
+    revision_id: str = Field(min_length=1, max_length=64)
+    filing_year: int = Field(ge=2000, le=2100)
+    period: str = Field(min_length=1, max_length=8)
+    canonical_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    created_at: datetime
+    facts: tuple[UserProfileFact, ...]
+
+
+class ProfileStaleCheckReport(BaseModel):
+    """Result of checking a draft's stored snapshot against the current projection."""
+
+    model_config = _STRICT_FROZEN
+
+    snapshot_id: str = Field(min_length=1, max_length=128)
+    profile_id: str = Field(min_length=1, max_length=96)
+    stored_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    current_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    stale: bool
+
+
+# ---------------------------------------------------------------------------
+# Portable export / import
+# ---------------------------------------------------------------------------
+
+
+class ProfileExportBundle(BaseModel):
+    """Portable, user-directed export bundle. Not retained by the backend."""
+
+    model_config = _STRICT_FROZEN
+
+    bundle_schema_version: int = Field(ge=1)
+    profile: UserProfileRecord
+    exported_at: datetime
+
+
+class ProfileImportResult(BaseModel):
+    """Outcome of importing a portable bundle."""
+
+    model_config = _STRICT_FROZEN
+
+    profile: UserProfileRecord
+    imported_at: datetime
+    issues: tuple[ProfileValidationIssue, ...] = ()
+
+
+__all__ = [
+    "DuplicateProfileCommand",
+    "EditProfileFieldCommand",
+    "EditProfileSectionCommand",
+    "ProfileExportBundle",
+    "ProfileImportResult",
+    "ProfileLifecycleResult",
+    "ProfileListResult",
+    "ProfileListing",
+    "ProfilePreflightReport",
+    "ProfilePreflightRequirement",
+    "ProfileSnapshot",
+    "ProfileSnapshotRequest",
+    "ProfileStaleCheckReport",
+    "ProfileValidationIssue",
+    "ProfileValidationReport",
+    "ProfileValidationSeverity",
+    "RegisterProfileCommand",
+    "RemoveProfileCommand",
+]
