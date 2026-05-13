@@ -47,22 +47,70 @@ def test_locale_integrity(manager):
         pytest.fail("\n".join(errors))
 
 
+def _namespace_covers(key: str, prefix: str) -> bool:
+    """Return True when ``key`` carries ``prefix`` as a dot-bounded sub-path.
+
+    Matches both top-level (``residence.ccaa.x``) and wrapped
+    (``wizard.setup.residence.ccaa.x``) placements so dynamic-key
+    construction that flows through a wrapper helper still counts
+    against the declared namespace.
+    """
+
+    return f".{prefix}." in f".{key}."
+
+
 @pytest.mark.unit
 @pytest.mark.domain_application
-def test_codebase_to_locale_parity(locales_state):
-    """Test 1: Parity between the codebase truth and the localizations."""
+def test_codebase_to_locale_parity(locales_state, manager):
+    """Test 1: Parity between the codebase truth and the localizations.
+
+    Concrete codebase keys must be present in every locale. Locale
+    keys absent from the concrete codebase set are tolerated when they
+    sit under a declared dynamic-namespace prefix (the runtime builds
+    the tail via f-string or concatenation, so the static scanner sees
+    only the prefix).
+    """
     codebase_keys, locale_keys_map, _ = locales_state
     assert len(codebase_keys) > 0, "No translation keys found in codebase"
+
+    namespace_prefixes = tuple(
+        marker.rstrip("*").rstrip(".") for marker in manager.get_codebase_namespaces() if marker.rstrip("*").rstrip(".")
+    )
+
+    def _covered_by_namespace(key: str) -> bool:
+        return any(_namespace_covers(key, prefix) for prefix in namespace_prefixes)
 
     errors = []
     for name, keys in locale_keys_map.items():
         missing = codebase_keys - keys
-        extra = keys - codebase_keys
+        extra = {key for key in keys - codebase_keys if not _covered_by_namespace(key)}
 
         if missing:
             errors.append(f"{name} is missing {len(missing)} codebase keys.")
         if extra:
             errors.append(f"{name} contains {len(extra)} extra keys not in the codebase.")
+
+    if errors:
+        pytest.fail("\n".join(errors))
+
+
+@pytest.mark.unit
+@pytest.mark.domain_application
+def test_codebase_namespaces_are_satisfied_by_locale_entries(locales_state, manager):
+    """Every dynamic-namespace marker has at least one concrete locale entry."""
+    _, locale_keys_map, _ = locales_state
+    namespaces = manager.get_codebase_namespaces()
+    if not namespaces:
+        return
+
+    errors = []
+    for marker in sorted(namespaces):
+        prefix = marker.rstrip("*").rstrip(".")
+        if not prefix:
+            continue
+        for name, keys in locale_keys_map.items():
+            if not any(_namespace_covers(key, prefix) for key in keys):
+                errors.append(f"{name} carries no key matching namespace marker {marker!r}")
 
     if errors:
         pytest.fail("\n".join(errors))

@@ -754,17 +754,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.adapters.outbound.google.GoogleAuthValidationError",
-        ErrorCode(
-            code="AUTH_GOOGLE_VALIDATION",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_google_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.adapters.outbound.llm._errors.LLMError",
         ErrorCode(
             code="FAIL_LLM",
@@ -1012,17 +1001,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_LLM_VALIDATION",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_llm_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.adapters.outbound.google.GoogleAuthUnavailableError",
-        ErrorCode(
-            code="REFUSED_GOOGLE_AUTH_UNAVAILABLE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_google_auth_unavailable",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

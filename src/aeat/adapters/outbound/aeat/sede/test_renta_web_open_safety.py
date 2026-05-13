@@ -74,9 +74,16 @@ def test_validar_button_label_is_blocked_by_safety_guard() -> None:
     it — the registry's typed bindings + parity oracle do all validation.
     Locking it as forbidden prevents accidental clicks from triggering
     AEAT-side validation state changes."""
-    assert _matches_forbidden_token(_normalise("Validar")) is not None
-    assert _matches_forbidden_token(_normalise("Validación")) is not None
-    assert _matches_forbidden_token(_normalise("VALIDAR DECLARACIÓN")) is not None
+    matched_validar = _matches_forbidden_token(_normalise("Validar"))
+    matched_validacion = _matches_forbidden_token(_normalise("Validación"))
+    matched_loud = _matches_forbidden_token(_normalise("VALIDAR DECLARACIÓN"))
+    # Pin both the match-vs-None contract AND that the matched token's
+    # normalised form is the prefix the input shares with the forbidden
+    # set — a regression that returned a non-matching token would slip
+    # past `is not None` alone.
+    assert matched_validar is not None and _normalise(matched_validar) in _normalise("Validar")
+    assert matched_validacion is not None and _normalise(matched_validacion) in _normalise("Validación")
+    assert matched_loud is not None and _normalise(matched_loud) in _normalise("VALIDAR DECLARACIÓN")
 
 
 def test_normalise_folds_accents_and_lowercases() -> None:

@@ -56,7 +56,7 @@ def test_regime_periodicity_quarterly_for_exterior_and_union_monthly_for_ioss() 
 
 
 def test_regime_periodicity_mapping_is_immutable() -> None:
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"item assignment|MappingProxyType|does not support"):
         REGIME_PERIODICITY[OssIossRegime.EXTERNAL_SCHEME] = RegimePeriodicity.MONTHLY  # type: ignore[index]  # ty: ignore[invalid-assignment]
 
 

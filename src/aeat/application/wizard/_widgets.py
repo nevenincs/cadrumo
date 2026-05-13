@@ -7,6 +7,12 @@ constraints declared on the descriptor, and returns the canonical
 form. Validators raise :class:`WizardValidationError` whose message
 carries the failing question's translation key so renderers can map
 the failure back to a localised prompt.
+
+Tax-ID-shaped questions (any question whose id matches ``tax-id`` or
+ends with ``-tax-id``) route through
+:func:`aeat.core.identity.validate_identity` so the Spanish NIF / NIE
+/ CIF checksum is enforced at every write surface: interactive,
+``--quiet`` flag, and ``config set tax.id`` mutations.
 """
 
 from __future__ import annotations
@@ -14,11 +20,14 @@ from __future__ import annotations
 from pathlib import Path
 
 from ...core.i18n import tr
+from ...core.identity import IdentityError, validate_identity
 from ._errors import WizardValidationError
 from ._models import WizardQuestion, WizardWidget
 
 _TRUE_TOKENS = frozenset({"true", "yes", "1", "y"})
 _FALSE_TOKENS = frozenset({"false", "no", "0", "n"})
+
+_TAX_ID_QUESTION_IDS: frozenset[str] = frozenset({"tax-id", "spouse-tax-id"})
 
 
 def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardValidationError:
@@ -32,11 +41,24 @@ def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardVal
 
 
 def validate_text(raw: str, question: WizardQuestion) -> str:
-    """Return the trimmed text answer; reject blank required strings."""
+    """Return the trimmed text answer; reject blank required strings.
+
+    Tax-id-shaped questions additionally route through the Spanish
+    NIF / NIE / CIF checksum validator from
+    :mod:`aeat.core.identity`. Malformed values raise
+    :class:`WizardValidationError` carrying
+    ``wizard.errors.invalid_tax_id`` so renderers surface the
+    translated message rather than the raw checksum complaint.
+    """
 
     value = raw.strip()
     if not value and question.required and question.visible_when is None:
         raise _fail(question, "blank_text")
+    if value and question.id in _TAX_ID_QUESTION_IDS:
+        try:
+            validate_identity(value)
+        except IdentityError as exc:
+            raise _fail(question, "invalid_tax_id", raw=raw, detail=str(exc)) from exc
     return value
 
 

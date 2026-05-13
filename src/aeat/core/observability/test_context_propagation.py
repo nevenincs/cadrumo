@@ -140,7 +140,7 @@ class TestRunContextRunIdValidation:
         monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
         for bad in ("../escape", "not-hex", "0" * 17, "ABCDEF0123456789"):
             with (
-                pytest.raises(RunTraceValidationError),
+                pytest.raises(RunTraceValidationError, match=r"invalid run_id"),
                 run_context(entrypoint="aeat test", arguments=(), run_id=bad),
             ):
                 pass

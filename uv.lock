@@ -149,8 +149,8 @@ dev = [
     { name = "types-defusedxml", specifier = ">=0.7.0.20260504" },
     { name = "types-openpyxl", specifier = ">=3.1.5.20260408" },
     { name = "types-reportlab", specifier = ">=4.4.10.20260408" },
-    { name = "vaultspec-core", specifier = ">=0.1.14" },
-    { name = "vaultspec-rag", specifier = ">=0.2.3" },
+    { name = "vaultspec-core", specifier = ">=0.1.18" },
+    { name = "vaultspec-rag", specifier = ">=0.2.8" },
 ]
 
 [[package]]
@@ -3310,7 +3310,7 @@ wheels = [
 
 [[package]]
 name = "vaultspec-core"
-version = "0.1.16"
+version = "0.1.18"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -3325,9 +3325,9 @@ dependencies = [
     { name = "typer" },
     { name = "uvicorn" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/21/d2/c8794f54d5fe54b2a0f3b91f72c2514b34318ed77e68314a43453404fc57/vaultspec_core-0.1.16.tar.gz", hash = "sha256:47126b2a92366b56409296dbc156751001d1548a700b8852d5ba14e92be5db57", size = 1145743, upload-time = "2026-04-28T02:19:19.573Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fb/88/182f4a58782077ee978ce841d9c3fe759115062cc94af5f2ef6fada314f1/vaultspec_core-0.1.18.tar.gz", hash = "sha256:a65eb726ec2c6c51c02715a674665d949ea49a8134fb50d3d55e2b34a2974ba6", size = 1330332, upload-time = "2026-05-06T06:55:54.808Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/76/f7/5c536c4f01ee516d579dd9d31869650da7cd7242b9785032723daa91863a/vaultspec_core-0.1.16-py3-none-any.whl", hash = "sha256:74ead80a25fb10aa408ab6d6bb4087a7b0d48417601c82a5f2c3eca40f9f3fa4", size = 427649, upload-time = "2026-04-28T02:19:17.79Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/76/d2078ca446dc78018c452b3d880d55d586052409958b97a513df52c280f6/vaultspec_core-0.1.18-py3-none-any.whl", hash = "sha256:32feda72de1a91c55c22dc379fca1f5245d6d1d452b6410b4052c0dcba65b556", size = 563629, upload-time = "2026-05-06T06:55:56.287Z" },
 ]
 
 [[package]]

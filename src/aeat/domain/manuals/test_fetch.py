@@ -92,7 +92,9 @@ class TestManifestIO:
 
         sha256 = hashlib.sha256(b"hello pdf\n").hexdigest()
         manifest = _manifest(sha256=sha256, length=len(b"hello pdf\n"))
-        verify_fetched_pdf(manifest, part_root)
+        assert manifest.sha256 == sha256
+        result = verify_fetched_pdf(manifest, part_root)
+        assert result is None
 
     def test_verify_fetched_pdf_sha_mismatch(self, tmp_path: Path) -> None:
         """A sha256 mismatch raises ManifestError."""

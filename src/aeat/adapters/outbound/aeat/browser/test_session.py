@@ -196,9 +196,9 @@ async def test_browser_session_creation(tmp_path: Path) -> None:
 
     context = await session.create_context()
     assert evasion.called
-    assert context.kwargs["locale"] == "es-ES"  # type: ignore
-    assert context.kwargs["timezone_id"] == "Europe/Madrid"  # type: ignore
-    assert "storage_state" not in context.kwargs  # type: ignore
+    assert context.kwargs["locale"] == "es-ES"  # ty: ignore[unresolved-attribute]
+    assert context.kwargs["timezone_id"] == "Europe/Madrid"  # ty: ignore[unresolved-attribute]
+    assert "storage_state" not in context.kwargs  # ty: ignore[unresolved-attribute]
     assert not hasattr(context, "_aeat_certificate_thumbprint")
 
 
@@ -241,7 +241,7 @@ async def test_browser_session_uses_existing_storage_state_file(tmp_path: Path) 
     )
 
     context = await session.create_context()
-    assert context.kwargs["storage_state"] == str(storage_state_path)  # type: ignore
+    assert context.kwargs["storage_state"] == str(storage_state_path)  # ty: ignore[unresolved-attribute]
 
 
 @pytest.mark.asyncio
@@ -259,7 +259,7 @@ async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Pat
     )
 
     context = await session.create_context(storage_state_path=override_path)
-    assert context.kwargs["storage_state"] == str(override_path)  # type: ignore
+    assert context.kwargs["storage_state"] == str(override_path)  # ty: ignore[unresolved-attribute]
 
 
 @pytest.mark.asyncio
@@ -585,4 +585,6 @@ def test_navigate_probe_raises_on_rate_limit_fixture() -> None:
 
 def test_navigate_probe_passes_on_ok_fixture() -> None:
     body = (_FIXTURES_ROOT / "ok" / "sede_landing.html").read_text(encoding="utf-8")
-    _probe_or_raise(_PROBE_URL, 200, {}, body, rate_limit_retry_after_default=300)
+    assert body, "ok fixture body must be non-empty for the probe test to be meaningful"
+    result = _probe_or_raise(_PROBE_URL, 200, {}, body, rate_limit_retry_after_default=300)
+    assert result is None

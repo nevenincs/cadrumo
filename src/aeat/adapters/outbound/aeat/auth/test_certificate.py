@@ -80,7 +80,7 @@ def _build_pkcs12_bundle(
 
 
 def test_bundle_rejects_extra_fields(tmp_path: Path) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Extra inputs are not permitted|not_a_field"):
         CertificateBundle.model_validate(
             {
                 "path": tmp_path / "x.p12",
@@ -97,12 +97,12 @@ def test_bundle_is_frozen(tmp_path: Path) -> None:
         password_env_var="X",
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"frozen|Instance is frozen"):
         bundle.path = tmp_path / "y.p12"  # type: ignore[misc]
 
 
 def test_bundle_rejects_empty_env_var_name(tmp_path: Path) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"password_env_var|at least 1 character"):
         CertificateBundle(
             path=tmp_path / "x.p12",
             password_env_var="",
@@ -338,7 +338,9 @@ def test_playwright_preload_accepts_marked_context(
             self._aeat_certificate_thumbprint = thumbprint
 
     ctx = _MarkedContext(loaded.sha256_thumbprint)
-    preload_into_browser_context(loaded, ctx)  # must not raise
+    assert ctx._aeat_certificate_thumbprint == loaded.sha256_thumbprint
+    result = preload_into_browser_context(loaded, ctx)
+    assert result is None
 
 
 def test_playwright_client_certificates_kwarg_materialises_secret(

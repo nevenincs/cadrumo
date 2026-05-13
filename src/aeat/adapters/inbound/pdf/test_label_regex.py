@@ -125,5 +125,5 @@ class TestLabelHitShape:
             decimal_value=Decimal("10.00"),
             match_count=1,
         )
-        with pytest.raises(AttributeError):
+        with pytest.raises(AttributeError, match=r"frozen|cannot|casilla_id"):
             hit.casilla_id = "02"  # type: ignore[misc,assignment]  # ty: ignore[invalid-assignment]

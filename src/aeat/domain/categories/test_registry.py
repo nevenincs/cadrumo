@@ -38,12 +38,9 @@ def test_every_profile_has_at_least_one_citation() -> None:
 def test_proportionality_kinds_carry_kind_specific_fields() -> None:
     """Cross-field invariants: each kind populates only its own metadata fields.
 
-    `fixed_percentage` rules are absent today (every home-office /
-    suministros-* category that previously used `fixed_percentage` was
-    moved to `usage_ratio_home_area` with `default_ratio` per the
-    `2026-04-21-usage-ratios-adr` contract). The invariants still hold
-    vacuously for `fixed_percentage` and exercise the live shape for
-    `usage_ratio_*`.
+    `fixed_percentage` rules carry no `usage_ratio_*` metadata and
+    vice versa; the assertions below pin both directions for every
+    profile in the registry.
     """
     fixed_percentage_rules = [
         profile.proportionality
@@ -102,5 +99,5 @@ def test_registry_preserves_conservative_semantics_for_special_categories() -> N
 def test_load_category_profiles_from_manual_rejects_unknown_year() -> None:
     """Unsupported handbook years must fail loud."""
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"2024|year|unsupported|unknown"):
         load_category_profiles_from_manual(2024)

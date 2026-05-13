@@ -62,8 +62,9 @@ def test_snapshot_as_audit_dict_matches_engine_schema(monkeypatch: pytest.Monkey
 def test_require_live_read_passes_when_enabled(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
     settings = _fresh_settings(monkeypatch, AEAT_LIVE_TESTS_ENABLED="1")
-    # Should not raise.
-    AeatAccessGate(settings).require_live_read()
+    assert settings.aeat_live_tests_enabled
+    result = AeatAccessGate(settings).require_live_read()
+    assert result is None
 
 
 def test_require_live_read_raises_when_unset(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -93,5 +94,5 @@ def test_access_gate_is_frozen(monkeypatch: pytest.MonkeyPatch) -> None:
     # Frozen dataclass rejects in-place mutation of declared fields.
     from dataclasses import FrozenInstanceError
 
-    with pytest.raises(FrozenInstanceError):
+    with pytest.raises(FrozenInstanceError, match=r"settings"):
         gate.__setattr__("settings", settings)

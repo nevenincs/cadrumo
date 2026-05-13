@@ -300,7 +300,7 @@ def _parse_ratio(raw: str) -> Decimal:
 def _load_profile() -> UsageRatioProfile:
     """Load the persisted profile, exiting cleanly on a load failure."""
     try:
-        return load_usage_ratios(_usage_ratios_path())
+        return load_usage_ratios()
     except UsageRatioError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc
@@ -309,7 +309,7 @@ def _load_profile() -> UsageRatioProfile:
 def _save_profile(profile: UsageRatioProfile) -> None:
     """Persist ``profile`` to disk, exiting cleanly on a save failure."""
     try:
-        save_usage_ratios(profile, _usage_ratios_path())
+        save_usage_ratios(profile)
     except UsageRatioError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(code=2) from exc

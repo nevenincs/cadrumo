@@ -32,6 +32,12 @@ auth:
     clave_movil_description: Push-approval authentication via the holder's phone registered
       with Cl@ve. Requires DNI/NIE, Cl@ve enrolment, and a paired device.
     clave_movil_label: Cl@ve Móvil
+    clave_permanente_description: Reserved closed provider slot for Cl@ve Permanente.
+    clave_permanente_label: Cl@ve Permanente
+    clave_pin_description: Reserved closed provider slot for Cl@ve PIN.
+    clave_pin_label: Cl@ve PIN
+    dnie_pkcs_description: Reserved closed provider slot for DNI-e PKCS.
+    dnie_pkcs_label: DNI-e PKCS
 categories:
   test_profile:
     display_label_851219: Display label 851219
@@ -40,42 +46,78 @@ cli:
     modelo:
       app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
       bindings:
-        as_of_help: Resolve the modelo revision active on the supplied ISO date
-          (YYYY-MM-DD)
+        app_help: Inspect and preview the bindings of an AEAT tax form
+        as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+        list_help: List the required and available bindings for a modelo / year /
+          period
+        missing_help: Filter to bindings without a resolved value (require bucket
+          / ledger / profile data)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Fiscal period to scope the bindings (e.g. 2026Q1, 2026-01)
+        override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
+        period_help: Fiscal period to scope the bindings (e.g. Q1, 2026-01)
+        preview_help: Preview bindings with temporary overrides without mutating state
+        year_help: Tax year of the modelo (e.g. 2026)
       casillas:
-        as_of_help: Resolve the modelo revision active on the supplied ISO date
-          (YYYY-MM-DD)
-        input_kind_help: Filter casillas by input kind (manual, bound, computed,
-          informational)
+        as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+        input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Fiscal period to scope the casillas (e.g. 2026Q1, 2026-01)
         required_help: Show only casillas the modelo marks as required
       describe:
-        as_of_help: Resolve the modelo revision active on the supplied ISO date
-          (YYYY-MM-DD)
+        as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Fiscal period to resolve the modelo revision against (e.g.
-          2026Q1, 2026-01)
+        period_help: Fiscal period to resolve the modelo revision against (e.g. 2026Q1,
+          2026-01)
       formulas:
-        as_of_help: Resolve the modelo revision active on the supplied ISO date
-          (YYYY-MM-DD)
+        as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Fiscal period to scope the formulas (e.g. 2026Q1, 2026-01)
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
+      filing_record:
+        app_help: Inspect internal filing records
+        bucket_id_help: Filter by bucket
+        filing_record_id_help: Stable filing-record identifier
+        include_superseded_help: Include superseded filing records (excluded by default)
+        list_help: List registered filing records
+        show_help: Show one filing record by id
+      work:
+        actor_help: Actor responsible for the action (free-text label up to 64 chars)
+        app_help: Manage the lifecycle of modelo work units
+        bucket_id_help: Bucket identifier the work unit belongs to
+        calculate_help: Persist a new draft calculation revision for the work unit
+        calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
+          revision
+        casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable)
+        create_help: Create or reuse a work unit for (modelo, year, period, revision)
+        discard_help: Mark a work unit as discarded (auditable state transition)
+        file_help: Mark a verified revision as internally filed. Does NOT submit to AEAT
+        include_discarded_help: Include discarded work units in the listing (excluded
+          by default)
+        list_help: List registered work units, optionally filtered by bucket
+        modelo_help: Tax form code (e.g. 303, 130, 100)
+        name_help: Optional display name for the work unit
+        notes_help: Optional notes attached to the filing record
+        override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
+        period_help: Filing period of the work unit (e.g. Q1, 4T, 0A, 01)
+        reason_help: Optional free-text reason for the discard (up to 500 chars)
+        rename_help: Update the display name of a work unit
+        revision_help: Stable id of the targeted registry modelo revision
+        revisions_help: List calculation revisions, optionally filtered to one work unit
+        status_help: Show the metadata of one work unit
+        verified_complete_help: Mark a draft calculation revision as verified-complete
+        work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
+        year_help: Tax year of the work unit (e.g. 2026)
   archive:
-    app_help: Export and import the encrypted local archive as portable JSON
-      bundles
+    app_help: Export and import the encrypted local archive as portable JSON bundles
     export:
       bundle_id_help: Override the auto-generated bundle identifier
       help: Write a portable JSON bundle of the secure object catalogue
       namespace_help: Restrict the bundle to one or more namespaces (repeatable)
       path_help: Destination path for the JSON bundle
     import:
-      conflict_help: 'Conflict policy when restoring colliding records: fail,
-        overwrite, or keep'
+      conflict_help: 'Conflict policy when restoring colliding records: fail, overwrite,
+        or keep'
       help: Restore an archive bundle into the encrypted secure object catalogue
       path_help: Path to the JSON bundle to restore
   browser:
@@ -97,12 +139,22 @@ cli:
   config:
     app_help: Manage local configuration and diagnostics
     auth:
+      clear_all_help: Clear all configured auth providers
+      clear_help: Clear local authentication metadata
+      clear_locks_help: Clear auth acquisition locks
+      clear_sessions_help: Clear persisted AEAT auth sessions
+      configure_help: Configure the active authentication provider
       file_help: Path to the credential file (certificate or key)
       help: Configure the active authentication provider
       provider_help: Authentication provider id (e.g. certificado-electronico)
+      providers_help: List supported authentication providers
+      reserved_provider: 'Authentication provider reserved but not available: %{provider}.'
+      status_help: Show configured authentication state
+      test_help: Check local authentication readiness
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
     doctor:
+      connectivity_help: Check browser and AEAT Sede connectivity
       help: Diagnose local configuration, registry, profile, auth, and logs
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
@@ -113,15 +165,17 @@ cli:
       quarantine_yes_help: Explicitly confirm the quarantine operation
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
-      no_active_profile: No active profile. Run 'aeat config setup --tax-id <NIF>'
+      no_active_profile: No active profile. Run 'aeat config init --tax-id <NIF>'
         first.
-      unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config list'' to
-        see the available keys.'
+      unknown_key: 'Unknown configuration key: %{name}. Run ''aeat config profile
+        list'' to see the available keys.'
     get:
       help: Show the current value of one configuration key
       key_help: Key to read (e.g. tax.id, iva.regime)
     list:
       help: List every configuration key with its current value
+    profile:
+      help: Manage active profile configuration values
     reset:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
@@ -137,12 +191,16 @@ cli:
       errors:
         missing_required_flags: Missing required flags for --quiet wizard run; supply
           a value for every required question.
-      help: Run the schema-driven setup wizard interactively or via flag-driven quiet
-        mode
+      help: Initialize the active tax profile and storage bucket
       profile_name_help: Profile name to write the answers into
       quiet_help: Run the flow non-interactively using only the supplied flag values
+      success:
+        next_step: 'Next step: run `aeat app overview` to review your next obligation.'
+        saved: Profile '%{profile_name}' saved.
     status:
+      empty_profile: No profile configured. Run `aeat config init` to get started.
       help: Show the readiness of the current configuration profile
+      next_step: 'Next step: `aeat app overview`'
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
@@ -156,7 +214,6 @@ cli:
     app_help: Management of the taxpayer calendar and deadlines
     explain:
       modelo_help: Tax form number (e.g. 303, 111)
-      profile_help: Taxpayer profile (e.g. autonomo, pyme)
     explain_help: Explain the deadlines and obligations for a specific tax form and
       profile
     list:
@@ -166,7 +223,6 @@ cli:
       modelo_col: Form
       opens_on_col: Opens On
       period_col: Period
-      profile_help: Filter by taxpayer profile (e.g. pyme, gran_empresa)
       status_col: Status
       table_title: Tax Deadline Calendar
       year_help: Fiscal year to query
@@ -175,7 +231,6 @@ cli:
       labels:
         closes: Closes
         no_upcoming: No upcoming deadlines
-      profile_help: Filter by taxpayer profile (e.g. pyme)
       year_help: Fiscal year to query
     next_help: Show the next relevant tax deadline
   declaration:
@@ -196,7 +251,7 @@ cli:
       no_draft_for_period: No draft exists for the specified period
       not_approved_for_export: The declaration must be approved before being exported
       profile_tax_id_required: 'The active profile requires a configured Tax ID (NIF/CIF).
-        Run: aeat config set tax.id <NIF/NIE>'
+        Run: aeat config profile set tax.id <NIF/NIE>'
       set_parse_error: Error parsing the field assignment
     export_help: Export an approved declaration to a local AEAT-format file
     format_help: Output format (e.g. json, text, table)
@@ -249,7 +304,6 @@ cli:
       inputs_help: Input files or directories to build the filing
       modelo_help: Tax model to build (e.g., 303, 111, 130)
       period_help: Tax period (e.g., 1T, 2T, 01, 12)
-      profile_help: Taxpayer profile to use
       profile_name_help: Taxpayer profile name
       profile_tax_id_help: Taxpayer's Tax ID (NIF)
       success: Filing successfully built
@@ -277,7 +331,6 @@ cli:
       modelo_mismatch: Tax model mismatch
       multiple_import_sources: Multiple import sources found
       period_mismatch: Tax period mismatch
-      profile_tax_id_required: Taxpayer's Tax ID (NIF) is required in the profile
       reasons_not_object: Reasons must be an object (JSON)
       submission_not_found: Submission not found
       submission_validation_failed: Submission validation failed
@@ -310,6 +363,7 @@ cli:
       value: Value
     import:
       actual: Actual (Found)
+      año_help: Fiscal year for the import operation (YYYY)
       borrador_unsupported: Importing from official draft is not supported for this
         tax model
       casilla_label: Box
@@ -514,7 +568,7 @@ cli:
       reason_help: Reason for the entry edit or correction
       set_help: Set ledger field values (field=value)
       skip_help: Mark the row excluded or return it to review
-      split_help: Split the row into business and personal-use shares
+      split_help: Allocate the row into business and personal-use shares
     errors:
       auto_detect_failed: Auto-detection of ledger format failed
       edit_requires_one: At least one field modification is required for editing
@@ -565,10 +619,10 @@ cli:
   overview:
     allow_incomplete_help: Allow the calendar to be computed under defaults when regime
       keys are unset. Without this flag the calendar is refused when warnings exist.
-    app_help: Review the current filing workspace
+    app_help: Review the active tax workspace
     calendar_help: Show the obligations calendar for a date range
     calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
-      setup profile set <key> <value>'' or pass --allow-incomplete to see the calendar
+      config profile set <key> <value>'' or pass --allow-incomplete to see the calendar
       computed under defaults.'
     calendar_requires_dates: Use --from and --to when showing the calendar
     drafts: Drafts
@@ -576,11 +630,11 @@ cli:
     header: "Model\tPeriod\tState\tOpens\tCloses"
     integrity_warning: '%{count} local row(s) cannot be decrypted under the current
       master key; run ''aeat config doctor'' for detail.'
-    invoices: Invoices
+    invoices: Business-operation records
     period: Period
     period_help: Tax period to review (for example, 2026-Q1)
     profile: Profile
-    status_help: Show profile, ledger, invoice, and declaration readiness
+    status_help: Show profile, ledger, and modelo readiness
     to_help: Calendar end date (YYYY-MM-DD)
     transactions: Transactions
     verbose_help: Show details and next action when available
@@ -595,6 +649,14 @@ cli:
     capture_source_filed_data_json_help: Emit source filed-data capture report as
       JSON
     casilla_help: Casilla id to compare; repeat to override the default computed casillas
+    citations:
+      app_help: Inspect the legal-norm corpus (Ley 37/1992, Ley 35/2006, ...)
+      articulo_help: Specific article to show (e.g. 91.Uno.2.1º)
+      list_help: List the normatives codified in the legal corpus
+      normative_id_help: Stable normative id (e.g. ley-37-1992)
+      show_help: Show one normative and, optionally, one of its articles
+      tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
+      verify_help: Verify the legal-norm corpus integrity
     errors:
       invalid_year_range: Invalid year range
       unknown_modelo: Registry has no modelo definition for {modelo}
@@ -605,6 +667,65 @@ cli:
     json_help: JSON format output
     list_filed_data_help: List existing filings in AEAT for the specified year range
     list_filed_data_json_help: Output in JSON format for automation tools
+    manuals:
+      app_help: Inspect AEAT Manual práctico records (Renta, IVA, Sociedades)
+      errors:
+        unknown_section: Section {section} was not found in the manual
+      kind_help: Filter by manual rule kind
+      list_help: List manual parts available locally
+      manual_help: Manual identifier (renta, iva, sociedades)
+      part_help: Manual volume (single, part1, part2-deducciones-autonomicas, part3)
+      rules_help: List the rules codified in a manual
+      section_help: Optional section identifier to show
+      show_help: Show a manual structure and, optionally, one section
+      verify_help: Verify the manual integrity against its contract
+      year_help: Tax year of the manual (e.g. 2024)
+    metrics:
+      applicability_declaration_count: applicability_declaration_count
+      application_link_count: application_link_count
+      application_link_surfaces: application_link_surfaces
+      artefact_refs: artefact_refs
+      backend_exists: backend_exists
+      captured_count: captured_count
+      casilla_count: casilla_count
+      compared_casillas: compared_casillas
+      comparison_count: comparison_count
+      cross_reference_count: cross_reference_count
+      difference_count: difference_count
+      differences: differences
+      drift_count: drift_count
+      environment: environment
+      extraction_profile_count: extraction_profile_count
+      failed_count: failed_count
+      failure_count: failure_count
+      formula_count: formula_count
+      formula_workbook_count: formula_workbook_count
+      legal_reference_count: legal_reference_count
+      missing_filed_casillas: missing_filed_casillas
+      missing_local_casillas: missing_local_casillas
+      modelo: modelo
+      modelo_count: modelo_count
+      modelos: modelos
+      observation_paths: observation_paths
+      orphan_oracle_ids: orphan_oracle_ids
+      passed: passed
+      registered_oracle_ids: registered_oracle_ids
+      revision: revision
+      revision_count: revision_count
+      row_count: row_count
+      runner_detail: runner_detail
+      runner_status: runner_status
+      scanned_count: scanned_count
+      scenario_id: scenario_id
+      source_reference_count: source_reference_count
+      status: status
+      tape_path: tape_path
+      unsupported_xls_count: unsupported_xls_count
+      verification_expectation_count: verification_expectation_count
+      verified: verified
+      workbook_count: workbook_count
+      workbook_parity_ref_count: workbook_parity_ref_count
+      workbook_path: workbook_path
     modelo_help: Optional filter by tax model (e.g. 303, 130)
     observation_help: Encrypted filed-declaration observation manifest to verify
     output_root_help: Path to the output root directory for the records
@@ -633,23 +754,47 @@ cli:
     workbooks_timeout_help: Maximum timeout (in seconds) for the compilation
     workbooks_verify_help: Verify the integrity of the generated workbooks
     year_help: Fiscal year to query or process
+  review:
+    app_help: 'Operator review queue: triage ledger transactions, purchase evidence,
+      and modelo findings'
+    errors:
+      invalid_state: 'Invalid review state: %{state}'
+    labels:
+      affected_object_id: Object
+      bucket: Bucket
+      id: ID
+      kind: Kind
+      next: Next
+      period: Period
+      severity: Severity
+      source_kind: Source kind
+    queue:
+      empty: No items pending review.
+      help: List items waiting for operator review
+      kind_help: Restrict the queue to one item kind
+      modelo_help: Restrict the queue to one modelo
+      source_kind_help: Restrict the queue to one source kind
+      state_help: Restrict the queue to one review state
+    show:
+      help: Show review details for a single item
+      id_help: Item id from the review queue
   root:
-    app_app_help: Tax workspaces for ledgers, invoices, and declarations
-    app_help: 'Spanish tax filing assistant
+    app_app_help: Tax workspace for overview, ledger, modelo, registry, and review
+    app_help: 'Spanish tax workflow assistant
 
 
-      Quickstart: aeat config setup --profile-name NAME --tax-id NIF'
+      Quickstart: aeat config init --tax-id NIF --activity ACTIVITY'
     debug_help: Show internal debug logs on stderr
+    detail_help: Also show the detailed registry summary
     format_help: Output format for command results
     quiet_help: Show only errors on stderr
     verbose_help: Show internal informational logs on stderr
-    version_command_help: Show package version and registry summary
-    version_help: Show package version and registry summary
+    version_help: Show package version (add --detail for the full registry summary)
   topic:
     app_help: Show conceptual help about regimes, modelos, and AEAT processes
     errors:
-      not_found: 'Topic not found: %{slug}. Run ''aeat app topic'' to list registered
-        topics.'
+      not_found: 'Topic not found: %{slug}. Run ''aeat app registry citations'' to
+        list registered topics.'
     opts:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
   txs:
@@ -724,6 +869,9 @@ filing:
     required_missing: Required field missing
     schema_mismatch: Mismatch with expected schema
 profile:
+  keys:
+    tax:
+      id: Tax identifier (NIF/NIE/CIF)
   test_keys:
     description_490119: x
 review:
@@ -749,7 +897,7 @@ topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
       certificate (FNMT / equivalent). Configure a provider with 'aeat config auth
-      --provider certificate' and verify with 'aeat config status'.
+      configure --provider certificate' and verify with 'aeat config auth test'.
     title: Authentication with AEAT
   calendar:
     body: The calendar shows filing obligations (modelos and periods) within a range.
@@ -787,11 +935,11 @@ topic:
   profile:
     body: The local profile carries your tax id (NIF), main activity, IVA/IRPF regime,
       and optional enrolments (SII, Verifactu, intracomunitario). Edit it with 'aeat
-      setup profile set <key> <value>'.
+      config profile set <key> <value>'.
     title: Taxpayer profile
   providers:
     body: Supported authentication providers; each has distinct prerequisites. 'aeat
-      setup auth providers' lists them with requirements.
+      config auth providers' lists them with requirements.
     title: Authentication providers
   recargo-extemporaneo:
     body: Filing after the deadline without prior AEAT notice accrues 1% per month
@@ -818,6 +966,26 @@ transactions:
   test_diagnostics:
     message: Month 2026-03 is missing from the imported file.
 wizard:
+  errors:
+    blank_integer: Integer value required for %{prompt_key}.
+    blank_path: Path required for %{prompt_key}.
+    blank_secret: Secret value required for %{prompt_key}.
+    blank_text: Value required for %{prompt_key}.
+    checkbox_required: Select at least one option for %{prompt_key}.
+    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
+    checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
+    invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
+    invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
+    invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
+    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
+    select_without_choices: Question %{prompt_key} declares no select options.
+    unsupported_console: The interactive wizard requires cmd.exe or Windows Terminal.
+      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch terminals.
+  progress:
+    question_prefix: '(question %{q_n}/%{q_total}) '
+    section_header: 'Section %{section_n}/%{section_total}: %{title}'
   setup:
     description: Operator-facing setup wizard for tax filing readiness
     enrollment:
@@ -841,8 +1009,6 @@ wizard:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
-      declaration-type:
-        help: Declaration type code
       does-intracomunitario:
         help: Conducts intracomunitario operations
       enrollment-large-company:
@@ -866,7 +1032,9 @@ wizard:
       name:
         help: Display name shown in local reviews
       notes:
-        help: Operator notes (not consumed by the engine)
+        help: Notes for your own records (optional)
+      output-language:
+        help: CLI output language for this profile
       pays-capital-income-with-retencion:
         help: Pays capital income with retención
       pays-professionals-with-retencion:
@@ -878,7 +1046,7 @@ wizard:
       spouse-birth-date:
         help: Spouse birth date
       spouse-disability-grade:
-        help: Spouse disability code
+        help: Spouse disability grade (if applicable)
       spouse-eu-eea-country:
         help: Spouse EU/EEA country
       spouse-eu-eea-resident:
@@ -896,9 +1064,11 @@ wizard:
       surnames:
         help: Surnames or company name for export headers
       tax-id:
-        help: Tax identifier (NIF/NIE) for declarations
+        help: Tax identifier (NIF/NIE) for the active profile
       tax-residence-ccaa:
         help: Tax-residence autonomous community
+      taxation-type:
+        help: Taxation type code
       taxpayer-birth-date:
         help: First taxpayer birth date
       taxpayer-death-date:
@@ -925,8 +1095,8 @@ wizard:
       title: IVA
     notes:
       notes:
-        prompt: Operator notes (not consumed by the engine)
-      title: Operator notes
+        prompt: Notes for your own records (optional)
+      title: Notes for your own records
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Foreign-held assets above legal threshold
@@ -944,7 +1114,7 @@ wizard:
         prompt: At least 70% of professional income with prior retención
       third-party-transactions-above-347-threshold:
         prompt: Third-party transactions exceed Modelo 347 threshold
-      title: Filing obligations
+      title: Modelo obligations
       uses-objective-estimation-irpf:
         prompt: Files IRPF under objective estimation
     profile:
@@ -952,8 +1122,6 @@ wizard:
         prompt: Business activity label or controlled key
       address-postcode:
         prompt: Tax address postcode
-      declaration-type:
-        prompt: Declaration type code
       iva-regime:
         choices:
           exento:
@@ -966,10 +1134,23 @@ wizard:
             label: Simplified regime
       name:
         prompt: Display name shown in local reviews
+      output-language:
+        choices:
+          ca:
+            label: Catalan
+          en:
+            label: English
+          es:
+            label: Spanish
+          hu:
+            label: Hungarian
+        prompt: CLI output language for this profile
       surnames:
         prompt: Surnames or company name for export headers
       tax-id:
-        prompt: Tax identifier (NIF/NIE) for declarations
+        prompt: Tax identifier (NIF/NIE) for the active profile
+      taxation-type:
+        prompt: Taxation type code
       title: Profile identity
     residence:
       ccaa:
@@ -1011,7 +1192,7 @@ wizard:
       spouse-birth-date:
         prompt: Spouse birth date
       spouse-disability-grade:
-        prompt: Spouse disability code
+        prompt: Spouse disability grade (if applicable)
       spouse-eu-eea-country:
         prompt: Spouse EU/EEA country
       spouse-eu-eea-resident:

@@ -48,7 +48,7 @@ class AuthSessionUnavailableError(AeatError):
 class AuthenticatedAeatSessionResult(BaseModel):
     """Outcome of ensuring an authenticated AEAT session."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid", arbitrary_types_allowed=True)
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
     provider_kind: AuthProviderKind
     session: Any
@@ -63,7 +63,7 @@ class AuthenticatedAeatSessionResult(BaseModel):
 class PersistedAuthSession(BaseModel):
     """Provider-neutral view of encrypted AEAT session metadata."""
 
-    model_config = ConfigDict(frozen=True, extra="ignore")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     provider_kind: AuthProviderKind = Field(
         description="Provider that produced the session metadata.",
@@ -139,16 +139,16 @@ async def require_verified_aeat_session(
     persisted = load_persisted_session(settings, kind)
     if persisted is None:
         raise AuthSessionUnavailableError(
-            "No active AEAT session; run `aeat setup auth login` before reading AEAT data"
+            "No active AEAT session; run `aeat config auth test` before reading AEAT data"
         )
     if persisted.is_expired(datetime.now(UTC)):
         raise AuthSessionUnavailableError(
-            "AEAT session is expired; run `aeat setup auth login` before reading AEAT data"
+            "AEAT session is expired; run `aeat config auth test` before reading AEAT data"
         )
     paths = storage_state_paths(settings, persisted.provider_kind)
     if not _session_store.exists(paths.storage_state):
         raise AuthSessionUnavailableError(
-            "AEAT session state is missing; run `aeat setup auth login` before reading AEAT data"
+            "AEAT session state is missing; run `aeat config auth test` before reading AEAT data"
         )
 
     from ...adapters.outbound.aeat.browser import default_browser_session_factory
@@ -164,14 +164,14 @@ async def require_verified_aeat_session(
         raise
     except Exception as exc:
         raise AuthSessionUnavailableError(
-            "AEAT session could not be verified; run `aeat setup auth login` before reading AEAT data"
+            "AEAT session could not be verified; run `aeat config auth test` before reading AEAT data"
         ) from exc
     finally:
         await _close_provider(provider)
 
     if not bool(getattr(assertion, "is_valid", False)):
         raise AuthSessionUnavailableError(
-            "AEAT session is not accepted by the AEAT Sede; run `aeat setup auth login` before reading AEAT data"
+            "AEAT session is not accepted by the AEAT Sede; run `aeat config auth test` before reading AEAT data"
         )
     return refreshed_session
 
@@ -286,7 +286,8 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
         persisted = _session_store.load(storage_state_path)
     except (ValueError, ValidationError) as exc:
         raise CorruptAuthSessionError(
-            "Your saved auth session is damaged and cannot be read. Run `aeat setup auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. "
+            "Run `aeat config auth clear --sessions` and then `aeat config auth test`."
         ) from exc
     if persisted is None:
         return None
@@ -295,19 +296,22 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
         raw = json.loads(json.dumps(persisted.metadata, default=str))
     except (TypeError, ValueError) as exc:
         raise CorruptAuthSessionError(
-            "Your saved auth session is damaged and cannot be read. Run `aeat setup auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. "
+            "Run `aeat config auth clear --sessions` and then `aeat config auth test`."
         ) from exc
 
     if not isinstance(raw, dict):
         raise CorruptAuthSessionError(
-            "Your saved auth session is damaged and cannot be read. Run `aeat setup auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. "
+            "Run `aeat config auth clear --sessions` and then `aeat config auth test`."
         )
 
     try:
         session = PersistedAuthSession.model_validate(raw)
     except ValidationError as exc:
         raise CorruptAuthSessionError(
-            "Your saved auth session is damaged and cannot be read. Run `aeat setup auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. "
+            "Run `aeat config auth clear --sessions` and then `aeat config auth test`."
         ) from exc
     if session.provider_kind is not kind_hint:
         _logger.debug(
@@ -317,7 +321,8 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
             session.provider_kind.value,
         )
         raise CorruptAuthSessionError(
-            "Your saved auth session is damaged and cannot be read. Run `aeat setup auth login` to sign in again."
+            "Your saved auth session is damaged and cannot be read. "
+            "Run `aeat config auth clear --sessions` and then `aeat config auth test`."
         )
     return session
 

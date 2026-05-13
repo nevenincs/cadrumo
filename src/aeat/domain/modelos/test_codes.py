@@ -19,7 +19,7 @@ def test_value_round_trip(raw: str) -> None:
 
 @pytest.mark.parametrize("raw", ["", "13", "1300", "abc", "13A"])
 def test_invalid_value_rejected(raw: str) -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"modelo code|three-digit"):
         ModeloCode(raw)
 
 

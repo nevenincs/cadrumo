@@ -198,7 +198,7 @@ class TestUnsafeSubmissionIds:
     )
     def test_unsafe_id_rejected(self, bad: str) -> None:
         repo = SubmissionRepository()
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=r"submission_id|unsafe|invalid"):
             repo.envelope_path_for(bad)
 
 

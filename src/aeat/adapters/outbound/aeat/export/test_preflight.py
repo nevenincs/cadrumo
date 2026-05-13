@@ -86,7 +86,9 @@ def _preflight(*, checker: Any | None = None, cert: Any | None = None) -> Prefli
 
 class TestPreflightGates:
     def test_happy_path_silent(self) -> None:
-        _preflight().check(_Draft(), today=_TODAY)
+        draft = _Draft()
+        result = _preflight().check(draft, today=_TODAY)
+        assert result is None
 
     def test_gate_1_draft_not_approved(self) -> None:
         with pytest.raises(SubmissionPreflightError, match="not approved"):
@@ -117,7 +119,9 @@ class TestPreflightGates:
                 message="export.test_preflight.message_620739",
             ),
         )
-        _preflight().check(_Draft(findings=findings), today=_TODAY)
+        assert findings[0].severity == FilingFindingSeverity.WARNING
+        result = _preflight().check(_Draft(findings=findings), today=_TODAY)
+        assert result is None
 
     def test_gate_3_window_closed(self) -> None:
         with pytest.raises(SubmissionPreflightError, match="deadline window"):

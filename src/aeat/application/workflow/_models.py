@@ -33,16 +33,26 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 class WorkflowEvent(BaseModel):
     """One operator-visible workflow event."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     action: str = Field(min_length=1)
     reason: str = ""
+    bucket_id: str | None = None
+    object_id: str | None = None
     at: datetime = Field(default_factory=utc_now)
 
     @field_validator("action", "reason")
     @classmethod
     def _trim_text(cls, value: str) -> str:
         return value.strip()
+
+    @field_validator("bucket_id", "object_id")
+    @classmethod
+    def _trim_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed or None
 
 
 class WorkflowStage(StrEnum):
@@ -76,7 +86,7 @@ class WorkflowAbortReason(StrEnum):
 class DeclarationPointer(BaseModel):
     """Pointer to a persisted filing draft and its status."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: str
     period: str
@@ -110,7 +120,7 @@ class WorkflowState(BaseModel):
         updated_at: UTC timestamp of the last write.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     auth: AuthState = Field(default_factory=AuthState)
     profiles: dict[str, Any] = Field(default_factory=dict)  # str → ProfileRecord
@@ -118,6 +128,7 @@ class WorkflowState(BaseModel):
     declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
     invoice_reviews: dict[str, Any] = Field(default_factory=dict)
     ledger_reviews: dict[str, Any] = Field(default_factory=dict)
+    bucket_events: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)
 
     def active_profile_record(self) -> Any | None:
@@ -126,9 +137,11 @@ class WorkflowState(BaseModel):
             return None
         record = self.profiles.get(self.active_profile)
         if isinstance(record, dict):
+            import json as _json
+
             from ..profile._models import ProfileRecord
 
-            return ProfileRecord.model_validate(record)
+            return ProfileRecord.model_validate_json(_json.dumps(record, default=str))
         return record
 
 
@@ -143,11 +156,13 @@ def update_declaration_pointer(
     verified: bool | None = None,
 ) -> WorkflowState:
     """Return ``state`` with the declaration pointer upserted for ``(modelo, period)``."""
+    import json as _json
+
     declarations: dict[str, Any] = dict(state.declarations)
     key = declaration_key(modelo, period)
     current = declarations.get(key)
     if isinstance(current, dict):
-        current = DeclarationPointer.model_validate(current)
+        current = DeclarationPointer.model_validate_json(_json.dumps(current, default=str))
 
     update_fields: dict[str, Any] = {
         "draft_id": draft_id,

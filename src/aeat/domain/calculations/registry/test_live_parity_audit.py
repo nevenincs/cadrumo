@@ -11,12 +11,10 @@ consumes to surface oracle-binding drift across modelos:
   declaring applicability predicates, deterministically ordered for
   audit output.
 
-Both helpers are pure (no profile-fact evaluation, no I/O) and were
-previously exercised only indirectly through
-``test_audit_oracle_bindings.py`` and
-``test_cross_reference_applicability.py``. A regression in the
-orphan-set difference, the predicate filter, or the lexicographic
-sort would silently mask the drift CI is supposed to catch.
+Both helpers are pure (no profile-fact evaluation, no I/O). A
+regression in the orphan-set difference, the predicate filter, or the
+lexicographic sort would silently mask the drift CI is supposed to
+catch, which is why this module exercises each at unit level.
 """
 
 from __future__ import annotations
@@ -206,10 +204,13 @@ def test_collect_applicability_declarations_omits_cross_references_with_no_predi
     unconditional default; the helper documents them as out-of-scope."""
     declarations = collect_applicability_declarations(_committed_modelos())
 
+    inspected = 0
     for declaration in declarations:
         assert declaration.predicate_fields, (
             f"declaration {declaration.cross_reference_id} surfaced with empty predicates"
         )
+        inspected += 1
+    assert inspected == len(declarations), "every declaration must be inspected by the loop"
 
 
 def test_collect_applicability_declarations_returns_typed_records() -> None:

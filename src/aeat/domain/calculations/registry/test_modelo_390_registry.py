@@ -21,6 +21,9 @@ def _load_modelo_390() -> tuple[ModeloDefinition, RegistryCatalogues]:
 
 def test_modelo_390_validator_accepts_committed_definition() -> None:
     modelo, catalogues = _load_modelo_390()
+    assert modelo.id == "390"
+    assert modelo.revisions, "390 must declare at least one revision"
+    assert any(rev.casillas for rev in modelo.revisions.values()), "390 must declare casillas"
     RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
 
 

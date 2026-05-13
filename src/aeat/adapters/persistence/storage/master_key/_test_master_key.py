@@ -5,7 +5,7 @@ from __future__ import annotations
 import base64
 import os
 import secrets
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
@@ -35,6 +35,45 @@ from ._master_key import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+
+class _FakeKeyringClient:
+    """Real :class:`KeyringClient` implementation for tests.
+
+    Stores ``(service, username) -> password`` pairs in an in-memory
+    dict so the provider's full contract (get / set / round-trip) is
+    exercised against a real type rather than a patched third-party
+    module. Custom probe / get / set behaviours plug in through the
+    constructor so tests cover every failure mode the production
+    provider must handle.
+    """
+
+    def __init__(
+        self,
+        *,
+        probe: Callable[[], None] | None = None,
+        get: Callable[[str, str], str | None] | None = None,
+        set_: Callable[[str, str, str], None] | None = None,
+        seeded: dict[tuple[str, str], str] | None = None,
+    ) -> None:
+        self._probe = probe or (lambda: None)
+        self._store: dict[tuple[str, str], str] = dict(seeded or {})
+        self._get_override = get
+        self._set_override = set_
+
+    def probe_backend(self) -> None:
+        self._probe()
+
+    def get_password(self, service: str, username: str) -> str | None:
+        if self._get_override is not None:
+            return self._get_override(service, username)
+        return self._store.get((service, username))
+
+    def set_password(self, service: str, username: str, password: str) -> None:
+        if self._set_override is not None:
+            self._set_override(service, username, password)
+            return
+        self._store[(service, username)] = password
 
 
 def _settings_with_store(tmp_path: Path, backend: SecretStoreBackend) -> Settings:
@@ -245,33 +284,34 @@ class TestKeyringProvider:
 class TestKeyringFailureSurfaces:
     """The keyring provider surfaces failures via ``KeyringUnavailableError``."""
 
-    def test_malformed_stored_value_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        keyring = pytest.importorskip("keyring")
+    def test_malformed_stored_value_raises(self) -> None:
+        from ._master_key import KEYRING_USERNAME
 
-        monkeypatch.setattr(keyring, "get_password", lambda service, username: "not!base64!")
-        provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}")
+        service = f"aeat:test:{secrets.token_hex(8)}"
+        client = _FakeKeyringClient(seeded={(service, KEYRING_USERNAME): "not!base64!"})
+        provider = KeyringMasterKeyProvider(service=service, client=client)
         with pytest.raises(KeyringUnavailableError):
             provider.get_master_key()
 
-    def test_wrong_size_stored_value_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        keyring = pytest.importorskip("keyring")
+    def test_wrong_size_stored_value_raises(self) -> None:
+        from ._master_key import KEYRING_USERNAME
 
+        service = f"aeat:test:{secrets.token_hex(8)}"
         too_short = base64.b64encode(b"short").decode("ascii")
-        monkeypatch.setattr(keyring, "get_password", lambda service, username: too_short)
-        provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}")
+        client = _FakeKeyringClient(seeded={(service, KEYRING_USERNAME): too_short})
+        provider = KeyringMasterKeyProvider(service=service, client=client)
         with pytest.raises(KeyringUnavailableError):
             provider.get_master_key()
 
-    def test_set_password_failure_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        keyring = pytest.importorskip("keyring")
+    def test_set_password_failure_raises(self) -> None:
         from keyring.errors import KeyringError
 
         def _fail_set(service: str, username: str, password: str) -> None:
             raise KeyringError("simulated backend failure")
 
-        monkeypatch.setattr(keyring, "get_password", lambda service, username: None)
-        monkeypatch.setattr(keyring, "set_password", _fail_set)
-        provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}")
+        service = f"aeat:test:{secrets.token_hex(8)}"
+        client = _FakeKeyringClient(set_=_fail_set)
+        provider = KeyringMasterKeyProvider(service=service, client=client)
         with pytest.raises(KeyringUnavailableError):
             provider.get_master_key()
 
@@ -423,55 +463,40 @@ class TestSecurityHardening:
             mode = (tmp_path / "secrets" / name).stat().st_mode & 0o777
             assert mode == 0o600, f"{name} must be 0o600; got {oct(mode)}"
 
-    def test_keyring_no_op_backend_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_keyring_no_op_backend_refused(self) -> None:
         """The fail.Keyring backend MUST be refused so the auto path falls back."""
-        keyring = pytest.importorskip("keyring")
-        from keyring.backends import fail
 
-        monkeypatch.setattr(keyring, "get_keyring", lambda: fail.Keyring())
-        provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}")
+        def _refuse() -> None:
+            raise KeyringUnavailableError("OS keychain backend is the no-op fail.Keyring")
+
+        client = _FakeKeyringClient(probe=_refuse)
+        provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}", client=client)
         with pytest.raises(KeyringUnavailableError):
             provider.get_master_key()
 
-    def test_keyring_cache_is_per_service(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_keyring_cache_is_per_service(self) -> None:
         """Two providers bound to distinct services do NOT share cached keys."""
-        keyring = pytest.importorskip("keyring")
 
-        # Replace the live backend so the test does not depend on the host's keychain.
-        store: dict[tuple[str, str], str] = {}
-
-        def _get(service: str, username: str) -> str | None:
-            return store.get((service, username))
-
-        def _set(service: str, username: str, password: str) -> None:
-            store[(service, username)] = password
-
-        # Replace the backend probe so it does not trip on the host's
-        # actual fail.Keyring detection.
-        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
-        monkeypatch.setattr(keyring, "get_password", _get)
-        monkeypatch.setattr(keyring, "set_password", _set)
-
+        shared = _FakeKeyringClient()
         service_a = f"aeat:test:{secrets.token_hex(8)}"
         service_b = f"aeat:test:{secrets.token_hex(8)}"
 
-        key_a = KeyringMasterKeyProvider(service=service_a).get_master_key()
-        key_b = KeyringMasterKeyProvider(service=service_b).get_master_key()
+        key_a = KeyringMasterKeyProvider(service=service_a, client=shared).get_master_key()
+        key_b = KeyringMasterKeyProvider(service=service_b, client=shared).get_master_key()
         assert key_a != key_b
         # Re-binding the first service must return the same key (still cached).
-        assert KeyringMasterKeyProvider(service=service_a).get_master_key() == key_a
+        assert KeyringMasterKeyProvider(service=service_a, client=shared).get_master_key() == key_a
 
-    def test_keyring_round_trip_disagreement_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_keyring_round_trip_disagreement_raises(self) -> None:
         """A backend that accepts set_password but drops the value MUST be detected."""
-        keyring = pytest.importorskip("keyring")
 
-        # The "silent dropper" — set_password succeeds but get_password
+        # "Silent dropper": set_password swallows the value; get_password
         # afterwards returns None.
-        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
-        monkeypatch.setattr(keyring, "get_password", lambda service, username: None)
-        monkeypatch.setattr(keyring, "set_password", lambda service, username, password: None)
-
-        provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}")
+        client = _FakeKeyringClient(
+            get=lambda service, username: None,
+            set_=lambda service, username, password: None,
+        )
+        provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}", client=client)
         with pytest.raises(KeyringUnavailableError):
             provider.get_master_key()
 
@@ -496,37 +521,26 @@ class TestFactory:
     def test_keyring_backend_propagates_failure(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        keyring = pytest.importorskip("keyring")
         from keyring.errors import KeyringError
 
         def _refuse(*_args: object, **_kwargs: object) -> None:
             raise KeyringError("no backend in this test")
 
-        monkeypatch.setattr(keyring, "get_password", _refuse)
-        monkeypatch.setattr(keyring, "set_password", _refuse)
+        client = _FakeKeyringClient(get=_refuse, set_=_refuse)
         settings = _settings_with_store(tmp_path, SecretStoreBackend.KEYRING)
-        # Either error class is acceptable — the explicit ``keyring``
-        # backend rejects the operation rather than silently routing
-        # through file. ``MasterKeyKeychainLockedError`` is the
-        # narrow class for "backend works but get_password refused"
-        # (the keychain-locked taxonomy);
-        # ``KeyringUnavailableError`` covers no-backend / package-
-        # missing failures. Both extend the substrate's
-        # ``SecretStoreError`` parent — accept either so the test
-        # is robust across CI runners that DO have a working
-        # keyring backend (Windows / macOS / libsecret-installed
-        # Linux: get_password path → MasterKeyKeychainLockedError)
-        # and runners that don't (no-op fail.Keyring backend
-        # surfaced by _probe_backend → KeyringUnavailableError).
+        # The explicit ``keyring`` backend rejects the operation rather
+        # than silently routing through file. The provider surfaces
+        # ``MasterKeyKeychainLockedError`` (backend works but
+        # get_password refused) which extends
+        # ``SecretStoreError``; accept the parent class so the test
+        # remains robust.
         with pytest.raises(SecretStoreError):
-            get_master_key_provider(settings_override=settings)
+            get_master_key_provider(settings_override=settings, keyring_client=client)
 
     def test_auto_backend_falls_back_when_keyring_unavailable(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         # When the keyring backend is genuinely unusable (no usable
         # backend, package missing, ``fail.Keyring`` no-op installed),
@@ -534,17 +548,17 @@ class TestFactory:
         # keychain-backed master key that a file-fallback could
         # diverge from.
         from ..errors import KeyringUnavailableError
-        from . import KeyringMasterKeyProvider
 
         def _probe_fail() -> None:
             raise KeyringUnavailableError("simulated no-op fail.Keyring backend")
 
-        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(_probe_fail))
+        client = _FakeKeyringClient(probe=_probe_fail)
         KeyringMasterKeyProvider._reset_for_tests()
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(
             settings_override=settings,
             passphrase_callback=lambda: "x",
+            keyring_client=client,
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)
         assert len(provider.get_master_key()) == KEY_SIZE
@@ -552,7 +566,6 @@ class TestFactory:
     def test_auto_backend_refuses_locked_keychain_without_file_state(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         # When the keychain is LOCKED (backend works, get_password
         # refused — Touch ID cancelled, libsecret locked, etc.) AND no
@@ -561,25 +574,21 @@ class TestFactory:
         # whatever the keychain holds. Refuse and surface the lock
         # state so the operator unlocks-and-retries OR explicitly
         # switches to ``AEAT_SECRET_STORE_BACKEND=file``.
-        from ..errors import MasterKeyKeychainLockedError
-        from . import KeyringMasterKeyProvider
-
-        keyring = pytest.importorskip("keyring")
         from keyring.errors import KeyringError
+
+        from ..errors import MasterKeyKeychainLockedError
 
         def _locked(*_args: object, **_kwargs: object) -> None:
             raise KeyringError("simulated locked keychain")
 
-        monkeypatch.setattr(keyring, "get_password", _locked)
-        monkeypatch.setattr(keyring, "set_password", _locked)
-        # Pretend the backend probe succeeds — only get_password fails.
-        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
+        client = _FakeKeyringClient(get=_locked, set_=_locked)
         KeyringMasterKeyProvider._reset_for_tests()
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         with pytest.raises(MasterKeyKeychainLockedError, match="auto-mode refuses"):
             get_master_key_provider(
                 settings_override=settings,
                 passphrase_callback=lambda: "x",
+                keyring_client=client,
             )
 
     def test_auto_backend_falls_back_when_locked_but_file_exists(
@@ -591,10 +600,9 @@ class TestFactory:
         # already exist, auto routes through file safely — the
         # operator has previously chosen the file backend (or
         # already provisioned both).
-        from . import FileFallbackMasterKeyProvider, KeyringMasterKeyProvider
-
-        keyring = pytest.importorskip("keyring")
         from keyring.errors import KeyringError
+
+        from . import FileFallbackMasterKeyProvider, KeyringMasterKeyProvider
 
         def _locked(*_args: object, **_kwargs: object) -> None:
             raise KeyringError("simulated locked keychain")
@@ -610,14 +618,13 @@ class TestFactory:
         seed_provider.get_master_key()
         FileFallbackMasterKeyProvider._reset_for_tests()
 
-        monkeypatch.setattr(keyring, "get_password", _locked)
-        monkeypatch.setattr(keyring, "set_password", _locked)
-        monkeypatch.setattr(KeyringMasterKeyProvider, "_probe_backend", staticmethod(lambda: None))
+        client = _FakeKeyringClient(get=_locked, set_=_locked)
         KeyringMasterKeyProvider._reset_for_tests()
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(
             settings_override=settings,
             passphrase_callback=lambda: "seed-passphrase",
+            keyring_client=client,
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)
         assert len(provider.get_master_key()) == KEY_SIZE

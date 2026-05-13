@@ -4,13 +4,36 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 import typer
 
+from ...application.modelo import (
+    CalculationRevisionNotFoundError,
+    CalculationRevisionStateError,
+    FilingRecordNotFoundError,
+    WorkUnitAlreadyDiscardedError,
+    WorkUnitMutationRefusedError,
+    WorkUnitNotFoundError,
+    calculate_modelo_revision,
+    create_work_unit,
+    discard_work_unit,
+    file_modelo_revision,
+    get_calculation_revision,
+    get_filing_record,
+    get_work_unit,
+    list_calculation_revisions,
+    list_filing_records,
+    list_work_units,
+    mark_revision_verified_complete,
+    rename_work_unit,
+)
+from ...domain.modelos._calculation_revision import CalculationRevision
+from ...domain.modelos._filing_record import FilingRecord
 from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
 from ...domain.calculations.registry._errors import RegistrySnapshotError
+from ...domain.modelos._work_unit import WorkUnit
 from ._common import _emit, _parse_iso_date
 from ._i18n import tr
 
@@ -118,22 +141,229 @@ def casillas(
     )
 
 
-@app.command("bindings")
-def bindings(
+bindings_app = typer.Typer(
+    name="bindings",
+    help=tr("cli.app.modelo.bindings.app_help"),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(bindings_app, name="bindings")
+
+#: Readiness category attached to every binding, derived from its
+#: source kind. Fixes the operator-facing vocabulary that
+#: missing-binding errors produce in place of raw registry error
+#: strings.
+_BINDING_SOURCE_TO_READINESS: dict[str, str] = {
+    "constant_value": "casilla",
+    "previous_filing": "prior filed revision",
+    "live_observation": "live observation",
+    "ledger_iva_aggregation": "ledger source",
+    "ledger_oss_aggregation": "ledger source",
+    "ledger_renta_expense_aggregation": "ledger source",
+    "profile_fact": "profile fact",
+    "bucket_state": "bucket",
+    "waiver": "waiver",
+    "blocking_finding": "blocking finding",
+}
+
+
+def _readiness_for_source(source: str) -> str:
+    """Return the readiness category for ``source``.
+
+    Unknown sources fall back to ``"ledger source"`` because every
+    registered source kind today is bucket / ledger-derived. If a
+    new source is added without a readiness mapping the fallback is
+    still operator-readable; stricter exhaustiveness belongs in the
+    bindings-resolution layer.
+    """
+    return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
+
+
+def _parse_binding_override(spec: str) -> tuple[str, str]:
+    """Parse a ``--binding KEY=VALUE`` spec into a ``(key, value)`` pair.
+
+    Scalar, list, and mapping values must survive resolution — the
+    parsing here is intentionally permissive at the CLI boundary;
+    the raw value flows through unchanged so the bindings-
+    resolution layer downstream can coerce it per source type.
+    """
+    if "=" not in spec:
+        raise typer.BadParameter(
+            f"--binding must be KEY=VALUE; got {spec!r}"
+        )
+    key, _, value = spec.partition("=")
+    key = key.strip()
+    if not key:
+        raise typer.BadParameter(
+            f"--binding key must be non-empty; got {spec!r}"
+        )
+    return key, value
+
+
+@bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
+def bindings_list(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.bindings.modelo_help"))],
-    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help"))] = None,
-    as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help"))] = None,
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
+    ],
+    year: Annotated[
+        int,
+        typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
+    ],
+    period: Annotated[
+        str,
+        typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
+    ],
+    missing: Annotated[
+        bool,
+        typer.Option("--missing", help=tr("cli.app.modelo.bindings.missing_help")),
+    ] = False,
+    as_of: Annotated[
+        str | None,
+        typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help")),
+    ] = None,
 ) -> None:
-    report = _run_query(lambda: _service().bindings(modelo, period=period, as_of=_as_of(as_of)))
-    _emit(
-        ctx,
-        report,
-        [
-            "binding_id\tsource\ttyped_enum",
-            *[f"{row.binding_id}\t{row.source}\t{row.typed_enum or '-'}" for row in report.rows],
-        ],
+    """List required and available binding keys for a modelo / year / period.
+
+    With ``--missing`` the list is filtered to bindings whose source
+    is not constant-valued (every non-``constant_value`` binding
+    requires runtime data from the bucket / ledger / profile /
+    prior filing / live observation to resolve).
+    """
+
+    scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
+    report = _run_query(
+        lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of))
     )
+    rows = report.rows
+    if missing:
+        rows = tuple(row for row in rows if row.source != "constant_value")
+    payload = {
+        "operation": "registry.modelo.bindings.list",
+        "modelo": report.code,
+        "revision": report.revision,
+        "filing_year": report.filing_year,
+        "period": report.period,
+        "missing_filter": missing,
+        "binding_count": len(rows),
+        "bindings": [
+            {
+                "binding_id": row.binding_id,
+                "source": row.source,
+                "readiness": _readiness_for_source(row.source),
+                "typed_enum": row.typed_enum,
+            }
+            for row in rows
+        ],
+    }
+    lines = [
+        "operation\tregistry.modelo.bindings.list",
+        f"modelo\t{report.code}",
+        f"revision\t{report.revision}",
+        f"filing_year\t{report.filing_year}",
+        f"period\t{report.period}",
+        f"missing_filter\t{missing}",
+        f"binding_count\t{len(rows)}",
+        "binding_id\tsource\treadiness\ttyped_enum",
+    ]
+    lines.extend(
+        f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}"
+        for row in rows
+    )
+    _emit(ctx, payload, lines)
+
+
+@bindings_app.command("preview", help=tr("cli.app.modelo.bindings.preview_help"))
+def bindings_preview(
+    ctx: typer.Context,
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
+    ],
+    year: Annotated[
+        int,
+        typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
+    ],
+    period: Annotated[
+        str,
+        typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
+    ],
+    binding: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--binding",
+            help=tr("cli.app.modelo.bindings.override_help"),
+        ),
+    ] = None,
+    as_of: Annotated[
+        str | None,
+        typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help")),
+    ] = None,
+) -> None:
+    """Resolve temporary ``--binding`` overrides without mutating state.
+
+    The override map is parsed at the CLI boundary; the registry
+    binding catalogue is loaded for the active modelo / year /
+    period and any override targeting a known binding id is
+    echoed back resolved. Unknown override keys fail with a
+    suggestion list sourced from the same catalogue.
+    """
+
+    overrides = dict(_parse_binding_override(spec) for spec in (binding or ()))
+    scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
+    report = _run_query(
+        lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of))
+    )
+    known_ids = {row.binding_id for row in report.rows}
+    unknown_keys = sorted(set(overrides) - known_ids)
+    if unknown_keys:
+        suggestion = ", ".join(sorted(known_ids))
+        raise typer.BadParameter(
+            f"unknown --binding key(s) {unknown_keys!r}; known bindings for "
+            f"{report.code}@{report.revision} ({report.period}): {suggestion}"
+        )
+    payload = {
+        "operation": "registry.modelo.bindings.preview",
+        "modelo": report.code,
+        "revision": report.revision,
+        "filing_year": report.filing_year,
+        "period": report.period,
+        "override_count": len(overrides),
+        "binding_count": len(report.rows),
+        "bindings": [
+            {
+                "binding_id": row.binding_id,
+                "source": row.source,
+                "readiness": _readiness_for_source(row.source),
+                "typed_enum": row.typed_enum,
+                "override": overrides.get(row.binding_id),
+            }
+            for row in report.rows
+        ],
+    }
+    lines = [
+        "operation\tregistry.modelo.bindings.preview",
+        f"modelo\t{report.code}",
+        f"revision\t{report.revision}",
+        f"filing_year\t{report.filing_year}",
+        f"period\t{report.period}",
+        f"override_count\t{len(overrides)}",
+        f"binding_count\t{len(report.rows)}",
+        "binding_id\tsource\treadiness\toverride",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                row.binding_id,
+                row.source,
+                _readiness_for_source(row.source),
+                overrides.get(row.binding_id) or "-",
+            )
+        )
+        for row in report.rows
+    )
+    _emit(ctx, payload, lines)
 
 
 @app.command("formulas")
@@ -156,6 +386,562 @@ def formulas(
             ],
         ],
     )
+
+
+work_app = typer.Typer(
+    name="work",
+    help=tr("cli.app.modelo.work.app_help"),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(work_app, name="work")
+
+
+def _work_unit_payload(unit: WorkUnit) -> dict[str, Any]:
+    return {
+        "work_unit_id": unit.work_unit_id,
+        "bucket_id": unit.bucket_id,
+        "modelo": str(unit.modelo),
+        "filing_year": unit.filing_year,
+        "period": unit.period,
+        "revision_id": unit.revision_id,
+        "name": unit.name,
+        "state": unit.state.value,
+        "created_at": unit.created_at.isoformat(),
+        "updated_at": unit.updated_at.isoformat(),
+        "discarded_at": unit.discarded_at.isoformat() if unit.discarded_at else None,
+        "discarded_by": unit.discarded_by,
+        "discard_reason": unit.discard_reason,
+    }
+
+
+def _work_unit_lines(unit: WorkUnit) -> list[str]:
+    lines = [
+        f"work_unit_id\t{unit.work_unit_id}",
+        f"bucket_id\t{unit.bucket_id}",
+        f"modelo\t{unit.modelo}",
+        f"filing_year\t{unit.filing_year}",
+        f"period\t{unit.period}",
+        f"revision_id\t{unit.revision_id}",
+        f"name\t{unit.name}",
+        f"state\t{unit.state.value}",
+        f"created_at\t{unit.created_at.isoformat()}",
+        f"updated_at\t{unit.updated_at.isoformat()}",
+    ]
+    if unit.discarded_at is not None:
+        lines.append(f"discarded_at\t{unit.discarded_at.isoformat()}")
+    if unit.discarded_by is not None:
+        lines.append(f"discarded_by\t{unit.discarded_by}")
+    if unit.discard_reason is not None:
+        lines.append(f"discard_reason\t{unit.discard_reason}")
+    return lines
+
+
+@work_app.command("create", help=tr("cli.app.modelo.work.create_help"))
+def work_create(
+    ctx: typer.Context,
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
+    ],
+    year: Annotated[
+        int,
+        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
+    ],
+    period: Annotated[
+        str,
+        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
+    ],
+    revision: Annotated[
+        str,
+        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
+    ],
+    bucket_id: Annotated[
+        str,
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
+    ] = "default",
+    name: Annotated[
+        str | None,
+        typer.Option("--name", help=tr("cli.app.modelo.work.name_help")),
+    ] = None,
+) -> None:
+    """Create or load a modelo work unit. Idempotent on the four-axis key."""
+
+    unit = create_work_unit(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=year,
+        period=period,
+        revision_id=revision,
+        name=name,
+    )
+    payload = {
+        "operation": "modelo.work.create",
+        **_work_unit_payload(unit),
+    }
+    lines = ["operation\tmodelo.work.create", *_work_unit_lines(unit)]
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("list", help=tr("cli.app.modelo.work.list_help"))
+def work_list(
+    ctx: typer.Context,
+    bucket_id: Annotated[
+        str | None,
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
+    ] = None,
+    include_discarded: Annotated[
+        bool,
+        typer.Option(
+            "--include-discarded",
+            help=tr("cli.app.modelo.work.include_discarded_help"),
+        ),
+    ] = False,
+) -> None:
+    """List modelo work units. Discarded units are excluded unless asked."""
+
+    units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
+    payload = {
+        "operation": "modelo.work.list",
+        "bucket_id_filter": bucket_id,
+        "include_discarded": include_discarded,
+        "work_unit_count": len(units),
+        "work_units": [_work_unit_payload(unit) for unit in units],
+    }
+    lines = [
+        "operation\tmodelo.work.list",
+        f"bucket_id_filter\t{bucket_id or ''}",
+        f"include_discarded\t{include_discarded}",
+        f"work_unit_count\t{len(units)}",
+        "work_unit_id\tbucket_id\tmodelo\tyear\tperiod\trevision_id\tstate\tname",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                unit.work_unit_id,
+                unit.bucket_id,
+                str(unit.modelo),
+                str(unit.filing_year),
+                unit.period,
+                unit.revision_id,
+                unit.state.value,
+                unit.name,
+            )
+        )
+        for unit in units
+    )
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("status", help=tr("cli.app.modelo.work.status_help"))
+def work_status(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+) -> None:
+    """Show one work unit's metadata."""
+
+    try:
+        unit = get_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    payload = {
+        "operation": "modelo.work.status",
+        **_work_unit_payload(unit),
+    }
+    lines = ["operation\tmodelo.work.status", *_work_unit_lines(unit)]
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("rename", help=tr("cli.app.modelo.work.rename_help"))
+def work_rename(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+    name: Annotated[
+        str,
+        typer.Option("--name", help=tr("cli.app.modelo.work.name_help")),
+    ],
+) -> None:
+    """Update one work unit's display name (preserves work_unit_id)."""
+
+    try:
+        unit = rename_work_unit(work_unit_id, name)
+    except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    payload = {
+        "operation": "modelo.work.rename",
+        **_work_unit_payload(unit),
+    }
+    lines = ["operation\tmodelo.work.rename", *_work_unit_lines(unit)]
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("discard", help=tr("cli.app.modelo.work.discard_help"))
+def work_discard(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+    actor: Annotated[
+        str,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ],
+    reason: Annotated[
+        str | None,
+        typer.Option("--reason", help=tr("cli.app.modelo.work.reason_help")),
+    ] = None,
+) -> None:
+    """Transition a work unit to discarded state.
+
+    The discard is an audit-grade state transition: revision
+    payloads are preserved, the work unit is marked discarded
+    with actor + reason captured, and subsequent mutations are
+    rejected. Discarded units are excluded from default
+    ``aeat app modelo work list`` output.
+    """
+
+    try:
+        unit = discard_work_unit(work_unit_id, actor=actor, reason=reason)
+    except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    payload = {
+        "operation": "modelo.work.discard",
+        **_work_unit_payload(unit),
+    }
+    lines = ["operation\tmodelo.work.discard", *_work_unit_lines(unit)]
+    _emit(ctx, payload, lines)
+
+
+filing_record_app = typer.Typer(
+    name="filing-record",
+    help=tr("cli.app.modelo.filing_record.app_help"),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(filing_record_app, name="filing-record")
+
+
+def _calculation_revision_payload(rev: CalculationRevision) -> dict[str, Any]:
+    return {
+        "calculation_revision_id": rev.calculation_revision_id,
+        "work_unit_id": rev.work_unit_id,
+        "state": rev.state.value,
+        "casilla_values": {k: str(v) for k, v in rev.casilla_values.items()},
+        "binding_overrides": dict(rev.binding_overrides),
+        "inputs_snapshot": dict(rev.inputs_snapshot),
+        "created_at": rev.created_at.isoformat(),
+        "updated_at": rev.updated_at.isoformat(),
+        "verified_at": rev.verified_at.isoformat() if rev.verified_at else None,
+        "verified_by": rev.verified_by,
+        "filed_at": rev.filed_at.isoformat() if rev.filed_at else None,
+        "filed_by": rev.filed_by,
+        "superseded_at": rev.superseded_at.isoformat() if rev.superseded_at else None,
+    }
+
+
+def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
+    lines = [
+        f"calculation_revision_id\t{rev.calculation_revision_id}",
+        f"work_unit_id\t{rev.work_unit_id}",
+        f"state\t{rev.state.value}",
+        f"created_at\t{rev.created_at.isoformat()}",
+        f"updated_at\t{rev.updated_at.isoformat()}",
+    ]
+    if rev.verified_at is not None:
+        lines.append(f"verified_at\t{rev.verified_at.isoformat()}")
+        lines.append(f"verified_by\t{rev.verified_by}")
+    if rev.filed_at is not None:
+        lines.append(f"filed_at\t{rev.filed_at.isoformat()}")
+        lines.append(f"filed_by\t{rev.filed_by}")
+    if rev.superseded_at is not None:
+        lines.append(f"superseded_at\t{rev.superseded_at.isoformat()}")
+    for casilla, value in sorted(rev.casilla_values.items()):
+        lines.append(f"casilla\t{casilla}\t{value}")
+    return lines
+
+
+def _filing_record_payload(record: FilingRecord) -> dict[str, Any]:
+    return {
+        "filing_record_id": record.filing_record_id,
+        "work_unit_id": record.work_unit_id,
+        "calculation_revision_id": record.calculation_revision_id,
+        "bucket_id": record.bucket_id,
+        "modelo": str(record.modelo),
+        "filing_year": record.filing_year,
+        "period": record.period,
+        "filed_at": record.filed_at.isoformat(),
+        "filed_by": record.filed_by,
+        "notes": record.notes,
+        "aeat_accepted": record.aeat_accepted,
+        "status": record.status.value,
+        "superseded_at": record.superseded_at.isoformat() if record.superseded_at else None,
+        "superseded_by_filing_record_id": record.superseded_by_filing_record_id,
+        "kind": "internal_filing",
+        "live_submission": False,
+    }
+
+
+def _filing_record_lines(record: FilingRecord) -> list[str]:
+    lines = [
+        f"filing_record_id\t{record.filing_record_id}",
+        f"work_unit_id\t{record.work_unit_id}",
+        f"calculation_revision_id\t{record.calculation_revision_id}",
+        f"bucket_id\t{record.bucket_id}",
+        f"modelo\t{record.modelo}",
+        f"filing_year\t{record.filing_year}",
+        f"period\t{record.period}",
+        f"filed_at\t{record.filed_at.isoformat()}",
+        f"filed_by\t{record.filed_by}",
+        f"status\t{record.status.value}",
+        f"aeat_accepted\t{str(record.aeat_accepted).lower()}",
+    ]
+    if record.notes is not None:
+        lines.append(f"notes\t{record.notes}")
+    if record.superseded_at is not None:
+        lines.append(f"superseded_at\t{record.superseded_at.isoformat()}")
+    if record.superseded_by_filing_record_id is not None:
+        lines.append(f"superseded_by_filing_record_id\t{record.superseded_by_filing_record_id}")
+    lines.append("kind\tinternal_filing")
+    lines.append("live_submission\tfalse")
+    return lines
+
+
+def _parse_casilla_override(spec: str) -> tuple[str, str]:
+    if "=" not in spec:
+        raise typer.BadParameter(f"--casilla must be ID=VALUE; got {spec!r}")
+    key, _, value = spec.partition("=")
+    key = key.strip()
+    if not key:
+        raise typer.BadParameter(f"--casilla key must be non-empty; got {spec!r}")
+    return key, value.strip()
+
+
+@work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
+def work_calculate(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+    casilla: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--casilla",
+            help=tr("cli.app.modelo.work.casilla_help"),
+        ),
+    ] = None,
+    binding: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--binding",
+            help=tr("cli.app.modelo.work.override_help"),
+        ),
+    ] = None,
+) -> None:
+    """Persist a new draft calculation revision for the work unit."""
+
+    from decimal import Decimal, InvalidOperation
+
+    casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
+    casilla_values: dict[str, Decimal] = {}
+    for k, v in casilla_pairs.items():
+        try:
+            casilla_values[k] = Decimal(v)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(f"--casilla value for {k!r} is not a decimal: {v!r}") from exc
+    binding_overrides = dict(_parse_casilla_override(spec) for spec in (binding or ()))
+
+    try:
+        revision = calculate_modelo_revision(
+            work_unit_id,
+            casilla_values=casilla_values,
+            binding_overrides=binding_overrides,
+        )
+    except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.work.calculate",
+        **_calculation_revision_payload(revision),
+    }
+    lines = ["operation\tmodelo.work.calculate", *_calculation_revision_lines(revision)]
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("revisions", help=tr("cli.app.modelo.work.revisions_help"))
+def work_revisions(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str | None,
+        typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ] = None,
+) -> None:
+    """List calculation revisions, optionally filtered to one work unit."""
+
+    revisions = list_calculation_revisions(work_unit_id=work_unit_id)
+    payload = {
+        "operation": "modelo.work.revisions",
+        "work_unit_id_filter": work_unit_id,
+        "revision_count": len(revisions),
+        "revisions": [_calculation_revision_payload(rev) for rev in revisions],
+    }
+    lines = [
+        "operation\tmodelo.work.revisions",
+        f"work_unit_id_filter\t{work_unit_id or ''}",
+        f"revision_count\t{len(revisions)}",
+        "calculation_revision_id\twork_unit_id\tstate\tcreated_at",
+    ]
+    lines.extend(
+        f"{rev.calculation_revision_id}\t{rev.work_unit_id}\t{rev.state.value}\t{rev.created_at.isoformat()}"
+        for rev in revisions
+    )
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("verified-complete", help=tr("cli.app.modelo.work.verified_complete_help"))
+def work_verified_complete(
+    ctx: typer.Context,
+    calculation_revision_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
+    ],
+    actor: Annotated[
+        str,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ],
+) -> None:
+    """Mark a draft calculation revision as verified complete."""
+
+    try:
+        revision = mark_revision_verified_complete(calculation_revision_id, actor=actor)
+    except (CalculationRevisionNotFoundError, CalculationRevisionStateError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.work.verified_complete",
+        **_calculation_revision_payload(revision),
+    }
+    lines = ["operation\tmodelo.work.verified_complete", *_calculation_revision_lines(revision)]
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("file", help=tr("cli.app.modelo.work.file_help"))
+def work_file(
+    ctx: typer.Context,
+    calculation_revision_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
+    ],
+    actor: Annotated[
+        str,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ],
+    notes: Annotated[
+        str | None,
+        typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
+    ] = None,
+) -> None:
+    """Mark a verified modelo revision as internally filed. Does NOT submit to AEAT."""
+
+    try:
+        record = file_modelo_revision(
+            calculation_revision_id,
+            actor=actor,
+            notes=notes,
+        )
+    except (
+        CalculationRevisionNotFoundError,
+        CalculationRevisionStateError,
+        WorkUnitNotFoundError,
+    ) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.work.file",
+        **_filing_record_payload(record),
+    }
+    lines = ["operation\tmodelo.work.file", *_filing_record_lines(record)]
+    lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
+    _emit(ctx, payload, lines)
+
+
+@filing_record_app.command("list", help=tr("cli.app.modelo.filing_record.list_help"))
+def filing_record_list(
+    ctx: typer.Context,
+    bucket_id: Annotated[
+        str | None,
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.filing_record.bucket_id_help")),
+    ] = None,
+    include_superseded: Annotated[
+        bool,
+        typer.Option(
+            "--include-superseded",
+            help=tr("cli.app.modelo.filing_record.include_superseded_help"),
+        ),
+    ] = False,
+) -> None:
+    """List filing records. Superseded records are excluded unless asked."""
+
+    records = list_filing_records(bucket_id=bucket_id, include_superseded=include_superseded)
+    payload = {
+        "operation": "modelo.filing_record.list",
+        "bucket_id_filter": bucket_id,
+        "include_superseded": include_superseded,
+        "record_count": len(records),
+        "records": [_filing_record_payload(record) for record in records],
+    }
+    lines = [
+        "operation\tmodelo.filing_record.list",
+        f"bucket_id_filter\t{bucket_id or ''}",
+        f"include_superseded\t{include_superseded}",
+        f"record_count\t{len(records)}",
+        "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                record.filing_record_id,
+                record.bucket_id,
+                str(record.modelo),
+                str(record.filing_year),
+                record.period,
+                record.status.value,
+                record.filed_at.isoformat(),
+                record.filed_by,
+            )
+        )
+        for record in records
+    )
+    _emit(ctx, payload, lines)
+
+
+@filing_record_app.command("show", help=tr("cli.app.modelo.filing_record.show_help"))
+def filing_record_show(
+    ctx: typer.Context,
+    filing_record_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.filing_record.filing_record_id_help")),
+    ],
+) -> None:
+    """Show one filing record by id."""
+
+    try:
+        record = get_filing_record(filing_record_id)
+    except FilingRecordNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.filing_record.show",
+        **_filing_record_payload(record),
+    }
+    lines = ["operation\tmodelo.filing_record.show", *_filing_record_lines(record)]
+    _emit(ctx, payload, lines)
 
 
 def _service() -> RegistryQueryService:

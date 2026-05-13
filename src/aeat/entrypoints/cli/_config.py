@@ -13,14 +13,13 @@ from ...application.diagnostics import (
     render_config_doctor_text,
 )
 from ...core.logging import default_log_file_path
-from ._common import _FORMAT_JSON, _format_of
+from ._common import _emit
+from ._errors import CliRefusedBoundaryError
 from ._i18n import tr
 
-app = typer.Typer(
-    name="config",
-    help=tr("cli.config.app_help"),
-    no_args_is_help=True,
-)
+app = typer.Typer(name="config", help=tr("cli.config.app_help"), no_args_is_help=True)
+profile_app = typer.Typer(name="profile", help=tr("cli.config.profile.help"), no_args_is_help=True)
+auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
 doctor_app = typer.Typer(
     name="doctor",
     help=tr("cli.config.doctor.help"),
@@ -36,24 +35,23 @@ def doctor(ctx: typer.Context) -> None:
     if ctx.invoked_subcommand is not None:
         return
     report = build_config_doctor_report()
-    if _format_of(ctx) == _FORMAT_JSON:
-        typer.echo(report.model_dump_json())
-        return
-    typer.echo(render_config_doctor_text(report), nl=False)
+    _emit(ctx, report.model_dump(mode="json"), render_config_doctor_text(report).splitlines())
 
 
 @doctor_app.command("logs", help=tr("cli.config.doctor.logs_help"))
 def doctor_logs(
+    ctx: typer.Context,
     lines: int = typer.Option(20, "--lines", min=0, help=tr("cli.config.doctor.logs_lines_help")),
 ) -> None:
     """Show the configured log file path and recent lines."""
 
     path = default_log_file_path()
-    typer.echo(f"path\t{path}")
-    if not path.exists() or lines == 0:
-        return
-    for line in _tail_lines(path, lines):
-        typer.echo(line)
+    tail = _tail_lines(path, lines) if path.exists() and lines > 0 else ()
+    _emit(
+        ctx,
+        {"path": str(path), "lines": tail},
+        (f"path\t{path}", *tail),
+    )
 
 
 @doctor_app.command("quarantine", help=tr("cli.config.doctor.quarantine_help"))
@@ -61,27 +59,20 @@ def doctor_quarantine(
     ctx: typer.Context,
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.doctor.quarantine_yes_help")),
 ) -> None:
-    """Move secure-object rows that fail tag verification into a quarantine table.
-
-    The active ``secure_objects`` table retains only rows decryptable
-    under the current master key after this operation. The quarantined
-    rows are preserved (along with their original metadata) in
-    ``secure_objects_quarantine`` so the operator can recover them
-    manually if a missing master key is later restored.
-    """
+    """Move secure-object rows that fail tag verification into quarantine."""
 
     if not yes:
-        typer.echo(tr("cli.config.doctor.quarantine_requires_yes"))
-        raise typer.Exit(code=2)
+        raise CliRefusedBoundaryError(tr("cli.config.doctor.quarantine_requires_yes"))
     report = quarantine_unreadable_secure_objects()
-    if _format_of(ctx) == _FORMAT_JSON:
-        typer.echo(report.model_dump_json())
-        return
-    typer.echo(f"quarantined\t{report.unreadable_total}")
-    typer.echo(f"retained\t{report.readable_total}")
-    for item in report.namespaces:
-        if item.unreadable > 0:
-            typer.echo(f"{item.namespace}\t{item.unreadable}")
+    _emit(
+        ctx,
+        report.model_dump(mode="json"),
+        (
+            f"quarantined\t{report.unreadable_total}",
+            f"retained\t{report.readable_total}",
+            *tuple(f"{item.namespace}\t{item.unreadable}" for item in report.namespaces if item.unreadable > 0),
+        ),
+    )
 
 
 def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
@@ -92,6 +83,15 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     return tuple(path.read_text(encoding="utf-8", errors="replace").splitlines()[-count:])
 
 
+def _register_doctor_connectivity(target: typer.Typer) -> None:
+    """Mount the browser/site-health diagnostic under config doctor."""
+
+    from .browser.health import health_cmd
+
+    target.command("connectivity", help=tr("cli.config.doctor.connectivity_help"))(health_cmd)
+
+
+_register_doctor_connectivity(doctor_app)
 app.add_typer(doctor_app, name="doctor")
 
 
@@ -101,7 +101,7 @@ def _profile_state():
     return workflow_state_repository()
 
 
-@app.command("list", help=tr("cli.config.list.help"))
+@profile_app.command("list", help=tr("cli.config.list.help"))
 def config_list(ctx: typer.Context) -> None:
     """List every profile key with its current value (or ``<unset>``)."""
 
@@ -113,11 +113,7 @@ def config_list(ctx: typer.Context) -> None:
     payload = {
         "active_profile": state.active_profile,
         "keys": [
-            {
-                "key": entry.key,
-                "requirement": entry.requirement.value,
-                "value": values.get(entry.key, ""),
-            }
+            {"key": entry.key, "requirement": entry.requirement.value, "value": values.get(entry.key, "")}
             for entry in PROFILE_KEYS
         ],
     }
@@ -125,20 +121,11 @@ def config_list(ctx: typer.Context) -> None:
     for entry in PROFILE_KEYS:
         rendered_value = values.get(entry.key, "")
         lines.append(f"{entry.key}\t{entry.requirement.value}\t{rendered_value or '<unset>'}")
-    if _format_of(ctx) == _FORMAT_JSON:
-        import json as _json
-
-        typer.echo(_json.dumps(payload, ensure_ascii=False))
-        return
-    for line in lines:
-        typer.echo(line)
+    _emit(ctx, payload, lines)
 
 
-@app.command("get", help=tr("cli.config.get.help"))
-def config_get(
-    ctx: typer.Context,
-    key: str = typer.Argument(..., help=tr("cli.config.get.key_help")),
-) -> None:
+@profile_app.command("get", help=tr("cli.config.get.help"))
+def config_get(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.config.get.key_help"))) -> None:
     """Return one profile key's current value."""
 
     from ...domain.profile import get_profile_key
@@ -146,17 +133,12 @@ def config_get(
     try:
         get_profile_key(key)
     except KeyError as exc:
-        raise typer.BadParameter(tr("cli.config.errors.unknown_key", name=key)) from exc
+        raise CliRefusedBoundaryError(tr("cli.config.errors.unknown_key", name=key)) from exc
     state = _profile_state().load()
     record = state.active_profile_record()
     value = record.values.get(key, "") if record is not None else ""
     payload = {"key": key, "value": value}
-    if _format_of(ctx) == _FORMAT_JSON:
-        import json as _json
-
-        typer.echo(_json.dumps(payload, ensure_ascii=False))
-        return
-    typer.echo(f"{key}\t{value or '<unset>'}")
+    _emit(ctx, payload, (f"{key}\t{value or '<unset>'}",))
 
 
 def _question_for_profile_key(profile_key: str):
@@ -172,7 +154,7 @@ def _question_for_profile_key(profile_key: str):
     return None
 
 
-@app.command("set", help=tr("cli.config.set.help"))
+@profile_app.command("set", help=tr("cli.config.set.help"))
 def config_set(
     ctx: typer.Context,
     key: str = typer.Argument(..., help=tr("cli.config.set.key_help")),
@@ -188,8 +170,7 @@ def config_set(
     try:
         registered = get_profile_key(key)
     except KeyError as exc:
-        raise typer.BadParameter(tr("cli.config.errors.unknown_key", name=key)) from exc
-
+        raise CliRefusedBoundaryError(tr("cli.config.errors.unknown_key", name=key)) from exc
     canonical_key = registered.key
     question = _question_for_profile_key(canonical_key)
     if question is not None:
@@ -199,30 +180,22 @@ def config_set(
             choices = ", ".join(choice.value for choice in question.choices)
             translated = exc.translated_message or tr("cli.config.errors.invalid_value", name=key, value=value)
             message = f"{translated} ({choices})" if choices else translated
-            raise typer.BadParameter(message) from exc
+            raise CliRefusedBoundaryError(message) from exc
 
     repository = _profile_state()
     state = repository.load()
     profile_name = state.active_profile
     if profile_name is None:
-        raise typer.BadParameter(tr("cli.config.errors.no_active_profile"))
+        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     updated = repository.update(lambda current: set_profile_values(current, profile_name, {canonical_key: value}))
     record = updated.active_profile_record()
     stored_value = record.values.get(canonical_key, "") if record is not None else ""
     payload = {"key": canonical_key, "value": stored_value}
-    if _format_of(ctx) == _FORMAT_JSON:
-        import json as _json
-
-        typer.echo(_json.dumps(payload, ensure_ascii=False))
-        return
-    typer.echo(f"{canonical_key}\t{stored_value}")
+    _emit(ctx, payload, (f"{canonical_key}\t{stored_value}",))
 
 
-@app.command("unset", help=tr("cli.config.unset.help"))
-def config_unset(
-    ctx: typer.Context,
-    key: str = typer.Argument(..., help=tr("cli.config.unset.key_help")),
-) -> None:
+@profile_app.command("unset", help=tr("cli.config.unset.help"))
+def config_unset(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.config.unset.key_help"))) -> None:
     """Clear one profile key value through the shared application backend."""
 
     from ...application.profile._actions import clear_profile_values
@@ -231,29 +204,23 @@ def config_unset(
     try:
         get_profile_key(key)
     except KeyError as exc:
-        raise typer.BadParameter(tr("cli.config.errors.unknown_key", name=key)) from exc
+        raise CliRefusedBoundaryError(tr("cli.config.errors.unknown_key", name=key)) from exc
     repository = _profile_state()
     state = repository.load()
     profile_name = state.active_profile
     if profile_name is None:
-        raise typer.BadParameter(tr("cli.config.errors.no_active_profile"))
+        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     repository.update(lambda current: clear_profile_values(current, profile_name, (key,)))
-    typer.echo(f"{key}\t<unset>")
+    _emit(ctx, {"key": key, "value": ""}, (f"{key}\t<unset>",))
 
 
 def _register_wizard_commands(target: typer.Typer) -> None:
-    """Register every wizard flow as a sub-command of ``target``.
-
-    Walks ``WIZARD_FLOWS`` once and binds the descriptor-derived
-    closure under ``aeat config <flow.id>``. Each flow contributes one
-    Typer command with per-question flags derived from the descriptor
-    plus the three mode flags (``--profile-name``, ``--quiet``,
-    ``--accept-defaults``).
-    """
+    """Register every wizard flow as a sub-command of ``target``."""
 
     from ...application.wizard._catalogue import WIZARD_FLOWS
     from ...application.wizard._commands import build_wizard_command
     from ...application.wizard._errors import WizardMissingFlagError
+    from ...application.wizard._prompter import WizardUnsupportedConsoleError
 
     for flow in WIZARD_FLOWS:
         command_callable = build_wizard_command(flow)
@@ -268,22 +235,31 @@ def _register_wizard_commands(target: typer.Typer) -> None:
                 _callable(*args, **kwargs)
             except WizardMissingFlagError as exc:
                 translated = exc.translated_message or tr("cli.config.setup.errors.missing_required_flags")
-                raise typer.BadParameter(translated) from exc
+                raise CliRefusedBoundaryError(translated) from exc
+            except WizardUnsupportedConsoleError as exc:
+                raise exc
+            if kwargs.get("quiet"):
+                profile_name = kwargs.get("profile_name", "default")
+                typer.echo(tr("cli.config.setup.success.saved", profile_name=profile_name))
+                typer.echo(tr("cli.config.setup.success.next_step"))
 
         wrapped = typing.cast(typing.Any, _wrapped)
         wrapped.__signature__ = original.__signature__
         wrapped.__annotations__ = original.__annotations__
         wrapped.__name__ = original.__name__
         wrapped.__doc__ = original.__doc__
-        target.command(name=flow.id, help=tr(f"cli.config.{flow.id}.help"))(_wrapped)
+        command_name = "init" if flow.id == "setup" else flow.id
+        target.command(name=command_name, help=tr(f"cli.config.{flow.id}.help"))(_wrapped)
 
 
 _register_wizard_commands(app)
 
 
-@app.command("status", help=tr("cli.config.status.help"))
+@profile_app.command("status", help=tr("cli.config.status.help"))
 def config_status(ctx: typer.Context) -> None:
     """Show the readiness of the current configuration profile."""
+
+    from pydantic import ValidationError
 
     from ...application.wizard._catalogue import SETUP_FLOW
     from ...application.wizard._persistence import project_answers
@@ -292,84 +268,173 @@ def config_status(ctx: typer.Context) -> None:
     state = workflow_state_repository().load()
     record = state.active_profile_record()
     values: dict[str, str] = dict(record.values) if record is not None else {}
-    projection = project_answers(SETUP_FLOW, values)
+    if not values.get("tax.id") or not values.get("activity"):
+        payload = {
+            "active_profile": state.active_profile,
+            "tax_id_present": bool(values.get("tax.id")),
+            "activity_present": bool(values.get("activity")),
+            "configured": False,
+        }
+        _emit(ctx, payload, (tr("cli.config.status.empty_profile"),))
+        return
+    try:
+        projection = project_answers(SETUP_FLOW, values)
+    except ValidationError:
+        payload = {
+            "active_profile": state.active_profile,
+            "tax_id_present": bool(values.get("tax.id")),
+            "activity_present": bool(values.get("activity")),
+            "configured": False,
+        }
+        _emit(ctx, payload, (tr("cli.config.status.empty_profile"),))
+        return
     payload = {
         "active_profile": state.active_profile,
         "tax_id_present": bool(values.get("tax.id")),
         "activity_present": bool(values.get("activity")),
         "iva_regime": values.get("iva.regime", ""),
         "tax_residence_ccaa": values.get("tax.residence.ccaa", ""),
+        "next_action": tr("cli.config.status.next_step"),
     }
-    if _format_of(ctx) == _FORMAT_JSON:
-        import json as _json
-
-        typer.echo(_json.dumps(payload, ensure_ascii=False))
-        return
-    typer.echo(f"profile\t{state.active_profile or ''}")
-    typer.echo(f"tax.id\t{values.get('tax.id', '<unset>')}")
-    typer.echo(f"activity\t{values.get('activity', '<unset>')}")
-    typer.echo(f"iva.regime\t{values.get('iva.regime', '<unset>')}")
-    typer.echo(f"tax.residence.ccaa\t{values.get('tax.residence.ccaa', '<unset>')}")
+    _emit(
+        ctx,
+        payload,
+        (
+            f"profile\t{state.active_profile or ''}",
+            f"tax.id\t{values.get('tax.id', '<unset>')}",
+            f"activity\t{values.get('activity', '<unset>')}",
+            f"iva.regime\t{values.get('iva.regime', '<unset>')}",
+            f"tax.residence.ccaa\t{values.get('tax.residence.ccaa', '<unset>')}",
+            tr("cli.config.status.next_step"),
+        ),
+    )
     del projection
 
 
 @app.command("reset", help=tr("cli.config.reset.help"))
 def config_reset(
-    scope: str = typer.Option(
-        "all",
-        "--scope",
-        help=tr("cli.config.reset.scope_help"),
-    ),
+    ctx: typer.Context,
+    scope: str = typer.Option("all", "--scope", help=tr("cli.config.reset.scope_help")),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.reset.yes_help")),
 ) -> None:
     """Reset operator-entered configuration scopes."""
 
-    from ...application.setup_reset import SetupResetScope, reset_setup
+    from ...application.config_reset import ConfigResetScope, reset_config
 
     if not yes:
-        raise typer.BadParameter(tr("cli.config.reset.requires_yes"))
+        raise CliRefusedBoundaryError(tr("cli.config.reset.requires_yes"))
     try:
-        scope_enum = SetupResetScope(scope)
+        scope_enum = ConfigResetScope(scope.strip().upper())
     except ValueError as exc:
-        valid = ", ".join(member.value for member in SetupResetScope)
-        raise typer.BadParameter(tr("cli.config.reset.invalid_scope", scope=scope, valid=valid)) from exc
-    report = reset_setup(scope_enum, confirmed=True)
-    typer.echo(f"scope\t{report.scope.value}")
-    typer.echo(f"removed_profiles\t{len(report.removed_profile_names)}")
-    typer.echo(f"removed_auth\t{report.removed_auth_session}")
+        valid = ", ".join(member.value.lower() for member in ConfigResetScope)
+        raise CliRefusedBoundaryError(tr("cli.config.reset.invalid_scope", scope=scope, valid=valid)) from exc
+    report = reset_config(scope_enum, confirmed=True)
+    _emit(
+        ctx,
+        report.model_dump(mode="json"),
+        (
+            f"scope\t{report.scope.value}",
+            f"removed_profiles\t{len(report.removed_profile_names)}",
+            f"removed_auth\t{report.removed_auth_session}",
+        ),
+    )
 
 
-@app.command("auth", help=tr("cli.config.auth.help"))
-def config_auth(
+@auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
+def auth_providers(ctx: typer.Context) -> None:
+    """List supported authentication providers from the backend catalogue."""
+
+    from ...application.auth import list_operator_auth_providers
+
+    report = list_operator_auth_providers()
+    payload = report.model_dump(mode="json")
+    _emit(
+        ctx,
+        payload,
+        tuple(
+            f"{provider.id}\t{'implemented' if provider.implemented else 'reserved'}\t{tr(str(provider.label))}"
+            for provider in report.providers
+        ),
+    )
+
+
+@auth_app.command("configure", help=tr("cli.config.auth.configure_help"))
+def auth_configure(
     ctx: typer.Context,
-    provider: str = typer.Option(
-        ...,
-        "--provider",
-        help=tr("cli.config.auth.provider_help"),
-    ),
+    provider: str = typer.Option(..., "--provider", help=tr("cli.config.auth.provider_help")),
     file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
 ) -> None:
     """Configure the active authentication provider."""
 
-    del ctx
-    from ...application.auth._actions import update_auth
-    from ...application.auth._catalogue import get_auth_provider
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.auth import AuthProviderReservedError, configure_operator_auth
 
     try:
-        listing = get_auth_provider(provider)
+        result = configure_operator_auth(provider, certificate_path=file)
     except KeyError as exc:
-        raise typer.BadParameter(tr("cli.config.auth.unknown_provider", provider=provider)) from exc
-    repository = workflow_state_repository()
-    repository.update(
-        lambda current: update_auth(
-            current,
-            provider=listing.id,
-            certificate_path=str(file) if file is not None else None,
-        )
-    )
-    typer.echo(f"provider\t{listing.id}")
-    typer.echo(f"file\t{file or ''}")
+        raise CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider)) from exc
+    except AuthProviderReservedError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider)) from exc
+    _emit(ctx, result.model_dump(mode="json"), (f"provider\t{result.provider}", f"file\t{result.file}"))
 
+
+@auth_app.command("status", help=tr("cli.config.auth.status_help"))
+def auth_status(ctx: typer.Context, provider: str | None = typer.Option(None, "--provider")) -> None:
+    """Show the configured local authentication state."""
+
+    from ...application.auth import inspect_operator_auth
+
+    try:
+        result = inspect_operator_auth(provider)
+    except KeyError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+    payload = result.model_dump(mode="json")
+    _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
+
+
+@auth_app.command("test", help=tr("cli.config.auth.test_help"))
+def auth_test(ctx: typer.Context, provider: str | None = typer.Option(None, "--provider")) -> None:
+    """Render auth readiness through the application-owned auth state."""
+
+    from ...application.auth import test_operator_auth
+
+    try:
+        result = test_operator_auth(provider)
+    except KeyError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+    payload = result.model_dump(mode="json")
+    _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
+
+
+@auth_app.command("clear", help=tr("cli.config.auth.clear_help"))
+def auth_clear(
+    ctx: typer.Context,
+    provider: str | None = typer.Option(None, "--provider"),
+    all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.clear_all_help")),
+    sessions: bool = typer.Option(False, "--sessions", help=tr("cli.config.auth.clear_sessions_help")),
+    locks: bool = typer.Option(False, "--locks", help=tr("cli.config.auth.clear_locks_help")),
+) -> None:
+    """Clear local auth metadata, persisted sessions, and auth locks."""
+
+    from ...application.auth import AuthProviderReservedError, clear_operator_auth
+
+    try:
+        result = clear_operator_auth(provider=provider, all_providers=all_providers, sessions=sessions, locks=locks)
+    except KeyError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+    except AuthProviderReservedError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
+    _emit(
+        ctx,
+        result.model_dump(mode="json"),
+        (
+            f"removed_sessions\t{result.removed_sessions}",
+            f"cleared_workflow_state\t{result.cleared_workflow_state}",
+            f"cleared_locks\t{result.cleared_locks}",
+        ),
+    )
+
+
+app.add_typer(profile_app, name="profile")
+app.add_typer(auth_app, name="auth")
 
 __all__ = ["app"]

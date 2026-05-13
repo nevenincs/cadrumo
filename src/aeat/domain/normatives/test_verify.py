@@ -42,11 +42,14 @@ class TestRealCorpus:
 
     def test_verify_real_corpus_clean(self) -> None:
         report = verify_catalogue()
-        assert report.clean, f"verify produced issues: {report.issues}"
+        assert report.clean is True, f"verify produced issues: {report.issues}"
+        assert report.issues == ()
 
     def test_raise_on_errors_noop_when_clean(self) -> None:
         report = verify_catalogue()
-        raise_on_errors(report)  # must not raise
+        assert report.clean, f"corpus must be clean for the noop assertion to be meaningful: {report.issues}"
+        result = raise_on_errors(report)
+        assert result is None
 
     def test_every_committed_articulo_renders(self) -> None:
         catalogue = load_catalogue()

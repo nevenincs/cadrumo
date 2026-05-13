@@ -136,7 +136,7 @@ field as the discriminator. Validate via
 class LedgerSplit(BaseModel):
     """Review metadata for a mixed-use ledger row."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     business_share: Decimal
     personal_share: Decimal
@@ -165,7 +165,7 @@ class LedgerSplit(BaseModel):
 class LedgerReviewRecord(BaseModel):
     """Workflow annotations for one persisted transaction."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     transaction_id: str = Field(min_length=1)
     skipped: bool = False
@@ -183,7 +183,7 @@ class LedgerReviewRecord(BaseModel):
 class InvoiceReviewRecord(BaseModel):
     """Workflow annotations for one persisted invoice."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     invoice_id: str = Field(min_length=1)
     fields: dict[str, str] = Field(default_factory=dict)

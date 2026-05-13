@@ -49,5 +49,7 @@ def test_renta_family_member_rejects_blank_optional_text() -> None:
 
 
 def test_renta_ascendant_cohabiting_descendant_count_follows_dictionary_range() -> None:
-    with pytest.raises(ValueError):
+    # Field constraint: le=10. Pydantic emits "less than or equal to 10"
+    # for the violation.
+    with pytest.raises(ValueError, match=r"less than or equal to 10"):
         RentaAscendantProfile(birth_date=date(1940, 1, 1), cohabiting_descendant_count=11)

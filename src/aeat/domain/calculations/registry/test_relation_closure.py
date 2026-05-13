@@ -66,6 +66,11 @@ def _modelo_115_observations() -> tuple[RegistryFilingObservation, ...]:
 def test_registry_validator_checks_cross_model_relation_closure() -> None:
     modelos, catalogues = _committed_tree()
 
+    assert len(modelos) >= 5, "committed registry must carry several modelos"
+    assert any(any(rev.relations for rev in modelo.revisions.values()) for modelo in modelos), (
+        "at least one modelo must declare cross-model relations for closure validation to be meaningful"
+    )
+
     RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
 
 

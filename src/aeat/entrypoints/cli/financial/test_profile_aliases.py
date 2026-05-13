@@ -73,7 +73,7 @@ def test_aliases_reject_mutation_at_runtime() -> None:
     import typing
 
     mapping = typing.cast(typing.Any, FAMILY_ALIASES)
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"item assignment|MappingProxyType|does not support"):
         mapping["new_alias"] = (SpendingCategory.TELEFONIA_MOVIL,)
 
 
@@ -85,11 +85,11 @@ def test_aliases_are_mapping_proxy() -> None:
 def test_set_ratio_help_lists_only_current_aliases() -> None:
     """Regression guard: Typer argument help must not advertise removed aliases.
 
-    The help string previously hard-coded the alias list; following
-    ``--help`` for a removed alias would then surface an
-    ``unknown key`` error. The help text now derives from
-    :data:`aeat.entrypoints.cli.financial._profile_aliases.FAMILY_ALIASES`
-    and this test pins the guarantee.
+    The help text derives from
+    :data:`aeat.entrypoints.cli.financial._profile_aliases.FAMILY_ALIASES`;
+    this test pins the derivation so a stale hand-coded list cannot
+    drift back in and advertise an alias the resolver no longer
+    accepts.
     """
     from typer.testing import CliRunner
 

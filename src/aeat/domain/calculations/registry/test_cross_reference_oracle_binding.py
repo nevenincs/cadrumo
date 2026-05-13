@@ -126,6 +126,11 @@ def test_registry_accepts_distinct_oracle_bindings_within_a_revision() -> None:
     distinct_revision = _revision_with_cross_references(revision, (twin_a, twin_b))
     distinct_modelo = _modelo_with_revision(modelo, distinct_revision)
 
+    assert {xref.oracle_id for xref in distinct_revision.live_cross_references} >= {
+        "aeat-nif-iva-checker",
+        "modelo-100-renta-web-open",
+    }, "distinct revision must carry both oracle bindings"
+
     validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)
     validator.validate_modelo(distinct_modelo)
 
@@ -134,6 +139,10 @@ def test_registry_accepts_no_oracle_binding_anywhere() -> None:
     """The committed registry has no oracle bindings yet; it must still validate."""
 
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
+    assert len(modelos) >= 5, "committed registry must declare a meaningful number of modelos"
     validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)
+    validated = 0
     for modelo in modelos:
         validator.validate_modelo(modelo)
+        validated += 1
+    assert validated == len(modelos), "every modelo must be validated"

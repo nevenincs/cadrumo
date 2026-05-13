@@ -244,9 +244,13 @@ def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
     member — no flow falls through to an unclassified state."""
     from aeat.domain.vat import settlement_sides_for_flow
 
+    assert len(list(IvaFlowDirection)) > 0
+    covered: set[IvaFlowDirection] = set()
     for flow in IvaFlowDirection:
         sides = settlement_sides_for_flow(flow)
         assert sides, f"{flow!r} maps to empty settlement-side set"
+        covered.add(flow)
+    assert covered == set(IvaFlowDirection), "every flow direction must be covered"
 
 
 def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:

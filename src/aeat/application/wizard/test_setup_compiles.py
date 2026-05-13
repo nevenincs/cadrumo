@@ -46,9 +46,14 @@ def test_every_profile_key_appears_in_profile_keys() -> None:
 
 
 def test_every_choice_value_passes_its_widget_validator() -> None:
-    for question in _setup_questions():
+    questions_with_choices = [q for q in _setup_questions() if q.choices]
+    assert questions_with_choices, "setup must declare at least one question with choices"
+    validated = 0
+    for question in questions_with_choices:
         for choice in question.choices:
             validate_widget_answer(question, choice.value)
+            validated += 1
+    assert validated > 0, "validator must have processed at least one choice"
 
 
 def test_compile_profile_keys_returns_one_entry_per_profile_bound_question() -> None:

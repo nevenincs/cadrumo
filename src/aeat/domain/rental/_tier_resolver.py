@@ -253,7 +253,8 @@ def _resolve_prior_rent_rebaja_threshold(period_year: int) -> Decimal:
         )
     except RegistryValidationError:
         _logger.debug(
-            "rental rebaja threshold: registry lookup failed for period_year=%d; fallback to PRIOR_RENT_REBAJA_THRESHOLD",
+            "rental rebaja threshold: registry lookup failed for period_year=%d;"
+            " fallback to PRIOR_RENT_REBAJA_THRESHOLD",
             period_year,
         )
         return PRIOR_RENT_REBAJA_THRESHOLD
@@ -278,7 +279,8 @@ def _resolve_ejercicio_amendment_year(period_year: int) -> int:
         return int(value)
     except RegistryValidationError:
         _logger.debug(
-            "rental amendment year: registry lookup failed for period_year=%d; fallback to DEFAULT_EJERCICIO_AMENDMENT_YEAR",
+            "rental amendment year: registry lookup failed for period_year=%d;"
+            " fallback to DEFAULT_EJERCICIO_AMENDMENT_YEAR",
             period_year,
         )
         return DEFAULT_EJERCICIO_AMENDMENT_YEAR
@@ -346,7 +348,8 @@ def _resolve_tier_70_b_1(
         and contract.qualifying_co_tenant_count == contract.tenant_count
     ):
         raise TierResolutionError(
-            f"tenant age range falls outside {joven_age_min}-{joven_age_max} but qualifying_co_tenant_count claims every co-tenant qualifies",
+            f"tenant age range falls outside {joven_age_min}-{joven_age_max}"
+            " but qualifying_co_tenant_count claims every co-tenant qualifies",
         )
     qualifying_share = Decimal(contract.qualifying_co_tenant_count) / Decimal(contract.tenant_count)
     return TierResolution(
@@ -390,7 +393,8 @@ def _resolve_tier_reduccion_rate(period_year: int, tier_id: str) -> Decimal:
     except RegistryValidationError:
         _logger.debug(
             "rental tier rate %s: registry lookup failed for period_year=%d; fallback to module constant",
-            tier_id, period_year,
+            tier_id,
+            period_year,
         )
         return {
             "tier-50": Decimal("0.50"),

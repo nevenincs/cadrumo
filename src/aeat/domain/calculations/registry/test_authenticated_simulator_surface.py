@@ -95,13 +95,16 @@ def test_authenticated_simulator_permits_synthetic_data_optional_authorization()
     """synthetic_data_allowed and requires_aeat_authorization are both flexible."""
 
     # Synthetic data permitted (GROI accepts arbitrary NIFs).
-    LiveCrossReferenceDecision.model_validate(_kwargs(synthetic_data_allowed=True))
+    a = LiveCrossReferenceDecision.model_validate(_kwargs(synthetic_data_allowed=True))
+    assert a.synthetic_data_allowed is True
     # Synthetic data also permitted False (a future surface that only
     # accepts the caller's own NIF would set this False).
-    LiveCrossReferenceDecision.model_validate(_kwargs(synthetic_data_allowed=False))
+    b = LiveCrossReferenceDecision.model_validate(_kwargs(synthetic_data_allowed=False))
+    assert b.synthetic_data_allowed is False
     # Authorization required (a future surface gated on certificate
     # tier on top of cl@ve-movil).
-    LiveCrossReferenceDecision.model_validate(_kwargs(requires_aeat_authorization=True))
+    c = LiveCrossReferenceDecision.model_validate(_kwargs(requires_aeat_authorization=True))
+    assert c.requires_aeat_authorization is True
 
 
 def test_authenticated_simulator_inherits_canonical_aeat_write_forbidden_actions() -> None:
@@ -134,63 +137,80 @@ def test_existing_surface_categories_still_validate() -> None:
     a cross-reference whose category is not the new one.
     """
 
+    decisions: list[LiveCrossReferenceDecision] = []
+
     # open_simulator
-    LiveCrossReferenceDecision(
-        id="probe-open-sim",
-        evidence_tier="executable_parity_evidence",
-        surface="open_simulator",
-        guard_policy_id="probe",
-        allowed_hosts=("sede.agenciatributaria.gob.es",),
-        allowed_methods=("GET",),
-        forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
-        synthetic_data_allowed=True,
-        requires_authentication=False,
-        requires_aeat_authorization=False,
-        legal_refs=("orden-hac-174-2020:art-1",),
-        source_refs=("aeat-modelo-349-procedure",),
+    decisions.append(
+        LiveCrossReferenceDecision(
+            id="probe-open-sim",
+            evidence_tier="executable_parity_evidence",
+            surface="open_simulator",
+            guard_policy_id="probe",
+            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_methods=("GET",),
+            forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
+            synthetic_data_allowed=True,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+            legal_refs=("orden-hac-174-2020:art-1",),
+            source_refs=("aeat-modelo-349-procedure",),
+        )
     )
     # public_read_surface
-    LiveCrossReferenceDecision(
-        id="probe-public-read",
-        evidence_tier="official_source_guidance",
-        surface="public_read_surface",
-        guard_policy_id="probe",
-        allowed_hosts=("sede.agenciatributaria.gob.es",),
-        allowed_methods=("GET",),
-        forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
-        synthetic_data_allowed=False,
-        requires_authentication=False,
-        requires_aeat_authorization=False,
-        legal_refs=("orden-hac-174-2020:art-1",),
-        source_refs=("aeat-modelo-349-procedure",),
+    decisions.append(
+        LiveCrossReferenceDecision(
+            id="probe-public-read",
+            evidence_tier="official_source_guidance",
+            surface="public_read_surface",
+            guard_policy_id="probe",
+            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_methods=("GET",),
+            forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
+            synthetic_data_allowed=False,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+            legal_refs=("orden-hac-174-2020:art-1",),
+            source_refs=("aeat-modelo-349-procedure",),
+        )
     )
     # authenticated_read_surface
-    LiveCrossReferenceDecision(
-        id="probe-auth-read",
-        evidence_tier="official_source_guidance",
-        surface="authenticated_read_surface",
-        guard_policy_id="probe",
-        allowed_hosts=("sede.agenciatributaria.gob.es",),
-        allowed_methods=("GET",),
-        forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
-        synthetic_data_allowed=False,
-        requires_authentication=True,
-        requires_aeat_authorization=True,
-        legal_refs=("orden-hac-174-2020:art-1",),
-        source_refs=("aeat-modelo-349-procedure",),
+    decisions.append(
+        LiveCrossReferenceDecision(
+            id="probe-auth-read",
+            evidence_tier="official_source_guidance",
+            surface="authenticated_read_surface",
+            guard_policy_id="probe",
+            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_methods=("GET",),
+            forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
+            synthetic_data_allowed=False,
+            requires_authentication=True,
+            requires_aeat_authorization=True,
+            legal_refs=("orden-hac-174-2020:art-1",),
+            source_refs=("aeat-modelo-349-procedure",),
+        )
     )
     # static_official_documentation
-    LiveCrossReferenceDecision(
-        id="probe-static-doc",
-        evidence_tier="official_source_guidance",
-        surface="static_official_documentation",
-        guard_policy_id="probe",
-        allowed_hosts=("sede.agenciatributaria.gob.es",),
-        allowed_methods=(),
-        forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
-        synthetic_data_allowed=False,
-        requires_authentication=False,
-        requires_aeat_authorization=False,
-        legal_refs=("orden-hac-174-2020:art-1",),
-        source_refs=("aeat-modelo-349-procedure",),
+    decisions.append(
+        LiveCrossReferenceDecision(
+            id="probe-static-doc",
+            evidence_tier="official_source_guidance",
+            surface="static_official_documentation",
+            guard_policy_id="probe",
+            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_methods=(),
+            forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
+            synthetic_data_allowed=False,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+            legal_refs=("orden-hac-174-2020:art-1",),
+            source_refs=("aeat-modelo-349-procedure",),
+        )
     )
+
+    assert [d.surface for d in decisions] == [
+        "open_simulator",
+        "public_read_surface",
+        "authenticated_read_surface",
+        "static_official_documentation",
+    ]

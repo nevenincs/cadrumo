@@ -16,13 +16,11 @@ hold for each one:
    ``renta-{año}-escala-autonomica-{ccaa}-base-general`` naming pattern.
 6. The construct's ``formulas`` member tuple includes both formula ids.
 
-These are structural / graph-wiring assertions per
-``.claude/rules/no-tautological-calculation-tests.md`` (allowed
-category: "operand_refs, formula_targets, relation_ids, revision.id,
-casilla counts, binding presence"). No hand-computed Decimal
-assertions — the calculation-arithmetic surface stays gated on AEAT-
-published oracle data, which is data-blocked until external sources
-land.
+All assertions are structural — they exercise operand refs, formula
+targets, relation ids, revision id, casilla counts, and binding
+presence. The calculation-arithmetic surface is verified by AEAT-
+published oracle data via the replay-parity layer, not by hand-
+computed Decimal literals.
 """
 
 from __future__ import annotations

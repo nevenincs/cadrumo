@@ -78,7 +78,7 @@ def audit_wizard_translations() -> tuple[str, ...]:
     return tuple(missing)
 
 
-_CLI_KEY_PATTERN = re.compile(r"['\"](cli\.[A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)+)['\"]")
+_CLI_KEY_PATTERN = re.compile(r"['\"](cli\.\w+(?:\.\w+)+)['\"]", re.UNICODE)
 
 
 def _cli_entrypoints_root() -> Path:

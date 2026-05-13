@@ -16,7 +16,6 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from enum import StrEnum
 from functools import lru_cache
-from pathlib import Path
 
 from ...core.logging import get_logger
 from ...domain._identifiers import canonical_decimal_string
@@ -83,7 +82,6 @@ def compute_current_approval_basis(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
-    transaction_catalogue_path: Path | None = None,
 ) -> FilingApprovalBasis:
     """Return the :class:`FilingApprovalBasis` digests for the current upstream state.
 
@@ -94,17 +92,15 @@ def compute_current_approval_basis(
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional override of the persisted
             transaction catalogue. When ``None``, the catalogue is
-            loaded from disk via the ``aeat_financial_txs_dir`` setting.
+            loaded from the encrypted SecureObjectRepository.
         category_profiles: Optional override of the active category
             profile map. Defaults to ``CATEGORY_PROFILES_2025``.
-        transaction_catalogue_path: Optional override of the catalogue
-            store directory.
 
     Returns:
         A freshly computed :class:`FilingApprovalBasis`.
     """
 
-    catalogue = transaction_catalogue or _load_transaction_catalogue(transaction_catalogue_path)
+    catalogue = transaction_catalogue or _load_transaction_catalogue()
     profiles = category_profiles or CATEGORY_PROFILES_2025
     return FilingApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
@@ -137,7 +133,6 @@ def approval_stale_reasons(
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
-    transaction_catalogue_path: Path | None = None,
 ) -> tuple[FilingApprovalStaleReason, ...]:
     """Return the ordered stale reasons for ``draft``.
 
@@ -151,7 +146,6 @@ def approval_stale_reasons(
             :class:`aeat.domain.filing.CasillaSchemaProvider`.
         transaction_catalogue: Optional catalogue override.
         category_profiles: Optional category profile map override.
-        transaction_catalogue_path: Optional catalogue store override.
 
     Returns:
         Tuple of :class:`FilingApprovalStaleReason` values in
@@ -166,7 +160,6 @@ def approval_stale_reasons(
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         category_profiles=category_profiles,
-        transaction_catalogue_path=transaction_catalogue_path,
     )
     reasons: list[FilingApprovalStaleReason] = []
     stored_basis = draft.approval_basis
@@ -193,7 +186,6 @@ def approve_draft(
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     approved_at: datetime | None = None,
-    transaction_catalogue_path: Path | None = None,
 ) -> FilingDraft:
     """Stamp approval metadata on ``draft`` and promote it to ``APPROVED``.
 
@@ -207,7 +199,6 @@ def approve_draft(
         transaction_catalogue: Optional catalogue override.
         category_profiles: Optional category profile map override.
         approved_at: Optional timestamp; defaults to ``datetime.now(UTC)``.
-        transaction_catalogue_path: Optional catalogue store override.
 
     Returns:
         A new :class:`FilingDraft` with approval metadata populated.
@@ -232,7 +223,6 @@ def approve_draft(
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         category_profiles=category_profiles,
-        transaction_catalogue_path=transaction_catalogue_path,
     )
     updated = draft.model_copy(
         update={
@@ -294,7 +284,6 @@ def refresh_review_status(
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
     refreshed_at: datetime | None = None,
-    transaction_catalogue_path: Path | None = None,
 ) -> FilingDraft:
     """Return ``draft`` with its approval status synchronised to current state.
 
@@ -312,7 +301,6 @@ def refresh_review_status(
         category_profiles: Optional category profile map override.
         refreshed_at: Optional timestamp; defaults to
             ``datetime.now(UTC)``.
-        transaction_catalogue_path: Optional catalogue store override.
 
     Returns:
         Either ``draft`` unchanged (when no transition was needed) or a
@@ -359,7 +347,6 @@ def refresh_review_status(
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         category_profiles=category_profiles,
-        transaction_catalogue_path=transaction_catalogue_path,
     )
     next_status = FilingDraftStatus.APPROVAL_STALE if reasons else FilingDraftStatus.APPROVED
     if draft.status is next_status:
@@ -444,8 +431,7 @@ def _require_registry_review_alignment(
     raise FilingDraftError(f"draft does not match the registry review surface: {codes!r}")
 
 
-def _load_transaction_catalogue(path: Path | None) -> TransactionCatalogue:
-    del path
+def _load_transaction_catalogue() -> TransactionCatalogue:
     return _load_transaction_catalogue_cached()
 
 
@@ -457,14 +443,10 @@ def _load_transaction_catalogue_cached() -> TransactionCatalogue:
     return repository.load()
 
 
-def _read_transaction_catalogue(path: Path) -> TransactionCatalogue:
-    """Load the transaction catalogue from the secure backend.
-
-    ``path`` is ignored because transaction data is not file-backed.
-    """
+def _read_transaction_catalogue() -> TransactionCatalogue:
+    """Load the transaction catalogue from the secure backend."""
     from ...domain.transactions import TransactionCatalogueRepository
 
-    del path
     repository = TransactionCatalogueRepository()
     if not repository.exists():
         _logger.debug("transaction catalogue secure object not found; using empty catalogue")

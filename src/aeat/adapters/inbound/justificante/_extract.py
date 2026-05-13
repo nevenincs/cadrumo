@@ -121,9 +121,9 @@ _EJERCICIO_LOOSE_RE = re.compile(
 _NIF_RE = re.compile(
     # NIF / NIE shape: leading letter (NIE) or digit (NIF), 7-8 mid
     # digits, trailing checksum letter. Total length 9 in practice.
-    # Stricter than the previous "[0-9A-Z]{8,12}" pattern, which
-    # accidentally matched the word "PRESENTADOR" in the
-    # ``NIF Presentador: <value>`` register-printed shape.
+    # The shape constraint excludes the word "PRESENTADOR" that the
+    # ``NIF Presentador: <value>`` register-printed shape places after
+    # the label.
     r"NIF\s*(?:Presentador)?\s*[:\-]?\s*"
     r"([XYZ\d]\d{7}[A-Z])",
     re.IGNORECASE,

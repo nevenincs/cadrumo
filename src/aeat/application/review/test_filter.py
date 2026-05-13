@@ -223,15 +223,15 @@ def test_ledger_spec_is_frozen() -> None:
 
 def test_ledger_spec_rejects_inconsistent_construction() -> None:
     """Direct construction with mismatched clauses / typed fields fails."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"clauses|status|inconsistent"):
         LedgerReviewFilterSpec(clauses=(), status=LedgerReviewStatus.PENDING)
 
 
 def test_invoice_spec_rejects_inconsistent_construction() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"clauses|kind|inconsistent"):
         InvoiceReviewFilterSpec(clauses=(), kind=InvoiceKind.ISSUED)
 
 
 def test_declaration_spec_rejects_inconsistent_construction() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"clauses|status|inconsistent"):
         DeclarationReviewFilterSpec(clauses=(), status=DeclarationReviewStatus.PENDING)

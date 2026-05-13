@@ -70,6 +70,11 @@ parity_app = typer.Typer(
 app.add_typer(workbooks_app, name="workbooks")
 app.add_typer(parity_app, name="parity")
 
+from ._registry_corpus import citations_app, manuals_app  # noqa: E402
+
+app.add_typer(citations_app, name="citations")
+app.add_typer(manuals_app, name="manuals")
+
 
 class RegistryTreeReport(BaseModel):
     """Read-only registry tree load or verification result."""

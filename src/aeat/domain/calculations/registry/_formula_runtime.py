@@ -179,9 +179,7 @@ def _evaluate_expression(
             raise RegistryValidationError("formula op 'lookup_bracket' expects 2 args")
         bracket_arg = expression.args[1]
         if bracket_arg.parameter is None:
-            raise RegistryValidationError(
-                "formula op 'lookup_bracket' requires args[1] to be a parameter leaf"
-            )
+            raise RegistryValidationError("formula op 'lookup_bracket' requires args[1] to be a parameter leaf")
         bracket_param = parameters.get(bracket_arg.parameter)
         if bracket_param is None:
             raise RegistryValidationError(f"parameter {bracket_arg.parameter!r} not registered")
@@ -211,17 +209,14 @@ def _evaluate_expression(
         binding_arg = expression.args[1]
         dispatch_arg = expression.args[2]
         if binding_arg.binding is None:
-            raise RegistryValidationError(
-                "formula op 'lookup_bracket_by_ccaa' requires args[1] to be a binding leaf"
-            )
+            raise RegistryValidationError("formula op 'lookup_bracket_by_ccaa' requires args[1] to be a binding leaf")
         if dispatch_arg.dispatch_table is None:
             raise RegistryValidationError(
                 "formula op 'lookup_bracket_by_ccaa' requires args[2] to be a dispatch_table leaf"
             )
         if binding_arg.binding not in resolved_enum_bindings:
             raise RegistryValidationError(
-                f"enum binding {binding_arg.binding!r} has no supplied value; "
-                f"required by lookup_bracket_by_ccaa"
+                f"enum binding {binding_arg.binding!r} has no supplied value; required by lookup_bracket_by_ccaa"
             )
         dispatch_key = resolved_enum_bindings[binding_arg.binding]
         dispatch_table = dispatch_arg.dispatch_table
@@ -384,24 +379,16 @@ def _resolve_bracket(
     if parameter.bracket_axis is None:
         raise RegistryValidationError(f"parameter {parameter.id!r} bracket_table requires bracket_axis")
     if parameter.bracket_axis not in date_context:
-        raise RegistryValidationError(
-            f"parameter {parameter.id!r} requires date axis {parameter.bracket_axis!r}"
-        )
+        raise RegistryValidationError(f"parameter {parameter.id!r} requires date axis {parameter.bracket_axis!r}")
     selected = date_context[parameter.bracket_axis]
     candidates = [
-        b
-        for b in parameter.brackets
-        if b.valid_from <= selected and (b.valid_to is None or selected <= b.valid_to)
+        b for b in parameter.brackets if b.valid_from <= selected and (b.valid_to is None or selected <= b.valid_to)
     ]
     if not candidates:
-        raise RegistryValidationError(
-            f"parameter {parameter.id!r} has no bracket valid for {selected.isoformat()}"
-        )
+        raise RegistryValidationError(f"parameter {parameter.id!r} has no bracket valid for {selected.isoformat()}")
     base = Decimal(base)
     if base < Decimal("0"):
-        raise RegistryValidationError(
-            f"parameter {parameter.id!r} lookup_bracket received negative base {base}"
-        )
+        raise RegistryValidationError(f"parameter {parameter.id!r} lookup_bracket received negative base {base}")
     sorted_brackets = sorted(candidates, key=lambda b: b.lower_bound)
     selected_entry = None
     for entry in sorted_brackets:
@@ -409,9 +396,7 @@ def _resolve_bracket(
             selected_entry = entry
             break
     if selected_entry is None:
-        raise RegistryValidationError(
-            f"parameter {parameter.id!r} has no bracket covering base {base}"
-        )
+        raise RegistryValidationError(f"parameter {parameter.id!r} has no bracket covering base {base}")
     return selected_entry.fixed_addition + selected_entry.marginal_rate * (base - selected_entry.lower_bound)
 
 

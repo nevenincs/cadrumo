@@ -60,7 +60,8 @@ async def _attempt_presentar_click() -> tuple[bool, str]:
 
         new_decl = page.locator(".z-window-modal button").filter(has_text="Nueva declaración")
         await _click_expected(
-            new_decl, stage="safety-proof:start",
+            new_decl,
+            stage="safety-proof:start",
             description="Nueva declaración",
             timeout_ms=payload.timeout_ms,
         )

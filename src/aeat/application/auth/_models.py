@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict
 class AuthState(BaseModel):
     """Local AEAT access readiness state."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     provider: str | None = None
     certificate_path: str | None = None

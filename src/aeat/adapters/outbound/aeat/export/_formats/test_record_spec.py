@@ -203,12 +203,12 @@ class TestEncodeText:
         # ISO-8859-15 emits 0xA4.
         assert encode_text("€", length=1, encoding="iso-8859-15") == b"\xa4"
         # ISO-8859-1 has no Euro.
-        with pytest.raises(UnicodeEncodeError):
+        with pytest.raises(UnicodeEncodeError, match=r"iso-8859-1|latin"):
             encode_text("€", length=1, encoding="iso-8859-1")
 
     def test_non_cp1252_char_raises(self) -> None:
         # Emoji has no CP1252 mapping.
-        with pytest.raises(UnicodeEncodeError):
+        with pytest.raises(UnicodeEncodeError, match=r"cp1252|charmap"):
             encode_text("TEXT 🎉", length=10, encoding="cp1252")
 
     def test_length_invariant(self) -> None:
@@ -297,7 +297,10 @@ class TestValidateRecordSpecs:
 
     def test_happy_path(self) -> None:
         specs = self._three_field_spec()
-        validate_record_specs(specs, total_length=16)
+        assert len(specs) == 3
+        assert sum(s.length for s in specs) == 16
+        result = validate_record_specs(specs, total_length=16)
+        assert result is None
 
     def test_empty_specs_raises(self) -> None:
         with pytest.raises(ValueError, match="must not be empty"):

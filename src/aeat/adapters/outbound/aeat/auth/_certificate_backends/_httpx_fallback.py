@@ -54,10 +54,11 @@ class HttpxFallbackBackend(_CertBackend):
         """Return a closed failure without materialising PEM/key files.
 
         :mod:`httpx` cannot consume in-memory PKCS#12 client certificates
-        through Python's standard :mod:`ssl` API. The previous implementation
-        converted the certificate and private key to plaintext temporary files;
-        that path is forbidden because certificate secrets must not bypass the
-        secure-storage boundary.
+        through Python's standard :mod:`ssl` API, and converting the
+        certificate and private key to plaintext temporary files is
+        forbidden because certificate secrets must not bypass the
+        secure-storage boundary. The fallback therefore reports a closed
+        failure rather than degrading the secrecy contract.
 
         Args:
             cert: The loaded PKCS#12 certificate to present.

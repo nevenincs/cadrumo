@@ -318,6 +318,30 @@ class BrowserSessionLike(Protocol):
     ) -> BrowserContextLike: ...
 
 
+@runtime_checkable
+class CertificateHealthCheck(Protocol):
+    """Injection seam for the certificate-health probe.
+
+    The production default is the module-level :func:`certificate_health`
+    function. Tests inject a real callable wrapping a captured-args
+    sink so the authenticator's ``describe()`` contract is verified
+    against a real implementation rather than a patched module
+    attribute.
+    """
+
+    def __call__(
+        self,
+        path: Path,
+        *,
+        password_env_var: str,
+        warn_days: int,
+        critical_days: int,
+        backend: CertificateBackend = ...,
+        friendly_name: str | None = ...,
+        now: datetime | None = ...,
+    ) -> CertificateHealth: ...
+
+
 # ── Authenticator ───────────────────────────────────────────────────────────
 
 
@@ -356,6 +380,7 @@ class AeatAuthenticator:
         browser_session_factory: BrowserSessionFactory | None = None,
         handshake_verifier: Callable[[LoadedCertificate, str], HandshakeResult] | None = None,
         navigation_timeout_ms: int = AEAT_LOGIN_NAVIGATION_TIMEOUT_MS,
+        certificate_health_check: CertificateHealthCheck | None = None,
     ) -> None:
         """Construct an authenticator bound to ``settings``.
 
@@ -369,11 +394,18 @@ class AeatAuthenticator:
                 :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` lazily at
                 :meth:`authenticate` time. Tests pass an in-process implementation here
                 to avoid the Playwright import path.
+            certificate_health_check: Optional
+                :class:`CertificateHealthCheck` callable threaded
+                into :meth:`describe`. Defaults to the module-level
+                :func:`certificate_health` import; tests inject a
+                real wrapping callable rather than monkeypatching the
+                module attribute.
         """
         self._settings = settings
         self._browser_session_factory = browser_session_factory
         self._handshake_verifier = handshake_verifier or verify_handshake
         self._navigation_timeout_ms = navigation_timeout_ms
+        self._certificate_health_check: CertificateHealthCheck = certificate_health_check or certificate_health
         # All asyncio primitives below are bound to the first event
         # loop that awaits the authenticator. The class assumes a
         # single-loop lifetime — constructing an instance in one loop
@@ -732,7 +764,7 @@ class AeatAuthenticator:
                 self._settings.aeat_certificate_password_secret.get_secret_value()
             )
             backend = CertificateBackend(self._settings.aeat_certificate_backend.name)
-            health = certificate_health(
+            health = self._certificate_health_check(
                 self._settings.aeat_certificate_path,
                 password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 - env var NAME, not a secret
                 warn_days=self._settings.aeat_cert_warn_days,

@@ -279,7 +279,7 @@ async def _capture_scenario_observation(
         "different capture strategy that varies profile inputs and reads "
         "the derived casillas. Tracked under #169."
     ),
-    strict=False,
+    strict=True,
     raises=Exception,
 )
 @pytest.mark.parametrize(
