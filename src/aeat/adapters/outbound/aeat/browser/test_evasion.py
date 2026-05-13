@@ -30,7 +30,7 @@ async def test_playwright_stealth_evasion_applies_init_script() -> None:
     evasion = PlaywrightStealthEvasion()
     context = RecordingContext()
 
-    await evasion.apply(context)  # type: ignore
+    await evasion.apply(context)  # ty: ignore[invalid-argument-type]
 
     assert context.init_scripts, "Stealth init script was not injected into the context"
     assert any("navigator" in script.lower() or "webdriver" in script.lower() for script in context.init_scripts)
