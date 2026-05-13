@@ -855,6 +855,19 @@ transactions:
   test_diagnostics:
     message: A 2026-03 hónap hiányzik az importált fájlból.
 wizard:
+  errors:
+    blank_integer: 'Integer value required for %{prompt_key}.'
+    blank_path: 'Path required for %{prompt_key}.'
+    blank_secret: 'Secret value required for %{prompt_key}.'
+    blank_text: 'Value required for %{prompt_key}.'
+    checkbox_required: 'Select at least one option for %{prompt_key}.'
+    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options: %{choices}.'
+    checkbox_without_choices: 'Question %{prompt_key} declares no checkbox options.'
+    invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
+    invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
+    invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
+    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options: %{choices}.'
+    select_without_choices: 'Question %{prompt_key} declares no select options.'
   setup:
     description: Operátorbarát beállítás varázsló a bevallások előkészítéséhez
     enrollment:

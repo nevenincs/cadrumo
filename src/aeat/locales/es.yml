@@ -859,6 +859,19 @@ transactions:
   test_diagnostics:
     message: Falta el mes 2026-03 en el archivo importado.
 wizard:
+  errors:
+    blank_integer: 'Valor entero requerido para %{prompt_key}.'
+    blank_path: 'Ruta requerida para %{prompt_key}.'
+    blank_secret: 'Valor secreto requerido para %{prompt_key}.'
+    blank_text: 'Valor obligatorio para %{prompt_key}.'
+    checkbox_required: 'Selecciona al menos una opción para %{prompt_key}.'
+    checkbox_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas: %{choices}.'
+    checkbox_without_choices: 'La pregunta %{prompt_key} no declara opciones para checkbox.'
+    invalid_confirm: 'Respuesta booleana no válida para %{prompt_key}: %{raw}.'
+    invalid_integer: 'Entero no válido para %{prompt_key}: %{raw}.'
+    invalid_tax_id: 'NIF/NIE/CIF no válido para %{prompt_key}: %{raw}. %{detail}.'
+    select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas: %{choices}.'
+    select_without_choices: 'La pregunta %{prompt_key} no declara opciones para select.'
   setup:
     description: Asistente de configuración para preparar las declaraciones
     enrollment:
