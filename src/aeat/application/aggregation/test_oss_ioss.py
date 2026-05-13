@@ -107,8 +107,10 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
     ``strict=True``, ``frozen=True``, and ``extra="forbid"``. Extras
     must fail validation; mutation after construction must raise."""
 
+    from pydantic import ValidationError
+
     candidate = _candidate()
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         OssIossLedgerCandidate(
             ledger_id="ledger-1",
             transaction_date=_SUPPLY_DATE,
@@ -119,9 +121,9 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
             transaction_kind=TransactionKind.OSS_UNION_SERVICES,
             base_amount=Decimal("100"),
             iva_amount=Decimal("19"),
-            unknown_axis="extra-value",  # type: ignore[call-arg]
+            unknown_axis="extra-value",  # ty: ignore[unknown-argument]
         )
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         candidate.base_amount = Decimal("200")  # type: ignore[misc]
 
 
@@ -130,9 +132,11 @@ def test_candidate_rejects_negative_amounts() -> None:
     upstream classifiers must flip the line into a separate Esquema
     flow."""
 
-    with pytest.raises(Exception):
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
         _candidate(base=Decimal("-1"))
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         _candidate(iva=Decimal("-1"))
 
 
@@ -254,6 +258,7 @@ def test_validation_attaches_diagnostic_context_to_the_error() -> None:
     with pytest.raises(AggregationValidationError) as exc_info:
         validate_oss_ioss_observation(candidate)
     context = exc_info.value.context
+    assert context is not None
     assert context["ledger_id"] == "line-bad-iva"
     assert context["destination_member_state"] == "de"
     assert context["rate_kind"] == "general"
@@ -403,8 +408,8 @@ def test_no_parallel_oss_ioss_aggregator_exists() -> None:
         if forbidden_pattern in text:
             offenders.append(py_file)
     assert offenders == [], (
-        f"Parallel OSS/IOSS aggregation surfaces detected outside the canonical "
-        f"`aeat.application.aggregation._oss_ioss` module: "
+        "Parallel OSS/IOSS aggregation surfaces detected outside the canonical "
+        "`aeat.application.aggregation._oss_ioss` module: "
         + ", ".join(str(p.relative_to(source_root)) for p in offenders)
     )
 
@@ -433,9 +438,6 @@ def test_no_cli_root_oss_or_ioss_verb_is_registered() -> None:
         hits = [needle for needle in forbidden_command_names if needle in text]
         if hits:
             offenders[py_file] = hits
-    assert offenders == {}, (
-        "CLI tree registers a forbidden OSS/IOSS verb: "
-        + ", ".join(
-            f"{p.relative_to(cli_root)} ({hits})" for p, hits in offenders.items()
-        )
+    assert offenders == {}, "CLI tree registers a forbidden OSS/IOSS verb: " + ", ".join(
+        f"{p.relative_to(cli_root)} ({hits})" for p, hits in offenders.items()
     )
