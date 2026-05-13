@@ -205,8 +205,8 @@ def _parse_rows(
         if not has_cert:
             continue
         header_index = _index_columns(normalised)
-        for tr in table.find_all("tr"):
-            cells = [td.get_text(" ", strip=True) for td in tr.find_all("td")]
+        for table_row in table.find_all("tr"):
+            cells = [td.get_text(" ", strip=True) for td in table_row.find_all("td")]
             if not cells:
                 continue
             row = _row_from_cells(
@@ -439,7 +439,7 @@ async def _fetch_and_parse(
     storage_state = storage_state_for_session(session)
     storage_state_path = session.storage_state_path
     if storage_state_path is None:
-        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat setup auth login` first")
+        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat config auth status` first")
     browser_session = await default_browser_session_factory(settings)
     try:
         context = await browser_session.create_context(storage_state=storage_state)
