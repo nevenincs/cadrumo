@@ -1,4 +1,4 @@
-"""Per-scope tests for ``aeat setup reset``."""
+"""Per-scope tests for ``aeat config reset``."""
 
 from __future__ import annotations
 
@@ -18,16 +18,16 @@ def _isolate_workflow(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'reset.db').as_posix()}")
 
 
-def test_reset_setup_refuses_without_confirmation(
+def test_reset_config_refuses_without_confirmation(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """The function must raise SetupResetUnconfirmedError when confirmed=False."""
-    from .setup_reset import SetupResetScope, SetupResetUnconfirmedError, reset_setup
+    """The function must raise ConfigResetUnconfirmedError when confirmed=False."""
+    from .config_reset import ConfigResetScope, ConfigResetUnconfirmedError, reset_config
 
     _isolate_workflow(monkeypatch, tmp_path)
-    with pytest.raises(SetupResetUnconfirmedError, match=r"setup|reset|unconfirmed"):
-        reset_setup(SetupResetScope.ALL, confirmed=False)
+    with pytest.raises(ConfigResetUnconfirmedError, match=r"config|reset|unconfirmed"):
+        reset_config(ConfigResetScope.ALL, confirmed=False)
 
 
 def test_reset_profile_only_clears_active_profile_record(
@@ -35,9 +35,9 @@ def test_reset_profile_only_clears_active_profile_record(
     tmp_path: Path,
 ) -> None:
     """PROFILE scope removes all profile entries but leaves auth state in place."""
+    from .config_reset import ConfigResetReport, ConfigResetScope, reset_config
     from .profile._actions import set_active_profile, set_profile_values
     from .profile._repository import profile_bucket_repository
-    from .setup_reset import SetupResetReport, SetupResetScope, reset_setup
     from .workflow._models import AuthState
     from .workflow._persistence import workflow_state_repository
 
@@ -52,9 +52,9 @@ def test_reset_profile_only_clears_active_profile_record(
     )
     repository.update(lambda current: current.model_copy(update={"auth": AuthState(provider="clave_movil")}))
 
-    report = reset_setup(SetupResetScope.PROFILE, confirmed=True)
-    assert isinstance(report, SetupResetReport)
-    assert report.scope is SetupResetScope.PROFILE
+    report = reset_config(ConfigResetScope.PROFILE, confirmed=True)
+    assert isinstance(report, ConfigResetReport)
+    assert report.scope is ConfigResetScope.PROFILE
     assert "kent" in report.removed_profile_names
     assert report.removed_auth_session is False
 
@@ -70,9 +70,9 @@ def test_reset_auth_only_clears_session(
     tmp_path: Path,
 ) -> None:
     """AUTH scope clears the session but leaves profile entries intact."""
+    from .config_reset import ConfigResetScope, reset_config
     from .profile._actions import set_active_profile, set_profile_values
     from .profile._repository import profile_bucket_repository
-    from .setup_reset import SetupResetScope, reset_setup
     from .workflow._models import AuthState
     from .workflow._persistence import workflow_state_repository
 
@@ -87,8 +87,8 @@ def test_reset_auth_only_clears_session(
     )
     repository.update(lambda current: current.model_copy(update={"auth": AuthState(provider="clave_movil")}))
 
-    report = reset_setup(SetupResetScope.AUTH, confirmed=True)
-    assert report.scope is SetupResetScope.AUTH
+    report = reset_config(ConfigResetScope.AUTH, confirmed=True)
+    assert report.scope is ConfigResetScope.AUTH
     assert report.removed_auth_session is True
     assert report.removed_profile_names == ()
 
@@ -103,9 +103,9 @@ def test_reset_data_invokes_quarantine_pipeline(
     tmp_path: Path,
 ) -> None:
     """DATA scope returns a quarantine count; profile + auth untouched."""
+    from .config_reset import ConfigResetScope, reset_config
     from .profile._actions import set_active_profile, set_profile_values
     from .profile._repository import profile_bucket_repository
-    from .setup_reset import SetupResetScope, reset_setup
     from .workflow._persistence import workflow_state_repository
 
     _isolate_workflow(monkeypatch, tmp_path)
@@ -118,8 +118,8 @@ def test_reset_data_invokes_quarantine_pipeline(
         )
     )
 
-    report = reset_setup(SetupResetScope.DATA, confirmed=True)
-    assert report.scope is SetupResetScope.DATA
+    report = reset_config(ConfigResetScope.DATA, confirmed=True)
+    assert report.scope is ConfigResetScope.DATA
     assert report.removed_profile_names == ()
     assert report.removed_auth_session is False
     # No unreadable rows in a fresh temp DB -> quarantine count is 0.
@@ -135,9 +135,9 @@ def test_reset_all_combines_all_scopes(
     tmp_path: Path,
 ) -> None:
     """ALL scope clears profile + auth + invokes quarantine."""
+    from .config_reset import ConfigResetScope, reset_config
     from .profile._actions import set_active_profile, set_profile_values
     from .profile._repository import profile_bucket_repository
-    from .setup_reset import SetupResetScope, reset_setup
     from .workflow._models import AuthState
     from .workflow._persistence import workflow_state_repository
 
@@ -152,8 +152,8 @@ def test_reset_all_combines_all_scopes(
     )
     repository.update(lambda current: current.model_copy(update={"auth": AuthState(provider="clave_movil")}))
 
-    report = reset_setup(SetupResetScope.ALL, confirmed=True)
-    assert report.scope is SetupResetScope.ALL
+    report = reset_config(ConfigResetScope.ALL, confirmed=True)
+    assert report.scope is ConfigResetScope.ALL
     assert "kent" in report.removed_profile_names
     assert report.removed_auth_session is True
 

@@ -1,0 +1,312 @@
+"""Application services for explicit read-only AEAT live workflows."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict
+
+from ...adapters.outbound.aeat.auth import AeatSession
+from ...adapters.outbound.aeat.sede import (
+    Declaration,
+    FiledDeclarationObservationStore,
+    capture_previous_filing_observations,
+    capture_relation_source_observations,
+    open_declarations_register,
+    shared_playwright,
+)
+from ...application.auth import ensure_authenticated_aeat_session
+from ...core.access_gate import AeatAccessGate
+from ...core.config import Settings, load_settings
+from ...domain.calculations.registry._authority import ValidatedRegistryAuthority
+from ._errors import LiveApplicationError, LiveApplicationInputError
+
+
+class FiledDataCaptureReport(BaseModel):
+    """Read-only filed-declaration capture report."""
+
+    model_config = ConfigDict(frozen=True)
+
+    output_root: str
+    modelo: str
+    year: int
+    captured_count: int
+    observation_paths: tuple[str, ...]
+    artefact_refs: tuple[str, ...]
+    casilla_count: int
+
+
+class SourceFiledDataCaptureReport(BaseModel):
+    """Read-only source-observation capture report for one target filing."""
+
+    model_config = ConfigDict(frozen=True)
+
+    output_root: str
+    target_modelo: str
+    target_year: int
+    target_period: str
+    captured_count: int
+    observation_paths: tuple[str, ...]
+    artefact_refs: tuple[str, ...]
+    casilla_count: int
+
+
+class FiledDataListingRow(BaseModel):
+    """One filed declaration row listed from AEAT without downloading artefacts."""
+
+    model_config = ConfigDict(frozen=True)
+
+    modelo: str
+    year: int
+    period: str
+    expediente_id: str
+    status: str
+    presented_at: datetime
+    has_submitted_file: bool
+    has_declaration_copy: bool
+    has_justificante: bool
+
+
+class FiledDataListingReport(BaseModel):
+    """Read-only filed-declaration listing report."""
+
+    model_config = ConfigDict(frozen=True)
+
+    modelo: str
+    year_from: int
+    year_to: int
+    row_count: int
+    rows: tuple[FiledDataListingRow, ...]
+
+
+def select_declarations_for_capture(
+    declarations: tuple[Declaration, ...],
+    *,
+    period: str | None = None,
+    expediente_id: str | None = None,
+    limit: int | None = None,
+) -> tuple[Declaration, ...]:
+    """Select filed-declaration rows for capture from one register query."""
+
+    selected = declarations
+    if period is not None:
+        selected = tuple(row for row in selected if row.period.upper() == period.upper())
+    if expediente_id is not None:
+        selected = tuple(row for row in selected if row.expediente_id == expediente_id)
+    if expediente_id is not None and not selected:
+        raise LiveApplicationInputError(f"AEAT declaration register did not return expediente {expediente_id!r}")
+    if limit is not None:
+        selected = selected[:limit]
+    return selected
+
+
+def filed_data_listing_row(declaration: Declaration) -> FiledDataListingRow:
+    """Map one AEAT declaration-register row into the application report shape."""
+
+    return FiledDataListingRow(
+        modelo=declaration.modelo,
+        year=declaration.ejercicio,
+        period=declaration.period,
+        expediente_id=declaration.expediente_id,
+        status=declaration.estado,
+        presented_at=declaration.presented_at,
+        has_submitted_file=bool(declaration.archive_link_text and declaration.archive_cell_index is not None),
+        has_declaration_copy=bool(
+            declaration.declaration_copy_link_text and declaration.declaration_copy_cell_index is not None
+        ),
+        has_justificante=bool(declaration.justificante_link_text and declaration.justificante_cell_index is not None),
+    )
+
+
+async def list_filed_data(
+    *,
+    modelo: str,
+    year_from: int,
+    year_to: int,
+) -> FiledDataListingReport:
+    """List filed declaration rows through the active AEAT session without downloading artefacts."""
+
+    if year_from > year_to:
+        raise LiveApplicationInputError("from-year must be less than or equal to to-year")
+    session, settings = await _active_verified_session()
+    rows: list[FiledDataListingRow] = []
+    async with (
+        shared_playwright(session) as playwright,
+        open_declarations_register(
+            session,
+            settings=settings,
+            playwright=playwright,
+        ) as register,
+    ):
+        for year in range(year_to, year_from - 1, -1):
+            declarations = await register.walk(
+                modelo=modelo,
+                ejercicio=year,
+            )
+            rows.extend(filed_data_listing_row(declaration) for declaration in declarations)
+    return FiledDataListingReport(
+        modelo=modelo,
+        year_from=year_from,
+        year_to=year_to,
+        row_count=len(rows),
+        rows=tuple(rows),
+    )
+
+
+async def capture_filed_data(
+    *,
+    modelo: str,
+    year: int,
+    output_root: Path,
+    period: str | None = None,
+    expediente_id: str | None = None,
+    limit: int | None = None,
+) -> FiledDataCaptureReport:
+    """Capture filed-declaration artefacts through the active AEAT session."""
+
+    session, _settings = await _active_verified_session()
+    store = FiledDeclarationObservationStore(output_root)
+    observation_paths: list[str] = []
+    artefact_refs: list[str] = []
+    casilla_count = 0
+
+    async with (
+        shared_playwright(session) as playwright,
+        open_declarations_register(
+            session,
+            playwright=playwright,
+        ) as register,
+    ):
+        declarations = await register.walk(
+            modelo=modelo,
+            ejercicio=year,
+        )
+        selected = select_declarations_for_capture(
+            declarations,
+            period=period,
+            expediente_id=expediente_id,
+            limit=limit,
+        )
+        for declaration in selected:
+            observation = await register.capture_observation(
+                declaration,
+                artefact_sink=store.persist_artefact,
+            )
+            manifest_path = store.persist_observation(observation)
+            observation_paths.append(manifest_path.relative_to(output_root).as_posix())
+            artefact_refs.extend(
+                storage_ref
+                for artefact in observation.artefacts
+                for storage_ref in (artefact.storage_ref,)
+                if storage_ref is not None
+            )
+            casilla_count += len(observation.casillas)
+
+    return FiledDataCaptureReport(
+        output_root=str(output_root),
+        modelo=modelo,
+        year=year,
+        captured_count=len(observation_paths),
+        observation_paths=tuple(observation_paths),
+        artefact_refs=tuple(artefact_refs),
+        casilla_count=casilla_count,
+    )
+
+
+async def capture_source_filed_data(
+    *,
+    modelo: str,
+    year: int,
+    period: str,
+    output_root: Path,
+    registry_root: Path = Path("registry/aeat"),
+    source_root: Path = Path("."),
+) -> SourceFiledDataCaptureReport:
+    """Capture filed observations required by a target filing's registry dependencies."""
+
+    session, settings = await _active_verified_session()
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    snapshot = authority.snapshot(
+        modelo,
+        filing_year=year,
+        period=period,
+    )
+    store = FiledDeclarationObservationStore(output_root)
+    observation_paths: list[str] = []
+    artefact_refs: list[str] = []
+    casilla_count = 0
+    seen: set[tuple[str, int, str, str]] = set()
+
+    async with shared_playwright(session) as playwright:
+        observations = (
+            await capture_previous_filing_observations(
+                session,
+                snapshot.revision,
+                filing_year=year,
+                period=period,
+                settings=settings,
+                playwright=playwright,
+                artefact_sink=store.persist_artefact,
+            )
+        ) + (
+            await capture_relation_source_observations(
+                session,
+                snapshot.revision,
+                filing_year=year,
+                period=period,
+                settings=settings,
+                playwright=playwright,
+                artefact_sink=store.persist_artefact,
+            )
+        )
+    for observation in observations:
+        key = (observation.modelo, observation.ejercicio, observation.period, observation.expediente_id)
+        if key in seen:
+            continue
+        seen.add(key)
+        manifest_path = store.persist_observation(observation)
+        observation_paths.append(manifest_path.relative_to(output_root).as_posix())
+        artefact_refs.extend(
+            storage_ref
+            for artefact in observation.artefacts
+            for storage_ref in (artefact.storage_ref,)
+            if storage_ref is not None
+        )
+        casilla_count += len(observation.casillas)
+
+    return SourceFiledDataCaptureReport(
+        output_root=str(output_root),
+        target_modelo=modelo,
+        target_year=year,
+        target_period=period,
+        captured_count=len(observation_paths),
+        observation_paths=tuple(observation_paths),
+        artefact_refs=tuple(artefact_refs),
+        casilla_count=casilla_count,
+    )
+
+
+async def _active_verified_session() -> tuple[AeatSession, Settings]:
+    settings = load_settings()
+    AeatAccessGate(settings).require_live_read()
+    result = await ensure_authenticated_aeat_session(
+        settings,
+        operation="live-filed-read",
+    )
+    return result.session, settings
+
+
+__all__ = [
+    "FiledDataCaptureReport",
+    "FiledDataListingReport",
+    "FiledDataListingRow",
+    "LiveApplicationError",
+    "LiveApplicationInputError",
+    "SourceFiledDataCaptureReport",
+    "capture_filed_data",
+    "capture_source_filed_data",
+    "filed_data_listing_row",
+    "list_filed_data",
+    "select_declarations_for_capture",
+]

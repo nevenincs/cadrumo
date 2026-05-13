@@ -12,6 +12,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
+from ...domain.invoices._errors import InvoiceValidationError
 
 _IVA_RATE_ALIASES = {
     "0": "RATE_0",
@@ -102,7 +103,7 @@ def _decode_invoice_payload(raw: str) -> tuple[Mapping[str, Any], ...]:
             return (decoded,)
         if isinstance(decoded, list) and all(isinstance(item, Mapping) for item in decoded):
             return tuple(decoded)
-        raise ValueError("invoice JSON payload must be an object or a list of objects")
+        raise InvoiceValidationError("invoice JSON payload must be an object or a list of objects")
 
     reader = csv.DictReader(raw.splitlines())
     return tuple(dict(row) for row in reader)

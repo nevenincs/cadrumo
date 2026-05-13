@@ -183,82 +183,42 @@ class TestRegistry:
             "aeat.domain.usage_ratios",
             "aeat.domain.attachments.manifests",
             "aeat.application.filing.history",
+            "aeat.application.profile.bucket",
         }.issubset(names)
 
 
-class TestHashedPassthroughAdapters:
-    """Path-keyed namespaces round-trip via hashed_object_key_b64.
+class TestProfileBucketArchive:
+    """Profile buckets round-trip through the archive subsystem."""
 
-    The natural key (the install path) is not in the payload, so the
-    archive walker emits the row's raw HMAC-SHA256 digest as base64 and
-    the restore writes it back through ``save_with_raw_key`` without
-    re-hashing.
-    """
+    def test_profile_bucket_round_trip(self) -> None:
+        from ..profile._models import ProfileRecord
+        from ..profile._repository import PROFILE_BUCKET_NAMESPACE, profile_bucket_repository
 
-    def test_path_keyed_setup_profile_round_trip(self) -> None:
-        from datetime import UTC
-        from datetime import datetime as _dt
-
-        from ...core.classification import SensitivityClass
-
-        repo = SecureObjectRepository()
-        natural_path_key = "/Users/example/.aeat/profile.json"
-        original_payload = (
-            b'{"schema_version":1,"written_at":"2026-04-13T08:00:00+00:00",'
-            b'"classification":"identity","payload":{"tax_id":"00000000T"}}'
-        )
-        repo.save(
-            namespace="aeat.application.setup.profile",
-            object_key=natural_path_key,
-            classification=SensitivityClass.IDENTITY,
-            schema_version=1,
-            written_at=_dt(2026, 4, 13, 8, 0, tzinfo=UTC),
-            payload=original_payload,
+        repository = profile_bucket_repository()
+        saved = repository.save(
+            ProfileRecord(
+                name="kent",
+                values={"tax.id": "00000000T", "activity": "design", "iva.regime": "GENERAL"},
+            )
         )
 
-        bundle = create_archive(namespaces=("aeat.application.setup.profile",))
+        bundle = create_archive(namespaces=(PROFILE_BUCKET_NAMESPACE,))
         assert len(bundle.records) == 1
         record = bundle.records[0]
-        # Hashed-passthrough records carry the digest, not the natural key.
-        assert record.object_key is None
-        assert record.hashed_object_key_b64 is not None
+        assert record.object_key == "profile-bucket:kent"
+        assert record.hashed_object_key_b64 is None
 
-        # Wipe the SQL row, then restore from the bundle.
-        from ...adapters.persistence.storage.crypto._encrypted_columns import HashedLookup
-
-        digest = HashedLookup.compute(natural_path_key)
-        with __import__(
-            "aeat.adapters.persistence.storage.sql.session",
-            fromlist=["session_scope"],
-        ).session_scope(repo._engine) as session:
-            from sqlalchemy import delete as _delete
-
-            from ...adapters.persistence.storage.sql import _orm
-
-            session.execute(
-                _delete(_orm.SecureObjectRow).where(
-                    _orm.SecureObjectRow.namespace == "aeat.application.setup.profile",
-                    _orm.SecureObjectRow.object_key == digest,
-                )
-            )
-        assert repo.exists("aeat.application.setup.profile", natural_path_key) is False
+        assert repository.delete("kent") is True
+        assert repository.load("kent") is None
 
         report = restore_archive(bundle, conflict_policy=ConflictPolicy.OVERWRITE)
         assert all(entry.outcome is RestoreOutcome.WROTE for entry in report.entries)
 
-        # The restored row should be reachable via the SAME natural
-        # key (because the master key is identical, the digest matches).
-        record_back = repo.load(
-            "aeat.application.setup.profile",
-            natural_path_key,
-            expected_class=SensitivityClass.IDENTITY,
-            max_supported_version=1,
-        )
-        assert record_back is not None
-        # JSON re-encoding may differ in whitespace; compare structurally.
-        import json as _json
-
-        assert _json.loads(record_back.payload.decode("utf-8")) == _json.loads(original_payload.decode("utf-8"))
+        restored = repository.load("kent")
+        assert restored is not None
+        assert restored.name == saved.name
+        assert restored.values == saved.values
+        assert restored.updated_at.isoformat() == saved.updated_at.isoformat()
 
 
 class TestFilingHistoryAdapter:

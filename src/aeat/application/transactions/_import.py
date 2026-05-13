@@ -12,7 +12,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.transactions import TransactionCatalogue
 from ...domain.transactions._models import derive_transaction_id

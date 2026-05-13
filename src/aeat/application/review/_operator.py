@@ -1,0 +1,192 @@
+"""Operator-facing projections for the read-only review queue."""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from ...core.config import Settings
+from ...core.i18n import tr as render_translation
+from ._aggregator import ReviewQueue
+from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
+from ._errors import ReviewError
+from ._models import FindingReviewItem, InvoiceReviewItem, ReviewItem, TransactionReviewItem
+
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class ReviewQueueRow(BaseModel):
+    """CLI-ready read-only review queue row."""
+
+    model_config = _STRICT_FROZEN
+
+    item_id: str = Field(min_length=1)
+    kind: str = Field(min_length=1)
+    source_kind: str | None = None
+    affected_object_id: str = Field(min_length=1)
+    bucket_id: str = Field(min_length=1)
+    modelo: str | None = None
+    period: str | None = None
+    severity: ReviewSeverity
+    state: ReviewState
+    blocking: bool
+    reason: str = ""
+    current_owner_surface: str = Field(min_length=1)
+    canonical_next_command: str = Field(min_length=1)
+    since: datetime
+    summary: str = Field(min_length=1)
+
+
+class ReviewQueueReport(BaseModel):
+    """Read-only review queue report."""
+
+    model_config = _STRICT_FROZEN
+
+    rows: tuple[ReviewQueueRow, ...]
+
+
+_ACCEPTED_KIND_TO_INTERNAL: dict[str, frozenset[ReviewItemKind]] = {
+    "ledger_transaction": frozenset({ReviewItemKind.TRANSACTION}),
+    "purchase_invoice_evidence": frozenset({ReviewItemKind.INVOICE}),
+    "payable_invoice": frozenset({ReviewItemKind.INVOICE}),
+    "collectible_invoice": frozenset({ReviewItemKind.INVOICE}),
+    "modelo_finding": frozenset({ReviewItemKind.FINDING}),
+    "live_notification": frozenset(),
+    "sync_divergence": frozenset(),
+}
+
+
+def project_review_queue(
+    *,
+    settings: Settings | None = None,
+    kinds: Iterable[str] = (),
+    source_kinds: Iterable[str] = (),
+    state: ReviewState = ReviewState.PENDING,
+    modelo: str | None = None,
+) -> ReviewQueueReport:
+    """Return review rows using accepted source-kind vocabulary."""
+
+    selected = _resolve_internal_kinds((*tuple(kinds), *tuple(source_kinds)))
+    items = ReviewQueue.collect(settings or Settings(), kinds=selected, state=state, modelo=modelo)
+    accepted_kinds = frozenset(kind.strip() for kind in kinds if kind.strip())
+    accepted_source_kinds = frozenset(kind.strip() for kind in source_kinds if kind.strip())
+    bucket_id = _active_bucket_id()
+    rows = tuple(
+        row
+        for item in items
+        for row in (_to_row(item, state=state, bucket_id=bucket_id),)
+        if _row_matches(row, accepted_kinds, accepted_source_kinds)
+    )
+    return ReviewQueueReport(rows=rows)
+
+
+def project_review_item(item_id: str, *, settings: Settings | None = None) -> ReviewQueueRow:
+    """Return one review row by id."""
+
+    report = project_review_queue(settings=settings, state=ReviewState.ALL)
+    for row in report.rows:
+        if row.item_id == item_id:
+            return row
+    raise ReviewError(f"review item not found: {item_id}")
+
+
+def _resolve_internal_kinds(kinds: Iterable[str]) -> frozenset[ReviewItemKind] | None:
+    internal: set[ReviewItemKind] = set()
+    accepted = tuple(kind.strip() for kind in kinds if kind.strip())
+    if not accepted:
+        return None
+    for kind in accepted:
+        mapped = _ACCEPTED_KIND_TO_INTERNAL.get(kind)
+        if mapped is None:
+            raise ReviewError(f"unknown review kind: {kind}")
+        internal.update(mapped)
+    return frozenset(internal)
+
+
+def _row_matches(
+    row: ReviewQueueRow,
+    accepted_kinds: frozenset[str],
+    accepted_source_kinds: frozenset[str],
+) -> bool:
+    kind_matches = not accepted_kinds or row.kind in accepted_kinds
+    source_matches = not accepted_source_kinds or (
+        row.source_kind is not None and row.source_kind in accepted_source_kinds
+    )
+    return kind_matches and source_matches
+
+
+def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQueueRow:
+    if isinstance(item, TransactionReviewItem):
+        return ReviewQueueRow(
+            item_id=item.item_id,
+            kind="ledger_transaction",
+            source_kind="ledger_transaction",
+            affected_object_id=item.source.transaction_id,
+            bucket_id=bucket_id,
+            modelo=item.modelo,
+            period=_year_period(item.source.raw.booked_date.isoformat()),
+            severity=item.severity,
+            state=state,
+            blocking=item.severity in {ReviewSeverity.CRITICAL, ReviewSeverity.HIGH},
+            reason=_render_summary(item.summary),
+            current_owner_surface="app ledger",
+            canonical_next_command=item.drill_command,
+            since=item.since,
+            summary=_render_summary(item.summary),
+        )
+    if isinstance(item, InvoiceReviewItem):
+        source_kind = "collectible_invoice" if item.source.kind.value == "ISSUED" else "payable_invoice"
+        return ReviewQueueRow(
+            item_id=item.item_id,
+            kind=source_kind,
+            source_kind=source_kind,
+            affected_object_id=item.source.invoice_id,
+            bucket_id=bucket_id,
+            modelo=item.modelo,
+            period=_year_period(item.source.issued_at.isoformat()),
+            severity=item.severity,
+            state=state,
+            blocking=item.severity in {ReviewSeverity.CRITICAL, ReviewSeverity.HIGH},
+            reason=_render_summary(item.summary),
+            current_owner_surface="app modelo",
+            canonical_next_command=item.drill_command,
+            since=item.since,
+            summary=_render_summary(item.summary),
+        )
+    if isinstance(item, FindingReviewItem):
+        return ReviewQueueRow(
+            item_id=item.item_id,
+            kind="modelo_finding",
+            source_kind=None,
+            affected_object_id=item.draft_id,
+            bucket_id=bucket_id,
+            modelo=item.modelo,
+            period=None,
+            severity=item.severity,
+            state=state,
+            blocking=item.severity in {ReviewSeverity.CRITICAL, ReviewSeverity.HIGH},
+            reason=_render_summary(item.summary),
+            current_owner_surface="app modelo",
+            canonical_next_command=item.drill_command,
+            since=item.since,
+            summary=_render_summary(item.summary),
+        )
+    raise ReviewError(f"unsupported review item type: {type(item).__name__}")
+
+
+def _render_summary(value: str) -> str:
+    rendered = render_translation(value)
+    return rendered or value
+
+
+def _active_bucket_id() -> str:
+    from ..workflow._persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    return state.active_profile or "default"
+
+
+def _year_period(value: str) -> str:
+    return value[:7]

@@ -16,7 +16,7 @@ import pytest
 
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...core.config import Settings
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
