@@ -87,6 +87,23 @@ cli:
         period_help: Periodo fiscal para acotar las fórmulas (p. ej. 2026Q1, 2026-01)
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
+      work:
+        app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
+          tributario
+        bucket_id_help: Identificador del bucket al que pertenece la unidad de trabajo
+        create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
+          periodo, revisión)
+        list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
+          por bucket
+        modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        name_help: Nombre de visualización opcional de la unidad de trabajo
+        period_help: Periodo fiscal de la unidad (p. ej. Q1, 4T, 0A, 01)
+        rename_help: Actualizar el nombre de visualización de una unidad de trabajo
+        revision_help: Identificador estable de la revisión registrada del modelo
+        status_help: Mostrar los metadatos de una unidad de trabajo
+        work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la unidad
+          de trabajo
+        year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
   archive:
     app_help: Exportar e importar el archivo local cifrado como paquetes JSON portables
     export:
@@ -1035,6 +1052,8 @@ wizard:
         help: Nombre visible mostrado en revisiones locales
       notes:
         help: Notas para tu propio recuerdo (opcional)
+      output-language:
+        help: Idioma de salida de la CLI para este perfil
       pays-capital-income-with-retencion:
         help: Paga rentas de capital con retención
       pays-professionals-with-retencion:
@@ -1134,6 +1153,17 @@ wizard:
             label: Régimen simplificado
       name:
         prompt: Nombre visible mostrado en revisiones locales
+      output-language:
+        choices:
+          ca:
+            label: Catalán
+          en:
+            label: Inglés
+          es:
+            label: Español
+          hu:
+            label: Húngaro
+        prompt: Idioma de salida de la CLI para este perfil
       surnames:
         prompt: Apellidos o razón social para cabeceras de exportación
       tax-id:

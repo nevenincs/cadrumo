@@ -80,6 +80,21 @@ cli:
         period_help: Adóidőszak a képletek szűkítéséhez (pl. 2026Q1, 2026-01)
       list:
         year_help: Modellkatalógus szűrése egyetlen adóévre
+      work:
+        app_help: Modell-munkaegységek életciklusának kezelése
+        bucket_id_help: A munkaegységet tartalmazó bucket azonosítója
+        create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak,
+          revízió) kulcsra
+        list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint
+          szűrve
+        modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
+        name_help: A munkaegység opcionális megjelenítési neve
+        period_help: A munkaegység adózási időszaka (pl. Q1, 4T, 0A, 01)
+        rename_help: Munkaegység megjelenítési nevének módosítása
+        revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
+        status_help: Egy munkaegység metaadatainak megjelenítése
+        work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
+        year_help: A munkaegység adóéve (pl. 2026)
   archive:
     app_help: A helyi titkosított archívum exportálása és importálása hordozható JSON
       csomagként
@@ -1031,6 +1046,8 @@ wizard:
         help: A helyi áttekintésben megjelenő név
       notes:
         help: Jegyzetek a saját nyilvántartásodhoz (opcionális)
+      output-language:
+        help: A profil CLI-kimenetének nyelve
       pays-capital-income-with-retencion:
         help: Tőkejövedelmeket adóelőleggel fizet
       pays-professionals-with-retencion:
@@ -1130,6 +1147,17 @@ wizard:
             label: Egyszerűsített rendszer
       name:
         prompt: A helyi áttekintésben megjelenő név
+      output-language:
+        choices:
+          ca:
+            label: Katalán
+          en:
+            label: Angol
+          es:
+            label: Spanyol
+          hu:
+            label: Magyar
+        prompt: A profil CLI-kimenetének nyelve
       surnames:
         prompt: Vezetéknév vagy cégnév az exportfejlécekhez
       tax-id:

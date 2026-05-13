@@ -4,13 +4,21 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 import typer
 
+from ...application.modelo import (
+    WorkUnitNotFoundError,
+    create_work_unit,
+    get_work_unit,
+    list_work_units,
+    rename_work_unit,
+)
 from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
 from ...domain.calculations.registry._errors import RegistrySnapshotError
+from ...domain.modelos._work_unit import WorkUnit
 from ._common import _emit, _parse_iso_date
 from ._i18n import tr
 
@@ -363,6 +371,177 @@ def formulas(
             ],
         ],
     )
+
+
+work_app = typer.Typer(
+    name="work",
+    help=tr("cli.app.modelo.work.app_help"),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(work_app, name="work")
+
+
+def _work_unit_payload(unit: WorkUnit) -> dict[str, Any]:
+    return {
+        "work_unit_id": unit.work_unit_id,
+        "bucket_id": unit.bucket_id,
+        "modelo": str(unit.modelo),
+        "filing_year": unit.filing_year,
+        "period": unit.period,
+        "revision_id": unit.revision_id,
+        "name": unit.name,
+        "created_at": unit.created_at.isoformat(),
+        "updated_at": unit.updated_at.isoformat(),
+    }
+
+
+def _work_unit_lines(unit: WorkUnit) -> list[str]:
+    return [
+        f"work_unit_id\t{unit.work_unit_id}",
+        f"bucket_id\t{unit.bucket_id}",
+        f"modelo\t{unit.modelo}",
+        f"filing_year\t{unit.filing_year}",
+        f"period\t{unit.period}",
+        f"revision_id\t{unit.revision_id}",
+        f"name\t{unit.name}",
+        f"created_at\t{unit.created_at.isoformat()}",
+        f"updated_at\t{unit.updated_at.isoformat()}",
+    ]
+
+
+@work_app.command("create", help=tr("cli.app.modelo.work.create_help"))
+def work_create(
+    ctx: typer.Context,
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
+    ],
+    year: Annotated[
+        int,
+        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
+    ],
+    period: Annotated[
+        str,
+        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
+    ],
+    revision: Annotated[
+        str,
+        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
+    ],
+    bucket_id: Annotated[
+        str,
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
+    ] = "default",
+    name: Annotated[
+        str | None,
+        typer.Option("--name", help=tr("cli.app.modelo.work.name_help")),
+    ] = None,
+) -> None:
+    """Create or load a modelo work unit. Idempotent on the four-axis key."""
+
+    unit = create_work_unit(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=year,
+        period=period,
+        revision_id=revision,
+        name=name,
+    )
+    payload = {
+        "operation": "modelo.work.create",
+        **_work_unit_payload(unit),
+    }
+    lines = ["operation\tmodelo.work.create", *_work_unit_lines(unit)]
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("list", help=tr("cli.app.modelo.work.list_help"))
+def work_list(
+    ctx: typer.Context,
+    bucket_id: Annotated[
+        str | None,
+        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
+    ] = None,
+) -> None:
+    """List modelo work units. Filtered by bucket when supplied."""
+
+    units = list_work_units(bucket_id=bucket_id)
+    payload = {
+        "operation": "modelo.work.list",
+        "bucket_id_filter": bucket_id,
+        "work_unit_count": len(units),
+        "work_units": [_work_unit_payload(unit) for unit in units],
+    }
+    lines = [
+        "operation\tmodelo.work.list",
+        f"bucket_id_filter\t{bucket_id or ''}",
+        f"work_unit_count\t{len(units)}",
+        "work_unit_id\tbucket_id\tmodelo\tyear\tperiod\trevision_id\tname",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                unit.work_unit_id,
+                unit.bucket_id,
+                str(unit.modelo),
+                str(unit.filing_year),
+                unit.period,
+                unit.revision_id,
+                unit.name,
+            )
+        )
+        for unit in units
+    )
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("status", help=tr("cli.app.modelo.work.status_help"))
+def work_status(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+) -> None:
+    """Show one work unit's metadata."""
+
+    try:
+        unit = get_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    payload = {
+        "operation": "modelo.work.status",
+        **_work_unit_payload(unit),
+    }
+    lines = ["operation\tmodelo.work.status", *_work_unit_lines(unit)]
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("rename", help=tr("cli.app.modelo.work.rename_help"))
+def work_rename(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+    name: Annotated[
+        str,
+        typer.Option("--name", help=tr("cli.app.modelo.work.name_help")),
+    ],
+) -> None:
+    """Update one work unit's display name (preserves work_unit_id)."""
+
+    try:
+        unit = rename_work_unit(work_unit_id, name)
+    except WorkUnitNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    payload = {
+        "operation": "modelo.work.rename",
+        **_work_unit_payload(unit),
+    }
+    lines = ["operation\tmodelo.work.rename", *_work_unit_lines(unit)]
+    _emit(ctx, payload, lines)
 
 
 def _service() -> RegistryQueryService:
