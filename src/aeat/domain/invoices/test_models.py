@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ...core.identity import IdentityError
 from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
 
@@ -84,7 +85,7 @@ def test_invoice_id_is_64_char_lowercase_hex_and_stable() -> None:
 def test_invoice_is_frozen_and_rejects_mutation() -> None:
     """Invoice models must be frozen."""
     invoice = _valid_invoice()
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen"):
         invoice.notes = "mutated"  # type: ignore[misc]
 
 
@@ -105,7 +106,7 @@ def test_invoice_line_accepts_one_cent_rounding() -> None:
 
 def test_invoice_line_rejects_larger_rounding_drift() -> None:
     """Drift beyond 1 cent on a line must fail validation."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"subtotal must equal quantity \* unit_price"):
         InvoiceLine.model_validate(
             {
                 "description": "Bad line",
@@ -243,7 +244,7 @@ def test_invoice_iva_category_is_typed_as_vat_category_substrate_enum() -> None:
 def test_invoice_iva_category_rejects_unknown_string() -> None:
     """An unknown iva_category string must fail validation now that the
     field is typed against the closed VATCategory enum."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"VATCategory"):
         Invoice.model_validate(
             {
                 "kind": InvoiceKind.ISSUED,
@@ -291,7 +292,7 @@ def test_iva_rate_percentage_is_resolved_against_centralized_vat_substrate() -> 
 
 def test_invoice_exempt_lines_require_zero_iva() -> None:
     """EXEMPT and NOT_SUBJECT lines must carry iva_amount == 0 exactly."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"iva_amount must be zero for EXEMPT / NOT_SUBJECT"):
         InvoiceLine.model_validate(
             {
                 "description": "Exempt with iva",
@@ -307,7 +308,7 @@ def test_invoice_exempt_lines_require_zero_iva() -> None:
 def test_invoice_requires_exact_invoice_level_totals() -> None:
     """Invoice-level totals must equal the line sums exactly (no tolerance)."""
     line = _valid_line(quantity="1", unit_price="100.00")
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"base_total must equal the exact sum of line subtotals"):
         Invoice.model_validate(
             {
                 "kind": InvoiceKind.ISSUED,
@@ -349,7 +350,7 @@ def test_invoice_rejects_accumulated_line_drift() -> None:
         }
     )
     # line subtotal sum is 200.02 but we declare base_total as 200.00 → >1-cent drift.
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"base_total must equal the exact sum of line subtotals"):
         Invoice.model_validate(
             {
                 "kind": InvoiceKind.ISSUED,
@@ -387,7 +388,12 @@ def test_invoice_exempt_invoice_enforces_zero_iva_total() -> None:
 
 def test_invoice_validates_spanish_tax_id_for_es_country() -> None:
     """ES counterparties must pass NIF/NIE/CIF validation."""
-    with pytest.raises(ValidationError):
+    # "INVALID" has 7 chars → tax-id shape gate rejects it before any
+    # checksum runs. The IdentityError is raised inside the mode="before"
+    # validator BUT propagates out unwrapped because IdentityError does
+    # not inherit from ValueError; only ValueError-descended exceptions
+    # get wrapped as pydantic ValidationError. Pin the actual class.
+    with pytest.raises(IdentityError, match=r"tax identifier must be 9 characters long"):
         _valid_invoice(counterparty_country="ES", counterparty_tax_id="INVALID")
 
 
@@ -395,7 +401,7 @@ def test_invoice_validates_vat_prefix_for_non_es_country() -> None:
     """Non-ES counterparties must carry a VAT number with the country prefix."""
     invoice = _valid_invoice(counterparty_country="DE", counterparty_tax_id="DE123456789")
     assert invoice.counterparty_tax_id == "DE123456789"
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"VAT number must start with the counterparty country ISO-2 prefix"):
         _valid_invoice(counterparty_country="DE", counterparty_tax_id="123456789")
 
 
@@ -405,14 +411,16 @@ def test_invoice_linked_transaction_ids_are_deduplicated_and_hex_validated() -> 
     hex_b = "b" * 64
     invoice = _valid_invoice(linked_transaction_ids=(hex_a, hex_b, hex_a))
     assert invoice.linked_transaction_ids == (hex_a, hex_b)
-    with pytest.raises(ValidationError):
+    with pytest.raises(
+        ValidationError, match=r"each linked_transaction_id must be a 64-character lowercase hex digest"
+    ):
         _valid_invoice(linked_transaction_ids=("not-hex",))
 
 
 def test_invoice_rejects_caller_supplied_invoice_id_mismatch() -> None:
     """A caller-supplied ``invoice_id`` must match the derived digest."""
     invoice = _valid_invoice()
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"invoice_id must match the stable hash derived"):
         Invoice.model_validate(
             {
                 "invoice_id": "0" * 64,
@@ -453,7 +461,7 @@ def test_invoice_number_is_uppercased_for_identity() -> None:
 def test_catalogue_rejects_duplicate_invoice_ids_on_construction() -> None:
     """Duplicate logical IDs must be rejected when building a catalogue."""
     invoice = _valid_invoice()
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"duplicate invoice_id"):
         InvoiceCatalogue.from_invoices([invoice, invoice])
 
 

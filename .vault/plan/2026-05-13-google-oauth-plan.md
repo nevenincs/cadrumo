@@ -249,18 +249,24 @@ Ship the v1 CLI edit and CSV-corrections commands that operators use to correct 
 
 ## Parallelization
 
-P01 is the foundation; nothing in P02 onwards can proceed without authenticated access to Drive. P02 must precede P03 / P04 / P05 / P07. P06 can begin in parallel with P02 (operates on local substrate hooks; no Drive dependency). P03 must precede P04 and P05 (sync coordinator is the dependency). P07 depends on both P02 and the registry-side enumeration hooks landed in P06. P08 can begin in parallel with P06 (operates on CLI surfaces; depends only on the per-domain hooks from P06).
+P01 is the foundation; nothing in P02 onwards can proceed without authenticated access to Drive. Within P03 and P06, dependencies cross phase boundaries at the Step level rather than the Phase level, so the sequencing below pins Step ranges rather than whole Phases.
 
-Default sequencing:
+Cross-phase step-level dependencies:
 
-1. P01 (alone).
-2. P02 and P06 in parallel.
-3. P03 (depends on P02 finalised).
-4. P04 and P05 in parallel (both depend on P03).
-5. P07 (depends on P02 and P06 finalised).
-6. P08 (depends on P06 finalised).
+- `P03.S04`-`P03.S06` (`NamespaceLabelDeriver` Protocol + registry + startup verification) — depended on by every `P06.S14`-`P06.S24` (per-namespace label-deriver registration) and by `P06.S29` (bucket-event emitter resolving namespace labels for event payloads).
+- `P06.S01`-`P06.S03b` (substrate enumeration hooks: `iter_namespaces`, `iter_all_records_raw`, per-domain `iter_*` repository APIs) — depended on by `P03.S07` (DriveSync coordinator full-enumeration algorithm) and by `P03.S10`-`P03.S15` (push / pull / status / claim / appProperties / filename surfaces).
+- `P06.S28` (canonical `SourceKind` enum) — depended on by `P05.S19` (prefix router), `P06.S05`-`P06.S08` (reverse-merge services), and `P06.S29` (event emitter).
 
-Within a Phase, Steps are sequenced by file dependency; reviewer judgement on each pair.
+Default sequencing (Step-range granularity, not whole Phases):
+
+1. **`P01`** (alone) — auth foundation, profile binding, `_config/` package promotion.
+2. **`P02`** ∥ **`P03.S01`-`P03.S06`** ∥ **`P06.S01`-`P06.S03b`** ∥ **`P06.S05`-`P06.S08`** ∥ **`P06.S25`-`P06.S28`** — provider abstraction, sync-state schema + deriver Protocol/registry, substrate enumeration hooks, reverse-merge services, allow-list, `SourceKind` enum. None of these have cross-dependencies on each other.
+3. **`P03.S07`-`P03.S20`** ∥ **`P06.S09`-`P06.S13`** ∥ **`P06.S14`-`P06.S24`** ∥ **`P06.S29`-`P06.S30`** — DriveSync coordinator + CLI + bucket init; filing/deadlines/workflow export hooks; per-namespace label-deriver registrations; bucket-event emitter; `_app/` package skeleton.
+4. **`P04`** ∥ **`P05`** — both depend on `P03.S07`-`P03.S20` finalised. P04 also depends on `P02` (`probe`) and `P03.S14` (manifest regeneration on push).
+5. **`P07`** — depends on `P02` (Sheets via the dedicated client landed in `P07.S19`) + `P06.S01`-`P06.S03b` (per-modelo enumeration). Can start as soon as Step (3) is closed.
+6. **`P08`** — depends on `P06.S05`-`P06.S08` (reverse-merge services) + `P06.S29` (bucket-event emitter) + `P06.S30` (`_app/` package). Can start as soon as Step (3) is closed; not gated on `P07`.
+
+Within a Step range, Steps are sequenced by file dependency; reviewer judgement on each pair. The Step-level cross-phase contract above replaces any whole-Phase "P03 must finalise before P06" claim — the original phrasing concealed a circular dependency between `P03.S07` and `P06.S01`-`P06.S03b`.
 
 ## Verification
 
