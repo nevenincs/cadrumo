@@ -340,7 +340,7 @@ class Settings(BaseSettings):
     aeat_auth_provider: AuthProviderKindSetting | None = Field(
         default=None,
         description=(
-            "Default auth provider for `aeat setup auth login` / `status` when "
+            "Default auth provider for `aeat config auth test` / `status` when "
             "--provider is omitted. When None, the CLI auto-selects the "
             "first configured provider from the canonical registry order."
         ),
@@ -350,7 +350,7 @@ class Settings(BaseSettings):
     aeat_clave_movil_dni_nie: str | None = Field(
         default=None,
         description=(
-            "Taxpayer DNI/NIE for `aeat setup auth login` using Clave Movil. "
+            "Taxpayer DNI/NIE for `aeat config auth test` using Clave Movil. "
             "Used to stamp the persisted session with the operator's "
             "identity and to pre-fill the non-QR fallback form. Not a "
             "secret on its own — the Cl@ve app on the operator's phone is "

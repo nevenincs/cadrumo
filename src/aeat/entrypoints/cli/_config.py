@@ -121,7 +121,6 @@ def _profile_state():
 
 
 @profile_app.command("list", help=tr("cli.config.list.help"))
-@app.command("list", help=tr("cli.config.list.help"))
 def config_list(ctx: typer.Context) -> None:
     """List every profile key with its current value (or ``<unset>``)."""
 
@@ -155,7 +154,6 @@ def config_list(ctx: typer.Context) -> None:
 
 
 @profile_app.command("get", help=tr("cli.config.get.help"))
-@app.command("get", help=tr("cli.config.get.help"))
 def config_get(
     ctx: typer.Context,
     key: str = typer.Argument(..., help=tr("cli.config.get.key_help")),
@@ -194,7 +192,6 @@ def _question_for_profile_key(profile_key: str):
 
 
 @profile_app.command("set", help=tr("cli.config.set.help"))
-@app.command("set", help=tr("cli.config.set.help"))
 def config_set(
     ctx: typer.Context,
     key: str = typer.Argument(..., help=tr("cli.config.set.key_help")),
@@ -241,7 +238,6 @@ def config_set(
 
 
 @profile_app.command("unset", help=tr("cli.config.unset.help"))
-@app.command("unset", help=tr("cli.config.unset.help"))
 def config_unset(
     ctx: typer.Context,
     key: str = typer.Argument(..., help=tr("cli.config.unset.key_help")),
@@ -306,7 +302,6 @@ _register_wizard_commands(app)
 
 
 @profile_app.command("status", help=tr("cli.config.status.help"))
-@app.command("status", help=tr("cli.config.status.help"))
 def config_status(ctx: typer.Context) -> None:
     """Show the readiness of the current configuration profile."""
 
@@ -399,17 +394,18 @@ def config_reset(
 def auth_providers(ctx: typer.Context) -> None:
     """List supported authentication providers from the backend catalogue."""
 
-    from ...application.auth import list_auth_providers
+    from ...application.auth import list_operator_auth_providers
 
-    providers = list_auth_providers()
-    payload = {"providers": [provider.model_dump(mode="json") for provider in providers]}
+    report = list_operator_auth_providers()
+    payload = report.model_dump(mode="json")
     if _format_of(ctx) == _FORMAT_JSON:
         import json as _json
 
         typer.echo(_json.dumps(payload, ensure_ascii=False))
         return
-    for provider in providers:
-        typer.echo(f"{provider.id}\t{tr(str(provider.label))}")
+    for provider in report.providers:
+        status = "implemented" if provider.implemented else "reserved"
+        typer.echo(f"{provider.id}\t{status}\t{tr(str(provider.label))}")
 
 
 @auth_app.command("configure", help=tr("cli.config.auth.configure_help"))
@@ -425,47 +421,29 @@ def auth_configure(
     """Configure the active authentication provider."""
 
     del ctx
-    from ...application.auth import get_auth_provider, update_auth
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.auth import AuthProviderReservedError, configure_operator_auth
 
     try:
-        listing = get_auth_provider(provider)
+        result = configure_operator_auth(provider, certificate_path=file)
     except KeyError as exc:
         raise typer.BadParameter(tr("cli.config.auth.unknown_provider", provider=provider)) from exc
-    repository = workflow_state_repository()
-    repository.update(
-        lambda current: update_auth(
-            current,
-            provider=listing.id,
-            certificate_path=str(file) if file is not None else None,
-        )
-    )
-    typer.echo(f"provider\t{listing.id}")
-    typer.echo(f"file\t{file or ''}")
+    except AuthProviderReservedError as exc:
+        raise typer.BadParameter(tr("cli.config.auth.reserved_provider", provider=provider)) from exc
+    typer.echo(f"provider\t{result.provider}")
+    typer.echo(f"file\t{result.file}")
 
 
 @auth_app.command("status", help=tr("cli.config.auth.status_help"))
 def auth_status(ctx: typer.Context, provider: str | None = typer.Option(None, "--provider")) -> None:
     """Show the configured local authentication state."""
 
-    from ...application.auth import get_auth_provider
-    from ...application.workflow._persistence import workflow_state_repository
+    from ...application.auth import inspect_operator_auth
 
-    state = workflow_state_repository().load()
-    auth = state.auth
-    configured_provider = auth.provider or ""
-    if provider is not None:
-        try:
-            get_auth_provider(provider)
-        except KeyError as exc:
-            raise typer.BadParameter(tr("cli.config.auth.unknown_provider", provider=provider)) from exc
-        configured_provider = provider.strip().lower()
-    payload = {
-        "provider": configured_provider,
-        "configured": bool(auth.provider),
-        "authenticated": bool(auth.authenticated_at),
-        "certificate_path": auth.certificate_path or "",
-    }
+    try:
+        result = inspect_operator_auth(provider)
+    except KeyError as exc:
+        raise typer.BadParameter(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+    payload = result.model_dump(mode="json")
     if _format_of(ctx) == _FORMAT_JSON:
         import json as _json
 
@@ -479,7 +457,20 @@ def auth_status(ctx: typer.Context, provider: str | None = typer.Option(None, "-
 def auth_test(ctx: typer.Context, provider: str | None = typer.Option(None, "--provider")) -> None:
     """Render auth readiness through the application-owned auth state."""
 
-    auth_status(ctx, provider=provider)
+    from ...application.auth import test_operator_auth
+
+    try:
+        result = test_operator_auth(provider)
+    except KeyError as exc:
+        raise typer.BadParameter(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+    payload = result.model_dump(mode="json")
+    if _format_of(ctx) == _FORMAT_JSON:
+        import json as _json
+
+        typer.echo(_json.dumps(payload, ensure_ascii=False))
+        return
+    for key, value in payload.items():
+        typer.echo(f"{key}\t{value}")
 
 
 @auth_app.command("clear", help=tr("cli.config.auth.clear_help"))
@@ -491,38 +482,22 @@ def auth_clear(
 ) -> None:
     """Clear local auth metadata, persisted sessions, and auth locks."""
 
-    from ...application.auth import (
-        AuthProviderKind,
-        AuthState,
-        clear_auth_acquisition_lock,
-        delete_persisted_session,
-        get_auth_provider,
-    )
-    from ...application.workflow._persistence import workflow_state_repository
-    from ...core.config import Settings
+    from ...application.auth import AuthProviderReservedError, clear_operator_auth
 
-    if provider is not None:
-        try:
-            get_auth_provider(provider)
-        except KeyError as exc:
-            raise typer.BadParameter(tr("cli.config.auth.unknown_provider", provider=provider)) from exc
-        provider_kind: AuthProviderKind | None = AuthProviderKind(provider.strip().lower())
-    else:
-        provider_kind = None
-
-    settings = Settings()
-    if sessions or all_providers:
-        removed = delete_persisted_session(settings, kind=None if all_providers else provider_kind)
-    else:
-        removed = []
-    if locks or all_providers:
-        lock_kinds = list(AuthProviderKind) if all_providers or provider_kind is None else [provider_kind]
-        for kind in lock_kinds:
-            clear_auth_acquisition_lock(settings, kind, reason="operator-clear")
-
-    repository = workflow_state_repository()
-    repository.update(lambda current: current.model_copy(update={"auth": AuthState()}))
-    typer.echo(f"removed_sessions\t{len(removed)}")
+    try:
+        result = clear_operator_auth(
+            provider=provider,
+            all_providers=all_providers,
+            sessions=sessions,
+            locks=locks,
+        )
+    except KeyError as exc:
+        raise typer.BadParameter(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+    except AuthProviderReservedError as exc:
+        raise typer.BadParameter(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
+    typer.echo(f"removed_sessions\t{result.removed_sessions}")
+    typer.echo(f"cleared_workflow_state\t{result.cleared_workflow_state}")
+    typer.echo(f"cleared_locks\t{result.cleared_locks}")
 
 
 app.add_typer(profile_app, name="profile")

@@ -102,10 +102,10 @@ This Phase delivers backend implementation for apex root and lifecycle contract 
 This Phase delivers shadow duplicate removal for apex root and lifecycle contract as required by `2026-05-12-cli-workflow-redesign-adr`.
 
 - [x] `W01.P002.S0007` - Audit duplicate implementations that overlap apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P002.S0008` - Delete duplicate backend branches that compete with apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P002.S0009` - Remove stale aliases that bypass the canonical service for apex root and lifecycle contract; `src/aeat/entrypoints/cli`.
-- [ ] `W01.P002.S0010` - Migrate internal callers to the canonical service for apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P002.S0011` - Remove stale fixtures and tests that encode duplicate behavior for apex root and lifecycle contract; `tests/application`.
+- [x] `W01.P002.S0008` - Delete duplicate backend branches that compete with apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P002.S0009` - Remove stale aliases that bypass the canonical service for apex root and lifecycle contract; `src/aeat/entrypoints/cli`.
+- [x] `W01.P002.S0010` - Migrate internal callers to the canonical service for apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P002.S0011` - Remove stale fixtures and tests that encode duplicate behavior for apex root and lifecycle contract; `tests/application`.
 - [x] `W01.P002.S0012` - Update boundary inventory entries that describe duplicate behavior for apex root and lifecycle contract; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W01.P003` - de-shim and de-stub cleanup

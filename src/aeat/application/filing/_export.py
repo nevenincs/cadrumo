@@ -2,12 +2,12 @@
 
 The CLI exposes two primitives the application layer must back end-to-end:
 
-- ``aeat app declaration export --output PATH`` writes an
+- ``aeat app modelo export --output PATH`` writes an
   AEAT declaration file from a validated registry snapshot for an approved
   :class:`aeat.domain.filing.FilingDraft` and reports the byte-level
   summary the operator needs to track the artefact (output path, draft
   identity, content hash, format).
-- ``aeat app declaration verify --file PATH`` re-reads a previously
+- ``aeat app modelo verify --file PATH`` re-reads a previously
   exported file and confirms that its casilla payload still matches
   the approved draft. The verdict is a closed enum; the diff (if any)
   is reported as a tuple of mismatched casilla identifiers so the CLI
@@ -92,7 +92,7 @@ class DeclarationExportResult(BaseModel):
     """Receipt produced by exporting an approved draft to disk.
 
     The record is the structured-data return value of the
-    `aeat app declaration export` command. It carries enough metadata
+    `aeat app modelo export` command. It carries enough metadata
     for the operator to identify the artefact later, for the verify
     command to anchor its comparison, and for the audit log to record
     the export event without re-reading the file.

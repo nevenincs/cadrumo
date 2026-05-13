@@ -32,13 +32,13 @@ def test_next_wizard_action_returns_setup_command_when_no_profile() -> None:
             auth_provider="certificate",
             login_ready=True,
         )
-        == "aeat config setup --profile-name NAME"
+        == "aeat config init --profile NAME"
     )
 
 
 def test_next_wizard_action_returns_set_required_command_when_missing_required() -> None:
     """When the profile exists but a required field is missing, the
-    operator is pointed at the matching ``aeat config set <field> VALUE``."""
+    operator is pointed at the matching ``aeat config profile set <field> VALUE``."""
     assert (
         _next_wizard_action(
             has_profile=True,
@@ -47,7 +47,7 @@ def test_next_wizard_action_returns_set_required_command_when_missing_required()
             auth_provider="certificate",
             login_ready=True,
         )
-        == "aeat config set nif VALUE"
+        == "aeat config profile set nif VALUE"
     )
 
 
@@ -62,14 +62,14 @@ def test_next_wizard_action_names_first_missing_required_field_only() -> None:
             auth_provider="certificate",
             login_ready=True,
         )
-        == "aeat config set nif VALUE"
+        == "aeat config profile set nif VALUE"
     )
 
 
 def test_next_wizard_action_returns_set_enrolment_command_when_missing_enrolment() -> None:
     """`missing_required=()` is the gate for the enrolment branch; once
     every required field is set, the dispatcher moves to the
-    ``aeat config set <enrolment> GENERAL`` suggestion."""
+    ``aeat config profile set <enrolment> GENERAL`` suggestion."""
     assert (
         _next_wizard_action(
             has_profile=True,
@@ -78,7 +78,7 @@ def test_next_wizard_action_returns_set_enrolment_command_when_missing_enrolment
             auth_provider="certificate",
             login_ready=True,
         )
-        == "aeat config set iva GENERAL"
+        == "aeat config profile set iva GENERAL"
     )
 
 
@@ -93,7 +93,7 @@ def test_next_wizard_action_returns_auth_setup_command_when_no_auth_provider() -
             auth_provider="",
             login_ready=False,
         )
-        == "aeat config auth --provider certificate --file PATH"
+        == "aeat config auth configure --provider certificate --file PATH"
     )
 
 
@@ -109,7 +109,7 @@ def test_next_wizard_action_returns_auth_login_command_when_not_login_ready() ->
             auth_provider="certificate",
             login_ready=False,
         )
-        == "aeat config auth --provider certificate"
+        == "aeat config auth test --provider certificate"
     )
 
 

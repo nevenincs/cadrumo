@@ -14,6 +14,7 @@ import typer
 from ...application.aggregation import aggregate_renta_ledger_expenses_from_repositories
 from ...application.auth import AuthProviderListing
 from ...application.workflow import WorkflowState, workflow_state_repository
+from ...core.errors import AeatError
 from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry import (
     ModeloRevision,
@@ -48,9 +49,6 @@ def _emit(ctx: typer.Context, payload: Any, lines: Iterable[str]) -> None:
         return
     for line in lines:
         typer.echo(line)
-
-
-from ...core.errors import AeatError
 
 
 class JsonEncodingError(AeatError):
@@ -92,8 +90,14 @@ def _active_profile_or_exit(ctx: typer.Context) -> tuple[WorkflowState, str]:
     if current.active_profile is None:
         _emit(
             ctx,
-            {"error": "no-active-profile", "next": "aeat setup init --name NAME"},
-            ["error\tno-active-profile", "next\taeat setup init --name NAME"],
+            {
+                "error": "no-active-profile",
+                "next": "aeat config init --profile NAME --tax-id NIF --activity TEXT --iva-regime REGIME",
+            },
+            [
+                "error\tno-active-profile",
+                "next\taeat config init --profile NAME --tax-id NIF --activity TEXT --iva-regime REGIME",
+            ],
         )
         _exit(2)
     assert current.active_profile is not None

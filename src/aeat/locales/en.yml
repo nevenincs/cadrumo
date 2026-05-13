@@ -32,6 +32,12 @@ auth:
     clave_movil_description: Push-approval authentication via the holder's phone registered
       with Cl@ve. Requires DNI/NIE, Cl@ve enrolment, and a paired device.
     clave_movil_label: Cl@ve Móvil
+    clave_permanente_description: Reserved fail-closed provider slot for Cl@ve Permanente.
+    clave_permanente_label: Cl@ve Permanente
+    clave_pin_description: Reserved fail-closed provider slot for Cl@ve PIN.
+    clave_pin_label: Cl@ve PIN
+    dnie_pkcs_description: Reserved fail-closed provider slot for DNI-e PKCS.
+    dnie_pkcs_label: DNI-e PKCS
 categories:
   test_profile:
     display_label_851219: Display label 851219
@@ -106,6 +112,7 @@ cli:
       help: Configure the active authentication provider
       provider_help: Authentication provider id (e.g. certificado-electronico)
       providers_help: List supported authentication providers
+      reserved_provider: 'Authentication provider reserved but not implemented: %{provider}.'
       status_help: Show configured authentication state
       test_help: Check local authentication readiness
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
@@ -595,6 +602,24 @@ cli:
     status_help: Show profile, ledger, invoice, and declaration readiness
     to_help: Calendar end date (YYYY-MM-DD)
     transactions: Transactions
+  review:
+    app_help: Human review queue for records needing operator judgment
+    errors:
+      invalid_state: 'Invalid review state: %{state}'
+    labels:
+      id: ID
+      kind: Kind
+      next: Next
+      severity: Severity
+    queue:
+      empty: No review items
+      help: List review queue rows
+      kind_help: Filter by source kind
+      modelo_help: Filter by modelo
+      state_help: Filter state (pending or all)
+    show:
+      help: Show one review queue item
+      id_help: Review item identifier
     verbose_help: Show details and next action when available
   registry:
     app_help: Tax models registry management
@@ -761,7 +786,7 @@ topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
       certificate (FNMT / equivalent). Configure a provider with 'aeat config auth
-      --provider certificate' and verify with 'aeat config status'.
+      configure --provider certificate' and verify with 'aeat config auth test'.
     title: Authentication with AEAT
   calendar:
     body: The calendar shows filing obligations (modelos and periods) within a range.

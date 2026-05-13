@@ -1,6 +1,6 @@
-"""Typed summary surface for ``aeat app declaration calculate``.
+"""Typed summary surface for ``aeat app modelo calculate``.
 
-The CLI contract requires bare ``aeat app declaration calculate`` to
+The CLI contract requires bare ``aeat app modelo calculate`` to
 print a compact summary table, blocker counts, warnings, and the next
 action — and shows repair hints instead of succeeding silently when the
 inputs are unresolved. The CLI cannot compute that summary by inspecting
@@ -38,7 +38,7 @@ class DeclarationCalculateNextAction(StrEnum):
     """Closed catalogue of next operator actions surfaced after calculate.
 
     The CLI uses this to render the "next action" line of the bare
-    ``aeat app declaration calculate`` summary.
+    ``aeat app modelo calculate`` summary.
 
     Attributes:
         RESOLVE_BLOCKERS: One or more validation findings at
@@ -47,11 +47,11 @@ class DeclarationCalculateNextAction(StrEnum):
             before any review/approve/export step.
         REVIEW: The draft validated cleanly (or only carries
             informational findings) and is ready for human review via
-            ``aeat app declaration review``.
+            ``aeat app review``.
         APPROVE: The draft has been reviewed and is awaiting human
-            approval via ``aeat app declaration approve``.
+            approval via ``aeat app modelo verify``.
         EXPORT: The draft is approved and may be exported via
-            ``aeat app declaration export``.
+            ``aeat app modelo export``.
         REFRESH_APPROVAL: The draft was previously approved but the
             approval is stale; the operator must re-approve.
         AMEND: The draft is in a downstream lifecycle state
@@ -69,7 +69,7 @@ class DeclarationCalculateNextAction(StrEnum):
 
 
 class DeclarationCalculateSummary(BaseModel):
-    """Typed summary of a single ``aeat app declaration calculate`` run.
+    """Typed summary of a single ``aeat app modelo calculate`` run.
 
     Attributes:
         draft_id: The :class:`aeat.domain.filing.FilingDraft` identity
