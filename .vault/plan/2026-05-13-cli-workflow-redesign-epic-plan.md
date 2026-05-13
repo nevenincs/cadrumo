@@ -101,12 +101,12 @@ This Phase delivers backend implementation for apex root and lifecycle contract 
 
 This Phase delivers shadow duplicate removal for apex root and lifecycle contract as required by `2026-05-12-cli-workflow-redesign-adr`.
 
-- [ ] `W01.P002.S0007` - Audit duplicate implementations that overlap apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P002.S0007` - Audit duplicate implementations that overlap apex root and lifecycle contract; `src/aeat/application`.
 - [ ] `W01.P002.S0008` - Delete duplicate backend branches that compete with apex root and lifecycle contract; `src/aeat/application`.
 - [ ] `W01.P002.S0009` - Remove stale aliases that bypass the canonical service for apex root and lifecycle contract; `src/aeat/entrypoints/cli`.
 - [ ] `W01.P002.S0010` - Migrate internal callers to the canonical service for apex root and lifecycle contract; `src/aeat/application`.
 - [ ] `W01.P002.S0011` - Remove stale fixtures and tests that encode duplicate behavior for apex root and lifecycle contract; `tests/application`.
-- [ ] `W01.P002.S0012` - Update boundary inventory entries that describe duplicate behavior for apex root and lifecycle contract; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W01.P002.S0012` - Update boundary inventory entries that describe duplicate behavior for apex root and lifecycle contract; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W01.P003` - de-shim and de-stub cleanup
 
@@ -2166,45 +2166,45 @@ This Phase delivers backend implementation for legal iva prorrata as required by
 
 This Phase delivers shadow duplicate removal for legal iva prorrata as required by `2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr`.
 
-- [ ] `W36.P177.S1057` - Audit duplicate implementations that overlap legal iva prorrata; `src/aeat/domain/vat`.
-- [ ] `W36.P177.S1058` - Delete duplicate backend branches that compete with legal iva prorrata; `src/aeat/domain/vat`.
-- [ ] `W36.P177.S1059` - Remove stale aliases that bypass the canonical service for legal iva prorrata; `src/aeat/entrypoints/cli`.
-- [ ] `W36.P177.S1060` - Migrate internal callers to the canonical service for legal iva prorrata; `src/aeat/domain/vat`.
-- [ ] `W36.P177.S1061` - Remove stale fixtures and tests that encode duplicate behavior for legal iva prorrata; `tests/domain/vat`.
-- [ ] `W36.P177.S1062` - Update boundary inventory entries that describe duplicate behavior for legal iva prorrata; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W36.P177.S1057` - Audit duplicate implementations that overlap legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P177.S1058` - Delete duplicate backend branches that compete with legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P177.S1059` - Remove stale aliases that bypass the canonical service for legal iva prorrata; `src/aeat/entrypoints/cli`.
+- [x] `W36.P177.S1060` - Migrate internal callers to the canonical service for legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P177.S1061` - Remove stale fixtures and tests that encode duplicate behavior for legal iva prorrata; `tests/domain/vat`.
+- [x] `W36.P177.S1062` - Update boundary inventory entries that describe duplicate behavior for legal iva prorrata; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W36.P178` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for legal iva prorrata as required by `2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr`.
 
-- [ ] `W36.P178.S1063` - Delete compatibility shims that preserve rejected behavior for legal iva prorrata; `src/aeat/domain/vat`.
-- [ ] `W36.P178.S1064` - Delete placeholder stubs that claim support for legal iva prorrata; `src/aeat/domain/vat`.
-- [ ] `W36.P178.S1065` - Replace stubbed paths with real backend service calls for legal iva prorrata; `src/aeat/domain/vat`.
-- [ ] `W36.P178.S1066` - Remove deprecated command spelling and help text for legal iva prorrata; `src/aeat/entrypoints/cli`.
-- [ ] `W36.P178.S1067` - Remove tests that assert shim or stub behavior for legal iva prorrata; `tests/domain/vat`.
-- [ ] `W36.P178.S1068` - Record the removed shim and stub surfaces for legal iva prorrata; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W36.P178.S1063` - Delete compatibility shims that preserve rejected behavior for legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P178.S1064` - Delete placeholder stubs that claim support for legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P178.S1065` - Replace stubbed paths with real backend service calls for legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P178.S1066` - Remove deprecated command spelling and help text for legal iva prorrata; `src/aeat/entrypoints/cli`.
+- [x] `W36.P178.S1067` - Remove tests that assert shim or stub behavior for legal iva prorrata; `tests/domain/vat`.
+- [x] `W36.P178.S1068` - Record the removed shim and stub surfaces for legal iva prorrata; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W36.P179` - real behavior verification
 
 This Phase delivers real behavior verification for legal iva prorrata as required by `2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr`.
 
-- [ ] `W36.P179.S1069` - Add service contract tests for legal iva prorrata; `tests/domain/vat`.
-- [ ] `W36.P179.S1070` - Add persistence or registry integration tests for legal iva prorrata; `tests/domain/vat`.
-- [ ] `W36.P179.S1071` - Add negative tests proving rejected aliases do not reach legal iva prorrata; `tests/entrypoints/cli`.
-- [ ] `W36.P179.S1072` - Add command behavior tests that exercise legal iva prorrata through real services; `tests/entrypoints/cli`.
-- [ ] `W36.P179.S1073` - Add end-to-end workflow coverage for legal iva prorrata; `tests`.
-- [ ] `W36.P179.S1074` - Run the targeted test slice for legal iva prorrata without skips or xfails; `tests/domain/vat`.
+- [x] `W36.P179.S1069` - Add service contract tests for legal iva prorrata; `tests/domain/vat`.
+- [x] `W36.P179.S1070` - Add persistence or registry integration tests for legal iva prorrata; `tests/domain/vat`.
+- [x] `W36.P179.S1071` - Add negative tests proving rejected aliases do not reach legal iva prorrata; `tests/entrypoints/cli`.
+- [x] `W36.P179.S1072` - Add command behavior tests that exercise legal iva prorrata through real services; `tests/entrypoints/cli`.
+- [x] `W36.P179.S1073` - Add end-to-end workflow coverage for legal iva prorrata; `tests`.
+- [x] `W36.P179.S1074` - Run the targeted test slice for legal iva prorrata without skips or xfails; `tests/domain/vat`.
 
 ### Phase `W36.P180` - thin cli exposure
 
 This Phase delivers thin cli exposure for legal iva prorrata as required by `2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr`.
 
-- [ ] `W36.P180.S1075` - Expose accepted command handlers for legal iva prorrata under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W36.P180.S1076` - Keep argument parsing for legal iva prorrata separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W36.P180.S1077` - Delegate legal iva prorrata execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W36.P180.S1078` - Render legal iva prorrata results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W36.P180.S1079` - Handle legal iva prorrata failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W36.P180.S1080` - Validate help text for legal iva prorrata uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W36.P180.S1075` - Expose accepted command handlers for legal iva prorrata under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W36.P180.S1076` - Keep argument parsing for legal iva prorrata separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W36.P180.S1077` - Delegate legal iva prorrata execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W36.P180.S1078` - Render legal iva prorrata results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W36.P180.S1079` - Handle legal iva prorrata failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W36.P180.S1080` - Validate help text for legal iva prorrata uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W37` - festivos deadline shift
 
