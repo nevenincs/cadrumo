@@ -67,7 +67,7 @@ def restrict_file_permissions(path: Path) -> None:
                 candidates.insert(0, f"{userdomain}\\{username}")
             result: subprocess.CompletedProcess[str] | None = None
             for candidate in candidates:
-                result = subprocess.run(  # noqa: S603 - local best-effort ACL hardening only
+                result = subprocess.run(
                     [
                         str(icacls_path),
                         str(path),

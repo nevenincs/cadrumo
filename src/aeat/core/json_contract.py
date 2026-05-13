@@ -15,7 +15,6 @@ having to know how the CLI itself wires Click options.
 
 from __future__ import annotations
 
-import contextlib
 import json
 import sys
 from collections.abc import Callable
@@ -24,6 +23,9 @@ from typing import Any, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 from .errors import AeatError
+from .logging import get_logger
+
+_log = get_logger(__name__)
 
 _STRICT_FROZEN_CONFIG = ConfigDict(
     extra="forbid",
@@ -144,8 +146,13 @@ def emit_json_document(
 
     target = sys.stdout if stream is None else stream
     if isinstance(target, _ReconfigurableStream):
-        with contextlib.suppress(Exception):
+        try:
             target.reconfigure(encoding="utf-8", errors="strict")
+        except (OSError, ValueError, AttributeError) as exc:
+            _log.debug(
+                "json_contract: stdout reconfigure to UTF-8 failed; emitting with current encoding (%s)",
+                exc,
+            )
     document = json.dumps(
         _jsonable_payload(payload),
         ensure_ascii=False,
