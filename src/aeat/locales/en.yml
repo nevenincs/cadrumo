@@ -149,8 +149,7 @@ cli:
       errors:
         missing_required_flags: Missing required flags for --quiet wizard run; supply
           a value for every required question.
-      help: Run the schema-driven setup wizard interactively or via flag-driven quiet
-        mode
+      help: Guided initial setup of the tax profile
       profile_name_help: Profile name to write the answers into
       quiet_help: Run the flow non-interactively using only the supplied flag values
       success:
@@ -966,7 +965,7 @@ wizard:
       name:
         help: Display name shown in local reviews
       notes:
-        help: Operator notes (not consumed by the engine)
+        help: Notes for your own records (optional)
       pays-capital-income-with-retencion:
         help: Pays capital income with retención
       pays-professionals-with-retencion:
@@ -978,7 +977,7 @@ wizard:
       spouse-birth-date:
         help: Spouse birth date
       spouse-disability-grade:
-        help: Spouse disability code
+        help: Spouse disability grade (if applicable)
       spouse-eu-eea-country:
         help: Spouse EU/EEA country
       spouse-eu-eea-resident:
@@ -1025,8 +1024,8 @@ wizard:
       title: IVA
     notes:
       notes:
-        prompt: Operator notes (not consumed by the engine)
-      title: Operator notes
+        prompt: Notes for your own records (optional)
+      title: Notes for your own records
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Foreign-held assets above legal threshold
@@ -1111,7 +1110,7 @@ wizard:
       spouse-birth-date:
         prompt: Spouse birth date
       spouse-disability-grade:
-        prompt: Spouse disability code
+        prompt: Spouse disability grade (if applicable)
       spouse-eu-eea-country:
         prompt: Spouse EU/EEA country
       spouse-eu-eea-resident:

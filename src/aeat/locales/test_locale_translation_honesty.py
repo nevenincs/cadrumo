@@ -14,6 +14,7 @@ with real translations and remove entries from the allowlist.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
@@ -48,8 +49,8 @@ def _load_allowlist() -> dict[str, set[str]]:
     translations land.
     """
 
-    path = _LOCALES_DIR / "_intentional_identical.yml"
-    data: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    path = _LOCALES_DIR / "_intentional_identical.json"
+    data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8")) or {}
     # The current allowlist uses a wholesale "untranslated_pending"
     # entry per locale rather than per-key justifications. Treat the
     # presence of that key as "every key is allowed to match en".

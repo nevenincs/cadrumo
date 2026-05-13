@@ -159,8 +159,7 @@ cli:
       errors:
         missing_required_flags: Hiányoznak a kötelező kapcsolók a --quiet módhoz;
           adj meg értéket minden kötelező kérdéshez.
-      help: A séma-vezérelt beállítási varázsló futtatása interaktívan vagy kapcsoló-vezérelt
-        csendes módban
+      help: Guided initial setup of the tax profile
       profile_name_help: A profil neve, ahova a válaszok kerülnek
       quiet_help: A folyamat futtatása interakció nélkül, csak a kapcsolók értékeit
         használva
@@ -993,7 +992,7 @@ wizard:
       name:
         help: A helyi áttekintésben megjelenő név
       notes:
-        help: Operátori jegyzetek (a motor nem dolgozza fel)
+        help: Jegyzetek a saját nyilvántartásodhoz (opcionális)
       pays-capital-income-with-retencion:
         help: Tőkejövedelmeket adóelőleggel fizet
       pays-professionals-with-retencion:
@@ -1005,7 +1004,7 @@ wizard:
       spouse-birth-date:
         help: A házastárs születési dátuma
       spouse-disability-grade:
-        help: A házastárs fogyatékossági kódja
+        help: A házastárs fogyatékossági foka (ha alkalmazandó)
       spouse-eu-eea-country:
         help: A házastárs EU/EGT országa
       spouse-eu-eea-resident:
@@ -1052,8 +1051,8 @@ wizard:
       title: ÁFA
     notes:
       notes:
-        prompt: Operátori jegyzetek (a motor nem dolgozza fel)
-      title: Operátori jegyzetek
+        prompt: Jegyzetek a saját nyilvántartásodhoz (opcionális)
+      title: Jegyzetek a saját nyilvántartásodhoz
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Külföldön tartott eszközök a törvényi küszöb felett
@@ -1138,7 +1137,7 @@ wizard:
       spouse-birth-date:
         prompt: A házastárs születési dátuma
       spouse-disability-grade:
-        prompt: A házastárs fogyatékossági kódja
+        prompt: A házastárs fogyatékossági foka (ha alkalmazandó)
       spouse-eu-eea-country:
         prompt: A házastárs EU/EGT országa
       spouse-eu-eea-resident:

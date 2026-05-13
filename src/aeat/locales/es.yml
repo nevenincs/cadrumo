@@ -161,8 +161,7 @@ cli:
       errors:
         missing_required_flags: Faltan banderas obligatorias para el modo --quiet;
           proporciona un valor para cada pregunta obligatoria.
-      help: Ejecutar el asistente de configuración basado en esquema de forma interactiva
-        o usando banderas
+      help: Configuración inicial guiada del perfil tributario
       profile_name_help: Nombre del perfil donde guardar las respuestas
       quiet_help: Ejecutar el flujo sin interacción usando solo los valores de las
         banderas
@@ -995,7 +994,7 @@ wizard:
       name:
         help: Nombre visible mostrado en revisiones locales
       notes:
-        help: Notas del operador (no consumidas por el motor)
+        help: Notas para tu propio recuerdo (opcional)
       pays-capital-income-with-retencion:
         help: Paga rentas de capital con retención
       pays-professionals-with-retencion:
@@ -1007,7 +1006,7 @@ wizard:
       spouse-birth-date:
         help: Fecha de nacimiento del cónyuge
       spouse-disability-grade:
-        help: Clave de discapacidad del cónyuge
+        help: Grado de discapacidad del cónyuge (si aplica)
       spouse-eu-eea-country:
         help: País UE/EEE del cónyuge
       spouse-eu-eea-resident:
@@ -1054,8 +1053,8 @@ wizard:
       title: IVA
     notes:
       notes:
-        prompt: Notas del operador (no consumidas por el motor)
-      title: Notas del operador
+        prompt: Notas para tu propio recuerdo (opcional)
+      title: Notas para tu propio recuerdo
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Bienes en el extranjero superan el umbral legal
@@ -1140,7 +1139,7 @@ wizard:
       spouse-birth-date:
         prompt: Fecha de nacimiento del cónyuge
       spouse-disability-grade:
-        prompt: Clave de discapacidad del cónyuge
+        prompt: Grado de discapacidad del cónyuge (si aplica)
       spouse-eu-eea-country:
         prompt: País UE/EEE del cónyuge
       spouse-eu-eea-resident:
