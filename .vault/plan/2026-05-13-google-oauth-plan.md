@@ -14,7 +14,7 @@ date: '2026-05-13'
 # L3 (Waves above Phases above Steps), L4 (Epic above Waves
 # above Phases above Steps; PM association required).
 # Pre-existing plans without this field default to L2.
-tier: L2
+tier: L3
 # Related documents as quoted wiki-links.
 # Carries the AUTHORISING documents (ADR, research, reference,
 # prior plan) for every Step in this plan; Steps inherit this
@@ -37,17 +37,25 @@ related:
 
 # `google-oauth` `Google OAuth integration master plan` plan
 
-Replaces the discarded gcloud-CLI Google Workspace stack with a fresh self-hosted OAuth Desktop application, a provider-agnostic storage abstraction, a per-row continuous mirror to Google Drive at the ciphertext layer, an incoming-bucket ingestion path, per-domain export tiers, calculation-to-Sheets visualisation, and a deferred-but-codified two-way sync verdict. Eight ADRs synthesise into eight phases below; each ADR maps to exactly one phase.
+Replaces the discarded gcloud-CLI Google Workspace stack with a fresh self-hosted OAuth Desktop application, a provider-agnostic storage abstraction, a per-row continuous mirror to Google Drive at the ciphertext layer, an incoming-bucket ingestion path, per-domain export tiers, calculation-to-Sheets visualisation, and a deferred-but-codified two-way sync verdict. Eight ADRs synthesise into eight phases organised under three Waves; each ADR maps to exactly one Phase.
 
 ## Proposed Changes
 
-Eight ADRs (ADR-0 through ADR-7) close the architectural surface. The plan walks the implementation in dependency order: authentication foundation first; storage provider abstraction next; sync coordinator and per-bucket semantics; encryption boundary with cross-machine restore via KEK escrow; inbound-bucket ingestion adapter; per-domain substrate hooks; calculation visualisation; two-way sync deferral codification.
+Eight ADRs (ADR-0 through ADR-7) close the architectural surface. The plan walks the implementation in dependency order across three Waves:
 
-The teardown commit `ab952f74` removed the prior stack with no migration shim. Every code path below is fresh; no backwards compatibility surfaces, no deprecation stubs, no partial implementations. Each phase ships complete or its rows stay open.
+- **`W01` Foundation** — `P01` (auth) + `P02` (storage provider abstraction) + `P06` (per-domain substrate hooks). Everything below the operator-facing surface: OAuth Desktop primitive, the `StorageProvider` Protocol with both backends, the substrate enumeration hooks and reverse-merge services, the canonical `SourceKind` enum, and the per-namespace label-deriver registrations.
+- **`W02` Surface** — `P03` (Drive bucket hierarchy + sync state + coordinator) + `P04` (snapshot encryption + KEK escrow) + `P05` (inbound ingestion) + `P08` (operator-facing CLI edit + CSV-corrections). Every operator-visible CLI verb against the Drive backend; the sync coordinator and its conflict semantics; the encryption boundary with cross-machine restore; the drop-zone ingestion path; the v1 reverse-merge entry points.
+- **`W03` Visualisation** — `P07` (calculation-to-Sheets four-sheet layout). Stand-alone surface depending on both `W01` (provider, substrate hooks) and the Drive write capabilities established by `W02`'s coordinator; the only Wave that consumes Sheets v4 in addition to Drive v3.
+
+Each Wave maps to one stage of the cross-phase step-range sequencing block below. The teardown commit `ab952f74` removed the prior stack with no migration shim. Every code path below is fresh; no backwards compatibility surfaces, no deprecation stubs, no partial implementations. Each phase ships complete or its rows stay open.
 
 ## Steps
 
-### Phase `P01` - authentication foundation (ADR-0)
+### Wave `W01` - Foundation
+
+Everything below the operator-facing surface. Lands the OAuth Desktop primitive (`P01`), the `StorageProvider` Protocol with both v1 backends (`P02`), and the per-domain substrate hooks (`P06`: enumeration APIs, reverse-merge services, `SourceKind` enum, label-deriver registrations, allow-list, sensitive-persistence policy). No Phase in this Wave depends on any operator-facing CLI verb against Drive; `W01` is internally parallelisable per the cross-phase step-range map in `## Parallelization`.
+
+#### Phase `P01` - authentication foundation (ADR-0)
 
 Land the OAuth Desktop application surface end-to-end: dependencies, SecureObjectRepository records, CLI commands, refresh lifecycle, typed error hierarchy. The post-teardown `src/aeat/adapters/outbound/google/` scaffold files (`__init__.py`, `_paths.py`, `test_google_auth.py`) are deleted in S00 and replaced by the v1 modules introduced across subsequent steps; no scaffold artifact survives this phase.
 
@@ -71,7 +79,7 @@ Land the OAuth Desktop application surface end-to-end: dependencies, SecureObjec
 - [ ] `P01.S17` - resolve the active `AEAT_PROFILE` at every `aeat config google ...` invocation through the existing `AeatProfile` resolver; raise `ProfileUnboundError` if the env var is unset and no `--profile` override is given; wire the resolver to every OAuth-record load/save path so the per-profile binding in ADR-0 §5 is enforced at one location; `src/aeat/adapters/outbound/google/_profile_binding.py`.
 - [ ] `P01.S18` - write a forbidden-import test asserting `src/aeat/adapters/outbound/google/` contains no module named `_oauth_legacy*`, `_gcloud*`, or anything outside the v1 module list from S00; `tests/import_contract/google/test_no_legacy_modules.py`.
 
-### Phase `P02` - storage provider abstraction (ADR-1)
+#### Phase `P02` - storage provider abstraction (ADR-1)
 
 Define `StorageProvider` Protocol and ship both v1 implementations (`LocalFileSystemProvider`, `GoogleDriveProvider`) plus the in-memory test backend.
 
@@ -94,76 +102,7 @@ Define `StorageProvider` Protocol and ship both v1 implementations (`LocalFileSy
 - [ ] `P02.S17` - extend `get_storage_provider` factory to read `aeat_storage_provider_kind` + (when applicable) `aeat_google_drive_root_folder_id`, resolve the active `AEAT_PROFILE`, and instantiate the configured backend with credentials threaded through the P01.S17 profile binding; `src/aeat/adapters/outbound/storage/_factory.py`.
 - [ ] `P02.S18` - implement `GoogleDriveProvider` root-folder discovery: create the `aeat-vault/` folder under the operator-configured root folder ID on first probe if absent; reject if the operator-configured root folder ID points to a non-folder file; `src/aeat/adapters/outbound/storage/_google_drive.py`.
 
-### Phase `P03` - drive bucket hierarchy, sync state, conflict resolution (ADR-2)
-
-Land the operator-facing Drive layout and the local sync-state sidecar table; implement the sync coordinator and the refuse-on-conflict semantics.
-
-- [ ] `P03.S01` - add Alembic migration creating `secure_objects_sync_state` table per ADR-2 §5; `migrations/versions/0005_secure_objects_sync_state.py`.
-- [ ] `P03.S02` - define `SyncStateRow` pydantic record + `SyncStateStatus` enum; `src/aeat/application/storage/sync/_records.py`.
-- [ ] `P03.S03` - implement SQLAlchemy ORM mapping and repository for sync-state rows; `src/aeat/adapters/persistence/storage/sql/_sync_state.py`.
-- [ ] `P03.S04` - define `NamespaceLabelDeriver` Protocol; `src/aeat/adapters/outbound/storage/_labels.py`.
-- [ ] `P03.S05` - implement label-deriver registry with per-namespace registration API and strict refusal (`UnregisteredNamespaceLabelDeriverError`) at startup when an allow-listed namespace lacks a registered deriver; no silent default, no permissive fallback; `src/aeat/adapters/outbound/storage/_labels.py`.
-- [ ] `P03.S06` - implement startup verification that every allow-listed namespace from ADR-5 has a registered label deriver; raise `UnregisteredNamespaceLabelDeriverError` on first storage-provider instantiation if any namespace is unregistered; `src/aeat/adapters/outbound/storage/_labels.py`.
-- [ ] `P03.S07` - implement `DriveSync` coordinator full-enumeration algorithm classifying records into unchanged / drift / conflict / fresh / tombstone / ghost / orphan; `src/aeat/application/storage/sync/_coordinator.py`.
-- [ ] `P03.S08` - implement `aeat config google sync push` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P03.S09` - implement `aeat config google sync pull` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P03.S10` - implement `aeat config google sync status [--format json|text]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P03.S11` - implement `aeat config google sync orphans [--format json|text]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P03.S12` - implement `aeat config google sync claim --file-id <id>` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P03.S13` - implement `--force --resolve {local,remote,fork} --keys <hmac_prefix_list>` conflict-resolution flag matrix; `src/aeat/application/storage/sync/_coordinator.py`.
-- [ ] `P03.S14` - implement Drive `appProperties` writes carrying the commit log on every push; `src/aeat/adapters/outbound/storage/_google_drive.py`.
-- [ ] `P03.S15` - implement filename surface form `<hmac_prefix_8>--<label>.<ext>` on push; rename detection on label drift; `src/aeat/application/storage/sync/_coordinator.py`.
-- [ ] `P03.S16` - write operator-facing `aeat-vault/README.md` content as a string constant and arrange one-time upload on first push; `src/aeat/application/storage/sync/_bucket_readme.py`.
-- [ ] `P03.S17` - write colocated unit tests for the diff classifier, conflict refusal, and `--resolve` flags using the in-memory backend; `src/aeat/application/storage/sync/_test_coordinator.py`.
-- [ ] `P03.S18` - write live tests gated by `AEAT_LIVE_TESTS_ENABLED` against real Drive for full push / pull / status round-trips; `src/aeat/application/storage/sync/_test_coordinator_live.py`.
-- [ ] `P03.S19` - implement underscore-prefixed operator bucket initialization (`_probe/`, `_sync-state/`, `_workspace/`, `_inbound/{pending,processed,rejected}`) on first push if any subfolder is absent; idempotent; emit a `storage.bucket.initialised` log line per created folder; `src/aeat/application/storage/sync/_bucket_init.py`.
-- [ ] `P03.S20` - implement `_sync-state/` per-namespace sidecar writer so the local sync-state table is mirrored to Drive on every successful push (one JSON object per namespace, ciphertext-wrapped); `src/aeat/application/storage/sync/_sync_state_mirror.py`.
-
-### Phase `P04` - snapshot encryption boundary and cross-machine restore (ADR-3)
-
-Implement ciphertext-layer mirror (already enforced by ADR-2 wiring), KEK escrow via Argon2id-wrapped passphrase, per-namespace HMAC manifest, and the restore CLI.
-
-- [ ] `P04.S01` - define `KekEscrowEnvelope` pydantic record; `src/aeat/application/storage/snapshot/_records.py`.
-- [ ] `P04.S02` - define `NamespaceManifest` and `ManifestEntry` pydantic records; `src/aeat/application/storage/snapshot/_records.py`.
-- [ ] `P04.S03` - implement Argon2id KDF over passphrase with configurable params and salt generation; `src/aeat/application/storage/snapshot/_escrow.py`.
-- [ ] `P04.S04` - implement KEK wrap via AES-256-GCM under derived wrap key; `src/aeat/application/storage/snapshot/_escrow.py`.
-- [ ] `P04.S05` - implement manifest generation with HMAC-SHA256 key derived via HKDF from master KEK; `src/aeat/application/storage/snapshot/_manifest.py`.
-- [ ] `P04.S06` - implement `aeat config google escrow create --profile <id>` Typer command prompting for passphrase; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P04.S07` - implement `aeat config google escrow status --profile <id> [--format json|text]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P04.S08` - implement `aeat config google escrow rotate --profile <id>` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P04.S09` - implement `aeat config google escrow delete --profile <id>` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P04.S10` - implement `aeat config google restore --profile <id> --from-drive [--namespace] [--keys]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P04.S11` - implement cross-machine bootstrap flow consuming escrow + restoring records into local substrate; `src/aeat/application/storage/snapshot/_restore.py`.
-- [ ] `P04.S12` - implement `aeat config google manifest verify --profile <id> [--namespace]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P04.S13` - regenerate per-namespace manifest on every successful push affecting the namespace; `src/aeat/application/storage/sync/_coordinator.py`.
-- [ ] `P04.S14` - write colocated unit tests for KEK wrap / unwrap, manifest HMAC, restore flow against the in-memory backend; `src/aeat/application/storage/snapshot/_test_escrow.py` and `_test_restore.py`.
-- [ ] `P04.S15` - write live tests for cross-machine restore against real Drive; `src/aeat/application/storage/snapshot/_test_restore_live.py`.
-
-### Phase `P05` - incoming-bucket ingestion (ADR-4)
-
-Materialise the operator drop-zone semantics: bucket layout, ack via move, triple dedup, validation gates, rejection sidecars.
-
-- [ ] `P05.S01` - add Alembic migration creating `inbound_ingested_files` table; `migrations/versions/0006_inbound_ingested_files.py`.
-- [ ] `P05.S02` - implement SQLAlchemy ORM mapping and repository; `src/aeat/adapters/persistence/storage/sql/_inbound_ingested.py`.
-- [ ] `P05.S03` - implement filename-convention parser (type / period / source / random); `src/aeat/application/storage/inbound/_filename.py`.
-- [ ] `P05.S04` - implement materialise-to-tempfile adapter for Drive-fetched files; `src/aeat/application/storage/inbound/_materialise.py`.
-- [ ] `P05.S05` - implement Drive-file-ID dedup layer; `src/aeat/application/storage/inbound/_dedup.py`.
-- [ ] `P05.S06` - implement content-hash (md5Checksum) dedup layer; `src/aeat/application/storage/inbound/_dedup.py`.
-- [ ] `P05.S07` - implement parse-level dedup composing with existing `application/transactions/_import.py` merge logic; `src/aeat/application/storage/inbound/_dedup.py`.
-- [ ] `P05.S08` - implement Stage-1 type detection (MIME + extension + magic bytes); `src/aeat/application/storage/inbound/_validate.py`.
-- [ ] `P05.S09` - implement Stage-2 parser-level validation invoking the appropriate inbound provider; `src/aeat/application/storage/inbound/_validate.py`.
-- [ ] `P05.S10` - implement move-to-processed acknowledgement; `src/aeat/application/storage/inbound/_acknowledge.py`.
-- [ ] `P05.S11` - implement move-to-rejected with sidecar `.error.txt` writer; `src/aeat/application/storage/inbound/_acknowledge.py`.
-- [ ] `P05.S12` - implement optional sidecar `<file>.meta.json` parser; `src/aeat/application/storage/inbound/_filename.py`.
-- [ ] `P05.S13` - implement `aeat config google sync inbound [--batch] [--dry-run]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P05.S14` - implement `aeat config google sync inbound --reject --file-id <id>` Typer command for operator manual reject; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P05.S15` - implement `aeat config google sync inbound --replay --file-id <id>` Typer command for operator forced re-ingest; `src/aeat/entrypoints/cli/_config/_google.py`.
-- [ ] `P05.S16` - write inbound-bucket README content uploaded on first inbound run; `src/aeat/application/storage/inbound/_bucket_readme.py`.
-- [ ] `P05.S17` - write colocated unit tests for filename parser, dedup, validation, ack, rejection; `src/aeat/application/storage/inbound/_test_*.py`.
-- [ ] `P05.S18` - write live tests for inbound round-trips against real Drive; `src/aeat/application/storage/inbound/_test_inbound_live.py`.
-- [ ] `P05.S19` - implement source-kind prefix router registry mapping the four canonical filename prefixes (`purchase-invoice-evidence-`, `payable-invoice-`, `collectible-invoice-`, plus `justificante-`, `bank-statement-`) to their downstream parser handlers; the router refuses any unmapped prefix and any bare `invoice-` prefix per the cli-workflow-redesign invoice-domain-decoupling ADR; `src/aeat/application/storage/inbound/_prefix_router.py`.
-
-### Phase `P06` - per-domain substrate hooks (ADR-5)
+#### Phase `P06` - per-domain substrate hooks (ADR-5)
 
 Land the substrate amendments and per-domain registrations required by the export taxonomy. Reverse-merge services land as the fully-active v1 backend for the P08 CLI edit and CSV-corrections commands; no settings flag, no inert code, no deferred activation.
 
@@ -203,7 +142,104 @@ Land the substrate amendments and per-domain registrations required by the expor
 - [ ] `P06.S29` - wire each reverse-merge service to the cli-workflow-redesign bucket-event-history dispatcher; events follow the `ledger.<source-kind>.correction.applied` shape with `source_kind`, `record_id`, `changed_fields`, `operator_actor`, `applied_at` fields; one event per applied row; failure to emit is a hard error, not a swallowed warning; `src/aeat/application/audit/_bucket_event_emitter.py`.
 - [ ] `P06.S30` - create the `src/aeat/entrypoints/cli/_app/` package skeleton (`__init__.py` + module-level Typer sub-app) consumed by P08 commands; the package mirrors `_config/` shape: no logic in `__init__.py`, one module per sub-CLI; `src/aeat/entrypoints/cli/_app/__init__.py`.
 
-### Phase `P07` - calculation-to-sheets visualisation (ADR-6)
+### Wave `W02` - Surface
+
+Every operator-visible CLI verb against the Drive backend. Lands the Drive bucket hierarchy + sync coordinator + conflict semantics (`P03`), the snapshot encryption boundary with cross-machine restore (`P04`), the drop-zone inbound ingestion path (`P05`), and the operator-facing CLI edit + CSV-corrections surfaces (`P08`). `P04` / `P05` cannot start until the `W02.P03.S07`-`W02.P03.S20` block lands; `P08` cannot start until the `W01.P06.S05`-`W01.P06.S08` reverse-merge services and `W01.P06.S29` / `W01.P06.S30` package skeleton land.
+
+#### Phase `P03` - drive bucket hierarchy, sync state, conflict resolution (ADR-2)
+
+Land the operator-facing Drive layout and the local sync-state sidecar table; implement the sync coordinator and the refuse-on-conflict semantics.
+
+- [ ] `P03.S01` - add Alembic migration creating `secure_objects_sync_state` table per ADR-2 §5; `migrations/versions/0005_secure_objects_sync_state.py`.
+- [ ] `P03.S02` - define `SyncStateRow` pydantic record + `SyncStateStatus` enum; `src/aeat/application/storage/sync/_records.py`.
+- [ ] `P03.S03` - implement SQLAlchemy ORM mapping and repository for sync-state rows; `src/aeat/adapters/persistence/storage/sql/_sync_state.py`.
+- [ ] `P03.S04` - define `NamespaceLabelDeriver` Protocol; `src/aeat/adapters/outbound/storage/_labels.py`.
+- [ ] `P03.S05` - implement label-deriver registry with per-namespace registration API and strict refusal (`UnregisteredNamespaceLabelDeriverError`) at startup when an allow-listed namespace lacks a registered deriver; no silent default, no permissive fallback; `src/aeat/adapters/outbound/storage/_labels.py`.
+- [ ] `P03.S06` - implement startup verification that every allow-listed namespace from ADR-5 has a registered label deriver; raise `UnregisteredNamespaceLabelDeriverError` on first storage-provider instantiation if any namespace is unregistered; `src/aeat/adapters/outbound/storage/_labels.py`.
+- [ ] `P03.S07` - implement `DriveSync` coordinator full-enumeration algorithm classifying records into unchanged / drift / conflict / fresh / tombstone / ghost / orphan; `src/aeat/application/storage/sync/_coordinator.py`.
+- [ ] `P03.S08` - implement `aeat config google sync push` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P03.S09` - implement `aeat config google sync pull` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P03.S10` - implement `aeat config google sync status [--format json|text]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P03.S11` - implement `aeat config google sync orphans [--format json|text]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P03.S12` - implement `aeat config google sync claim --file-id <id>` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P03.S13` - implement `--force --resolve {local,remote,fork} --keys <hmac_prefix_list>` conflict-resolution flag matrix; `src/aeat/application/storage/sync/_coordinator.py`.
+- [ ] `P03.S14` - implement Drive `appProperties` writes carrying the commit log on every push; `src/aeat/adapters/outbound/storage/_google_drive.py`.
+- [ ] `P03.S15` - implement filename surface form `<hmac_prefix_8>--<label>.<ext>` on push; rename detection on label drift; `src/aeat/application/storage/sync/_coordinator.py`.
+- [ ] `P03.S16` - write operator-facing `aeat-vault/README.md` content as a string constant and arrange one-time upload on first push; `src/aeat/application/storage/sync/_bucket_readme.py`.
+- [ ] `P03.S17` - write colocated unit tests for the diff classifier, conflict refusal, and `--resolve` flags using the in-memory backend; `src/aeat/application/storage/sync/_test_coordinator.py`.
+- [ ] `P03.S18` - write live tests gated by `AEAT_LIVE_TESTS_ENABLED` against real Drive for full push / pull / status round-trips; `src/aeat/application/storage/sync/_test_coordinator_live.py`.
+- [ ] `P03.S19` - implement underscore-prefixed operator bucket initialization (`_probe/`, `_sync-state/`, `_workspace/`, `_inbound/{pending,processed,rejected}`) on first push if any subfolder is absent; idempotent; emit a `storage.bucket.initialised` log line per created folder; `src/aeat/application/storage/sync/_bucket_init.py`.
+- [ ] `P03.S20` - implement `_sync-state/` per-namespace sidecar writer so the local sync-state table is mirrored to Drive on every successful push (one JSON object per namespace, ciphertext-wrapped); `src/aeat/application/storage/sync/_sync_state_mirror.py`.
+
+#### Phase `P04` - snapshot encryption boundary and cross-machine restore (ADR-3)
+
+Implement ciphertext-layer mirror (already enforced by ADR-2 wiring), KEK escrow via Argon2id-wrapped passphrase, per-namespace HMAC manifest, and the restore CLI.
+
+- [ ] `P04.S01` - define `KekEscrowEnvelope` pydantic record; `src/aeat/application/storage/snapshot/_records.py`.
+- [ ] `P04.S02` - define `NamespaceManifest` and `ManifestEntry` pydantic records; `src/aeat/application/storage/snapshot/_records.py`.
+- [ ] `P04.S03` - implement Argon2id KDF over passphrase with configurable params and salt generation; `src/aeat/application/storage/snapshot/_escrow.py`.
+- [ ] `P04.S04` - implement KEK wrap via AES-256-GCM under derived wrap key; `src/aeat/application/storage/snapshot/_escrow.py`.
+- [ ] `P04.S05` - implement manifest generation with HMAC-SHA256 key derived via HKDF from master KEK; `src/aeat/application/storage/snapshot/_manifest.py`.
+- [ ] `P04.S06` - implement `aeat config google escrow create --profile <id>` Typer command prompting for passphrase; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P04.S07` - implement `aeat config google escrow status --profile <id> [--format json|text]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P04.S08` - implement `aeat config google escrow rotate --profile <id>` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P04.S09` - implement `aeat config google escrow delete --profile <id>` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P04.S10` - implement `aeat config google restore --profile <id> --from-drive [--namespace] [--keys]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P04.S11` - implement cross-machine bootstrap flow consuming escrow + restoring records into local substrate; `src/aeat/application/storage/snapshot/_restore.py`.
+- [ ] `P04.S12` - implement `aeat config google manifest verify --profile <id> [--namespace]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P04.S13` - regenerate per-namespace manifest on every successful push affecting the namespace; `src/aeat/application/storage/sync/_coordinator.py`.
+- [ ] `P04.S14` - write colocated unit tests for KEK wrap / unwrap, manifest HMAC, restore flow against the in-memory backend; `src/aeat/application/storage/snapshot/_test_escrow.py` and `_test_restore.py`.
+- [ ] `P04.S15` - write live tests for cross-machine restore against real Drive; `src/aeat/application/storage/snapshot/_test_restore_live.py`.
+
+#### Phase `P05` - incoming-bucket ingestion (ADR-4)
+
+Materialise the operator drop-zone semantics: bucket layout, ack via move, triple dedup, validation gates, rejection sidecars.
+
+- [ ] `P05.S01` - add Alembic migration creating `inbound_ingested_files` table; `migrations/versions/0006_inbound_ingested_files.py`.
+- [ ] `P05.S02` - implement SQLAlchemy ORM mapping and repository; `src/aeat/adapters/persistence/storage/sql/_inbound_ingested.py`.
+- [ ] `P05.S03` - implement filename-convention parser (type / period / source / random); `src/aeat/application/storage/inbound/_filename.py`.
+- [ ] `P05.S04` - implement materialise-to-tempfile adapter for Drive-fetched files; `src/aeat/application/storage/inbound/_materialise.py`.
+- [ ] `P05.S05` - implement Drive-file-ID dedup layer; `src/aeat/application/storage/inbound/_dedup.py`.
+- [ ] `P05.S06` - implement content-hash (md5Checksum) dedup layer; `src/aeat/application/storage/inbound/_dedup.py`.
+- [ ] `P05.S07` - implement parse-level dedup composing with existing `application/transactions/_import.py` merge logic; `src/aeat/application/storage/inbound/_dedup.py`.
+- [ ] `P05.S08` - implement Stage-1 type detection (MIME + extension + magic bytes); `src/aeat/application/storage/inbound/_validate.py`.
+- [ ] `P05.S09` - implement Stage-2 parser-level validation invoking the appropriate inbound provider; `src/aeat/application/storage/inbound/_validate.py`.
+- [ ] `P05.S10` - implement move-to-processed acknowledgement; `src/aeat/application/storage/inbound/_acknowledge.py`.
+- [ ] `P05.S11` - implement move-to-rejected with sidecar `.error.txt` writer; `src/aeat/application/storage/inbound/_acknowledge.py`.
+- [ ] `P05.S12` - implement optional sidecar `<file>.meta.json` parser; `src/aeat/application/storage/inbound/_filename.py`.
+- [ ] `P05.S13` - implement `aeat config google sync inbound [--batch] [--dry-run]` Typer command; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P05.S14` - implement `aeat config google sync inbound --reject --file-id <id>` Typer command for operator manual reject; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P05.S15` - implement `aeat config google sync inbound --replay --file-id <id>` Typer command for operator forced re-ingest; `src/aeat/entrypoints/cli/_config/_google.py`.
+- [ ] `P05.S16` - write inbound-bucket README content uploaded on first inbound run; `src/aeat/application/storage/inbound/_bucket_readme.py`.
+- [ ] `P05.S17` - write colocated unit tests for filename parser, dedup, validation, ack, rejection; `src/aeat/application/storage/inbound/_test_*.py`.
+- [ ] `P05.S18` - write live tests for inbound round-trips against real Drive; `src/aeat/application/storage/inbound/_test_inbound_live.py`.
+- [ ] `P05.S19` - implement source-kind prefix router registry mapping the four canonical filename prefixes (`purchase-invoice-evidence-`, `payable-invoice-`, `collectible-invoice-`, plus `justificante-`, `bank-statement-`) to their downstream parser handlers; the router refuses any unmapped prefix and any bare `invoice-` prefix per the cli-workflow-redesign invoice-domain-decoupling ADR; `src/aeat/application/storage/inbound/_prefix_router.py`.
+
+#### Phase `P08` - operator-facing CLI edit + CSV-corrections surfaces (ADR-7)
+
+Ship the v1 CLI edit and CSV-corrections commands that operators use to correct editable Tier-1 domain fields. Every command calls the fully-active reverse-merge services from P06; no settings flag, no inert code. CLI surfaces use the EPIC's canonical `aeat app ledger ...` namespaces per the cli-workflow-redesign apex ADR.
+
+- [ ] `P08.S01` - obtain EPIC-team sign-off on the `aeat app ledger transaction edit` single-record correction verb and the `aeat app ledger transaction corrections` sub-namespace; the latter applies symmetrically to `payable-invoice corrections` and `collectible-invoice corrections`; capture the decision under `.vault/exec/2026-05-13-cli-workflow-redesign/`.
+- [ ] `P08.S02` - implement `aeat app ledger transaction edit <id> --category --notes` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
+- [ ] `P08.S03` - implement `aeat app ledger payable-invoice edit <id> --payment-status --notes` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
+- [ ] `P08.S04` - implement `aeat app ledger collectible-invoice edit <id> --payment-status --notes` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
+- [ ] `P08.S05` - implement `aeat app ledger rental income edit <id> --amount --dias-alquilados` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
+- [ ] `P08.S06` - implement `aeat app ledger rental expense edit <id> --amount --description --allocation-pct` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
+- [ ] `P08.S07` - implement `aeat app ledger transaction corrections export-csv --period --output` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
+- [ ] `P08.S08` - implement `aeat app ledger transaction corrections import-csv --input [--dry-run]` Typer command with full-validation-before-commit semantics; `src/aeat/entrypoints/cli/_app/_ledger.py`.
+- [ ] `P08.S09` - implement `aeat app ledger payable-invoice corrections export-csv` / `import-csv` Typer commands; `src/aeat/entrypoints/cli/_app/_ledger.py`.
+- [ ] `P08.S10` - implement `aeat app ledger collectible-invoice corrections export-csv` / `import-csv` Typer commands; `src/aeat/entrypoints/cli/_app/_ledger.py`.
+- [ ] `P08.S11` - implement audit logging on every CSV import row emitting both a `reverse_merge_audit` row and a `ledger.<source-kind>.correction.applied` bucket event per the cli-workflow-redesign bucket-event-history ADR; `src/aeat/application/audit/_reverse_merge_audit.py`.
+- [ ] `P08.S12` - document the four safety properties and the future-amendment surface in a contributor-facing README under the audit subpackage; `src/aeat/application/audit/README.md`.
+- [ ] `P08.S13` - write colocated unit tests for edit commands and CSV round-trips; `src/aeat/entrypoints/cli/_app/_test_ledger_*.py`.
+- [ ] `P08.S14` - write a forbidden-import test asserting no `sync pull --workspace-edits` (or any Sheets-pull) verb is registered under `aeat config google sync` in v1; the test introspects the Typer command tree and fails if any matching command exists; defends ADR-7's deferral invariant against future drift; `tests/import_contract/google/test_no_sheets_pull_verb.py`.
+- [ ] `P08.S15` - add Spanish CLI localisation strings for every new `aeat config google ...` and `aeat app ledger ...` command (help text, prompts, error messages) keyed off the existing `_i18n` resource module; coverage test asserts no untranslated key for any new command; `src/aeat/entrypoints/cli/_i18n/google.po` + `tests/entrypoints/cli/test_i18n_coverage.py`.
+
+### Wave `W03` - Visualisation
+
+Stand-alone Sheets-v4 surface that consumes both `W01` (provider, substrate hooks, per-modelo enumeration) and the Drive write capabilities established by `W02`'s coordinator. The only Wave that touches the Sheets v4 API in addition to Drive v3; isolated into a dedicated thin client per `P07.S19`.
+
+#### Phase `P07` - calculation-to-sheets visualisation (ADR-6)
 
 Land the four-sheet visualisation Spreadsheet per (modelo, period); hybrid formula translation; Spanish UX; protected ranges.
 
@@ -227,29 +263,9 @@ Land the four-sheet visualisation Spreadsheet per (modelo, period); hybrid formu
 - [ ] `P07.S18` - link the calc-sheet formula translator to each Modelo's existing `workbook_parity_refs` so the translated formulas are validated against AEAT-published parity workbooks; a parity-divergence test runs per (modelo, period) in unit tests; `src/aeat/application/storage/calc_sheets/_parity_check.py`.
 - [ ] `P07.S19` - factor a dedicated `_sheets_service.py` thin client for the Sheets v4 API distinct from the Drive v3 client; the calc-sheets writers consume only this client; the Drive provider does not import it; `src/aeat/adapters/outbound/google/_sheets_service.py`.
 
-### Phase `P08` - operator-facing CLI edit + CSV-corrections surfaces (ADR-7)
-
-Ship the v1 CLI edit and CSV-corrections commands that operators use to correct editable Tier-1 domain fields. Every command calls the fully-active reverse-merge services from P06; no settings flag, no inert code. CLI surfaces use the EPIC's canonical `aeat app ledger ...` namespaces per the cli-workflow-redesign apex ADR.
-
-- [ ] `P08.S01` - obtain EPIC-team sign-off on the `aeat app ledger transaction edit` single-record correction verb and the `aeat app ledger transaction corrections` sub-namespace; the latter applies symmetrically to `payable-invoice corrections` and `collectible-invoice corrections`; capture the decision under `.vault/exec/2026-05-13-cli-workflow-redesign/`.
-- [ ] `P08.S02` - implement `aeat app ledger transaction edit <id> --category --notes` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
-- [ ] `P08.S03` - implement `aeat app ledger payable-invoice edit <id> --payment-status --notes` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
-- [ ] `P08.S04` - implement `aeat app ledger collectible-invoice edit <id> --payment-status --notes` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
-- [ ] `P08.S05` - implement `aeat app ledger rental income edit <id> --amount --dias-alquilados` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
-- [ ] `P08.S06` - implement `aeat app ledger rental expense edit <id> --amount --description --allocation-pct` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
-- [ ] `P08.S07` - implement `aeat app ledger transaction corrections export-csv --period --output` Typer command; `src/aeat/entrypoints/cli/_app/_ledger.py`.
-- [ ] `P08.S08` - implement `aeat app ledger transaction corrections import-csv --input [--dry-run]` Typer command with full-validation-before-commit semantics; `src/aeat/entrypoints/cli/_app/_ledger.py`.
-- [ ] `P08.S09` - implement `aeat app ledger payable-invoice corrections export-csv` / `import-csv` Typer commands; `src/aeat/entrypoints/cli/_app/_ledger.py`.
-- [ ] `P08.S10` - implement `aeat app ledger collectible-invoice corrections export-csv` / `import-csv` Typer commands; `src/aeat/entrypoints/cli/_app/_ledger.py`.
-- [ ] `P08.S11` - implement audit logging on every CSV import row emitting both a `reverse_merge_audit` row and a `ledger.<source-kind>.correction.applied` bucket event per the cli-workflow-redesign bucket-event-history ADR; `src/aeat/application/audit/_reverse_merge_audit.py`.
-- [ ] `P08.S12` - document the four safety properties and the future-amendment surface in a contributor-facing README under the audit subpackage; `src/aeat/application/audit/README.md`.
-- [ ] `P08.S13` - write colocated unit tests for edit commands and CSV round-trips; `src/aeat/entrypoints/cli/_app/_test_ledger_*.py`.
-- [ ] `P08.S14` - write a forbidden-import test asserting no `sync pull --workspace-edits` (or any Sheets-pull) verb is registered under `aeat config google sync` in v1; the test introspects the Typer command tree and fails if any matching command exists; defends ADR-7's deferral invariant against future drift; `tests/import_contract/google/test_no_sheets_pull_verb.py`.
-- [ ] `P08.S15` - add Spanish CLI localisation strings for every new `aeat config google ...` and `aeat app ledger ...` command (help text, prompts, error messages) keyed off the existing `_i18n` resource module; coverage test asserts no untranslated key for any new command; `src/aeat/entrypoints/cli/_i18n/google.po` + `tests/entrypoints/cli/test_i18n_coverage.py`.
-
 ## Parallelization
 
-P01 is the foundation; nothing in P02 onwards can proceed without authenticated access to Drive. Within P03 and P06, dependencies cross phase boundaries at the Step level rather than the Phase level, so the sequencing below pins Step ranges rather than whole Phases.
+`P01` is the foundation; nothing in `W01.P02`, `W01.P06`, or any of `W02` / `W03` can proceed without authenticated access to Drive. Within `P03` and `P06`, dependencies cross phase boundaries at the Step level rather than the Phase level, so the sequencing below pins Step ranges rather than whole Phases.
 
 Cross-phase step-level dependencies:
 
@@ -259,12 +275,12 @@ Cross-phase step-level dependencies:
 
 Default sequencing (Step-range granularity, not whole Phases):
 
-1. **`P01`** (alone) — auth foundation, profile binding, `_config/` package promotion.
-2. **`P02`** ∥ **`P03.S01`-`P03.S06`** ∥ **`P06.S01`-`P06.S03b`** ∥ **`P06.S05`-`P06.S08`** ∥ **`P06.S25`-`P06.S28`** — provider abstraction, sync-state schema + deriver Protocol/registry, substrate enumeration hooks, reverse-merge services, allow-list, `SourceKind` enum. None of these have cross-dependencies on each other.
-3. **`P03.S07`-`P03.S20`** ∥ **`P06.S09`-`P06.S13`** ∥ **`P06.S14`-`P06.S24`** ∥ **`P06.S29`-`P06.S30`** — DriveSync coordinator + CLI + bucket init; filing/deadlines/workflow export hooks; per-namespace label-deriver registrations; bucket-event emitter; `_app/` package skeleton.
-4. **`P04`** ∥ **`P05`** — both depend on `P03.S07`-`P03.S20` finalised. P04 also depends on `P02` (`probe`) and `P03.S14` (manifest regeneration on push).
-5. **`P07`** — depends on `P02` (Sheets via the dedicated client landed in `P07.S19`) + `P06.S01`-`P06.S03b` (per-modelo enumeration). Can start as soon as Step (3) is closed.
-6. **`P08`** — depends on `P06.S05`-`P06.S08` (reverse-merge services) + `P06.S29` (bucket-event emitter) + `P06.S30` (`_app/` package). Can start as soon as Step (3) is closed; not gated on `P07`.
+1. **`W01.P01`** (alone) — auth foundation, profile binding, `_config/` package promotion.
+2. **`W01.P02`** ∥ **`W02.P03.S01`-`W02.P03.S06`** ∥ **`W01.P06.S01`-`W01.P06.S03b`** ∥ **`W01.P06.S05`-`W01.P06.S08`** ∥ **`W01.P06.S25`-`W01.P06.S28`** — provider abstraction, sync-state schema + deriver Protocol/registry, substrate enumeration hooks, reverse-merge services, allow-list, `SourceKind` enum. None of these have cross-dependencies on each other.
+3. **`W02.P03.S07`-`W02.P03.S20`** ∥ **`W01.P06.S09`-`W01.P06.S13`** ∥ **`W01.P06.S14`-`W01.P06.S24`** ∥ **`W01.P06.S29`-`W01.P06.S30`** — DriveSync coordinator + CLI + bucket init; filing/deadlines/workflow export hooks; per-namespace label-deriver registrations; bucket-event emitter; `_app/` package skeleton.
+4. **`W02.P04`** ∥ **`W02.P05`** — both depend on `W02.P03.S07`-`W02.P03.S20` finalised. `P04` also depends on `W01.P02` (`probe`) and `W02.P03.S14` (manifest regeneration on push).
+5. **`W03.P07`** — depends on `W01.P02` (Sheets via the dedicated client landed in `P07.S19`) + `W01.P06.S01`-`W01.P06.S03b` (per-modelo enumeration). Can start as soon as Step (3) is closed.
+6. **`W02.P08`** — depends on `W01.P06.S05`-`W01.P06.S08` (reverse-merge services) + `W01.P06.S29` (bucket-event emitter) + `W01.P06.S30` (`_app/` package). Can start as soon as Step (3) is closed; not gated on `W03.P07`.
 
 Within a Step range, Steps are sequenced by file dependency; reviewer judgement on each pair. The Step-level cross-phase contract above replaces any whole-Phase "P03 must finalise before P06" claim — the original phrasing concealed a circular dependency between `P03.S07` and `P06.S01`-`P06.S03b`.
 
