@@ -71,6 +71,7 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-audit-research]]'
   - '[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr]]'
+  - '[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-audit]]'
 ---
 
 <!-- LINK RULES:
@@ -147,65 +148,6 @@ This Phase delivers thin cli exposure for apex root and lifecycle contract as re
 - [x] `W01.P005.S0028` - Render apex root and lifecycle contract results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
 - [x] `W01.P005.S0029` - Handle apex root and lifecycle contract failures through the central command error boundary; `src/aeat/entrypoints/cli`.
 - [x] `W01.P005.S0030` - Validate help text for apex root and lifecycle contract uses accepted vocabulary only; `tests/entrypoints/cli`.
-
-## Wave `W60` - profile output language
-
-This Wave implements the `2026-05-13-cli-workflow-redesign-profile-output-language-adr` decision for profile-owned output language. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services. This Wave is physically placed after W01 so the next execution pass handles profile language before continuing to the broader backlog.
-
-### Phase `W60.P296` - backend implementation
-
-This Phase delivers backend implementation for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
-
-- [x] `W60.P296.S1771` - Map the `2026-05-13-cli-workflow-redesign-profile-output-language-adr` decision into non-CLI service ownership for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors, src/aeat/application/wizard, src/aeat/domain/profile`.
-- [x] `W60.P296.S1772` - Implement Pydantic command and result contracts for profile-owned output language; `src/aeat/application/wizard, src/aeat/domain/profile`.
-- [x] `W60.P296.S1773` - Wire application or domain services required by profile-owned output language; `src/aeat/application/wizard, src/aeat/application/profile`.
-- [x] `W60.P296.S1774` - Connect persistence, bucket events, registry data, or provider adapters required by profile-owned output language; `src/aeat/application/workflow, src/aeat/application/profile`.
-- [x] `W60.P296.S1775` - Route existing backend functionality into the canonical service for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors`.
-- [x] `W60.P296.S1776` - Record service-level error codes and log fields for profile-owned output language; `src/aeat/core/errors/registry, src/aeat/application/profile`.
-
-### Phase `W60.P297` - shadow duplicate removal
-
-This Phase delivers shadow duplicate removal for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
-
-- [x] `W60.P297.S1777` - Audit duplicate implementations that overlap profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors, src/aeat/entrypoints/cli`.
-- [x] `W60.P297.S1778` - Delete duplicate backend branches that compete with profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors`.
-- [x] `W60.P297.S1779` - Remove stale aliases that bypass the canonical service for profile-owned output language; `src/aeat/entrypoints/cli`.
-- [x] `W60.P297.S1780` - Migrate internal callers to the canonical service for profile-owned output language; `src/aeat/core, src/aeat/application, src/aeat/entrypoints/cli`.
-- [x] `W60.P297.S1781` - Remove stale fixtures and tests that encode duplicate behavior for profile-owned output language; `tests, src/aeat/**/test_*.py`.
-- [x] `W60.P297.S1782` - Update boundary inventory entries that describe duplicate behavior for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
-
-### Phase `W60.P298` - de-shim and de-stub cleanup
-
-This Phase delivers de-shim and de-stub cleanup for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
-
-- [x] `W60.P298.S1783` - Delete compatibility shims that preserve rejected behavior for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors, src/aeat/entrypoints/cli`.
-- [x] `W60.P298.S1784` - Delete placeholder stubs that claim support for profile-owned output language; `src/aeat/application/wizard, src/aeat/domain/profile`.
-- [x] `W60.P298.S1785` - Replace stubbed paths with real backend service calls for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors`.
-- [x] `W60.P298.S1786` - Remove deprecated command spelling and help text for profile-owned output language; `src/aeat/entrypoints/cli, src/aeat/locales`.
-- [x] `W60.P298.S1787` - Remove tests that assert shim or stub behavior for profile-owned output language; `tests, src/aeat/**/test_*.py`.
-- [x] `W60.P298.S1788` - Record the removed shim and stub surfaces for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
-
-### Phase `W60.P299` - real behavior verification
-
-This Phase delivers real behavior verification for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
-
-- [x] `W60.P299.S1789` - Add service contract tests for profile-owned output language; `tests/application, src/aeat/core/i18n`.
-- [x] `W60.P299.S1790` - Add persistence or registry integration tests for profile-owned output language; `tests/application, src/aeat/application/wizard`.
-- [x] `W60.P299.S1791` - Add negative tests proving rejected aliases do not reach profile-owned output language; `tests/entrypoints/cli`.
-- [x] `W60.P299.S1792` - Add command behavior tests that exercise profile-owned output language through real services; `tests/entrypoints/cli`.
-- [x] `W60.P299.S1793` - Add end-to-end workflow coverage for profile-owned output language; `tests`.
-- [x] `W60.P299.S1794` - Run the targeted test slice for profile-owned output language without skips or xfails; `tests/application, tests/entrypoints/cli`.
-
-### Phase `W60.P300` - thin cli exposure
-
-This Phase delivers thin cli exposure for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
-
-- [x] `W60.P300.S1795` - Expose accepted command handlers for profile-owned output language under `aeat config`; `src/aeat/entrypoints/cli`.
-- [x] `W60.P300.S1796` - Keep argument parsing for profile-owned output language separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [x] `W60.P300.S1797` - Delegate profile-owned output language execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [x] `W60.P300.S1798` - Render profile-owned output language results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [x] `W60.P300.S1799` - Handle profile-owned output language failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [x] `W60.P300.S1800` - Validate help text for profile-owned output language uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W02` - cli backend boundary
 
@@ -621,65 +563,6 @@ This Phase verifies the retained CLI surfaces are thin adapters over profile buc
 - [x] `W08.P040.S0238` - Render profile bucket results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
 - [x] `W08.P040.S0239` - Handle profile bucket failures through the central command error boundary and registered `AeatError` types; `src/aeat/entrypoints/cli, src/aeat/core/errors`.
 - [x] `W08.P040.S0240` - Validate help text uses accepted vocabulary and does not imply profile JSON/path storage or CLI-owned business logic; `src/aeat/entrypoints/cli, src/aeat/locales`.
-
-## Wave `W61` - manual ledger bucket lifecycle
-
-This Wave implements the 2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr decision as a bespoke bridge after profile bucket hardening. It makes manual ledger transactions first-class bucket-scoped app data before downstream profile schema, aggregation, review, or ledger command expansion can rely on them.
-
-### Phase `W61.P301` - ledger bucket storage review
-
-This Phase audits and fixes the transaction catalogue storage boundary so every ledger read and write resolves through the active profile bucket before manual data entry is exposed.
-
-- [x] `W61.P301.S1801` - Audit active profile bucket and transaction catalogue storage ownership; `src/aeat/application/profile, src/aeat/domain/transactions`.
-- [x] `W61.P301.S1802` - Define bucket-scoped transaction catalogue repository contracts; `src/aeat/domain/transactions`.
-- [ ] `W61.P301.S1803` - Implement active profile bucket resolution for transaction catalogue reads and writes; `src/aeat/domain/transactions, src/aeat/application/workflow`.
-- [ ] `W61.P301.S1804` - Prevent cross-profile transaction collisions for manual and imported rows; `src/aeat/domain/transactions`.
-- [ ] `W61.P301.S1805` - Migrate ledger import and review projections to bucket-scoped transaction storage; `src/aeat/application/review, src/aeat/application/ledger`.
-- [ ] `W61.P301.S1806` - Register bucket-scoped ledger storage errors and log fields; `src/aeat/domain/transactions, src/aeat/core/errors`.
-
-### Phase `W61.P302` - manual transaction api
-
-This Phase creates backend-owned manual ledger mutation contracts that persist complete aggregation-visible transaction facts instead of workflow review overlays.
-
-- [ ] `W61.P302.S1807` - Define manual transaction command and result contracts; `src/aeat/application/ledger`.
-- [ ] `W61.P302.S1808` - Implement create read list and update service operations for manual ledger rows; `src/aeat/application/ledger`.
-- [ ] `W61.P302.S1809` - Persist aggregation-visible base IVA category classification and business percentage fields; `src/aeat/domain/transactions`.
-- [ ] `W61.P302.S1810` - Validate direction zero amount transfer and correction semantics in backend policy; `src/aeat/application/ledger`.
-- [ ] `W61.P302.S1811` - Separate durable ledger mutations from workflow review annotations; `src/aeat/application/review, src/aeat/application/ledger`.
-- [ ] `W61.P302.S1812` - Capture evidence provenance actor and edit lineage for manual transactions; `src/aeat/application/ledger, src/aeat/domain/attachments`.
-
-### Phase `W61.P303` - iva proportionality and aggregation routing
-
-This Phase wires manual ledger facts into IVA base, IVA amount, business-private proportionality, usage-ratio, prorrata-reference, and modelo aggregation paths without conflating distinct tax substrates.
-
-- [ ] `W61.P303.S1813` - Project bucket-local manual ledger facts into Renta aggregation; `src/aeat/application/aggregation`.
-- [ ] `W61.P303.S1814` - Project taxable base IVA amount and IVA rate facts into IVA ledger observations; `src/aeat/application/aggregation, src/aeat/domain/calculations/registry`.
-- [ ] `W61.P303.S1815` - Attach usage ratio references for mixed private and business usage; `src/aeat/domain/usage_ratios, src/aeat/application/ledger`.
-- [ ] `W61.P303.S1816` - Carry prorrata references without conflating them with usage ratios; `src/aeat/application/aggregation, src/aeat/domain/vat`.
-- [ ] `W61.P303.S1817` - Report missing base IVA proportionality category and classification facts in preflight; `src/aeat/application/ledger, src/aeat/application/aggregation`.
-- [ ] `W61.P303.S1818` - Route modelo aggregation through bucket-local transaction catalogues; `src/aeat/application/modelo, src/aeat/application/aggregation`.
-
-### Phase `W61.P304` - ledger events removal archive and export
-
-This Phase adds auditable ledger lifecycle semantics for edit, allocation, evidence attachment, removal, reset, archive, stash, and export operations within the active bucket.
-
-- [ ] `W61.P304.S1819` - Extend bucket event types and object types for ledger transaction mutations; `src/aeat/domain/buckets`.
-- [ ] `W61.P304.S1820` - Emit ledger events for create import edit classify allocate attach remove reset archive and export operations; `src/aeat/application/ledger`.
-- [ ] `W61.P304.S1821` - Implement archive and stash semantics with auditable transaction lineage; `src/aeat/application/archive, src/aeat/application/ledger`.
-- [ ] `W61.P304.S1822` - Implement bucket-local removal and reset protections for ledger data; `src/aeat/application/ledger, src/aeat/application/config_reset.py, src/aeat/application/setup_reset.py`.
-- [ ] `W61.P304.S1823` - Export ledger rows from the canonical bucket-scoped catalogue; `src/aeat/application/export, src/aeat/application/ledger`.
-- [ ] `W61.P304.S1824` - Replace stale review queue drill commands with app ledger lifecycle commands; `src/aeat/application/review`.
-
-### Phase `W61.P305` - manual ledger cli lifecycle
-
-This Phase exposes the manual ledger lifecycle under aeat app ledger as thin commands after backend storage, mutation, audit, and aggregation contracts exist.
-
-- [ ] `W61.P305.S1825` - Expose manual transaction creation under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W61.P305.S1826` - Expose ledger read list status and tracking commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W61.P305.S1827` - Expose edit classify allocate and proportionality commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W61.P305.S1828` - Expose attach remove reset stash archive and export commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W61.P305.S1829` - Delegate every manual ledger command to centralized backend services and schema emitters; `src/aeat/entrypoints/cli, src/aeat/application/ledger`.
-- [ ] `W61.P305.S1830` - Validate command vocabulary help text and boundary inventory for manual ledger lifecycle; `src/aeat/entrypoints/cli, src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ## Wave `W09` - user profile backend schema
 
@@ -3701,3 +3584,369 @@ This Phase delivers thin cli exposure for workflow resumption semantics as requi
 - [ ] `W59.P295.S1768` - Render workflow resumption semantics results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
 - [ ] `W59.P295.S1769` - Handle workflow resumption semantics failures through the central command error boundary; `src/aeat/entrypoints/cli`.
 - [ ] `W59.P295.S1770` - Validate help text for workflow resumption semantics uses accepted vocabulary only; `tests/entrypoints/cli`.
+
+## Wave `W60` - profile output language
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-profile-output-language-adr` decision for profile-owned output language. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
+
+### Phase `W60.P296` - backend implementation
+
+This Phase delivers backend implementation for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
+
+- [x] `W60.P296.S1771` - Map the `2026-05-13-cli-workflow-redesign-profile-output-language-adr` decision into non-CLI service ownership for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors, src/aeat/application/wizard, src/aeat/domain/profile`.
+- [x] `W60.P296.S1772` - Implement Pydantic command and result contracts for profile-owned output language; `src/aeat/application/wizard, src/aeat/domain/profile`.
+- [x] `W60.P296.S1773` - Wire application or domain services required by profile-owned output language; `src/aeat/application/wizard, src/aeat/application/profile`.
+- [x] `W60.P296.S1774` - Connect persistence, bucket events, registry data, or provider adapters required by profile-owned output language; `src/aeat/application/workflow, src/aeat/application/profile`.
+- [x] `W60.P296.S1775` - Route existing backend functionality into the canonical service for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors`.
+- [x] `W60.P296.S1776` - Record service-level error codes and log fields for profile-owned output language; `src/aeat/core/errors/registry, src/aeat/application/profile`.
+
+### Phase `W60.P297` - shadow duplicate removal
+
+This Phase delivers shadow duplicate removal for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
+
+- [x] `W60.P297.S1777` - Audit duplicate implementations that overlap profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors, src/aeat/entrypoints/cli`.
+- [x] `W60.P297.S1778` - Delete duplicate backend branches that compete with profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors`.
+- [x] `W60.P297.S1779` - Remove stale aliases that bypass the canonical service for profile-owned output language; `src/aeat/entrypoints/cli`.
+- [x] `W60.P297.S1780` - Migrate internal callers to the canonical service for profile-owned output language; `src/aeat/core, src/aeat/application, src/aeat/entrypoints/cli`.
+- [x] `W60.P297.S1781` - Remove stale fixtures and tests that encode duplicate behavior for profile-owned output language; `tests, src/aeat/**/test_*.py`.
+- [x] `W60.P297.S1782` - Update boundary inventory entries that describe duplicate behavior for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W60.P298` - de-shim and de-stub cleanup
+
+This Phase delivers de-shim and de-stub cleanup for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
+
+- [x] `W60.P298.S1783` - Delete compatibility shims that preserve rejected behavior for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors, src/aeat/entrypoints/cli`.
+- [x] `W60.P298.S1784` - Delete placeholder stubs that claim support for profile-owned output language; `src/aeat/application/wizard, src/aeat/domain/profile`.
+- [x] `W60.P298.S1785` - Replace stubbed paths with real backend service calls for profile-owned output language; `src/aeat/core/i18n, src/aeat/core/errors`.
+- [x] `W60.P298.S1786` - Remove deprecated command spelling and help text for profile-owned output language; `src/aeat/entrypoints/cli, src/aeat/locales`.
+- [x] `W60.P298.S1787` - Remove tests that assert shim or stub behavior for profile-owned output language; `tests, src/aeat/**/test_*.py`.
+- [x] `W60.P298.S1788` - Record the removed shim and stub surfaces for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W60.P299` - real behavior verification
+
+This Phase delivers real behavior verification for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
+
+- [x] `W60.P299.S1789` - Add service contract tests for profile-owned output language; `tests/application, src/aeat/core/i18n`.
+- [x] `W60.P299.S1790` - Add persistence or registry integration tests for profile-owned output language; `tests/application, src/aeat/application/wizard`.
+- [x] `W60.P299.S1791` - Add negative tests proving rejected aliases do not reach profile-owned output language; `tests/entrypoints/cli`.
+- [x] `W60.P299.S1792` - Add command behavior tests that exercise profile-owned output language through real services; `tests/entrypoints/cli`.
+- [x] `W60.P299.S1793` - Add end-to-end workflow coverage for profile-owned output language; `tests`.
+- [x] `W60.P299.S1794` - Run the targeted test slice for profile-owned output language without skips or xfails; `tests/application, tests/entrypoints/cli`.
+
+### Phase `W60.P300` - thin cli exposure
+
+This Phase delivers thin cli exposure for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
+
+- [x] `W60.P300.S1795` - Expose accepted command handlers for profile-owned output language under `aeat config`; `src/aeat/entrypoints/cli`.
+- [x] `W60.P300.S1796` - Keep argument parsing for profile-owned output language separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W60.P300.S1797` - Delegate profile-owned output language execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W60.P300.S1798` - Render profile-owned output language results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W60.P300.S1799` - Handle profile-owned output language failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W60.P300.S1800` - Validate help text for profile-owned output language uses accepted vocabulary only; `tests/entrypoints/cli`.
+
+## Wave `W61` - manual ledger bucket lifecycle
+
+This Wave implements the 2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr decision as a bespoke bridge after profile bucket hardening. It makes manual ledger transactions first-class bucket-scoped app data before downstream profile schema, aggregation, review, or ledger command expansion can rely on them.
+
+### Phase `W61.P301` - ledger bucket storage review
+
+This Phase audits and fixes the transaction catalogue storage boundary so every ledger read and write resolves through the active profile bucket before manual data entry is exposed.
+
+- [x] `W61.P301.S1801` - Audit active profile bucket and transaction catalogue storage ownership; `src/aeat/application/profile, src/aeat/domain/transactions`.
+- [x] `W61.P301.S1802` - Define bucket-scoped transaction catalogue repository contracts; `src/aeat/domain/transactions`.
+- [x] `W61.P301.S1803` - Implement active profile bucket resolution for transaction catalogue reads and writes; `src/aeat/domain/transactions, src/aeat/application/workflow`.
+- [x] `W61.P301.S1804` - Prevent cross-profile transaction collisions for manual and imported rows; `src/aeat/domain/transactions`.
+- [x] `W61.P301.S1805` - Migrate ledger import and review projections to bucket-scoped transaction storage; `src/aeat/application/review, src/aeat/application/ledger`.
+- [x] `W61.P301.S1806` - Register bucket-scoped ledger storage errors and log fields; `src/aeat/domain/transactions, src/aeat/core/errors`.
+
+### Phase `W61.P302` - manual transaction api
+
+This Phase creates backend-owned manual ledger mutation contracts that persist complete aggregation-visible transaction facts instead of workflow review overlays.
+
+- [ ] `W61.P302.S1807` - Define manual transaction command and result contracts; `src/aeat/application/ledger`.
+- [ ] `W61.P302.S1808` - Implement create read list and update service operations for manual ledger rows; `src/aeat/application/ledger`.
+- [ ] `W61.P302.S1809` - Persist aggregation-visible base IVA category classification and business percentage fields; `src/aeat/domain/transactions`.
+- [ ] `W61.P302.S1810` - Validate direction zero amount transfer and correction semantics in backend policy; `src/aeat/application/ledger`.
+- [ ] `W61.P302.S1811` - Separate durable ledger mutations from workflow review annotations; `src/aeat/application/review, src/aeat/application/ledger`.
+- [ ] `W61.P302.S1812` - Capture evidence provenance actor and edit lineage for manual transactions; `src/aeat/application/ledger, src/aeat/domain/attachments`.
+
+### Phase `W61.P303` - iva proportionality and aggregation routing
+
+This Phase wires manual ledger facts into IVA base, IVA amount, business-private proportionality, usage-ratio, prorrata-reference, and modelo aggregation paths without conflating distinct tax substrates.
+
+- [ ] `W61.P303.S1813` - Project bucket-local manual ledger facts into Renta aggregation; `src/aeat/application/aggregation`.
+- [ ] `W61.P303.S1814` - Project taxable base IVA amount and IVA rate facts into IVA ledger observations; `src/aeat/application/aggregation, src/aeat/domain/calculations/registry`.
+- [ ] `W61.P303.S1815` - Attach usage ratio references for mixed private and business usage; `src/aeat/domain/usage_ratios, src/aeat/application/ledger`.
+- [ ] `W61.P303.S1816` - Carry prorrata references without conflating them with usage ratios; `src/aeat/application/aggregation, src/aeat/domain/vat`.
+- [ ] `W61.P303.S1817` - Report missing base IVA proportionality category and classification facts in preflight; `src/aeat/application/ledger, src/aeat/application/aggregation`.
+- [ ] `W61.P303.S1818` - Route modelo aggregation through bucket-local transaction catalogues; `src/aeat/application/modelo, src/aeat/application/aggregation`.
+
+### Phase `W61.P304` - ledger events removal archive and export
+
+This Phase adds auditable ledger lifecycle semantics for edit, allocation, evidence attachment, removal, reset, archive, stash, and export operations within the active bucket.
+
+- [ ] `W61.P304.S1819` - Extend bucket event types and object types for ledger transaction mutations; `src/aeat/domain/buckets`.
+- [ ] `W61.P304.S1820` - Emit ledger events for create import edit classify allocate attach remove reset archive and export operations; `src/aeat/application/ledger`.
+- [ ] `W61.P304.S1821` - Implement archive and stash semantics with auditable transaction lineage; `src/aeat/application/archive, src/aeat/application/ledger`.
+- [ ] `W61.P304.S1822` - Implement bucket-local removal and reset protections for ledger data; `src/aeat/application/ledger, src/aeat/application/config_reset.py, src/aeat/application/setup_reset.py`.
+- [ ] `W61.P304.S1823` - Export ledger rows from the canonical bucket-scoped catalogue; `src/aeat/application/export, src/aeat/application/ledger`.
+- [ ] `W61.P304.S1824` - Replace stale review queue drill commands with app ledger lifecycle commands; `src/aeat/application/review`.
+
+### Phase `W61.P305` - manual ledger cli lifecycle
+
+This Phase exposes the manual ledger lifecycle under aeat app ledger as thin commands after backend storage, mutation, audit, and aggregation contracts exist.
+
+- [ ] `W61.P305.S1825` - Expose manual transaction creation under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W61.P305.S1826` - Expose ledger read list status and tracking commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W61.P305.S1827` - Expose edit classify allocate and proportionality commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W61.P305.S1828` - Expose attach remove reset stash archive and export commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W61.P305.S1829` - Delegate every manual ledger command to centralized backend services and schema emitters; `src/aeat/entrypoints/cli, src/aeat/application/ledger`.
+- [ ] `W61.P305.S1830` - Validate command vocabulary help text and boundary inventory for manual ledger lifecycle; `src/aeat/entrypoints/cli, src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+## Wave `W62` - topic corpus registry harvest
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr` decision for `application/topics`. It harvests topic catalogue behavior into `aeat app registry citations` and `aeat app registry manuals`, deletes rejected topic/help command paths, and keeps the CLI as a thin adapter with no business logic.
+
+### Phase `W62.P306` - backend binding
+
+This Phase binds topic catalogue behavior to approved registry services.
+
+- [ ] `W62.P306.S1831` - Read the topic catalogue, registry citations, manuals, and apex ADR requirements before editing; `.vault/adr`.
+- [ ] `W62.P306.S1832` - Implement strict Pydantic application registry contracts that consume `TopicCatalogue` and expose typed citation and manual projections; `src/aeat/application/registry`.
+- [ ] `W62.P306.S1833` - Resolve topic i18n keys through the central locale backend without embedding prose in CLI handlers; `src/aeat/application/registry`.
+- [ ] `W62.P306.S1834` - Record registry service errors and log fields through the central error and logging drivers; `src/aeat/application/registry, src/aeat/core`.
+
+### Phase `W62.P307` - rejected path removal
+
+This Phase removes command collisions and shadow backend paths that compete with registry-owned topic help.
+
+- [ ] `W62.P307.S1835` - Delete any remaining topic or help command registrations outside `aeat app registry`; `src/aeat/entrypoints/cli`.
+- [ ] `W62.P307.S1836` - Remove tests that assert rejected topic or help-root behavior; `tests/entrypoints/cli`.
+- [ ] `W62.P307.S1837` - Ensure topic catalogue code has no Typer application or command-local rendering path; `src/aeat/application/topics`.
+- [ ] `W62.P307.S1838` - Update backend boundary inventory so topic corpus ownership is registry-only; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W62.P308` - verification and cli exposure
+
+This Phase proves registry topic behavior through real services and exposes only approved registry commands.
+
+- [ ] `W62.P308.S1839` - Add service tests for topic-backed citation and manual projections; `tests/application/registry`.
+- [ ] `W62.P308.S1840` - Add CLI behavior tests for `aeat app registry citations` and `aeat app registry manuals` output through `_emit`; `tests/entrypoints/cli`.
+- [ ] `W62.P308.S1841` - Expose topic-backed registry results without implementing lookup or formatting logic in CLI handlers; `src/aeat/entrypoints/cli/registry.py`.
+- [ ] `W62.P308.S1842` - Validate that rejected topic/help command vocabulary is absent from help text and command discovery; `tests/entrypoints/cli`.
+
+## Wave `W63` - declaracion verification parser harvest
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr` decision for `application/verification` and `adapters/inbound/declaracion`. It connects declaration PDF observations to modelo verification, reconciliation, and filing-record import services.
+
+### Phase `W63.P309` - backend binding
+
+This Phase binds declaration parsing and verification to modelo application services.
+
+- [ ] `W63.P309.S1843` - Read the modelo verify, filing-record, external filing import, and unexposed capability ADRs before editing; `.vault/adr`.
+- [ ] `W63.P309.S1844` - Implement strict Pydantic application service contracts that accept declaration artefacts and return typed `VerificationVerdict` projections; `src/aeat/application/modelo, src/aeat/application/verification`.
+- [ ] `W63.P309.S1845` - Route declaration parser output through validated registry snapshots and modelo calculation services; `src/aeat/application/verification, src/aeat/adapters/inbound/declaracion`.
+- [ ] `W63.P309.S1846` - Persist declaration-derived filing evidence only inside the active profile bucket with bucket events; `src/aeat/application/modelo, src/aeat/domain/buckets`.
+
+### Phase `W63.P310` - rejected path removal
+
+This Phase removes parser command collisions and shadow paths that bypass modelo-owned verification.
+
+- [ ] `W63.P310.S1847` - Delete any declaration or filing command registration outside approved `aeat app modelo` verbs; `src/aeat/entrypoints/cli`.
+- [ ] `W63.P310.S1848` - Remove parser call sites that write loose files or bypass the active profile bucket; `src/aeat`.
+- [ ] `W63.P310.S1849` - Remove tests that assert declaration verification through command-local behavior; `tests`.
+- [ ] `W63.P310.S1850` - Update boundary inventory so declaration parsing is modelo verification backend only; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W63.P311` - verification and cli exposure
+
+This Phase proves declaration verification through real modelo services.
+
+- [ ] `W63.P311.S1851` - Add real service tests for declaration PDF parsing into verification verdicts; `tests/application/verification`.
+- [ ] `W63.P311.S1852` - Add bucket persistence tests for declaration-derived filing evidence and events; `tests/application/modelo`.
+- [ ] `W63.P311.S1853` - Expose declaration verification through `aeat app modelo verify` and `aeat app modelo reconcile` only; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W63.P311.S1854` - Validate CLI handlers delegate entirely to backend services and render through `_emit`; `tests/entrypoints/cli`.
+
+## Wave `W64` - justificante filing record harvest
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr` decision for `domain/justificante` and `adapters/inbound/justificante`. It makes official justificante evidence part of `aeat app modelo filing-record` and `aeat app modelo reconcile`.
+
+### Phase `W64.P312` - backend binding
+
+This Phase binds justificante parsing, records, and repositories to filing-record services.
+
+- [ ] `W64.P312.S1855` - Read the modelo filing-record, complementaria external filing, and unexposed capability ADRs before editing; `.vault/adr`.
+- [ ] `W64.P312.S1856` - Implement strict Pydantic application commands that import justificante artefacts into bucket-scoped filing records; `src/aeat/application/modelo, src/aeat/application/filing`.
+- [ ] `W64.P312.S1857` - Reuse `JustificanteRepository` and parser backend types behind centralized application services; `src/aeat/domain/justificante, src/aeat/adapters/inbound/justificante`.
+- [ ] `W64.P312.S1858` - Emit bucket events for filing-record import, replacement, verification, and reconciliation; `src/aeat/domain/buckets`.
+
+### Phase `W64.P313` - rejected path removal
+
+This Phase removes justificante command collisions and shadow paths that bypass filing-record ownership.
+
+- [ ] `W64.P313.S1859` - Delete any standalone justificante command path or file-loader entrypoint outside `aeat app modelo`; `src/aeat/entrypoints/cli`.
+- [ ] `W64.P313.S1860` - Remove loose-file persistence of parsed justificante records; `src/aeat`.
+- [ ] `W64.P313.S1861` - Remove tests that accept justificante data without bucket storage and event history; `tests`.
+- [ ] `W64.P313.S1862` - Update boundary inventory so justificante parsing is filing-record backend behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W64.P314` - verification and cli exposure
+
+This Phase proves justificante import and reconciliation through real services.
+
+- [ ] `W64.P314.S1863` - Add service tests for justificante import into a modelo filing record; `tests/application/modelo`.
+- [ ] `W64.P314.S1864` - Add reconciliation tests that pair imported justificante evidence with calculated revisions; `tests/application/filing`.
+- [ ] `W64.P314.S1865` - Expose justificante import through approved `aeat app modelo filing-record import` and `aeat app modelo reconcile` commands; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W64.P314.S1866` - Validate command help avoids live submission wording and renders all results through `_emit`; `tests/entrypoints/cli`.
+
+## Wave `W65` - submission preflight and status harvest
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr` decision for `domain/submission`. It keeps submission code read-only and binds preflight and historical status to `aeat app modelo verify`, `aeat app modelo file`, and filed-record workflows.
+
+### Phase `W65.P315` - backend binding
+
+This Phase binds submission preflight and historical records to modelo backend services.
+
+- [ ] `W65.P315.S1867` - Read the live submit excision, modelo file, filing-record, and unexposed capability ADRs before editing; `.vault/adr`.
+- [ ] `W65.P315.S1868` - Route `SubmissionEngine.preflight` through strict Pydantic `aeat app modelo verify` and `aeat app modelo file` application services; `src/aeat/application/modelo, src/aeat/domain/submission`.
+- [ ] `W65.P315.S1869` - Bind historical submitted-status reads to filing-record status projections without remote writes; `src/aeat/application/filing`.
+- [ ] `W65.P315.S1870` - Store submission-status facts in the active profile bucket and emit bucket events on status changes; `src/aeat/domain/buckets, src/aeat/domain/submission`.
+
+### Phase `W65.P316` - rejected path removal
+
+This Phase removes any path that implies live AEAT submission.
+
+- [ ] `W65.P316.S1871` - Delete command vocabulary that exposes submit, present, sign, pay, or remote write semantics; `src/aeat/entrypoints/cli`.
+- [ ] `W65.P316.S1872` - Remove backend methods or adapters that attempt write-shaped portal transport; `src/aeat/domain/submission, src/aeat/adapters/outbound/aeat`.
+- [ ] `W65.P316.S1873` - Remove tests that expect live-write flows or bypass `LiveSubmitForbiddenError`; `tests`.
+- [ ] `W65.P316.S1874` - Update boundary inventory so submission is preflight and status backend only; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W65.P317` - verification and cli exposure
+
+This Phase proves preflight and status behavior without exposing a submission command.
+
+- [ ] `W65.P317.S1875` - Add service tests for preflight failures, filed status, and submitted status transitions; `tests/domain/submission, tests/application/modelo`.
+- [ ] `W65.P317.S1876` - Add negative CLI tests proving live-submit command vocabulary is absent; `tests/entrypoints/cli`.
+- [ ] `W65.P317.S1877` - Expose preflight results only as part of `aeat app modelo verify`, `aeat app modelo file`, `aeat app modelo status`, and `aeat app modelo history`; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W65.P317.S1878` - Validate central error handling for preflight failures and forbidden live-write attempts; `tests/entrypoints/cli`.
+
+## Wave `W66` - sanitizer intake service harvest
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr` decision for `adapters/inbound/sanitizer`. It turns PDF sanitization into internal intake hygiene for ledger and modelo artefacts.
+
+### Phase `W66.P318` - backend binding
+
+This Phase binds sanitizer behavior to approved intake services.
+
+- [ ] `W66.P318.S1879` - Read the receipt evidence, ledger transaction, filing-record, and unexposed capability ADRs before editing; `.vault/adr`.
+- [ ] `W66.P318.S1880` - Implement strict Pydantic application intake services that call `sanitize_pdf` before evidence or filing artefact persistence; `src/aeat/application/ledger, src/aeat/application/modelo`.
+- [ ] `W66.P318.S1881` - Persist sanitizer warnings, token-map provenance, and deterministic flags in bucket-scoped evidence metadata; `src/aeat/domain/attachments, src/aeat/domain/buckets`.
+- [ ] `W66.P318.S1882` - Route sanitizer errors through the central AEAT error hierarchy and logging driver; `src/aeat/core, src/aeat/adapters/inbound/sanitizer`.
+
+### Phase `W66.P319` - rejected path removal
+
+This Phase removes sanitizer command collisions and shadow paths from the operator surface.
+
+- [ ] `W66.P319.S1883` - Delete any sanitize command registration outside ledger or modelo intake flows; `src/aeat/entrypoints/cli`.
+- [ ] `W66.P319.S1884` - Remove call sites that sanitize into loose files without bucket evidence metadata; `src/aeat`.
+- [ ] `W66.P319.S1885` - Remove tests that accept sanitizer behavior without real parser and storage integration; `tests`.
+- [ ] `W66.P319.S1886` - Update boundary inventory so sanitizer ownership is internal intake hygiene; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W66.P320` - verification and cli exposure
+
+This Phase proves sanitizer intake through real ledger and modelo services.
+
+- [ ] `W66.P320.S1887` - Add service tests for sanitized ledger attachments and modelo artefact imports; `tests/application/ledger, tests/application/modelo`.
+- [ ] `W66.P320.S1888` - Add persistence tests proving sanitizer metadata and bucket events are durable; `tests/domain/buckets, tests/domain/attachments`.
+- [ ] `W66.P320.S1889` - Expose sanitizer-backed behavior only through `aeat app ledger attach`, `aeat app ledger import`, and `aeat app modelo import`; `src/aeat/entrypoints/cli`.
+- [ ] `W66.P320.S1890` - Validate CLI handlers contain no sanitizer policy or token-map business logic; `tests/entrypoints/cli`.
+
+## Wave `W67` - llm governed evidence harvest
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr` decision for `adapters/outbound/llm`. It places LLM use behind approved backend services with secure storage, redaction, provenance, usage records, and central errors.
+
+### Phase `W67.P321` - backend binding
+
+This Phase binds LLM adapter behavior to approved evidence, OCR, and classification services.
+
+- [ ] `W67.P321.S1891` - Read the receipt OCR, ledger classify, profile bucket, and unexposed capability ADRs before editing; `.vault/adr`.
+- [ ] `W67.P321.S1892` - Define strict Pydantic backend service policies for LLM requests, redaction, confidence, provenance, and usage records; `src/aeat/application/ledger, src/aeat/adapters/outbound/llm`.
+- [ ] `W67.P321.S1893` - Persist prompts, responses, confidence, redaction manifest, and usage metadata inside the active profile bucket; `src/aeat/domain/buckets`.
+- [ ] `W67.P321.S1894` - Route provider failures, rate limits, and validation errors through central AEAT errors and logging; `src/aeat/core, src/aeat/adapters/outbound/llm`.
+
+### Phase `W67.P322` - rejected path removal
+
+This Phase removes LLM command collisions and shadow command-local paths.
+
+- [ ] `W67.P322.S1895` - Delete any LLM command registration or command-local provider invocation; `src/aeat/entrypoints/cli`.
+- [ ] `W67.P322.S1896` - Remove application call sites that send profile, ledger, filing, or evidence data to LLM providers without backend policy; `src/aeat`.
+- [ ] `W67.P322.S1897` - Remove tests that use deterministic providers as a substitute for real backend policy checks; `tests`.
+- [ ] `W67.P322.S1898` - Update boundary inventory so LLM is adapter-only behind approved services; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W67.P323` - verification and cli exposure
+
+This Phase proves governed LLM use without exposing an LLM command.
+
+- [ ] `W67.P323.S1899` - Add service tests for redaction, provenance, usage recording, and confidence gates; `tests/application/ledger`.
+- [ ] `W67.P323.S1900` - Add storage tests proving LLM-derived evidence remains bucket-scoped; `tests/domain/buckets`.
+- [ ] `W67.P323.S1901` - Expose LLM-backed behavior only through approved `aeat app ledger attach` evidence and `aeat app ledger classify` commands; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W67.P323.S1902` - Validate CLI handlers do not construct prompts, parse LLM responses, or decide classification results; `tests/entrypoints/cli`.
+
+## Wave `W68` - export serializer boundary harvest
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr` decision for `adapters/outbound/aeat/export`. It binds serializers to modelo revision exports and ledger BOE libro exports while preserving the live-submit prohibition.
+
+### Phase `W68.P324` - backend binding
+
+This Phase binds export serializers to approved export services.
+
+- [ ] `W68.P324.S1903` - Read the modelo export, libros BOE, live submit excision, and unexposed capability ADRs before editing; `.vault/adr`.
+- [ ] `W68.P324.S1904` - Implement strict Pydantic application export services that call serializer adapters for modelo revisions and BOE libros; `src/aeat/application/modelo, src/aeat/application/ledger`.
+- [ ] `W68.P324.S1905` - Store export manifests, checksums, source revision ids, and event records in the active profile bucket; `src/aeat/domain/buckets`.
+- [ ] `W68.P324.S1906` - Route serializer validation and format errors through central AEAT errors and logging; `src/aeat/core, src/aeat/adapters/outbound/aeat/export`.
+
+### Phase `W68.P325` - rejected path removal
+
+This Phase removes export command collisions and shadow paths that imply a filing root or live submission.
+
+- [ ] `W68.P325.S1907` - Delete any filing-root or submit-shaped export command path; `src/aeat/entrypoints/cli`.
+- [ ] `W68.P325.S1908` - Remove backend branches that combine serialization with remote writes; `src/aeat/adapters/outbound/aeat/export`.
+- [ ] `W68.P325.S1909` - Remove tests that expect export commands outside `aeat app modelo` or `aeat app ledger`; `tests`.
+- [ ] `W68.P325.S1910` - Update boundary inventory so export serialization is backend-only behind approved app domains; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W68.P326` - verification and cli exposure
+
+This Phase proves exports through real serializers and approved app commands.
+
+- [ ] `W68.P326.S1911` - Add service tests for modelo revision export manifests and serializer outputs; `tests/application/modelo`.
+- [ ] `W68.P326.S1912` - Add service tests for ledger BOE libro exporters with real ledger data; `tests/application/ledger`.
+- [ ] `W68.P326.S1913` - Expose exports only through `aeat app modelo export` and `aeat app ledger export`; `src/aeat/entrypoints/cli`.
+- [ ] `W68.P326.S1914` - Validate help text and errors never imply live AEAT submission; `tests/entrypoints/cli`.
+
+## Wave `W69` - attachment evidence storage harvest
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr` decision for `domain/attachments`. It creates a real application service boundary for ledger evidence and evidence bundles and corrects plan scopes that point at non-existent evidence packages.
+
+### Phase `W69.P327` - backend binding
+
+This Phase binds attachment domain behavior to ledger evidence and evidence bundle services.
+
+- [ ] `W69.P327.S1915` - Read the ledger transaction, receipt OCR, evidence bundle, and unexposed capability ADRs before editing; `.vault/adr`.
+- [ ] `W69.P327.S1916` - Implement strict Pydantic application evidence services over `AttachmentStore`, `AttachmentCatalogue`, and attachment manifests; `src/aeat/application/ledger`.
+- [ ] `W69.P327.S1917` - Link purchase invoice evidence, receipts, references, and supporting files to ledger transactions through bucket-scoped identifiers; `src/aeat/domain/attachments, src/aeat/domain/transactions`.
+- [ ] `W69.P327.S1918` - Emit bucket events for evidence attach, replace, detach, verify, export, and bundle creation; `src/aeat/domain/buckets`.
+
+### Phase `W69.P328` - rejected path removal
+
+This Phase removes attachment command collisions and shadow paths that bypass ledger evidence ownership.
+
+- [ ] `W69.P328.S1919` - Delete any attachment command registration outside approved ledger and modelo evidence flows; `src/aeat/entrypoints/cli`.
+- [ ] `W69.P328.S1920` - Correct plan and code scopes that reference non-existent evidence application packages; `.vault/plan, src/aeat`.
+- [ ] `W69.P328.S1921` - Remove storage paths that persist attachments outside the active profile bucket; `src/aeat/domain/attachments`.
+- [ ] `W69.P328.S1922` - Update boundary inventory so attachment storage is ledger evidence backend behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W69.P329` - verification and cli exposure
+
+This Phase proves attachment evidence through real storage and approved app commands.
+
+- [ ] `W69.P329.S1923` - Add service tests for ledger attachment evidence lifecycle with real attachment manifests; `tests/application/ledger`.
+- [ ] `W69.P329.S1924` - Add bucket storage tests for attachment lineage, checksums, and event history; `tests/domain/attachments, tests/domain/buckets`.
+- [ ] `W69.P329.S1925` - Expose attachment evidence only through `aeat app ledger attach` and approved evidence bundle commands; `src/aeat/entrypoints/cli`.
+- [ ] `W69.P329.S1926` - Validate CLI handlers delegate attachment behavior to backend services and render through `_emit`; `tests/entrypoints/cli`.

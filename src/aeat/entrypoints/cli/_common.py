@@ -10,7 +10,13 @@ import typer
 
 from ...application.aggregation import aggregate_renta_ledger_expenses_from_repositories
 from ...application.auth import AuthProviderListing
-from ...application.workflow import WorkflowState, workflow_state_repository
+from ...application.workflow import (
+    NoActiveProfileError,
+    WorkflowState,
+    active_bucket_id_or_raise,
+    active_transaction_catalogue_repository,
+    workflow_state_repository,
+)
 from ...core.output_rendering import render_command_output
 from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry import (
@@ -135,8 +141,20 @@ def _profile_to_autonomo(state: WorkflowState) -> AutonomoProfile:
 # ---------------------------------------------------------------------
 
 
-def _tx_repo() -> TransactionCatalogueRepository:
-    return TransactionCatalogueRepository()
+def _active_bucket_id_or_bad(state: WorkflowState) -> str:
+    """Return the active profile bucket id or raise the CLI 'bad' error."""
+
+    try:
+        return active_bucket_id_or_raise(state)
+    except NoActiveProfileError as exc:
+        raise _bad(tr("cli.common.errors.no_active_profile")) from exc
+
+
+def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
+    try:
+        return active_transaction_catalogue_repository(state)
+    except NoActiveProfileError as exc:
+        raise _bad(tr("cli.common.errors.no_active_profile")) from exc
 
 
 def _invoice_repo() -> InvoiceCatalogueRepository:
@@ -147,8 +165,8 @@ def _draft_repo() -> FilingDraftRepository:
     return FilingDraftRepository()
 
 
-def _load_transactions() -> TransactionCatalogue:
-    return _tx_repo().load()
+def _load_transactions(state: WorkflowState) -> TransactionCatalogue:
+    return _tx_repo(state).load()
 
 
 def _load_invoices() -> InvoiceCatalogue:
@@ -169,13 +187,13 @@ def _draft_by_id(draft_id: str) -> FilingDraft:
 
 def _aggregate_filing_inputs(modelo: str, period: str, state: WorkflowState) -> dict[str, object]:
     """Return filing inputs aggregated from registry-approved sources."""
-    del state
     if modelo.strip() == "100" and _annual_filing_year(period) is not None:
         filing_year = _annual_filing_year(period)
         assert filing_year is not None
         return _aggregate_renta_filing_inputs(
+            bucket_id=_active_bucket_id_or_bad(state),
             filing_year=filing_year,
-            transaction_repository=_tx_repo(),
+            transaction_repository=_tx_repo(state),
             invoice_repository=_invoice_repo(),
         )
     return {}
@@ -183,11 +201,13 @@ def _aggregate_filing_inputs(modelo: str, period: str, state: WorkflowState) -> 
 
 def _aggregate_renta_filing_inputs(
     *,
+    bucket_id: str,
     filing_year: int,
     transaction_repository: TransactionCatalogueRepository,
     invoice_repository: InvoiceCatalogueRepository,
 ) -> dict[str, object]:
     aggregation = aggregate_renta_ledger_expenses_from_repositories(
+        bucket_id=bucket_id,
         period=str(filing_year),
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,

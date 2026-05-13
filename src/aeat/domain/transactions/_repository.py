@@ -26,7 +26,8 @@ from ...adapters.persistence.storage.errors import ClassificationError, Envelope
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.classification import SensitivityClass
 from ...core.logging import get_logger
-from ._models import Transaction, TransactionCatalogue, derive_transaction_id
+from ._errors import LedgerStorageError
+from ._models import BucketTransactionRef, Transaction, TransactionCatalogue, derive_transaction_id
 
 if TYPE_CHECKING:
     from ._enums import TransactionDirection
@@ -35,8 +36,25 @@ if TYPE_CHECKING:
 _log = get_logger(__name__)
 
 _TX_CATALOGUE_VERSION = 1
-_TX_NAMESPACE = "aeat.domain.transactions"
-_TX_OBJECT_KEY = "catalogue"
+TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket"
+
+
+def transaction_catalogue_object_key(bucket_id: str) -> str:
+    """Return the secure object key for one profile bucket's transaction catalogue.
+
+    The catalogue is per profile bucket: every read and write resolves
+    through the active profile bucket's id. Cross-bucket aggregation
+    must qualify with ``(bucket_id, tx_id)``; ``tx_id`` alone is unique
+    only within one bucket.
+    """
+
+    trimmed = bucket_id.strip()
+    if not trimmed:
+        raise LedgerStorageError(
+            "bucket_id must not be blank",
+            context={"repository": "transaction_catalogue", "operation": "object_key"},
+        )
+    return f"transaction-catalogue:{trimmed}"
 
 
 class ImportSummary(BaseModel):
@@ -58,6 +76,9 @@ class ImportSummary(BaseModel):
     imported: int = Field(ge=0)
     skipped: int = Field(ge=0)
     errors: int = Field(default=0, ge=0)
+    bucket_id: str = Field(min_length=1)
+    imported_refs: tuple[BucketTransactionRef, ...] = ()
+    skipped_refs: tuple[BucketTransactionRef, ...] = ()
     catalogue_path: str
 
 
@@ -69,15 +90,30 @@ DirectionResolver = Callable[["RawTransaction"], "TransactionDirection"]
 
 
 class TransactionCatalogueRepository:
-    """Repository over the encrypted SQL-backed transaction catalogue."""
+    """Repository over the encrypted SQL-backed transaction catalogue.
 
-    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+    Every instance is bound to one profile bucket via ``bucket_id``.
+    All reads and writes operate on the per-bucket secure object
+    ``transaction-catalogue:{bucket_id}`` inside the
+    ``aeat.domain.transactions.bucket`` namespace, so two operator
+    profiles never share transaction storage.
+    """
+
+    def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
+        self._object_key = transaction_catalogue_object_key(bucket_id)
+        self._bucket_id = bucket_id.strip()
         self._objects = objects or SecureObjectRepository()
 
-    def exists(self) -> bool:
-        """Return whether a transaction catalogue has been persisted."""
+    @property
+    def bucket_id(self) -> str:
+        """Return the profile bucket id this repository is bound to."""
 
-        return self._objects.exists(_TX_NAMESPACE, _TX_OBJECT_KEY)
+        return self._bucket_id
+
+    def exists(self) -> bool:
+        """Return whether this bucket's transaction catalogue has been persisted."""
+
+        return self._objects.exists(TX_BUCKET_NAMESPACE, self._object_key)
 
     def load(self) -> TransactionCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
@@ -89,13 +125,17 @@ class TransactionCatalogueRepository:
                 higher than the consumer supports.
         """
         record = self._objects.load(
-            _TX_NAMESPACE,
-            _TX_OBJECT_KEY,
+            TX_BUCKET_NAMESPACE,
+            self._object_key,
             expected_class=SensitivityClass.FINANCIAL,
             max_supported_version=_TX_CATALOGUE_VERSION,
         )
         if record is None:
-            _log.debug("transaction catalogue not found; returning empty catalogue")
+            _log.debug(
+                "transaction catalogue not found; returning empty catalogue bucket_id=%s object_key=%s",
+                self._bucket_id,
+                self._object_key,
+            )
             return TransactionCatalogue()
         try:
             envelope = Envelope[TransactionCatalogue].model_validate_json(record.payload.decode("utf-8"))
@@ -113,7 +153,12 @@ class TransactionCatalogueRepository:
                 f"consumer supports up to {_TX_CATALOGUE_VERSION}",
             )
         catalogue = envelope.payload
-        _log.debug("loaded transaction catalogue with %d entries", len(catalogue.transactions))
+        _log.debug(
+            "loaded transaction catalogue bucket_id=%s object_key=%s entries=%d",
+            self._bucket_id,
+            self._object_key,
+            len(catalogue.transactions),
+        )
         return catalogue
 
     def save(self, catalogue: TransactionCatalogue) -> None:
@@ -129,14 +174,19 @@ class TransactionCatalogueRepository:
             payload=catalogue,
         )
         self._objects.save(
-            namespace=_TX_NAMESPACE,
-            object_key=_TX_OBJECT_KEY,
+            namespace=TX_BUCKET_NAMESPACE,
+            object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
             schema_version=_TX_CATALOGUE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
-        _log.info("saved transaction catalogue with %d entries", len(catalogue.transactions))
+        _log.info(
+            "saved transaction catalogue bucket_id=%s object_key=%s entries=%d",
+            self._bucket_id,
+            self._object_key,
+            len(catalogue.transactions),
+        )
 
     def merge_raw_transactions(
         self,
@@ -167,11 +217,15 @@ class TransactionCatalogueRepository:
         existing_ids = set(current.transactions.keys())
         imported = 0
         skipped = 0
+        imported_refs: list[BucketTransactionRef] = []
+        skipped_refs: list[BucketTransactionRef] = []
         new_transactions: dict[str, Transaction] = dict(current.transactions)
         for raw in raw_transactions:
             tx_id = derive_transaction_id(raw)
+            ref = BucketTransactionRef(bucket_id=self._bucket_id, transaction_id=tx_id)
             if tx_id in existing_ids:
                 skipped += 1
+                skipped_refs.append(ref)
                 continue
             try:
                 direction = direction_resolver(raw)
@@ -193,24 +247,31 @@ class TransactionCatalogueRepository:
             new_transactions[tx_id] = transaction
             existing_ids.add(tx_id)
             imported += 1
+            imported_refs.append(ref)
         merged = TransactionCatalogue.model_validate({"transactions": new_transactions})
         self.save(merged)
         _log.info(
-            "merged raw transactions: imported=%d skipped=%d catalogue=%s",
+            "merged raw transactions: bucket_id=%s imported=%d skipped=%d catalogue=%s",
+            self._bucket_id,
             imported,
             skipped,
-            _TX_OBJECT_KEY,
+            self._object_key,
         )
         return ImportSummary(
             imported=imported,
             skipped=skipped,
-            catalogue_path=f"db://secure_objects/{_TX_NAMESPACE}/{_TX_OBJECT_KEY}",
+            bucket_id=self._bucket_id,
+            imported_refs=tuple(imported_refs),
+            skipped_refs=tuple(skipped_refs),
+            catalogue_path=f"db://secure_objects/{TX_BUCKET_NAMESPACE}/{self._object_key}",
         )
 
 
 __all__ = [
+    "TX_BUCKET_NAMESPACE",
     "ClassificationError",
     "EnvelopeVersionError",
     "ImportSummary",
     "TransactionCatalogueRepository",
+    "transaction_catalogue_object_key",
 ]

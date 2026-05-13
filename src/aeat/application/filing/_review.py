@@ -79,6 +79,7 @@ class FilingApprovalStaleReason(StrEnum):
 def compute_current_approval_basis(
     draft: FilingDraft,
     *,
+    bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -100,7 +101,7 @@ def compute_current_approval_basis(
         A freshly computed :class:`FilingApprovalBasis`.
     """
 
-    catalogue = transaction_catalogue or _load_transaction_catalogue()
+    catalogue = transaction_catalogue or _load_transaction_catalogue(bucket_id)
     profiles = category_profiles or CATEGORY_PROFILES_2025
     return FilingApprovalBasis(
         draft_payload_fingerprint=draft.draft_id,
@@ -130,6 +131,7 @@ def compute_review_checksum(approval_basis: FilingApprovalBasis) -> str:
 def approval_stale_reasons(
     draft: FilingDraft,
     *,
+    bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -157,6 +159,7 @@ def approval_stale_reasons(
 
     current_basis = compute_current_approval_basis(
         draft,
+        bucket_id=bucket_id,
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         category_profiles=category_profiles,
@@ -181,6 +184,7 @@ def approval_stale_reasons(
 def approve_draft(
     draft: FilingDraft,
     *,
+    bucket_id: str,
     approved_by: str,
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
@@ -220,6 +224,7 @@ def approve_draft(
     timestamp = approved_at or datetime.now(tz=UTC)
     approval_basis = compute_current_approval_basis(
         draft,
+        bucket_id=bucket_id,
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         category_profiles=category_profiles,
@@ -280,6 +285,7 @@ def unapprove_draft(
 def refresh_review_status(
     draft: FilingDraft,
     *,
+    bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     transaction_catalogue: TransactionCatalogue | None = None,
     category_profiles: Mapping[SpendingCategory, CategoryProfile] | None = None,
@@ -344,6 +350,7 @@ def refresh_review_status(
 
     reasons = approval_stale_reasons(
         draft,
+        bucket_id=bucket_id,
         schema_provider=schema_provider,
         transaction_catalogue=transaction_catalogue,
         category_profiles=category_profiles,
@@ -431,23 +438,23 @@ def _require_registry_review_alignment(
     raise FilingDraftError(f"draft does not match the registry review surface: {codes!r}")
 
 
-def _load_transaction_catalogue() -> TransactionCatalogue:
-    return _load_transaction_catalogue_cached()
+def _load_transaction_catalogue(bucket_id: str) -> TransactionCatalogue:
+    return _load_transaction_catalogue_cached(bucket_id)
 
 
 @lru_cache(maxsize=8)
-def _load_transaction_catalogue_cached() -> TransactionCatalogue:
+def _load_transaction_catalogue_cached(bucket_id: str) -> TransactionCatalogue:
     from ...domain.transactions import TransactionCatalogueRepository
 
-    repository = TransactionCatalogueRepository()
+    repository = TransactionCatalogueRepository(bucket_id=bucket_id)
     return repository.load()
 
 
-def _read_transaction_catalogue() -> TransactionCatalogue:
+def _read_transaction_catalogue(bucket_id: str) -> TransactionCatalogue:
     """Load the transaction catalogue from the secure backend."""
     from ...domain.transactions import TransactionCatalogueRepository
 
-    repository = TransactionCatalogueRepository()
+    repository = TransactionCatalogueRepository(bucket_id=bucket_id)
     if not repository.exists():
         _logger.debug("transaction catalogue secure object not found; using empty catalogue")
         return TransactionCatalogue()
