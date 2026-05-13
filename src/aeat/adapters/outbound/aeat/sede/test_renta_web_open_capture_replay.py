@@ -28,7 +28,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.paths import PROJECT_ROOT
-from .....domain.calculations.registry import RentaWebOpenLivePayload
+from .....domain.calculations.registry import RentaWebOpenLivePayload, RentaWebOpenSyntheticProfile
 from .....entrypoints.cli._live import requires_live_enabled
 from ._renta_web_open import collect_renta_web_open_observation
 
@@ -140,13 +140,10 @@ _PROFILE_VARIANT_CAPTURES: tuple[tuple[str, dict[str, str]], ...] = (
 async def _capture_profile_variant_observation(profile_overrides: dict[str, str]) -> tuple[str, dict[str, str]]:
     """Drive the live simulator with a varied synthetic profile."""
 
-    profile_kwargs: dict[str, object] = {**profile_overrides}
     payload = (
         RentaWebOpenLivePayload(
             timeout_ms=90_000,
-            profile=RentaWebOpenLivePayload.model_fields["profile"].default_factory(**profile_kwargs)
-            if profile_kwargs
-            else RentaWebOpenLivePayload.model_fields["profile"].default_factory(),
+            profile=RentaWebOpenSyntheticProfile.model_validate(profile_overrides),
         )
         .model_dump_json()
         .encode("utf-8")

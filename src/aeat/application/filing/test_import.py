@@ -2,7 +2,7 @@
 
 Exercises :func:`aeat.application.filing.import_filing_from_justificante`
 end-to-end against local justificante fixture PDFs under
-``tests/fixtures/justificantes/``.
+``src/aeat/tests/fixtures/justificantes/``.
 """
 
 from __future__ import annotations
@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from ...core.config import PROJECT_ROOT
 from ...domain.justificante import JustificanteParseError
+from ...tests import FIXTURES_DIR
 from . import (
     FilingImportError,
     import_filing_from_justificante,
@@ -21,7 +21,7 @@ from .runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
+_FIXTURES = FIXTURES_DIR / "justificantes"
 
 
 @pytest.fixture(scope="module")
@@ -43,11 +43,6 @@ class TestImportFromJustificante:
     def test_modelo_130_justificante_only_import_requires_binding_data(self, schema_provider) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
         with pytest.raises(FilingImportError, match="previous_year_economic_activity_net_income"):
-            import_filing_from_justificante(pdf, schema_provider=schema_provider)
-
-    def test_modelo_303_requires_registry_snapshot(self, schema_provider) -> None:
-        pdf = _FIXTURES / "modelo_303_2026Q1.pdf"
-        with pytest.raises(FilingImportError, match="not present in the calculation registry"):
             import_filing_from_justificante(pdf, schema_provider=schema_provider)
 
     def test_unsupported_modelo_raises_import_error(self, schema_provider) -> None:

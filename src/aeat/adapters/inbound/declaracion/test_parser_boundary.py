@@ -10,11 +10,13 @@ import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+from aeat.tests import FIXTURES_DIR
+
 from ....core.paths import PROJECT_ROOT
 from ....domain.calculations.registry._authority import ValidatedRegistryAuthority
 from . import DeclaracionParseError, parse_declaracion
 
-_REAL_DECLARATION_COPY = PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / "130" / "2024-1T.pdf"
+_REAL_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
 
 pytestmark = [
     pytest.mark.unit,

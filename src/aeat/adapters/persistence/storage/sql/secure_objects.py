@@ -111,7 +111,7 @@ class SecureObjectRepository:
         """Return whether ``namespace`` carries a row with this raw HMAC digest.
 
         Used by the archive restore pipeline when the natural key was
-        not present in the source bundle (path-keyed namespaces). Same
+        not present in the source bundle. Same
         master-key constraint as :meth:`save_with_raw_key`.
         """
         if len(hashed_object_key) != 32:
@@ -209,7 +209,13 @@ class SecureObjectRepository:
                     object_key_bytes = bytes(object_key_value)
                     try:
                         decrypt_encrypted_bytes_column(payload_bytes)
-                    except DecryptionError:
+                    except DecryptionError as exc:
+                        _log.debug(
+                            "secure_objects: quarantining unreadable row id=%s namespace=%s (%s)",
+                            int(raw.id),
+                            namespace,
+                            exc,
+                        )
                         session.execute(
                             text(
                                 "INSERT INTO secure_objects_quarantine "
@@ -265,7 +271,12 @@ class SecureObjectRepository:
         for raw in rows:
             try:
                 decrypt_encrypted_bytes_column(bytes(raw.payload))
-            except DecryptionError:
+            except DecryptionError as exc:
+                _log.debug(
+                    "secure_objects probe: unreadable row in namespace=%s (%s)",
+                    namespace,
+                    exc,
+                )
                 unreadable += 1
             else:
                 readable += 1

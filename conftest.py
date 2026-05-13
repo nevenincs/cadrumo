@@ -1,21 +1,20 @@
 """Repo-root pytest conftest.
 
 Two responsibilities, both hostable from the repo root so items
-gathered under ``src/aeat/...`` (Rust-style colocated tests) pass
-through the same enforcement surface as items under ``tests/``:
+gathered under ``src/aeat/...`` pass through the same enforcement surface:
 
 1. Auto-load ``env/.env`` into ``os.environ`` at module-load time so
-   the ``AEAT_LIVE_TESTS_ENABLED`` gate in ``tests/conftest.py`` sees
+   the ``AEAT_LIVE_TESTS_ENABLED`` gate in ``src/aeat/tests/conftest.py`` sees
    the same value the rest of the project's pydantic-settings stack
    reads. Without this, populating ``env/.env`` and running
    ``just test-live`` silently skips every ``live_read`` test because
    pytest never sources dotenv files itself.
 2. Apply the nine-marker collection hook so any item carrying
    ``live_write`` (or missing the access/domain markers) is dropped /
-   raised on. The hook body lives in :mod:`tests._marker_hook`; this
+   raised on. The hook body lives in :mod:`aeat.tests._marker_hook`; this
    conftest is a thin wrapper.
 
-See ``tests/README.md`` and charter ``#116`` for the full taxonomy.
+See ``src/aeat/tests/README.md`` and charter ``#116`` for the full taxonomy.
 """
 
 from __future__ import annotations
@@ -24,8 +23,9 @@ import os
 from pathlib import Path
 
 import pytest
-from tests._env_loader import load_env_file
-from tests._marker_hook import apply as _apply_marker_contract
+
+from aeat.tests._env_loader import load_env_file
+from aeat.tests._marker_hook import apply as _apply_marker_contract
 
 _REPO_ROOT = Path(__file__).resolve().parent
 _ENV_FILE = _REPO_ROOT / "env" / ".env"

@@ -25,7 +25,7 @@ class WizardWidget(StrEnum):
     """Closed taxonomy of input primitives the wizard runtime supports."""
 
     TEXT = "text"
-    SECRET = "secret"  # noqa: S105
+    SECRET = "secret"
     CONFIRM = "confirm"
     SELECT = "select"
     CHECKBOX = "checkbox"

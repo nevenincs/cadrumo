@@ -12,7 +12,7 @@ Note on dead-code branches: `_check_tax_id_present`,
 `_check_eu_eea_country_consistency` carry ERROR branches that are
 defense-in-depth duplicates of `SetupAnswers`'s own field-level and
 model-validator constraints (tax_id min_length=1, activity
-min_length=1, spouse_tax_id required when joint declaration,
+min_length=1, spouse_tax_id required when joint taxation,
 eu_eea_country required when EU/EEA-resident). Testing those
 branches would require bypassing schema validation via
 `model_construct` — the project rule "don't write tests for
@@ -60,9 +60,9 @@ def _finding(answers: SetupAnswers, name: str) -> WizardCheckFinding:
 
 
 def test_spouse_consistency_ok_when_joint_with_spouse_tax_id() -> None:
-    """Joint declaration with a non-empty spouse_tax_id satisfies the
+    """Joint taxation with a non-empty spouse_tax_id satisfies the
     check; the OK message_key is emitted."""
-    answers = _individual_answers(declaration_type="2", spouse_tax_id="87654321B")
+    answers = _individual_answers(taxation_type="2", spouse_tax_id="87654321B")
 
     finding = _finding(answers, "spouse_consistency")
 
@@ -71,9 +71,9 @@ def test_spouse_consistency_ok_when_joint_with_spouse_tax_id() -> None:
 
 
 def test_spouse_consistency_ok_when_not_joint() -> None:
-    """Individual declaration (declaration_type='1' or empty) skips the
+    """Individual taxation (taxation_type='1' or empty) skips the
     spouse-tax-id requirement entirely; emits the OK message_key."""
-    answers = _individual_answers(declaration_type="1", spouse_tax_id="")
+    answers = _individual_answers(taxation_type="1", spouse_tax_id="")
 
     finding = _finding(answers, "spouse_consistency")
 

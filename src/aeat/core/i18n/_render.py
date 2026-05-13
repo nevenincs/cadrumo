@@ -8,12 +8,16 @@ can render translatable keys without reaching into the CLI entrypoints.
 from __future__ import annotations
 
 import importlib.resources
+import os
 
 import i18n
 
 from ..config import load_settings
+from ..logging import get_logger
 
+_log = get_logger(__name__)
 _INITIALISED = False
+SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu")
 
 
 def _ensure_initialised() -> None:
@@ -28,19 +32,57 @@ def _ensure_initialised() -> None:
     _INITIALISED = True
 
 
-def output_language() -> str:
-    """Resolve the operator-facing output language from settings.
+def _normalise_supported_language(value: object) -> str | None:
+    raw = str(value).lower().strip()
+    if raw in SUPPORTED_OUTPUT_LANGUAGES:
+        return raw
+    return None
 
-    Defaults to ``"es"`` on any failure.
+
+def output_language() -> str:
+    """Resolve the operator-facing output language.
+
+    Explicit ``AEAT_CLI_LANGUAGE`` and ``AEAT_OUTPUT_LANGUAGE`` win for
+    one-off sessions and automation. Otherwise the active profile's
+    ``output.language`` key is used. The settings default remains the
+    final fallback and defaults to English for a clean install.
 
     Returns:
-        The configured ISO 639-1 language code.
+        The resolved ISO 639-1 language code.
     """
+    for env_name in ("AEAT_CLI_LANGUAGE", "AEAT_OUTPUT_LANGUAGE"):
+        override = os.environ.get(env_name)
+        if override and override.strip():
+            explicit = _normalise_supported_language(override)
+            if explicit is not None:
+                return explicit
+    profile_language = _active_profile_output_language()
+    if profile_language is not None:
+        return profile_language
     try:
         lang = load_settings().aeat_output_language
-        return str(lang).lower().strip()
+        return _normalise_supported_language(lang) or "en"
     except (KeyError, ValueError, AttributeError):
-        return "es"
+        return "en"
+
+
+def _active_profile_output_language() -> str | None:
+    """Return active profile language without mutating workflow state."""
+
+    try:
+        from ...application.workflow._persistence import workflow_state_repository
+
+        record = workflow_state_repository().load().active_profile_record()
+        if record is None:
+            return None
+        raw = _normalise_supported_language(record.values.get("output.language", ""))
+    except (OSError, ValueError, KeyError, AttributeError, ImportError) as exc:
+        _log.debug(
+            "i18n: unable to resolve active-profile output language; falling back to settings (%s)",
+            exc,
+        )
+        return None
+    return raw
 
 
 def tr(translation_key: str, /, **kwargs: object) -> str:
@@ -61,4 +103,4 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     return i18n.t(translation_key, **kwargs)
 
 
-__all__ = ["output_language", "tr"]
+__all__ = ["SUPPORTED_OUTPUT_LANGUAGES", "output_language", "tr"]

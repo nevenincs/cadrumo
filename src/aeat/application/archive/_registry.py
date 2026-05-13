@@ -11,8 +11,7 @@ Two key strategies are supported:
   envelope payload (e.g. invoice catalogue's ``"catalogue"`` constant
   or a filing draft's ``draft_id`` field). Default for new adapters.
 - ``hashed_passthrough`` — natural key is NOT recoverable from the
-  payload (path-keyed namespaces such as
-  ``aeat.application.setup.profile``). The export emits the row's
+  payload. The export emits the row's
   raw HMAC digest as base64; restore writes it back through
   :meth:`SecureObjectRepository.save_with_raw_key` without re-hashing.
   Same-master-key round-trip only.
@@ -27,7 +26,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.classification import SensitivityClass
-from ..profile._storage_namespaces import _PROFILE_NAMESPACE
+from ..profile._repository import PROFILE_BUCKET_NAMESPACE, profile_bucket_object_key
 from ._errors import ArchiveAdapterMissingError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
@@ -126,6 +125,17 @@ def _extract_field(field_name: str) -> Callable[[dict[str, Any]], str]:
         return value
 
     return extract
+
+
+def _extract_profile_bucket_object_key(payload: dict[str, Any]) -> str:
+    """Return the secure-object key for a profile bucket payload."""
+
+    value = payload.get("bucket_id")
+    if not isinstance(value, str) or not value:
+        raise ArchiveAdapterMissingError(
+            "archive payload is missing required key field 'bucket_id'; cannot derive object key",
+        )
+    return profile_bucket_object_key(value)
 
 
 def _extract_first_entry_field(entries_field: str, entry_field: str) -> Callable[[dict[str, Any]], str]:
@@ -251,13 +261,21 @@ def _register_built_in_adapters() -> None:
             extract_object_key=_extract_first_entry_field("entries", "modelo"),
         )
     )
+    register_archive_adapter(
+        ArchiveAdapter(
+            namespace=PROFILE_BUCKET_NAMESPACE,
+            classification=SensitivityClass.IDENTITY,
+            schema_version=1,
+            label="profile bucket",
+            extract_object_key=_extract_profile_bucket_object_key,
+        )
+    )
     # Path-keyed namespaces: the natural key is the install/storage
     # path, which lives only in the row's HashedLookup column. These
     # adapters use HASHED_PASSTHROUGH so the export emits the raw
     # digest and the restore writes it back through
     # ``save_with_raw_key``. Same-master-key round-trip only.
     for namespace, label, classification in (
-        (_PROFILE_NAMESPACE, "setup profile (autonomo identity)", SensitivityClass.IDENTITY),
         ("aeat.persistence.profile.assets", "profile assets ledger", SensitivityClass.FINANCIAL),
         (
             "aeat.persistence.profile.assets.amortization",
@@ -265,7 +283,6 @@ def _register_built_in_adapters() -> None:
             SensitivityClass.FINANCIAL,
         ),
         ("aeat.persistence.profile.inventory", "profile inventory ledger", SensitivityClass.FINANCIAL),
-        ("aeat.persistence.profile.tax_residence", "profile tax residence", SensitivityClass.IDENTITY),
     ):
         register_archive_adapter(
             ArchiveAdapter(

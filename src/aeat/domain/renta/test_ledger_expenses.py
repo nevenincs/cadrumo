@@ -318,7 +318,7 @@ def test_category_normalization_accepts_closed_values_and_rejects_unknowns() -> 
 def test_fact_model_rejects_boolean_and_float_amounts() -> None:
     payload = _fact(category=SpendingCategory.ASESORIA_CONTABLE).model_dump()
     payload["gross_amount"] = 100.0
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"gross_amount|Decimal|decimal"):
         RentaDeductibleExpenseFact.model_validate(payload)
 
 

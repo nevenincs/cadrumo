@@ -40,10 +40,17 @@ _UNRELIABLE_WARNING_CODES: frozenset[str] = frozenset(
 
 
 class _DiscrepancyLike(Protocol):
-    casilla_id: str
-    computed_value: Decimal
-    user_value: Decimal
-    delta: Decimal
+    @property
+    def casilla_id(self) -> str: ...
+
+    @property
+    def computed_value(self) -> Decimal: ...
+
+    @property
+    def user_value(self) -> Decimal: ...
+
+    @property
+    def delta(self) -> Decimal: ...
 
 
 @dataclass(frozen=True, slots=True)

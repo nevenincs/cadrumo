@@ -16,8 +16,10 @@ application functions and pydantic records.
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
+import click
 import typer
 
 from ._stdio import configure_stdio_for_utf8
@@ -30,19 +32,30 @@ from ._stdio import configure_stdio_for_utf8
 configure_stdio_for_utf8()
 
 from ...application.diagnostics import build_cli_version_report, render_cli_version_text
+from ...application.operator_surface import (
+    build_help_document,
+    build_root_landing_report,
+    render_help_text,
+)
+from ...application.overview import build_overview_status_report
+from ...application.workflow import workflow_state_repository
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from . import _config
-from ._common import _FORMAT_TEXT
+from ._common import _FORMAT_TEXT, _emit
 from ._errors import decorate_typer_app, write_stderr
 from ._i18n import tr
 from ._log_levels import apply_to_root_logger, resolve_log_level
+from ._root_landing import render_cli_root_landing_lines
 
 _overview_module: Any | None = None
 _ledger_module: Any | None = None
+_live_module: Any | None = None
 _modelo_module: Any | None = None
 _registry_module: Any | None = None
 _review_module: Any | None = None
 
 try:
+    from . import _app_live as _live_module
     from . import _ledger as _ledger_module
     from . import _modelo as _modelo_module
     from . import _overview as _overview_module
@@ -63,6 +76,7 @@ app = typer.Typer(
     help=tr("cli.root.app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
+    add_help_option=False,
     add_completion=True,
 )
 
@@ -70,6 +84,14 @@ app = typer.Typer(
 @app.callback()
 def _root(
     ctx: typer.Context,
+    language: str | None = typer.Option(
+        None,
+        "--language",
+        "--lang",
+        click_type=click.Choice(SUPPORTED_OUTPUT_LANGUAGES),
+        help=tr("cli.root.language_help"),
+        is_eager=True,
+    ),
     version: bool = typer.Option(
         False,
         "--version",
@@ -83,6 +105,13 @@ def _root(
         help=tr("cli.root.detail_help"),
         is_eager=True,
     ),
+    help_: bool = typer.Option(
+        False,
+        "--help",
+        "-h",
+        help=tr("cli.root.help_help"),
+        is_eager=True,
+    ),
     format_: str = typer.Option(
         _FORMAT_TEXT,
         "--format",
@@ -93,7 +122,11 @@ def _root(
     debug: bool = typer.Option(False, "--debug", help=tr("cli.root.debug_help")),
 ) -> None:
     """Capture root-level CLI flags into the Typer context."""
+    if language is not None:
+        os.environ["AEAT_CLI_LANGUAGE"] = language
     apply_to_root_logger(resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
+    state = ctx.ensure_object(dict)
+    state["format"] = format_.strip().lower() or _FORMAT_TEXT
     if version:
         report = build_cli_version_report()
         if detail:
@@ -101,13 +134,21 @@ def _root(
         else:
             typer.echo(f"{report.package_name} {report.package_version}")
         raise typer.Exit()
+    if help_:
+        document = build_help_document("root")
+        _emit(ctx, document, render_help_text(document).splitlines())
+        raise typer.Exit()
     if ctx.invoked_subcommand is None:
         if _app_import_error is not None:
             _emit_startup_import_error(_app_import_error)
-        typer.echo(ctx.get_help())
+        workflow_state = workflow_state_repository().load()
+        landing = build_root_landing_report(workflow_state.active_profile)
+        if workflow_state.active_profile is None:
+            _emit(ctx, landing, render_cli_root_landing_lines(landing))
+            raise typer.Exit()
+        overview_report = build_overview_status_report(state=workflow_state)
+        _emit(ctx, overview_report, render_cli_root_landing_lines(landing))
         raise typer.Exit()
-    state = ctx.ensure_object(dict)
-    state["format"] = format_.strip().lower() or _FORMAT_TEXT
 
 
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
@@ -152,16 +193,35 @@ def _missing_dependency_name(error: ModuleNotFoundError) -> str:
 app_app = typer.Typer(
     name="app",
     help=tr("cli.root.app_app_help"),
-    no_args_is_help=True,
+    no_args_is_help=False,
+    invoke_without_command=True,
+    add_help_option=False,
 )
+
+
+@app_app.callback()
+def _app_root(
+    ctx: typer.Context,
+    help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.root.app_help_help"), is_eager=True),
+) -> None:
+    """Render app-level workflow help when requested."""
+
+    if help_ or ctx.invoked_subcommand is None:
+        document = build_help_document("app")
+        _emit(ctx, document, render_help_text(document).splitlines())
+        raise typer.Exit()
+
+
 if _app_import_error is None:
     assert _overview_module is not None
     assert _ledger_module is not None
+    assert _live_module is not None
     assert _modelo_module is not None
     assert _registry_module is not None
     assert _review_module is not None
     app_app.add_typer(_overview_module.app, name="overview")
     app_app.add_typer(_ledger_module.app, name="ledger")
+    app_app.add_typer(_live_module.app, name="live")
     app_app.add_typer(_modelo_module.app, name="modelo")
     app_app.add_typer(_registry_module.app, name="registry")
     app_app.add_typer(_review_module.app, name="review")

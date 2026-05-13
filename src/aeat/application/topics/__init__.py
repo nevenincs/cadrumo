@@ -98,9 +98,9 @@ def load_topic_catalogue(root: Path | None = None) -> TopicCatalogue:
         A :class:`TopicCatalogue` carrying one :class:`Topic` per TOML.
 
     Raises:
-        ValueError: When the directory is empty or a TOML row is
-            malformed. Pydantic validation errors propagate verbatim
-            from :class:`Topic`.
+        TopicNotFoundError: When the directory is empty (no TOML
+            files present). Pydantic validation errors propagate
+            verbatim from :class:`Topic` when a TOML row is malformed.
     """
 
     target = root if root is not None else _TOPIC_REGISTRY_ROOT
@@ -118,7 +118,7 @@ def load_topic_catalogue(root: Path | None = None) -> TopicCatalogue:
             )
         )
     if not topics:
-        raise ValueError(f"topic catalogue at {target} is empty")
+        raise TopicNotFoundError(f"topic catalogue at {target} is empty")
     return TopicCatalogue(topics=tuple(topics))
 
 

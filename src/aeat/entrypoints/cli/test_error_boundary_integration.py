@@ -63,19 +63,17 @@ _REFUSED_EXIT: int = get_error_exit_code(ErrorCategory.REFUSED)
     [
         (
             # Flag collision: the root-app callback calls resolve_log_level() which
-            # raises when --quiet and --verbose are both set.  A real subcommand
-            # ("version") is needed — --help is an eager option that short-circuits
-            # before the root callback body runs.
-            ["--quiet", "--verbose", "version"],
+            # raises when --quiet and --verbose are both set.  A real mounted
+            # command path is used so Click parses through the root callback.
+            ["--quiet", "--verbose", "config", "doctor"],
             None,
             None,
             "--quiet/--verbose mutual-exclusion flag collision",
         ),
         (
             # Env-var path: AEAT_LOG_LEVEL set to a value not in the allowed
-            # set; resolve_log_level() raises on the env-var parse branch.  Same
-            # reasoning: a real subcommand is required to invoke the root callback.
-            ["version"],
+            # set; resolve_log_level() raises on the env-var parse branch.
+            ["config", "doctor"],
             "AEAT_LOG_LEVEL",
             "NOT_A_VALID_LEVEL",
             "AEAT_LOG_LEVEL env set to an unrecognised value",

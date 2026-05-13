@@ -8,8 +8,9 @@ file reads or environment lookups during construction.
 
 from __future__ import annotations
 
-from ...core.i18n import Translatable
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, Translatable
 from ...domain.deadlines._models import IVARegime
+from ...domain.profile import RentaDeclarationType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
 from ...domain.profile._ccaa import CCAA
 from ._models import (
     WizardChoice,
@@ -42,7 +43,7 @@ def _confirm(qid: str, profile_key: str, *, suffix: str, default: str = "false")
     )
 
 
-_JOINT_DECLARATION = WizardCondition(question_id="declaration-type", equals="2")
+_JOINT_DECLARATION = WizardCondition(question_id="taxation-type", equals="2")
 _NON_RESIDENT_IRPF = WizardCondition(question_id="spouse-non-resident-irpf", equals="true")
 _EU_EEA_RESIDENT = WizardCondition(question_id="spouse-eu-eea-resident", equals="true")
 
@@ -73,6 +74,76 @@ _CCAA_CHOICES: tuple[WizardChoice, ...] = tuple(
         label=_t(f"residence.ccaa.choices.{member.value}.label"),
     )
     for member in CCAA
+)
+
+_OUTPUT_LANGUAGE_CHOICES: tuple[WizardChoice, ...] = tuple(
+    WizardChoice(
+        value=language,
+        label=_t(f"profile.output-language.choices.{language}.label"),
+    )
+    for language in SUPPORTED_OUTPUT_LANGUAGES
+)
+
+_DECLARATION_TYPE_CHOICES: tuple[WizardChoice, ...] = (
+    WizardChoice(
+        value=RentaDeclarationType.INDIVIDUAL.value,
+        label=_t("profile.taxation-type.choices.individual.label"),
+        description=_t("profile.taxation-type.choices.individual.description"),
+    ),
+    WizardChoice(
+        value=RentaDeclarationType.JOINT.value,
+        label=_t("profile.taxation-type.choices.joint.label"),
+        description=_t("profile.taxation-type.choices.joint.description"),
+    ),
+)
+
+_SEX_CHOICES: tuple[WizardChoice, ...] = (
+    WizardChoice(
+        value=RentaSexCode.HOMBRE.value,
+        label=_t("codes.sex.choices.h.label"),
+    ),
+    WizardChoice(
+        value=RentaSexCode.MUJER.value,
+        label=_t("codes.sex.choices.m.label"),
+    ),
+)
+
+_MARITAL_STATUS_CHOICES: tuple[WizardChoice, ...] = (
+    WizardChoice(
+        value=RentaMaritalStatus.SOLTERO.value,
+        label=_t("taxpayer.taxpayer-marital-status.choices.soltero.label"),
+    ),
+    WizardChoice(
+        value=RentaMaritalStatus.CASADO.value,
+        label=_t("taxpayer.taxpayer-marital-status.choices.casado.label"),
+    ),
+    WizardChoice(
+        value=RentaMaritalStatus.VIUDO.value,
+        label=_t("taxpayer.taxpayer-marital-status.choices.viudo.label"),
+    ),
+    WizardChoice(
+        value=RentaMaritalStatus.SEPARADO_DIVORCIADO.value,
+        label=_t("taxpayer.taxpayer-marital-status.choices.separado-divorciado.label"),
+    ),
+)
+
+_DISABILITY_GRADE_CHOICES: tuple[WizardChoice, ...] = (
+    WizardChoice(
+        value=RentaDisabilityGrade.GE_33_LT_65.value,
+        label=_t("codes.disability-grade.choices.33-64.label"),
+    ),
+    WizardChoice(
+        value=RentaDisabilityGrade.GE_65.value,
+        label=_t("codes.disability-grade.choices.65-plus.label"),
+    ),
+    WizardChoice(
+        value=RentaDisabilityGrade.JUDICIAL_INCAPACITY.value,
+        label=_t("codes.disability-grade.choices.judicial-incapacity.label"),
+    ),
+    WizardChoice(
+        value=RentaDisabilityGrade.ASSISTANCE_OR_REDUCED_MOBILITY.value,
+        label=_t("codes.disability-grade.choices.assistance-or-mobility.label"),
+    ),
 )
 
 
@@ -121,10 +192,21 @@ _PROFILE_SECTION = WizardSection(
             answer_type=str,
         ),
         WizardQuestion(
-            id="declaration-type",
+            id="taxation-type",
             profile_key="declaration.type",
             widget=WizardWidget.TEXT,
-            prompt=_t("profile.declaration-type.prompt"),
+            prompt=_t("profile.taxation-type.prompt"),
+            choices=_DECLARATION_TYPE_CHOICES,
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="output-language",
+            profile_key="output.language",
+            widget=WizardWidget.SELECT,
+            prompt=_t("profile.output-language.prompt"),
+            choices=_OUTPUT_LANGUAGE_CHOICES,
+            default="es",
             required=False,
             answer_type=str,
         ),
@@ -141,6 +223,7 @@ _TAXPAYER_SECTION = WizardSection(
             profile_key="taxpayer.sex",
             widget=WizardWidget.TEXT,
             prompt=_t("taxpayer.taxpayer-sex.prompt"),
+            choices=_SEX_CHOICES,
             required=False,
             answer_type=str,
         ),
@@ -149,6 +232,7 @@ _TAXPAYER_SECTION = WizardSection(
             profile_key="taxpayer.marital_status",
             widget=WizardWidget.TEXT,
             prompt=_t("taxpayer.taxpayer-marital-status.prompt"),
+            choices=_MARITAL_STATUS_CHOICES,
             required=False,
             answer_type=str,
         ),
@@ -165,6 +249,7 @@ _TAXPAYER_SECTION = WizardSection(
             profile_key="taxpayer.disability_grade",
             widget=WizardWidget.TEXT,
             prompt=_t("taxpayer.taxpayer-disability-grade.prompt"),
+            choices=_DISABILITY_GRADE_CHOICES,
             required=False,
             answer_type=str,
         ),
@@ -225,6 +310,7 @@ _SPOUSE_SECTION = WizardSection(
             profile_key="spouse.sex",
             widget=WizardWidget.TEXT,
             prompt=_t("spouse.spouse-sex.prompt"),
+            choices=_SEX_CHOICES,
             required=False,
             visible_when=_JOINT_DECLARATION,
             answer_type=str,
@@ -234,6 +320,7 @@ _SPOUSE_SECTION = WizardSection(
             profile_key="spouse.disability_grade",
             widget=WizardWidget.TEXT,
             prompt=_t("spouse.spouse-disability-grade.prompt"),
+            choices=_DISABILITY_GRADE_CHOICES,
             required=False,
             answer_type=str,
         ),

@@ -11,7 +11,6 @@ matching CSV downloads.
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
-from contextlib import suppress
 from pathlib import Path
 from typing import Any
 
@@ -83,8 +82,10 @@ class XlsxProvider(FinancialProvider):
             return ProviderValidation(is_valid=False, warnings=(str(exc),))
         finally:
             if workbook is not None:
-                with suppress(Exception):
+                try:
                     workbook.close()
+                except Exception as close_exc:
+                    _logger.debug("xlsx provider: workbook.close() after validate_source failed (%s)", close_exc)
         warnings: list[str] = []
         if layout is None:
             return ProviderValidation(
@@ -219,8 +220,10 @@ class XlsxProvider(FinancialProvider):
             # errors, KeyError, ValueError, OSError, IndexError or
             # TypeError depending on file shape; the close() must run
             # uniformly. ``raise`` preserves the original cause.
-            with suppress(Exception):
+            try:
                 workbook.close()
+            except Exception as close_exc:
+                _logger.debug("xlsx provider: workbook.close() during parse-error teardown failed (%s)", close_exc)
             raise
 
 

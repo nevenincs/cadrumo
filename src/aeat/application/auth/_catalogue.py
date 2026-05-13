@@ -6,7 +6,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
@@ -75,6 +75,18 @@ def list_auth_providers() -> tuple[AuthProviderListing, ...]:
     return AUTH_PROVIDER_CATALOGUE
 
 
+def implemented_auth_provider_ids() -> tuple[str, ...]:
+    """Return provider ids accepted by auth commands that need an implementation."""
+
+    return tuple(entry.id for entry in AUTH_PROVIDER_CATALOGUE if entry.implemented)
+
+
+def known_auth_provider_ids() -> tuple[str, ...]:
+    """Return every recognized provider id, including reserved slots."""
+
+    return tuple(entry.id for entry in AUTH_PROVIDER_CATALOGUE)
+
+
 def get_auth_provider(provider_id: str) -> AuthProviderListing:
     """Resolve a provider id to its catalogue listing.
 
@@ -97,5 +109,7 @@ __all__ = [
     "AUTH_PROVIDER_CATALOGUE",
     "AuthProviderListing",
     "get_auth_provider",
+    "implemented_auth_provider_ids",
+    "known_auth_provider_ids",
     "list_auth_providers",
 ]

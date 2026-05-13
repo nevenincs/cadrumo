@@ -48,7 +48,7 @@ def test_catalogue_topic_lookup_returns_typed_record() -> None:
 def test_catalogue_rejects_unknown_slug_with_typed_error() -> None:
     """Unknown slugs raise :class:`TopicNotFoundError`."""
     catalogue = load_topic_catalogue()
-    with pytest.raises(TopicNotFoundError):
+    with pytest.raises(TopicNotFoundError, match=r"topic|not|found"):
         catalogue.topic("not-a-real-topic")
 
 

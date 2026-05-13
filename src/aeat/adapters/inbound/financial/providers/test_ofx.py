@@ -11,11 +11,13 @@ from pathlib import Path
 
 import pytest
 
+from aeat.tests import FIXTURES_DIR
+
 from .. import OfxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_FIXTURES = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "financial"
+_FIXTURES = FIXTURES_DIR / "financial"
 
 
 def test_ofx_provider_prefers_fitid_and_payee() -> None:

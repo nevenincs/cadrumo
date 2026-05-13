@@ -160,7 +160,7 @@ class TestLoader:
     def test_load_manual_missing_structure_raises_not_found(self, tmp_path: Path) -> None:
         """A part root without structure/ raises ManualNotFoundError."""
         settings = _settings_with_root(tmp_path)
-        with pytest.raises(ManualNotFoundError):
+        with pytest.raises(ManualNotFoundError, match=r"IVA|manual|structure|2025"):
             load_manual(ManualId.IVA, 2025, ManualPart.SINGLE, settings=settings)
 
     def test_load_manual_rejects_malformed_section(self, tmp_path: Path) -> None:
@@ -187,7 +187,7 @@ class TestLoader:
             bad_section,
         )
         manual = load_manual(ManualId.IVA, 2025, ManualPart.SINGLE, settings=settings)
-        with pytest.raises(ManualParseError):
+        with pytest.raises(ManualParseError, match=r"manual|parse"):
             load_section(
                 settings.aeat_manuals_root / "iva" / "2025",
                 manual.chapters[0].sections[0],

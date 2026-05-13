@@ -240,11 +240,11 @@ class TestIdentityClassification:
         assert _classify_identity("X1234567L") == "NIE"
 
     def test_rejects_cif(self) -> None:
-        with pytest.raises(ClaveMovilConfigurationError):
+        with pytest.raises(ClaveMovilConfigurationError, match=r"NIF|NIE|identity|CIF"):
             _classify_identity("B12345674")
 
     def test_rejects_empty(self) -> None:
-        with pytest.raises(ClaveMovilConfigurationError):
+        with pytest.raises(ClaveMovilConfigurationError, match=r"NIF|NIE|identity|empty"):
             _classify_identity("")
 
 
@@ -369,7 +369,7 @@ class TestAuthenticateFresh:
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilConfigurationError):
+            with pytest.raises(ClaveMovilConfigurationError, match=r"AEAT_CLAVE_MOVIL_DNI_FECHA|non-QR|fallback"):
                 await provider.authenticate(browser_session=browser_session)
 
         asyncio.run(run())
@@ -384,7 +384,7 @@ class TestAuthenticateFresh:
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilConfigurationError):
+            with pytest.raises(ClaveMovilConfigurationError, match=r"identity|NIF|NIE|configuration"):
                 await provider.authenticate(browser_session=browser_session)
 
         asyncio.run(run())
@@ -422,7 +422,7 @@ class TestPendingPetitionRefusal:
         page = _PendingPetitionPage(target_path=settings.aeat_sede_expedientes_path)
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilApprovalTimeoutError) as excinfo:
+            with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"Cl@ve|pending|prior|petition") as excinfo:
                 await provider._raise_if_pending_request_error(page)
             assert excinfo.value.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED
             assert excinfo.value.context is not None
@@ -443,7 +443,7 @@ class TestPendingPetitionRefusal:
         page.url = "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/ObtenerClaveMovil?qAA=2"
 
         async def run() -> None:
-            with pytest.raises(ClaveMovilApprovalTimeoutError) as excinfo:
+            with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"clave|movil|approval|timeout") as excinfo:
                 await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=100)
             assert excinfo.value.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED
             assert excinfo.value.context is not None

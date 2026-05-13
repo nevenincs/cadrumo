@@ -9,9 +9,9 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from ....adapters.inbound.justificante import parse_justificante
-from ....core.config import PROJECT_ROOT
 from ....domain.filing import FilingBuilderError, FilingDraft, FilingDraftStatus
 from ....domain.justificante import Justificante
+from ....tests import FIXTURES_DIR
 from .. import build_runtime_schema_provider
 from ..runtime import RegistrySchemaProvider
 from ..testing import build_registry_filing_draft
@@ -112,7 +112,7 @@ def _draft_for_123(
 
 
 def _justificante(modelo: str, label: str) -> Justificante:
-    return parse_justificante(PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / modelo / f"{label}.pdf")
+    return parse_justificante(FIXTURES_DIR / "justificantes" / modelo / f"{label}.pdf")
 
 
 def _justificante_record(
@@ -135,7 +135,7 @@ def _justificante_record(
         total_a_ingresar=total_a_ingresar,
         total_a_devolver=total_a_devolver,
         verification_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/Sede/cotejo/CSV=SANITIZEDCSV111"),
-        source_pdf_path=PROJECT_ROOT / "tests" / "fixtures" / "justificantes" / modelo / "synthetic.pdf",
+        source_pdf_path=FIXTURES_DIR / "justificantes" / modelo / "synthetic.pdf",
         source_pdf_sha256="a" * 64,
         parsed_at=_FIXED_NOW,
     )

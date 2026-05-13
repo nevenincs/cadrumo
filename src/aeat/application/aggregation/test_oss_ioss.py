@@ -110,7 +110,7 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
     from pydantic import ValidationError
 
     candidate = _candidate()
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         OssIossLedgerCandidate(
             ledger_id="ledger-1",
             transaction_date=_SUPPLY_DATE,
@@ -123,7 +123,7 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
             iva_amount=Decimal("19"),
             unknown_axis="extra-value",  # ty: ignore[unknown-argument]
         )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         candidate.base_amount = Decimal("200")  # type: ignore[misc]
 
 
@@ -134,9 +134,9 @@ def test_candidate_rejects_negative_amounts() -> None:
 
     from pydantic import ValidationError
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"base_amount|greater than"):
         _candidate(base=Decimal("-1"))
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"iva_amount|greater than"):
         _candidate(iva=Decimal("-1"))
 
 
@@ -192,7 +192,7 @@ def test_validation_rejects_candidate_with_iva_off_by_six_euros_on_destination_d
         base=Decimal("100"),
         iva=Decimal("25"),
     )
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"iva|rate|tolerance|drift"):
         validate_oss_ioss_observation(candidate)
 
 
@@ -208,7 +208,7 @@ def test_validation_rejects_zero_iva_when_destination_rate_is_non_zero() -> None
         base=Decimal("100"),
         iva=Decimal("0"),
     )
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"iva|zero|rate|drift|tolerance"):
         validate_oss_ioss_observation(candidate)
 
 
@@ -238,7 +238,7 @@ def test_validation_rejects_beyond_tolerance_drift() -> None:
         base=Decimal("100"),
         iva=Decimal("19.02"),
     )
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"iva|tolerance|drift|exceed"):
         validate_oss_ioss_observation(candidate)
 
 
@@ -255,7 +255,7 @@ def test_validation_attaches_diagnostic_context_to_the_error() -> None:
         base=Decimal("100"),
         iva=Decimal("25"),
     )
-    with pytest.raises(AggregationValidationError) as exc_info:
+    with pytest.raises(AggregationValidationError, match=r"aggregation|validation") as exc_info:
         validate_oss_ioss_observation(candidate)
     context = exc_info.value.context
     assert context is not None
@@ -280,7 +280,7 @@ def test_validation_raises_rate_not_found_for_pre_registry_date() -> None:
         base=Decimal("100"),
         iva=Decimal("19"),
     )
-    with pytest.raises(VatRateNotFoundError):
+    with pytest.raises(VatRateNotFoundError, match=r"DE|1900|rate"):
         validate_oss_ioss_observation(candidate)
 
 
@@ -311,7 +311,7 @@ def test_batch_validation_raises_on_first_offending_candidate() -> None:
         _candidate(ledger_id="b", iva=Decimal("99")),  # bad
         _candidate(ledger_id="c", iva=Decimal("19")),
     ]
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"iva|tolerance|drift|exceed"):
         validate_oss_ioss_observations(candidates)
 
 
@@ -351,7 +351,7 @@ def test_aggregator_rejects_when_any_candidate_fails_rate_validation() -> None:
         _candidate(ledger_id="a", base=Decimal("100"), iva=Decimal("19")),
         _candidate(ledger_id="b", base=Decimal("200"), iva=Decimal("99")),  # bad
     ]
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(AggregationValidationError, match=r"iva|tolerance|drift|exceed"):
         aggregate_oss_ioss_bindings(revision, candidates)
 
 

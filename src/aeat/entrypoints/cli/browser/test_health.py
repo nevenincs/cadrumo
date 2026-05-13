@@ -3,7 +3,7 @@
 Every test uses the explicit probe-factory override seam exposed by
 :mod:`aeat.entrypoints.cli.browser.health`. The doubles raise real
 :class:`aeat.core.errors.SiteHealthError` instances constructed from real
-HTML fixtures under ``tests/fixtures/site_health/``. No monkeypatching
+HTML fixtures under ``src/aeat/tests/fixtures/site_health/``. No monkeypatching
 or ``unittest`` usage.
 """
 
@@ -19,15 +19,16 @@ from typer.testing import CliRunner
 
 from ....adapters.outbound.aeat.browser._site_health import SiteHealthState
 from ....adapters.outbound.aeat.browser._site_health_parsers import evaluate_response
-from ....core.config import PROJECT_ROOT, Settings
+from ....core.config import Settings
 from ....core.errors import SiteHealthError
+from ....tests import FIXTURES_DIR
 from . import app
 from .health import HealthProbeLike, ProbeFactory, _RealProbe, override_probe_factory
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _RUNNER = CliRunner()
-_FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
+_FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 
 
 def _unwrap_result(output: str):

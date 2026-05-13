@@ -46,5 +46,5 @@ def test_translated_message_does_not_leak_into_str() -> None:
 
 
 def test_preflight_catchable_as_submission_error() -> None:
-    with pytest.raises(SubmissionError):
+    with pytest.raises(SubmissionError, match=r"submission"):
         raise SubmissionPreflightError("draft not ready")

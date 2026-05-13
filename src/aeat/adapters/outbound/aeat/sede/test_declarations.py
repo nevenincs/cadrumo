@@ -42,6 +42,7 @@ from aeat.domain.calculations.registry import (
     parse_export_payload,
     resolve_export_layout,
 )
+from aeat.tests import FIXTURES_DIR
 
 from ._declarations import (
     Declaration,
@@ -66,7 +67,7 @@ from ._schema import FiledDeclarationArtefact, FiledDeclarationObservation, Obse
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
-_FIXTURE_ROOT = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "aeat-sede"
+_FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
 _SUBMITTED_FILE_130_2026_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-130-2026-1T-redacted.txt"
 _SUBMITTED_FILE_111_2025_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-111-2025-1T-redacted.txt"
 _SUBMITTED_FILE_100_2023_0A = _FIXTURE_ROOT / "submitted-files" / "modelo-100-2023-0A-redacted.xml"
@@ -338,7 +339,7 @@ class TestParseListbox:
 
     def test_missing_listbox_raises_parse_error(self) -> None:
         """Assert HTML without a listbox raises :exc:`SedeParseError`."""
-        with pytest.raises(SedeParseError):
+        with pytest.raises(SedeParseError, match=r"listbox|missing|parse"):
             _parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=2022)
 
 

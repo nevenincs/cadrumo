@@ -2,7 +2,7 @@
 
 This is the load-bearing security gate the sanitiser exists to
 satisfy. For every committed fixture under
-``tests/fixtures/justificantes/<modelo>/`` the test loads the
+``src/aeat/tests/fixtures/justificantes/<modelo>/`` the test loads the
 sidecar mapping JSON (which records the synthetic values applied
 to the fixture) and asserts that no entry in any forbidden-leak
 category contains a value that should have been replaced.
@@ -38,11 +38,9 @@ from pathlib import Path
 import pikepdf
 import pytest
 
+from aeat.tests import FIXTURES_DIR
+
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
-
-
-def _project_root() -> Path:
-    return Path(__file__).resolve().parents[5]
 
 
 def _committed_fixture_pairs() -> list[tuple[Path, Path]]:
@@ -51,7 +49,7 @@ def _committed_fixture_pairs() -> list[tuple[Path, Path]]:
     Returns an empty list when no fixtures have landed yet, so a
     fresh checkout collects zero parametrised cases.
     """
-    fixture_root = _project_root() / "tests" / "fixtures" / "justificantes"
+    fixture_root = FIXTURES_DIR / "justificantes"
     if not fixture_root.is_dir():
         return []
     pairs: list[tuple[Path, Path]] = []

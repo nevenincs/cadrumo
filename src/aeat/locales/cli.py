@@ -1,0 +1,67 @@
+"""Developer CLI for locale catalogue audits and scaffolding."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Annotated
+
+import typer
+
+from .manager import LocaleManager
+
+app = typer.Typer(name="locales", no_args_is_help=True)
+
+
+def _default_manager() -> LocaleManager:
+    locales_dir = Path(__file__).parent
+    return LocaleManager(locales_dir.parent, locales_dir)
+
+
+@app.command("audit")
+def audit() -> None:
+    """Print codebase-to-locale drift for every locale file."""
+
+    manager = _default_manager()
+    codebase_keys = manager.get_codebase_keys()
+    namespace_prefixes = tuple(
+        marker.rstrip("*").rstrip(".") for marker in manager.get_codebase_namespaces() if marker.rstrip("*").rstrip(".")
+    )
+    failed = False
+    for locale_path in sorted(manager.locales_dir.glob("*.yml")):
+        keys = manager.get_yaml_keys(manager.load_locale(locale_path))
+        missing = sorted(codebase_keys - keys)
+        extra = sorted(key for key in keys - codebase_keys if not _covered_by_namespace(key, namespace_prefixes))
+        if missing or extra:
+            failed = True
+            typer.echo(f"{locale_path.name}: missing={len(missing)} extra={len(extra)}")
+            for key in missing:
+                typer.echo(f"  missing {key}")
+            for key in extra:
+                typer.echo(f"  extra {key}")
+        else:
+            typer.echo(f"{locale_path.name}: ok")
+    if failed:
+        raise typer.Exit(code=1)
+
+
+@app.command("scaffold")
+def scaffold(
+    check: Annotated[
+        bool,
+        typer.Option("--check", help="Report drift without writing locale files."),
+    ] = False,
+) -> None:
+    """Update locale files so they match concrete codebase translation keys."""
+
+    if check:
+        audit()
+        return
+    _default_manager().scaffold()
+    typer.echo("locale scaffold updated")
+
+
+def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
+    return any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
+
+
+__all__ = ["app"]

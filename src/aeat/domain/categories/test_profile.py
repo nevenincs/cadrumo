@@ -65,7 +65,7 @@ def test_category_profile_accepts_profile_without_casilla_projection() -> None:
 def test_category_profile_rejects_stale_casilla_projection_payload() -> None:
     """Deleted projection fields must fail validation instead of being dropped."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted|projection"):
         CategoryProfile.model_validate(
             {
                 "category": SpendingCategory.MATERIAL_OFICINA,

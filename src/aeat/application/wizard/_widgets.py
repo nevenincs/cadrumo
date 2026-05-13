@@ -54,6 +54,10 @@ def validate_text(raw: str, question: WizardQuestion) -> str:
     value = raw.strip()
     if not value and question.required and question.visible_when is None:
         raise _fail(question, "blank_text")
+    if value and question.choices:
+        allowed = {choice.value for choice in question.choices}
+        if value not in allowed:
+            raise _fail(question, "select_unknown", raw=raw, choices=sorted(allowed))
     if value and question.id in _TAX_ID_QUESTION_IDS:
         try:
             validate_identity(value)

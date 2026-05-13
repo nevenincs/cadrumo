@@ -12,6 +12,8 @@ from ._catalogue import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderListing,
     get_auth_provider,
+    implemented_auth_provider_ids,
+    known_auth_provider_ids,
     list_auth_providers,
 )
 
@@ -133,7 +135,7 @@ def describe_provider_operator_impact(description: AuthProviderDescription) -> s
     return tr("application.auth.provider_impact.generic_ready", label=description.label)
 
 
-from ._acquisition_lock import (  # noqa: E402
+from ._acquisition_lock import (
     AuthAcquisitionLockedError,
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockState,
@@ -144,9 +146,9 @@ from ._acquisition_lock import (  # noqa: E402
     clear_auth_acquisition_lock,
     inspect_auth_acquisition_lock,
 )
-from ._actions import update_auth  # noqa: E402
-from ._models import AuthState  # noqa: E402
-from ._operator import (  # noqa: E402
+from ._actions import update_auth
+from ._models import AuthState
+from ._operator import (
     AuthClearResult,
     AuthConfigureResult,
     AuthProviderReservedError,
@@ -158,7 +160,7 @@ from ._operator import (  # noqa: E402
     list_operator_auth_providers,
     test_operator_auth,
 )
-from ._sessions import (  # noqa: E402
+from ._sessions import (
     AuthenticatedAeatSessionResult,
     AuthSessionUnavailableError,
     CorruptAuthSessionError,
@@ -202,8 +204,10 @@ __all__ = [
     "describe_provider_operator_impact",
     "ensure_authenticated_aeat_session",
     "get_auth_provider",
+    "implemented_auth_provider_ids",
     "inspect_auth_acquisition_lock",
     "inspect_operator_auth",
+    "known_auth_provider_ids",
     "list_auth_providers",
     "list_operator_auth_providers",
     "load_persisted_session",

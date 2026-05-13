@@ -12,11 +12,13 @@ from pathlib import Path
 
 import pytest
 
+from aeat.tests import FIXTURES_DIR
+
 from .. import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_FIXTURES = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "financial"
+_FIXTURES = FIXTURES_DIR / "financial"
 
 
 def test_xlsx_provider_ingests_header_detected_worksheet() -> None:

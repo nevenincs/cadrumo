@@ -19,8 +19,11 @@ import questionary
 
 from ...core.errors import AeatError
 from ...core.i18n import tr
+from ...core.logging import get_logger
 from ._errors import WizardScriptOverflowError, WizardScriptUnderflowError
 from ._models import WizardChoice, WizardQuestion, WizardWidget
+
+_log = get_logger(__name__)
 
 
 class WizardUnsupportedConsoleError(AeatError):
@@ -45,8 +48,11 @@ def _resolve_no_console_error_types() -> tuple[type[BaseException], ...]:
         from prompt_toolkit.output.win32 import NoConsoleScreenBufferError as _Win32NoConsole
 
         error_types.insert(0, _Win32NoConsole)
-    except ImportError:
-        pass
+    except ImportError as exc:
+        _log.debug(
+            "wizard prompter: prompt_toolkit win32 console probe unavailable on this platform: %s",
+            exc,
+        )
     return tuple(error_types)
 
 
@@ -55,6 +61,8 @@ _NO_CONSOLE_ERRORS: tuple[type[BaseException], ...] = _resolve_no_console_error_
 if TYPE_CHECKING:
     from prompt_toolkit.input import Input
     from prompt_toolkit.output import Output
+
+    from ._models import WizardFlow
 
 
 @runtime_checkable
@@ -141,6 +149,21 @@ class QuestionaryPrompter:
         self._input = input
         self._output = output
 
+    def prepare(self, flow: WizardFlow) -> None:
+        """Verify prompt support and explain the setup flow before progress starts."""
+
+        self._ensure_interactive_environment()
+        question_total = sum(len(section.questions) for section in flow.sections)
+        required_total = sum(1 for section in flow.sections for question in section.questions if question.required)
+        self.emit_progress(
+            tr(
+                f"wizard.{flow.id}.intro",
+                section_total=len(flow.sections),
+                question_total=question_total,
+                required_total=required_total,
+            )
+        )
+
     def emit_progress(self, text: str) -> None:
         """Emit a progress line (section header or question prefix).
 
@@ -152,6 +175,21 @@ class QuestionaryPrompter:
 
         sys.stdout.write(f"{text}\n")
         sys.stdout.flush()
+
+    def _ensure_interactive_environment(self) -> None:
+        """Fail before progress when this process cannot host an interactive prompt."""
+
+        if self._input is not None or self._output is not None:
+            return
+        if not sys.stdin.isatty():
+            raise WizardUnsupportedConsoleError(tr("wizard.errors.unsupported_console"))
+        try:
+            from prompt_toolkit.output.defaults import create_output
+
+            output = create_output(always_prefer_tty=True)
+            output.flush()
+        except _NO_CONSOLE_ERRORS as exc:
+            raise WizardUnsupportedConsoleError(tr("wizard.errors.unsupported_console")) from exc
 
     def ask(self, question: WizardQuestion, *, default: str | None) -> str:
         prompt = tr(str(question.prompt))

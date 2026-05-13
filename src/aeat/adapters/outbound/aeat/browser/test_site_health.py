@@ -2,7 +2,7 @@
 
 Drives :func:`aeat.adapters.outbound.aeat.browser.evaluate_response` and the
 underlying :mod:`._site_health_parsers` against real HTML strings loaded off disk
-under ``tests/fixtures/site_health/``. No test doubles — the parsers are exercised
+under ``src/aeat/tests/fixtures/site_health/``. No test doubles — the parsers are exercised
 end-to-end so a fixture-side regression surfaces here first.
 
 The module is marked ``unit`` / ``domain_outbound`` so it stays inside the
@@ -19,7 +19,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core.config import PROJECT_ROOT
+from aeat.tests import FIXTURES_DIR
+
 from . import (
     SiteHealthEvidence,
     SiteHealthState,
@@ -34,7 +35,7 @@ from ._site_health_parsers import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
-_FIXTURES_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "site_health"
+_FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 _PROBE_URL = "https://sede.agenciatributaria.gob.es/"
 _RATE_LIMIT_DEFAULT = 300
 
@@ -358,7 +359,7 @@ class TestSiteHealthModels:
         from ._site_health import _URL_ADAPTER
 
         valid_url = _URL_ADAPTER.validate_python("https://sede.agenciatributaria.gob.es/")
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             SiteHealthEvidence.model_validate(
                 {
                     "url": valid_url,
@@ -370,21 +371,21 @@ class TestSiteHealthModels:
             )
 
     def test_evidence_rejects_out_of_bounds_status(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"http_status|greater than"):
             _evidence(http_status=99)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"http_status|less than"):
             _evidence(http_status=600)
 
     def test_evidence_rejects_over_long_fragment(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"html_fragment|String should have at most"):
             _evidence(html_fragment="x" * 4097)
 
     def test_evidence_rejects_empty_marker(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"detected_markers|at least 1 character"):
             _evidence(detected_markers=("",))
 
     def test_evidence_rejects_over_long_marker(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"detected_markers|String should have at most"):
             _evidence(detected_markers=("x" * 129,))
 
     def test_status_requires_observed_at_tzaware(self) -> None:
@@ -398,7 +399,7 @@ class TestSiteHealthModels:
 
     def test_status_rejects_zero_retry_after(self) -> None:
         ev = _evidence()
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"retry_after_seconds|greater than"):
             SiteHealthStatus(
                 state=SiteHealthState.RATE_LIMITED,
                 evidence=ev,

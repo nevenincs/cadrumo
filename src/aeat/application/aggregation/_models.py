@@ -18,7 +18,7 @@ from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer, field_validator, model_validator
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ._errors import AggregationPeriodError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")

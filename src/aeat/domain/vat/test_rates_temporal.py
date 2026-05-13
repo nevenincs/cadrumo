@@ -64,7 +64,7 @@ def test_es_reduced_2024_and_2025_both_resolve() -> None:
 
 def test_es_pre_2024_lookup_raises() -> None:
     """Dates before the 2024 baseline have no registered rate."""
-    with pytest.raises(VatRateNotFoundError):
+    with pytest.raises(VatRateNotFoundError, match=r"ES|GENERAL|2023|rate"):
         lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, date(2023, 6, 1))
 
 

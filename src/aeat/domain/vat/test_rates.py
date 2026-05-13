@@ -53,7 +53,7 @@ def test_lookup_rate_returns_spain_general_21() -> None:
 
 def test_lookup_rate_raises_for_unknown_kind() -> None:
     """Denmark has no reduced rate; lookup must raise."""
-    with pytest.raises(VatRateNotFoundError):
+    with pytest.raises(VatRateNotFoundError, match=r"DK|REDUCED|rate"):
         lookup_rate(EUMemberState.DK, VATRateKind.REDUCED, date(2025, 6, 1))
 
 
@@ -63,7 +63,7 @@ def test_lookup_rate_respects_effective_from() -> None:
     The 2024 baseline ES window means ``2024-12-31`` resolves successfully;
     the pre-2024 range still has no registered record and must raise.
     """
-    with pytest.raises(VatRateNotFoundError):
+    with pytest.raises(VatRateNotFoundError, match=r"ES|GENERAL|2023|rate"):
         lookup_rate(EUMemberState.ES, VATRateKind.GENERAL, date(2023, 12, 31))
 
 

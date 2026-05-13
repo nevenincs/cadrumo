@@ -1,0 +1,236 @@
+%PDF-1.3
+%“Œ‹ž ReportLab Generated PDF document (opensource)
+1 0 obj
+<<
+/F1 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+>>
+endobj
+3 0 obj
+<<
+/Contents 11 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 10 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+4 0 obj
+<<
+/Contents 12 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 10 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+5 0 obj
+<<
+/Contents 13 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 10 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+6 0 obj
+<<
+/Contents 14 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 10 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+7 0 obj
+<<
+/Contents 15 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 10 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+8 0 obj
+<<
+/PageMode /UseNone /Pages 10 0 R /Type /Catalog
+>>
+endobj
+9 0 obj
+<<
+/Author (aeat test fixtures) /CreationDate (D:20260421120448+02'00') /Creator (aeat fixture generator) /Keywords () /ModDate (D:20260421120448+02'00') /Producer (reportlab) 
+  /Subject (synthetic N26 savings statement fixture) /Title (N26 savings statement 2024-06) /Trapped /False
+>>
+endobj
+10 0 obj
+<<
+/Count 5 /Kids [ 3 0 R 4 0 R 5 0 R 6 0 R 7 0 R ] /Type /Pages
+>>
+endobj
+11 0 obj
+<<
+/Length 1573
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 51.02362 773.8583 Tm (Kontoauszug) Tj T* ET
+BT 1 0 0 1 51.02362 757.4173 Tm (Nr. 06/2024) Tj T* ET
+BT 1 0 0 1 51.02362 740.9764 Tm (01.06.2024 bis 30.06.2024) Tj T* ET
+BT 1 0 0 1 51.02362 724.5354 Tm  T* ET
+BT 1 0 0 1 51.02362 708.0945 Tm (Beschreibung Verbuchungsdatum Betrag) Tj T* ET
+BT 1 0 0 1 51.02362 691.6535 Tm (Zinsertrag 01.06.2024 +252,16EUR) Tj T* ET
+BT 1 0 0 1 51.02362 675.2126 Tm (Wertstellung 01.06.2024) Tj T* ET
+BT 1 0 0 1 51.02362 658.7717 Tm (Abgeltungssteuer 01.06.2024 -63,04EUR) Tj T* ET
+BT 1 0 0 1 51.02362 642.3307 Tm (Wertstellung 01.06.2024) Tj T* ET
+BT 1 0 0 1 51.02362 625.8898 Tm (Solidaritaetszuschlag 01.06.2024 -3,46EUR) Tj T* ET
+BT 1 0 0 1 51.02362 609.4488 Tm (Wertstellung 01.06.2024) Tj T* ET
+BT 1 0 0 1 51.02362 593.0079 Tm (Max Mustermann 19.06.2024 +5.000,00EUR) Tj T* ET
+BT 1 0 0 1 51.02362 576.5669 Tm (Gutschriften) Tj T* ET
+BT 1 0 0 1 51.02362 560.126 Tm (IBAN: DE99500502010123456789 | BIC: HELADEF1822) Tj T* ET
+BT 1 0 0 1 51.02362 543.685 Tm (Tagesgeld N26) Tj T* ET
+BT 1 0 0 1 51.02362 527.2441 Tm (Wertstellung 19.06.2024) Tj T* ET
+BT 1 0 0 1 51.02362 510.8031 Tm  T* ET
+BT 1 0 0 1 51.02362 494.3622 Tm (Max Mustermann Kontotyp: Sparkonto Erstellt am) Tj T* ET
+BT 1 0 0 1 51.02362 477.9213 Tm (Musterstrasse 123, 01234 Musterstadt IBAN: DE99100110010123456789 01.07.2024) Tj T* ET
+BT 1 0 0 1 51.02362 461.4803 Tm (BIC: NTSBDEB1XXX) Tj T* ET
+BT 1 0 0 1 51.02362 445.0394 Tm (N26 Bank AG | Voltairestrasse 8, 10179 Berlin, Deutschland | 1/5) Tj T* ET
+ 
+endstream
+endobj
+12 0 obj
+<<
+/Length 1265
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 51.02362 773.8583 Tm (Zusammenfassung) Tj T* ET
+BT 1 0 0 1 51.02362 757.4173 Tm (Nr. 06/2024) Tj T* ET
+BT 1 0 0 1 51.02362 740.9764 Tm (01.06.2024 bis 30.06.2024) Tj T* ET
+BT 1 0 0 1 51.02362 724.5354 Tm  T* ET
+BT 1 0 0 1 51.02362 708.0945 Tm (Beschreibung Betrag) Tj T* ET
+BT 1 0 0 1 51.02362 691.6535 Tm (Dein alter Kontostand +79.062,36EUR) Tj T* ET
+BT 1 0 0 1 51.02362 675.2126 Tm (Ausgehende Transaktionen -66,50EUR) Tj T* ET
+BT 1 0 0 1 51.02362 658.7717 Tm (Einkommende Transaktionen +5.252,16EUR) Tj T* ET
+BT 1 0 0 1 51.02362 642.3307 Tm (Gebuehren 0,00EUR) Tj T* ET
+BT 1 0 0 1 51.02362 625.8898 Tm (Steuern -66,50EUR) Tj T* ET
+BT 1 0 0 1 51.02362 609.4488 Tm (Zinsen +252,16EUR) Tj T* ET
+BT 1 0 0 1 51.02362 593.0079 Tm (Dein neuer Kontostand +84.248,02EUR) Tj T* ET
+BT 1 0 0 1 51.02362 576.5669 Tm  T* ET
+BT 1 0 0 1 51.02362 560.126 Tm (Max Mustermann Kontotyp: Sparkonto Erstellt am) Tj T* ET
+BT 1 0 0 1 51.02362 543.685 Tm (Musterstrasse 123, 01234 Musterstadt IBAN: DE99100110010123456789 01.07.2024) Tj T* ET
+BT 1 0 0 1 51.02362 527.2441 Tm (BIC: NTSBDEB1XXX) Tj T* ET
+BT 1 0 0 1 51.02362 510.8031 Tm (N26 Bank AG | Voltairestrasse 8, 10179 Berlin, Deutschland | 2/5) Tj T* ET
+ 
+endstream
+endobj
+13 0 obj
+<<
+/Length 1161
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 51.02362 773.8583 Tm (Uebersicht zu Gebuehren und Zinsen) Tj T* ET
+BT 1 0 0 1 51.02362 757.4173 Tm (Nr. 06/2024) Tj T* ET
+BT 1 0 0 1 51.02362 740.9764 Tm (01.06.2024 bis 30.06.2024) Tj T* ET
+BT 1 0 0 1 51.02362 724.5354 Tm  T* ET
+BT 1 0 0 1 51.02362 708.0945 Tm (Gebuehren 0,00EUR) Tj T* ET
+BT 1 0 0 1 51.02362 691.6535 Tm (Steuer) Tj T* ET
+BT 1 0 0 1 51.02362 675.2126 Tm (Abgeltungssteuer -63,04EUR) Tj T* ET
+BT 1 0 0 1 51.02362 658.7717 Tm (Solidaritaetszuschlag -3,46EUR) Tj T* ET
+BT 1 0 0 1 51.02362 642.3307 Tm (Gesamt -66,50EUR) Tj T* ET
+BT 1 0 0 1 51.02362 625.8898 Tm (Zinsertrag +252,16EUR) Tj T* ET
+BT 1 0 0 1 51.02362 609.4488 Tm (Gesamt +252,16EUR) Tj T* ET
+BT 1 0 0 1 51.02362 593.0079 Tm  T* ET
+BT 1 0 0 1 51.02362 576.5669 Tm (Max Mustermann Kontotyp: Sparkonto Erstellt am) Tj T* ET
+BT 1 0 0 1 51.02362 560.126 Tm (Musterstrasse 123, 01234 Musterstadt IBAN: DE99100110010123456789 01.07.2024) Tj T* ET
+BT 1 0 0 1 51.02362 543.685 Tm (BIC: NTSBDEB1XXX) Tj T* ET
+BT 1 0 0 1 51.02362 527.2441 Tm (N26 Bank AG | Voltairestrasse 8, 10179 Berlin, Deutschland | 3/5) Tj T* ET
+ 
+endstream
+endobj
+14 0 obj
+<<
+/Length 1034
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 51.02362 773.8583 Tm (Kontoauszug) Tj T* ET
+BT 1 0 0 1 51.02362 757.4173 Tm (01.06.2024 bis 30.06.2024) Tj T* ET
+BT 1 0 0 1 51.02362 740.9764 Tm (Anmerkung) Tj T* ET
+BT 1 0 0 1 51.02362 724.5354 Tm  T* ET
+BT 1 0 0 1 51.02362 708.0945 Tm (Dies ist eine synthetische, sanitizierte Testversion eines N26 Kontoauszugs.) Tj T* ET
+BT 1 0 0 1 51.02362 691.6535 Tm (Transaktionen werden nur nach endgueltiger Verbuchung angezeigt.) Tj T* ET
+BT 1 0 0 1 51.02362 675.2126 Tm (Abweichungen zur App koennen durch Echtzeitdarstellung entstehen.) Tj T* ET
+BT 1 0 0 1 51.02362 658.7717 Tm  T* ET
+BT 1 0 0 1 51.02362 642.3307 Tm (Max Mustermann Kontotyp: Sparkonto Erstellt am) Tj T* ET
+BT 1 0 0 1 51.02362 625.8898 Tm (Musterstrasse 123, 01234 Musterstadt IBAN: DE99100110010123456789 01.07.2024) Tj T* ET
+BT 1 0 0 1 51.02362 609.4488 Tm (BIC: NTSBDEB1XXX) Tj T* ET
+BT 1 0 0 1 51.02362 593.0079 Tm (N26 Bank AG | Voltairestrasse 8, 10179 Berlin, Deutschland | 4/5) Tj T* ET
+ 
+endstream
+endobj
+15 0 obj
+<<
+/Length 980
+>>
+stream
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+BT /F1 10 Tf 12 TL ET
+BT 1 0 0 1 51.02362 773.8583 Tm (Kontoauszug) Tj T* ET
+BT 1 0 0 1 51.02362 757.4173 Tm (01.06.2024 bis 30.06.2024) Tj T* ET
+BT 1 0 0 1 51.02362 740.9764 Tm (Vierteljaehrlicher Rechnungsabschluss inklusive Saldenmitteilung) Tj T* ET
+BT 1 0 0 1 51.02362 724.5354 Tm  T* ET
+BT 1 0 0 1 51.02362 708.0945 Tm (Bitte pruefe den ausgewiesenen Saldo und melde Einwendungen zeitnah.) Tj T* ET
+BT 1 0 0 1 51.02362 691.6535 Tm (Diese Testseite ersetzt den rechtlichen Volltext der echten Bankvorlage.) Tj T* ET
+BT 1 0 0 1 51.02362 675.2126 Tm  T* ET
+BT 1 0 0 1 51.02362 658.7717 Tm (Max Mustermann Kontotyp: Sparkonto Erstellt am) Tj T* ET
+BT 1 0 0 1 51.02362 642.3307 Tm (Musterstrasse 123, 01234 Musterstadt IBAN: DE99100110010123456789 01.07.2024) Tj T* ET
+BT 1 0 0 1 51.02362 625.8898 Tm (BIC: NTSBDEB1XXX) Tj T* ET
+BT 1 0 0 1 51.02362 609.4488 Tm (N26 Bank AG | Voltairestrasse 8, 10179 Berlin, Deutschland | 5/5) Tj T* ET
+ 
+endstream
+endobj
+xref
+0 16
+0000000000 65535 f 
+0000000061 00000 n 
+0000000092 00000 n 
+0000000199 00000 n 
+0000000404 00000 n 
+0000000609 00000 n 
+0000000814 00000 n 
+0000001019 00000 n 
+0000001224 00000 n 
+0000001293 00000 n 
+0000001596 00000 n 
+0000001680 00000 n 
+0000003305 00000 n 
+0000004622 00000 n 
+0000005835 00000 n 
+0000006921 00000 n 
+trailer
+<<
+/ID 
+[<66b70eaaaffb862d35368f2b692cef95><66b70eaaaffb862d35368f2b692cef95>]
+% ReportLab generated PDF document -- digest (opensource)
+
+/Info 9 0 R
+/Root 8 0 R
+/Size 16
+>>
+startxref
+7952
+%%EOF

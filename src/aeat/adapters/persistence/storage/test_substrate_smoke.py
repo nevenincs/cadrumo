@@ -135,7 +135,7 @@ def test_path_safety_rejects_traversal(tmp_path: Path) -> None:
     """The substrate's typed path helpers refuse traversal attempts."""
     from . import PathContainmentError
 
-    with pytest.raises(PathContainmentError):
+    with pytest.raises(PathContainmentError, match=r"path|containment"):
         safe_subpath(tmp_path, "../escape", context="smoke")
 
 
@@ -144,7 +144,11 @@ def test_file_lock_serializes_writers(tmp_path: Path) -> None:
     from . import LockAcquisitionError
 
     target = tmp_path / "shared.json"
-    with exclusive_file_lock(target), pytest.raises(LockAcquisitionError), exclusive_file_lock(target, timeout=0.0):
+    with (
+        exclusive_file_lock(target),
+        pytest.raises(LockAcquisitionError, match=r"lock|timeout|acquire"),
+        exclusive_file_lock(target, timeout=0.0),
+    ):
         pytest.fail("nested non-blocking acquire should have failed")
 
 
@@ -185,7 +189,7 @@ def test_cross_process_lock_contention(tmp_path: Path) -> None:
     from . import LockAcquisitionError
 
     target = tmp_path / "contended.json"
-    proc = subprocess.Popen(  # noqa: S603 - inline script, no shell, args are typed Paths/floats
+    proc = subprocess.Popen(
         [sys.executable, "-c", _LOCK_HOLDER_SCRIPT, str(target), "0.5"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -204,7 +208,10 @@ def test_cross_process_lock_contention(tmp_path: Path) -> None:
                 break
         assert sentinel == "ready", "lock-holder subprocess did not emit readiness sentinel"
 
-        with pytest.raises(LockAcquisitionError), exclusive_file_lock(target, timeout=0.1, retry_backoff=0.01):
+        with (
+            pytest.raises(LockAcquisitionError, match=r"lock|timeout|acquire"),
+            exclusive_file_lock(target, timeout=0.1, retry_backoff=0.01),
+        ):
             pytest.fail("acquired lock while another process held it")
     finally:
         try:

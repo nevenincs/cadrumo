@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
-from ._errors import ArchiveAdapterMissingError
+from ._errors import ArchiveAdapterMissingError, ArchiveBundleSchemaError
 from ._models import ARCHIVE_BUNDLE_SCHEMA_VERSION, ArchiveBundle, ArchiveRecord
 from ._registry import KeyStrategy, all_archive_adapters, archive_adapter_for
 
@@ -55,7 +55,7 @@ def create_archive(
             envelope_json = json.loads(stored.payload.decode("utf-8"))
             payload = envelope_json.get("payload")
             if not isinstance(payload, dict):
-                raise ValueError(
+                raise ArchiveBundleSchemaError(
                     f"archive export: namespace {adapter.namespace!r} envelope payload is not a JSON object",
                 )
             # SQLite drops tzinfo at the column boundary even with

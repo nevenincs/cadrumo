@@ -94,10 +94,19 @@ class LocaleManager:
     def load_locale(self, path: Path) -> dict[str, Any]:
         """Load a locale YAML file strictly, failing on duplicates."""
         with open(path, encoding="utf-8") as f:
-            data = yaml.load(f, Loader=StrictUniqueKeyLoader)  # noqa: S506
+            loader = StrictUniqueKeyLoader(f)
+            try:
+                data = loader.get_single_data()
+            finally:
+                loader.dispose()
             return data if data is not None else {}
 
-    def _build_nested_dict(self, keys: set[str], existing_data: dict[str, Any]) -> dict[str, Any]:
+    def _build_nested_dict(
+        self,
+        keys: set[str],
+        existing_data: dict[str, Any],
+        namespace_prefixes: tuple[str, ...] = (),
+    ) -> dict[str, Any]:
         """Build a sorted, nested dictionary strictly conforming to the required keys."""
         # 1. Gather all values from existing data to preserve translations
         existing_flat = {}
@@ -115,10 +124,29 @@ class LocaleManager:
                 existing_flat[key] = curr
             else:
                 existing_flat[key] = key  # Default to its own dot-notated path
+        existing_flat.update(
+            {
+                key: value
+                for key, value in _flatten_leaf_values(existing_data).items()
+                if key not in existing_flat and _covered_by_namespace(key, namespace_prefixes)
+            }
+        )
 
         # 2. Rebuild the nested structure from scratch to prune extras and ensure type safety
         new_data: dict[str, Any] = {}
         for key in sorted(keys):
+            if key not in existing_flat:
+                continue
+            parts = key.split(".")
+            curr = new_data
+            for part in parts[:-1]:
+                if part not in curr:
+                    curr[part] = {}
+                curr = curr[part]
+            curr[parts[-1]] = existing_flat[key]
+        for key in sorted(existing_flat):
+            if key in keys:
+                continue
             parts = key.split(".")
             curr = new_data
             for part in parts[:-1]:
@@ -132,14 +160,43 @@ class LocaleManager:
     def scaffold(self) -> None:
         """Parse codebase, generate locale files, auto-sort, and prune extra keys."""
         codebase_keys = self.get_codebase_keys()
+        namespace_prefixes = tuple(
+            marker.rstrip("*").rstrip(".")
+            for marker in self.get_codebase_namespaces()
+            if marker.rstrip("*").rstrip(".")
+        )
 
         for f in self.locales_dir.glob("*.yml"):
             try:
                 data = self.load_locale(f)
-            except Exception:
+            except (OSError, yaml.YAMLError, LocaleError) as exc:
+                _log.warning(
+                    "locale scaffold: failed to parse %s; starting from empty mapping (%s)",
+                    f,
+                    exc,
+                )
                 data = {}
 
-            new_data = self._build_nested_dict(codebase_keys, data)
+            new_data = self._build_nested_dict(codebase_keys, data, namespace_prefixes)
 
             with open(f, "w", encoding="utf-8") as f_obj:
                 yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
+
+
+def _flatten_leaf_values(mapping: dict[str, Any], prefix: str = "") -> dict[str, Any]:
+    """Return leaf locale values keyed by dotted path."""
+
+    flattened: dict[str, Any] = {}
+    for key, value in mapping.items():
+        path = f"{prefix}.{key}" if prefix else str(key)
+        if isinstance(value, dict):
+            flattened.update(_flatten_leaf_values(value, path))
+        else:
+            flattened[path] = value
+    return flattened
+
+
+def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
+    """Return whether a dotted locale key belongs to a dynamic namespace."""
+
+    return any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)

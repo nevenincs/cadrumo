@@ -400,7 +400,7 @@ def test_export_result_is_frozen() -> None:
         exported_at=datetime(2026, 5, 3, tzinfo=UTC),
         narrative=_narrative(),
     )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         receipt.byte_size = 1  # type: ignore[misc]
 
 

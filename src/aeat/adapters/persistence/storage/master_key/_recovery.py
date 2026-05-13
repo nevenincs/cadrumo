@@ -121,7 +121,7 @@ def _load_wordlist() -> tuple[str, ...]:
     text = path.read_text(encoding="ascii")
     words = tuple(line.strip() for line in text.splitlines() if line.strip())
     if len(words) != 2048:
-        raise RuntimeError(
+        raise StorageValidationError(
             f"BIP-39 wordlist must have exactly 2048 words; got {len(words)}",
         )
     return words

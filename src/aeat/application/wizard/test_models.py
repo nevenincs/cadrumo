@@ -77,7 +77,7 @@ def test_every_model_is_strict_frozen_extra_forbid() -> None:
 def test_flow_rejects_non_tuple_sections() -> None:
     """Passing a list (instead of a tuple) violates the strict schema."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"sections|Tuple|tuple"):
         WizardFlow.model_validate(
             {
                 "id": "setup",
@@ -90,7 +90,7 @@ def test_flow_rejects_non_tuple_sections() -> None:
 
 
 def test_flow_rejects_empty_sections_tuple() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"sections|at least 1"):
         WizardFlow(
             id="setup",
             title=Translatable("wizard.setup.title"),
@@ -101,7 +101,7 @@ def test_flow_rejects_empty_sections_tuple() -> None:
 
 
 def test_section_rejects_empty_questions_tuple() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"questions|at least 1"):
         WizardSection(
             id="profile",
             title=Translatable("wizard.setup.profile.title"),
@@ -112,7 +112,7 @@ def test_section_rejects_empty_questions_tuple() -> None:
 def test_condition_rejects_non_string_equals() -> None:
     """Strict mode rejects integer ``equals`` even when coercion would succeed."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"equals|string|str"):
         WizardCondition.model_validate({"question_id": "declaration-type", "equals": 2})
 
 
@@ -128,7 +128,7 @@ def test_question_answer_type_accepts_canonical_set() -> None:
 
 
 def test_question_answer_type_rejects_non_canonical_type() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"answer_type|float"):
         WizardQuestion.model_validate(
             {
                 "id": "tax-id",
@@ -141,7 +141,7 @@ def test_question_answer_type_rejects_non_canonical_type() -> None:
 
 
 def test_question_widget_must_be_member() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"widget|Input should be"):
         WizardQuestion.model_validate(
             {
                 "id": "tax-id",

@@ -262,7 +262,13 @@ def _parse_datetime(raw: str) -> datetime:
     ):
         try:
             return datetime.strptime(normalised, fmt)
-        except ValueError:
+        except ValueError as fmt_exc:
+            _logger.debug(
+                "justificante extract: datetime format %r did not match %r (%s); trying next",
+                fmt,
+                normalised,
+                fmt_exc,
+            )
             continue
     raise JustificanteParseError(f"unrecognised datetime literal: {raw!r}")
 

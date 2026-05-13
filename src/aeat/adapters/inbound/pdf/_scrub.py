@@ -114,7 +114,7 @@ def _rng_from_filename(filename: str) -> random.Random:
     numerics); it is never used as a cryptographic primitive.
     """
     seed = hashlib.sha256(filename.encode("utf-8")).digest()
-    return random.Random(int.from_bytes(seed[:8], "big"))  # noqa: S311
+    return random.Random(int.from_bytes(seed[:8], "big"))
 
 
 def _scrub_amount(match: re.Match[str], rng: random.Random) -> str:

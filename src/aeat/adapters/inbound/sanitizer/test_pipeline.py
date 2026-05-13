@@ -162,7 +162,7 @@ class TestRefuseIfSigned:
         buffer = io.BytesIO()
         pdf.save(buffer)
 
-        with pytest.raises(SignaturePresentError):
+        with pytest.raises(SignaturePresentError, match=r"signature|SigFlags|signed|AcroForm"):
             sanitize_pdf(buffer.getvalue(), TokenMap())
 
     def test_raises_when_signature_field_present(self) -> None:
@@ -173,7 +173,7 @@ class TestRefuseIfSigned:
         buffer = io.BytesIO()
         pdf.save(buffer)
 
-        with pytest.raises(SignaturePresentError):
+        with pytest.raises(SignaturePresentError, match=r"signature|SigFlags|signed|AcroForm"):
             sanitize_pdf(buffer.getvalue(), TokenMap())
 
 
@@ -187,7 +187,7 @@ class TestRefuseIfAlreadySanitized:
         sha = hashlib.sha256(source).hexdigest()
         monkeypatch.setattr(_fixtures, "SANITIZED_SHAS", frozenset({sha}))
 
-        with pytest.raises(AlreadySanitizedError) as exc:
+        with pytest.raises(AlreadySanitizedError, match=r"already|sanitized") as exc:
             sanitize_pdf(source, TokenMap())
         assert exc.value.source_sha256 == sha
 

@@ -2,10 +2,9 @@
 
 Subcommands:
 
-- ``aeat filing build`` — build a draft from a JSON inputs file.
 - ``aeat filing validate`` — re-validate a saved draft.
 - ``aeat filing show`` — pretty-print a draft.
-- ``aeat filing list`` — list drafts under the configured drafts dir.
+- ``aeat filing list`` — list drafts in the secure repository.
 - ``aeat filing import`` — reconstruct a draft from a justificante /
   declaración / borrador PDF.
 """
@@ -35,18 +34,15 @@ from ....application.filing import (
     FilingDraftStatus,
     FilingFindingSeverity,
     FilingImportError,
-    FilingOperatorProfile,
     approval_stale_reasons,
     build_complementaria,
-    build_draft,
     describe_stale_reason,
     import_filing_from_justificante,
     iter_findings,
     refresh_review_status,
     validate_draft,
 )
-from ....application.filing.runtime import build_runtime_schema_provider, load_default_filing_profile
-from ....core.config import load_settings
+from ....application.filing.runtime import build_runtime_schema_provider
 from ....core.logging import get_logger
 from ....domain.justificante import JustificanteError
 from ....domain.submission import SubmissionError, SubmissionRepository, SubmittedFiling
@@ -91,41 +87,6 @@ def _schema_provider():
     return build_runtime_schema_provider()
 
 
-def _load_inputs(path: Path) -> dict[str, object]:
-    """Load and parse a JSON inputs file from disk."""
-    if not path.exists():
-        raise typer.BadParameter(tr("cli.filing.errors.inputs_not_found", path=path))
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        _logger.warning("_load_inputs: invalid JSON in %s", path, exc_info=True)
-        raise typer.BadParameter(
-            tr("cli.filing.errors.invalid_json", path=path, exc=str(exc)),
-        ) from exc
-    if not isinstance(raw, dict):
-        raise typer.BadParameter(tr("cli.filing.errors.inputs_not_object", path=path))
-    parsed: dict[str, object] = {}
-    for key, value in raw.items():
-        if not isinstance(key, str):
-            raise typer.BadParameter(
-                tr("cli.filing.errors.casilla_key_not_string", type=type(key).__name__),
-            )
-        if isinstance(value, str | int | bool) or value is None:
-            parsed[key] = value
-        elif isinstance(value, float):
-            # Use Decimal so monetary precision is preserved.
-            parsed[key] = Decimal(str(value))
-        else:
-            raise typer.BadParameter(
-                tr(
-                    "cli.filing.errors.unsupported_value_type",
-                    field=key,
-                    type=type(value).__name__,
-                ),
-            )
-    return parsed
-
-
 def _draft_repository() -> FilingDraftRepository:
     """Return the SQL-backed FilingDraftRepository.
 
@@ -142,9 +103,8 @@ def _load_draft(path: Path) -> FilingDraft:
 
     The filing draft repository persists every draft as an encrypted
     object in the SQL backend. ``envelope_path_for(draft_id)`` returns
-    a logical ``db://`` path whose final segment IS the draft id; this
-    helper accepts that logical path, the bare draft id, or a legacy
-    on-disk ``<draft_id>.envelope.json`` filename.
+    a logical ``db://`` path whose final segment is the draft id; this
+    helper accepts that logical path or the bare draft id.
 
     Raises:
         :exc:`typer.BadParameter`: If no draft matches the resolved id
@@ -161,14 +121,10 @@ def _load_draft(path: Path) -> FilingDraft:
 def _draft_id_from_argument(path: Path) -> str:
     """Return the draft id encoded in a CLI ``Path`` argument.
 
-    Accepts a logical SQL path (final segment is the id), a legacy
-    ``<draft_id>.envelope.json`` filename (strip the suffix), or the
-    bare draft id wrapped in a Path (use as-is).
+    Accepts a logical SQL path (final segment is the id), or the bare
+    draft id wrapped in a Path.
     """
-    name = path.name
-    if name.endswith(".envelope.json"):
-        return name[: -len(".envelope.json")]
-    return name
+    return path.name
 
 
 def _refresh_persisted_draft(path: Path, draft: FilingDraft | None = None) -> FilingDraft:
@@ -224,11 +180,9 @@ def _render_draft_next_steps(draft: FilingDraft, *, draft_path: Path) -> None:
 
 
 def _parse_json_argument(raw: str) -> dict[str, object]:
-    """Parse ``raw`` as either an inline JSON object or a JSON file path."""
-    candidate = Path(raw)
-    payload_text = candidate.read_text(encoding="utf-8") if candidate.exists() else raw
+    """Parse ``raw`` as an inline JSON object."""
     try:
-        payload = json.loads(payload_text)
+        payload = json.loads(raw)
     except json.JSONDecodeError as exc:
         _logger.warning("_parse_json_argument: invalid JSON in %r", raw, exc_info=True)
         raise typer.BadParameter(
@@ -351,71 +305,6 @@ def _render_draft(draft: FilingDraft, *, findings_only: bool = False) -> None:
     _console.print(findings_table)
 
 
-@app.command("build")
-def build(
-    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.filing.build.modelo_help"))],
-    period: Annotated[str, typer.Option("--period", help=tr("cli.filing.build.period_help"))],
-    inputs: Annotated[
-        Path,
-        typer.Option("--inputs", help=tr("cli.filing.build.inputs_help")),
-    ],
-    profile_tax_id: Annotated[
-        str | None,
-        typer.Option(
-            "--profile-tax-id",
-            help=tr("cli.filing.build.profile_tax_id_help"),
-        ),
-    ] = None,
-    profile_name: Annotated[
-        str | None,
-        typer.Option("--profile-name", help=tr("cli.filing.build.profile_name_help")),
-    ] = None,
-) -> None:
-    """Build a draft from a JSON inputs file and save it to disk."""
-    settings = load_settings()
-    parsed_inputs = _load_inputs(inputs)
-    operator_profile: FilingOperatorProfile
-    if profile_tax_id is None:
-        try:
-            operator_profile = load_default_filing_profile(display_name=profile_name)
-        except FilingDraftError as exc:
-            raise typer.BadParameter(str(exc)) from exc
-    else:
-        operator_profile = FilingOperatorProfile(
-            tax_id=profile_tax_id,
-            display_name=profile_name or profile_tax_id,
-        )
-    _logger.info("filing build: starting draft build for Modelo %s period %s", modelo, period)
-    try:
-        draft = build_draft(
-            modelo=modelo,
-            period=period,
-            profile=operator_profile,
-            inputs=parsed_inputs,
-            schema_provider=_schema_provider(),
-            fail_on_warning=settings.aeat_draft_fail_on_warning,
-        )
-    except FilingDraftError as exc:
-        _logger.warning(
-            "filing build: draft build failed for modelo %s period %s",
-            modelo,
-            period,
-            exc_info=True,
-        )
-        raise typer.BadParameter(str(exc)) from exc
-    saved = _save_draft(draft)
-    _logger.info(
-        "filing build: draft %s saved for Modelo %s period %s (status=%s)",
-        draft.draft_id,
-        modelo,
-        period,
-        draft.status.value,
-    )
-    typer.echo(tr("cli.filing.build.success"))
-    _render_draft(draft)
-    _render_draft_next_steps(draft, draft_path=saved)
-
-
 @app.command("validate")
 def validate(
     draft_path: Annotated[Path, typer.Argument(help=tr("cli.filing.validate.draft_path_help"))],
@@ -467,7 +356,7 @@ def list_drafts(
         typer.Option("--status", help=tr("cli.filing.list.status_help")),
     ] = None,
 ) -> None:
-    """List drafts in the configured drafts directory."""
+    """List drafts in the secure repository."""
     target_status: FilingDraftStatus | None = None
     if status is not None:
         try:

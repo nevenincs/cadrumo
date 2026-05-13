@@ -97,7 +97,7 @@ class TestVerify:
     def test_missing_part_root_raises(self, tmp_path: Path) -> None:
         """A non-existent part root is a hard error, not a report."""
         settings = _settings(tmp_path)
-        with pytest.raises(ManualNotFoundError):
+        with pytest.raises(ManualNotFoundError, match=r"IVA|manual|root|2025"):
             verify_manual_dir(
                 manual_id=ManualId.IVA,
                 year=2025,
@@ -185,5 +185,5 @@ class TestVerify:
             part=ManualPart.SINGLE,
             settings=settings,
         )
-        with pytest.raises(ManualReviewRequiredError):
+        with pytest.raises(ManualReviewRequiredError, match=r"manual|review|required"):
             raise_on_errors(report)

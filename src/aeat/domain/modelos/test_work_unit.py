@@ -29,7 +29,11 @@ from aeat.application.modelo import (
     rename_work_unit,
 )
 from aeat.domain.modelos._errors import ModeloValidationError
-from aeat.domain.modelos._repository import remove_work_unit, upsert_work_unit
+from aeat.domain.modelos._repository import (
+    WorkUnitCatalogueRepository,
+    remove_work_unit,
+    upsert_work_unit,
+)
 from aeat.domain.modelos._work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
@@ -43,17 +47,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 
-class _InMemoryWorkUnitRepository:
-    """Fake repository that stores a catalogue in process memory.
+class _InMemoryWorkUnitRepository(WorkUnitCatalogueRepository):
+    """In-memory repository that stores a catalogue in process memory.
 
-    The application services accept any object that exposes
-    ``load`` and ``save`` matching the
-    :class:`WorkUnitCatalogueRepository` contract. This stub
-    implements just enough to drive the action layer without a
-    SQL backend.
+    Subclasses :class:`WorkUnitCatalogueRepository` so the nominal
+    type signature of the application services is satisfied without
+    binding to the SQL backend. ``__init__`` skips the parent's
+    SecureObjectRepository wire-up; ``load`` / ``save`` are
+    overridden to keep state in the instance.
     """
 
     def __init__(self, *, initial: WorkUnitCatalogue | None = None) -> None:
+        # Skip the SecureObjectRepository wire-up the parent does;
+        # in-memory state is sufficient for the action-layer tests.
         self._catalogue = initial or WorkUnitCatalogue()
         self.save_calls = 0
 
@@ -181,21 +187,28 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
     fail validation; mutation after construction raises."""
 
     unit = _build_unit()
-    with pytest.raises(ValidationError):
-        WorkUnit(
-            work_unit_id=unit.work_unit_id,
-            bucket_id=unit.bucket_id,
-            modelo="303",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
-            filing_year=2026,
-            period="Q1",
-            revision_id="2009-y-siguientes",
-            name="303-2026-Q1",
-            created_at=_T0,
-            updated_at=_T0,
-            unknown_axis="extra-value",  # type: ignore[call-arg]  # ty: ignore[unknown-argument]
+    # Use model_validate(dict) so the unknown kwarg / invalid-string
+    # ModeloCode value flows through pydantic validation rather than
+    # being caught statically by the type checker — the test intent
+    # is to verify the runtime validators reject the payload, not to
+    # exercise call-time static analysis.
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
+        WorkUnit.model_validate(
+            {
+                "work_unit_id": unit.work_unit_id,
+                "bucket_id": unit.bucket_id,
+                "modelo": "303",
+                "filing_year": 2026,
+                "period": "Q1",
+                "revision_id": "2009-y-siguientes",
+                "name": "303-2026-Q1",
+                "created_at": _T0,
+                "updated_at": _T0,
+                "unknown_axis": "extra-value",
+            }
         )
-    with pytest.raises(ValidationError):
-        unit.name = "renamed"  # type: ignore[misc]
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
+        unit.name = "renamed"
 
 
 def test_work_unit_rejects_id_that_does_not_match_derivation() -> None:
@@ -203,7 +216,7 @@ def test_work_unit_rejects_id_that_does_not_match_derivation() -> None:
     ``work_unit_id`` that disagrees with the deterministic
     derivation is refused by the schema."""
 
-    with pytest.raises(ValidationError) as exc:
+    with pytest.raises(ValidationError, match=r"does not match the derived id") as exc:
         _build_unit(work_unit_id="0" * 64)
     assert "does not match the derived id" in str(exc.value)
 
@@ -213,7 +226,7 @@ def test_work_unit_rejects_updated_before_created() -> None:
 
     earlier = _T0
     later = datetime(2026, 1, 16, 12, 0, 0, tzinfo=UTC)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"updated_at|created_at|precedes"):
         _build_unit(created_at=later, updated_at=earlier)
 
 
@@ -225,7 +238,7 @@ def test_work_unit_rejects_updated_before_created() -> None:
 def test_catalogue_rejects_key_record_mismatch() -> None:
     unit = _build_unit()
     bad_key = "f" * 64
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"work_unit_id|key|catalogue"):
         WorkUnitCatalogue(work_units={bad_key: unit})
 
 
@@ -234,7 +247,7 @@ def test_catalogue_from_work_units_rejects_duplicate_ids() -> None:
     the same id fails fast."""
 
     unit = _build_unit()
-    with pytest.raises(ModeloValidationError):
+    with pytest.raises(ModeloValidationError, match=r"duplicate work_unit_id"):
         WorkUnitCatalogue.from_work_units((unit, unit))
 
 
@@ -269,7 +282,7 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key() -> None:
         filing_year=2026,
         period="Q1",
         revision_id="2009-y-siguientes",
-        repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        repository=repo,
         clock=_T0,
     )
     second = create_work_unit(
@@ -279,7 +292,7 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key() -> None:
         period="Q1",
         revision_id="2009-y-siguientes",
         name="ignored-because-already-exists",
-        repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        repository=repo,
         clock=_T0,
     )
     assert first.work_unit_id == second.work_unit_id
@@ -295,7 +308,7 @@ def test_create_work_unit_uses_default_name_when_no_name_supplied() -> None:
         filing_year=2026,
         period="Q1",
         revision_id="2009-y-siguientes",
-        repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        repository=repo,
         clock=_T0,
     )
     assert unit.name == "303-2026-Q1"
@@ -310,7 +323,7 @@ def test_create_work_unit_honours_explicit_name() -> None:
         period="Q1",
         revision_id="2009-y-siguientes",
         name="renta-q1-2026-draft",
-        repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        repository=repo,
         clock=_T0,
     )
     assert unit.name == "renta-q1-2026-draft"
@@ -334,10 +347,10 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period() -> None:
             filing_year=year,
             period=period,
             revision_id="rev",
-            repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+            repository=repo,
             clock=_T0,
         )
-    units = list_work_units(repository=repo)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+    units = list_work_units(repository=repo)
     keys = tuple((u.bucket_id, str(u.modelo), u.period) for u in units)
     assert keys == (
         ("bucket-A", "130", "Q1"),
@@ -349,50 +362,32 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period() -> None:
 def test_list_work_units_filters_by_bucket_id() -> None:
     repo = _InMemoryWorkUnitRepository()
     create_work_unit(
-        bucket_id="bucket-A",
-        modelo="303",
-        filing_year=2026,
-        period="Q1",
-        revision_id="rev",
-        repository=repo,  # ty: ignore[invalid-argument-type]
-        clock=_T0,  # type: ignore[arg-type]
+        bucket_id="bucket-A", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
     create_work_unit(
-        bucket_id="bucket-B",
-        modelo="303",
-        filing_year=2026,
-        period="Q2",
-        revision_id="rev",
-        repository=repo,  # ty: ignore[invalid-argument-type]
-        clock=_T0,  # type: ignore[arg-type]
+        bucket_id="bucket-B", modelo="303", filing_year=2026, period="Q2", revision_id="rev", repository=repo, clock=_T0
     )
-    only_a = list_work_units(bucket_id="bucket-A", repository=repo)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+    only_a = list_work_units(bucket_id="bucket-A", repository=repo)
     assert len(only_a) == 1
     assert only_a[0].bucket_id == "bucket-A"
 
 
 def test_get_work_unit_raises_when_id_is_absent() -> None:
     repo = _InMemoryWorkUnitRepository()
-    with pytest.raises(WorkUnitNotFoundError):
-        get_work_unit("missing", repository=repo)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+    with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
+        get_work_unit("missing", repository=repo)
 
 
 def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at() -> None:
     repo = _InMemoryWorkUnitRepository()
     original = create_work_unit(
-        bucket_id="default",
-        modelo="303",
-        filing_year=2026,
-        period="Q1",
-        revision_id="rev",
-        repository=repo,  # ty: ignore[invalid-argument-type]
-        clock=_T0,  # type: ignore[arg-type]
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
     later = datetime(2026, 2, 1, 12, 0, 0, tzinfo=UTC)
     renamed = rename_work_unit(
         original.work_unit_id,
         "renta-q1-2026-final",
-        repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+        repository=repo,
         clock=later,
     )
     assert renamed.work_unit_id == original.work_unit_id
@@ -403,8 +398,8 @@ def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at() -> None:
 
 def test_rename_work_unit_raises_when_id_is_absent() -> None:
     repo = _InMemoryWorkUnitRepository()
-    with pytest.raises(WorkUnitNotFoundError):
-        rename_work_unit("missing", "ignored", repository=repo)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+    with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
+        rename_work_unit("missing", "ignored", repository=repo)
 
 
 # ---------------------------------------------------------------------------
@@ -418,15 +413,14 @@ def test_discard_work_unit_transitions_to_discarded_state() -> None:
 
     repo = _InMemoryWorkUnitRepository()
     original = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
-        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
     discard_time = datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC)
     discarded = discard_work_unit(
         original.work_unit_id,
         actor="operator-A",
         reason="wrong-profile",
-        repository=repo,  # type: ignore[arg-type]
+        repository=repo,
         clock=discard_time,
     )
     assert discarded.work_unit_id == original.work_unit_id
@@ -440,13 +434,12 @@ def test_discard_work_unit_transitions_to_discarded_state() -> None:
 def test_discard_work_unit_accepts_omitted_reason() -> None:
     repo = _InMemoryWorkUnitRepository()
     original = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
-        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
     discarded = discard_work_unit(
         original.work_unit_id,
         actor="operator-A",
-        repository=repo,  # type: ignore[arg-type]
+        repository=repo,
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
     assert discarded.discard_reason is None
@@ -454,8 +447,8 @@ def test_discard_work_unit_accepts_omitted_reason() -> None:
 
 def test_discard_work_unit_raises_on_missing_id() -> None:
     repo = _InMemoryWorkUnitRepository()
-    with pytest.raises(WorkUnitNotFoundError):
-        discard_work_unit("missing", actor="operator-A", repository=repo)  # type: ignore[arg-type]
+    with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
+        discard_work_unit("missing", actor="operator-A", repository=repo)
 
 
 def test_discard_work_unit_raises_when_already_discarded() -> None:
@@ -465,16 +458,19 @@ def test_discard_work_unit_raises_when_already_discarded() -> None:
 
     repo = _InMemoryWorkUnitRepository()
     unit = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
-        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
     discard_work_unit(
-        unit.work_unit_id, actor="operator-A", repository=repo,  # type: ignore[arg-type]
+        unit.work_unit_id,
+        actor="operator-A",
+        repository=repo,
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
-    with pytest.raises(WorkUnitAlreadyDiscardedError):
+    with pytest.raises(WorkUnitAlreadyDiscardedError, match=r"work|unit|already|discarded"):
         discard_work_unit(
-            unit.work_unit_id, actor="operator-B", repository=repo,  # type: ignore[arg-type]
+            unit.work_unit_id,
+            actor="operator-B",
+            repository=repo,
             clock=datetime(2026, 3, 2, 12, 0, 0, tzinfo=UTC),
         )
 
@@ -486,50 +482,51 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit() -> None:
 
     repo = _InMemoryWorkUnitRepository()
     unit = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
-        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
     discard_work_unit(
-        unit.work_unit_id, actor="operator-A", repository=repo,  # type: ignore[arg-type]
+        unit.work_unit_id,
+        actor="operator-A",
+        repository=repo,
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
-    with pytest.raises(WorkUnitMutationRefusedError):
-        rename_work_unit(unit.work_unit_id, "new-name", repository=repo)  # type: ignore[arg-type]
+    with pytest.raises(WorkUnitMutationRefusedError, match=r"discard|DISCARDED|state|mutation"):
+        rename_work_unit(unit.work_unit_id, "new-name", repository=repo)
 
 
 def test_list_work_units_excludes_discarded_by_default() -> None:
     repo = _InMemoryWorkUnitRepository()
     unit_draft = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
-        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
     unit_to_discard = create_work_unit(
-        bucket_id="default", modelo="130", filing_year=2026, period="Q1",
-        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+        bucket_id="default", modelo="130", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
     discard_work_unit(
-        unit_to_discard.work_unit_id, actor="operator-A", repository=repo,  # type: ignore[arg-type]
+        unit_to_discard.work_unit_id,
+        actor="operator-A",
+        repository=repo,
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
-    visible = list_work_units(repository=repo)  # type: ignore[arg-type]
+    visible = list_work_units(repository=repo)
     assert {u.work_unit_id for u in visible} == {unit_draft.work_unit_id}
 
 
 def test_list_work_units_includes_discarded_when_flag_set() -> None:
     repo = _InMemoryWorkUnitRepository()
     unit_draft = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
-        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
     unit_to_discard = create_work_unit(
-        bucket_id="default", modelo="130", filing_year=2026, period="Q1",
-        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+        bucket_id="default", modelo="130", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
     discard_work_unit(
-        unit_to_discard.work_unit_id, actor="operator-A", repository=repo,  # type: ignore[arg-type]
+        unit_to_discard.work_unit_id,
+        actor="operator-A",
+        repository=repo,
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
-    visible = list_work_units(include_discarded=True, repository=repo)  # type: ignore[arg-type]
+    visible = list_work_units(include_discarded=True, repository=repo)
     assert {u.work_unit_id for u in visible} == {
         unit_draft.work_unit_id,
         unit_to_discard.work_unit_id,
@@ -541,7 +538,7 @@ def test_work_unit_schema_rejects_discard_metadata_on_draft_state() -> None:
     cross-field model validator refuses such records on
     construction."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"DRAFT|discard|state"):
         _build_unit(
             state=WorkUnitState.DRAFT,
             discarded_at=_T0,
@@ -553,7 +550,7 @@ def test_work_unit_schema_requires_discard_metadata_on_discarded_state() -> None
     """Conversely, a record claiming DISCARDED state must carry
     ``discarded_at`` and ``discarded_by``."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"DISCARDED|discard|state"):
         _build_unit(state=WorkUnitState.DISCARDED)
 
 

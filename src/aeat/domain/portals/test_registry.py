@@ -71,7 +71,7 @@ def test_modelo_037_entries_are_retired() -> None:
 def test_duplicate_entry_rejected() -> None:
     """``_finalise_registry`` rejects a duplicate key."""
     duplicate = PORTAL_REGISTRY[Portal.PORTAL_SEDE_ROOT]
-    with pytest.raises(PortalIntegrityError):
+    with pytest.raises(PortalIntegrityError, match=r"portal|integrity"):
         _finalise_registry((duplicate, duplicate))
 
 
@@ -89,7 +89,7 @@ def test_get_portal_accepts_string_value() -> None:
 
 def test_get_portal_unknown_string_raises() -> None:
     """Unknown strings raise :class:`UnknownPortalError`."""
-    with pytest.raises(UnknownPortalError):
+    with pytest.raises(UnknownPortalError, match=r"unknown|portal"):
         get_portal("not_a_portal")
 
 

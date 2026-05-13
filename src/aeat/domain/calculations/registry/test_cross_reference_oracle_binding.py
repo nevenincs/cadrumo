@@ -55,7 +55,7 @@ def test_cross_reference_rejects_empty_oracle_id() -> None:
     payload = base.model_dump()
     payload["oracle_id"] = ""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"oracle_id|at least 1 character"):
         LiveCrossReferenceDecision.model_validate(payload)
 
 
@@ -74,7 +74,7 @@ def test_cross_reference_rejects_malformed_oracle_id(bad_id: str) -> None:
     payload = base.model_dump()
     payload["oracle_id"] = bad_id
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"oracle_id|pattern|String should match"):
         LiveCrossReferenceDecision.model_validate(payload)
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from . import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderListing,
@@ -43,7 +43,7 @@ def test_get_auth_provider_returns_canonical_entry() -> None:
 
 @pytest.mark.parametrize("provider_id", ["not.a.provider", "clave-permanente", "clave_permanente", "clave-movil"])
 def test_get_auth_provider_raises_keyerror_for_unsupported_provider_id(provider_id: str) -> None:
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match=r"provider|unknown|not.a.provider|clave"):
         get_auth_provider(provider_id)
 
 
@@ -69,7 +69,7 @@ def test_listing_is_frozen() -> None:
     from pydantic import ValidationError
 
     entry = AUTH_PROVIDER_CATALOGUE[0]
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         entry.id = "changed"  # type: ignore[misc]
 
 

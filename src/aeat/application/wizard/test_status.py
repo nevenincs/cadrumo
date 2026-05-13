@@ -8,6 +8,9 @@ exercised: the report is the structural contract that doctor and
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -21,6 +24,21 @@ from aeat.application.wizard._status import (
 from aeat.application.workflow._models import WorkflowState
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+@pytest.fixture(autouse=True)
+def _isolated_secure_bucket_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'wizard-status.db').as_posix()}")
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+
+    from ...adapters.persistence.storage.sql.engine import dispose_engine
+
+    dispose_engine()
+    try:
+        yield
+    finally:
+        dispose_engine()
 
 
 def test_empty_state_yields_no_active_profile_report() -> None:
@@ -62,10 +80,10 @@ def test_active_profile_with_identity_and_iva_regime_is_profile_ready() -> None:
     assert report.missing_enrolment == ()
 
 
-def test_next_action_for_empty_state_directs_to_aeat_config_setup() -> None:
+def test_next_action_for_empty_state_directs_to_aeat_config_init() -> None:
     state = WorkflowState()
     report = build_wizard_status(state)
-    assert report.next_action.startswith("aeat config setup")
+    assert report.next_action == "aeat config init --profile NAME"
 
 
 def test_report_is_strict_frozen_pydantic_v2() -> None:
@@ -74,7 +92,7 @@ def test_report_is_strict_frozen_pydantic_v2() -> None:
     assert model_config.get("frozen") is True
     assert model_config.get("extra") == "forbid"
     # The report rejects unknown fields per extra="forbid"
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         WizardStatusReport.model_validate(
             {
                 "active_profile": None,
@@ -91,7 +109,7 @@ def test_report_is_strict_frozen_pydantic_v2() -> None:
 
 def test_load_active_autonomo_profile_raises_wizard_status_error_when_no_profile() -> None:
     state = WorkflowState()
-    with pytest.raises(WizardStatusError):
+    with pytest.raises(WizardStatusError, match=r"profile|active|autonomo"):
         load_active_autonomo_profile(state)
 
 
@@ -100,5 +118,5 @@ def test_load_active_autonomo_profile_raises_wizard_status_error_when_tax_id_mis
         set_profile_values(WorkflowState(), "operator", {"activity": "design"}),
         "operator",
     )
-    with pytest.raises(WizardStatusError):
+    with pytest.raises(WizardStatusError, match=r"tax|profile|operator|missing"):
         load_active_autonomo_profile(state)

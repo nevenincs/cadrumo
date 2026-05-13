@@ -1,9 +1,8 @@
 """Persistence adapter for wizard answers.
 
 Serialises a typed answers model back to canonical-token strings, calls
-``set_profile_values`` to mutate the workflow state, and dispatches the
-linked side-effect persistence (e.g. ``save_tax_residence``) that
-specific profile keys carry. The reverse projection
+``set_profile_values`` to persist the profile values in the active
+profile bucket. The reverse projection
 (``project_answers``) builds the typed answers model from a raw
 canonical-token dict.
 """
@@ -77,31 +76,14 @@ def persist_answers(
     state: WorkflowState,
     profile_name: str,
 ) -> WorkflowState:
-    """Persist ``answers`` into ``state`` and trigger linked side effects.
+    """Persist ``answers`` into the profile bucket and return updated state.
 
     Each profile-bound question contributes one canonical-token entry to
-    the active ``ProfileRecord.values``. When the flow writes
-    ``tax.residence.ccaa``, the side-effect
-    ``save_tax_residence`` adapter is invoked so the
-    ``TaxResidenceProfile`` storage surface stays in sync.
+    the active profile bucket.
     """
 
     canonical = serialise_answers(flow, answers)
-    new_state = set_profile_values(state, profile_name, canonical)
-    _maybe_save_tax_residence(canonical)
-    return new_state
-
-
-def _maybe_save_tax_residence(canonical: Mapping[str, str]) -> None:
-    """Persist tax residence through the tax-residence storage adapter."""
-
-    ccaa_value = canonical.get("tax.residence.ccaa")
-    if not ccaa_value:
-        return
-    from ...adapters.persistence.profile.tax_residence import save_tax_residence
-    from ...domain.profile import CCAA, TaxResidenceProfile
-
-    save_tax_residence(TaxResidenceProfile(ccaa=CCAA(ccaa_value)))
+    return set_profile_values(state, profile_name, canonical)
 
 
 def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:

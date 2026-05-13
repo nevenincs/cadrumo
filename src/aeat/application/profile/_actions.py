@@ -2,63 +2,197 @@
 
 from __future__ import annotations
 
-import json
-from typing import Any
+import hashlib
 
-from ..workflow._models import WorkflowState
+from ...core.errors import CoreValidationError
+from ...domain.buckets import (
+    BucketEvent,
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
+    append_bucket_event,
+    derive_bucket_event_id,
+)
+from ..workflow._models import WorkflowEvent, WorkflowState
 from ..workflow._utils import _normalise_key, utc_now
 from ._models import ProfileRecord
+from ._repository import profile_bucket_id, profile_bucket_repository
 
 
-def _coerce_profile_record(raw: dict[str, Any]) -> ProfileRecord:
-    """Round-trip a raw mapping into a strict :class:`ProfileRecord`.
+def _append_bucket_event(
+    state: WorkflowState,
+    *,
+    action: str,
+    bucket_id: str,
+    object_id: str,
+) -> WorkflowState:
+    event = WorkflowEvent(action=action, bucket_id=bucket_id, object_id=object_id)
+    return state.model_copy(update={"bucket_events": (*state.bucket_events, event), "updated_at": utc_now()})
 
-    The persistence layer rehydrates ``WorkflowState.profiles`` values
-    as plain dicts (the field is typed ``dict[str, Any]``), so any
-    timestamp survives as an ISO-8601 string. Strict-mode
-    ``model_validate`` would refuse to coerce that string back into a
-    ``datetime``; routing through ``model_validate_json`` accepts the
-    ISO-8601 form via the JSON parser's typed coercion.
-    """
 
-    return ProfileRecord.model_validate_json(json.dumps(raw, default=str))
+def _emit_profile_bucket_event(
+    *,
+    action: BucketEventType,
+    bucket_id: str,
+    object_id: str,
+    payload: dict[str, str] | None = None,
+) -> None:
+    occurred_at = utc_now()
+    event = BucketEvent(
+        event_id=derive_bucket_event_id(
+            bucket_id=bucket_id,
+            event_type=action,
+            occurred_at=occurred_at,
+            actor="aeat.application.profile",
+            object_type=BucketEventObjectType.PROFILE,
+            object_id=object_id,
+            payload=payload or {},
+        ),
+        bucket_id=bucket_id,
+        event_type=action,
+        occurred_at=occurred_at,
+        actor="aeat.application.profile",
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=object_id,
+        payload_version=1,
+        payload=payload or {},
+    )
+    repository = BucketEventHistoryRepository()
+    repository.save(append_bucket_event(repository.load(), event))
+
+
+def _event_object_id(keys: tuple[str, ...]) -> str:
+    joined = ",".join(sorted(keys))
+    if len(joined) <= 500:
+        return joined
+    digest = hashlib.sha256(joined.encode("utf-8")).hexdigest()
+    return f"keys:{len(keys)}:{digest}"
 
 
 def set_active_profile(state: WorkflowState, name: str) -> WorkflowState:
     """Select or create an active profile."""
 
-    profile_name = name.strip()
-    if not profile_name:
-        raise ValueError("profile name must not be blank")
+    try:
+        profile_name = profile_bucket_id(name)
+    except ValueError as exc:
+        raise CoreValidationError("profile name must not be blank") from exc
+    repository = profile_bucket_repository()
     profiles = dict(state.profiles)
-    if profile_name not in profiles:
-        profiles[profile_name] = ProfileRecord(name=profile_name)
-    return state.model_copy(update={"active_profile": profile_name, "profiles": profiles, "updated_at": utc_now()})
+    created = repository.load(profile_name) is None
+    if created:
+        repository.save(ProfileRecord(name=profile_name))
+    profiles[profile_name] = {"bucket_id": profile_name}
+    updated = state.model_copy(update={"active_profile": profile_name, "profiles": profiles, "updated_at": utc_now()})
+    if created:
+        _emit_profile_bucket_event(
+            action=BucketEventType.PROFILE_BUCKET_CREATED,
+            bucket_id=profile_name,
+            object_id=profile_name,
+        )
+        updated = _append_bucket_event(
+            updated,
+            action="profile.created",
+            bucket_id=profile_name,
+            object_id=profile_name,
+        )
+    _emit_profile_bucket_event(
+        action=BucketEventType.PROFILE_SELECTED,
+        bucket_id=profile_name,
+        object_id=profile_name,
+    )
+    return _append_bucket_event(
+        updated,
+        action="profile.selected",
+        bucket_id=profile_name,
+        object_id=profile_name,
+    )
 
 
 def set_profile_values(state: WorkflowState, profile_name: str, values: dict[str, str]) -> WorkflowState:
     """Merge values into one profile and select it."""
 
+    bucket_id = profile_bucket_id(profile_name)
+    repository = profile_bucket_repository()
     profiles = dict(state.profiles)
-    current = profiles.get(profile_name, ProfileRecord(name=profile_name))
-    if isinstance(current, dict):
-        current = _coerce_profile_record(current)
+    current = repository.load(bucket_id)
+    created = current is None
+    if current is None:
+        current = ProfileRecord(name=bucket_id)
 
-    merged = {**current.values, **{_normalise_key(key): raw.strip() for key, raw in values.items()}}
-    profiles[profile_name] = current.model_copy(update={"values": merged, "updated_at": utc_now()})
-    return state.model_copy(update={"active_profile": profile_name, "profiles": profiles, "updated_at": utc_now()})
+    normalised = {_normalise_key(key): raw.strip() for key, raw in values.items()}
+    merged = {**current.values, **normalised}
+    saved = repository.save(current.model_copy(update={"values": merged, "updated_at": utc_now()}))
+    profiles[bucket_id] = {"bucket_id": bucket_id}
+    updated = state.model_copy(update={"active_profile": bucket_id, "profiles": profiles, "updated_at": utc_now()})
+    if created:
+        _emit_profile_bucket_event(
+            action=BucketEventType.PROFILE_BUCKET_CREATED,
+            bucket_id=bucket_id,
+            object_id=bucket_id,
+        )
+        updated = _append_bucket_event(
+            updated,
+            action="profile.created",
+            bucket_id=bucket_id,
+            object_id=bucket_id,
+        )
+    if normalised:
+        _emit_profile_bucket_event(
+            action=BucketEventType.PROFILE_VALUES_UPDATED,
+            bucket_id=bucket_id,
+            object_id=saved.name,
+            payload={"keys": _event_object_id(tuple(normalised))},
+        )
+        updated = _append_bucket_event(
+            updated,
+            action="profile.values.updated",
+            bucket_id=bucket_id,
+            object_id=_event_object_id(tuple(normalised)),
+        )
+    return updated
 
 
 def clear_profile_values(state: WorkflowState, profile_name: str, keys: tuple[str, ...]) -> WorkflowState:
     """Clear values from one profile and select it."""
 
+    bucket_id = profile_bucket_id(profile_name)
+    repository = profile_bucket_repository()
     profiles = dict(state.profiles)
-    current = profiles.get(profile_name, ProfileRecord(name=profile_name))
-    if isinstance(current, dict):
-        current = _coerce_profile_record(current)
+    current = repository.load(bucket_id)
+    created = current is None
+    if current is None:
+        current = ProfileRecord(name=bucket_id)
 
     values = dict(current.values)
-    for key in keys:
-        values.pop(_normalise_key(key), None)
-    profiles[profile_name] = current.model_copy(update={"values": values, "updated_at": utc_now()})
-    return state.model_copy(update={"active_profile": profile_name, "profiles": profiles, "updated_at": utc_now()})
+    normalised = tuple(_normalise_key(key) for key in keys)
+    for key in normalised:
+        values.pop(key, None)
+    repository.save(current.model_copy(update={"values": values, "updated_at": utc_now()}))
+    profiles[bucket_id] = {"bucket_id": bucket_id}
+    updated = state.model_copy(update={"active_profile": bucket_id, "profiles": profiles, "updated_at": utc_now()})
+    if created:
+        _emit_profile_bucket_event(
+            action=BucketEventType.PROFILE_BUCKET_CREATED,
+            bucket_id=bucket_id,
+            object_id=bucket_id,
+        )
+        updated = _append_bucket_event(
+            updated,
+            action="profile.created",
+            bucket_id=bucket_id,
+            object_id=bucket_id,
+        )
+    if normalised:
+        _emit_profile_bucket_event(
+            action=BucketEventType.PROFILE_VALUES_CLEARED,
+            bucket_id=bucket_id,
+            object_id=bucket_id,
+            payload={"keys": _event_object_id(normalised)},
+        )
+        updated = _append_bucket_event(
+            updated,
+            action="profile.values.cleared",
+            bucket_id=bucket_id,
+            object_id=_event_object_id(normalised),
+        )
+    return updated

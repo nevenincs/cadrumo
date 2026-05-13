@@ -79,7 +79,7 @@ class TestPersistenceRoundTrip:
         assert b"translation" not in raw
 
     def test_load_missing_raises(self, tmp_path: Path) -> None:
-        with pytest.raises(WorkflowError):
+        with pytest.raises(WorkflowError, match=r"workflow"):
             load_run("missing", runs_dir=tmp_path)
 
     def test_load_rejects_traversal_id(self, tmp_path: Path) -> None:

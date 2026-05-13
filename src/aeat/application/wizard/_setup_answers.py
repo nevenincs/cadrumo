@@ -2,7 +2,7 @@
 
 Each question in the ``setup`` flow maps one-to-one to a field on
 :class:`SetupAnswers`. Cross-field invariants (spouse fields required
-when declaration type is joint, EU/EEA country required when spouse
+when taxation type is joint, EU/EEA country required when spouse
 is EU/EEA-resident) live as model validators.
 """
 
@@ -11,6 +11,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...domain.deadlines._models import IVARegime
+from ...domain.profile import RentaDeclarationType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
 from ...domain.profile._ccaa import CCAA
 
 
@@ -25,22 +26,23 @@ class SetupAnswers(BaseModel):
     surnames: str = ""
     activity: str = Field(min_length=1)
     address_postcode: str = ""
-    declaration_type: str = ""
+    taxation_type: RentaDeclarationType | str = ""
+    output_language: str = "es"
 
     # ── taxpayer biographic ──────────────────────────────────────────────
-    taxpayer_sex: str = ""
-    taxpayer_marital_status: str = ""
+    taxpayer_sex: RentaSexCode | str = ""
+    taxpayer_marital_status: RentaMaritalStatus | str = ""
     taxpayer_birth_date: str = ""
-    taxpayer_disability_grade: str = ""
+    taxpayer_disability_grade: RentaDisabilityGrade | str = ""
     taxpayer_death_date: str = ""
 
-    # ── spouse (declaration_type == "2") ─────────────────────────────────
+    # ── spouse (taxation_type == "2") ────────────────────────────────────
     spouse_tax_id: str = ""
     spouse_name: str = ""
     spouse_surnames: str = ""
     spouse_birth_date: str = ""
-    spouse_sex: str = ""
-    spouse_disability_grade: str = ""
+    spouse_sex: RentaSexCode | str = ""
+    spouse_disability_grade: RentaDisabilityGrade | str = ""
     spouse_non_resident_irpf: bool = False
     spouse_eu_eea_resident: bool = False
     spouse_eu_eea_country: str = ""
@@ -59,7 +61,7 @@ class SetupAnswers(BaseModel):
     enrollment_large_company: bool = False
     enrollment_public_administration_budget_gt_6000000: bool = False
 
-    # ── retencion / declaration booleans ────────────────────────────────
+    # ── retencion / modelo obligation booleans ───────────────────────────
     has_employees: bool = False
     pays_professionals_with_retencion: bool = False
     professional_income_withholding_ge_70pct: bool = False
@@ -85,6 +87,50 @@ class SetupAnswers(BaseModel):
             return IVARegime(value)
         raise TypeError("iva_regime must be an IVARegime member or string token")
 
+    @field_validator("taxation_type", mode="before")
+    @classmethod
+    def _parse_taxation_type(cls, value: object) -> RentaDeclarationType | str:
+        if value == "":
+            return ""
+        if isinstance(value, RentaDeclarationType):
+            return value
+        if isinstance(value, str):
+            return RentaDeclarationType(value)
+        raise TypeError("taxation_type must be a RentaDeclarationType member, string token, or blank")
+
+    @field_validator("taxpayer_sex", "spouse_sex", mode="before")
+    @classmethod
+    def _parse_sex_code(cls, value: object) -> RentaSexCode | str:
+        if value == "":
+            return ""
+        if isinstance(value, RentaSexCode):
+            return value
+        if isinstance(value, str):
+            return RentaSexCode(value)
+        raise TypeError("sex code must be a RentaSexCode member, string token, or blank")
+
+    @field_validator("taxpayer_marital_status", mode="before")
+    @classmethod
+    def _parse_marital_status(cls, value: object) -> RentaMaritalStatus | str:
+        if value == "":
+            return ""
+        if isinstance(value, RentaMaritalStatus):
+            return value
+        if isinstance(value, str):
+            return RentaMaritalStatus(value)
+        raise TypeError("taxpayer_marital_status must be a RentaMaritalStatus member, string token, or blank")
+
+    @field_validator("taxpayer_disability_grade", "spouse_disability_grade", mode="before")
+    @classmethod
+    def _parse_disability_grade(cls, value: object) -> RentaDisabilityGrade | str:
+        if value == "":
+            return ""
+        if isinstance(value, RentaDisabilityGrade):
+            return value
+        if isinstance(value, str):
+            return RentaDisabilityGrade(value)
+        raise TypeError("disability grade must be a RentaDisabilityGrade member, string token, or blank")
+
     @field_validator("tax_residence_ccaa", mode="before")
     @classmethod
     def _parse_tax_residence_ccaa(cls, value: object) -> CCAA:
@@ -94,10 +140,20 @@ class SetupAnswers(BaseModel):
             return CCAA(value)
         raise TypeError("tax_residence_ccaa must be a CCAA member or string token")
 
+    @field_validator("output_language")
+    @classmethod
+    def _validate_output_language(cls, value: str) -> str:
+        from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+
+        if value not in SUPPORTED_OUTPUT_LANGUAGES:
+            valid = ", ".join(SUPPORTED_OUTPUT_LANGUAGES)
+            raise ValueError(f"output_language must be one of: {valid}")
+        return value
+
     @model_validator(mode="after")
     def _validate_spouse_fields_when_joint(self) -> SetupAnswers:
-        if self.declaration_type == "2" and not self.spouse_tax_id:
-            raise ValueError("spouse_tax_id is required when declaration_type is joint (declaration_type='2')")
+        if self.taxation_type == RentaDeclarationType.JOINT and not self.spouse_tax_id:
+            raise ValueError("spouse_tax_id is required when taxation_type is joint (taxation_type='2')")
         return self
 
     @model_validator(mode="after")

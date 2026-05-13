@@ -26,7 +26,7 @@ def test_reset_setup_refuses_without_confirmation(
     from .setup_reset import SetupResetScope, SetupResetUnconfirmedError, reset_setup
 
     _isolate_workflow(monkeypatch, tmp_path)
-    with pytest.raises(SetupResetUnconfirmedError):
+    with pytest.raises(SetupResetUnconfirmedError, match=r"setup|reset|unconfirmed"):
         reset_setup(SetupResetScope.ALL, confirmed=False)
 
 
@@ -36,6 +36,7 @@ def test_reset_profile_only_clears_active_profile_record(
 ) -> None:
     """PROFILE scope removes all profile entries but leaves auth state in place."""
     from .profile._actions import set_active_profile, set_profile_values
+    from .profile._repository import profile_bucket_repository
     from .setup_reset import SetupResetReport, SetupResetScope, reset_setup
     from .workflow._models import AuthState
     from .workflow._persistence import workflow_state_repository
@@ -61,6 +62,7 @@ def test_reset_profile_only_clears_active_profile_record(
     assert state_after.profiles == {}
     assert state_after.active_profile is None
     assert state_after.auth.provider == "clave_movil"
+    assert profile_bucket_repository().load("kent") is None
 
 
 def test_reset_auth_only_clears_session(
@@ -69,6 +71,7 @@ def test_reset_auth_only_clears_session(
 ) -> None:
     """AUTH scope clears the session but leaves profile entries intact."""
     from .profile._actions import set_active_profile, set_profile_values
+    from .profile._repository import profile_bucket_repository
     from .setup_reset import SetupResetScope, reset_setup
     from .workflow._models import AuthState
     from .workflow._persistence import workflow_state_repository
@@ -92,6 +95,7 @@ def test_reset_auth_only_clears_session(
     state_after = workflow_state_repository().load()
     assert state_after.auth.provider is None
     assert "kent" in state_after.profiles
+    assert profile_bucket_repository().load("kent") is not None
 
 
 def test_reset_data_invokes_quarantine_pipeline(
@@ -100,6 +104,7 @@ def test_reset_data_invokes_quarantine_pipeline(
 ) -> None:
     """DATA scope returns a quarantine count; profile + auth untouched."""
     from .profile._actions import set_active_profile, set_profile_values
+    from .profile._repository import profile_bucket_repository
     from .setup_reset import SetupResetScope, reset_setup
     from .workflow._persistence import workflow_state_repository
 
@@ -122,6 +127,7 @@ def test_reset_data_invokes_quarantine_pipeline(
 
     state_after = workflow_state_repository().load()
     assert "kent" in state_after.profiles
+    assert profile_bucket_repository().load("kent") is not None
 
 
 def test_reset_all_combines_all_scopes(
@@ -130,6 +136,7 @@ def test_reset_all_combines_all_scopes(
 ) -> None:
     """ALL scope clears profile + auth + invokes quarantine."""
     from .profile._actions import set_active_profile, set_profile_values
+    from .profile._repository import profile_bucket_repository
     from .setup_reset import SetupResetScope, reset_setup
     from .workflow._models import AuthState
     from .workflow._persistence import workflow_state_repository
@@ -153,3 +160,4 @@ def test_reset_all_combines_all_scopes(
     state_after = workflow_state_repository().load()
     assert state_after.profiles == {}
     assert state_after.auth.provider is None
+    assert profile_bucket_repository().load("kent") is None

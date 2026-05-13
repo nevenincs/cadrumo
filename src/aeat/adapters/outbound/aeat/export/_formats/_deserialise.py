@@ -155,7 +155,9 @@ def deserialise(
                 assert spec.literal_value is not None
                 expected = spec.literal_value.encode(encoding).ljust(spec.length, b" ")
                 if raw != expected and raw != spec.literal_value.encode(encoding):
-                    raise ValueError(f"RESERVED field {spec.field_id!r} expected {spec.literal_value!r}; got {raw!r}")
+                    raise ExportFormatError(
+                        f"RESERVED field {spec.field_id!r} expected {spec.literal_value!r}; got {raw!r}",
+                    )
                 field_values[spec.field_id] = spec.literal_value
 
             case FieldKind.CURRENCY:

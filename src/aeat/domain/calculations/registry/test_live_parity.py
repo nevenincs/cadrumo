@@ -377,7 +377,7 @@ def test_oracle_verify_payload_raises_when_planned_operation_blocked() -> None:
     )
     policy = _read_only_policy()
 
-    with pytest.raises(RegistryValidationError):
+    with pytest.raises(RegistryValidationError, match=r"policy|method|forbidden|operation"):
         oracle.verify_payload(policy, b"", expected={})
 
 

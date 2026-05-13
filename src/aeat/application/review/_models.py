@@ -23,7 +23,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ...domain.invoices import Invoice
 from ...domain.transactions import Transaction
 from ..filing import FilingValidationFinding

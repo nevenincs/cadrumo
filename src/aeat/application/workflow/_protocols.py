@@ -95,8 +95,8 @@ class CertificateBundleProtocol(Protocol):
 class FilingInputsProviderProtocol(Protocol):
     """Provides filing inputs for the draft stage.
 
-    The default adapter reads the inputs from a JSON file at
-    ``settings.aeat_workflow_draft_inputs_path``.
+    Production adapters load inputs from bucket-scoped, secure application
+    services rather than operator-supplied files.
     """
 
     def load_inputs(

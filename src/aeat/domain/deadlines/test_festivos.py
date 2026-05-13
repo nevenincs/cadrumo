@@ -89,7 +89,7 @@ def test_load_calendar_2025_separates_national_from_ccaa() -> None:
 def test_load_calendar_missing_year_raises_validation_error() -> None:
     """A year with no registered TOML produces a recoverable error."""
 
-    with pytest.raises(DeadlineValidationError):
+    with pytest.raises(DeadlineValidationError, match=r"1999|year|calendar|range"):
         load_holiday_calendar(1999)
 
 
@@ -283,7 +283,7 @@ def test_shift_deadline_accepts_externally_supplied_calendar() -> None:
 
 
 def test_shift_deadline_rejects_empty_modelo_string() -> None:
-    with pytest.raises(DeadlineValidationError):
+    with pytest.raises(DeadlineValidationError, match=r"modelo|empty|blank"):
         shift_deadline(date(2025, 3, 4), modelo="", ccaa_code=None)
 
 
@@ -321,19 +321,19 @@ def test_holiday_is_frozen_and_forbids_extras() -> None:
         ccaa_code=None,
         name="Test",
     )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         holiday.name = "Renamed"  # type: ignore[misc]
 
 
 def test_deadline_shift_is_frozen_and_immutable() -> None:
     shift = shift_deadline(date(2025, 3, 4), modelo="303", ccaa_code=None)
     assert isinstance(shift, DeadlineShift)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         shift.shifted = True  # type: ignore[misc]
 
 
 def test_holiday_calendar_year_must_be_in_supported_range() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"year|greater than"):
         HolidayCalendar(
             year=1999,
             boe_ref="invalid",

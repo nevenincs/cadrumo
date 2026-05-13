@@ -218,12 +218,12 @@ class TestScrubSidecar:
         )
         assert sidecar.fixture_tier == "l2"
         assert sidecar.scrub_version == SCRUB_VERSION
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
             sidecar.scrub_version = "0.0.0"  # type: ignore[misc]
 
     def test_sidecar_rejects_non_hex_sha(self, tmp_path: Path) -> None:
         """A sidecar with a non-hex SHA fails pydantic validation."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"original_sha256|hex|pattern"):
             ScrubSidecar(
                 original_sha256="not-a-hash",
                 scrubbed_sha256="a" * 64,

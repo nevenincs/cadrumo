@@ -80,7 +80,7 @@ class TestReplayRun:
         monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
         trace = _build_trace("fedcba9876543210", corpus_sha256="0" * 64)
         save_trace(trace)
-        with pytest.raises(AeatCorpusDriftError) as excinfo:
+        with pytest.raises(AeatCorpusDriftError, match=r"aeat|corpus|drift") as excinfo:
             replay_run(trace.run_id)
         assert excinfo.value.run_id == trace.run_id
         assert excinfo.value.recorded == "0" * 64

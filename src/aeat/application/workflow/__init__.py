@@ -6,7 +6,6 @@ from __future__ import annotations
 from ._adapters import (
     DeadlineEngineAdapter,
     FilingDraftBuilderAdapter,
-    JsonFileInputsProvider,
     SubmissionEngineAdapter,
     default_engine,
 )
@@ -66,7 +65,6 @@ __all__ = [
     "FilingDraftBuilderAdapter",
     "FilingDraftBuilderProtocol",
     "FilingInputsProviderProtocol",
-    "JsonFileInputsProvider",
     "RegistryFilingDraftProtocol",
     "SiteHealthAlert",
     "SubmissionEngineAdapter",

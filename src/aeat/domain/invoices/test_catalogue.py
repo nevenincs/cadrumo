@@ -79,7 +79,7 @@ def test_persistence_round_trip_preserves_catalogue(tmp_path: Path) -> None:
 
 def test_load_raises_typed_error_for_invalid_json() -> None:
     """Invalid JSON must surface a typed persistence error."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"json|JSON|Invalid"):
         InvoiceCatalogue.model_validate_json("{not-valid")
 
 
@@ -129,14 +129,14 @@ def test_link_transaction_rejects_non_hex_transaction_id() -> None:
     """Invalid transaction IDs must raise a typed link error."""
     invoice = _valid_invoice()
     catalogue = InvoiceCatalogue.from_invoices([invoice])
-    with pytest.raises(InvoiceLinkError):
+    with pytest.raises(InvoiceLinkError, match=r"transaction_id|hex"):
         link_transaction(catalogue, invoice.invoice_id, "not-hex")
 
 
 def test_link_transaction_raises_typed_not_found() -> None:
     """Missing invoice IDs must raise InvoiceNotFoundError."""
     catalogue = InvoiceCatalogue.from_invoices([_valid_invoice()])
-    with pytest.raises(InvoiceNotFoundError):
+    with pytest.raises(InvoiceNotFoundError, match=r"invoice|not|found"):
         link_transaction(catalogue, "nonexistent", "a" * 64)
 
 
@@ -144,11 +144,11 @@ def test_catalogue_rejects_mapping_with_mismatched_keys() -> None:
     """Mapping keys must match each nested invoice's ``invoice_id``."""
     invoice = _valid_invoice()
     payload = {"invoices": {"wrong-key": invoice}}
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"invoice_id|key|mismatch"):
         InvoiceCatalogue.model_validate(payload)
 
 
 def test_catalogue_error_hierarchy_reachable() -> None:
     """Error subclasses must be catchable through a single parent."""
-    with pytest.raises(InvoiceCatalogueError):
+    with pytest.raises(InvoiceCatalogueError, match=r"surface test"):
         raise InvoicePersistenceError("surface test")

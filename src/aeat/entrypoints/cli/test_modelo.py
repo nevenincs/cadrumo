@@ -55,8 +55,7 @@ def test_bindings_list_emits_readiness_category_for_every_row() -> None:
 
     result = _RUNNER.invoke(
         app,
-        ["app", "modelo", "bindings", "list",
-         "--modelo", "303", "--year", "2026", "--period", "Q1"],
+        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1"],
     )
     assert result.exit_code == 0, result.output
     assert "operation\tregistry.modelo.bindings.list" in result.output
@@ -74,9 +73,7 @@ def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None
 
     result = _RUNNER.invoke(
         app,
-        ["app", "modelo", "bindings", "list",
-         "--modelo", "303", "--year", "2026", "--period", "Q1",
-         "--missing"],
+        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1", "--missing"],
     )
     assert result.exit_code == 0, result.output
     assert "missing_filter\tTrue" in result.output
@@ -88,10 +85,20 @@ def test_bindings_preview_echoes_override_for_known_key() -> None:
 
     result = _RUNNER.invoke(
         app,
-        ["app", "modelo", "bindings", "preview",
-         "--modelo", "303", "--year", "2026", "--period", "Q1",
-         "--binding",
-         "modelo-303-iva-repercutido-general-cuota=1234.56"],
+        [
+            "app",
+            "modelo",
+            "bindings",
+            "preview",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "Q1",
+            "--binding",
+            "modelo-303-iva-repercutido-general-cuota=1234.56",
+        ],
     )
     assert result.exit_code == 0, result.output
     assert "operation\tregistry.modelo.bindings.preview" in result.output
@@ -106,9 +113,20 @@ def test_bindings_preview_rejects_unknown_binding_with_suggestion_list() -> None
 
     result = _RUNNER.invoke(
         app,
-        ["app", "modelo", "bindings", "preview",
-         "--modelo", "303", "--year", "2026", "--period", "Q1",
-         "--binding", "no-such-binding=42"],
+        [
+            "app",
+            "modelo",
+            "bindings",
+            "preview",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "Q1",
+            "--binding",
+            "no-such-binding=42",
+        ],
     )
     assert result.exit_code != 0
     output_lower = result.output.lower()
@@ -123,9 +141,20 @@ def test_bindings_preview_rejects_malformed_override_syntax() -> None:
 
     result = _RUNNER.invoke(
         app,
-        ["app", "modelo", "bindings", "preview",
-         "--modelo", "303", "--year", "2026", "--period", "Q1",
-         "--binding", "missing-equals-sign"],
+        [
+            "app",
+            "modelo",
+            "bindings",
+            "preview",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "Q1",
+            "--binding",
+            "missing-equals-sign",
+        ],
     )
     assert result.exit_code != 0
     assert "KEY=VALUE" in result.output
@@ -161,10 +190,7 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
         text = py_file.read_text(encoding="utf-8")
         if any(needle in text for needle in forbidden_patterns):
             offenders.append(py_file)
-    assert offenders == [], (
-        "Parallel bindings Typer outside the canonical _modelo.py: "
-        f"{[str(p) for p in offenders]}"
-    )
+    assert offenders == [], f"Parallel bindings Typer outside the canonical _modelo.py: {[str(p) for p in offenders]}"
 
 
 def test_bindings_list_and_preview_emit_no_bucket_event() -> None:
@@ -175,18 +201,9 @@ def test_bindings_list_and_preview_emit_no_bucket_event() -> None:
     any bucket-event emission call. If a future change wires one
     in by accident, this test fails fast."""
 
-    from pathlib import Path
-
     from aeat.core.paths import PROJECT_ROOT
 
-    canonical_text = (
-        PROJECT_ROOT
-        / "src"
-        / "aeat"
-        / "entrypoints"
-        / "cli"
-        / "_modelo.py"
-    ).read_text(encoding="utf-8")
+    canonical_text = (PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli" / "_modelo.py").read_text(encoding="utf-8")
     forbidden_emitters = (
         "emit_bucket_event",
         "append_bucket_event",

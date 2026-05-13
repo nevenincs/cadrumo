@@ -10,9 +10,10 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
+
+from aeat.tests import FIXTURES_DIR
 
 from .....domain.transactions import RawTransaction, SourceFormat
 from .. import ProviderValidation, detect_provider
@@ -20,7 +21,7 @@ from ._base import parse_amount_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_FIXTURES = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "financial"
+_FIXTURES = FIXTURES_DIR / "financial"
 
 
 def test_raw_transaction_round_trip_uses_mapping_field() -> None:

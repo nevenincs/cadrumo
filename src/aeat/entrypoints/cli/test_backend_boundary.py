@@ -102,7 +102,7 @@ _KNOWN_FINDINGS: tuple[BoundaryFinding, ...] = (
     BoundaryFinding(
         row_id="CLI-007",
         source="src/aeat/entrypoints/cli/filing/__init__.py",
-        symbols=("build", "_load_inputs", "_handle_declaracion_import"),
+        symbols=("_handle_declaracion_import",),
         backend_gap="API-005",
         owner="application.filing",
     ),
@@ -112,13 +112,6 @@ _KNOWN_FINDINGS: tuple[BoundaryFinding, ...] = (
         symbols=("overview_status",),
         backend_gap="API-008",
         owner="application.overview",
-    ),
-    BoundaryFinding(
-        row_id="CLI-009",
-        source="src/aeat/entrypoints/cli/registry.py",
-        symbols=("inspect_registry_tree", "select_declarations_for_capture", "verify_filed_state"),
-        backend_gap="API-006",
-        owner="application.registry",
     ),
     BoundaryFinding(
         row_id="CLI-010",
@@ -175,6 +168,35 @@ def test_boundary_plan_tracks_every_known_cli_finding_and_backend_gap() -> None:
             if token not in combined:
                 offences.append(f"{finding.row_id}: docs do not track {token!r}")
     assert offences == [], "boundary docs missing tracked rows:\n  " + "\n  ".join(offences)
+
+
+def test_declaration_review_has_no_command_local_format_selector() -> None:
+    """Root ``--format`` is the only output selector for declaration review."""
+
+    tree = _parse_source("src/aeat/entrypoints/cli/_declaration.py")
+    declaration_review = next(
+        node
+        for node in ast.iter_child_nodes(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "declaration_review"
+    )
+    parameter_names = {arg.arg for arg in declaration_review.args.args}
+    assert "format_" not in parameter_names
+
+
+def test_cli_observability_wrapper_module_is_absent_from_command_tree() -> None:
+    """Generic run tracing is not part of the accepted CLI surface."""
+
+    wrapper_path = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli" / "_observability.py"
+    assert not wrapper_path.exists()
+
+    offences: list[str] = []
+    for path in sorted(_CLI_ROOT.rglob("*.py")):
+        if path.name.startswith("test_"):
+            continue
+        text = path.read_text(encoding="utf-8")
+        if "cli_run_context" in text or "build_arguments" in text or "._observability" in text:
+            offences.append(path.relative_to(PROJECT_ROOT).as_posix())
+    assert offences == []
 
 
 def test_cli_unit_tests_do_not_contain_process_state_or_xfail_language() -> None:

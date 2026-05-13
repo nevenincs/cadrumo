@@ -4,35 +4,42 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date
+from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any, Literal
 
 import typer
 
 from ...application.modelo import (
+    AmendmentEvidenceMissingError,
+    AmendmentTargetStateError,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     FilingRecordNotFoundError,
+    VerificationReportNotFoundError,
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
+    amend_modelo_revision,
     calculate_modelo_revision,
     create_work_unit,
     discard_work_unit,
     file_modelo_revision,
-    get_calculation_revision,
     get_filing_record,
+    get_verification_report,
     get_work_unit,
     list_calculation_revisions,
     list_filing_records,
+    list_verification_reports,
     list_work_units,
-    mark_revision_verified_complete,
     rename_work_unit,
+    verify_modelo_revision,
 )
-from ...domain.modelos._calculation_revision import CalculationRevision
-from ...domain.modelos._filing_record import FilingRecord
 from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
 from ...domain.calculations.registry._errors import RegistrySnapshotError
+from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
+from ...domain.modelos._filing_record import FilingRecord
+from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ._common import _emit, _parse_iso_date
 from ._i18n import tr
@@ -188,15 +195,11 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
     resolution layer downstream can coerce it per source type.
     """
     if "=" not in spec:
-        raise typer.BadParameter(
-            f"--binding must be KEY=VALUE; got {spec!r}"
-        )
+        raise typer.BadParameter(f"--binding must be KEY=VALUE; got {spec!r}")
     key, _, value = spec.partition("=")
     key = key.strip()
     if not key:
-        raise typer.BadParameter(
-            f"--binding key must be non-empty; got {spec!r}"
-        )
+        raise typer.BadParameter(f"--binding key must be non-empty; got {spec!r}")
     return key, value
 
 
@@ -233,9 +236,7 @@ def bindings_list(
     """
 
     scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
-    report = _run_query(
-        lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of))
-    )
+    report = _run_query(lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of)))
     rows = report.rows
     if missing:
         rows = tuple(row for row in rows if row.source != "constant_value")
@@ -268,8 +269,7 @@ def bindings_list(
         "binding_id\tsource\treadiness\ttyped_enum",
     ]
     lines.extend(
-        f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}"
-        for row in rows
+        f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}" for row in rows
     )
     _emit(ctx, payload, lines)
 
@@ -312,9 +312,7 @@ def bindings_preview(
 
     overrides = dict(_parse_binding_override(spec) for spec in (binding or ()))
     scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
-    report = _run_query(
-        lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of))
-    )
+    report = _run_query(lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of)))
     known_ids = {row.binding_id for row in report.rows}
     unknown_keys = sorted(set(overrides) - known_ids)
     if unknown_keys:
@@ -746,24 +744,38 @@ def work_calculate(
 ) -> None:
     """Persist a new draft calculation revision for the work unit."""
 
-    from decimal import Decimal, InvalidOperation
+    from ...application.modelo import CalculationRegistryUnavailableError
 
     casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
-    casilla_values: dict[str, Decimal] = {}
+    casilla_inputs: dict[str, Decimal] = {}
     for k, v in casilla_pairs.items():
         try:
-            casilla_values[k] = Decimal(v)
+            casilla_inputs[k] = Decimal(v)
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(f"--casilla value for {k!r} is not a decimal: {v!r}") from exc
-    binding_overrides = dict(_parse_casilla_override(spec) for spec in (binding or ()))
+    binding_pairs = dict(_parse_casilla_override(spec) for spec in (binding or ()))
+    binding_values: dict[str, Decimal] = {}
+    enum_binding_values: dict[str, str] = {}
+    for k, v in binding_pairs.items():
+        try:
+            binding_values[k] = Decimal(v)
+        except (InvalidOperation, ValueError):
+            # Non-decimal binding overrides flow into the enum-binding
+            # channel (e.g. profile-sourced enums like CCAA).
+            enum_binding_values[k] = v
 
     try:
         revision = calculate_modelo_revision(
             work_unit_id,
-            casilla_values=casilla_values,
-            binding_overrides=binding_overrides,
+            casilla_inputs=casilla_inputs,
+            binding_values=binding_values or None,
+            enum_binding_values=enum_binding_values or None,
         )
-    except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
+    except (
+        WorkUnitNotFoundError,
+        WorkUnitMutationRefusedError,
+        CalculationRegistryUnavailableError,
+    ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
     payload = {
@@ -804,8 +816,64 @@ def work_revisions(
     _emit(ctx, payload, lines)
 
 
-@work_app.command("verified-complete", help=tr("cli.app.modelo.work.verified_complete_help"))
-def work_verified_complete(
+def _verification_report_payload(report: VerificationReport) -> dict[str, Any]:
+    return {
+        "verification_report_id": report.verification_report_id,
+        "calculation_revision_id": report.calculation_revision_id,
+        "completeness_status": report.completeness_status.value,
+        "granted_verified_complete": report.granted_verified_complete,
+        "resolved_casillas": list(report.resolved_casillas),
+        "missing_required_casillas": list(report.missing_required_casillas),
+        "run_at": report.run_at.isoformat(),
+        "verified_by": report.verified_by,
+        "findings": [
+            {
+                "kind": f.kind.value,
+                "severity": f.severity.value,
+                "casilla_id": f.casilla_id,
+                "expectation_id": f.expectation_id,
+                "message": f.message,
+                "next_action": f.next_action,
+            }
+            for f in report.findings
+        ],
+    }
+
+
+def _verification_report_lines(report: VerificationReport) -> list[str]:
+    lines = [
+        f"verification_report_id\t{report.verification_report_id}",
+        f"calculation_revision_id\t{report.calculation_revision_id}",
+        f"completeness_status\t{report.completeness_status.value}",
+        f"granted_verified_complete\t{str(report.granted_verified_complete).lower()}",
+        f"run_at\t{report.run_at.isoformat()}",
+        f"verified_by\t{report.verified_by}",
+        f"resolved_casilla_count\t{len(report.resolved_casillas)}",
+        f"missing_required_casilla_count\t{len(report.missing_required_casillas)}",
+        f"finding_count\t{len(report.findings)}",
+    ]
+    for casilla in report.missing_required_casillas:
+        lines.append(f"missing_casilla\t{casilla}")
+    for finding in report.findings:
+        next_action = finding.next_action or ""
+        casilla = finding.casilla_id or ""
+        lines.append(
+            "\t".join(
+                (
+                    "finding",
+                    finding.kind.value,
+                    finding.severity.value,
+                    casilla,
+                    finding.message,
+                    next_action,
+                )
+            )
+        )
+    return lines
+
+
+@work_app.command("verify", help=tr("cli.app.modelo.work.verify_help"))
+def work_verify(
     ctx: typer.Context,
     calculation_revision_id: Annotated[
         str,
@@ -816,19 +884,32 @@ def work_verified_complete(
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
     ],
 ) -> None:
-    """Mark a draft calculation revision as verified complete."""
+    """Verify a draft calculation revision against the verified-complete contract.
+
+    Produces a structured verification report. On success, the
+    revision transitions to ``verified_complete``. On failure, the
+    revision is not mutated and the report explains the missing
+    inputs or blocking findings.
+    """
 
     try:
-        revision = mark_revision_verified_complete(calculation_revision_id, actor=actor)
-    except (CalculationRevisionNotFoundError, CalculationRevisionStateError) as exc:
+        report = verify_modelo_revision(calculation_revision_id, actor=actor)
+    except (
+        CalculationRevisionNotFoundError,
+        CalculationRevisionStateError,
+        WorkUnitNotFoundError,
+    ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
     payload = {
-        "operation": "modelo.work.verified_complete",
-        **_calculation_revision_payload(revision),
+        "operation": "modelo.work.verify",
+        **_verification_report_payload(report),
     }
-    lines = ["operation\tmodelo.work.verified_complete", *_calculation_revision_lines(revision)]
+    lines = ["operation\tmodelo.work.verify", *_verification_report_lines(report)]
     _emit(ctx, payload, lines)
+
+    if not report.granted_verified_complete:
+        raise typer.Exit(code=1)
 
 
 @work_app.command("file", help=tr("cli.app.modelo.work.file_help"))
@@ -867,6 +948,104 @@ def work_file(
         **_filing_record_payload(record),
     }
     lines = ["operation\tmodelo.work.file", *_filing_record_lines(record)]
+    lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
+    _emit(ctx, payload, lines)
+
+
+def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
+    if "=" not in spec:
+        raise typer.BadParameter(f"--set must be CASILLA=DECIMAL; got {spec!r}")
+    key, _, value = spec.partition("=")
+    key = key.strip()
+    if not key:
+        raise typer.BadParameter(f"--set key must be non-empty; got {spec!r}")
+    try:
+        decimal_value = Decimal(value.strip())
+    except (InvalidOperation, ValueError) as exc:
+        raise typer.BadParameter(f"--set value must be a decimal; got {value!r}") from exc
+    return key, decimal_value
+
+
+@work_app.command("amend", help=tr("cli.app.modelo.work.amend_help"))
+def work_amend(
+    ctx: typer.Context,
+    from_filing_record_id: Annotated[
+        str,
+        typer.Option(
+            "--from-filing-record",
+            help=tr("cli.app.modelo.work.from_filing_record_help"),
+        ),
+    ],
+    kind: Annotated[
+        str,
+        typer.Option(
+            "--kind",
+            help=tr("cli.app.modelo.work.amendment_kind_help"),
+        ),
+    ],
+    reason: Annotated[
+        str,
+        typer.Option(
+            "--reason",
+            help=tr("cli.app.modelo.work.amendment_reason_help"),
+        ),
+    ],
+    actor: Annotated[
+        str,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ],
+    set_overrides: Annotated[
+        list[str] | None,
+        typer.Option("--set", help=tr("cli.app.modelo.work.set_override_help")),
+    ] = None,
+) -> None:
+    """Build a complementaria amendment over an externally-filed return."""
+
+    try:
+        amendment_kind = CalculationRevisionAmendmentKind(kind.strip())
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"--kind must be one of "
+            f"{', '.join(repr(k.value) for k in CalculationRevisionAmendmentKind)}; got {kind!r}"
+        ) from exc
+
+    overrides: dict[str, Decimal] = {}
+    for spec in set_overrides or ():
+        key, value = _parse_amendment_casilla(spec)
+        overrides[key] = value
+    if not overrides:
+        raise typer.BadParameter("--set is required at least once for an amendment")
+
+    try:
+        record = amend_modelo_revision(
+            from_filing_record_id=from_filing_record_id,
+            overrides=overrides,
+            amendment_kind=amendment_kind,
+            reason=reason,
+            actor=actor,
+        )
+    except (
+        FilingRecordNotFoundError,
+        AmendmentEvidenceMissingError,
+        AmendmentTargetStateError,
+        CalculationRevisionNotFoundError,
+        CalculationRevisionStateError,
+        WorkUnitNotFoundError,
+    ) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.work.amend",
+        "amendment_kind": amendment_kind.value,
+        "amends_filing_record_id": from_filing_record_id,
+        **_filing_record_payload(record),
+    }
+    lines = [
+        "operation\tmodelo.work.amend",
+        f"amendment_kind\t{amendment_kind.value}",
+        f"amends_filing_record_id\t{from_filing_record_id}",
+        *_filing_record_lines(record),
+    ]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
     _emit(ctx, payload, lines)
 
@@ -921,6 +1100,80 @@ def filing_record_list(
     _emit(ctx, payload, lines)
 
 
+verification_report_app = typer.Typer(
+    name="verification-report",
+    help=tr("cli.app.modelo.verification_report.app_help"),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(verification_report_app, name="verification-report")
+
+
+@verification_report_app.command("list", help=tr("cli.app.modelo.verification_report.list_help"))
+def verification_report_list(
+    ctx: typer.Context,
+    calculation_revision_id: Annotated[
+        str | None,
+        typer.Option(
+            "--calculation-revision-id",
+            help=tr("cli.app.modelo.work.calculation_revision_id_help"),
+        ),
+    ] = None,
+) -> None:
+    """List verification reports, optionally filtered to one revision."""
+
+    reports = list_verification_reports(calculation_revision_id=calculation_revision_id)
+    payload = {
+        "operation": "modelo.verification_report.list",
+        "calculation_revision_id_filter": calculation_revision_id,
+        "report_count": len(reports),
+        "reports": [_verification_report_payload(r) for r in reports],
+    }
+    lines = [
+        "operation\tmodelo.verification_report.list",
+        f"calculation_revision_id_filter\t{calculation_revision_id or ''}",
+        f"report_count\t{len(reports)}",
+        "verification_report_id\tcalculation_revision_id\tcompleteness_status\tgranted\trun_at\tverified_by",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                r.verification_report_id,
+                r.calculation_revision_id,
+                r.completeness_status.value,
+                str(r.granted_verified_complete).lower(),
+                r.run_at.isoformat(),
+                r.verified_by,
+            )
+        )
+        for r in reports
+    )
+    _emit(ctx, payload, lines)
+
+
+@verification_report_app.command("show", help=tr("cli.app.modelo.verification_report.show_help"))
+def verification_report_show(
+    ctx: typer.Context,
+    verification_report_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.verification_report.verification_report_id_help")),
+    ],
+) -> None:
+    """Show one verification report by id."""
+
+    try:
+        report = get_verification_report(verification_report_id)
+    except VerificationReportNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.verification_report.show",
+        **_verification_report_payload(report),
+    }
+    lines = ["operation\tmodelo.verification_report.show", *_verification_report_lines(report)]
+    _emit(ctx, payload, lines)
+
+
 @filing_record_app.command("show", help=tr("cli.app.modelo.filing_record.show_help"))
 def filing_record_show(
     ctx: typer.Context,
@@ -941,6 +1194,93 @@ def filing_record_show(
         **_filing_record_payload(record),
     }
     lines = ["operation\tmodelo.filing_record.show", *_filing_record_lines(record)]
+    _emit(ctx, payload, lines)
+
+
+@filing_record_app.command("import", help=tr("cli.app.modelo.filing_record.import_help"))
+def filing_record_import(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+    evidence_kind: Annotated[
+        str,
+        typer.Option(
+            "--evidence-kind",
+            help=tr("cli.app.modelo.filing_record.evidence_kind_help"),
+        ),
+    ],
+    evidence_reference_id: Annotated[
+        str,
+        typer.Option(
+            "--evidence-id",
+            help=tr("cli.app.modelo.filing_record.evidence_reference_id_help"),
+        ),
+    ],
+    actor: Annotated[
+        str,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ] = "aeat-import",
+    set_overrides: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--set",
+            help=tr("cli.app.modelo.filing_record.import_casilla_help"),
+        ),
+    ] = None,
+) -> None:
+    """Persist an externally-filed return as a baseline filing record."""
+
+    from ...application.modelo import (
+        ExternalFilingImportError,
+        import_external_filing_evidence,
+    )
+    from ...domain.modelos._filing_record import ExternalEvidenceKind
+
+    try:
+        kind = ExternalEvidenceKind(evidence_kind.strip())
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"--evidence-kind must be one of "
+            f"{', '.join(repr(k.value) for k in ExternalEvidenceKind)}; got {evidence_kind!r}"
+        ) from exc
+
+    casilla_values: dict[str, Decimal] = {}
+    for spec in set_overrides or ():
+        key, value = _parse_amendment_casilla(spec)
+        casilla_values[key] = value
+    if not casilla_values:
+        raise typer.BadParameter("--set is required at least once for an import")
+
+    try:
+        record = import_external_filing_evidence(
+            work_unit_id=work_unit_id,
+            casilla_values=casilla_values,
+            evidence_kind=kind,
+            evidence_reference_id=evidence_reference_id,
+            actor=actor,
+        )
+    except (
+        WorkUnitNotFoundError,
+        WorkUnitMutationRefusedError,
+        ExternalFilingImportError,
+    ) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.filing_record.import",
+        "evidence_kind": kind.value,
+        "evidence_reference_id": evidence_reference_id,
+        **_filing_record_payload(record),
+    }
+    lines = [
+        "operation\tmodelo.filing_record.import",
+        f"evidence_kind\t{kind.value}",
+        f"evidence_reference_id\t{evidence_reference_id}",
+        *_filing_record_lines(record),
+    ]
+    lines.append("filing_disambiguation\t(imported AEAT-attested baseline)")
     _emit(ctx, payload, lines)
 
 

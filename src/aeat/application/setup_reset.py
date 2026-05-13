@@ -1,9 +1,10 @@
-"""Scoped setup reset for ``aeat setup reset``.
+"""Scoped setup reset backend retained for config reset internals.
 
 Removes one or more pieces of operator-local state behind an explicit
 ``--yes`` confirmation gate. Four scopes are supported:
 
-- ``PROFILE``: clears every operator profile from the workflow state.
+- ``PROFILE``: clears every operator profile pointer and deletes each
+  persisted profile bucket.
 - ``AUTH``: clears the persisted auth session and provider metadata.
 - ``DATA``: quarantines every undecryptable secure-objects row plus
   every readable one whose namespace belongs to the operator's data
@@ -49,8 +50,8 @@ class SetupResetReport(BaseModel):
     Attributes:
         scope: The :class:`SetupResetScope` that was applied.
         removed_profile_names: Sorted tuple of profile names cleared
-            from the workflow state. Empty when the scope did not
-            touch profiles.
+            from the workflow state and profile bucket repository.
+            Empty when the scope did not touch profiles.
         removed_auth_session: True when the auth session was reset.
         quarantined_namespace_count: Number of secure-object namespaces
             whose unreadable rows were archived to the quarantine table
@@ -93,7 +94,14 @@ def reset_setup(scope: SetupResetScope, *, confirmed: bool) -> SetupResetReport:
     quarantined_namespace_count = 0
 
     if scope in {SetupResetScope.PROFILE, SetupResetScope.ALL}:
-        removed_profile_names = tuple(sorted(current.profiles.keys()))
+        from .profile._repository import profile_bucket_repository
+
+        profile_repository = profile_bucket_repository()
+        removed_profile_names = tuple(
+            sorted({*current.profiles.keys(), *(item.name for item in profile_repository.list_profiles())})
+        )
+        for profile_name in removed_profile_names:
+            profile_repository.delete(profile_name)
         new_state = new_state.model_copy(
             update={
                 "profiles": {},

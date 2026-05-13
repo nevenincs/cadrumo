@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...core.errors import AeatError
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 
 
 class AggregationError(AeatError):

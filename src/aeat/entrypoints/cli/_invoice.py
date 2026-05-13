@@ -109,9 +109,9 @@ def invoice_review(
             )
             return
         raise _bad(tr("cli.invoice.errors.invoice_not_found", id=invoice_id))
-    payload = {"rows": []}
+    payload_rows: list[dict[str, object]] = []
     for row in rows:
-        payload["rows"].append(
+        payload_rows.append(
             {
                 "id": row.id,
                 "kind": row.kind,
@@ -122,6 +122,7 @@ def invoice_review(
                 "payment.id": row.payment_id,
             }
         )
+    payload = {"rows": payload_rows}
 
     lines: list[str] = [
         f"{tr('cli.invoice.labels.id')}\t"
@@ -130,8 +131,11 @@ def invoice_review(
         f"{tr('cli.invoice.labels.iva')}\t"
         f"{tr('cli.invoice.labels.status')}"
     ]
-    for row in payload["rows"]:
-        lines.append(f"{row['id'][:12]}\t{row['kind']}\t{row['base']}\t{row['iva']}\t{row['status']}")
+    for payload_row in payload_rows:
+        lines.append(
+            f"{str(payload_row['id'])[:12]}\t{payload_row['kind']}\t{payload_row['base']}\t"
+            f"{payload_row['iva']}\t{payload_row['status']}"
+        )
 
     if not rows:
         lines.append(tr("cli.invoice.review.no_invoices"))

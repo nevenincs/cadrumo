@@ -1,12 +1,9 @@
-"""Parity tests: aeat config set and aeat config get read the same backend.
+"""Parity tests: aeat config profile set/get read the same profile bucket.
 
-Pins the contract that ``aeat config set``, ``aeat config get`` and
-``aeat config status`` share a single :class:`WorkflowState` backend:
-operator-entered values written by one verb are visible to every
-other verb in the group. The fixture seeds the workflow state
-directly via :func:`workflow_state_repository().update(...)` so the
-parity assertion does not depend on a wizard or initialisation
-command for its setup.
+Pins the contract that ``aeat config profile set``, ``aeat config
+profile get`` and ``aeat config profile status`` share the active
+profile bucket selected by ``WorkflowState``. Operator-entered values
+written by one verb are visible to every other verb in the group.
 """
 
 from __future__ import annotations
@@ -31,7 +28,7 @@ def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 
 def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") -> None:
-    """Seed an active profile directly through the workflow state repository."""
+    """Seed an active profile through the profile application service."""
 
     from aeat.application.profile._actions import set_active_profile, set_profile_values
     from aeat.application.workflow._persistence import workflow_state_repository
@@ -51,12 +48,10 @@ def test_config_set_then_config_get_round_trips_iva_regime(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """A value written via 'aeat config set' must be readable via 'aeat config get'.
+    """A value written via config profile set is readable via config profile get.
 
-    Pins the single-backend contract: both verbs read and write the
-    same WorkflowState.profiles record. Without that contract operators
-    would maintain two divergent stores; this test fails if either
-    verb gets carved out into a parallel store.
+    Pins the profile-bucket contract: both verbs read and write the
+    same profile-associated secure bucket selected by workflow state.
     """
 
     _isolate(monkeypatch, tmp_path)
@@ -64,25 +59,33 @@ def test_config_set_then_config_get_round_trips_iva_regime(
 
     from aeat.entrypoints.cli import app
 
-    set_via_config = _RUNNER.invoke(app, ["config", "set", "iva.regime", "GENERAL"])
+    set_via_config = _RUNNER.invoke(app, ["config", "profile", "set", "iva.regime", "GENERAL"])
     assert set_via_config.exit_code == 0, set_via_config.output
     assert "GENERAL" in set_via_config.output
 
-    get_via_config = _RUNNER.invoke(app, ["config", "get", "iva.regime"])
+    get_via_config = _RUNNER.invoke(app, ["config", "profile", "get", "iva.regime"])
     assert get_via_config.exit_code == 0, get_via_config.output
     assert "GENERAL" in get_via_config.output
+
+    from aeat.application.profile._repository import profile_bucket_repository
+    from aeat.application.workflow._persistence import workflow_state_repository
+
+    workflow_state = workflow_state_repository().load()
+    assert workflow_state.profiles["default"] == {"bucket_id": "default"}
+    bucket = profile_bucket_repository().load("default")
+    assert bucket is not None
+    assert bucket.values["iva.regime"] == "GENERAL"
 
 
 def test_config_set_then_config_status_surfaces_assigned_value(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """A value written via 'aeat config set' must surface in 'aeat config status'.
+    """A value written via config profile set surfaces in config profile status.
 
     Mirror direction: the set writer feeds the readiness summary. The
-    status command reads the same WorkflowState.profiles record the
-    set verb writes; this test fails if the status surface carves
-    out a parallel read path.
+    status command reads the same profile-associated secure bucket the
+    set verb writes.
     """
 
     _isolate(monkeypatch, tmp_path)
@@ -90,10 +93,10 @@ def test_config_set_then_config_status_surfaces_assigned_value(
 
     from aeat.entrypoints.cli import app
 
-    set_via_config = _RUNNER.invoke(app, ["config", "set", "iva.regime", "SIMPLIFICADO"])
+    set_via_config = _RUNNER.invoke(app, ["config", "profile", "set", "iva.regime", "SIMPLIFICADO"])
     assert set_via_config.exit_code == 0, set_via_config.output
 
-    status_result = _RUNNER.invoke(app, ["config", "status"])
+    status_result = _RUNNER.invoke(app, ["config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output
     assert "SIMPLIFICADO" in status_result.output
 
@@ -109,6 +112,6 @@ def test_config_set_refuses_unknown_key_with_typed_error(
 
     from aeat.entrypoints.cli import app
 
-    result = _RUNNER.invoke(app, ["config", "set", "not.a.real.key", "value"])
+    result = _RUNNER.invoke(app, ["config", "profile", "set", "not.a.real.key", "value"])
     assert result.exit_code != 0
     assert "not.a.real.key" in result.output

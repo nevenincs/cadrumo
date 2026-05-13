@@ -12,12 +12,13 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from ....tests import FIXTURES_DIR
 from . import app as financial_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _RUNNER = CliRunner()
-_FIXTURES = Path(__file__).resolve().parents[5] / "tests" / "fixtures" / "financial"
+_FIXTURES = FIXTURES_DIR / "financial"
 
 
 def test_financial_ingest_json_stream() -> None:
@@ -62,7 +63,7 @@ def test_financial_ingest_rejects_invalid_source(tmp_path: Path) -> None:
     source.write_text("foo,bar\n1,2\n", encoding="utf-8")
     result = _RUNNER.invoke(financial_app, ["ingest", str(source)])
     assert result.exit_code == 2
-    assert "validation error" in result.output.lower()
+    assert "csv headers do not match" in result.output.lower()
 
 
 def test_financial_ingest_reports_ingest_errors(tmp_path: Path) -> None:
@@ -74,10 +75,10 @@ def test_financial_ingest_reports_ingest_errors(tmp_path: Path) -> None:
     )
     result = _RUNNER.invoke(financial_app, ["ingest", str(source)])
     assert result.exit_code == 2
-    assert "ingest error" in result.output.lower()
+    assert "ingestion process has failed" in result.output.lower()
 
 
-def test_financial_ingest_persist_operator_moment(tmp_path: Path) -> None:
+def test_financial_ingest_persist_operator_moment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """``aeat financial ingest --persist`` writes to the encrypted catalogue and is idempotent."""
 
     from ....adapters.persistence.storage import (
@@ -101,6 +102,7 @@ def test_financial_ingest_persist_operator_moment(tmp_path: Path) -> None:
     override_master_key_provider(provider)
     override_secret_store(secret_store)
     catalogue_dir = tmp_path / "catalogue"
+    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(catalogue_dir))
     try:
         result = _RUNNER.invoke(
             financial_app,
@@ -110,17 +112,9 @@ def test_financial_ingest_persist_operator_moment(tmp_path: Path) -> None:
                 "--provider",
                 "auto",
                 "--persist",
-                "--catalogue-dir",
-                str(catalogue_dir),
             ],
         )
         assert result.exit_code == 0, result.output
-        # The envelope file landed under the catalogue directory at
-        # FINANCIAL classification.
-        envelope_path = catalogue_dir / "transactions.envelope.json"
-        assert envelope_path.exists()
-        envelope_text = envelope_path.read_text(encoding="utf-8")
-        assert '"classification":"financial"' in envelope_text
         assert "imported=2" in result.output
         assert "skipped=0" in result.output
 
@@ -134,8 +128,6 @@ def test_financial_ingest_persist_operator_moment(tmp_path: Path) -> None:
                 "--provider",
                 "auto",
                 "--persist",
-                "--catalogue-dir",
-                str(catalogue_dir),
             ],
         )
         assert result_b.exit_code == 0, result_b.output

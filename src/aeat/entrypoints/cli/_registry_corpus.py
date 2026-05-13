@@ -24,7 +24,7 @@ Every command honours the root ``--format json|text`` contract.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import typer
 
@@ -35,10 +35,12 @@ from ...domain.manuals import (
     ManualPart,
     find_rules,
     iter_sections,
-    load_catalogue as load_manual_catalogue,
     load_manual,
     raise_on_errors,
     verify_manual_dir,
+)
+from ...domain.manuals import (
+    load_catalogue as load_manual_catalogue,
 )
 from ...domain.manuals._schema import RuleKind
 from ...domain.manuals._verify import ManualVerificationReport
@@ -47,8 +49,12 @@ from ...domain.normatives import (
     cite,
     find_articulo,
     find_reference,
-    load_catalogue as load_normative_catalogue,
     short_title,
+)
+from ...domain.normatives import (
+    load_catalogue as load_normative_catalogue,
+)
+from ...domain.normatives import (
     verify_catalogue as verify_normative_catalogue,
 )
 from ...domain.normatives.errors import NormativeParseError
@@ -122,7 +128,7 @@ def list_citations_cmd(
         "references": [_normative_payload(ref) for ref in references],
     }
     lines = [
-        f"operation\tregistry.citations.list",
+        "operation\tregistry.citations.list",
         f"reference_count\t{len(references)}",
         f"tag_filter\t{tag or ''}",
     ]
@@ -274,14 +280,24 @@ def _discover_manual_parts() -> tuple[tuple[ManualId, int, ManualPart, Path], ..
     for manual_dir in sorted(p for p in root.iterdir() if p.is_dir()):
         try:
             manual_id = ManualId(manual_dir.name)
-        except ValueError:
+        except ValueError as exc:
+            _LOGGER.debug(
+                "manuals discovery: skipping %r — not a recognised ManualId (%s)",
+                manual_dir.name,
+                exc,
+            )
             continue
         for year_dir in sorted(p for p in manual_dir.iterdir() if p.is_dir() and p.name.isdigit()):
             year = int(year_dir.name)
             for part_dir in sorted(p for p in year_dir.iterdir() if p.is_dir()):
                 try:
                     part = ManualPart(part_dir.name)
-                except ValueError:
+                except ValueError as exc:
+                    _LOGGER.debug(
+                        "manuals discovery: skipping %r — not a recognised ManualPart (%s)",
+                        part_dir.name,
+                        exc,
+                    )
                     continue
                 discovered.append((manual_id, year, part, part_dir))
     return tuple(discovered)
@@ -392,9 +408,7 @@ def show_manual_cmd(
             None,
         )
         if matched is None:
-            raise typer.BadParameter(
-                tr("cli.registry.manuals.errors.unknown_section", section=section)
-            )
+            raise typer.BadParameter(tr("cli.registry.manuals.errors.unknown_section", section=section))
         payload["section"] = {
             "section_id": matched.section_id,
             "title": matched.title,
@@ -447,15 +461,8 @@ def list_manual_rules_cmd(
             "other",
         )
         if kind not in allowed:
-            raise typer.BadParameter(
-                f"--kind must be one of {allowed!r}; got {kind!r}"
-            )
-        # The runtime guard above narrows ``kind`` to one of the
-        # ``RuleKind`` Literal members. ty cannot infer the narrowing
-        # from a tuple-membership test against an arbitrary tuple, so
-        # the assignment carries a single suppressed Literal-narrowing
-        # diagnostic with an explicit reason code.
-        rule_kind = kind  # ty: ignore[invalid-assignment]
+            raise typer.BadParameter(f"--kind must be one of {allowed!r}; got {kind!r}")
+        rule_kind = cast(RuleKind, kind)
     rules = tuple(find_rules(catalogue, kind=rule_kind))
     payload = {
         "operation": "registry.manuals.rules",
@@ -515,9 +522,7 @@ def verify_manual_cmd(
 ) -> None:
     """Verify one manual part against its schema and cross-reference contracts."""
 
-    report: ManualVerificationReport = verify_manual_dir(
-        manual_id=manual, year=year, part=part
-    )
+    report: ManualVerificationReport = verify_manual_dir(manual_id=manual, year=year, part=part)
     error_issues = report.errors
     warning_issues = report.warnings
     payload = {

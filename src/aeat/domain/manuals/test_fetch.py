@@ -62,7 +62,7 @@ class TestPartSpecs:
 
     def test_lookup_spec_miss_raises(self) -> None:
         """lookup_spec raises ManifestError for an unregistered triple."""
-        with pytest.raises(ManifestError):
+        with pytest.raises(ManifestError, match=r"IVA|2099|manifest|spec"):
             lookup_spec(ManualId.IVA, 2099, ManualPart.SINGLE)
 
 
@@ -79,7 +79,7 @@ class TestManifestIO:
 
     def test_load_manifest_missing_raises(self, tmp_path: Path) -> None:
         """load_manifest raises ManifestError when the file is absent."""
-        with pytest.raises(ManifestError):
+        with pytest.raises(ManifestError, match=r"manifest|absent|missing|not found"):
             load_manifest(tmp_path / "absent.json")
 
     def test_verify_fetched_pdf_success(self, tmp_path: Path) -> None:

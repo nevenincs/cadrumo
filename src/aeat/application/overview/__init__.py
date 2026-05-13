@@ -38,6 +38,8 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...application.diagnostics import secure_object_unreadable_total
+from ...application.workflow import WorkflowState, workflow_state_repository
 from ...domain.deadlines import (
     AutonomoProfile,
     DeadlineEngine,
@@ -46,6 +48,9 @@ from ...domain.deadlines import (
     Recovery,
     Schedule,
 )
+from ...domain.filing import FilingDraftRepository
+from ...domain.invoices import InvoiceCatalogueRepository
+from ...domain.transactions import TransactionCatalogueRepository
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` for overview records."""
@@ -267,6 +272,18 @@ class OverviewCalendar(BaseModel):
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
 
 
+class OverviewStatusReport(BaseModel):
+    """Current active-profile readiness counters for ``overview status``."""
+
+    model_config = _STRICT_FROZEN
+
+    active_profile: str | None = None
+    transactions: int = Field(ge=0)
+    invoices: int = Field(ge=0)
+    drafts: int = Field(ge=0)
+    unreadable_rows: int = Field(ge=0)
+
+
 def _entry_intersects_range(
     obligation: FilingObligation,
     calendar_range: OverviewCalendarRange,
@@ -413,6 +430,44 @@ def build_overview_calendar(
     )
 
 
+def build_overview_status_report(
+    *,
+    state: WorkflowState | None = None,
+    transaction_repository: TransactionCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueRepository | None = None,
+    draft_repository: FilingDraftRepository | None = None,
+    unreadable_rows: int | None = None,
+) -> OverviewStatusReport:
+    """Build the typed readiness report used by root and overview status."""
+
+    current = workflow_state_repository().load() if state is None else state
+    transactions = (transaction_repository or TransactionCatalogueRepository()).load()
+    invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
+    drafts = tuple((draft_repository or FilingDraftRepository()).iter_drafts())
+    unreadable_total = secure_object_unreadable_total() if unreadable_rows is None else unreadable_rows
+    return OverviewStatusReport(
+        active_profile=current.active_profile,
+        transactions=len(transactions.transactions),
+        invoices=len(invoices),
+        drafts=len(drafts),
+        unreadable_rows=unreadable_total,
+    )
+
+
+def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
+    """Render ``OverviewStatusReport`` as stable tab-separated text rows."""
+
+    lines = [
+        f"profile\t{report.active_profile or ''}",
+        f"transactions\t{report.transactions}",
+        f"invoices\t{report.invoices}",
+        f"drafts\t{report.drafts}",
+    ]
+    if report.unreadable_rows > 0:
+        lines.append(f"integrity-warning\tunreadable_rows={report.unreadable_rows}")
+    return tuple(lines)
+
+
 __all__ = [
     "CalendarCompleteness",
     "CalendarWarning",
@@ -420,6 +475,9 @@ __all__ = [
     "OverviewCalendarEntry",
     "OverviewCalendarRange",
     "OverviewPeriodState",
+    "OverviewStatusReport",
     "build_overview_calendar",
+    "build_overview_status_report",
+    "render_overview_status_lines",
     "user_state_for",
 ]

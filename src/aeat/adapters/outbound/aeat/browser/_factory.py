@@ -25,7 +25,6 @@ injecting their own in-process implementations.
 from __future__ import annotations
 
 import asyncio
-import contextlib
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -137,8 +136,10 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
         # exception between here and the successful return leaks those
         # resources. Mirror the teardown DefaultBrowserSession.close()
         # performs on the happy path.
-        with contextlib.suppress(Exception):
+        try:
             await playwright.stop()
+        except Exception as stop_exc:
+            logger.debug("browser factory: playwright.stop() during error teardown failed (%s)", stop_exc)
         raise
 
 
@@ -150,8 +151,10 @@ async def shared_playwright_runtime() -> AsyncIterator[Playwright]:
     try:
         yield playwright
     finally:
-        with contextlib.suppress(Exception):
+        try:
             await playwright.stop()
+        except Exception as stop_exc:
+            logger.debug("browser factory: playwright.stop() during runtime teardown failed (%s)", stop_exc)
 
 
 @asynccontextmanager
@@ -176,8 +179,10 @@ async def opened_browser_page(
         page = await context.new_page()
         yield page, context
     finally:
-        with contextlib.suppress(Exception):
+        try:
             await context.close()
+        except Exception as close_exc:
+            logger.debug("browser factory: context.close() during teardown failed (%s)", close_exc)
         await browser_session.close()
 
 

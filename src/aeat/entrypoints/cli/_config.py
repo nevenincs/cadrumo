@@ -5,19 +5,29 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 
+import click
 import typer
 
+from ...application.auth import implemented_auth_provider_ids, known_auth_provider_ids
+from ...application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES, parse_config_reset_scope
 from ...application.diagnostics import (
     build_config_doctor_report,
     quarantine_unreadable_secure_objects,
     render_config_doctor_text,
 )
+from ...application.operator_surface import build_help_document, render_help_text
 from ...core.logging import default_log_file_path
 from ._common import _emit
-from ._errors import CliRefusedBoundaryError
+from ._errors import CliRefusedBoundaryError, write_stderr
 from ._i18n import tr
 
-app = typer.Typer(name="config", help=tr("cli.config.app_help"), no_args_is_help=True)
+app = typer.Typer(
+    name="config",
+    help=tr("cli.config.app_help"),
+    no_args_is_help=False,
+    invoke_without_command=True,
+    add_help_option=False,
+)
 profile_app = typer.Typer(name="profile", help=tr("cli.config.profile.help"), no_args_is_help=True)
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
 doctor_app = typer.Typer(
@@ -26,6 +36,24 @@ doctor_app = typer.Typer(
     no_args_is_help=False,
     invoke_without_command=True,
 )
+bucket_app = typer.Typer(
+    name="bucket",
+    help=tr("cli.config.bucket.help"),
+    no_args_is_help=True,
+)
+
+
+@app.callback()
+def config_root(
+    ctx: typer.Context,
+    help_: bool = typer.Option(False, "--help", "-h", help="Show config workflow help.", is_eager=True),
+) -> None:
+    """Render config-level workflow help when requested."""
+
+    if help_ or ctx.invoked_subcommand is None:
+        document = build_help_document("config")
+        _emit(ctx, document, render_help_text(document).splitlines())
+        raise typer.Exit()
 
 
 @doctor_app.callback()
@@ -237,7 +265,8 @@ def _register_wizard_commands(target: typer.Typer) -> None:
                 translated = exc.translated_message or tr("cli.config.setup.errors.missing_required_flags")
                 raise CliRefusedBoundaryError(translated) from exc
             except WizardUnsupportedConsoleError as exc:
-                raise exc
+                write_stderr(f"{exc}\n")
+                raise typer.Exit(2) from exc
             if kwargs.get("quiet"):
                 profile_name = kwargs.get("profile_name", "default")
                 typer.echo(tr("cli.config.setup.success.saved", profile_name=profile_name))
@@ -248,6 +277,7 @@ def _register_wizard_commands(target: typer.Typer) -> None:
         wrapped.__annotations__ = original.__annotations__
         wrapped.__name__ = original.__name__
         wrapped.__doc__ = original.__doc__
+        wrapped.__wizard_flow__ = getattr(original, "__wizard_flow__", None)
         command_name = "init" if flow.id == "setup" else flow.id
         target.command(name=command_name, help=tr(f"cli.config.{flow.id}.help"))(_wrapped)
 
@@ -314,20 +344,21 @@ def config_status(ctx: typer.Context) -> None:
 @app.command("reset", help=tr("cli.config.reset.help"))
 def config_reset(
     ctx: typer.Context,
-    scope: str = typer.Option("all", "--scope", help=tr("cli.config.reset.scope_help")),
+    scope: str = typer.Option(
+        "all",
+        "--scope",
+        click_type=click.Choice(CONFIG_RESET_SCOPE_CLI_VALUES),
+        help=tr("cli.config.reset.scope_help"),
+    ),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.reset.yes_help")),
 ) -> None:
     """Reset operator-entered configuration scopes."""
 
-    from ...application.config_reset import ConfigResetScope, reset_config
+    from ...application.config_reset import reset_config
 
     if not yes:
         raise CliRefusedBoundaryError(tr("cli.config.reset.requires_yes"))
-    try:
-        scope_enum = ConfigResetScope(scope.strip().upper())
-    except ValueError as exc:
-        valid = ", ".join(member.value.lower() for member in ConfigResetScope)
-        raise CliRefusedBoundaryError(tr("cli.config.reset.invalid_scope", scope=scope, valid=valid)) from exc
+    scope_enum = parse_config_reset_scope(scope)
     report = reset_config(scope_enum, confirmed=True)
     _emit(
         ctx,
@@ -361,7 +392,12 @@ def auth_providers(ctx: typer.Context) -> None:
 @auth_app.command("configure", help=tr("cli.config.auth.configure_help"))
 def auth_configure(
     ctx: typer.Context,
-    provider: str = typer.Option(..., "--provider", help=tr("cli.config.auth.provider_help")),
+    provider: str = typer.Option(
+        ...,
+        "--provider",
+        click_type=click.Choice(implemented_auth_provider_ids()),
+        help=tr("cli.config.auth.provider_help"),
+    ),
     file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
 ) -> None:
     """Configure the active authentication provider."""
@@ -378,7 +414,10 @@ def auth_configure(
 
 
 @auth_app.command("status", help=tr("cli.config.auth.status_help"))
-def auth_status(ctx: typer.Context, provider: str | None = typer.Option(None, "--provider")) -> None:
+def auth_status(
+    ctx: typer.Context,
+    provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(known_auth_provider_ids())),
+) -> None:
     """Show the configured local authentication state."""
 
     from ...application.auth import inspect_operator_auth
@@ -392,7 +431,10 @@ def auth_status(ctx: typer.Context, provider: str | None = typer.Option(None, "-
 
 
 @auth_app.command("test", help=tr("cli.config.auth.test_help"))
-def auth_test(ctx: typer.Context, provider: str | None = typer.Option(None, "--provider")) -> None:
+def auth_test(
+    ctx: typer.Context,
+    provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(implemented_auth_provider_ids())),
+) -> None:
     """Render auth readiness through the application-owned auth state."""
 
     from ...application.auth import test_operator_auth
@@ -408,7 +450,7 @@ def auth_test(ctx: typer.Context, provider: str | None = typer.Option(None, "--p
 @auth_app.command("clear", help=tr("cli.config.auth.clear_help"))
 def auth_clear(
     ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider"),
+    provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(implemented_auth_provider_ids())),
     all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.clear_all_help")),
     sessions: bool = typer.Option(False, "--sessions", help=tr("cli.config.auth.clear_sessions_help")),
     locks: bool = typer.Option(False, "--locks", help=tr("cli.config.auth.clear_locks_help")),
@@ -434,7 +476,63 @@ def auth_clear(
     )
 
 
+@bucket_app.command("history", help=tr("cli.config.bucket.history_help"))
+def bucket_history(
+    ctx: typer.Context,
+    bucket_id: typing.Annotated[
+        str,
+        typer.Argument(help=tr("cli.config.bucket.bucket_id_help")),
+    ],
+    event_type: typing.Annotated[
+        list[str] | None,
+        typer.Option(
+            "--event-type",
+            help=tr("cli.config.bucket.event_type_help"),
+        ),
+    ] = None,
+) -> None:
+    """Browse the append-only bucket-event history."""
+
+    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    repository = BucketEventHistoryRepository()
+    catalogue = repository.load()
+    selected: tuple[BucketEventType, ...] | None
+    if event_type:
+        try:
+            selected = tuple(BucketEventType(value.strip()) for value in event_type)
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+    else:
+        selected = None
+
+    events = catalogue.for_bucket(bucket_id, event_types=selected)
+    payload = {
+        "operation": "config.bucket.history",
+        "bucket_id": bucket_id,
+        "event_types": [t.value for t in selected] if selected else None,
+        "events": [
+            {
+                "event_id": e.event_id,
+                "event_type": e.event_type.value,
+                "occurred_at": e.occurred_at.isoformat(),
+                "actor": e.actor,
+                "object_type": e.object_type.value,
+                "object_id": e.object_id,
+                "payload": dict(e.payload),
+            }
+            for e in events
+        ],
+    }
+    lines = ["operation\tconfig.bucket.history", f"bucket_id\t{bucket_id}", f"event_count\t{len(events)}"] + [
+        f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_type.value}\t{e.object_id}\t{e.actor}"
+        for e in events
+    ]
+    _emit(ctx, payload, lines)
+
+
 app.add_typer(profile_app, name="profile")
 app.add_typer(auth_app, name="auth")
+app.add_typer(bucket_app, name="bucket")
 
 __all__ = ["app"]

@@ -472,7 +472,7 @@ class TestBlobStoreRotation:
 
 
 class TestSingleFileRotationEntry:
-    """single-file consumers (usage_ratios, setup profile)."""
+    """single-file consumers such as usage ratios."""
 
     def test_target_filename_visits_only_named_file(
         self,
@@ -517,8 +517,8 @@ class TestSingleFileRotationEntry:
         alice: EphemeralMasterKeyProvider,
         bob: EphemeralMasterKeyProvider,
     ) -> None:
-        # Operator hasn't run setup yet — profile file does not exist.
-        # Rotation must report (0, 0, 0) without raising.
+        # Single-file target does not exist. Rotation must report
+        # (0, 0, 0) without raising.
         store = tmp_path / "single-file-store"
         store.mkdir()
         summary = rotate_master_key(
@@ -526,7 +526,7 @@ class TestSingleFileRotationEntry:
                 RotationPlanEntry(
                     store_dir=store,
                     hkdf_context=_HKDF_CONTEXT_TX,
-                    target_filename="profile.json",
+                    target_filename="single-file.json",
                 ),
             ),
             old_master_key_provider=alice,
@@ -614,7 +614,7 @@ class TestRotationLockTargetAlignment:
         assert entry.lock_path_for(envelope_path) == Path("/store/draft-abc123.lock")
 
     def test_single_file_envelope_uses_with_suffix_convention(self) -> None:
-        # Single-file consumers (usage-ratios, default profile) use
+        # Single-file consumers such as usage-ratios use
         # ``target.with_suffix('.lock')`` for their writer lock; the
         # plan entry must produce the same path.
         entry = RotationPlanEntry(

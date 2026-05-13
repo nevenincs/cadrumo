@@ -97,14 +97,12 @@ def _seed_profile(
     iva_regime: str = "GENERAL",
     extra_values: dict[str, str] | None = None,
 ) -> None:
-    """Seed an active profile directly through the workflow state repository.
+    """Seed an active profile through workflow pointers and profile buckets.
 
     Composes ``set_active_profile('default')`` with ``set_profile_values``
-    over the supplied identity fields and writes the result through
-    ``workflow_state_repository().update(...)``. Tests pinning the
-    operational CLI verbs (declaration, ledger, invoice) call this
-    once to prime an active profile before exercising the verb under
-    test.
+    over the supplied identity fields. Workflow state keeps the active
+    profile pointer; profile values are written through the profile
+    bucket repository by the profile application service.
 
     ``iva.regime`` defaults to ``GENERAL`` so the seeded profile
     matches the operator's state after a quiet, no-override
@@ -120,6 +118,78 @@ def _seed_profile(
     if extra_values:
         values.update(extra_values)
     repo.update(lambda state: set_profile_values(state, "default", values))
+
+
+def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_bucket(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
+
+    from aeat.application.filing import load_default_filing_profile
+    from aeat.application.profile._repository import profile_bucket_repository
+    from aeat.application.workflow import workflow_state_repository
+
+    _isolate_user_cli(monkeypatch, tmp_path)
+
+    init_result = _invoke(
+        [
+            "config",
+            "init",
+            "--quiet",
+            "--profile",
+            "kent",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+            "--iva-regime",
+            "GENERAL",
+        ]
+    )
+    assert init_result.exit_code == 0, init_result.output
+
+    set_result = _invoke(["config", "profile", "set", "output.language", "en"])
+    assert set_result.exit_code == 0, set_result.output
+
+    get_result = _invoke(["--format", "json", "config", "profile", "get", "output.language"])
+    assert get_result.exit_code == 0, get_result.output
+    assert json.loads(_json_output(get_result))["value"] == "en"
+
+    status_result = _invoke(["--format", "json", "config", "profile", "status"])
+    assert status_result.exit_code == 0, status_result.output
+    status_payload = json.loads(_json_output(status_result))
+    assert status_payload["active_profile"] == "kent"
+    assert status_payload["iva_regime"] == "GENERAL"
+
+    state = workflow_state_repository().load()
+    assert state.profiles["kent"] == {"bucket_id": "kent"}
+    stored = profile_bucket_repository().load("kent")
+    assert stored is not None
+    assert stored.values["tax.id"] == "00000000T"
+    assert stored.values["output.language"] == "en"
+
+    calendar_result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "status",
+            "--calendar",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-03-31",
+            "--allow-incomplete",
+        ]
+    )
+    assert calendar_result.exit_code == 0, calendar_result.output
+    calendar_payload = json.loads(_json_output(calendar_result))
+    assert "iva.regime" in calendar_payload["calendar"]["completeness"]["explicitly_set_keys"]
+
+    filing_profile = load_default_filing_profile()
+    assert filing_profile.tax_id == "00000000T"
 
 
 def test_root_surface_contains_config_and_app_only() -> None:
@@ -156,13 +226,12 @@ def test_root_no_args_renders_help_successfully() -> None:
     result = _invoke([])
 
     assert result.exit_code == 0, result.output
-    assert "config" in result.output
-    assert "app" in result.output
-    assert "--version" in result.output
-    assert "Quickstart: aeat config init --tax-id NIF --activity" in result.output
+    assert "aeat config profile status" in result.output
+    assert "aeat app overview status" in result.output
+    assert "aeat app ledger import" in result.output
 
 
-def test_removed_developer_commands_are_not_registered() -> None:
+def test_retired_commands_are_not_registered() -> None:
     removed_commands = [
         ["financial", "--help"],
         ["filing", "--help"],
@@ -689,7 +758,7 @@ def test_config_profile_set_requires_active_profile_with_typed_error(
 ) -> None:
     """``aeat config profile set`` rejects assignments when no profile is selected.
 
-    The set verb writes into the active profile's value record; with no
+    The set verb writes into the active profile bucket; with no
     active profile, the operation is refused with a typed CLI usage
     error referencing the bootstrap command they must run first.
     """
@@ -959,8 +1028,8 @@ def test_declaration_verbs_accept_modelo_period_selector(
 ) -> None:
     """Every declaration verb must resolve a draft from ``(--modelo, --period)``.
 
-    Pre-W4, only ``status`` and ``review`` accepted the
-    ``(--modelo, --period)`` selector; ``approve``, ``validate``,
+    Older command surfaces only accepted the ``(--modelo, --period)``
+    selector on ``status`` and ``review``; ``approve``, ``validate``,
     ``preview``, ``export``, and ``edit`` required ``--id``. The
     operator could not chain ``calculate`` -> ``validate`` without
     capturing the draft id manually. This test pins the unified

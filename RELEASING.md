@@ -93,7 +93,7 @@ The canonical version lives in `pyproject.toml`. release-please also
 keeps `src/aeat/__init__.py` `__version__` in lockstep via
 `"extra-files"` in `release-please-config.json`, and records the
 current version in `.release-please-manifest.json`. All three must
-agree at every commit. `tests/test_release_config.py` enforces this
+agree at every commit. `src/aeat/tests/test_release_config.py` enforces this
 as a `@pytest.mark.unit` tripwire.
 
 Never hand-edit one version surface without the other two — the

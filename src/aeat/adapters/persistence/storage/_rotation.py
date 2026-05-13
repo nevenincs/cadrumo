@@ -67,8 +67,7 @@ class RotationPlanEntry(BaseModel):
             Use this for single-file consumers whose on-disk filename
             does not end in ``.envelope.json`` (e.g.
             ``usage-ratios.json`` written by the usage-ratios
-            service, or an operator-configured
-            ``aeat_default_profile_path``). When set, the rotation
+            service). When set, the rotation
             visits exactly ``store_dir / target_filename`` and ignores
             every other file in the directory.
     """
@@ -138,8 +137,7 @@ def _iter_envelope_files(
         if entry.target_filename is not None:
             # Single-file mode: visit exactly this filename inside the
             # directory. Used by consumers whose on-disk filename does
-            # not end in ``.envelope.json`` (usage_ratios, setup
-            # profile).
+            # not end in ``.envelope.json`` (usage_ratios).
             target = entry.store_dir / entry.target_filename
             if target.is_file():
                 yield target, entry
@@ -191,26 +189,24 @@ def _try_decrypt_bytes(
 def _atomic_write(target: Path, *, payload: str) -> None:
     """Atomically replace ``target`` with ``payload`` via tempfile + os.replace."""
     target.parent.mkdir(parents=True, exist_ok=True)
-    # Capture tmp_path BEFORE the ``with`` so cleanup works when context
-    # entry raises (rare but possible on some filesystems / antivirus
-    # hooks). NamedTemporaryFile raising means no file was created.
-    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
-        mode="w",
-        encoding="utf-8",
-        dir=target.parent,
-        prefix=f"{target.stem}.",
-        suffix=".tmp",
-        delete=False,
-    )
-    tmp_path = Path(handle.name)
+    tmp_path: Path | None = None
     try:
-        with handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=target.parent,
+            prefix=f"{target.stem}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
             handle.write(payload)
         os.replace(tmp_path, target)
         fsync_parent_dir(target)
     except OSError:
         _log.error("rotation: atomic write failed target=%s", target, exc_info=True)
-        tmp_path.unlink(missing_ok=True)
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
         raise
 
 
@@ -341,8 +337,6 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
     context. Operators with custom directories / additional consumers
     pass an extended plan to :func:`rotate_master_key` directly.
     """
-    from ....application.profile._storage_namespaces import _PROFILE_HKDF_CONTEXT
-
     return (
         RotationPlanEntry(
             store_dir=Path(settings.aeat_financial_txs_dir),
@@ -400,27 +394,6 @@ def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
         RotationPlanEntry(
             store_dir=Path(settings.aeat_workflow_runs_dir),
             hkdf_context=b"aeat.application.workflow.run.v1",
-        ),
-        RotationPlanEntry(
-            # The setup wizard's ``AutonomoProfile`` is written as a
-            # single-file envelope at the operator-configured
-            # ``aeat_default_profile_path`` (or no file at all when
-            # the setting is None). The actual filename is operator-
-            # chosen and may not end in ``.envelope.json`` — target
-            # the exact filename rather than relying on the directory
-            # walk's default suffix match (which would miss e.g.
-            # ``profile.json``).
-            store_dir=(
-                Path(settings.aeat_default_profile_path).parent
-                if settings.aeat_default_profile_path is not None
-                else Path(settings.aeat_secret_store_dir) / "setup"
-            ),
-            hkdf_context=_PROFILE_HKDF_CONTEXT,
-            target_filename=(
-                Path(settings.aeat_default_profile_path).name
-                if settings.aeat_default_profile_path is not None
-                else None
-            ),
         ),
     )
 

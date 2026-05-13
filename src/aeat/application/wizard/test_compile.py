@@ -83,7 +83,7 @@ def test_one_profile_key_per_distinct_question() -> None:
 def test_none_bound_questions_are_skipped() -> None:
     flow = _flow(
         (
-            _question("declaration-type", profile_key=None),
+            _question("taxation-type", profile_key=None),
             _question("tax-id", profile_key="tax.id"),
         )
     )
@@ -104,10 +104,10 @@ def test_optional_when_flagged_optional() -> None:
 
 
 def test_conditional_question_is_optional() -> None:
-    condition = WizardCondition(question_id="declaration-type", equals="2")
+    condition = WizardCondition(question_id="taxation-type", equals="2")
     flow = _flow(
         (
-            _question("declaration-type", profile_key="declaration.type"),
+            _question("taxation-type", profile_key="declaration.type"),
             _question("spouse-name", profile_key="spouse.name", visible_when=condition),
         )
     )
@@ -154,7 +154,7 @@ def test_duplicate_profile_key_raises() -> None:
         ),
         answers_model=_DummyAnswers,
     )
-    with pytest.raises(WizardCompileError):
+    with pytest.raises(WizardCompileError, match=r"wizard|compile"):
         compile_profile_keys((flow_a, flow_b))
 
 
@@ -226,3 +226,9 @@ def test_compile_is_pure_on_the_real_catalogue() -> None:
         if question.profile_key is not None
     }
     assert {entry.key for entry in keys} == declared
+
+
+def test_real_catalogue_exposes_profile_owned_output_language_key() -> None:
+    keys = {entry.key for entry in compile_profile_keys(WIZARD_FLOWS)}
+
+    assert "output.language" in keys

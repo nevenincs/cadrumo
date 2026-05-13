@@ -49,6 +49,14 @@ def _emit(prompter: Prompter, text: str) -> None:
         hook(text)
 
 
+def _prepare(prompter: Prompter, flow: WizardFlow) -> None:
+    """Let interactive prompters validate and introduce the flow before progress."""
+
+    hook = getattr(prompter, "prepare", None)
+    if callable(hook):
+        hook(flow)
+
+
 def _section_visible_questions(
     section: WizardSection,
     canonical: Mapping[str, str],
@@ -81,6 +89,7 @@ def run_flow(
     canonical: dict[str, str] = {}
     typed: dict[str, object] = {}
     section_total = len(flow.sections)
+    _prepare(prompter, flow)
 
     for section_index, section in enumerate(flow.sections, start=1):
         visible_questions = _section_visible_questions(section, canonical)

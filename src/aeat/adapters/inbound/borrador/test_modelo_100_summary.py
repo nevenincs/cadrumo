@@ -205,5 +205,5 @@ class TestOverrides:
 
     def test_artefact_kind_override_skips_detection(self, tmp_path: Path) -> None:
         pdf = _generate_pdf(tmp_path, artefact_kind="BORRADOR")
-        with pytest.raises(BorradorParseError):
+        with pytest.raises(BorradorParseError, match=r"BORRADOR|DECLARACION|artefact|kind"):
             parse_borrador(pdf, artefact_kind_override=ArtefactKind.DECLARACION)

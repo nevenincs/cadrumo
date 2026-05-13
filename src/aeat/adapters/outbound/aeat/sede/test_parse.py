@@ -1,15 +1,15 @@
 """Parser tests against real AEAT HTML captures (identity-redacted).
 
-The fixtures under ``tests/fixtures/aeat-sede/`` are live captures
-from a real sede with NIF, name, expediente sequence, and CSV
+The fixtures under ``src/aeat/tests/fixtures/aeat-sede/`` are live
+captures from a real sede with NIF, name, expediente sequence, and CSV
 redacted to synthetic but schema-valid placeholders.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+
+from aeat.tests import FIXTURES_DIR
 
 from ._errors import SedeParseError
 from ._parse import parse_expediente_detail, parse_resumen_tree
@@ -17,7 +17,7 @@ from ._parse import parse_expediente_detail, parse_resumen_tree
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
-_FIXTURE_ROOT = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "aeat-sede"
+_FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
 _SEDE_BASE = "https://www6.agenciatributaria.gob.es"
 
 

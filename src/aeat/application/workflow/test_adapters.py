@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
+from datetime import UTC, datetime
 
 import pytest
 
-from ...domain.deadlines import AutonomoProfile, IVARegime
-from . import JsonFileInputsProvider
+from ...domain.deadlines import AutonomoProfile, IVARegime, Schedule
+from . import default_engine
 from ._errors import WorkflowError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -25,39 +24,33 @@ def _profile() -> AutonomoProfile:
     )
 
 
-def test_json_inputs_provider_requires_modelo_period_shape(tmp_path: Path) -> None:
-    inputs_path = tmp_path / "inputs.json"
-    inputs_path.write_text(
-        json.dumps(
-            {
-                "130": {
-                    "2026Q1": {
-                        "01": "12500.00",
-                        "irpf.previous_year_economic_activity_net_income": "13000",
-                    }
-                }
-            }
-        ),
-        encoding="utf-8",
-    )
-
-    values = JsonFileInputsProvider(inputs_path).load_inputs(
-        modelo="130",
-        period="2026Q1",
-        profile=_profile(),
-    )
-
-    assert values["01"] == "12500.00"
-    assert values["irpf.previous_year_economic_activity_net_income"] == "13000"
+class _DeadlineEngine:
+    def compute(self, profile: AutonomoProfile, year: int, *, today=None) -> Schedule:
+        del year, today
+        return Schedule(
+            profile=profile,
+            year=2026,
+            obligations=(),
+            generated_at=datetime(2026, 1, 1, tzinfo=UTC),
+        )
 
 
-def test_json_inputs_provider_rejects_root_casilla_payload(tmp_path: Path) -> None:
-    inputs_path = tmp_path / "inputs.json"
-    inputs_path.write_text(json.dumps({"01": "12500.00"}), encoding="utf-8")
+class _DraftBuilder:
+    def build(self, *, modelo: str, period: str, profile: AutonomoProfile, inputs, fail_on_warning: bool = False):
+        del modelo, period, profile, inputs, fail_on_warning
+        raise AssertionError("draft builder should not run while constructing default_engine")
 
-    with pytest.raises(WorkflowError, match="modelo '130'"):
-        JsonFileInputsProvider(inputs_path).load_inputs(
-            modelo="130",
-            period="2026Q1",
-            profile=_profile(),
+
+class _SubmissionEngine:
+    def preflight(self, draft, *, today) -> None:
+        del draft, today
+
+
+def test_default_engine_requires_bucket_backed_inputs_provider() -> None:
+    with pytest.raises(WorkflowError, match="bucket-backed filing inputs provider"):
+        default_engine(
+            submission_engine=_SubmissionEngine(),
+            deadline_engine=_DeadlineEngine(),
+            filing_draft_builder=_DraftBuilder(),
+            inputs_provider=None,
         )

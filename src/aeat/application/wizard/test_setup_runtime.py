@@ -25,10 +25,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _scripted_answers_for_individual_declaration() -> deque[str]:
-    """Build a scripted answer set for an individual (non-joint) declaration.
+    """Build a scripted answer set for an individual taxation profile.
 
     The order matches the declared question order in ``SETUP_FLOW``.
-    Conditional spouse questions tied to ``declaration_type == "2"``
+    Conditional spouse questions tied to ``taxation_type == "2"``
     are skipped by the runtime, so they should NOT appear in the
     deque.
     """
@@ -41,14 +41,15 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "Doe",  # surnames
             "Software development",  # activity
             "28001",  # address-postcode
-            "1",  # declaration-type (individual)
+            "1",  # taxation-type (individual)
+            "en",  # output-language
             # ── taxpayer biographic ────────────────
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
             "",  # taxpayer-birth-date
             "",  # taxpayer-disability-grade
             "",  # taxpayer-death-date
-            # ── spouse (joint declaration condition NOT satisfied) ──
+            # ── spouse (joint taxation condition NOT satisfied) ──
             # spouse-tax-id … spouse-sex SKIPPED by runtime
             "",  # spouse-disability-grade (unconditional)
             "false",  # spouse-non-resident-irpf (unconditional)
@@ -89,12 +90,13 @@ def test_run_flow_collects_visible_questions_in_order() -> None:
     assert isinstance(answers, SetupAnswers)
     assert answers.tax_id == "12345678Z"
     assert answers.activity == "Software development"
+    assert answers.output_language == "en"
 
 
 def test_run_flow_skips_spouse_questions_when_declaration_is_individual() -> None:
     prompter = ScriptedPrompter(_scripted_answers_for_individual_declaration())
     run_flow(SETUP_FLOW, prompter)
-    # Spouse joint-conditional questions must not be asked when declaration_type != "2"
+    # Spouse joint-conditional questions must not be asked when taxation_type != "2"
     assert "spouse-tax-id" not in prompter.asked
     assert "spouse-name" not in prompter.asked
     assert "spouse-eu-eea-resident" not in prompter.asked
@@ -108,7 +110,7 @@ def test_runner_close_overflow_is_caught() -> None:
     extras = _scripted_answers_for_individual_declaration()
     extras.append("orphan")
     prompter = ScriptedPrompter(extras)
-    with pytest.raises(WizardScriptOverflowError):
+    with pytest.raises(WizardScriptOverflowError, match=r"overflow|orphan|script|unused"):
         run_flow(SETUP_FLOW, prompter)
 
 
@@ -130,6 +132,7 @@ def test_canonical_dict_only_carries_profile_bound_keys() -> None:
     canonical = serialise_answers(SETUP_FLOW, answers)
     assert "tax.id" in canonical
     assert canonical["tax.id"] == "12345678Z"
+    assert canonical["output.language"] == "en"
     assert "tax.residence.ccaa" in canonical
     assert canonical["tax.residence.ccaa"] == "madrid"
     # Non-profile-bound questions don't surface in the canonical map
@@ -143,8 +146,8 @@ def test_canonical_dict_only_carries_profile_bound_keys() -> None:
         assert key not in canonical
 
 
-def test_run_flow_walks_joint_declaration_spouse_questions() -> None:
-    """When ``declaration_type == "2"``, the spouse questions appear in order."""
+def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
+    """When ``taxation_type == "2"``, the spouse questions appear in order."""
 
     answers_deque: deque[str] = deque(
         [
@@ -153,7 +156,8 @@ def test_run_flow_walks_joint_declaration_spouse_questions() -> None:
             "Doe",  # surnames
             "Software development",  # activity
             "28001",  # address-postcode
-            "2",  # declaration-type (joint!)
+            "2",  # taxation-type (joint)
+            "en",  # output-language
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
             "",  # taxpayer-birth-date

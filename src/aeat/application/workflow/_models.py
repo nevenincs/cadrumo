@@ -111,7 +111,7 @@ class WorkflowState(BaseModel):
 
     Attributes:
         auth: Local AEAT access readiness state.
-        profiles: Operator-entered profiles keyed by profile name.
+        profiles: Profile-bucket pointers keyed by profile name.
         active_profile: Currently selected profile name, or ``None``.
         declarations: Filing draft pointers keyed by :func:`declaration_key`.
         invoice_reviews: Invoice review annotations keyed by ``invoice_id``.
@@ -123,7 +123,7 @@ class WorkflowState(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     auth: AuthState = Field(default_factory=AuthState)
-    profiles: dict[str, Any] = Field(default_factory=dict)  # str → ProfileRecord
+    profiles: dict[str, Any] = Field(default_factory=dict)
     active_profile: str | None = None
     declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
     invoice_reviews: dict[str, Any] = Field(default_factory=dict)
@@ -132,17 +132,12 @@ class WorkflowState(BaseModel):
     updated_at: datetime = Field(default_factory=utc_now)
 
     def active_profile_record(self) -> Any | None:
-        """Return the active profile record, or ``None`` when no profile is selected."""
+        """Return the active profile record from the profile's secure bucket."""
         if self.active_profile is None:
             return None
-        record = self.profiles.get(self.active_profile)
-        if isinstance(record, dict):
-            import json as _json
+        from ..profile._repository import profile_bucket_repository
 
-            from ..profile._models import ProfileRecord
-
-            return ProfileRecord.model_validate_json(_json.dumps(record, default=str))
-        return record
+        return profile_bucket_repository().load(self.active_profile)
 
 
 def update_declaration_pointer(
@@ -188,8 +183,8 @@ def update_declaration_pointer(
 # already present in sys.modules['aeat.application.workflow._models'].
 # ---------------------------------------------------------------------------
 
-from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus  # noqa: E402
-from ...domain.deadlines import FilingObligation  # noqa: E402
+from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
+from ...domain.deadlines import FilingObligation
 
 
 class SiteHealthAlert(BaseModel):
