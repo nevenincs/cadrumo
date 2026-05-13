@@ -87,7 +87,7 @@ def test_financial_invoices_show_missing_id_exits_two() -> None:
     result = _RUNNER.invoke(financial_app, ["invoices", "show", "missing"])
 
     assert result.exit_code == 2
-    assert "Factura no encontrada" in result.output
+    assert "Invoice not found" in result.output
 
 
 def test_financial_invoices_link_renders_backend_result_json() -> None:

@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ...core.i18n import Translatable as tr
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ...domain.transactions import TransactionCatalogue
 from . import (
     CasillaSchemaProvider,
@@ -315,7 +315,7 @@ def test_iter_findings_threshold() -> None:
     assert finding_error in warnings_or_errors
     assert finding_info not in warnings_or_errors
     assert finding_info in list(iter_findings(draft, severity_at_least="INFO"))
-    with pytest.raises(FilingCalculateError, match=r"filing|calculate"):
+    with pytest.raises(FilingCalculateError, match=r"Unknown severity"):
         list(iter_findings(draft, severity_at_least="HUGE"))
 
 
