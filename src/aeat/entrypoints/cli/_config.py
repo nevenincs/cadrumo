@@ -238,6 +238,10 @@ def _register_wizard_commands(target: typer.Typer) -> None:
                 raise CliRefusedBoundaryError(translated) from exc
             except WizardUnsupportedConsoleError as exc:
                 raise exc
+            if kwargs.get("quiet"):
+                profile_name = kwargs.get("profile_name", "default")
+                typer.echo(tr("cli.config.setup.success.saved", profile_name=profile_name))
+                typer.echo(tr("cli.config.setup.success.next_step"))
 
         wrapped = typing.cast(typing.Any, _wrapped)
         wrapped.__signature__ = original.__signature__
