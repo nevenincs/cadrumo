@@ -2155,12 +2155,12 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-
 
 This Phase delivers backend implementation for legal iva prorrata as required by `2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr`.
 
-- [ ] `W36.P176.S1051` - Map the `2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr` decision into non-CLI service ownership for legal iva prorrata; `src/aeat/domain/vat`.
-- [ ] `W36.P176.S1052` - Implement Pydantic command and result contracts for legal iva prorrata; `src/aeat/domain/vat`.
-- [ ] `W36.P176.S1053` - Wire application or domain services required by legal iva prorrata; `src/aeat/domain/vat`.
-- [ ] `W36.P176.S1054` - Connect persistence, bucket events, registry data, or provider adapters required by legal iva prorrata; `src/aeat/domain/vat`.
-- [ ] `W36.P176.S1055` - Route existing backend functionality into the canonical service for legal iva prorrata; `src/aeat/domain/vat`.
-- [ ] `W36.P176.S1056` - Record service-level error codes and log fields for legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P176.S1051` - Map the `2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr` decision into non-CLI service ownership for legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P176.S1052` - Implement Pydantic command and result contracts for legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P176.S1053` - Wire application or domain services required by legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P176.S1054` - Connect persistence, bucket events, registry data, or provider adapters required by legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P176.S1055` - Route existing backend functionality into the canonical service for legal iva prorrata; `src/aeat/domain/vat`.
+- [x] `W36.P176.S1056` - Record service-level error codes and log fields for legal iva prorrata; `src/aeat/domain/vat`.
 
 ### Phase `W36.P177` - shadow duplicate removal
 
