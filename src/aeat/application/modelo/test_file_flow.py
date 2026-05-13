@@ -41,11 +41,14 @@ from aeat.application.modelo import (
     list_filing_records,
     mark_revision_verified_complete,
 )
+from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import (
     CalculationRevisionCatalogue,
     CalculationRevisionState,
 )
 from aeat.domain.modelos._filing_record import FilingRecordCatalogue, FilingRecordStatus
+from aeat.domain.modelos._filing_repository import FilingRecordCatalogueRepository
+from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.modelos._work_unit import WorkUnitCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -59,8 +62,10 @@ _T4 = datetime(2026, 1, 16, 12, 0, 0, tzinfo=UTC)
 _T5 = datetime(2026, 1, 16, 13, 0, 0, tzinfo=UTC)
 
 
-class _InMemoryWorkUnitRepository:
+class _InMemoryWorkUnitRepository(WorkUnitCatalogueRepository):
     def __init__(self) -> None:
+        # Skip the parent's SecureObjectRepository wire-up; the
+        # action-layer tests only need in-memory load/save.
         self._catalogue = WorkUnitCatalogue()
 
     def load(self) -> WorkUnitCatalogue:
@@ -70,7 +75,7 @@ class _InMemoryWorkUnitRepository:
         self._catalogue = catalogue
 
 
-class _InMemoryCalculationRevisionRepository:
+class _InMemoryCalculationRevisionRepository(CalculationRevisionCatalogueRepository):
     def __init__(self) -> None:
         self._catalogue = CalculationRevisionCatalogue()
 
@@ -81,7 +86,7 @@ class _InMemoryCalculationRevisionRepository:
         self._catalogue = catalogue
 
 
-class _InMemoryFilingRecordRepository:
+class _InMemoryFilingRecordRepository(FilingRecordCatalogueRepository):
     def __init__(self) -> None:
         self._catalogue = FilingRecordCatalogue()
 
@@ -119,7 +124,7 @@ def _seed_work_unit(
         filing_year=filing_year,
         period=period,
         revision_id=revision_id,
-        repository=wu_repo,  # type: ignore[arg-type]
+        repository=wu_repo,
         clock=_T0,
     )
 
@@ -136,16 +141,16 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions() -> None:
     first = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_values={"01": Decimal("1000")},
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         clock=_T1,
     )
 
     second = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_values={"01": Decimal("2000"), "02": Decimal("500")},
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         clock=_T2,
     )
 
@@ -153,7 +158,7 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions() -> None:
 
     revisions = list_calculation_revisions(
         work_unit_id=work_unit.work_unit_id,
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        calculation_repository=cr_repo,
     )
     assert len(revisions) == 2
     assert {r.calculation_revision_id for r in revisions} == {
@@ -165,7 +170,7 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions() -> None:
     # Current pointer follows most-recent calculate.
     refreshed_work_unit = get_work_unit(
         work_unit.work_unit_id,
-        repository=wu_repo,  # type: ignore[arg-type]
+        repository=wu_repo,
     )
     assert refreshed_work_unit.current_calculation_revision_id == second.calculation_revision_id
     assert refreshed_work_unit.filed_calculation_revision_id is None
@@ -183,21 +188,21 @@ def test_calculate_is_idempotent_on_identical_inputs() -> None:
     first = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_values={"01": Decimal("1000")},
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         clock=_T1,
     )
     second = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_values={"01": Decimal("1000")},
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         clock=_T2,
     )
     assert first.calculation_revision_id == second.calculation_revision_id
     revisions = list_calculation_revisions(
         work_unit_id=work_unit.work_unit_id,
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        calculation_repository=cr_repo,
     )
     assert len(revisions) == 1
 
@@ -211,14 +216,14 @@ def test_mark_verified_complete_requires_draft_state() -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_values={"01": Decimal("1000")},
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         clock=_T1,
     )
     verified = mark_revision_verified_complete(
         revision.calculation_revision_id,
         actor="operator-A",
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        calculation_repository=cr_repo,
         clock=_T2,
     )
     assert verified.state is CalculationRevisionState.VERIFIED_COMPLETE
@@ -228,7 +233,7 @@ def test_mark_verified_complete_requires_draft_state() -> None:
         mark_revision_verified_complete(
             revision.calculation_revision_id,
             actor="operator-A",
-            calculation_repository=cr_repo,  # type: ignore[arg-type]
+            calculation_repository=cr_repo,
             clock=_T3,
         )
 
@@ -242,17 +247,17 @@ def test_file_requires_verified_complete_state() -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_values={"01": Decimal("1000")},
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         clock=_T1,
     )
     with pytest.raises(CalculationRevisionStateError):
         file_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-A",
-            work_unit_repository=wu_repo,  # type: ignore[arg-type]
-            calculation_repository=cr_repo,  # type: ignore[arg-type]
-            filing_repository=fr_repo,  # type: ignore[arg-type]
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
             clock=_T2,
         )
 
@@ -270,23 +275,23 @@ def test_file_creates_filing_record_and_advances_pointers() -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_values={"01": Decimal("1000")},
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         clock=_T1,
     )
     mark_revision_verified_complete(
         revision.calculation_revision_id,
         actor="operator-A",
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        calculation_repository=cr_repo,
         clock=_T2,
     )
     filing = file_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-A",
         notes="Q1 IVA",
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
-        filing_repository=fr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
         clock=_T3,
     )
 
@@ -298,7 +303,7 @@ def test_file_creates_filing_record_and_advances_pointers() -> None:
 
     refreshed_revision = get_calculation_revision(
         revision.calculation_revision_id,
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        calculation_repository=cr_repo,
     )
     assert refreshed_revision.state is CalculationRevisionState.FILED
     assert refreshed_revision.filed_at == _T3
@@ -306,7 +311,7 @@ def test_file_creates_filing_record_and_advances_pointers() -> None:
 
     refreshed_wu = get_work_unit(
         work_unit.work_unit_id,
-        repository=wu_repo,  # type: ignore[arg-type]
+        repository=wu_repo,
     )
     assert refreshed_wu.filed_calculation_revision_id == revision.calculation_revision_id
     assert refreshed_wu.current_filing_record_id == filing.filing_record_id
@@ -341,22 +346,22 @@ def test_filing_record_supersession_preserves_audit_history() -> None:
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_values={"01": Decimal("1000")},
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         clock=_T1,
     )
     mark_revision_verified_complete(
         revision_one.calculation_revision_id,
         actor="operator-A",
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        calculation_repository=cr_repo,
         clock=_T2,
     )
     filing_one = file_modelo_revision(
         revision_one.calculation_revision_id,
         actor="operator-A",
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
-        filing_repository=fr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
         clock=_T3,
     )
 
@@ -364,23 +369,23 @@ def test_filing_record_supersession_preserves_audit_history() -> None:
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_values={"01": Decimal("1200"), "02": Decimal("100")},
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         clock=_T4,
     )
     mark_revision_verified_complete(
         revision_two.calculation_revision_id,
         actor="operator-A",
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        calculation_repository=cr_repo,
         clock=_T4,
     )
     filing_two = file_modelo_revision(
         revision_two.calculation_revision_id,
         actor="operator-A",
         notes="corrected after audit",
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
-        filing_repository=fr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
         clock=_T5,
     )
 
@@ -388,14 +393,14 @@ def test_filing_record_supersession_preserves_audit_history() -> None:
     assert filing_two.status is FilingRecordStatus.CURRENT
     refreshed_revision_two = get_calculation_revision(
         revision_two.calculation_revision_id,
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        calculation_repository=cr_repo,
     )
     assert refreshed_revision_two.state is CalculationRevisionState.FILED
 
     # Prior filing is superseded; prior revision moved to FILED_SUPERSEDED.
     refreshed_filing_one = get_filing_record(
         filing_one.filing_record_id,
-        filing_repository=fr_repo,  # type: ignore[arg-type]
+        filing_repository=fr_repo,
     )
     assert refreshed_filing_one.status is FilingRecordStatus.SUPERSEDED
     assert refreshed_filing_one.superseded_at == _T5
@@ -403,7 +408,7 @@ def test_filing_record_supersession_preserves_audit_history() -> None:
 
     refreshed_revision_one = get_calculation_revision(
         revision_one.calculation_revision_id,
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        calculation_repository=cr_repo,
     )
     assert refreshed_revision_one.state is CalculationRevisionState.FILED_SUPERSEDED
     assert refreshed_revision_one.superseded_at == _T5
@@ -434,7 +439,7 @@ def test_filing_record_supersession_preserves_audit_history() -> None:
     # Work-unit pointers point at the new filing.
     refreshed_wu = get_work_unit(
         work_unit.work_unit_id,
-        repository=wu_repo,  # type: ignore[arg-type]
+        repository=wu_repo,
     )
     assert refreshed_wu.filed_calculation_revision_id == revision_two.calculation_revision_id
     assert refreshed_wu.current_filing_record_id == filing_two.filing_record_id
@@ -450,56 +455,56 @@ def test_list_filing_records_excludes_superseded_by_default() -> None:
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_values={"01": Decimal("1000")},
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         clock=_T1,
     )
     mark_revision_verified_complete(
         revision_one.calculation_revision_id,
         actor="operator-A",
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        calculation_repository=cr_repo,
         clock=_T2,
     )
     file_modelo_revision(
         revision_one.calculation_revision_id,
         actor="operator-A",
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
-        filing_repository=fr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
         clock=_T3,
     )
 
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
         casilla_values={"01": Decimal("1200")},
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
         clock=_T4,
     )
     mark_revision_verified_complete(
         revision_two.calculation_revision_id,
         actor="operator-A",
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
+        calculation_repository=cr_repo,
         clock=_T4,
     )
     file_modelo_revision(
         revision_two.calculation_revision_id,
         actor="operator-A",
-        work_unit_repository=wu_repo,  # type: ignore[arg-type]
-        calculation_repository=cr_repo,  # type: ignore[arg-type]
-        filing_repository=fr_repo,  # type: ignore[arg-type]
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
         clock=_T5,
     )
 
     default_listing = list_filing_records(
-        filing_repository=fr_repo,  # type: ignore[arg-type]
+        filing_repository=fr_repo,
     )
     assert len(default_listing) == 1
     assert default_listing[0].status is FilingRecordStatus.CURRENT
 
     with_history = list_filing_records(
         include_superseded=True,
-        filing_repository=fr_repo,  # type: ignore[arg-type]
+        filing_repository=fr_repo,
     )
     assert len(with_history) == 2
 
@@ -518,15 +523,15 @@ def test_calculate_refused_on_discarded_work_unit() -> None:
     discard_work_unit(
         work_unit.work_unit_id,
         actor="operator-A",
-        repository=wu_repo,  # type: ignore[arg-type]
+        repository=wu_repo,
         clock=_T1,
     )
     with pytest.raises(WorkUnitMutationRefusedError):
         calculate_modelo_revision(
             work_unit.work_unit_id,
             casilla_values={"01": Decimal("1000")},
-            work_unit_repository=wu_repo,  # type: ignore[arg-type]
-            calculation_repository=cr_repo,  # type: ignore[arg-type]
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
             clock=_T2,
         )
 
@@ -536,7 +541,7 @@ def test_get_filing_record_raises_on_missing_id() -> None:
     with pytest.raises(FilingRecordNotFoundError):
         get_filing_record(
             "0" * 64,
-            filing_repository=fr_repo,  # type: ignore[arg-type]
+            filing_repository=fr_repo,
         )
 
 
@@ -545,5 +550,5 @@ def test_get_calculation_revision_raises_on_missing_id() -> None:
     with pytest.raises(CalculationRevisionNotFoundError):
         get_calculation_revision(
             "0" * 64,
-            calculation_repository=cr_repo,  # type: ignore[arg-type]
+            calculation_repository=cr_repo,
         )

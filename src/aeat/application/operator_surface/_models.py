@@ -31,6 +31,36 @@ class SourceKind(StrEnum):
     COLLECTIBLE_INVOICE = "collectible_invoice"
 
 
+class OperatorMutability(StrEnum):
+    """Side-effect class for an operator-facing command family."""
+
+    READ_ONLY = "read_only"
+    LOCAL_STATE_MUTATING = "local_state_mutating"
+    LIVE_READ = "live_read"
+
+
+class HelpSurface(StrEnum):
+    """Curated help surfaces with backend-owned command listings."""
+
+    ROOT = "root"
+    CONFIG = "config"
+    APP = "app"
+
+
+class MountedCommandDomain(StrEnum):
+    """Backend-owned command domains exposed under the accepted roots."""
+
+    FIRST_RUN = "first_run"
+    PROFILE = "profile"
+    AUTH = "auth"
+    DIAGNOSTICS = "diagnostics"
+    OVERVIEW = "overview"
+    LEDGER = "ledger"
+    MODELO = "modelo"
+    REVIEW = "review"
+    REGISTRY = "registry"
+
+
 class RootSurface(BaseModel):
     """Backend ownership record for an accepted root surface."""
 
@@ -59,6 +89,46 @@ class RetiredOperatorSurface(BaseModel):
     replacement: str | None
     suggestion: str | None
     reason: str = Field(min_length=1)
+
+
+class HelpEntry(BaseModel):
+    """One command row in a curated help section."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    command: str = Field(min_length=1, max_length=80)
+    description: str = Field(min_length=1, max_length=80)
+
+
+class HelpSection(BaseModel):
+    """One workflow-ordered help section."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    title: str = Field(min_length=1, max_length=80)
+    entries: tuple[HelpEntry, ...] = Field(min_length=1)
+
+
+class HelpDocument(BaseModel):
+    """Curated help document rendered by the CLI boundary."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    surface: HelpSurface
+    heading: str = Field(min_length=1, max_length=120)
+    paragraphs: tuple[str, ...] = Field(min_length=1)
+    sections: tuple[HelpSection, ...] = Field(min_length=1)
+    footer: str = Field(min_length=1, max_length=120)
+
+
+class RootLandingReport(BaseModel):
+    """Bare ``aeat`` invocation result."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    active_profile: str | None = None
+    command: str = Field(min_length=1, max_length=120)
+    message: str = Field(min_length=1, max_length=160)
 
 
 class LifecycleContract(BaseModel):
@@ -98,6 +168,36 @@ class SourceKindAlias(BaseModel):
 
     alias: str = Field(min_length=1)
     canonical: SourceKind
+
+
+class MountedCommandFamily(BaseModel):
+    """One mounted command family and its backend owner."""
+
+    model_config = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
+
+    domain: MountedCommandDomain
+    root: RootSurfaceName
+    child: str = Field(min_length=1)
+    operator_question: str = Field(min_length=1)
+    service_owner: str = Field(pattern=r"^aeat\.(application|domain|adapters|core)(\.[a-z_][a-z0-9_]*)*$")
+    commands: tuple[str, ...] = Field(min_length=1)
+    mutability: OperatorMutability
+
+    @field_validator("child")
+    @classmethod
+    def _child_is_kebab(cls, value: str) -> str:
+        if value != value.strip().lower() or " " in value:
+            raise ValueError("mounted command child must be a lower-case command token")
+        return value
+
+    @field_validator("commands")
+    @classmethod
+    def _commands_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise ValueError("mounted command names must be unique")
+        if any(not command.strip() for command in value):
+            raise ValueError("mounted command names must not be blank")
+        return value
 
 
 class ServiceOwner(BaseModel):
@@ -144,6 +244,7 @@ class OperatorSurfaceContract(BaseModel):
     lifecycle: LifecycleContract
     source_kinds: tuple[SourceKind, ...]
     source_kind_aliases: tuple[SourceKindAlias, ...]
+    command_families: tuple[MountedCommandFamily, ...]
     service_owners: tuple[ServiceOwner, ...]
     log_fields: OperatorSurfaceLogFields
     error_codes: tuple[str, ...]
@@ -168,4 +269,15 @@ class OperatorSurfaceContract(BaseModel):
         )
         if value != expected:
             raise ValueError("source kinds must match the accepted four-kind taxonomy")
+        return value
+
+    @field_validator("command_families")
+    @classmethod
+    def _command_families_are_unique(
+        cls,
+        value: tuple[MountedCommandFamily, ...],
+    ) -> tuple[MountedCommandFamily, ...]:
+        keys = tuple((family.root, family.child) for family in value)
+        if len(set(keys)) != len(keys):
+            raise ValueError("mounted command families must be unique per root and child")
         return value
