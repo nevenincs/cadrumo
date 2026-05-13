@@ -118,8 +118,8 @@ This Phase delivers shadow duplicate removal for apex root and lifecycle contrac
 This Phase delivers de-shim and de-stub cleanup for apex root and lifecycle contract as required by `2026-05-12-cli-workflow-redesign-adr`.
 
 - [x] `W01.P003.S0013` - Delete compatibility shims that preserve rejected behavior for apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P003.S0014` - Delete placeholder stubs that claim support for apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P003.S0015` - Replace stubbed paths with real backend service calls for apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P003.S0014` - Delete placeholder stubs that claim support for apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P003.S0015` - Replace stubbed paths with real backend service calls for apex root and lifecycle contract; `src/aeat/application`.
 - [x] `W01.P003.S0016` - Remove deprecated command spelling and help text for apex root and lifecycle contract; `src/aeat/entrypoints/cli`.
 - [x] `W01.P003.S0017` - Remove tests that assert shim or stub behavior for apex root and lifecycle contract; `tests/application`.
 - [x] `W01.P003.S0018` - Record the removed shim and stub surfaces for apex root and lifecycle contract; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
