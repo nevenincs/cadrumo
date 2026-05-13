@@ -4,8 +4,7 @@ Every test in this module either grounds its expected value in an external
 authority (the LIVA article cited inline or the AEAT "Manual Práctico IVA"
 worked example reproduced inline), or asserts a structural / wiring /
 error-path property. No test computes the expected value by re-applying the
-same formula the production code applies — that would be tautological per
-``.claude/rules/no-tautological-calculation-tests.md``.
+same formula the production code applies.
 
 Legal authorities cited:
 
