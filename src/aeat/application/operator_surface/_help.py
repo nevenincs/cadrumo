@@ -98,13 +98,6 @@ def _root_help() -> HelpDocument:
                 _entry("aeat app review queue", "List items needing attention"),
                 _entry("aeat app registry inspect", "Inspect local registry data"),
             ),
-            _section(
-                "Common mistypes",
-                _entry("aeat init -> aeat config init", "Use config for first run"),
-                _entry("aeat setup -> aeat config init", "Setup is folded into config"),
-                _entry("aeat status -> aeat app overview status", "Status is overview"),
-                _entry("aeat submit -> rejected", "Live submission is disabled"),
-            ),
         ),
         footer="Run aeat config --help or aeat app --help to see that subtree.",
     )

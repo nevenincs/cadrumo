@@ -68,7 +68,7 @@ def test_root_help_uses_curated_two_root_shape() -> None:
     assert "Setup" in result.output
     assert "Daily ledger work" in result.output
     assert "Modelo lifecycle" in result.output
-    assert "Common mistypes" in result.output
+    assert "Common mistypes" not in result.output
     assert "aeat config init" in result.output
     assert "aeat app overview status" in result.output
     assert "aeat app live filed list" in result.output
@@ -132,7 +132,7 @@ def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -
     aeat_exe = shutil.which("aeat")
     assert aeat_exe is not None
 
-    result = subprocess.run(
+    result = subprocess.run(  # noqa: S603
         [aeat_exe],
         cwd=Path.cwd(),
         env=_console_env(tmp_path),
@@ -159,7 +159,7 @@ def test_installed_console_config_init_fails_fast_without_prompt_host(tmp_path: 
     aeat_exe = shutil.which("aeat")
     assert aeat_exe is not None
 
-    result = subprocess.run(
+    result = subprocess.run(  # noqa: S603
         [aeat_exe, "config", "init"],
         cwd=Path.cwd(),
         env=_console_env(tmp_path),

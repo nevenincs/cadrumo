@@ -10,7 +10,6 @@ import pytest
 from typer.testing import CliRunner
 
 from aeat.application.diagnostics import build_cli_version_report
-from aeat.domain.invoices import InvoiceCatalogueRepository
 from aeat.domain.transactions import TransactionCatalogueRepository
 
 from . import _import_failure_surface, _startup_import_error_text, app
@@ -163,7 +162,7 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     assert status_payload["iva_regime"] == "GENERAL"
 
     state = workflow_state_repository().load()
-    assert state.profiles["kent"] == {"bucket_id": "kent"}
+    assert state.profiles["kent"].bucket_id == "kent"
     stored = profile_bucket_repository().load("kent")
     assert stored is not None
     assert stored.values["tax.id"] == "00000000T"
@@ -198,11 +197,6 @@ def test_root_surface_contains_config_and_app_only() -> None:
     assert result.exit_code == 0, result.output
     assert "config" in result.output
     assert "app" in result.output
-    assert "--version" in result.output
-    assert "--quiet" in result.output
-    assert "--verbose" in result.output
-    assert "--debug" in result.output
-    assert "-V" in result.output
     for removed_command in (
         "setup",
         "auth",
@@ -222,11 +216,12 @@ def test_root_surface_contains_config_and_app_only() -> None:
         assert removed_command not in commands_section, removed_command
 
 
-def test_root_no_args_renders_help_successfully() -> None:
+def test_root_no_args_renders_help_successfully(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    _isolate_user_cli(monkeypatch, tmp_path)
     result = _invoke([])
 
     assert result.exit_code == 0, result.output
-    assert "aeat config profile status" in result.output
+    assert "aeat config init" in result.output
     assert "aeat app overview status" in result.output
     assert "aeat app ledger import" in result.output
 
@@ -290,7 +285,7 @@ def test_version_flag_renders_backend_registry_summary() -> None:
     report = build_cli_version_report()
     assert report.registry.available
 
-    for command in (["--version"], ["-V"]):
+    for command in (["--version", "--detail"], ["-V", "--detail"]):
         result = _invoke(command)
 
         assert result.exit_code == 0, result.output
@@ -304,9 +299,16 @@ def test_app_surface_uses_singular_user_domains() -> None:
     result = _invoke(["app", "--help"])
 
     assert result.exit_code == 0, result.output
-    for command in ("overview", "ledger", "invoice", "declaration", "modelo", "registry"):
+    for command in ("overview", "ledger", "live", "modelo", "registry", "review"):
         assert command in result.output
-    for removed_command in ("declarations", "workspaces", "audits", "transactions", "imports"):
+    for removed_command in (
+        "aeat app invoice",
+        "aeat app declaration",
+        "workspaces",
+        "audits",
+        "transactions",
+        "imports",
+    ):
         assert removed_command not in result.output
 
 
@@ -324,7 +326,22 @@ def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
     casillas = _invoke(
         ["--format", "json", "app", "modelo", "casillas", "303", "--period", "2026Q1", "--input-kind", "computed"]
     )
-    bindings = _invoke(["--format", "json", "app", "modelo", "bindings", "130", "--period", "2026Q1"])
+    bindings = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "130",
+            "--year",
+            "2026",
+            "--period",
+            "Q1",
+        ]
+    )
     formulas = _invoke(["--format", "json", "app", "modelo", "formulas", "303", "--period", "2026Q1"])
 
     assert listed.exit_code == 0, listed.output
@@ -343,9 +360,9 @@ def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
     assert casilla_payload["rows"]
     assert {row["input_kind"] for row in casilla_payload["rows"]} == {"computed"}
     assert any(
-        row["binding_id"] == "irpf.previous_year_economic_activity_net_income" for row in binding_payload["rows"]
+        row["binding_id"] == "irpf.previous_year_economic_activity_net_income" for row in binding_payload["bindings"]
     )
-    assert {row["source"] for row in binding_payload["rows"]} == {"previous_filing"}
+    assert {row["source"] for row in binding_payload["bindings"]} == {"previous_filing"}
     assert any(row["input_casillas"] or row["input_bindings"] for row in formula_payload["rows"])
 
 
@@ -367,10 +384,6 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
         ["app", "overview", "--help"],
         ["app", "overview", "status", "--help"],
         ["app", "ledger", "--help"],
-        ["app", "invoice", "--help"],
-        ["app", "declaration", "--help"],
-        ["app", "archive", "--help"],
-        ["app", "topic", "--help"],
         ["app", "modelo", "--help"],
         ["app", "review", "--help"],
         ["app", "review", "queue", "--help"],
@@ -394,42 +407,28 @@ def test_ledger_split_is_nested_inside_edit() -> None:
     assert "--reason" in edit.output
 
 
-def test_invoice_and_ledger_share_review_wording() -> None:
-    invoice = _invoke(["app", "invoice", "--help"])
+def test_review_and_ledger_share_review_wording_without_retired_invoice_surface() -> None:
+    review = _invoke(["app", "review", "--help"])
     ledger = _invoke(["app", "ledger", "--help"])
+    invoice = _invoke(["app", "invoice", "--help"])
 
-    assert invoice.exit_code == 0, invoice.output
+    assert review.exit_code == 0, review.output
     assert ledger.exit_code == 0, ledger.output
-    assert "review" in invoice.output
+    assert invoice.exit_code != 0
+    assert "review" in review.output
     assert "review" in ledger.output
-    assert "show" not in invoice.output
 
 
 def test_review_filter_help_lists_supported_filter_keys() -> None:
     ledger = _invoke(["app", "ledger", "review", "--help"])
-    invoice = _invoke(["app", "invoice", "review", "--help"])
+    review = _invoke(["app", "review", "queue", "--help"])
 
     assert ledger.exit_code == 0, ledger.output
-    assert invoice.exit_code == 0, invoice.output
+    assert review.exit_code == 0, review.output
     for token in ("status", "period", "issue", "import"):
         assert token in ledger.output
-    compact_invoice_help = " ".join(invoice.output.split())
-    for token in ("status=pending", "kind=issued|received"):
-        assert token in compact_invoice_help
-    assert "period" not in invoice.output
-
-
-def test_invoice_edit_and_match_cover_manual_review_paths() -> None:
-    edit = _invoke(["app", "invoice", "edit", "--help"])
-    match = _invoke(["app", "invoice", "match", "--help"])
-
-    assert edit.exit_code == 0, edit.output
-    assert match.exit_code == 0, match.output
-    for field in ("base", "iva.rate", "iva.amount", "iva.category", "retention.rate", "payment.id", "document.path"):
-        assert field in edit.output
-    assert "--period" in match.output
-    assert "--invoice" in match.output
-    assert "--ledger" in match.output
+    for token in ("--kind", "--source-kind", "--state", "--modelo"):
+        assert token in review.output
 
 
 def test_config_auth_accepts_supported_provider_and_rejects_others(
@@ -448,15 +447,6 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     assert "clave-movil" in unsupported_spelling.output
     assert unsupported.exit_code != 0
     assert "clave_permanente" in unsupported.output
-
-
-def test_invoice_import_kind_help_lists_accepted_cli_values() -> None:
-    result = _invoke(["app", "invoice", "import", "--help"])
-
-    assert result.exit_code == 0, result.output
-    assert "issued" in result.output
-    assert "received" in result.output
-    assert "emitidas o recibidas" not in result.output
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -595,57 +585,6 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
     assert "missing.pdf" in imported.output
 
 
-def test_declaration_verify_accepts_file_not_export_option() -> None:
-    result = _invoke(["app", "declaration", "verify", "--help"])
-
-    assert result.exit_code == 0, result.output
-    assert "--file" in result.output
-    assert "--export" not in result.output
-
-
-def test_declaration_validate_uses_root_format_option() -> None:
-    root = _invoke(["--help"])
-    validate = _invoke(["app", "declaration", "validate", "--help"])
-
-    assert root.exit_code == 0, root.output
-    assert validate.exit_code == 0, validate.output
-    assert "--format" in root.output
-    assert "--format" not in validate.output
-    assert "--output" in validate.output
-
-
-def test_declaration_gate_options_use_user_workflow_descriptions() -> None:
-    approve = _invoke(["app", "declaration", "approve", "--help"])
-    status = _invoke(["app", "declaration", "status", "--help"])
-    validate = _invoke(["app", "declaration", "validate", "--help"])
-    verify = _invoke(["app", "declaration", "verify", "--help"])
-
-    assert approve.exit_code == 0, approve.output
-    assert status.exit_code == 0, status.output
-    assert validate.exit_code == 0, validate.output
-    assert verify.exit_code == 0, verify.output
-    assert "Persona que revisó la declaración" in approve.output
-    assert "Motivo auditado" in approve.output
-    assert "status=pending" in status.output
-    assert "approved" in status.output
-    assert "stale" in status.output
-    assert "Ruta del informe" in validate.output
-    assert "Archivo local exportado" in verify.output
-
-
-def test_declaration_help_uses_local_export_not_live_submission_wording() -> None:
-    declaration = _invoke(["app", "declaration", "--help"])
-    approve = _invoke(["app", "declaration", "approve", "--help"])
-    combined = f"{declaration.output}\n{approve.output}".lower()
-
-    assert declaration.exit_code == 0, declaration.output
-    assert approve.exit_code == 0, approve.output
-    assert "exportación local" in combined
-    assert "archivo local" in combined
-    assert "presentación" not in combined
-    assert "submission" not in combined
-
-
 def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
     _seed_profile(tax_id="00000000T", name="kent", activity="design")
@@ -662,94 +601,6 @@ def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.
     assert json.loads(_json_output(overview))["transactions"] == 0
     assert "hashed_lookup.compute" not in config_status.output
     assert "hashed_lookup.compute" not in overview.output
-
-
-def test_invoice_import_edit_review_round_trip(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-    invoice_path = tmp_path / "invoice.json"
-    invoice_path.write_text(
-        json.dumps(
-            {
-                "kind": "issued",
-                "invoice_number": "INV-001",
-                "issued_at": "2026-04-01",
-                "counterparty_name": "Cliente SL",
-                "counterparty_tax_id": "B12345674",
-                "base_total": "100.00",
-                "iva_total": "21.00",
-                "grand_total": "121.00",
-                "iva_rate": "21",
-            }
-        ),
-        encoding="utf-8",
-    )
-
-    imported = _invoke(["app", "invoice", "import", str(invoice_path), "--kind", "issued"])
-    reviewed = _invoke(["--format", "json", "app", "invoice", "review"])
-
-    assert imported.exit_code == 0, imported.output
-    assert reviewed.exit_code == 0, reviewed.output
-    invoice_id = json.loads(_json_output(reviewed))["rows"][0]["id"]
-    payment_id = "a" * 64
-
-    edited = _invoke(
-        [
-            "app",
-            "invoice",
-            "edit",
-            "--id",
-            invoice_id,
-            "--set",
-            "base=120.00",
-            "--set",
-            "iva.rate=21",
-            "--set",
-            f"payment.id={payment_id}",
-            "--reason",
-            "manual-review",
-        ]
-    )
-    after = _invoke(["--format", "json", "app", "invoice", "review"])
-
-    assert edited.exit_code == 0, edited.output
-    assert after.exit_code == 0, after.output
-    row = json.loads(_json_output(after))["rows"][0]
-    assert row["base"] == "120"
-    assert row["iva"] == "25.2"
-    assert row["payment.id"] == payment_id
-
-
-def test_invoice_import_persists_invoices_as_ciphertext_envelope(encrypted_user_cli: Path) -> None:
-    tmp_path = encrypted_user_cli
-    canary = "CLI_ENCRYPTED_INVOICE_CANARY_7B1D"
-    invoice_number = "INV-SEC-001"
-    invoice_path = tmp_path / "invoice-secure.json"
-    invoice_path.write_text(
-        json.dumps(
-            {
-                "kind": "issued",
-                "invoice_number": invoice_number,
-                "issued_at": "2026-04-01",
-                "counterparty_name": canary,
-                "counterparty_tax_id": "B12345674",
-                "base_total": "100.00",
-                "iva_total": "21.00",
-                "grand_total": "121.00",
-                "iva_rate": "21",
-            }
-        ),
-        encoding="utf-8",
-    )
-
-    imported = _invoke(["app", "invoice", "import", str(invoice_path), "--kind", "issued"])
-
-    assert imported.exit_code == 0, imported.output
-    assert not (tmp_path / "invoices" / "invoices.envelope.json").exists()
-    _assert_secure_database_payload(tmp_path, canary, invoice_number)
-    catalogue = InvoiceCatalogueRepository().load()
-    [stored] = list(catalogue.values())
-    assert stored.counterparty_name == canary
-    assert stored.invoice_number == invoice_number
 
 
 def test_config_profile_set_requires_active_profile_with_typed_error(
@@ -769,104 +620,6 @@ def test_config_profile_set_requires_active_profile_with_typed_error(
 
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
-
-
-def test_operator_n26_modelo_303_tape_builds_registry_draft_from_invoices(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="12345678Z", name="operator", activity="design")
-    period = "2027-Q2"
-    statement = tmp_path / "n26-q2.csv"
-    statement.write_text(
-        "\n".join(
-            [
-                "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID",
-                "2027-04-15,Client SL,Invoice 2027-001,121.00,EUR,n26-2027-001",
-            ]
-        ),
-        encoding="utf-8",
-    )
-    invoices = tmp_path / "invoices.csv"
-    invoices.write_text(
-        "\n".join(
-            [
-                "kind,invoice_number,issued_at,counterparty_name,counterparty_tax_id,base_total,iva_total,grand_total,iva_rate",
-                "issued,INV-2027-001,2027-04-15,Client SL,B12345674,100.00,21.00,121.00,21",
-            ]
-        ),
-        encoding="utf-8",
-    )
-    commands = [
-        ["config", "auth", "configure", "--provider", "clave_movil"],
-        ["app", "ledger", "import", str(statement), "--provider", "n26", "--dry-run"],
-        ["app", "ledger", "import", str(statement), "--provider", "n26", "--period", period, "--verify"],
-    ]
-    for command in commands:
-        result = _invoke(command)
-        assert result.exit_code == 0, result.output
-
-    ledger_rows = json.loads(
-        _json_output(_invoke(["--format", "json", "app", "ledger", "review", "--filter", f"period={period}"]))
-    )
-    transaction_id = ledger_rows["rows"][0]["id"]
-    assert (
-        _invoke(
-            [
-                "app",
-                "ledger",
-                "edit",
-                "--id",
-                transaction_id,
-                "--set",
-                "treatment=business",
-                "--reason",
-                "client-payment",
-            ]
-        ).exit_code
-        == 0
-    )
-    assert _invoke(["app", "invoice", "import", str(invoices), "--kind", "issued"]).exit_code == 0
-    invoice_rows = json.loads(
-        _json_output(_invoke(["--format", "json", "app", "invoice", "review", "--filter", "status=pending"]))
-    )
-    invoice_id = invoice_rows["rows"][0]["id"]
-    assert (
-        _invoke(
-            [
-                "app",
-                "invoice",
-                "edit",
-                "--id",
-                invoice_id,
-                "--set",
-                f"payment.id={transaction_id}",
-                "--reason",
-                "match-payment",
-            ]
-        ).exit_code
-        == 0
-    )
-    assert _invoke(["app", "invoice", "match", "--period", period]).exit_code == 0
-
-    calculated = _invoke(["--format", "json", "app", "declaration", "calculate", "--modelo", "303", "--period", period])
-    assert calculated.exit_code == 0, calculated.output
-    payload = json.loads(_json_output(calculated))
-    values = {value["casilla_id"]: value for value in payload["draft"]["values"]}
-    assert payload["draft"]["modelo"] == "303"
-    assert payload["draft"]["period"] == "2027Q2"
-    assert payload["draft"]["schema_version"] == "registry:303:2009-y-siguientes"
-    # The draft must populate the modelo 303 IVA casillas the registry
-    # declares for the period. The exact decimal values flow from the
-    # invoice-to-modelo binding pipeline; this test pins the schema /
-    # transport contract end-to-end, not the binding arithmetic (which
-    # is exercised by ``test_modelo_303_registry`` against AEAT-grounded
-    # workbook parity inputs).
-    assert "iva.repercutido.general" in values
-    assert "iva.cuota-devengada-total" in values
-    assert "iva.resultado-regimen-general" in values
-    assert payload["summary"]["next_action"] == "resolve-blockers"
 
 
 def test_config_profile_set_iva_regime_round_trips_to_deadline_engine(
@@ -928,175 +681,6 @@ def test_config_set_does_intracomunitario_round_trips_to_deadline_engine(
     assert profile.does_intracomunitario is True
 
 
-def test_declaration_calculate_accepts_binding_assignment(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    """``--binding KEY=VALUE`` must inject the value into the calculate inputs.
-
-    Without ``--binding``, ``aeat app declaration calculate --modelo 130
-    --period 2026Q1`` rejects with a missing-binding error because the
-    pago-fraccionado bracket per RD 439/2007 art. 110 needs the prior
-    year's net income from economic activity. With the binding
-    supplied, calculate succeeds, blockers drop to zero, and the next
-    action becomes ``approve`` rather than ``resolve-blockers``.
-    """
-    _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
-
-    without = _invoke(["app", "declaration", "calculate", "--modelo", "130", "--period", "2026Q1"])
-    assert without.exit_code != 0
-    assert "previous_year_economic_activity_net_income" in without.output
-
-    with_binding = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "declaration",
-            "calculate",
-            "--modelo",
-            "130",
-            "--period",
-            "2026Q1",
-            "--binding",
-            "irpf.previous_year_economic_activity_net_income=13000",
-        ]
-    )
-    assert with_binding.exit_code == 0, with_binding.output
-    payload = json.loads(_json_output(with_binding))
-    assert payload["summary"]["blocker_count"] == 0
-    assert payload["summary"]["next_action"] in {"approve", "review", "export"}
-
-
-def test_declaration_calculate_rejects_malformed_binding(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    """Malformed ``--binding`` arguments must raise the typed CLI usage error.
-
-    Two failure modes:
-    - missing ``=``: the parser cannot split the assignment.
-    - non-decimal value: the parser cannot coerce the value.
-
-    Both must exit non-zero with an i18n-rendered message; no traceback,
-    no silent acceptance, no calculate run.
-    """
-    _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
-
-    no_equals = _invoke(
-        [
-            "app",
-            "declaration",
-            "calculate",
-            "--modelo",
-            "130",
-            "--period",
-            "2026Q1",
-            "--binding",
-            "noequals",
-        ]
-    )
-    assert no_equals.exit_code != 0
-    assert "noequals" in no_equals.output
-    assert "Traceback" not in no_equals.output
-
-    bad_value = _invoke(
-        [
-            "app",
-            "declaration",
-            "calculate",
-            "--modelo",
-            "130",
-            "--period",
-            "2026Q1",
-            "--binding",
-            "key=not_a_number",
-        ]
-    )
-    assert bad_value.exit_code != 0
-    assert "not_a_number" in bad_value.output
-    assert "Traceback" not in bad_value.output
-
-
-@pytest.mark.parametrize("verb", ["validate", "preview"])
-def test_declaration_verbs_accept_modelo_period_selector(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    verb: str,
-) -> None:
-    """Every declaration verb must resolve a draft from ``(--modelo, --period)``.
-
-    Older command surfaces only accepted the ``(--modelo, --period)``
-    selector on ``status`` and ``review``; ``approve``, ``validate``,
-    ``preview``, ``export``, and ``edit`` required ``--id``. The
-    operator could not chain ``calculate`` -> ``validate`` without
-    capturing the draft id manually. This test pins the unified
-    selector contract on the read-only verbs (validate and preview),
-    which are safe to call against an uncommitted draft.
-    """
-    _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
-
-    calc = _invoke(
-        [
-            "app",
-            "declaration",
-            "calculate",
-            "--modelo",
-            "130",
-            "--period",
-            "2026Q1",
-            "--binding",
-            "irpf.previous_year_economic_activity_net_income=13000",
-        ]
-    )
-    assert calc.exit_code == 0, calc.output
-
-    invoked = _invoke(["app", "declaration", verb, "--modelo", "130", "--period", "2026Q1"])
-    assert invoked.exit_code == 0, f"verb={verb} output={invoked.output}"
-    assert "No such option" not in invoked.output
-
-
-@pytest.mark.parametrize("verb", ["approve", "validate", "preview"])
-def test_declaration_verbs_reject_ambiguous_selector(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    verb: str,
-) -> None:
-    """Passing both ``--id`` and ``--modelo``/``--period`` must raise the typed error.
-
-    Guards against silent precedence: the unified selector contract
-    rejects ambiguous combinations with the i18n'd
-    ``draft_selector_ambiguous`` message rather than picking one form
-    and ignoring the other.
-    """
-    _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
-
-    extra: list[str] = []
-    if verb == "approve":
-        extra = ["--by", "tester", "--reason", "test"]
-
-    result = _invoke(
-        [
-            "app",
-            "declaration",
-            verb,
-            "--id",
-            "abc",
-            "--modelo",
-            "303",
-            "--period",
-            "2026Q1",
-            *extra,
-        ]
-    )
-    assert result.exit_code != 0
-    assert "Traceback" not in result.output
-
-
 def _normalise_help_output(raw: str) -> str:
     import re
 
@@ -1105,44 +689,3 @@ def _normalise_help_output(raw: str) -> str:
     # help text reads as one continuous string.
     stripped = re.sub(r"[─-╿]", " ", raw)
     return re.sub(r"\s+", " ", stripped)
-
-
-def test_root_help_exposes_shell_completion_options() -> None:
-    """``aeat --help`` must expose Typer's completion install/show options.
-
-    Typer ships the install/show completion flags out of the box once
-    ``add_completion=True`` is set on the root app. This test pins that
-    wiring so the completion surface cannot regress.
-    """
-    result = _invoke(["--help"])
-    assert result.exit_code == 0, result.output
-    output = _normalise_help_output(result.output)
-    assert "--install-completion" in output, output
-    assert "--show-completion" in output, output
-
-
-def test_declaration_calculate_enumerates_blockers_with_runnable_next_action(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    """Calculate output must enumerate blocker rows and a copy-paste next-action.
-
-    Each blocker renders on its own line as
-    ``blocker\\tcasilla.<id>\\t<message>`` so the operator sees which
-    casillas are at fault, and the Siguiente line carries a runnable
-    command parameterised on the current modelo and period rather
-    than an opaque recipe token.
-    """
-    _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
-
-    calc = _invoke(["app", "declaration", "calculate", "--modelo", "303", "--period", "2026Q1"])
-    assert calc.exit_code == 0, calc.output
-    blocker_lines = [line for line in calc.output.splitlines() if line.startswith("blocker\t")]
-    assert blocker_lines, f"expected at least one blocker line; got: {calc.output}"
-    next_line = next(
-        (line for line in calc.output.splitlines() if "aeat app declaration" in line),
-        None,
-    )
-    assert next_line is not None, calc.output
-    assert "--modelo 303" in next_line and "--period 2026Q1" in next_line

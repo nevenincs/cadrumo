@@ -59,39 +59,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.entrypoints.cli.auth._registry.NoConfiguredProviderError",
-        ErrorCode(
-            code="AUTH_CLI_AUTH_REGISTRY_NO_CONFIGURED_PROVIDER",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_cli_auth_registry_no_configured_provider",
-            default_suggestion="aeat config auth --provider certificate",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.entrypoints.cli.auth._registry.ProviderUnavailableError",
-        ErrorCode(
-            code="AUTH_CLI_AUTH_REGISTRY_PROVIDER_UNAVAILABLE",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_cli_auth_registry_provider_unavailable",
-            default_suggestion="aeat config auth --help",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.entrypoints.cli.auth._registry.UnknownProviderError",
-        ErrorCode(
-            code="AUTH_CLI_AUTH_REGISTRY_UNKNOWN_PROVIDER",
-            category=ErrorCategory.AUTH,
-            message_key="errors.auth.auth_cli_auth_registry_unknown_provider",
-            default_suggestion="aeat config auth --help",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.application.auth._sessions.CorruptAuthSessionError",
         ErrorCode(
             code="INTEGRITY_CLI_AUTH_SESSION_CORRUPT_AUTH_SESSION",
