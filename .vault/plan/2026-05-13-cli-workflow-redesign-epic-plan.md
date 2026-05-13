@@ -150,56 +150,56 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-profile-output-langua
 
 This Phase delivers backend implementation for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
 
-- [ ] `W60.P296.S1771` - Map the `2026-05-13-cli-workflow-redesign-profile-output-language-adr` decision into non-CLI service ownership for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/application/wizard`, `src/aeat/domain/profile`.
-- [ ] `W60.P296.S1772` - Implement Pydantic command and result contracts for profile-owned output language; `src/aeat/application/wizard`, `src/aeat/domain/profile`.
-- [ ] `W60.P296.S1773` - Wire application or domain services required by profile-owned output language; `src/aeat/application/wizard`, `src/aeat/application/profile`.
-- [ ] `W60.P296.S1774` - Connect persistence, bucket events, registry data, or provider adapters required by profile-owned output language; `src/aeat/application/workflow`, `src/aeat/application/profile`.
-- [ ] `W60.P296.S1775` - Route existing backend functionality into the canonical service for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
-- [ ] `W60.P296.S1776` - Record service-level error codes and log fields for profile-owned output language; `src/aeat/core/errors/registry`, `src/aeat/application/profile`.
+- [x] `W60.P296.S1771` - Map the `2026-05-13-cli-workflow-redesign-profile-output-language-adr` decision into non-CLI service ownership for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/application/wizard`, `src/aeat/domain/profile`.
+- [x] `W60.P296.S1772` - Implement Pydantic command and result contracts for profile-owned output language; `src/aeat/application/wizard`, `src/aeat/domain/profile`.
+- [x] `W60.P296.S1773` - Wire application or domain services required by profile-owned output language; `src/aeat/application/wizard`, `src/aeat/application/profile`.
+- [x] `W60.P296.S1774` - Connect persistence, bucket events, registry data, or provider adapters required by profile-owned output language; `src/aeat/application/workflow`, `src/aeat/application/profile`.
+- [x] `W60.P296.S1775` - Route existing backend functionality into the canonical service for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
+- [x] `W60.P296.S1776` - Record service-level error codes and log fields for profile-owned output language; `src/aeat/core/errors/registry`, `src/aeat/application/profile`.
 
 ### Phase `W60.P297` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
 
-- [ ] `W60.P297.S1777` - Audit duplicate implementations that overlap profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/entrypoints/cli`.
-- [ ] `W60.P297.S1778` - Delete duplicate backend branches that compete with profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
-- [ ] `W60.P297.S1779` - Remove stale aliases that bypass the canonical service for profile-owned output language; `src/aeat/entrypoints/cli`.
-- [ ] `W60.P297.S1780` - Migrate internal callers to the canonical service for profile-owned output language; `src/aeat/core`, `src/aeat/application`, `src/aeat/entrypoints/cli`.
-- [ ] `W60.P297.S1781` - Remove stale fixtures and tests that encode duplicate behavior for profile-owned output language; `tests`, `src/aeat/**/test_*.py`.
-- [ ] `W60.P297.S1782` - Update boundary inventory entries that describe duplicate behavior for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W60.P297.S1777` - Audit duplicate implementations that overlap profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/entrypoints/cli`.
+- [x] `W60.P297.S1778` - Delete duplicate backend branches that compete with profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
+- [x] `W60.P297.S1779` - Remove stale aliases that bypass the canonical service for profile-owned output language; `src/aeat/entrypoints/cli`.
+- [x] `W60.P297.S1780` - Migrate internal callers to the canonical service for profile-owned output language; `src/aeat/core`, `src/aeat/application`, `src/aeat/entrypoints/cli`.
+- [x] `W60.P297.S1781` - Remove stale fixtures and tests that encode duplicate behavior for profile-owned output language; `tests`, `src/aeat/**/test_*.py`.
+- [x] `W60.P297.S1782` - Update boundary inventory entries that describe duplicate behavior for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W60.P298` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
 
-- [ ] `W60.P298.S1783` - Delete compatibility shims that preserve rejected behavior for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/entrypoints/cli`.
-- [ ] `W60.P298.S1784` - Delete placeholder stubs that claim support for profile-owned output language; `src/aeat/application/wizard`, `src/aeat/domain/profile`.
-- [ ] `W60.P298.S1785` - Replace stubbed paths with real backend service calls for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
-- [ ] `W60.P298.S1786` - Remove deprecated command spelling and help text for profile-owned output language; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
-- [ ] `W60.P298.S1787` - Remove tests that assert shim or stub behavior for profile-owned output language; `tests`, `src/aeat/**/test_*.py`.
-- [ ] `W60.P298.S1788` - Record the removed shim and stub surfaces for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W60.P298.S1783` - Delete compatibility shims that preserve rejected behavior for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`, `src/aeat/entrypoints/cli`.
+- [x] `W60.P298.S1784` - Delete placeholder stubs that claim support for profile-owned output language; `src/aeat/application/wizard`, `src/aeat/domain/profile`.
+- [x] `W60.P298.S1785` - Replace stubbed paths with real backend service calls for profile-owned output language; `src/aeat/core/i18n`, `src/aeat/core/errors`.
+- [x] `W60.P298.S1786` - Remove deprecated command spelling and help text for profile-owned output language; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
+- [x] `W60.P298.S1787` - Remove tests that assert shim or stub behavior for profile-owned output language; `tests`, `src/aeat/**/test_*.py`.
+- [x] `W60.P298.S1788` - Record the removed shim and stub surfaces for profile-owned output language; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W60.P299` - real behavior verification
 
 This Phase delivers real behavior verification for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
 
-- [ ] `W60.P299.S1789` - Add service contract tests for profile-owned output language; `tests/application`, `src/aeat/core/i18n`.
-- [ ] `W60.P299.S1790` - Add persistence or registry integration tests for profile-owned output language; `tests/application`, `src/aeat/application/wizard`.
-- [ ] `W60.P299.S1791` - Add negative tests proving rejected aliases do not reach profile-owned output language; `tests/entrypoints/cli`.
-- [ ] `W60.P299.S1792` - Add command behavior tests that exercise profile-owned output language through real services; `tests/entrypoints/cli`.
-- [ ] `W60.P299.S1793` - Add end-to-end workflow coverage for profile-owned output language; `tests`.
-- [ ] `W60.P299.S1794` - Run the targeted test slice for profile-owned output language without skips or xfails; `tests/application`, `tests/entrypoints/cli`.
+- [x] `W60.P299.S1789` - Add service contract tests for profile-owned output language; `tests/application`, `src/aeat/core/i18n`.
+- [x] `W60.P299.S1790` - Add persistence or registry integration tests for profile-owned output language; `tests/application`, `src/aeat/application/wizard`.
+- [x] `W60.P299.S1791` - Add negative tests proving rejected aliases do not reach profile-owned output language; `tests/entrypoints/cli`.
+- [x] `W60.P299.S1792` - Add command behavior tests that exercise profile-owned output language through real services; `tests/entrypoints/cli`.
+- [x] `W60.P299.S1793` - Add end-to-end workflow coverage for profile-owned output language; `tests`.
+- [x] `W60.P299.S1794` - Run the targeted test slice for profile-owned output language without skips or xfails; `tests/application`, `tests/entrypoints/cli`.
 
 ### Phase `W60.P300` - thin cli exposure
 
 This Phase delivers thin cli exposure for profile-owned output language as required by `2026-05-13-cli-workflow-redesign-profile-output-language-adr`.
 
-- [ ] `W60.P300.S1795` - Expose accepted command handlers for profile-owned output language under `aeat config`; `src/aeat/entrypoints/cli`.
-- [ ] `W60.P300.S1796` - Keep argument parsing for profile-owned output language separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W60.P300.S1797` - Delegate profile-owned output language execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W60.P300.S1798` - Render profile-owned output language results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W60.P300.S1799` - Handle profile-owned output language failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W60.P300.S1800` - Validate help text for profile-owned output language uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W60.P300.S1795` - Expose accepted command handlers for profile-owned output language under `aeat config`; `src/aeat/entrypoints/cli`.
+- [x] `W60.P300.S1796` - Keep argument parsing for profile-owned output language separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W60.P300.S1797` - Delegate profile-owned output language execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W60.P300.S1798` - Render profile-owned output language results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W60.P300.S1799` - Handle profile-owned output language failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W60.P300.S1800` - Validate help text for profile-owned output language uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W02` - cli backend boundary
 
@@ -209,56 +209,56 @@ This Wave implements the `2026-05-08-cli-backend-boundary-adr` decision for cent
 
 This Phase delivers backend implementation for central backend boundary enforcement as required by `2026-05-08-cli-backend-boundary-adr`.
 
-- [ ] `W02.P006.S0031` - Map the `2026-05-08-cli-backend-boundary-adr` decision into non-CLI service ownership for central backend boundary enforcement; `src/aeat/application`.
-- [ ] `W02.P006.S0032` - Implement Pydantic command and result contracts for central backend boundary enforcement; `src/aeat/application`.
-- [ ] `W02.P006.S0033` - Wire application or domain services required by central backend boundary enforcement; `src/aeat/application`.
-- [ ] `W02.P006.S0034` - Connect persistence, bucket events, registry data, or provider adapters required by central backend boundary enforcement; `src/aeat/application`.
-- [ ] `W02.P006.S0035` - Route existing backend functionality into the canonical service for central backend boundary enforcement; `src/aeat/application`.
-- [ ] `W02.P006.S0036` - Record service-level error codes and log fields for central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P006.S0031` - Map the `2026-05-08-cli-backend-boundary-adr` decision into non-CLI service ownership for central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P006.S0032` - Implement Pydantic command and result contracts for central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P006.S0033` - Wire application or domain services required by central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P006.S0034` - Connect persistence, bucket events, registry data, or provider adapters required by central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P006.S0035` - Route existing backend functionality into the canonical service for central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P006.S0036` - Record service-level error codes and log fields for central backend boundary enforcement; `src/aeat/application`.
 
 ### Phase `W02.P007` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for central backend boundary enforcement as required by `2026-05-08-cli-backend-boundary-adr`.
 
-- [ ] `W02.P007.S0037` - Audit duplicate implementations that overlap central backend boundary enforcement; `src/aeat/application`.
-- [ ] `W02.P007.S0038` - Delete duplicate backend branches that compete with central backend boundary enforcement; `src/aeat/application`.
-- [ ] `W02.P007.S0039` - Remove stale aliases that bypass the canonical service for central backend boundary enforcement; `src/aeat/entrypoints/cli`.
-- [ ] `W02.P007.S0040` - Migrate internal callers to the canonical service for central backend boundary enforcement; `src/aeat/application`.
-- [ ] `W02.P007.S0041` - Remove stale fixtures and tests that encode duplicate behavior for central backend boundary enforcement; `tests/entrypoints/cli`.
-- [ ] `W02.P007.S0042` - Update boundary inventory entries that describe duplicate behavior for central backend boundary enforcement; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W02.P007.S0037` - Audit duplicate implementations that overlap central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P007.S0038` - Delete duplicate backend branches that compete with central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P007.S0039` - Remove stale aliases that bypass the canonical service for central backend boundary enforcement; `src/aeat/entrypoints/cli`.
+- [x] `W02.P007.S0040` - Migrate internal callers to the canonical service for central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P007.S0041` - Remove stale fixtures and tests that encode duplicate behavior for central backend boundary enforcement; `tests/entrypoints/cli`.
+- [x] `W02.P007.S0042` - Update boundary inventory entries that describe duplicate behavior for central backend boundary enforcement; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W02.P008` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for central backend boundary enforcement as required by `2026-05-08-cli-backend-boundary-adr`.
 
-- [ ] `W02.P008.S0043` - Delete compatibility shims that preserve rejected behavior for central backend boundary enforcement; `src/aeat/application`.
-- [ ] `W02.P008.S0044` - Delete placeholder stubs that claim support for central backend boundary enforcement; `src/aeat/application`.
-- [ ] `W02.P008.S0045` - Replace stubbed paths with real backend service calls for central backend boundary enforcement; `src/aeat/application`.
-- [ ] `W02.P008.S0046` - Remove deprecated command spelling and help text for central backend boundary enforcement; `src/aeat/entrypoints/cli`.
-- [ ] `W02.P008.S0047` - Remove tests that assert shim or stub behavior for central backend boundary enforcement; `tests/entrypoints/cli`.
-- [ ] `W02.P008.S0048` - Record the removed shim and stub surfaces for central backend boundary enforcement; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W02.P008.S0043` - Delete compatibility shims that preserve rejected behavior for central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P008.S0044` - Delete placeholder stubs that claim support for central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P008.S0045` - Replace stubbed paths with real backend service calls for central backend boundary enforcement; `src/aeat/application`.
+- [x] `W02.P008.S0046` - Remove deprecated command spelling and help text for central backend boundary enforcement; `src/aeat/entrypoints/cli`.
+- [x] `W02.P008.S0047` - Remove tests that assert shim or stub behavior for central backend boundary enforcement; `tests/entrypoints/cli`.
+- [x] `W02.P008.S0048` - Record the removed shim and stub surfaces for central backend boundary enforcement; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W02.P009` - real behavior verification
 
 This Phase delivers real behavior verification for central backend boundary enforcement as required by `2026-05-08-cli-backend-boundary-adr`.
 
-- [ ] `W02.P009.S0049` - Add service contract tests for central backend boundary enforcement; `tests/entrypoints/cli`.
-- [ ] `W02.P009.S0050` - Add persistence or registry integration tests for central backend boundary enforcement; `tests/entrypoints/cli`.
-- [ ] `W02.P009.S0051` - Add negative tests proving rejected aliases do not reach central backend boundary enforcement; `tests/entrypoints/cli`.
-- [ ] `W02.P009.S0052` - Add command behavior tests that exercise central backend boundary enforcement through real services; `tests/entrypoints/cli`.
-- [ ] `W02.P009.S0053` - Add end-to-end workflow coverage for central backend boundary enforcement; `tests`.
-- [ ] `W02.P009.S0054` - Run the targeted test slice for central backend boundary enforcement without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W02.P009.S0049` - Add service contract tests for central backend boundary enforcement; `tests/entrypoints/cli`.
+- [x] `W02.P009.S0050` - Add persistence or registry integration tests for central backend boundary enforcement; `tests/entrypoints/cli`.
+- [x] `W02.P009.S0051` - Add negative tests proving rejected aliases do not reach central backend boundary enforcement; `tests/entrypoints/cli`.
+- [x] `W02.P009.S0052` - Add command behavior tests that exercise central backend boundary enforcement through real services; `tests/entrypoints/cli`.
+- [x] `W02.P009.S0053` - Add end-to-end workflow coverage for central backend boundary enforcement; `tests`.
+- [x] `W02.P009.S0054` - Run the targeted test slice for central backend boundary enforcement without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W02.P010` - thin cli exposure
 
 This Phase delivers thin cli exposure for central backend boundary enforcement as required by `2026-05-08-cli-backend-boundary-adr`.
 
-- [ ] `W02.P010.S0055` - Expose accepted command handlers for central backend boundary enforcement under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W02.P010.S0056` - Keep argument parsing for central backend boundary enforcement separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W02.P010.S0057` - Delegate central backend boundary enforcement execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W02.P010.S0058` - Render central backend boundary enforcement results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W02.P010.S0059` - Handle central backend boundary enforcement failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W02.P010.S0060` - Validate help text for central backend boundary enforcement uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W02.P010.S0055` - Expose accepted command handlers for central backend boundary enforcement under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W02.P010.S0056` - Keep argument parsing for central backend boundary enforcement separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W02.P010.S0057` - Delegate central backend boundary enforcement execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W02.P010.S0058` - Render central backend boundary enforcement results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W02.P010.S0059` - Handle central backend boundary enforcement failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W02.P010.S0060` - Validate help text for central backend boundary enforcement uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W03` - aeat cli wireframe
 
@@ -2746,56 +2746,56 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-app-modelo-discard-ad
 
 This Phase delivers backend implementation for modelo discard behavior as required by `2026-05-13-cli-workflow-redesign-app-modelo-discard-adr`.
 
-- [ ] `W45.P221.S1321` - Map the `2026-05-13-cli-workflow-redesign-app-modelo-discard-adr` decision into non-CLI service ownership for modelo discard behavior; `src/aeat/application/modelo`.
-- [ ] `W45.P221.S1322` - Implement Pydantic command and result contracts for modelo discard behavior; `src/aeat/application/modelo`.
-- [ ] `W45.P221.S1323` - Wire application or domain services required by modelo discard behavior; `src/aeat/application/modelo`.
-- [ ] `W45.P221.S1324` - Connect persistence, bucket events, registry data, or provider adapters required by modelo discard behavior; `src/aeat/application/modelo`.
-- [ ] `W45.P221.S1325` - Route existing backend functionality into the canonical service for modelo discard behavior; `src/aeat/application/modelo`.
-- [ ] `W45.P221.S1326` - Record service-level error codes and log fields for modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P221.S1321` - Map the `2026-05-13-cli-workflow-redesign-app-modelo-discard-adr` decision into non-CLI service ownership for modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P221.S1322` - Implement Pydantic command and result contracts for modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P221.S1323` - Wire application or domain services required by modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P221.S1324` - Connect persistence, bucket events, registry data, or provider adapters required by modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P221.S1325` - Route existing backend functionality into the canonical service for modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P221.S1326` - Record service-level error codes and log fields for modelo discard behavior; `src/aeat/application/modelo`.
 
 ### Phase `W45.P222` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for modelo discard behavior as required by `2026-05-13-cli-workflow-redesign-app-modelo-discard-adr`.
 
-- [ ] `W45.P222.S1327` - Audit duplicate implementations that overlap modelo discard behavior; `src/aeat/application/modelo`.
-- [ ] `W45.P222.S1328` - Delete duplicate backend branches that compete with modelo discard behavior; `src/aeat/application/modelo`.
-- [ ] `W45.P222.S1329` - Remove stale aliases that bypass the canonical service for modelo discard behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W45.P222.S1330` - Migrate internal callers to the canonical service for modelo discard behavior; `src/aeat/application/modelo`.
-- [ ] `W45.P222.S1331` - Remove stale fixtures and tests that encode duplicate behavior for modelo discard behavior; `tests/application/modelo`.
-- [ ] `W45.P222.S1332` - Update boundary inventory entries that describe duplicate behavior for modelo discard behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W45.P222.S1327` - Audit duplicate implementations that overlap modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P222.S1328` - Delete duplicate backend branches that compete with modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P222.S1329` - Remove stale aliases that bypass the canonical service for modelo discard behavior; `src/aeat/entrypoints/cli`.
+- [x] `W45.P222.S1330` - Migrate internal callers to the canonical service for modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P222.S1331` - Remove stale fixtures and tests that encode duplicate behavior for modelo discard behavior; `tests/application/modelo`.
+- [x] `W45.P222.S1332` - Update boundary inventory entries that describe duplicate behavior for modelo discard behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W45.P223` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for modelo discard behavior as required by `2026-05-13-cli-workflow-redesign-app-modelo-discard-adr`.
 
-- [ ] `W45.P223.S1333` - Delete compatibility shims that preserve rejected behavior for modelo discard behavior; `src/aeat/application/modelo`.
-- [ ] `W45.P223.S1334` - Delete placeholder stubs that claim support for modelo discard behavior; `src/aeat/application/modelo`.
-- [ ] `W45.P223.S1335` - Replace stubbed paths with real backend service calls for modelo discard behavior; `src/aeat/application/modelo`.
-- [ ] `W45.P223.S1336` - Remove deprecated command spelling and help text for modelo discard behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W45.P223.S1337` - Remove tests that assert shim or stub behavior for modelo discard behavior; `tests/application/modelo`.
-- [ ] `W45.P223.S1338` - Record the removed shim and stub surfaces for modelo discard behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W45.P223.S1333` - Delete compatibility shims that preserve rejected behavior for modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P223.S1334` - Delete placeholder stubs that claim support for modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P223.S1335` - Replace stubbed paths with real backend service calls for modelo discard behavior; `src/aeat/application/modelo`.
+- [x] `W45.P223.S1336` - Remove deprecated command spelling and help text for modelo discard behavior; `src/aeat/entrypoints/cli`.
+- [x] `W45.P223.S1337` - Remove tests that assert shim or stub behavior for modelo discard behavior; `tests/application/modelo`.
+- [x] `W45.P223.S1338` - Record the removed shim and stub surfaces for modelo discard behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W45.P224` - real behavior verification
 
 This Phase delivers real behavior verification for modelo discard behavior as required by `2026-05-13-cli-workflow-redesign-app-modelo-discard-adr`.
 
-- [ ] `W45.P224.S1339` - Add service contract tests for modelo discard behavior; `tests/application/modelo`.
-- [ ] `W45.P224.S1340` - Add persistence or registry integration tests for modelo discard behavior; `tests/application/modelo`.
-- [ ] `W45.P224.S1341` - Add negative tests proving rejected aliases do not reach modelo discard behavior; `tests/entrypoints/cli`.
-- [ ] `W45.P224.S1342` - Add command behavior tests that exercise modelo discard behavior through real services; `tests/entrypoints/cli`.
-- [ ] `W45.P224.S1343` - Add end-to-end workflow coverage for modelo discard behavior; `tests`.
-- [ ] `W45.P224.S1344` - Run the targeted test slice for modelo discard behavior without skips or xfails; `tests/application/modelo`.
+- [x] `W45.P224.S1339` - Add service contract tests for modelo discard behavior; `tests/application/modelo`.
+- [x] `W45.P224.S1340` - Add persistence or registry integration tests for modelo discard behavior; `tests/application/modelo`.
+- [x] `W45.P224.S1341` - Add negative tests proving rejected aliases do not reach modelo discard behavior; `tests/entrypoints/cli`.
+- [x] `W45.P224.S1342` - Add command behavior tests that exercise modelo discard behavior through real services; `tests/entrypoints/cli`.
+- [x] `W45.P224.S1343` - Add end-to-end workflow coverage for modelo discard behavior; `tests`.
+- [x] `W45.P224.S1344` - Run the targeted test slice for modelo discard behavior without skips or xfails; `tests/application/modelo`.
 
 ### Phase `W45.P225` - thin cli exposure
 
 This Phase delivers thin cli exposure for modelo discard behavior as required by `2026-05-13-cli-workflow-redesign-app-modelo-discard-adr`.
 
-- [ ] `W45.P225.S1345` - Expose accepted command handlers for modelo discard behavior under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W45.P225.S1346` - Keep argument parsing for modelo discard behavior separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W45.P225.S1347` - Delegate modelo discard behavior execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W45.P225.S1348` - Render modelo discard behavior results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W45.P225.S1349` - Handle modelo discard behavior failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W45.P225.S1350` - Validate help text for modelo discard behavior uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W45.P225.S1345` - Expose accepted command handlers for modelo discard behavior under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W45.P225.S1346` - Keep argument parsing for modelo discard behavior separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W45.P225.S1347` - Delegate modelo discard behavior execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W45.P225.S1348` - Render modelo discard behavior results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W45.P225.S1349` - Handle modelo discard behavior failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W45.P225.S1350` - Validate help text for modelo discard behavior uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W46` - app modelo shape
 
