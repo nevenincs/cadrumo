@@ -8,8 +8,17 @@ from ._errors import (
     AggregationMissingClassificationError,
     AggregationPeriodError,
     AggregationUnsupportedModeloError,
+    AggregationValidationError,
 )
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind, Quarter
+from ._prorrata import (
+    ProrrataAggregation,
+    VatOperation,
+    VatOperationKind,
+    aggregate_definitiva_prorrata,
+    aggregate_prorrata_inputs,
+    aggregate_provisional_prorrata,
+)
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
     RentaLedgerAggregationIssueReason,
@@ -24,14 +33,21 @@ __all__ = [
     "AggregationMissingClassificationError",
     "AggregationPeriodError",
     "AggregationUnsupportedModeloError",
+    "AggregationValidationError",
     "CasillaAggregation",
     "CasillaProvenance",
     "Period",
     "PeriodKind",
+    "ProrrataAggregation",
     "Quarter",
     "RentaLedgerAggregationIssue",
     "RentaLedgerAggregationIssueReason",
     "RentaLedgerExpenseAggregation",
+    "VatOperation",
+    "VatOperationKind",
+    "aggregate_definitiva_prorrata",
+    "aggregate_prorrata_inputs",
+    "aggregate_provisional_prorrata",
     "aggregate_renta_ledger_expenses",
     "aggregate_renta_ledger_expenses_from_repositories",
 ]
