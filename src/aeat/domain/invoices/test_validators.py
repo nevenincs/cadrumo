@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.identity import validate_spanish_tax_id
+from ...core.identity import IdentityError, validate_spanish_tax_id
 from ._validators import validate_country_code, validate_vat_number
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -91,8 +91,15 @@ def test_validate_spanish_tax_id_accepts_abeh_letter_form() -> None:
     ],
 )
 def test_validate_spanish_tax_id_rejects_invalid_checksum(value: str) -> None:
-    """Invalid checksum characters must raise ``ValueError``."""
-    with pytest.raises(ValueError):
+    """Invalid checksum characters must raise ``IdentityError``.
+
+    The parametrized inputs route through NIF / NIE / CIF-digit /
+    CIF-letter validators which each emit a checksum-specific
+    message. The shared ``checksum`` keyword is in every branch's
+    raise message; the match= ensures the failure is a checksum
+    rejection rather than a shape regex miss.
+    """
+    with pytest.raises(IdentityError, match=r"checksum"):
         validate_spanish_tax_id(value)
 
 
@@ -101,8 +108,14 @@ def test_validate_spanish_tax_id_rejects_invalid_checksum(value: str) -> None:
     ["", "12345", "12345678ZA", "?23456781"],
 )
 def test_validate_spanish_tax_id_rejects_malformed_shapes(value: str) -> None:
-    """Blank, short, long, and non-alphanumeric inputs must be rejected."""
-    with pytest.raises(ValueError):
+    """Blank, short, long, and non-alphanumeric inputs must be rejected.
+
+    Every shape-level rejection in the tax-id pipeline emits a
+    message prefixed with ``tax identifier`` (blank / wrong length /
+    unrecognised leader). The match= ensures the failure is a
+    shape-level rejection, not a checksum failure.
+    """
+    with pytest.raises(IdentityError, match=r"tax identifier"):
         validate_spanish_tax_id(value)
 
 
@@ -169,8 +182,14 @@ def test_validate_vat_number_accepts_expected_prefixes(value: str, country: str,
     ],
 )
 def test_validate_vat_number_rejects_bad_shapes(value: str, country: str) -> None:
-    """Missing or mismatched prefix and out-of-range bodies are rejected."""
-    with pytest.raises(ValueError):
+    """Missing or mismatched prefix and out-of-range bodies are rejected.
+
+    Every VAT-number rejection message begins with ``VAT number``;
+    the prefix-mismatch and body-shape branches both share the
+    keyword so the match= pins rejection by the VAT shape gate
+    rather than any unrelated InvoiceValidationError.
+    """
+    with pytest.raises(ValueError, match=r"VAT number"):
         validate_vat_number(value, country)
 
 
@@ -190,5 +209,5 @@ def test_validate_country_code_normalises(value: str, expected: str) -> None:
 @pytest.mark.parametrize("value", ["", "E", "ESP", "E3"])
 def test_validate_country_code_rejects_invalid_shapes(value: str) -> None:
     """Non-2-letter or non-alphabetic country codes are rejected."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"country code must be an ISO-3166 alpha-2 value"):
         validate_country_code(value)
