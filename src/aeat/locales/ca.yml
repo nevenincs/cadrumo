@@ -157,8 +157,7 @@ cli:
       errors:
         missing_required_flags: Falten banderes obligatòries per al mode --quiet;
           proporciona un valor per a cada pregunta obligatòria.
-      help: Executar l'assistent de configuració basat en esquema de forma interactiva
-        o mitjançant banderes
+      help: Guided initial setup of the tax profile
       profile_name_help: Nom del perfil on s'escriuen les respostes
       quiet_help: Executar el flux sense interacció utilitzant només els valors de
         les banderes
@@ -984,7 +983,7 @@ wizard:
       name:
         help: Nom visible mostrat en revisions locals
       notes:
-        help: Notes de l'operador (no consumides pel motor)
+        help: Notes per al teu propi record (opcional)
       pays-capital-income-with-retencion:
         help: Paga rendes de capital amb retenció
       pays-professionals-with-retencion:
@@ -996,7 +995,7 @@ wizard:
       spouse-birth-date:
         help: Data de naixement del cònjuge
       spouse-disability-grade:
-        help: Clau de discapacitat del cònjuge
+        help: Grau de discapacitat del cònjuge (si aplica)
       spouse-eu-eea-country:
         help: País UE/EEE del cònjuge
       spouse-eu-eea-resident:
@@ -1043,8 +1042,8 @@ wizard:
       title: IVA
     notes:
       notes:
-        prompt: Notes de l'operador (no consumides pel motor)
-      title: Notes de l'operador
+        prompt: Notes per al teu propi record (opcional)
+      title: Notes per al teu propi record
     obligations:
       bienes-extranjero-above-threshold:
         prompt: Béns a l'estranger superen el llindar legal
@@ -1129,7 +1128,7 @@ wizard:
       spouse-birth-date:
         prompt: Data de naixement del cònjuge
       spouse-disability-grade:
-        prompt: Clau de discapacitat del cònjuge
+        prompt: Grau de discapacitat del cònjuge (si aplica)
       spouse-eu-eea-country:
         prompt: País UE/EEE del cònjuge
       spouse-eu-eea-resident:
