@@ -22,7 +22,6 @@ from ...core.logging import get_logger
 from ._errors import ModeloError
 from ._work_unit import WorkUnit, WorkUnitCatalogue
 
-
 _LOGGER = get_logger(__name__)
 _WORK_UNIT_NAMESPACE = "aeat.domain.modelos.work_units"
 _WORK_UNIT_OBJECT_KEY = "catalogue"
@@ -71,19 +70,14 @@ class WorkUnitCatalogueRepository:
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
             _LOGGER.error("work-unit catalogue integrity error", exc_info=True)
-            raise WorkUnitPersistenceError(
-                f"work-unit catalogue integrity error: {type(exc).__name__}: {exc}"
-            ) from exc
+            raise WorkUnitPersistenceError(f"work-unit catalogue integrity error: {type(exc).__name__}: {exc}") from exc
         if record is None:
             _LOGGER.debug("work-unit catalogue not found; returning empty catalogue")
             return WorkUnitCatalogue()
-        envelope = Envelope[WorkUnitCatalogue].model_validate_json(
-            record.payload.decode("utf-8")
-        )
+        envelope = Envelope[WorkUnitCatalogue].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.FINANCIAL:
             raise WorkUnitPersistenceError(
-                f"work-unit catalogue has classification {envelope.classification}; "
-                f"FINANCIAL expected"
+                f"work-unit catalogue has classification {envelope.classification}; FINANCIAL expected"
             )
         if envelope.schema_version > _WORK_UNIT_CATALOGUE_VERSION:
             raise WorkUnitPersistenceError(
@@ -91,9 +85,7 @@ class WorkUnitCatalogueRepository:
                 f"consumer supports up to {_WORK_UNIT_CATALOGUE_VERSION}"
             )
         catalogue = envelope.payload
-        _LOGGER.debug(
-            "loaded work-unit catalogue with %d entr(y/ies)", len(catalogue)
-        )
+        _LOGGER.debug("loaded work-unit catalogue with %d entr(y/ies)", len(catalogue))
         return catalogue
 
     def save(self, catalogue: WorkUnitCatalogue) -> None:
@@ -113,14 +105,10 @@ class WorkUnitCatalogueRepository:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
-        _LOGGER.info(
-            "saved work-unit catalogue with %d entr(y/ies)", len(catalogue)
-        )
+        _LOGGER.info("saved work-unit catalogue with %d entr(y/ies)", len(catalogue))
 
 
-def upsert_work_unit(
-    catalogue: WorkUnitCatalogue, unit: WorkUnit
-) -> WorkUnitCatalogue:
+def upsert_work_unit(catalogue: WorkUnitCatalogue, unit: WorkUnit) -> WorkUnitCatalogue:
     """Return a new catalogue with ``unit`` inserted or replaced.
 
     The input catalogue is not mutated. The returned catalogue
@@ -134,9 +122,7 @@ def upsert_work_unit(
     return WorkUnitCatalogue(work_units=mapping)
 
 
-def remove_work_unit(
-    catalogue: WorkUnitCatalogue, work_unit_id: str
-) -> WorkUnitCatalogue:
+def remove_work_unit(catalogue: WorkUnitCatalogue, work_unit_id: str) -> WorkUnitCatalogue:
     """Return a new catalogue with ``work_unit_id`` removed.
 
     Removing an absent id is a no-op that returns a value-equal

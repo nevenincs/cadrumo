@@ -77,5 +77,5 @@ class TestRaiseOnErrors:
                 ),
             )
         )
-        with pytest.raises(NormativeError):
+        with pytest.raises(NormativeError, match=r"normative"):
             raise_on_errors(report)

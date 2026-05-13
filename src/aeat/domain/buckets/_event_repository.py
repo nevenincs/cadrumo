@@ -11,7 +11,6 @@ from ...core.logging import get_logger
 from ._errors import BucketsError
 from ._event import BucketEvent, BucketEventHistoryCatalogue
 
-
 _LOGGER = get_logger(__name__)
 _NAMESPACE = "aeat.domain.buckets.event_history"
 _OBJECT_KEY = "catalogue"

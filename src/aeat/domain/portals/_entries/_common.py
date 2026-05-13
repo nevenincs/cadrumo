@@ -13,7 +13,7 @@ from collections.abc import Iterable
 
 from pydantic import HttpUrl, TypeAdapter
 
-from ....core.i18n import Translatable as tr  # noqa: N813
+from ....core.i18n import Translatable as tr
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
 from .._metadata import PortalMetadata

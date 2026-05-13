@@ -16,7 +16,7 @@ from enum import StrEnum
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ._errors import CategoryValidationError
 
 

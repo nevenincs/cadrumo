@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import pytest
 
+from ._errors import TransactionError
 from ._model_tier import (
     MINIMUM_CLASSIFICATION_TIER,
     ModelCapability,
@@ -64,7 +65,7 @@ def test_resolve_profile_without_alias_returns_lowest_tier_at_or_above_minimum()
 def test_resolve_profile_rejects_low_tier_alias() -> None:
     """An alias below the minimum tier must be refused."""
     # claude-haiku is LOW in the catalogue.
-    with pytest.raises(ValueError, match="tier LOW but classification requires at least MEDIUM"):
+    with pytest.raises(TransactionError, match="tier LOW but classification requires at least MEDIUM"):
         resolve_profile("claude", alias="claude-haiku")
 
 
@@ -76,12 +77,12 @@ def test_resolve_profile_accepts_low_tier_alias_when_minimum_lowered() -> None:
 
 
 def test_resolve_profile_rejects_unknown_provider() -> None:
-    with pytest.raises(ValueError, match="unknown provider"):
+    with pytest.raises(TransactionError, match="unknown provider"):
         resolve_profile("not-a-provider")
 
 
 def test_resolve_profile_rejects_unknown_alias() -> None:
-    with pytest.raises(ValueError, match="unknown alias"):
+    with pytest.raises(TransactionError, match="unknown alias"):
         resolve_profile("claude", alias="claude-from-the-future")
 
 
@@ -91,7 +92,7 @@ def test_profile_is_frozen_dataclass() -> None:
 
     profile = resolve_profile("claude")
     with pytest.raises(FrozenInstanceError, match=r"model_id"):
-        setattr(profile, "model_id", "changed")  # noqa: B010
+        setattr(profile, "model_id", "changed")  # noqa: B010 — verifying the frozen-instance error path
 
 
 def test_every_profile_has_a_non_empty_alias() -> None:

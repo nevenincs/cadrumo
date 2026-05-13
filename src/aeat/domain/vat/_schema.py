@@ -29,7 +29,7 @@ from pydantic import (
     model_validator,
 )
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from .errors import VatValidationError
 
 

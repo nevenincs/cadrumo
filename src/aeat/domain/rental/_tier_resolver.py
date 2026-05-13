@@ -423,6 +423,10 @@ def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
             )
         )
     except RegistryValidationError:
+        _logger.debug(
+            "rental joven age min: registry lookup failed for period_year=%d; fallback to JOVEN_TENANT_AGE_MIN",
+            period_year,
+        )
         age_min = JOVEN_TENANT_AGE_MIN
     try:
         age_max = int(
@@ -434,6 +438,10 @@ def _resolve_joven_tenant_age_range(period_year: int) -> tuple[int, int]:
             )
         )
     except RegistryValidationError:
+        _logger.debug(
+            "rental joven age max: registry lookup failed for period_year=%d; fallback to JOVEN_TENANT_AGE_MAX",
+            period_year,
+        )
         age_max = JOVEN_TENANT_AGE_MAX
     return age_min, age_max
 

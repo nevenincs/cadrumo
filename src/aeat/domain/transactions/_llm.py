@@ -40,7 +40,7 @@ from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ..categories import CATEGORY_PROFILES_2025, SpendingCategory
 from ._enums import BusinessClassification
@@ -418,7 +418,7 @@ class SubprocessLLMClassifier:
             transaction.transaction_id,
         )
         try:
-            completed = subprocess.run(  # noqa: S603 — explicit command list, trusted binary.
+            completed = subprocess.run(
                 argv,
                 input=stdin_input,
                 capture_output=True,

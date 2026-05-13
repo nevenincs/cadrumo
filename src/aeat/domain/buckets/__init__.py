@@ -36,7 +36,6 @@ from ._event_repository import (
     append_bucket_event,
 )
 
-
 __all__ = [
     "BucketEvent",
     "BucketEventHistoryCatalogue",
