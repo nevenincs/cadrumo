@@ -66,27 +66,21 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr]]'
 ---
 
-<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
-     outside the YAML frontmatter above -->
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `cli-workflow-redesign` `epic` plan
 
 ## Epic intent
 
 Implement GitHub milestone `CLI workflow redesign epic` milestone #12 as the complete apex ADR implementation for the CLI workflow redesign. The strategic goal is a coherent tax workflow CLI rooted only at `aeat config` and `aeat app`, with backend/application/domain behavior implemented before command exposure and no business logic in the CLI layer. The timeline horizon is the full milestone implementation cycle from foundation waves through final apex conformance, and the participating teams are coordinated coding agents working in shared worktrees without pull-request gates. Epic completion requires every Step row closed in this plan and milestone #12 closed in GitHub.
-
-## Proposed Changes
-
-- Treat each related ADR as one execution Wave so implementation, cleanup, tests, and CLI exposure remain traceable to the decision that requires them.
-- Apply the same five-phase shape to every Wave: backend implementation, shadow duplicate removal, de-shim and de-stub cleanup, real-behavior verification, then thin CLI exposure.
-- Keep business logic out of `src/aeat/entrypoints/cli` by requiring CLI handlers to parse arguments, call existing backend services, and render typed results only.
-- Use centralized Pydantic result and command models, `aeat.core.logging`, `aeat.core.errors`, `aeat.entrypoints.cli._errors`, `_emit`, `emit_json_success`, and `emit_json_document` for every command surface.
-- Retire rejected roots and aliases: `setup`, `archive`, `data`, `filing`, `financial`, `invoice`, `declaration`, `sanitize`, `llm`, `topic`, standalone `submit`, `presentation`, `preflight`, and `workflow`.
-- Preserve accepted vocabulary: `calculate -> verify -> file`, `internal filed`, `amend`, `bindings`, `rename`, `reconcile`, `ledger_transaction`, `purchase_invoice_evidence`, `payable_invoice`, and `collectible_invoice`.
-- Use real-behavior unit, integration, and end-to-end tests without tautological tests, mocks, stubs, monkeypatch shortcuts, skips, or xfails as a substitute for implementation.
-- Maintain plan progress in this L4 document and use the vaultspec plan CLI for future identifier-affecting edits to Waves, Phases, and Steps.
-
-## Steps
 
 ## Wave `W01` - apex cli workflow redesign
 
@@ -96,12 +90,12 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-adr` decision for ape
 
 This Phase delivers backend implementation for apex root and lifecycle contract as required by `2026-05-12-cli-workflow-redesign-adr`.
 
-- [ ] `W01.P001.S0001` - Map the `2026-05-12-cli-workflow-redesign-adr` decision into non-CLI service ownership for apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P001.S0002` - Implement Pydantic command and result contracts for apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P001.S0003` - Wire application or domain services required by apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P001.S0004` - Connect persistence, bucket events, registry data, or provider adapters required by apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P001.S0005` - Route existing backend functionality into the canonical service for apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P001.S0006` - Record service-level error codes and log fields for apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P001.S0001` - Map the `2026-05-12-cli-workflow-redesign-adr` decision into non-CLI service ownership for apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P001.S0002` - Implement Pydantic command and result contracts for apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P001.S0003` - Wire application or domain services required by apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P001.S0004` - Connect persistence, bucket events, registry data, or provider adapters required by apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P001.S0005` - Route existing backend functionality into the canonical service for apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P001.S0006` - Record service-level error codes and log fields for apex root and lifecycle contract; `src/aeat/application`.
 
 ### Phase `W01.P002` - shadow duplicate removal
 
@@ -3568,20 +3562,3 @@ This Phase delivers thin cli exposure for workflow resumption semantics as requi
 - [ ] `W59.P295.S1768` - Render workflow resumption semantics results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
 - [ ] `W59.P295.S1769` - Handle workflow resumption semantics failures through the central command error boundary; `src/aeat/entrypoints/cli`.
 - [ ] `W59.P295.S1770` - Validate help text for workflow resumption semantics uses accepted vocabulary only; `tests/entrypoints/cli`.
-
-## Parallelization
-
-Waves are ordered by dependency group and default to sequential execution at the Wave level. Phases inside a Wave are ordered backend implementation, shadow duplicate removal, de-shim and de-stub cleanup, real-behavior verification, then CLI exposure. Independent backend steps inside the same Phase may run in parallel when they do not edit the same modules and when they share no persistence or schema migration dependency. CLI exposure steps never start before backend service contracts, cleanup, and real-behavior tests for that Wave exist. Multiple agents may work in the same shared worktree only with explicit file ownership, no pull-request gate, and no reversion of unrelated in-flight changes.
-
-## Verification
-
-- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-13-cli-workflow-redesign-epic-plan.md` reports no plan-grammar errors for this document.
-- Every related ADR in the frontmatter has exactly one Wave in this plan.
-- Every Step row in every Wave is closed in this plan before the epic is complete.
-- GitHub milestone `CLI workflow redesign epic` milestone #12 is closed only after every Step row is closed.
-- The installed command tree exposes only `aeat config` and `aeat app` at the root.
-- Rejected roots and aliases are absent from command registration, help text, tests, and touched documentation.
-- Every CLI command delegates to centralized backend/application/domain services and contains no business logic, validation policy, persistence rules, provider logic, workflow transitions, shims, or compatibility behavior.
-- Every command uses centralized Pydantic contracts, central logging, central error handling, and central output rendering.
-- The relevant unit, integration, and end-to-end tests pass without tautological assertions, mocks, stubs, monkeypatch shortcuts, skips, or xfails as a substitute for behavior.
-- A final boundary audit proves CLI-001 through CLI-010 are either implemented as backend-backed thin adapters or removed as rejected behavior.
