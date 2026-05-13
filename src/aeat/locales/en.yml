@@ -153,6 +153,9 @@ cli:
         mode
       profile_name_help: Profile name to write the answers into
       quiet_help: Run the flow non-interactively using only the supplied flag values
+      success:
+        next_step: 'Next step: run `aeat app overview` to review your next obligation.'
+        saved: Profile '%{profile_name}' saved.
     status:
       empty_profile: No profile configured. Run `aeat config init` to get started.
       help: Show the readiness of the current configuration profile

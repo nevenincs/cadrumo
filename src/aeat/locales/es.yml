@@ -166,6 +166,10 @@ cli:
       profile_name_help: Nombre del perfil donde guardar las respuestas
       quiet_help: Ejecutar el flujo sin interacción usando solo los valores de las
         banderas
+      success:
+        next_step: 'Próximo paso: ejecuta `aeat app overview` para revisar tu próxima
+          obligación.'
+        saved: Perfil '%{profile_name}' guardado.
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config init` para empezar.
       help: Mostrar el estado del perfil de configuración activo

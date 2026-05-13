@@ -164,6 +164,9 @@ cli:
       profile_name_help: A profil neve, ahova a válaszok kerülnek
       quiet_help: A folyamat futtatása interakció nélkül, csak a kapcsolók értékeit
         használva
+      success:
+        next_step: 'Next step: run `aeat app overview` to review your next obligation.'
+        saved: Profile '%{profile_name}' saved.
     status:
       empty_profile: No profile configured. Run `aeat config init` to get started.
       help: Az aktív konfigurációs profil készenlétének megjelenítése
