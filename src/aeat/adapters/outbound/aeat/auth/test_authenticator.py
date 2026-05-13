@@ -841,9 +841,10 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
             now=now,
         )
 
-    monkeypatch.setattr(authenticator_module, "certificate_health", _capture_certificate_health)
-
-    description = AeatAuthenticator(settings).describe()
+    description = AeatAuthenticator(
+        settings,
+        certificate_health_check=_capture_certificate_health,
+    ).describe()
 
     assert description.available is True
     assert captured["path"] == bundle_path
