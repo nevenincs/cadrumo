@@ -17,6 +17,7 @@ from __future__ import annotations
 import pytest
 from pydantic import SecretStr, ValidationError
 
+from ....core.identity import IdentityError
 from ._records import (
     AddressReplacement,
     ArbitraryReplacement,
@@ -60,7 +61,11 @@ class TestNifReplacement:
         )
 
     def test_rejects_synthetic_with_bad_checksum(self) -> None:
-        with pytest.raises(ValidationError):
+        # validate_spanish_tax_id raises IdentityError, which does NOT
+        # inherit from ValueError; pydantic propagates it out of the
+        # @field_validator unwrapped. pytest.raises(ValidationError)
+        # would silently never match — pin the actual class.
+        with pytest.raises(IdentityError, match=r"NIE checksum letter is invalid"):
             NifReplacement(
                 real=SecretStr("Y4113523X"),
                 synthetic="Y0000001Z",  # wrong checksum letter
@@ -68,7 +73,10 @@ class TestNifReplacement:
             )
 
     def test_rejects_blank_synthetic(self) -> None:
-        with pytest.raises(ValidationError):
+        # Blank synthetic is rejected by the _NonEmptyStr field-type
+        # constraint (min_length=1) BEFORE the custom field_validator
+        # runs — pydantic surfaces this through ValidationError.
+        with pytest.raises(ValidationError, match=r"at least 1 character"):
             NifReplacement(
                 real=SecretStr("Y4113523X"),
                 synthetic="",
@@ -87,7 +95,7 @@ class TestNameReplacement:
         )
 
     def test_rejects_mixed_case(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"synthetic name must be uppercase"):
             NameReplacement(
                 real=SecretStr("Wootsch Gergely Domokos"),
                 synthetic="Apellido Nombre",
@@ -95,7 +103,7 @@ class TestNameReplacement:
             )
 
     def test_rejects_digits(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"synthetic name must not contain digits"):
             NameReplacement(
                 real=SecretStr("Wootsch Gergely Domokos"),
                 synthetic="APELLIDO 1",
@@ -114,7 +122,7 @@ class TestExpedienteReplacement:
         )
 
     def test_rejects_with_punctuation(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"synthetic expediente must be alphanumeric"):
             ExpedienteReplacement(
                 real=SecretStr("ABC2024-0042"),
                 synthetic="9999-2024",
@@ -133,7 +141,7 @@ class TestCsvReplacement:
         )
 
     def test_rejects_short(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"synthetic CSV must be exactly 16 characters"):
             CsvReplacement(
                 real=SecretStr("FNBB57PE9KZ5TN4R"),
                 synthetic="TOO_SHORT",
@@ -141,7 +149,7 @@ class TestCsvReplacement:
             )
 
     def test_rejects_lowercase(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"synthetic CSV must be uppercase alphanumeric"):
             CsvReplacement(
                 real=SecretStr("FNBB57PE9KZ5TN4R"),
                 synthetic="sanitized1002021",
@@ -160,7 +168,7 @@ class TestNrcReplacement:
         )
 
     def test_rejects_too_long(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"synthetic NRC must be 16-32 characters"):
             NrcReplacement(
                 real=SecretStr("ABCDEFGHIJKLMNOP"),
                 synthetic="X" * 64,
@@ -180,7 +188,7 @@ class TestIbanReplacement:
         )
 
     def test_rejects_bad_checksum(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"synthetic IBAN fails the ISO 13616 mod-97 check"):
             IbanReplacement(
                 real=SecretStr("ES7621000418401234567891"),
                 synthetic="ES0000000000000000000000",
@@ -206,7 +214,7 @@ class TestImporteReplacement:
         )
 
     def test_rejects_dot_decimal(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"synthetic IMPORTE must contain a decimal comma"):
             ImporteReplacement(
                 real=SecretStr("9.876,54"),
                 synthetic="1000.00",
@@ -214,7 +222,7 @@ class TestImporteReplacement:
             )
 
     def test_rejects_one_decimal_digit(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"synthetic IMPORTE must end with two decimal digits"):
             ImporteReplacement(
                 real=SecretStr("9.876,54"),
                 synthetic="1.000,5",
@@ -233,7 +241,9 @@ class TestArbitraryReplacement:
         )
 
     def test_rejects_blank(self) -> None:
-        with pytest.raises(ValidationError):
+        # Same _NonEmptyStr field-type constraint as NifReplacement —
+        # pydantic rejects min_length violation with the stock message.
+        with pytest.raises(ValidationError, match=r"at least 1 character"):
             ArbitraryReplacement(
                 real=SecretStr("opaque"),
                 synthetic="",
@@ -273,14 +283,14 @@ class TestTokenMapShape:
 
     def test_frozen_rejects_mutation(self) -> None:
         mapping = TokenMap()
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"frozen"):
             # `frozen=True` causes pydantic to reject this assignment;
             # `setattr` keeps the static type checker happy because it
             # only sees a generic attribute write.
             setattr(mapping, "nif", ())  # noqa: B010
 
     def test_unknown_field_rejected(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             TokenMap.model_validate({"unknown_field": "x"})
 
     def test_is_empty_returns_false_when_any_category_populated(self) -> None:
@@ -383,7 +393,7 @@ class TestReplacementShape:
         assert record.surface == "content_stream"
 
     def test_rejects_invalid_sha(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"real_sha256"):
             Replacement(
                 surface="content_stream",
                 surface_index=(0,),
@@ -393,7 +403,7 @@ class TestReplacementShape:
             )
 
     def test_rejects_unknown_surface(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Input should be"):
             Replacement.model_validate(
                 {
                     "surface": "unknown_surface_kind",
@@ -405,7 +415,7 @@ class TestReplacementShape:
             )
 
     def test_rejects_unknown_encoding(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Input should be"):
             Replacement.model_validate(
                 {
                     "surface": "content_stream",
@@ -425,7 +435,7 @@ class TestScrubbedSurfaceShape:
         assert record.count == 0
 
     def test_rejects_negative_count(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"greater than or equal to 0"):
             ScrubbedSurface(surface="attachments", count=-1)
 
 
@@ -440,7 +450,7 @@ class TestSanitizationWarningShape:
         assert record.code == "structtree_dropped_lossy"
 
     def test_rejects_unknown_code(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Input should be"):
             SanitizationWarning.model_validate(
                 {"code": "unknown_warning_kind", "detail": "—"},
             )
@@ -461,7 +471,7 @@ class TestDeterminismFlagsShape:
         assert flags.object_stream_mode == "preserve"
 
     def test_rejects_unknown_object_stream_mode(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Input should be"):
             DeterminismFlags.model_validate(
                 {
                     "deterministic_id": True,
@@ -509,7 +519,7 @@ class TestSanitizationResultShape:
             recompress_flate=False,
             compress_streams=True,
         )
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"source_sha256"):
             SanitizationResult(
                 output_bytes=b"%PDF-1.4\n",
                 source_sha256="not-a-hash",
@@ -524,7 +534,7 @@ class TestSanitizationResultShape:
             )
 
     def test_rejects_unknown_field(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             SanitizationResult.model_validate(
                 {
                     "output_bytes": b"%PDF-1.4\n",
