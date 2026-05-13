@@ -260,6 +260,10 @@ def __getattr__(name: str):
         from ._lifecycle import ProfileLifecycleService
 
         return ProfileLifecycleService
+    if name in ("facts_to_values", "projection_for_autonomo", "record_to_values", "snapshot_to_values"):
+        from . import _projections
+
+        return getattr(_projections, name)
     if name == "ProfilePreflightService":
         from ._preflight import ProfilePreflightService
 
@@ -308,6 +312,10 @@ __all__ = [
     "RemoveProfileCommand",
     "UserProfileLifecycleRepository",
     "UserProfileSnapshotRepository",
+    "facts_to_values",
+    "projection_for_autonomo",
+    "record_to_values",
+    "snapshot_to_values",
     "user_profile_snapshot_object_key",
     "user_profile_value_object_key",
 ]
