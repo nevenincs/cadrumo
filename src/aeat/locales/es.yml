@@ -39,6 +39,12 @@ auth:
     clave_movil_description: Autenticación con aprobación push en el móvil del titular
       registrado en Cl@ve. Requiere DNI/NIE, registro en Cl@ve, y el dispositivo emparejado.
     clave_movil_label: Cl@ve Móvil
+    clave_permanente_description: Hueco reservado y cerrado para Cl@ve Permanente.
+    clave_permanente_label: Cl@ve Permanente
+    clave_pin_description: Hueco reservado y cerrado para Cl@ve PIN.
+    clave_pin_label: Cl@ve PIN
+    dnie_pkcs_description: Hueco reservado y cerrado para DNI-e PKCS.
+    dnie_pkcs_label: DNI-e PKCS
 categories:
   test_profile:
     display_label_851219: Etiqueta de visualización 851219
@@ -112,8 +118,7 @@ cli:
       help: Configurar el proveedor de autenticación activo
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
       providers_help: Listar proveedores de autenticación soportados
-      reserved_provider: 'Proveedor de autenticación reservado pero no disponible
-        aún: {{provider}}.'
+      reserved_provider: 'Proveedor de autenticación reservado pero no disponible: %{provider}.'
       status_help: Mostrar el estado de autenticación configurado
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
@@ -717,7 +722,7 @@ cli:
     app_help: 'Cola de revisión del operador: clasifica transacciones, facturas e
       incidencias'
     errors:
-      invalid_state: 'Estado de revisión inválido: {{state}}'
+      invalid_state: 'Estado de revisión inválido: %{state}'
     labels:
       id: ID
       kind: Tipo
@@ -934,6 +939,9 @@ wizard:
     select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
+    unsupported_console: 'El asistente interactivo necesita cmd.exe o Windows Terminal.
+      Usa `aeat config init --quiet --tax-id NIF --activity ACTIVIDAD` o cambia de
+      terminal.'
   setup:
     description: Asistente de configuración para preparar las declaraciones
     enrollment:

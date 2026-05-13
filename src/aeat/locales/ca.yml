@@ -929,6 +929,9 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
+    unsupported_console: 'The interactive wizard requires cmd.exe or Windows Terminal.
+      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch
+      terminals.'
   setup:
     description: Auxiliar de configuració per preparar les declaracions
     enrollment:
