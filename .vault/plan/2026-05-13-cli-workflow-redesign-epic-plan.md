@@ -583,7 +583,7 @@ This Phase delivers backend implementation for profile backend schema as require
 
 This Phase delivers shadow duplicate removal for profile backend schema as required by `2026-05-07-user-profile-backend-schema-adr`.
 
-- [ ] `W09.P042.S0247` - Audit duplicate implementations that overlap profile backend schema; `src/aeat/application/profile`.
+- [x] `W09.P042.S0247` - Audit duplicate implementations that overlap profile backend schema; `src/aeat/application/profile`.
 - [ ] `W09.P042.S0248` - Delete duplicate backend branches that compete with profile backend schema; `src/aeat/application/profile`.
 - [ ] `W09.P042.S0249` - Remove stale aliases that bypass the canonical service for profile backend schema; `src/aeat/entrypoints/cli`.
 - [ ] `W09.P042.S0250` - Migrate internal callers to the canonical service for profile backend schema; `src/aeat/application/profile`.
