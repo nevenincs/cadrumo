@@ -80,7 +80,7 @@ def test_coerce_decimal_handles_negative_value() -> None:
 
 
 def test_coerce_decimal_rejects_non_numeric_string() -> None:
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"invalid-value-invoice") as exc_info:
         _coerce_decimal(_clause("base", "not-a-decimal"), scope="invoice")
 
     assert exc_info.value.reason == "invalid-value-invoice"
@@ -89,14 +89,14 @@ def test_coerce_decimal_rejects_non_numeric_string() -> None:
 def test_coerce_decimal_rejects_scientific_notation() -> None:
     """The narrow regex excludes scientific notation — operator
     inputs should be plain decimals, not ``1e6``."""
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"invalid-value-invoice") as exc_info:
         _coerce_decimal(_clause("base", "1e6"), scope="invoice")
 
     assert exc_info.value.reason == "invalid-value-invoice"
 
 
 def test_coerce_decimal_scope_tag_composes_into_reason() -> None:
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"invalid-value-ledger") as exc_info:
         _coerce_decimal(_clause("base", "not-a-decimal"), scope="ledger")
 
     assert exc_info.value.reason == "invalid-value-ledger"
@@ -115,7 +115,7 @@ def test_coerce_invoice_iva_rate_accepts_canonical_substrate_slot(rate: str) -> 
 def test_coerce_invoice_iva_rate_rejects_non_canonical_value() -> None:
     """7% is not a known IVA substrate slot; the parser rejects it
     before it can reach an invoice record."""
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"unsupported-iva-rate") as exc_info:
         _coerce_invoice_iva_rate(_clause("iva.rate", "7"))
 
     assert exc_info.value.reason == "unsupported-iva-rate"
@@ -124,7 +124,7 @@ def test_coerce_invoice_iva_rate_rejects_non_canonical_value() -> None:
 def test_coerce_invoice_iva_rate_rejects_non_numeric_value() -> None:
     """A non-numeric value fails at the ``_coerce_decimal`` gate
     with the ``invalid-value-invoice-iva-rate`` scope tag."""
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"invalid-value-invoice-iva-rate") as exc_info:
         _coerce_invoice_iva_rate(_clause("iva.rate", "abc"))
 
     assert exc_info.value.reason == "invalid-value-invoice-iva-rate"
@@ -141,21 +141,21 @@ def test_coerce_invoice_retention_rate_accepts_bounds(rate: str) -> None:
 
 
 def test_coerce_invoice_retention_rate_rejects_value_above_100() -> None:
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"retention-rate-out-of-range") as exc_info:
         _coerce_invoice_retention_rate(_clause("retention.rate", "150"))
 
     assert exc_info.value.reason == "retention-rate-out-of-range"
 
 
 def test_coerce_invoice_retention_rate_rejects_negative_value() -> None:
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"retention-rate-out-of-range") as exc_info:
         _coerce_invoice_retention_rate(_clause("retention.rate", "-1"))
 
     assert exc_info.value.reason == "retention-rate-out-of-range"
 
 
 def test_coerce_invoice_retention_rate_rejects_non_numeric_value() -> None:
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"invalid-value-invoice-retention-rate") as exc_info:
         _coerce_invoice_retention_rate(_clause("retention.rate", "fifteen"))
 
     assert exc_info.value.reason == "invalid-value-invoice-retention-rate"
@@ -174,14 +174,14 @@ def test_coerce_share_accepts_inclusive_zero_one_range(share: str) -> None:
 def test_coerce_share_rejects_value_above_one() -> None:
     """1.5 violates the inclusive 0..1 envelope; the scope tag
     propagates into the reason code."""
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"invalid-value-ledger") as exc_info:
         _coerce_share(_clause("business.share", "1.5"), scope="ledger")
 
     assert exc_info.value.reason == "invalid-value-ledger"
 
 
 def test_coerce_share_rejects_negative_value() -> None:
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"invalid-value-ledger") as exc_info:
         _coerce_share(_clause("business.share", "-0.1"), scope="ledger")
 
     assert exc_info.value.reason == "invalid-value-ledger"
@@ -190,7 +190,7 @@ def test_coerce_share_rejects_negative_value() -> None:
 def test_coerce_share_rejects_non_numeric_value() -> None:
     """Non-numeric strings fail at the ``_coerce_decimal`` gate
     with the same scope-tagged reason."""
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"invalid-value-ledger") as exc_info:
         _coerce_share(_clause("business.share", "half"), scope="ledger")
 
     assert exc_info.value.reason == "invalid-value-ledger"
@@ -235,7 +235,7 @@ def test_ensure_unique_keys_raises_edit_parse_error_on_repeated_key() -> None:
     CLI surface the failure came from."""
     clauses = (_clause("base", "120"), _clause("base", "200"))
 
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"duplicate-key-invoice") as exc_info:
         _ensure_unique_keys(clauses, scope="invoice")
 
     assert exc_info.value.reason == "duplicate-key-invoice"
@@ -244,7 +244,7 @@ def test_ensure_unique_keys_raises_edit_parse_error_on_repeated_key() -> None:
 def test_ensure_unique_keys_scope_tag_composes_into_reason() -> None:
     clauses = (_clause("category", "software"), _clause("category", "office"))
 
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"duplicate-key-ledger") as exc_info:
         _ensure_unique_keys(clauses, scope="ledger")
 
     assert exc_info.value.reason == "duplicate-key-ledger"
@@ -267,7 +267,7 @@ def test_ensure_known_keys_raises_edit_parse_error_on_unknown_key() -> None:
     allowed = {"base", "iva.rate"}
     clauses = (_clause("notakey", "value"),)
 
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"unknown-key-invoice") as exc_info:
         _ensure_known_keys(clauses, scope="invoice", allowed=allowed)
 
     assert exc_info.value.reason == "unknown-key-invoice"
@@ -277,7 +277,7 @@ def test_ensure_known_keys_scope_tag_composes_into_reason() -> None:
     allowed = {"category"}
     clauses = (_clause("nonsense", "value"),)
 
-    with pytest.raises(EditParseError) as exc_info:
+    with pytest.raises(EditParseError, match=r"unknown-key-ledger") as exc_info:
         _ensure_known_keys(clauses, scope="ledger", allowed=allowed)
 
     assert exc_info.value.reason == "unknown-key-ledger"

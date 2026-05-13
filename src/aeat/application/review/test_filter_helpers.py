@@ -70,7 +70,7 @@ def test_ensure_unique_keys_passes_when_all_keys_distinct() -> None:
 def test_ensure_unique_keys_raises_on_repeated_key() -> None:
     clauses = (_clause("status", "pending"), _clause("status", "reviewed"))
 
-    with pytest.raises(FilterParseError) as exc_info:
+    with pytest.raises(FilterParseError, match=r"duplicate-key-ledger") as exc_info:
         _ensure_unique_keys(clauses, scope="ledger")
 
     assert exc_info.value.reason == "duplicate-key-ledger"
@@ -81,7 +81,7 @@ def test_ensure_unique_keys_scope_tag_composes_into_reason() -> None:
     CLI can route the repair hint per-scope."""
     clauses = (_clause("status", "pending"), _clause("status", "reviewed"))
 
-    with pytest.raises(FilterParseError) as exc_info:
+    with pytest.raises(FilterParseError, match=r"duplicate-key-invoice") as exc_info:
         _ensure_unique_keys(clauses, scope="invoice")
 
     assert exc_info.value.reason == "duplicate-key-invoice"
@@ -118,7 +118,7 @@ def test_ensure_known_keys_passes_on_empty_tuple() -> None:
 def test_ensure_known_keys_raises_on_unknown_key() -> None:
     clauses = (_clause("status", "pending"), _clause("notakey", "value"))
 
-    with pytest.raises(FilterParseError) as exc_info:
+    with pytest.raises(FilterParseError, match=r"unknown-key-ledger") as exc_info:
         _ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
 
     assert exc_info.value.reason == "unknown-key-ledger"
@@ -127,7 +127,7 @@ def test_ensure_known_keys_raises_on_unknown_key() -> None:
 def test_ensure_known_keys_scope_tag_composes_into_reason() -> None:
     clauses = (_clause("notakey", "value"),)
 
-    with pytest.raises(FilterParseError) as exc_info:
+    with pytest.raises(FilterParseError, match=r"unknown-key-invoice") as exc_info:
         _ensure_known_keys(clauses, scope="invoice", allowed=InvoiceReviewFilterKey)
 
     assert exc_info.value.reason == "unknown-key-invoice"
@@ -140,7 +140,7 @@ def test_ensure_known_keys_per_scope_catalogues_differ() -> None:
 
     _ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
 
-    with pytest.raises(FilterParseError) as exc_info:
+    with pytest.raises(FilterParseError, match=r"unknown-key-invoice") as exc_info:
         _ensure_known_keys(clauses, scope="invoice", allowed=InvoiceReviewFilterKey)
 
     assert exc_info.value.reason == "unknown-key-invoice"
@@ -162,7 +162,7 @@ def test_enum_value_or_raise_coerces_valid_value_to_enum_member() -> None:
 def test_enum_value_or_raise_raises_on_unknown_value() -> None:
     clause = _clause("status", "not-a-real-status")
 
-    with pytest.raises(FilterParseError) as exc_info:
+    with pytest.raises(FilterParseError, match=r"invalid-value-ledger") as exc_info:
         _enum_value_or_raise(clause, LedgerReviewStatus, scope="ledger")
 
     assert exc_info.value.reason == "invalid-value-ledger"
@@ -171,7 +171,7 @@ def test_enum_value_or_raise_raises_on_unknown_value() -> None:
 def test_enum_value_or_raise_scope_tag_composes_into_reason() -> None:
     clause = _clause("status", "not-a-real-status")
 
-    with pytest.raises(FilterParseError) as exc_info:
+    with pytest.raises(FilterParseError, match=r"invalid-value-invoice") as exc_info:
         _enum_value_or_raise(clause, LedgerReviewStatus, scope="invoice")
 
     assert exc_info.value.reason == "invalid-value-invoice"
@@ -193,7 +193,7 @@ def test_enum_value_or_raise_case_fold_false_rejects_uppercase_for_lowercase_enu
     a lowercase-valued enum like :class:`LedgerReviewStatus`."""
     clause = _clause("status", "PENDING")
 
-    with pytest.raises(FilterParseError) as exc_info:
+    with pytest.raises(FilterParseError, match=r"invalid-value-ledger") as exc_info:
         _enum_value_or_raise(clause, LedgerReviewStatus, scope="ledger")
 
     assert exc_info.value.reason == "invalid-value-ledger"
@@ -204,7 +204,7 @@ def test_enum_value_or_raise_case_fold_true_rejects_unknown_uppercase_value() ->
     values outside the enum catalogue."""
     clause = _clause("kind", "not-a-real-kind")
 
-    with pytest.raises(FilterParseError) as exc_info:
+    with pytest.raises(FilterParseError, match=r"invalid-value-invoice") as exc_info:
         _enum_value_or_raise(clause, InvoiceKind, scope="invoice", case_fold=True)
 
     assert exc_info.value.reason == "invalid-value-invoice"

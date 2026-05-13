@@ -532,7 +532,7 @@ def _probe_or_raise(
 
 def test_navigate_probe_raises_on_mantenimiento_fixture() -> None:
     body = (_FIXTURES_ROOT / "mantenimiento" / "interstitial.html").read_text(encoding="utf-8")
-    with pytest.raises(SiteHealthError) as excinfo:
+    with pytest.raises(SiteHealthError, match=r"(?i)mantenimiento") as excinfo:
         _probe_or_raise(_PROBE_URL, 200, {}, body, rate_limit_retry_after_default=300)
     assert excinfo.value.status.state is SiteHealthState.MANTENIMIENTO
     assert excinfo.value.context is not None
@@ -564,14 +564,14 @@ async def test_browser_session_navigate_content_failure_reports_failure_mode(tmp
 
 def test_navigate_probe_raises_on_waf_fixture() -> None:
     body = (_FIXTURES_ROOT / "waf_challenge" / "request_blocked.html").read_text(encoding="utf-8")
-    with pytest.raises(SiteHealthError) as excinfo:
+    with pytest.raises(SiteHealthError, match=r"(?i)waf[ _]?challenge") as excinfo:
         _probe_or_raise(_PROBE_URL, 403, {}, body, rate_limit_retry_after_default=300)
     assert excinfo.value.status.state is SiteHealthState.WAF_CHALLENGE
 
 
 def test_navigate_probe_raises_on_rate_limit_fixture() -> None:
     body = (_FIXTURES_ROOT / "rate_limited" / "429_retry_after.html").read_text(encoding="utf-8")
-    with pytest.raises(SiteHealthError) as excinfo:
+    with pytest.raises(SiteHealthError, match=r"(?i)rate[ _]?limited") as excinfo:
         _probe_or_raise(
             _PROBE_URL,
             429,

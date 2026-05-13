@@ -45,20 +45,20 @@ def test_parse_filter_clause_trims_value() -> None:
 
 def test_parse_filter_clause_rejects_missing_equals() -> None:
     raw = "status pending"
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"missing-equals") as exc:
         parse_filter_clause(raw)
     assert exc.value.reason == "missing-equals"
     assert exc.value.raw_token == raw
 
 
 def test_parse_filter_clause_rejects_empty_key() -> None:
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"empty-key") as exc:
         parse_filter_clause("=pending")
     assert exc.value.reason == "empty-key"
 
 
 def test_parse_filter_clause_rejects_empty_value() -> None:
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"empty-value") as exc:
         parse_filter_clause("status=")
     assert exc.value.reason == "empty-value"
 
@@ -120,25 +120,25 @@ def test_ledger_spec_empty_returns_empty_spec() -> None:
 
 
 def test_ledger_spec_rejects_unknown_key() -> None:
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"unknown-key-ledger") as exc:
         LedgerReviewFilterSpec.from_strings(["kind=received"])
     assert exc.value.reason == "unknown-key-ledger"
 
 
 def test_ledger_spec_rejects_invalid_status() -> None:
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"invalid-value-ledger-status") as exc:
         LedgerReviewFilterSpec.from_strings(["status=fictional"])
     assert exc.value.reason == "invalid-value-ledger-status"
 
 
 def test_ledger_spec_rejects_invalid_issue() -> None:
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"invalid-value-ledger-issue") as exc:
         LedgerReviewFilterSpec.from_strings(["issue=fictional"])
     assert exc.value.reason == "invalid-value-ledger-issue"
 
 
 def test_ledger_spec_rejects_duplicate_key() -> None:
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"duplicate-key-ledger") as exc:
         LedgerReviewFilterSpec.from_strings(["status=pending", "status=skipped"])
     assert exc.value.reason == "duplicate-key-ledger"
 
@@ -163,19 +163,19 @@ def test_invoice_spec_case_folds_kind() -> None:
 
 
 def test_invoice_spec_rejects_unknown_key() -> None:
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"unknown-key-invoice") as exc:
         InvoiceReviewFilterSpec.from_strings(["period=2026-Q1"])
     assert exc.value.reason == "unknown-key-invoice"
 
 
 def test_invoice_spec_rejects_invalid_kind() -> None:
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"invalid-value-invoice-kind") as exc:
         InvoiceReviewFilterSpec.from_strings(["kind=draft"])
     assert exc.value.reason == "invalid-value-invoice-kind"
 
 
 def test_invoice_spec_rejects_duplicate_key() -> None:
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"duplicate-key-invoice") as exc:
         InvoiceReviewFilterSpec.from_strings(["kind=issued", "kind=received"])
     assert exc.value.reason == "duplicate-key-invoice"
 
@@ -197,13 +197,13 @@ def test_declaration_spec_supports_every_status_value() -> None:
 
 
 def test_declaration_spec_rejects_unknown_key() -> None:
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"unknown-key-declaration") as exc:
         DeclarationReviewFilterSpec.from_strings(["period=2026-Q1"])
     assert exc.value.reason == "unknown-key-declaration"
 
 
 def test_declaration_spec_rejects_invalid_status() -> None:
-    with pytest.raises(FilterParseError) as exc:
+    with pytest.raises(FilterParseError, match=r"invalid-value-declaration-status") as exc:
         DeclarationReviewFilterSpec.from_strings(["status=fictional"])
     assert exc.value.reason == "invalid-value-declaration-status"
 
