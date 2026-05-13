@@ -102,10 +102,10 @@ This Phase delivers backend implementation for apex root and lifecycle contract 
 This Phase delivers shadow duplicate removal for apex root and lifecycle contract as required by `2026-05-12-cli-workflow-redesign-adr`.
 
 - [x] `W01.P002.S0007` - Audit duplicate implementations that overlap apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P002.S0008` - Delete duplicate backend branches that compete with apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P002.S0009` - Remove stale aliases that bypass the canonical service for apex root and lifecycle contract; `src/aeat/entrypoints/cli`.
-- [ ] `W01.P002.S0010` - Migrate internal callers to the canonical service for apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P002.S0011` - Remove stale fixtures and tests that encode duplicate behavior for apex root and lifecycle contract; `tests/application`.
+- [x] `W01.P002.S0008` - Delete duplicate backend branches that compete with apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P002.S0009` - Remove stale aliases that bypass the canonical service for apex root and lifecycle contract; `src/aeat/entrypoints/cli`.
+- [x] `W01.P002.S0010` - Migrate internal callers to the canonical service for apex root and lifecycle contract; `src/aeat/application`.
+- [x] `W01.P002.S0011` - Remove stale fixtures and tests that encode duplicate behavior for apex root and lifecycle contract; `tests/application`.
 - [x] `W01.P002.S0012` - Update boundary inventory entries that describe duplicate behavior for apex root and lifecycle contract; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W01.P003` - de-shim and de-stub cleanup
@@ -1978,56 +1978,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-domain-harvest-oss-io
 
 This Phase delivers backend implementation for oss and ioss calculation facts as required by `2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-adr`.
 
-- [ ] `W33.P161.S0961` - Map the `2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-adr` decision into non-CLI service ownership for oss and ioss calculation facts; `src/aeat/domain/vat`.
-- [ ] `W33.P161.S0962` - Implement Pydantic command and result contracts for oss and ioss calculation facts; `src/aeat/domain/vat`.
-- [ ] `W33.P161.S0963` - Wire application or domain services required by oss and ioss calculation facts; `src/aeat/domain/vat`.
-- [ ] `W33.P161.S0964` - Connect persistence, bucket events, registry data, or provider adapters required by oss and ioss calculation facts; `src/aeat/domain/vat`.
-- [ ] `W33.P161.S0965` - Route existing backend functionality into the canonical service for oss and ioss calculation facts; `src/aeat/domain/vat`.
-- [ ] `W33.P161.S0966` - Record service-level error codes and log fields for oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P161.S0961` - Map the `2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-adr` decision into non-CLI service ownership for oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P161.S0962` - Implement Pydantic command and result contracts for oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P161.S0963` - Wire application or domain services required by oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P161.S0964` - Connect persistence, bucket events, registry data, or provider adapters required by oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P161.S0965` - Route existing backend functionality into the canonical service for oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P161.S0966` - Record service-level error codes and log fields for oss and ioss calculation facts; `src/aeat/domain/vat`.
 
 ### Phase `W33.P162` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for oss and ioss calculation facts as required by `2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-adr`.
 
-- [ ] `W33.P162.S0967` - Audit duplicate implementations that overlap oss and ioss calculation facts; `src/aeat/domain/vat`.
-- [ ] `W33.P162.S0968` - Delete duplicate backend branches that compete with oss and ioss calculation facts; `src/aeat/domain/vat`.
-- [ ] `W33.P162.S0969` - Remove stale aliases that bypass the canonical service for oss and ioss calculation facts; `src/aeat/entrypoints/cli`.
-- [ ] `W33.P162.S0970` - Migrate internal callers to the canonical service for oss and ioss calculation facts; `src/aeat/domain/vat`.
-- [ ] `W33.P162.S0971` - Remove stale fixtures and tests that encode duplicate behavior for oss and ioss calculation facts; `tests/domain/vat`.
-- [ ] `W33.P162.S0972` - Update boundary inventory entries that describe duplicate behavior for oss and ioss calculation facts; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W33.P162.S0967` - Audit duplicate implementations that overlap oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P162.S0968` - Delete duplicate backend branches that compete with oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P162.S0969` - Remove stale aliases that bypass the canonical service for oss and ioss calculation facts; `src/aeat/entrypoints/cli`.
+- [x] `W33.P162.S0970` - Migrate internal callers to the canonical service for oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P162.S0971` - Remove stale fixtures and tests that encode duplicate behavior for oss and ioss calculation facts; `tests/domain/vat`.
+- [x] `W33.P162.S0972` - Update boundary inventory entries that describe duplicate behavior for oss and ioss calculation facts; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W33.P163` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for oss and ioss calculation facts as required by `2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-adr`.
 
-- [ ] `W33.P163.S0973` - Delete compatibility shims that preserve rejected behavior for oss and ioss calculation facts; `src/aeat/domain/vat`.
-- [ ] `W33.P163.S0974` - Delete placeholder stubs that claim support for oss and ioss calculation facts; `src/aeat/domain/vat`.
-- [ ] `W33.P163.S0975` - Replace stubbed paths with real backend service calls for oss and ioss calculation facts; `src/aeat/domain/vat`.
-- [ ] `W33.P163.S0976` - Remove deprecated command spelling and help text for oss and ioss calculation facts; `src/aeat/entrypoints/cli`.
-- [ ] `W33.P163.S0977` - Remove tests that assert shim or stub behavior for oss and ioss calculation facts; `tests/domain/vat`.
-- [ ] `W33.P163.S0978` - Record the removed shim and stub surfaces for oss and ioss calculation facts; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W33.P163.S0973` - Delete compatibility shims that preserve rejected behavior for oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P163.S0974` - Delete placeholder stubs that claim support for oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P163.S0975` - Replace stubbed paths with real backend service calls for oss and ioss calculation facts; `src/aeat/domain/vat`.
+- [x] `W33.P163.S0976` - Remove deprecated command spelling and help text for oss and ioss calculation facts; `src/aeat/entrypoints/cli`.
+- [x] `W33.P163.S0977` - Remove tests that assert shim or stub behavior for oss and ioss calculation facts; `tests/domain/vat`.
+- [x] `W33.P163.S0978` - Record the removed shim and stub surfaces for oss and ioss calculation facts; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W33.P164` - real behavior verification
 
 This Phase delivers real behavior verification for oss and ioss calculation facts as required by `2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-adr`.
 
-- [ ] `W33.P164.S0979` - Add service contract tests for oss and ioss calculation facts; `tests/domain/vat`.
-- [ ] `W33.P164.S0980` - Add persistence or registry integration tests for oss and ioss calculation facts; `tests/domain/vat`.
-- [ ] `W33.P164.S0981` - Add negative tests proving rejected aliases do not reach oss and ioss calculation facts; `tests/entrypoints/cli`.
-- [ ] `W33.P164.S0982` - Add command behavior tests that exercise oss and ioss calculation facts through real services; `tests/entrypoints/cli`.
-- [ ] `W33.P164.S0983` - Add end-to-end workflow coverage for oss and ioss calculation facts; `tests`.
-- [ ] `W33.P164.S0984` - Run the targeted test slice for oss and ioss calculation facts without skips or xfails; `tests/domain/vat`.
+- [x] `W33.P164.S0979` - Add service contract tests for oss and ioss calculation facts; `tests/domain/vat`.
+- [x] `W33.P164.S0980` - Add persistence or registry integration tests for oss and ioss calculation facts; `tests/domain/vat`.
+- [x] `W33.P164.S0981` - Add negative tests proving rejected aliases do not reach oss and ioss calculation facts; `tests/entrypoints/cli`.
+- [x] `W33.P164.S0982` - Add command behavior tests that exercise oss and ioss calculation facts through real services; `tests/entrypoints/cli`.
+- [x] `W33.P164.S0983` - Add end-to-end workflow coverage for oss and ioss calculation facts; `tests`.
+- [x] `W33.P164.S0984` - Run the targeted test slice for oss and ioss calculation facts without skips or xfails; `tests/domain/vat`.
 
 ### Phase `W33.P165` - thin cli exposure
 
 This Phase delivers thin cli exposure for oss and ioss calculation facts as required by `2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-adr`.
 
-- [ ] `W33.P165.S0985` - Expose accepted command handlers for oss and ioss calculation facts under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W33.P165.S0986` - Keep argument parsing for oss and ioss calculation facts separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W33.P165.S0987` - Delegate oss and ioss calculation facts execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W33.P165.S0988` - Render oss and ioss calculation facts results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W33.P165.S0989` - Handle oss and ioss calculation facts failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W33.P165.S0990` - Validate help text for oss and ioss calculation facts uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W33.P165.S0985` - Expose accepted command handlers for oss and ioss calculation facts under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W33.P165.S0986` - Keep argument parsing for oss and ioss calculation facts separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W33.P165.S0987` - Delegate oss and ioss calculation facts execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W33.P165.S0988` - Render oss and ioss calculation facts results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W33.P165.S0989` - Handle oss and ioss calculation facts failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W33.P165.S0990` - Validate help text for oss and ioss calculation facts uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W34` - domain harvest rental
 

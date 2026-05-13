@@ -3,8 +3,8 @@
 The command tree exposes two top-level namespaces:
 
 - ``aeat config`` — local configuration, on-ramp wizard, diagnostics.
-- ``aeat app`` — operational tax work: overview, ledger, invoice,
-  declaration.
+- ``aeat app`` — operational tax work: overview, ledger, modelo,
+  registry, and review.
 
 Every command in this package is a thin transport over the backend API.
 The handler bodies parse argv, call into
@@ -21,7 +21,7 @@ from typing import Any
 import typer
 
 from ...application.diagnostics import build_cli_version_report, render_cli_version_text
-from . import _archive, _config
+from . import _config
 from ._common import _FORMAT_TEXT
 from ._errors import decorate_typer_app, write_stderr
 from ._i18n import tr
@@ -29,17 +29,15 @@ from ._log_levels import apply_to_root_logger, resolve_log_level
 
 _overview_module: Any | None = None
 _ledger_module: Any | None = None
-_invoice_module: Any | None = None
-_declaration_module: Any | None = None
 _modelo_module: Any | None = None
 _registry_module: Any | None = None
+_review_module: Any | None = None
 
 try:
-    from . import _declaration as _declaration_module
-    from . import _invoice as _invoice_module
     from . import _ledger as _ledger_module
     from . import _modelo as _modelo_module
     from . import _overview as _overview_module
+    from . import _review as _review_module
     from . import registry as _registry_module
 except ModuleNotFoundError as exc:
     _app_import_error: ModuleNotFoundError | None = exc
@@ -70,6 +68,12 @@ def _root(
         help=tr("cli.root.version_help"),
         is_eager=True,
     ),
+    detail: bool = typer.Option(
+        False,
+        "--detail",
+        help=tr("cli.root.detail_help"),
+        is_eager=True,
+    ),
     format_: str = typer.Option(
         _FORMAT_TEXT,
         "--format",
@@ -82,7 +86,11 @@ def _root(
     """Capture root-level CLI flags into the Typer context."""
     apply_to_root_logger(resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
     if version:
-        typer.echo(render_cli_version_text(build_cli_version_report()))
+        report = build_cli_version_report()
+        if detail:
+            typer.echo(render_cli_version_text(report))
+        else:
+            typer.echo(f"{report.package_name} {report.package_version}")
         raise typer.Exit()
     if ctx.invoked_subcommand is None:
         if _app_import_error is not None:
@@ -137,25 +145,17 @@ app_app = typer.Typer(
     help=tr("cli.root.app_app_help"),
     no_args_is_help=True,
 )
-
-from . import _topic as _topic_module  # noqa: E402
-
 if _app_import_error is None:
     assert _overview_module is not None
     assert _ledger_module is not None
-    assert _invoice_module is not None
-    assert _declaration_module is not None
     assert _modelo_module is not None
     assert _registry_module is not None
+    assert _review_module is not None
     app_app.add_typer(_overview_module.app, name="overview")
     app_app.add_typer(_ledger_module.app, name="ledger")
-    app_app.add_typer(_invoice_module.app, name="invoice")
-    app_app.add_typer(_declaration_module.app, name="declaration")
     app_app.add_typer(_modelo_module.app, name="modelo")
     app_app.add_typer(_registry_module.app, name="registry")
-
-app_app.add_typer(_archive.app, name="archive")
-app_app.add_typer(_topic_module.app, name="topic")
+    app_app.add_typer(_review_module.app, name="review")
 
 
 # ---------------------------------------------------------------------

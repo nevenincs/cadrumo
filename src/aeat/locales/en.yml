@@ -702,20 +702,25 @@ cli:
       invalid_state: 'Invalid review state: %{state}'
     labels:
       id: ID
+      affected_object_id: Object
+      bucket: Bucket
       kind: Kind
       next: Next
+      period: Period
       severity: Severity
+      source_kind: Source kind
     queue:
       empty: No items pending review.
       help: List items waiting for operator review
       kind_help: Restrict the queue to one item kind
       modelo_help: Restrict the queue to one modelo
+      source_kind_help: Restrict the queue to one source kind
       state_help: Restrict the queue to one review state
     show:
       help: Show review details for a single item
       id_help: Item id from the review queue
   root:
-    app_app_help: Tax workspaces for ledgers, invoices, and declarations
+    app_app_help: Tax workspace for overview, ledger, modelo, registry, and review
     app_help: 'Spanish tax filing assistant
 
 
@@ -724,8 +729,9 @@ cli:
     format_help: Output format for command results
     quiet_help: Show only errors on stderr
     verbose_help: Show internal informational logs on stderr
+    detail_help: Also show the detailed registry summary
     version_command_help: Show package version and registry summary
-    version_help: Show package version and registry summary
+    version_help: Show package version (add --detail for the full registry summary)
   topic:
     app_help: Show conceptual help about regimes, modelos, and AEAT processes
     errors:
