@@ -314,10 +314,10 @@ class TestArgvReconstruction:
             ArgumentRecord(name="period", value="2026Q1", source=ArgumentSource.POSITIONAL),
             ArgumentRecord(name="force", value="True", source=ArgumentSource.FLAG),
         )
-        argv = _argv_from_arguments("aeat filing submit", args)
+        argv = _argv_from_arguments("aeat app modelo work file", args)
         # Boolean True renders as a bare flag (no =True); value-less
         # Typer Option flags reject the =value form.
-        assert argv == ["filing", "submit", "130", "2026Q1", "--force"]
+        assert argv == ["app", "modelo", "work", "file", "130", "2026Q1", "--force"]
 
     def test_flag_name_underscore_converted_to_dash(self) -> None:
         args = (ArgumentRecord(name="as_json", value="True", source=ArgumentSource.FLAG),)
