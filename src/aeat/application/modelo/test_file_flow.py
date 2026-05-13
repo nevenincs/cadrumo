@@ -555,78 +555,128 @@ def test_get_calculation_revision_raises_on_missing_id() -> None:
 
 
 # ---------------------------------------------------------------------------
-# verify_modelo_revision
+# verify_modelo_revision — real-registry, encrypted-SQL end-to-end coverage.
+#
+# These tests deliberately reject monkeypatches, stubs, and in-memory
+# fake repositories. The verifier reaches the real registry root and the
+# real ``SecureObjectRepository`` so the encrypt → persist → decrypt
+# round-trip is exercised. Inputs are drawn from registry ground truth
+# (modelo 180, revision ``2023-y-siguientes``, period ``0A``), which
+# carries ten ``required=True`` casillas with ``input_kind="manual"``.
 # ---------------------------------------------------------------------------
 
 
+from pathlib import Path  # noqa: E402
+
+from aeat.adapters.persistence.storage import (  # noqa: E402
+    EphemeralMasterKeyProvider,
+    override_master_key_provider,
+)
+from aeat.adapters.persistence.storage.sql import SecureObjectRepository  # noqa: E402
+from aeat.adapters.persistence.storage.sql._orm import Base  # noqa: E402
+from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings  # noqa: E402
 from aeat.application.modelo import (  # noqa: E402
     VerificationReportNotFoundError,
     get_verification_report,
     list_verification_reports,
     verify_modelo_revision,
 )
+from aeat.core.config import Settings  # noqa: E402
+from aeat.domain.calculations.registry import ValidatedRegistryAuthority  # noqa: E402
+from aeat.domain.modelos._calculation_repository import (  # noqa: E402
+    CalculationRevisionCatalogueRepository,
+)
+from aeat.domain.modelos._filing_repository import FilingRecordCatalogueRepository  # noqa: E402
+from aeat.domain.modelos._repository import WorkUnitCatalogueRepository  # noqa: E402
 from aeat.domain.modelos._verification_report import (  # noqa: E402
     VerificationCompletenessStatus,
     VerificationFindingKind,
     VerificationFindingSeverity,
-    VerificationReportCatalogue,
 )
 from aeat.domain.modelos._verification_repository import (  # noqa: E402
     VerificationReportCatalogueRepository,
 )
 
 
-class _InMemoryVerificationRepository(VerificationReportCatalogueRepository):
-    def __init__(self) -> None:
-        self._catalogue = VerificationReportCatalogue()
-
-    def load(self) -> VerificationReportCatalogue:
-        return self._catalogue
-
-    def save(self, catalogue: VerificationReportCatalogue) -> None:
-        self._catalogue = catalogue
+_VERIFY_MODELO = "180"
+_VERIFY_REVISION = "2023-y-siguientes"
+_VERIFY_PERIOD = "0A"
+_VERIFY_YEAR = 2024
 
 
-def _stub_registry(
-    monkeypatch: pytest.MonkeyPatch,
-    *,
-    required: tuple[str, ...] = ("01",),
-    optional: tuple[str, ...] = (),
-    missing: bool = False,
-) -> None:
-    """Override the registry lookup with a deterministic stub.
+def _registry_required_manual_casillas() -> tuple[str, ...]:
+    """Return the required ``input_kind=manual`` casilla ids the verifier
+    will demand for (180, 2024, 0A). Reads the real registry — no test
+    duplication of revision data."""
 
-    When ``missing`` is True the helper returns ``None`` to exercise
-    the registry-snapshot-not-found path. Otherwise it returns the
-    provided (required, optional) tuple.
-    """
-
-    def _fake(*, modelo: str, filing_year: int, period: str):
-        if missing:
-            return None
-        return (required, optional)
-
-    monkeypatch.setattr(
-        "aeat.application.modelo._actions._required_input_casillas_for_revision",
-        _fake,
+    authority = ValidatedRegistryAuthority.load(
+        Path("registry/aeat"), source_root=Path(".")
+    )
+    snapshot = authority.snapshot(
+        _VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD
+    )
+    return tuple(
+        str(c.id)
+        for c in snapshot.revision.casillas
+        if c.required and c.input_kind == "manual"
     )
 
 
-def test_verify_grants_when_all_required_casillas_present(
-    monkeypatch: pytest.MonkeyPatch,
+@pytest.fixture
+def real_repos(tmp_path):
+    """Wire the four catalogue repositories against a fresh encrypted
+    SQLite database. Yields ``(wu_repo, cr_repo, fr_repo, vr_repo)``
+    and tears down the master-key override after the test."""
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "modelo_verify_flow.db"
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
+    )
+    Base.metadata.create_all(engine)
+    try:
+        objects = SecureObjectRepository(engine=engine)
+        wu = WorkUnitCatalogueRepository(objects=objects)
+        cr = CalculationRevisionCatalogueRepository(objects=objects)
+        fr = FilingRecordCatalogueRepository(objects=objects)
+        vr = VerificationReportCatalogueRepository(objects=objects)
+        yield wu, cr, fr, vr
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
+
+
+def _seed_modelo_180_work_unit(wu_repo):
+    return create_work_unit(
+        bucket_id="default",
+        modelo=_VERIFY_MODELO,
+        filing_year=_VERIFY_YEAR,
+        period=_VERIFY_PERIOD,
+        revision_id=_VERIFY_REVISION,
+        repository=wu_repo,
+        clock=_T0,
+    )
+
+
+def test_verify_grants_when_all_required_casillas_present_real_registry(
+    real_repos,
 ) -> None:
-    """Happy path: every required casilla is satisfied. The verifier
-    grants verified-complete; the revision transitions DRAFT →
-    VERIFIED_COMPLETE; the report records zero findings."""
+    """Real e2e: registry resolves modelo 180 (2024, 0A); every required
+    manual casilla is supplied; the verifier persists a granted report
+    in encrypted storage; the calculation revision transitions
+    DRAFT → VERIFIED_COMPLETE. No mocks, no in-memory fakes — the
+    SQL repository encrypts on save and decrypts on load."""
 
-    _stub_registry(monkeypatch, required=("01", "02"))
+    wu_repo, cr_repo, _, vr_repo = real_repos
+    required = _registry_required_manual_casillas()
+    assert required, "registry must declare at least one required manual casilla"
 
-    wu_repo, cr_repo, _ = _make_repos()
-    vr_repo = _InMemoryVerificationRepository()
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = _seed_modelo_180_work_unit(wu_repo)
+    casilla_values = {cid: Decimal("1") for cid in required}
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000"), "02": Decimal("250")},
+        casilla_values=casilla_values,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         clock=_T1,
@@ -644,7 +694,7 @@ def test_verify_grants_when_all_required_casillas_present(
     assert report.granted_verified_complete is True
     assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
     assert report.findings == ()
-    assert set(report.resolved_casillas) == {"01", "02"}
+    assert set(report.resolved_casillas) == set(required)
     assert report.missing_required_casillas == ()
 
     refreshed = get_calculation_revision(
@@ -655,23 +705,34 @@ def test_verify_grants_when_all_required_casillas_present(
     assert refreshed.verified_at == _T2
     assert refreshed.verified_by == "operator-A"
 
+    # Round-trip through encrypted storage.
+    persisted = get_verification_report(
+        report.verification_report_id,
+        verification_repository=vr_repo,
+    )
+    assert persisted.granted_verified_complete is True
+    assert persisted.completeness_status is VerificationCompletenessStatus.COMPLETE
 
-def test_verify_refuses_when_required_casilla_missing(
-    monkeypatch: pytest.MonkeyPatch,
+
+def test_verify_refuses_when_required_casilla_missing_real_registry(
+    real_repos,
 ) -> None:
-    """A required casilla absent from ``casilla_values`` produces a
-    BLOCKING ``MISSING_REQUIRED_CASILLA`` finding. The verifier
-    refuses the transition; the revision stays DRAFT; the report is
-    still persisted so the audit trail records the refusal."""
+    """Real e2e: omit one required casilla; the verifier emits a
+    BLOCKING ``MISSING_REQUIRED_CASILLA`` finding for it; the
+    revision stays DRAFT; the refused report is still persisted so
+    the audit trail records the refusal."""
 
-    _stub_registry(monkeypatch, required=("01", "02"))
+    wu_repo, cr_repo, _, vr_repo = real_repos
+    required = _registry_required_manual_casillas()
+    assert len(required) >= 2
 
-    wu_repo, cr_repo, _ = _make_repos()
-    vr_repo = _InMemoryVerificationRepository()
-    work_unit = _seed_work_unit(wu_repo)
+    omitted = required[0]
+    supplied = {cid: Decimal("1") for cid in required[1:]}
+
+    work_unit = _seed_modelo_180_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_values=supplied,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         clock=_T1,
@@ -691,10 +752,10 @@ def test_verify_refuses_when_required_casilla_missing(
     assert any(
         f.kind is VerificationFindingKind.MISSING_REQUIRED_CASILLA
         and f.severity is VerificationFindingSeverity.BLOCKING
-        and f.casilla_id == "02"
+        and f.casilla_id == omitted
         for f in report.findings
     )
-    assert "02" in report.missing_required_casillas
+    assert omitted in report.missing_required_casillas
 
     refreshed = get_calculation_revision(
         revision.calculation_revision_id,
@@ -706,24 +767,31 @@ def test_verify_refuses_when_required_casilla_missing(
         report.verification_report_id,
         verification_repository=vr_repo,
     )
-    assert persisted.verification_report_id == report.verification_report_id
+    assert persisted.granted_verified_complete is False
 
 
-def test_verify_emits_blocking_rule_when_registry_unresolved(
-    monkeypatch: pytest.MonkeyPatch,
+def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
+    real_repos,
 ) -> None:
-    """When the registry snapshot cannot be resolved, the verifier
-    raises a BLOCKING_RULE finding and refuses to grant verified-
-    complete. The completeness status is BLOCKED."""
+    """Real e2e: a work unit anchored to a year that predates modelo
+    180's earliest revision (``valid_from=2019``) cannot resolve a
+    registry snapshot. The verifier surfaces a BLOCKING_RULE finding
+    and refuses the transition. The revision stays DRAFT."""
 
-    _stub_registry(monkeypatch, missing=True)
+    wu_repo, cr_repo, _, vr_repo = real_repos
 
-    wu_repo, cr_repo, _ = _make_repos()
-    vr_repo = _InMemoryVerificationRepository()
-    work_unit = _seed_work_unit(wu_repo)
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo=_VERIFY_MODELO,
+        filing_year=2010,
+        period=_VERIFY_PERIOD,
+        revision_id=_VERIFY_REVISION,
+        repository=wu_repo,
+        clock=_T0,
+    )
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_values={"perc.base": Decimal("1")},
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         clock=_T1,
@@ -751,19 +819,17 @@ def test_verify_emits_blocking_rule_when_registry_unresolved(
     assert refreshed.state is CalculationRevisionState.DRAFT
 
 
-def test_verify_rejects_non_draft_revision(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Re-verifying a verified-complete revision is rejected with
-    ``CalculationRevisionStateError``. The operator must produce a
-    fresh draft revision (which lands as DRAFT) to verify again."""
+def test_verify_rejects_non_draft_revision_real_registry(real_repos) -> None:
+    """Real e2e: a verified-complete revision cannot be re-verified.
+    The operator must produce a fresh draft (which lands as DRAFT)
+    to verify again."""
 
-    _stub_registry(monkeypatch, required=("01",))
-
-    wu_repo, cr_repo, _ = _make_repos()
-    vr_repo = _InMemoryVerificationRepository()
-    work_unit = _seed_work_unit(wu_repo)
+    wu_repo, cr_repo, _, vr_repo = real_repos
+    required = _registry_required_manual_casillas()
+    work_unit = _seed_modelo_180_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_values={cid: Decimal("1") for cid in required},
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         clock=_T1,
@@ -788,17 +854,16 @@ def test_verify_rejects_non_draft_revision(monkeypatch: pytest.MonkeyPatch) -> N
         )
 
 
-def test_list_and_get_verification_reports(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reports are indexable by id and by calculation revision."""
+def test_list_and_get_verification_reports_real_registry(real_repos) -> None:
+    """Real e2e: reports persist through the encrypted catalogue and
+    are indexable by id and by calculation_revision_id."""
 
-    _stub_registry(monkeypatch, required=("01",))
-
-    wu_repo, cr_repo, _ = _make_repos()
-    vr_repo = _InMemoryVerificationRepository()
-    work_unit = _seed_work_unit(wu_repo)
+    wu_repo, cr_repo, _, vr_repo = real_repos
+    required = _registry_required_manual_casillas()
+    work_unit = _seed_modelo_180_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_values={cid: Decimal("1") for cid in required},
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         clock=_T1,

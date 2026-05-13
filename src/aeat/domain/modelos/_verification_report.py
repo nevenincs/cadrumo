@@ -21,7 +21,6 @@ import json
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from types import MappingProxyType
 from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
@@ -191,15 +190,6 @@ class VerificationReportCatalogue(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     reports: Mapping[str, VerificationReport] = Field(default_factory=dict)
-
-    @field_validator("reports", mode="before")
-    @classmethod
-    def _freeze_reports(cls, value: Any) -> Mapping[str, VerificationReport]:
-        if isinstance(value, MappingProxyType):
-            return value
-        if isinstance(value, Mapping):
-            return MappingProxyType(dict(value))
-        raise ModeloValidationError(f"reports must be a Mapping, got {type(value).__name__}")
 
     @model_validator(mode="after")
     def _enforce_keys_match(self) -> VerificationReportCatalogue:

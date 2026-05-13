@@ -23,7 +23,6 @@ import hashlib
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from types import MappingProxyType
 from typing import Annotated, Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
@@ -262,18 +261,6 @@ class WorkUnitCatalogue(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     work_units: Mapping[str, WorkUnit] = Field(default_factory=dict)
-
-    @field_validator("work_units", mode="before")
-    @classmethod
-    def _freeze_work_units(cls, value: Any) -> Mapping[str, WorkUnit]:
-        """Coerce the loader's mutable mapping into an immutable view."""
-        if isinstance(value, MappingProxyType):
-            return value
-        if isinstance(value, dict):
-            return MappingProxyType(dict(value))
-        if isinstance(value, Mapping):
-            return MappingProxyType(dict(value))
-        raise ModeloValidationError(f"work_units must be a mapping, got {type(value).__name__}")
 
     @model_validator(mode="after")
     def _enforce_keys_match(self) -> WorkUnitCatalogue:
