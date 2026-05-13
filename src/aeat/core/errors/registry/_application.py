@@ -279,50 +279,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.archive._errors.ArchiveError",
-        ErrorCode(
-            code="ERROR_ARCHIVE",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_archive",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.archive._errors.ArchiveAdapterMissingError",
-        ErrorCode(
-            code="REFUSED_ARCHIVE_ADAPTER_MISSING",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_archive_adapter_missing",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.archive._errors.ArchiveBundleSchemaError",
-        ErrorCode(
-            code="REFUSED_ARCHIVE_BUNDLE_SCHEMA",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_archive_bundle_schema",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.application.archive._errors.ArchiveConflictError",
-        ErrorCode(
-            code="REFUSED_ARCHIVE_CONFLICT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_archive_conflict",
-            default_suggestion="aeat app archive import <path> --conflict overwrite",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.application.auth._sessions.CorruptAuthSessionError",
         ErrorCode(
             code="AUTH_SESSION_CORRUPT",

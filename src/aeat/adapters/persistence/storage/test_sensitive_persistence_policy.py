@@ -187,11 +187,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "manifest_path.write_text",
     ): "official manual corpus manifest",
     (
-        "src/aeat/entrypoints/cli/_archive.py",
-        "export_cmd",
-        "path.write_text",
-    ): "explicit user-directed portable archive export",
-    (
         "src/aeat/entrypoints/cli/_declaration.py",
         "declaration_validate",
         "output.write_text",
