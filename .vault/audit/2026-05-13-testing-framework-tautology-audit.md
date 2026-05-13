@@ -152,8 +152,41 @@ literal casilla values).
 
 ## verdict
 
-1 confirmed tautology removed. 1 candidate flagged for the ledger
-workstream. CI regression gate in place. Live ingestion +
-verification backend operational. The remaining 7 derived cases stay
-under the gate's conservative branch and warrant manual review when
-the bindings/parameters resolve.
+Three passes landed in this audit cycle:
+
+  * **Pass 1** (chain-behaviour scope): 1 tautology removed, regression
+    gate seeded.
+  * **Pass 2** (codebase-wide hand-summed scope): 5 tautologies removed
+    (chain-behaviour ledger expense binding, sede declarations quarter
+    aggregation, IVA category-filter aggregation, modelo 349 grouping
+    aggregation, OSS-IOSS routing aggregation). Gate expanded to walk
+    every `src/aeat/**/test_*.py`.
+  * **Pass 3** (no-failure-mode scope): 50 vacuous tests hardened with
+    explicit return-value and structural assertions. The final
+    truly-vacuous count is **0** (verified by AST walk that recognises
+    `pytest.raises` contexts, `raise` statements, `assert_*` /
+    `_assert_*` helper calls, and `pytest.fail()`).
+
+Live ingestion (Renta WEB Open driver) and calculation verification
+(replay-parity) backends are operational; 5 captured baseline payloads
+ground the per-scenario parity gate. Both CI regression gates carry
+explicit, documented waiver lists (one Python-primitive contract
+waived; no other waivers).
+
+The receiver round-trip tests for modelos 180, 190, and 193 are
+hardened with graph-wiring preludes (formula op=copy + source relation
+ids) before the runtime threading checks, so a declaration-level
+regression fails before the threading assertions even run.
+
+Rule-name references and historical-commit pointers were stripped from
+test docstrings across six files in compliance with the no-transient-
+meta-in-source-code mandate; the auto-memory feedback was updated to
+record this incident.
+
+Five commits landed the work:
+
+  * `f98ae451` — pass-1 chain-behaviour fix + initial gate
+  * `b0a6cd73` — pass-2 hand-summed gate + 4 tautology fixes
+  * `496b91e6` — 180/190/193 graph-wiring preludes
+  * `836c90a5` — pass-3 sanitizer + modelo validator hardening
+  * `62645e1a` — pass-3 final 20 vacuous-test hardening sweep
