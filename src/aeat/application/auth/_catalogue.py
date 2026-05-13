@@ -1,4 +1,4 @@
-"""Typed catalogue for ``aeat setup auth providers``."""
+"""Typed catalogue for ``aeat config auth providers``."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class AuthProviderListing(BaseModel):
-    """One row in the ``aeat setup auth providers`` catalogue.
+    """One row in the ``aeat config auth providers`` catalogue.
 
     Attributes:
         id: Stable lowercase identifier (``"certificate"``,

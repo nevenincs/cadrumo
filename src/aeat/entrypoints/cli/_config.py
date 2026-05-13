@@ -21,6 +21,16 @@ app = typer.Typer(
     help=tr("cli.config.app_help"),
     no_args_is_help=True,
 )
+profile_app = typer.Typer(
+    name="profile",
+    help=tr("cli.config.profile.help"),
+    no_args_is_help=True,
+)
+auth_app = typer.Typer(
+    name="auth",
+    help=tr("cli.config.auth.help"),
+    no_args_is_help=True,
+)
 doctor_app = typer.Typer(
     name="doctor",
     help=tr("cli.config.doctor.help"),
@@ -84,6 +94,14 @@ def doctor_quarantine(
             typer.echo(f"{item.namespace}\t{item.unreadable}")
 
 
+def _register_doctor_connectivity(target: typer.Typer) -> None:
+    """Mount the existing browser health probe under config diagnostics."""
+
+    from .browser.health import health_cmd
+
+    target.command("connectivity", help=tr("cli.config.doctor.connectivity_help"))(health_cmd)
+
+
 def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     """Return the last ``count`` lines from ``path`` without trailing newlines."""
 
@@ -92,6 +110,7 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     return tuple(path.read_text(encoding="utf-8", errors="replace").splitlines()[-count:])
 
 
+_register_doctor_connectivity(doctor_app)
 app.add_typer(doctor_app, name="doctor")
 
 
@@ -101,6 +120,7 @@ def _profile_state():
     return workflow_state_repository()
 
 
+@profile_app.command("list", help=tr("cli.config.list.help"))
 @app.command("list", help=tr("cli.config.list.help"))
 def config_list(ctx: typer.Context) -> None:
     """List every profile key with its current value (or ``<unset>``)."""
@@ -134,6 +154,7 @@ def config_list(ctx: typer.Context) -> None:
         typer.echo(line)
 
 
+@profile_app.command("get", help=tr("cli.config.get.help"))
 @app.command("get", help=tr("cli.config.get.help"))
 def config_get(
     ctx: typer.Context,
@@ -172,6 +193,7 @@ def _question_for_profile_key(profile_key: str):
     return None
 
 
+@profile_app.command("set", help=tr("cli.config.set.help"))
 @app.command("set", help=tr("cli.config.set.help"))
 def config_set(
     ctx: typer.Context,
@@ -218,6 +240,7 @@ def config_set(
     typer.echo(f"{canonical_key}\t{stored_value}")
 
 
+@profile_app.command("unset", help=tr("cli.config.unset.help"))
 @app.command("unset", help=tr("cli.config.unset.help"))
 def config_unset(
     ctx: typer.Context,
@@ -275,12 +298,14 @@ def _register_wizard_commands(target: typer.Typer) -> None:
         wrapped.__annotations__ = original.__annotations__
         wrapped.__name__ = original.__name__
         wrapped.__doc__ = original.__doc__
-        target.command(name=flow.id, help=tr(f"cli.config.{flow.id}.help"))(_wrapped)
+        command_name = "init" if flow.id == "setup" else flow.id
+        target.command(name=command_name, help=tr(f"cli.config.{flow.id}.help"))(_wrapped)
 
 
 _register_wizard_commands(app)
 
 
+@profile_app.command("status", help=tr("cli.config.status.help"))
 @app.command("status", help=tr("cli.config.status.help"))
 def config_status(ctx: typer.Context) -> None:
     """Show the readiness of the current configuration profile."""
@@ -324,34 +349,54 @@ def config_reset(
 ) -> None:
     """Reset operator-entered configuration scopes."""
 
-    from ...application.setup_reset import SetupResetScope, reset_setup
+    from ...application.config_reset import ConfigResetScope, reset_config
 
     if not yes:
         raise typer.BadParameter(tr("cli.config.reset.requires_yes"))
     try:
-        scope_enum = SetupResetScope(scope)
+        scope_enum = ConfigResetScope(scope.strip().upper())
     except ValueError as exc:
-        valid = ", ".join(member.value for member in SetupResetScope)
+        valid = ", ".join(member.value for member in ConfigResetScope)
         raise typer.BadParameter(tr("cli.config.reset.invalid_scope", scope=scope, valid=valid)) from exc
-    report = reset_setup(scope_enum, confirmed=True)
+    report = reset_config(scope_enum, confirmed=True)
     typer.echo(f"scope\t{report.scope.value}")
     typer.echo(f"removed_profiles\t{len(report.removed_profile_names)}")
     typer.echo(f"removed_auth\t{report.removed_auth_session}")
 
 
-@app.command("auth", help=tr("cli.config.auth.help"))
-def config_auth(
+@auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
+def auth_providers(ctx: typer.Context) -> None:
+    """List supported AEAT Sede auth providers."""
+
+    from ...application.auth import list_auth_providers
+
+    providers = list_auth_providers()
+    payload = {"providers": [provider.model_dump(mode="json") for provider in providers]}
+    if _format_of(ctx) == _FORMAT_JSON:
+        import json as _json
+
+        typer.echo(_json.dumps(payload, ensure_ascii=False))
+        return
+    for provider in providers:
+        typer.echo(f"{provider.id}\t{provider.label}\t{provider.description}")
+
+
+@auth_app.command("configure", help=tr("cli.config.auth.configure_help"))
+def auth_configure(
     ctx: typer.Context,
     provider: str = typer.Option(
         ...,
         "--provider",
         help=tr("cli.config.auth.provider_help"),
     ),
-    file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
+    certificate_path: Path | None = typer.Option(
+        None,
+        "--certificate-path",
+        help=tr("cli.config.auth.file_help"),
+    ),
 ) -> None:
     """Configure the active authentication provider."""
 
-    del ctx
     from ...application.auth._actions import update_auth
     from ...application.auth._catalogue import get_auth_provider
     from ...application.workflow._persistence import workflow_state_repository
@@ -365,11 +410,106 @@ def config_auth(
         lambda current: update_auth(
             current,
             provider=listing.id,
-            certificate_path=str(file) if file is not None else None,
+            certificate_path=str(certificate_path) if certificate_path is not None else None,
         )
     )
+    payload = {"provider": listing.id, "certificate_path": str(certificate_path) if certificate_path else ""}
+    if _format_of(ctx) == _FORMAT_JSON:
+        import json as _json
+
+        typer.echo(_json.dumps(payload, ensure_ascii=False))
+        return
     typer.echo(f"provider\t{listing.id}")
-    typer.echo(f"file\t{file or ''}")
+    typer.echo(f"certificate_path\t{certificate_path or ''}")
+
+
+@auth_app.command("status", help=tr("cli.config.auth.status_help"))
+def auth_status(
+    ctx: typer.Context,
+    provider: str | None = typer.Option(None, "--provider", help=tr("cli.config.auth.provider_help")),
+) -> None:
+    """Show active auth configuration and session readiness."""
+
+    from ...application.workflow._persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    auth = state.auth
+    configured = False if provider is not None and auth.provider not in {None, provider} else bool(auth.provider)
+    payload = {
+        "provider": auth.provider or "",
+        "configured": configured,
+        "authenticated": auth.authenticated_at is not None,
+        "certificate_path": auth.certificate_path or "",
+    }
+    if _format_of(ctx) == _FORMAT_JSON:
+        import json as _json
+
+        typer.echo(_json.dumps(payload, ensure_ascii=False))
+        return
+    for key, value in payload.items():
+        typer.echo(f"{key}\t{value}")
+
+
+@auth_app.command("test", help=tr("cli.config.auth.test_help"))
+def auth_test(
+    ctx: typer.Context,
+    provider: str | None = typer.Option(None, "--provider", help=tr("cli.config.auth.provider_help")),
+) -> None:
+    """Report auth readiness without performing live submission."""
+
+    auth_status(ctx, provider=provider)
+
+
+@auth_app.command("clear", help=tr("cli.config.auth.clear_help"))
+def auth_clear(
+    ctx: typer.Context,
+    provider: str | None = typer.Option(None, "--provider", help=tr("cli.config.auth.provider_help")),
+    all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.clear_all_help")),
+    sessions: bool = typer.Option(False, "--sessions", help=tr("cli.config.auth.clear_sessions_help")),
+    locks: bool = typer.Option(False, "--locks", help=tr("cli.config.auth.clear_locks_help")),
+) -> None:
+    """Clear local auth config, sessions, and acquisition locks."""
+
+    from ...application.auth import (
+        AuthProviderKind,
+        clear_auth_acquisition_lock,
+        delete_persisted_session,
+    )
+    from ...application.auth._models import AuthState
+    from ...application.workflow._persistence import workflow_state_repository
+    from ...core.config import Settings
+
+    settings = Settings()
+    selected_kind = AuthProviderKind(provider) if provider is not None else None
+    kinds = tuple(AuthProviderKind) if all_providers else ((selected_kind,) if selected_kind is not None else ())
+    removed_sessions = tuple(delete_persisted_session(settings, selected_kind)) if sessions else ()
+    cleared_locks = (
+        tuple(
+            clear_auth_acquisition_lock(settings, kind, reason="operator-config-auth-clear").state.value
+            for kind in kinds
+        )
+        if locks
+        else ()
+    )
+    if provider is None or all_providers:
+        workflow_state_repository().update(lambda current: current.model_copy(update={"auth": AuthState()}))
+    payload = {
+        "provider": provider or "",
+        "all": all_providers,
+        "removed_sessions": [str(path) for path in removed_sessions],
+        "cleared_locks": list(cleared_locks),
+    }
+    if _format_of(ctx) == _FORMAT_JSON:
+        import json as _json
+
+        typer.echo(_json.dumps(payload, ensure_ascii=False))
+        return
+    typer.echo(f"removed_sessions\t{len(removed_sessions)}")
+    typer.echo(f"cleared_locks\t{len(cleared_locks)}")
+
+
+app.add_typer(profile_app, name="profile")
+app.add_typer(auth_app, name="auth")
 
 
 __all__ = ["app"]

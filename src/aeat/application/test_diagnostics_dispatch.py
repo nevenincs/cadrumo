@@ -141,7 +141,7 @@ def test_profile_check_no_active_profile_returns_warn_with_setup_next_action() -
 
     assert result.name == "profile.active"
     assert result.status == "warn"
-    assert result.next_action == "aeat config setup --profile-name NAME --tax-id NIF"
+    assert result.next_action == "aeat config init --profile NAME --tax-id NIF --activity TEXT --iva-regime REGIME"
 
 
 def test_profile_check_missing_required_keys_returns_warn_with_report_next_action() -> None:
@@ -152,14 +152,14 @@ def test_profile_check_missing_required_keys_returns_warn_with_report_next_actio
     report = _wizard_status(
         profile_ready=False,
         missing_required=("tax_id", "ccaa"),
-        next_action="aeat config setup --tax-id NIF",
+        next_action="aeat config profile set tax.id NIF",
     )
 
     result = _profile_check(report)
 
     assert result.name == "profile.required_keys"
     assert result.status == "warn"
-    assert result.next_action == "aeat config setup --tax-id NIF"
+    assert result.next_action == "aeat config profile set tax.id NIF"
     assert "tax_id" in result.summary
     assert "ccaa" in result.summary
 
@@ -187,7 +187,7 @@ def test_profile_check_active_profile_set_but_not_ready_does_not_short_circuit_t
         active_profile="kent",
         profile_ready=False,
         missing_required=("tax_id",),
-        next_action="aeat config setup --tax-id NIF",
+        next_action="aeat config profile set tax.id NIF",
     )
 
     result = _profile_check(report)
@@ -209,7 +209,7 @@ def test_auth_check_no_provider_returns_warn_with_auth_setup_next_action() -> No
 
     assert result.name == "auth.provider"
     assert result.status == "warn"
-    assert result.next_action == "aeat config auth --provider certificate --file PATH"
+    assert result.next_action == "aeat config auth configure --provider certificate --certificate-path PATH"
 
 
 def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
@@ -220,7 +220,7 @@ def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
     assert result.name == "auth.session"
     assert result.status == "warn"
     assert "certificate" in result.summary
-    assert result.next_action == "aeat config auth --provider certificate"
+    assert result.next_action == "aeat config auth test --provider certificate"
 
 
 def test_auth_check_happy_path_returns_ok_with_provider_session_summary() -> None:
