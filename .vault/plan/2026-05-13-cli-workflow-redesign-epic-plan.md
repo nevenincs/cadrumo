@@ -2214,56 +2214,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-festivos-deadline-shi
 
 This Phase delivers backend implementation for business day deadline shift as required by `2026-05-12-cli-workflow-redesign-festivos-deadline-shift-adr`.
 
-- [ ] `W37.P181.S1081` - Map the `2026-05-12-cli-workflow-redesign-festivos-deadline-shift-adr` decision into non-CLI service ownership for business day deadline shift; `src/aeat/domain/deadlines`.
-- [ ] `W37.P181.S1082` - Implement Pydantic command and result contracts for business day deadline shift; `src/aeat/domain/deadlines`.
-- [ ] `W37.P181.S1083` - Wire application or domain services required by business day deadline shift; `src/aeat/domain/deadlines`.
-- [ ] `W37.P181.S1084` - Connect persistence, bucket events, registry data, or provider adapters required by business day deadline shift; `src/aeat/domain/deadlines`.
-- [ ] `W37.P181.S1085` - Route existing backend functionality into the canonical service for business day deadline shift; `src/aeat/domain/deadlines`.
-- [ ] `W37.P181.S1086` - Record service-level error codes and log fields for business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P181.S1081` - Map the `2026-05-12-cli-workflow-redesign-festivos-deadline-shift-adr` decision into non-CLI service ownership for business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P181.S1082` - Implement Pydantic command and result contracts for business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P181.S1083` - Wire application or domain services required by business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P181.S1084` - Connect persistence, bucket events, registry data, or provider adapters required by business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P181.S1085` - Route existing backend functionality into the canonical service for business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P181.S1086` - Record service-level error codes and log fields for business day deadline shift; `src/aeat/domain/deadlines`.
 
 ### Phase `W37.P182` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for business day deadline shift as required by `2026-05-12-cli-workflow-redesign-festivos-deadline-shift-adr`.
 
-- [ ] `W37.P182.S1087` - Audit duplicate implementations that overlap business day deadline shift; `src/aeat/domain/deadlines`.
-- [ ] `W37.P182.S1088` - Delete duplicate backend branches that compete with business day deadline shift; `src/aeat/domain/deadlines`.
-- [ ] `W37.P182.S1089` - Remove stale aliases that bypass the canonical service for business day deadline shift; `src/aeat/entrypoints/cli`.
-- [ ] `W37.P182.S1090` - Migrate internal callers to the canonical service for business day deadline shift; `src/aeat/domain/deadlines`.
-- [ ] `W37.P182.S1091` - Remove stale fixtures and tests that encode duplicate behavior for business day deadline shift; `tests/domain/deadlines`.
-- [ ] `W37.P182.S1092` - Update boundary inventory entries that describe duplicate behavior for business day deadline shift; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W37.P182.S1087` - Audit duplicate implementations that overlap business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P182.S1088` - Delete duplicate backend branches that compete with business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P182.S1089` - Remove stale aliases that bypass the canonical service for business day deadline shift; `src/aeat/entrypoints/cli`.
+- [x] `W37.P182.S1090` - Migrate internal callers to the canonical service for business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P182.S1091` - Remove stale fixtures and tests that encode duplicate behavior for business day deadline shift; `tests/domain/deadlines`.
+- [x] `W37.P182.S1092` - Update boundary inventory entries that describe duplicate behavior for business day deadline shift; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W37.P183` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for business day deadline shift as required by `2026-05-12-cli-workflow-redesign-festivos-deadline-shift-adr`.
 
-- [ ] `W37.P183.S1093` - Delete compatibility shims that preserve rejected behavior for business day deadline shift; `src/aeat/domain/deadlines`.
-- [ ] `W37.P183.S1094` - Delete placeholder stubs that claim support for business day deadline shift; `src/aeat/domain/deadlines`.
-- [ ] `W37.P183.S1095` - Replace stubbed paths with real backend service calls for business day deadline shift; `src/aeat/domain/deadlines`.
-- [ ] `W37.P183.S1096` - Remove deprecated command spelling and help text for business day deadline shift; `src/aeat/entrypoints/cli`.
-- [ ] `W37.P183.S1097` - Remove tests that assert shim or stub behavior for business day deadline shift; `tests/domain/deadlines`.
-- [ ] `W37.P183.S1098` - Record the removed shim and stub surfaces for business day deadline shift; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W37.P183.S1093` - Delete compatibility shims that preserve rejected behavior for business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P183.S1094` - Delete placeholder stubs that claim support for business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P183.S1095` - Replace stubbed paths with real backend service calls for business day deadline shift; `src/aeat/domain/deadlines`.
+- [x] `W37.P183.S1096` - Remove deprecated command spelling and help text for business day deadline shift; `src/aeat/entrypoints/cli`.
+- [x] `W37.P183.S1097` - Remove tests that assert shim or stub behavior for business day deadline shift; `tests/domain/deadlines`.
+- [x] `W37.P183.S1098` - Record the removed shim and stub surfaces for business day deadline shift; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W37.P184` - real behavior verification
 
 This Phase delivers real behavior verification for business day deadline shift as required by `2026-05-12-cli-workflow-redesign-festivos-deadline-shift-adr`.
 
-- [ ] `W37.P184.S1099` - Add service contract tests for business day deadline shift; `tests/domain/deadlines`.
-- [ ] `W37.P184.S1100` - Add persistence or registry integration tests for business day deadline shift; `tests/domain/deadlines`.
-- [ ] `W37.P184.S1101` - Add negative tests proving rejected aliases do not reach business day deadline shift; `tests/entrypoints/cli`.
-- [ ] `W37.P184.S1102` - Add command behavior tests that exercise business day deadline shift through real services; `tests/entrypoints/cli`.
-- [ ] `W37.P184.S1103` - Add end-to-end workflow coverage for business day deadline shift; `tests`.
-- [ ] `W37.P184.S1104` - Run the targeted test slice for business day deadline shift without skips or xfails; `tests/domain/deadlines`.
+- [x] `W37.P184.S1099` - Add service contract tests for business day deadline shift; `tests/domain/deadlines`.
+- [x] `W37.P184.S1100` - Add persistence or registry integration tests for business day deadline shift; `tests/domain/deadlines`.
+- [x] `W37.P184.S1101` - Add negative tests proving rejected aliases do not reach business day deadline shift; `tests/entrypoints/cli`.
+- [x] `W37.P184.S1102` - Add command behavior tests that exercise business day deadline shift through real services; `tests/entrypoints/cli`.
+- [x] `W37.P184.S1103` - Add end-to-end workflow coverage for business day deadline shift; `tests`.
+- [x] `W37.P184.S1104` - Run the targeted test slice for business day deadline shift without skips or xfails; `tests/domain/deadlines`.
 
 ### Phase `W37.P185` - thin cli exposure
 
 This Phase delivers thin cli exposure for business day deadline shift as required by `2026-05-12-cli-workflow-redesign-festivos-deadline-shift-adr`.
 
-- [ ] `W37.P185.S1105` - Expose accepted command handlers for business day deadline shift under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W37.P185.S1106` - Keep argument parsing for business day deadline shift separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W37.P185.S1107` - Delegate business day deadline shift execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W37.P185.S1108` - Render business day deadline shift results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W37.P185.S1109` - Handle business day deadline shift failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W37.P185.S1110` - Validate help text for business day deadline shift uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W37.P185.S1105` - Expose accepted command handlers for business day deadline shift under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W37.P185.S1106` - Keep argument parsing for business day deadline shift separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W37.P185.S1107` - Delegate business day deadline shift execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W37.P185.S1108` - Render business day deadline shift results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W37.P185.S1109` - Handle business day deadline shift failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W37.P185.S1110` - Validate help text for business day deadline shift uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W38` - modelo work units
 
