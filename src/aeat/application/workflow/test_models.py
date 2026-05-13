@@ -72,7 +72,7 @@ class TestWorkflowStepValidation:
     def test_details_rejects_non_string_value(self) -> None:
         """Strict validation rejects non-string values in the details dict."""
         now = datetime(2026, 4, 12, tzinfo=UTC)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"valid string"):
             WorkflowStep(
                 stage=WorkflowStage.LOADING_PROFILE,
                 started_at=now,
@@ -111,7 +111,7 @@ class TestSiteHealthAlert:
         assert alert.status.state is SiteHealthState.MANTENIMIENTO
 
     def test_alert_rejects_empty_run_id(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"at least 1 character"):
             SiteHealthAlert(
                 stage=WorkflowStage.BUILDING_DRAFT,
                 status=self._status(),
@@ -122,7 +122,7 @@ class TestSiteHealthAlert:
         """A completed step must have ``ended_at >= started_at``."""
         now = datetime(2026, 4, 12, 12, 0, tzinfo=UTC)
         earlier = datetime(2026, 4, 12, 10, 0, tzinfo=UTC)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"precedes started_at"):
             WorkflowStep(
                 stage=WorkflowStage.LOADING_PROFILE,
                 started_at=now,
@@ -148,7 +148,7 @@ class TestWorkflowResultTerminal:
     def test_done_rejects_reason(self) -> None:
         """A DONE result must not carry an aborted_reason."""
         now = datetime(2026, 4, 12, tzinfo=UTC)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"DONE results must not carry an aborted_reason"):
             WorkflowResult(
                 run_id="a" * 16,
                 started_at=now,
@@ -162,7 +162,7 @@ class TestWorkflowResultTerminal:
     def test_aborted_requires_reason(self) -> None:
         """An ABORTED result must carry an aborted_reason."""
         now = datetime(2026, 4, 12, tzinfo=UTC)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"ABORTED results must carry an aborted_reason"):
             WorkflowResult(
                 run_id="a" * 16,
                 started_at=now,
@@ -176,7 +176,7 @@ class TestWorkflowResultTerminal:
     def test_non_terminal_stage_rejected(self) -> None:
         """final_stage must be DONE or ABORTED."""
         now = datetime(2026, 4, 12, tzinfo=UTC)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"final_stage must be DONE or ABORTED"):
             WorkflowResult(
                 run_id="a" * 16,
                 started_at=now,
