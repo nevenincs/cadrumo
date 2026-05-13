@@ -20,7 +20,7 @@ identifier; ``name`` is a display-only attribute.
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
+from collections.abc import Mapping, ValuesView
 from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Any, cast
@@ -226,25 +226,16 @@ class WorkUnit(BaseModel):
                 f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}"
             )
         if self.state is WorkUnitState.DRAFT:
-            if (
-                self.discarded_at is not None
-                or self.discarded_by is not None
-                or self.discard_reason is not None
-            ):
+            if self.discarded_at is not None or self.discarded_by is not None or self.discard_reason is not None:
                 raise ModeloValidationError(
-                    "draft work unit must not carry discard metadata "
-                    "(discarded_at / discarded_by / discard_reason)"
+                    "draft work unit must not carry discard metadata (discarded_at / discarded_by / discard_reason)"
                 )
         elif self.state is WorkUnitState.DISCARDED:
             if self.discarded_at is None or self.discarded_by is None:
-                raise ModeloValidationError(
-                    "discarded work unit must carry discarded_at and "
-                    "discarded_by"
-                )
+                raise ModeloValidationError("discarded work unit must carry discarded_at and discarded_by")
             if self.discarded_at < self.created_at:
                 raise ModeloValidationError(
-                    f"discarded_at {self.discarded_at.isoformat()} precedes "
-                    f"created_at {self.created_at.isoformat()}"
+                    f"discarded_at {self.discarded_at.isoformat()} precedes created_at {self.created_at.isoformat()}"
                 )
         return self
 
@@ -301,7 +292,7 @@ class WorkUnitCatalogue(BaseModel):
         """Return the work unit for ``work_unit_id`` or ``None`` if absent."""
         return self.work_units.get(work_unit_id)
 
-    def values(self):
+    def values(self) -> ValuesView[WorkUnit]:
         """Return a view of every work unit in the catalogue."""
         return self.work_units.values()
 

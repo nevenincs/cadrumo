@@ -1515,7 +1515,7 @@ class RegistryValidator:
             return [f"{scope}: {owner} parser {dotted_path!r} must be a dotted callable path"]
         try:
             module = import_module(module_name)
-        except Exception as exc:
+        except (ImportError, ValueError, SyntaxError) as exc:
             return [f"{scope}: {owner} parser {dotted_path!r} cannot import module {module_name!r}: {exc}"]
         try:
             resolved = getattr(module, attribute)

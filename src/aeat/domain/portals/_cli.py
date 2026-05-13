@@ -13,7 +13,6 @@ depending on ``--json``.
 
 from __future__ import annotations
 
-import contextlib
 import sys
 
 import typer
@@ -22,6 +21,7 @@ from rich.table import Table
 
 from ...core.click_context import json_output_requested
 from ...core.json_contract import OutputRootSchema, emit_json_success, register_schema
+from ...core.logging import get_logger
 from ._categories import PortalCategory
 from ._errors import UnknownPortalError
 from ._metadata import PortalMetadata
@@ -32,6 +32,7 @@ from ._registry import (
 )
 
 _CONSOLE = Console()
+_log = get_logger(__name__)
 
 
 @register_schema("portals list")
@@ -60,8 +61,14 @@ def _ensure_utf8_streams() -> None:
     for stream in (sys.stdout, sys.stderr):
         reconfigure = getattr(stream, "reconfigure", None)
         if callable(reconfigure):
-            with contextlib.suppress(ValueError, OSError):
+            try:
                 reconfigure(encoding="utf-8", errors="replace")
+            except (ValueError, OSError) as exc:
+                _log.debug(
+                    "portals CLI: could not reconfigure stream %r to UTF-8: %s",
+                    getattr(stream, "name", stream),
+                    exc,
+                )
 
 
 app = typer.Typer(

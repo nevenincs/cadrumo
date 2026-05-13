@@ -345,9 +345,9 @@ def _reason_for(
     """Build the structured shift reason for one non-business day."""
 
     if candidate.weekday() == 5:
-        weekend_token = "sabado"  # noqa: S105
+        weekend_token = "sabado"
     elif candidate.weekday() == 6:
-        weekend_token = "domingo"  # noqa: S105
+        weekend_token = "domingo"
     else:
         weekend_token = ""
 

@@ -215,8 +215,4 @@ def test_modelo_100_directory_layout_loads_with_expected_revisions() -> None:
     assert modelo.id == "100"
     expected_revisions = {"2020", "2021", "2022", "2023", "2024", "2025"}
     actual_revisions = set(modelo.revisions)
-    assert actual_revisions == expected_revisions, (
-        f"modelo 100 revision set drift: expected {sorted(expected_revisions)!r}, "
-        f"got {sorted(actual_revisions)!r}. If this is a deliberate addition "
-        f"(new fiscal year revision), update the expected set in this test."
-    )
+    assert actual_revisions == expected_revisions

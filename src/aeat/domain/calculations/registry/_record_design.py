@@ -20,8 +20,11 @@ from pdfplumber.page import Page
 from pydantic import ConfigDict
 from xlrd.sheet import Sheet as XlrdSheet
 
+from ....core.logging import get_logger
 from ._errors import RegistryValidationError
 from ._schema import RegistryModel
+
+_log = get_logger(__name__)
 
 _OPENPYXL_HEADER_FOOTER_WARNING = "Cannot parse header or footer so it will be ignored"
 _OPENPYXL_PRINT_AREA_WARNING = r"Print area cannot be set to Defined name: .*"
@@ -347,7 +350,13 @@ def _find_header(worksheet: Worksheet) -> _WorkbookHeader:
             length_index = _required_header_index(values, "lon")
             type_index = _required_header_index(values, "tipo")
             description_index = _required_header_index(values, "descripcion")
-        except ValueError:
+        except ValueError as header_exc:
+            _log.debug(
+                "record-design header probe (xlsx %s): row %d missing required columns (%s); trying next",
+                worksheet.title,
+                row_number,
+                header_exc,
+            )
             continue
         return _WorkbookHeader(
             row_number=row_number,
@@ -373,7 +382,12 @@ def _find_xls_header(worksheet: XlrdSheet) -> _WorkbookHeader:
             length_index = _required_header_index(values, "lon")
             type_index = _required_header_index(values, "tipo")
             description_index = _required_header_index(values, "descripcion")
-        except ValueError:
+        except ValueError as header_exc:
+            _log.debug(
+                "record-design header probe (xls): row %d missing required columns (%s); trying next",
+                rowx + 1,
+                header_exc,
+            )
             continue
         return _WorkbookHeader(
             row_number=rowx + 1,

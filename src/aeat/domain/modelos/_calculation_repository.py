@@ -11,7 +11,6 @@ from ...core.logging import get_logger
 from ._calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ._errors import ModeloError
 
-
 _LOGGER = get_logger(__name__)
 _CALCULATION_NAMESPACE = "aeat.domain.modelos.calculation_revisions"
 _CALCULATION_OBJECT_KEY = "catalogue"
@@ -46,13 +45,10 @@ class CalculationRevisionCatalogueRepository:
             ) from exc
         if record is None:
             return CalculationRevisionCatalogue()
-        envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(
-            record.payload.decode("utf-8")
-        )
+        envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not SensitivityClass.FINANCIAL:
             raise CalculationRevisionPersistenceError(
-                f"calculation-revision catalogue has classification {envelope.classification}; "
-                f"FINANCIAL expected"
+                f"calculation-revision catalogue has classification {envelope.classification}; FINANCIAL expected"
             )
         if envelope.schema_version > _CALCULATION_CATALOGUE_VERSION:
             raise CalculationRevisionPersistenceError(
