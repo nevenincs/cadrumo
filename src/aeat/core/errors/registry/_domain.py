@@ -851,6 +851,61 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._actions.CalculationRevisionNotFoundError",
+        ErrorCode(
+            code="ERROR_MODELO_CALCULATION_REVISION_NOT_FOUND",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_calculation_revision_not_found",
+            default_suggestion="aeat app modelo work calculate WORK_UNIT_ID",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.CalculationRevisionStateError",
+        ErrorCode(
+            code="ERROR_MODELO_CALCULATION_REVISION_STATE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_calculation_revision_state",
+            default_suggestion="aeat app modelo work calculate WORK_UNIT_ID",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.FilingRecordNotFoundError",
+        ErrorCode(
+            code="ERROR_MODELO_FILING_RECORD_NOT_FOUND",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_filing_record_not_found",
+            default_suggestion="aeat app modelo filing-record list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._calculation_repository.CalculationRevisionPersistenceError",
+        ErrorCode(
+            code="FAIL_MODELO_CALCULATION_REVISION_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_modelo_calculation_revision_persistence",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._filing_repository.FilingRecordPersistenceError",
+        ErrorCode(
+            code="FAIL_MODELO_FILING_RECORD_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_modelo_filing_record_persistence",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.period.PeriodError",
         ErrorCode(
             code="ERROR_PERIOD",

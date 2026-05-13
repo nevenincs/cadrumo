@@ -16,24 +16,44 @@ state fixture.
 from __future__ import annotations
 
 from ._actions import (
+    CalculationRevisionNotFoundError,
+    CalculationRevisionStateError,
+    FilingRecordNotFoundError,
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
+    calculate_modelo_revision,
     create_work_unit,
     discard_work_unit,
+    file_modelo_revision,
+    get_calculation_revision,
+    get_filing_record,
     get_work_unit,
+    list_calculation_revisions,
+    list_filing_records,
     list_work_units,
+    mark_revision_verified_complete,
     rename_work_unit,
 )
 
 
 __all__ = [
+    "CalculationRevisionNotFoundError",
+    "CalculationRevisionStateError",
+    "FilingRecordNotFoundError",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",
     "WorkUnitNotFoundError",
+    "calculate_modelo_revision",
     "create_work_unit",
     "discard_work_unit",
+    "file_modelo_revision",
+    "get_calculation_revision",
+    "get_filing_record",
     "get_work_unit",
+    "list_calculation_revisions",
+    "list_filing_records",
     "list_work_units",
+    "mark_revision_verified_complete",
     "rename_work_unit",
 ]

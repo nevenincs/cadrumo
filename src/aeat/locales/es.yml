@@ -85,28 +85,46 @@ cli:
           (AAAA-MM-DD)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         period_help: Periodo fiscal para acotar las fórmulas (p. ej. 2026Q1, 2026-01)
+      filing_record:
+        app_help: Inspeccionar las presentaciones internas (filing records) registradas
+        bucket_id_help: Filtrar por bucket
+        filing_record_id_help: Identificador estable de un filing record
+        include_superseded_help: Incluir los filing records superados (excluidos por defecto)
+        list_help: Listar los filing records registrados
+        show_help: Mostrar un filing record por id
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
       work:
-        actor_help: Actor responsable del descarte (etiqueta libre de hasta 64 caracteres)
+        actor_help: Actor responsable de la acción (etiqueta libre de hasta 64 caracteres)
         app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
           tributario
         bucket_id_help: Identificador del bucket al que pertenece la unidad de trabajo
+        calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
+        calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
+          de una revisión de cálculo
+        casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible)
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
           periodo, revisión)
         discard_help: Marcar una unidad de trabajo como descartada (transición de estado
           auditable)
+        file_help: Marcar una revisión verificada como internamente presentada. NO envía
+          a la AEAT
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por bucket
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         name_help: Nombre de visualización opcional de la unidad de trabajo
+        notes_help: Notas opcionales asociadas al filing record
+        override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
         period_help: Periodo fiscal de la unidad (p. ej. Q1, 4T, 0A, 01)
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
         revision_help: Identificador estable de la revisión registrada del modelo
+        revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas por
+          unidad de trabajo
         status_help: Mostrar los metadatos de una unidad de trabajo
+        verified_complete_help: Marcar una revisión draft como verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)

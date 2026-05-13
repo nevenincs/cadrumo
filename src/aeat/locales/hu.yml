@@ -81,26 +81,43 @@ cli:
         period_help: Adóidőszak a képletek szűkítéséhez (pl. 2026Q1, 2026-01)
       list:
         year_help: Modellkatalógus szűrése egyetlen adóévre
+      filing_record:
+        app_help: Belső bejelentési rekordok (filing records) vizsgálata
+        bucket_id_help: Szűrés bucket szerint
+        filing_record_id_help: Filing record stabil azonosítója
+        include_superseded_help: A felülírt filing recordokat is mutassa (alapértelmezetten
+          kihagyva)
+        list_help: Regisztrált filing recordok listázása
+        show_help: Egy filing record megjelenítése azonosító alapján
       work:
-        actor_help: A megszakításért felelős szereplő (legfeljebb 64 karakteres szabadszöveges
-          címke)
+        actor_help: A művelet felelőse (legfeljebb 64 karakteres szabadszöveges címke)
         app_help: Modell-munkaegységek életciklusának kezelése
         bucket_id_help: A munkaegységet tartalmazó bucket azonosítója
+        calculate_help: Új draft kalkulációs revízió rögzítése a munkaegységhez
+        calculation_revision_id_help: Egy kalkulációs revízió 64-karakteres SHA-256 azonosítója
+        casilla_help: Cella értéke CASILLA=DECIMAL szintaxissal (ismételhető)
         create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak,
           revízió) kulcsra
         discard_help: Munkaegység megszakítottként megjelölése (auditálható állapotátmenet)
+        file_help: Ellenőrzött revízió belsőleg leadottként megjelölése. NEM küldi el
+          az AEAT-nak
         include_discarded_help: A megszakított munkaegységeket is mutassa a listában
           (alapértelmezetten kihagyva)
         list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint
           szűrve
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         name_help: A munkaegység opcionális megjelenítési neve
+        notes_help: A filing recordhoz fűzött opcionális megjegyzések
+        override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
         period_help: A munkaegység adózási időszaka (pl. Q1, 4T, 0A, 01)
         reason_help: A megszakítás opcionális szabadszöveges indoklása (legfeljebb 500
           karakter)
         rename_help: Munkaegység megjelenítési nevének módosítása
         revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
+        revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
+          szűrve
         status_help: Egy munkaegység metaadatainak megjelenítése
+        verified_complete_help: Egy draft kalkulációs revízió verified-complete-té jelölése
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
         year_help: A munkaegység adóéve (pl. 2026)
   archive:
