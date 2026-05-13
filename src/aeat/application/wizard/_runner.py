@@ -7,6 +7,14 @@ visible questions, runs the widget-level validator on the raw
 answer, accumulates the canonical-token dict, parses each value into
 its declared ``answer_type``, and returns the flow's
 ``answers_model`` instance.
+
+Section / question progress lines:
+    Before each section's first visible question, the runner emits a
+    translated "Sección N/M: <title>" header via the prompter's
+    optional ``emit_progress`` hook. Each question within the section
+    prepends "(pregunta n/m) " to its prompt via the same hook. The
+    descriptor knows the static section / question counts; visible-
+    when conditionals adjust the runtime per-section visible count.
 """
 
 from __future__ import annotations
@@ -15,7 +23,8 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel
 
-from ._models import WizardFlow, WizardQuestion
+from ...core.i18n import tr
+from ._models import WizardFlow, WizardQuestion, WizardSection
 from ._persistence import _parse_canonical
 from ._prompter import Prompter
 from ._widgets import validate_widget_answer
@@ -30,6 +39,24 @@ def _condition_satisfied(question: WizardQuestion, canonical: Mapping[str, str])
     if parent is None:
         return False
     return parent == question.visible_when.equals
+
+
+def _emit(prompter: Prompter, text: str) -> None:
+    """Emit ``text`` through the prompter if it carries the optional hook."""
+
+    hook = getattr(prompter, "emit_progress", None)
+    if callable(hook):
+        hook(text)
+
+
+def _section_visible_questions(
+    section: WizardSection,
+    canonical: Mapping[str, str],
+) -> list[WizardQuestion]:
+    """Return the section's questions whose ``visible_when`` predicate
+    is satisfied by the accumulated canonical answers so far."""
+
+    return [question for question in section.questions if _condition_satisfied(question, canonical)]
 
 
 def run_flow(
@@ -53,11 +80,31 @@ def run_flow(
     defaults_map: Mapping[str, str] = defaults or {}
     canonical: dict[str, str] = {}
     typed: dict[str, object] = {}
+    section_total = len(flow.sections)
 
-    for section in flow.sections:
-        for question in section.questions:
-            if not _condition_satisfied(question, canonical):
-                continue
+    for section_index, section in enumerate(flow.sections, start=1):
+        visible_questions = _section_visible_questions(section, canonical)
+        if not visible_questions:
+            continue
+        _emit(
+            prompter,
+            tr(
+                "wizard.progress.section_header",
+                section_n=section_index,
+                section_total=section_total,
+                title=tr(str(section.title)),
+            ),
+        )
+        question_total = len(visible_questions)
+        for question_index, question in enumerate(visible_questions, start=1):
+            _emit(
+                prompter,
+                tr(
+                    "wizard.progress.question_prefix",
+                    q_n=question_index,
+                    q_total=question_total,
+                ),
+            )
             default = defaults_map.get(question.id, question.default)
             raw = prompter.ask(question, default=default)
             validated = validate_widget_answer(question, raw)

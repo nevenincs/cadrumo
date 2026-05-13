@@ -953,6 +953,9 @@ wizard:
     unsupported_console: 'El asistente interactivo necesita cmd.exe o Windows Terminal.
       Usa `aeat config init --quiet --tax-id NIF --activity ACTIVIDAD` o cambia de
       terminal.'
+  progress:
+    question_prefix: '(pregunta %{q_n}/%{q_total}) '
+    section_header: 'Sección %{section_n}/%{section_total}: %{title}'
   setup:
     description: Asistente de configuración para preparar las declaraciones
     enrollment:
