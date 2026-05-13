@@ -62,11 +62,15 @@ class WorkflowStateRepository:
     def save(self, state: WorkflowState) -> None:
         """Persist state in the encrypted database object store."""
 
+        try:
+            payload = WorkflowState.model_validate({**state.__dict__, "updated_at": utc_now()})
+        except ValueError as exc:
+            raise WorkflowError(f"workflow state refused invalid payload: {exc}") from exc
         envelope = Envelope[WorkflowState](
             schema_version=_STATE_VERSION,
             written_at=utc_now(),
             classification=SensitivityClass.FINANCIAL,
-            payload=state.model_copy(update={"updated_at": utc_now()}),
+            payload=payload,
         )
         self._objects.save(
             namespace=_STATE_NAMESPACE,

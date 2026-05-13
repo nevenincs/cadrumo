@@ -97,6 +97,22 @@ class DeclarationPointer(BaseModel):
     updated_at: datetime = Field(default_factory=utc_now)
 
 
+class ProfileBucketPointer(BaseModel):
+    """Pointer from workflow state to a secure profile bucket."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    bucket_id: str = Field(min_length=1, max_length=128)
+
+    @field_validator("bucket_id")
+    @classmethod
+    def _trim_bucket_id(cls, value: str) -> str:
+        trimmed = value.strip()
+        if not trimmed:
+            raise ValueError("bucket_id must not be blank")
+        return trimmed
+
+
 def declaration_key(modelo: str, period: str) -> str:
     """Return the canonical state-store key for a ``(modelo, period)`` pair."""
     return f"{modelo.strip()}:{period.strip()}"
@@ -123,7 +139,7 @@ class WorkflowState(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     auth: AuthState = Field(default_factory=AuthState)
-    profiles: dict[str, Any] = Field(default_factory=dict)
+    profiles: dict[str, ProfileBucketPointer] = Field(default_factory=dict)
     active_profile: str | None = None
     declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
     invoice_reviews: dict[str, Any] = Field(default_factory=dict)
@@ -135,9 +151,21 @@ class WorkflowState(BaseModel):
         """Return the active profile record from the profile's secure bucket."""
         if self.active_profile is None:
             return None
+        pointer = self.profiles.get(self.active_profile)
+        if pointer is None:
+            return None
         from ..profile._repository import profile_bucket_repository
 
-        return profile_bucket_repository().load(self.active_profile)
+        return profile_bucket_repository().load(pointer.bucket_id)
+
+    def active_profile_bucket_id(self) -> str | None:
+        """Return the active profile's secure bucket id."""
+        if self.active_profile is None:
+            return None
+        pointer = self.profiles.get(self.active_profile)
+        if pointer is None:
+            return None
+        return pointer.bucket_id
 
 
 def update_declaration_pointer(
@@ -183,8 +211,8 @@ def update_declaration_pointer(
 # already present in sys.modules['aeat.application.workflow._models'].
 # ---------------------------------------------------------------------------
 
-from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
-from ...domain.deadlines import FilingObligation
+from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus  # noqa: E402
+from ...domain.deadlines import FilingObligation  # noqa: E402
 
 
 class SiteHealthAlert(BaseModel):
