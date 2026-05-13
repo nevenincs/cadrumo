@@ -49,7 +49,7 @@ class ReconciliationSuggestion(BaseModel):
     model_config = _STRICT_FROZEN
 
     invoice_id: str = Field(min_length=1)
-    transaction_id: str = Field(min_length=1)
+    transaction_id: str = Field(min_length=_HEX_TRANSACTION_ID_LENGTH, max_length=_HEX_TRANSACTION_ID_LENGTH)
     amount_match: bool
     counterparty_match: bool
     score: Decimal
@@ -73,8 +73,8 @@ class LinkInconsistency(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    invoice_id: str
-    transaction_id: str
+    invoice_id: str = Field(min_length=1)
+    transaction_id: str = Field(min_length=_HEX_TRANSACTION_ID_LENGTH, max_length=_HEX_TRANSACTION_ID_LENGTH)
     direction: Literal["invoice-only", "transaction-only"]
 
 
