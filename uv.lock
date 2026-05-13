@@ -86,7 +86,10 @@ dev = [
     { name = "ty" },
     { name = "types-defusedxml" },
     { name = "types-openpyxl" },
+    { name = "types-pywin32" },
+    { name = "types-pyyaml" },
     { name = "types-reportlab" },
+    { name = "types-xlrd" },
     { name = "vaultspec-core" },
     { name = "vaultspec-rag" },
 ]
@@ -148,7 +151,10 @@ dev = [
     { name = "ty", specifier = ">=0.0.1a1" },
     { name = "types-defusedxml", specifier = ">=0.7.0.20260504" },
     { name = "types-openpyxl", specifier = ">=3.1.5.20260408" },
+    { name = "types-pywin32", specifier = ">=311.0.0.20260508" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20260510" },
     { name = "types-reportlab", specifier = ">=4.4.10.20260408" },
+    { name = "types-xlrd", specifier = ">=2.0.0.20260408" },
     { name = "vaultspec-core", specifier = ">=0.1.18" },
     { name = "vaultspec-rag", specifier = ">=0.2.8" },
 ]
@@ -3248,12 +3254,39 @@ wheels = [
 ]
 
 [[package]]
+name = "types-pywin32"
+version = "311.0.0.20260508"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/19/c7/38afbc42ec39aae3e70fe73c1ee6631feb8c4ac3db0496009c2e67fa5936/types_pywin32-311.0.0.20260508.tar.gz", hash = "sha256:143f6b19a036de630e28a196452f1da829573cd2dd64b7289ff86bb36c93d3d6", size = 332372, upload-time = "2026-05-08T04:50:06.683Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f2/96/8a25f248165acc32e0e4246f72e30e075e6596dd6ff912968e962c421d49/types_pywin32-311.0.0.20260508-py3-none-any.whl", hash = "sha256:933063714b43dc7fbd86f28842ca3367e901f24d32795025e749568e56b84b2b", size = 395354, upload-time = "2026-05-08T04:50:05.375Z" },
+]
+
+[[package]]
+name = "types-pyyaml"
+version = "6.0.12.20260510"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/36/85/0d9fafce21be112e977a89677f1ce9d1aef921d745b17c758c93e861c11f/types_pyyaml-6.0.12.20260510.tar.gz", hash = "sha256:09c1f1cb65a6eebea1e2e51ccf4918b8288e152909609a35cdb0d805efd125ad", size = 17831, upload-time = "2026-05-10T05:26:28.136Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d3/ad/fd618a218925daada7b8a5e7326e662599fa5fdff4a4c44ab2795bd2d9ca/types_pyyaml-6.0.12.20260510-py3-none-any.whl", hash = "sha256:3492eb9ba4d9d833473214c4d5736cccf5f37d93f5854059721e1c84f785309d", size = 20304, upload-time = "2026-05-10T05:26:26.981Z" },
+]
+
+[[package]]
 name = "types-reportlab"
 version = "4.4.10.20260508"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ea/ef/38984f8fbfa4155e53a2a2b4fa2705d3be4028e8115c4e89d4845756c25c/types_reportlab-4.4.10.20260508.tar.gz", hash = "sha256:14d4e74140c29962d4f6b6b2923ea0742833c1e87b5872d414dcb96e838d58b9", size = 71744, upload-time = "2026-05-08T04:48:50.976Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8a/bc/4f7f7e821073d08ad8744aa941f7c3178f7674bdac994e66ed7d30a1859b/types_reportlab-4.4.10.20260508-py3-none-any.whl", hash = "sha256:9cfc21998ff6b7991ff077c9b9ba5ebf2f520eeaff2fbf58f0f7cae7d686d8ee", size = 112743, upload-time = "2026-05-08T04:48:50.024Z" },
+]
+
+[[package]]
+name = "types-xlrd"
+version = "2.0.0.20260408"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e7/41/0045814e0f0676e3526453a4e5beb4914aae354126a7de7225c6c2d7568e/types_xlrd-2.0.0.20260408.tar.gz", hash = "sha256:f86341825dcecc82c9eb4955308a9e7ea07d9d7290aca9a8f5373d7cdf172a2c", size = 13984, upload-time = "2026-04-08T04:29:05.963Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4c/3d/fa50879aad7e63d1b0d4fe6ea97db0e1a7141a223f6f8d8eafa9df5033a8/types_xlrd-2.0.0.20260408-py3-none-any.whl", hash = "sha256:a140966631a855d69d69aa8842526123f2aaa1f855338083e361561a266a6f5a", size = 16879, upload-time = "2026-04-08T04:29:05.143Z" },
 ]
 
 [[package]]

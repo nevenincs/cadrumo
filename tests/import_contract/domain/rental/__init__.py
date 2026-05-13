@@ -1,1 +1,0 @@
-"""Rental import-contract tests."""

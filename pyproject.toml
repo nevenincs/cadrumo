@@ -159,13 +159,16 @@ dev = [
   "types-defusedxml>=0.7.0.20260504",
   "types-openpyxl>=3.1.5.20260408",
   "types-reportlab>=4.4.10.20260408",
+  "types-pyyaml>=6.0.12.20260510",
+  "types-xlrd>=2.0.0.20260408",
+  "types-pywin32>=311.0.0.20260508",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
 [tool.ruff]
 target-version = "py313"
 line-length = 120
-src = ["src", "tests"]
+src = ["src"]
 
 [tool.ruff.lint]
 select = [
@@ -188,7 +191,10 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "T20"]
+# Bundled test modules colocated under src/aeat/.
+"src/aeat/**/test_*.py" = ["S101", "T20"]
+"src/aeat/**/_test_*.py" = ["S101", "T20"]
+"src/aeat/tests/**/*.py" = ["S101", "T20"]
 # `tools/` holds contributor-only one-shot analysis scripts; print() is
 # the canonical surface for these CLIs.
 "tools/**/*.py" = ["T20"]
@@ -235,9 +241,9 @@ ignore = [
 "src/aeat/domain/portals/_cli.py" = ["B008"]
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.
-"unittest".msg = "Project is pytest-only. Use pytest primitives — fixtures, parametrise, tmp_path. See tests/README.md."
-"unittest.mock".msg = "Mocks are banned in live tests and discouraged in unit tests. Use real objects or fakes-as-classes. See tests/README.md."
-"mock".msg = "Third-party 'mock' is banned for the same reason as unittest.mock. See tests/README.md."
+"unittest".msg = "Project is pytest-only. Use pytest primitives — fixtures, parametrise, tmp_path. See src/aeat/tests/README.md."
+"unittest.mock".msg = "Mocks are banned in live tests and discouraged in unit tests. Use real objects or fakes-as-classes. See src/aeat/tests/README.md."
+"mock".msg = "Third-party 'mock' is banned for the same reason as unittest.mock. See src/aeat/tests/README.md."
 
 # The relative-imports mandate is enforced by the custom
 # scripts/check_relative_imports.py script, not by Ruff TID251. Ruff's
@@ -281,7 +287,7 @@ explicit_package_bases = true
 namespace_packages = true
 
 [[tool.mypy.overrides]]
-module = ["playwright.*", "typer.*", "rich.*", "bs4.*"]
+module = ["playwright.*", "typer.*", "rich.*", "bs4.*", "i18n.*", "ofxparse.*"]
 ignore_missing_imports = true
 
 # ── pyrefly ──────────────────────────────────────────────────────────────────
@@ -294,21 +300,21 @@ search_path = ["src", "stubs"]
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-testpaths = ["src", "tests"]
+testpaths = ["src/aeat"]
 pythonpath = ["src"]
 python_files = ["test_*.py", "_test_*.py"]
 addopts = "-v --tb=short -m 'unit' --strict-markers"
 asyncio_mode = "strict"
 markers = [
   "unit: deterministic tests with no external I/O",
-  "live_read: opt-in tests that READ from a real external service; see tests/README.md",
+  "live_read: opt-in tests that READ from a real external service; see src/aeat/tests/README.md",
   "live_write: permanently forbidden external write-shaped tests; collection-dropped with no bypass",
   "domain_outbound: exercises AEAT Sede Electronica read paths (auth, browser, inbox, justificante, portals, status, sync)",
   "domain_submission: exercises local filing export, preflight, and historical submission records; no AEAT write surface",
   "domain_inbound: exercises financial ingest (financial, cli/financial)",
   "domain_persistence: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, registry, deadlines, cli/deadlines)",
   "domain_application: exercises workflow orchestration, LLM, i18n, testing subpackages",
-  "domain_core: exercises project plumbing (root modules, non-domain cli, setup, top-level tests/*.py)",
+  "domain_core: exercises project plumbing (root modules, non-domain cli, setup, bundled src/aeat/tests meta)",
   # Hexagonal layered markers.
   "domain_inbound: exercises adapters.inbound.* (financial providers, borrador, declaracion, identity, sanitizer, pdf shared)",
   "domain_outbound: exercises adapters.outbound.* (aeat auth/browser/sede/export/verify, llm)",
@@ -330,7 +336,7 @@ branch = true
 omit = [
   "*/test_*.py",
   "*/_test_*.py",
-  "*/tests/*",
+  "src/aeat/tests/*",
 ]
 
 [tool.coverage.report]
@@ -347,11 +353,11 @@ skip_covered = false
 # ~5900 raw security findings. Suppress test-only false positives at the
 # config layer; production code stays under the full bandit ruleset.
 [tool.bandit]
-# Skip the test directory entirely — every signal there is a false positive
-# at the boundary (assert is the test language, fixtures use random for
+# Skip the bundled test tree — every signal there is a false positive at
+# the boundary (assert is the test language, fixtures use random for
 # synthetic data, hardcoded credentials are obvious test stubs).
 exclude_dirs = [
-  "tests",
+  "src/aeat/tests",
   ".venv",
   "stubs",
 ]
@@ -361,9 +367,8 @@ exclude_dirs = [
 # Every other rule stays active.
 skips = ["B101"]
 
-# Per-rule per-glob skips for the in-source test files (`src/aeat/**/test_*.py`)
-# that aren't under the top-level `tests/` directory but mirror the same
-# noise profile.
+# Per-rule per-glob skips for colocated test files mirror the bundled
+# src/aeat/tests tree's noise profile.
 [tool.bandit.assert_used]
 skips = ["*/test_*.py", "*/_test_*.py", "**/conftest.py"]
 
@@ -385,8 +390,8 @@ ignore-property-decorators = true
 ignore-module = false
 fail-under = 80
 exclude = [
-  "tests",
   "stubs",
+  "src/aeat/tests",
   "src/aeat/**/test_*.py",
   "src/aeat/**/_test_*.py",
 ]
@@ -402,7 +407,7 @@ paths = ["src/aeat"]
 exclude = [
   "src/aeat/**/test_*.py",
   "src/aeat/**/_test_*.py",
-  "tests",
+  "src/aeat/tests",
   "stubs",
 ]
 ignore_decorators = [
