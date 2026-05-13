@@ -628,6 +628,27 @@ cli:
       presentades com a JSON
     casilla_help: Id de casella a comparar; repetiu-lo per substituir les caselles
       calculades per defecte
+    citations:
+      app_help: Inspeccionar el corpus normatiu (Llei 37/1992, Llei 35/2006, ...)
+      articulo_help: Article concret a mostrar (p. ex. 91.U.2.1r)
+      list_help: Llistar les normatives registrades al corpus legal
+      normative_id_help: Id estable de la normativa (p. ex. ley-37-1992)
+      show_help: Mostrar una normativa i, opcionalment, un dels seus articles
+      tag_help: Filtrar per etiqueta de domini fiscal (p. ex. 'irpf', 'iva')
+      verify_help: Verificar la integritat del corpus normatiu
+    manuals:
+      app_help: Inspeccionar els Manuals pràctics AEAT (Renda, IVA, Societats)
+      errors:
+        unknown_section: La secció {section} no s'ha trobat al manual
+      kind_help: Filtrar per tipus de regla del manual
+      list_help: Llistar els manuals disponibles localment
+      manual_help: Identificador del manual (renta, iva, sociedades)
+      part_help: Volum del manual (single, part1, part2-deducciones-autonomicas, part3)
+      rules_help: Llistar les regles codificades en un manual
+      section_help: Identificador opcional de secció a mostrar
+      show_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
+      verify_help: Verificar la integritat del manual contra el seu contracte
+      year_help: Any fiscal del manual (p. ex. 2024)
     errors:
       invalid_year_range: Rang d'anys no vàlid
       unknown_modelo: El registre no conté cap definició del model {modelo}

@@ -23,32 +23,48 @@ which is strictly worse than leaving the stream as-is.
 
 from __future__ import annotations
 
+import logging
 import sys
 from typing import TextIO
+
+# ``aeat.core.logging`` cannot be imported at this layer without
+# pulling the project's configuration eagerly; this module runs at
+# the top of CLI startup, before settings are loaded. The stdlib
+# logger here defers handler routing until the central logging
+# config attaches, at which point messages flow through the
+# SecretScrubbingFilter and project handlers like any other.
+_LOGGER = logging.getLogger(__name__)
 
 
 def _reconfigure_stream(stream: TextIO | None) -> None:
     """Reconfigure ``stream`` to UTF-8 with ``errors="replace"`` if possible.
 
-    Streams that don't expose ``reconfigure`` (e.g. test capture
-    fixtures, custom wrappers, certain pipes) are left untouched.
-    ``OSError`` and ``ValueError`` are the documented failure modes
-    for streams that cannot be reconfigured at runtime; both are
-    swallowed because crashing the CLI startup over an
-    encoding-tuning step is the wrong trade-off.
+    Streams that don't expose ``reconfigure`` (test capture fixtures,
+    custom wrappers, certain pipes) are left untouched. ``OSError``
+    and ``ValueError`` are the documented failure modes when a
+    stream declines mid-run reconfiguration. Either is logged at
+    debug level so the swallow is observable in diagnostic captures;
+    crashing the CLI startup over an encoding-tuning step is the
+    wrong trade-off.
     """
 
     if stream is None:
         return
     reconfigure = getattr(stream, "reconfigure", None)
     if reconfigure is None:
+        _LOGGER.debug(
+            "stdio reconfigure skipped: stream %r exposes no reconfigure() method",
+            type(stream).__name__,
+        )
         return
     try:
         reconfigure(encoding="utf-8", errors="replace")
-    except (OSError, ValueError):
-        # Pipes, captured streams, and wrappers that decline mid-run
-        # reconfiguration land here. Leaving the stream as-is is the
-        # safest fallback.
+    except (OSError, ValueError) as exc:
+        _LOGGER.debug(
+            "stdio reconfigure declined by stream %r: %s",
+            type(stream).__name__,
+            exc,
+        )
         return
 
 
