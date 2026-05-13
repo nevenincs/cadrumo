@@ -90,6 +90,10 @@ cli:
           report
       work:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
+        amend_help: Build a corrective amendment over an externally-filed return.
+          Requires a filing record with imported AEAT-attested evidence
+        amendment_kind_help: Legal kind of the amendment (complementaria or sustitutiva)
+        amendment_reason_help: Free-text reason for the amendment (operator audit trail)
         app_help: Manage the lifecycle of modelo work units
         bucket_id_help: Bucket identifier the work unit belongs to
         calculate_help: Persist a new draft calculation revision for the work unit
@@ -100,6 +104,8 @@ cli:
         discard_help: Mark a work unit as discarded (auditable state transition)
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
+        from_filing_record_help: Stable id of the baseline filing record to amend.
+          Must carry imported external evidence (justificante / CSV register / live capture)
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         list_help: List registered work units, optionally filtered by bucket
@@ -113,6 +119,8 @@ cli:
         revision_help: Stable id of the targeted registry modelo revision
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
+        set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
+          at least one required)
         status_help: Show the metadata of one work unit
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
@@ -269,7 +277,6 @@ cli:
         Run: aeat config profile set tax.id <NIF/NIE>'
       set_parse_error: Error parsing the field assignment
     export_help: Export an approved declaration to a local AEAT-format file
-    format_help: Output format (e.g. json, text, table)
     labels:
       blockers: Blockers
       by: By
@@ -675,11 +682,6 @@ cli:
     verbose_help: Show details and next action when available
   registry:
     app_help: Tax models registry management
-    capture_filed_data_help: Capture data already filed with AEAT and update the local
-      registry
-    capture_limit_help: Limit of records to process
-    capture_source_filed_data_help: Capture filed source observations required by
-      a target modelo calculation
     casilla_help: Casilla id to compare; repeat to override the default computed casillas
     citations:
       app_help: Inspect the legal-norm corpus (Ley 37/1992, Ley 35/2006, ...)
@@ -689,11 +691,8 @@ cli:
       show_help: Show one normative and, optionally, one of its articles
       tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
       verify_help: Verify the legal-norm corpus integrity
-    expediente_help: AEAT file number to capture
-    from_year_help: Start year to capture or review records
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
-    list_filed_data_help: List existing filings in AEAT for the specified year range
     manuals:
       app_help: Inspect AEAT Manual práctico records (Renta, IVA, Sociedades)
       errors:
@@ -753,9 +752,7 @@ cli:
       workbook_count: workbook_count
       workbook_parity_ref_count: workbook_parity_ref_count
       workbook_path: workbook_path
-    modelo_help: Optional filter by tax model (e.g. 303, 130)
     observation_help: Encrypted filed-declaration observation manifest to verify
-    output_root_help: Path to the output root directory for the records
     parity_app_help: Scenario and tape parity runner for manual calculation checks
     parity_output_help: Destination JSON file for the generated parity tape
     parity_replay_help: Replay an archived parity tape against the current registry
@@ -765,10 +762,8 @@ cli:
     parity_scenario_help: Path to a parity scenario JSON file
     parity_store_root_help: Root directory used to store generated parity tapes
     parity_tape_help: Path to a stored parity tape JSON file
-    period_help: Optional filter by fiscal period (e.g. Q1, 01)
     source_observation_help: Encrypted source observation manifest required by previous-filing
       bindings or relations
-    to_year_help: End year to capture or review records
     verify_filed_state_help: Compare local registry calculation output against captured
       filed AEAT state
     verify_help: Verify the integrity of the local registry
@@ -780,7 +775,6 @@ cli:
     workbooks_root_help: Root directory containing the workbooks definitions
     workbooks_timeout_help: Maximum timeout (in seconds) for the compilation
     workbooks_verify_help: Verify the integrity of the generated workbooks
-    year_help: Fiscal year to query or process
   review:
     app_help: 'Operator review queue: triage ledger transactions, purchase evidence,
       and modelo findings'
@@ -820,6 +814,8 @@ cli:
       headline: AEAT Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
         --help`.'
+      quick_start_doctor: '  5. `aeat config doctor` - diagnose configuration, storage,
+        and local health.'
       quick_start_heading: Quick start
       quick_start_import: '  3. `aeat app ledger import <bank-statement.csv> --provider
         csv` - add your bank transactions.'
@@ -842,6 +838,7 @@ cli:
       welcome_no_profile: Welcome. No active profile is configured yet, so start with
         setup.
       welcome_profile: Welcome back. Active profile is `%{profile}`.
+    language_help: Output language for this command (overrides the active profile)
     quiet_help: Show only errors on stderr
     verbose_help: Show internal informational logs on stderr
     version_help: Show package version (add --detail for the full registry summary)
@@ -1035,11 +1032,16 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: The interactive wizard requires cmd.exe or Windows Terminal.
-      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch terminals.
+    unsupported_console: "The guided setup could not open an interactive prompt in\
+      \ this run.\nNothing has been saved yet.\n\nTry the guided setup again from\
+      \ an interactive terminal session:\n  aeat config init\n\nOr start with the\
+      \ two required values:\n  aeat config init --quiet --tax-id 12345678Z --activity\
+      \ \"software development\"\n\nActivity can be a plain description of your work\
+      \ or the IAE heading if you know it.\nRun `aeat config init --help` to see every\
+      \ setup field."
   progress:
-    question_prefix: '(question %{q_n}/%{q_total}) '
-    section_header: 'Section %{section_n}/%{section_total}: %{title}'
+    question_prefix: Question %{q_n} of %{q_total}
+    section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
     description: Operator-facing setup wizard for tax filing readiness
     enrollment:
@@ -1058,7 +1060,7 @@ wizard:
       title: Family unit
     flags:
       activity:
-        help: Business activity label or controlled key
+        help: Business activity as plain text, or the IAE heading if you know it
       address-postcode:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
@@ -1137,6 +1139,18 @@ wizard:
         help: Third-party transactions exceed Modelo 347 threshold
       uses-objective-estimation-irpf:
         help: Files IRPF under objective estimation
+    intro: 'Guided tax profile setup
+
+
+      This prepares the local profile the app uses for ledger work and tax-form checks.
+
+      Expect %{section_total} sections. Only %{required_total} answers are required
+      to start; the rest can be left blank when you do not know them yet.
+
+      Have your NIF/NIE/CIF, a short activity description, VAT/IRPF regime details,
+      tax residence, and family details if they apply.
+
+      After saving, check progress with `aeat config profile status`.'
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intra-community operations exceed 50,000 EUR
@@ -1173,7 +1187,8 @@ wizard:
         prompt: Files IRPF under objective estimation
     profile:
       activity:
-        prompt: Business activity label or controlled key
+        prompt: Business activity (plain text is fine; use the IAE heading if you
+          know it)
       address-postcode:
         prompt: Tax address postcode
       iva-regime:

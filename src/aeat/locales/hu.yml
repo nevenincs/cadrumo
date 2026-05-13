@@ -98,6 +98,11 @@ cli:
           SHA-256 azonosítója
       work:
         actor_help: A művelet felelőse (legfeljebb 64 karakteres szabadszöveges címke)
+        amend_help: Helyesbítő (complementaria) bevallás építése egy külsőleg leadott
+          bevallás fölött. Importált AEAT-hitelesített evidenciával rendelkező filing
+          record szükséges
+        amendment_kind_help: Helyesbítés jogi típusa (complementaria vagy sustitutiva)
+        amendment_reason_help: Helyesbítés szabadszöveges oka (kezelői auditnyom)
         app_help: Modell-munkaegységek életciklusának kezelése
         bucket_id_help: A munkaegységet tartalmazó bucket azonosítója
         calculate_help: Új draft kalkulációs revízió rögzítése a munkaegységhez
@@ -109,6 +114,8 @@ cli:
         discard_help: Munkaegység megszakítottként megjelölése (auditálható állapotátmenet)
         file_help: Ellenőrzött revízió belsőleg leadottként megjelölése. NEM küldi
           el az AEAT-nak
+        from_filing_record_help: A helyesbítendő alap filing record stabil azonosítója.
+          Külső importált evidenciát kell hordoznia (justificante / CSV / élő rögzítés)
         include_discarded_help: A megszakított munkaegységeket is mutassa a listában
           (alapértelmezetten kihagyva)
         list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint
@@ -124,6 +131,8 @@ cli:
         revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
         revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
           szűrve
+        set_override_help: Helyesbített cellaérték CASILLA=DECIMAL szintaxissal
+          (ismételhető; legalább egy kötelező)
         status_help: Egy munkaegység metaadatainak megjelenítése
         verify_help: Draft kalkulációs revízió verifikálása a verified-complete szerződés
           ellen
@@ -286,7 +295,6 @@ cli:
         szükséges
       set_parse_error: Hiba a mezőhozzárendelés elemzésekor
     export_help: Jóváhagyott bevallás exportálása helyi AEAT-formátumú fájlba
-    format_help: Kimeneti formátum (pl. json, text, table)
     labels:
       blockers: Akadályozó tényezők
       by: Által
@@ -699,11 +707,6 @@ cli:
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:
     app_help: Adózási modellek nyilvántartásának kezelése
-    capture_filed_data_help: Az AEAT-hoz már benyújtott adatok rögzítése és a helyi
-      nyilvántartás frissítése
-    capture_limit_help: A feldolgozandó bejegyzések korlátja
-    capture_source_filed_data_help: A célmodell számításához szükséges benyújtott
-      forrásmegfigyelések rögzítése
     casilla_help: Összehasonlítandó casilla azonosító; ismételhető az alapértelmezett
       számított casillák felülírásához
     citations:
@@ -714,11 +717,8 @@ cli:
       show_help: Egy jogszabály és opcionálisan az egyik cikke megjelenítése
       tag_help: Szűrés adónemtag szerint (pl. 'irpf', 'iva')
       verify_help: Jogi korpusz integritásának ellenőrzése
-    expediente_help: A rögzítendő AEAT ügyszám
-    from_year_help: Kezdő év a bejegyzések rögzítéséhez vagy felülvizsgálatához
     inspect_help: A nyilvántartás állapotának és hivatkozásainak ellenőrzése
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának útvonala
-    list_filed_data_help: Meglévő AEAT benyújtások listázása a megadott évtartományra
     manuals:
       app_help: AEAT Manual práctico bejegyzések vizsgálata (Renta, IVA, Sociedades)
       errors:
@@ -778,10 +778,8 @@ cli:
       workbook_count: workbook_count
       workbook_parity_ref_count: workbook_parity_ref_count
       workbook_path: workbook_path
-    modelo_help: Opcionális szűrő adózási modell szerint (pl. 303, 130)
     observation_help: Ellenőrizendő titkosított benyújtott bevallási megfigyelési
       manifeszt
-    output_root_help: A bejegyzések kimeneti gyökérkönyvtárának útvonala
     parity_app_help: Paritási forgatókönyvek és szalagok futtatása manuális ellenőrzésekhez
     parity_output_help: A generált paritási szalag cél JSON fájlja
     parity_replay_help: Archivált paritási szalag visszajátszása az aktuális registry
@@ -791,10 +789,8 @@ cli:
     parity_scenario_help: Paritási forgatókönyv JSON fájl elérési útja
     parity_store_root_help: A generált paritási szalagok tárolására használt gyökérkönyvtár
     parity_tape_help: Egy mentett paritási szalag JSON fájl elérési útja
-    period_help: Opcionális szűrő adózási időszak szerint (pl. Q1, 01)
     source_observation_help: Korábbi bevallási kötéshez vagy relációhoz szükséges
       titkosított forrásmegfigyelési manifeszt
-    to_year_help: Záró év a bejegyzések rögzítéséhez vagy felülvizsgálatához
     verify_filed_state_help: Helyi registry számítás összehasonlítása rögzített AEAT
       benyújtott állapottal
     verify_help: A helyi nyilvántartás integritásának ellenőrzése
@@ -806,7 +802,6 @@ cli:
     workbooks_root_help: A munkafüzet-definíciókat tartalmazó gyökérkönyvtár
     workbooks_timeout_help: A fordítás maximális időkorlátja (másodpercben)
     workbooks_verify_help: A generált munkafüzetek integritásának ellenőrzése
-    year_help: Lekérdezendő vagy feldolgozandó adóév
   review:
     app_help: Emberi felülvizsgálati sor a kezelői döntést igénylő rekordokhoz
     errors:
@@ -846,6 +841,8 @@ cli:
       headline: AEAT adoasszisztens
       help_line: 'Tovabbi segitseg: futtasd az `aeat --help`, `aeat config --help`
         vagy `aeat app --help` parancsot.'
+      quick_start_doctor: '  5. `aeat config doctor` - konfiguracio, tarolo es helyi
+        allapot diagnosztikaja.'
       quick_start_heading: Gyors kezdes
       quick_start_import: '  3. `aeat app ledger import <banki-kivonat.csv> --provider
         csv` - banki tranzakciok hozzaadasa.'
@@ -867,6 +864,7 @@ cli:
       tagline: Helyi elso spanyol adozasi munkafolyamat autonomoknak.
       welcome_no_profile: Udvozlet. Meg nincs aktiv profil beallitva; kezdd a beallitassal.
       welcome_profile: Udvozlet ujra. Az aktiv profil `%{profile}`.
+    language_help: A parancs kimeneti nyelve (felülírja az aktív profilt)
     quiet_help: Csak hibák megjelenítése stderr-en
     verbose_help: Belső információs naplók megjelenítése stderr-en
     version_help: Csomagverzió megjelenítése (a --detail kapcsoló mutatja a teljes
@@ -1066,11 +1064,16 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: The interactive wizard requires cmd.exe or Windows Terminal.
-      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch terminals.
+    unsupported_console: "The guided setup could not open an interactive prompt in\
+      \ this run.\nNothing has been saved yet.\n\nTry the guided setup again from\
+      \ an interactive terminal session:\n  aeat config init\n\nOr start with the\
+      \ two required values:\n  aeat config init --quiet --tax-id 12345678Z --activity\
+      \ \"software development\"\n\nActivity can be a plain description of your work\
+      \ or the IAE heading if you know it.\nRun `aeat config init --help` to see every\
+      \ setup field."
   progress:
-    question_prefix: '(question %{q_n}/%{q_total}) '
-    section_header: 'Section %{section_n}/%{section_total}: %{title}'
+    question_prefix: Question %{q_n} of %{q_total}
+    section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
     description: Operátorbarát beállítás varázsló a bevallások előkészítéséhez
     enrollment:
@@ -1089,7 +1092,7 @@ wizard:
       title: Családi egység
     flags:
       activity:
-        help: Tevékenységcímke vagy ellenőrzött kulcs
+        help: Gazdasági tevékenység szabad szövegként, vagy IAE-kód, ha ismered
       address-postcode:
         help: Adózási cím irányítószáma
       bienes-extranjero-above-threshold:
@@ -1168,6 +1171,19 @@ wizard:
         help: Harmadik felekkel folytatott műveletek meghaladják a Modelo 347 küszöböt
       uses-objective-estimation-irpf:
         help: IRPF-et becsült rendszerben adózza
+    intro: 'Irányított adóprofil-beállítás
+
+
+      Ez készíti elő azt a helyi profilt, amelyet az app a könyvelési munkához és
+      a bevallási ellenőrzésekhez használ.
+
+      %{section_total} lépés van. Csak %{required_total} válasz kötelező az induláshoz;
+      amit még nem tudsz, üresen hagyhatod.
+
+      Legyen kéznél a NIF/NIE/CIF, a tevékenység rövid leírása, az ÁFA/IRPF rendszer
+      adatai, az adóügyi illetőség és szükség esetén a családi adatok.
+
+      Mentés után a haladást itt ellenőrizheted: `aeat config profile status`.'
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Közösségi műveletek meghaladják az 50 000 EUR küszöböt
@@ -1204,7 +1220,8 @@ wizard:
         prompt: IRPF-et becsült rendszerben adózza
     profile:
       activity:
-        prompt: Tevékenységcímke vagy ellenőrzött kulcs
+        prompt: Gazdasági tevékenység (szabad szöveg is elég; használd az IAE-kódot,
+          ha ismered)
       address-postcode:
         prompt: Adózási cím irányítószáma
       iva-regime:

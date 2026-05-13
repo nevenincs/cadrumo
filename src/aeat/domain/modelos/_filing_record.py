@@ -36,7 +36,6 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
 
-
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 
 _FilingRecordId = Annotated[
@@ -75,6 +74,43 @@ class FilingRecordStatus(StrEnum):
 
     CURRENT = "current"
     SUPERSEDED = "superseded"
+
+
+class ExternalEvidenceKind(StrEnum):
+    """Closed catalogue of external-evidence kinds.
+
+    A filing record marked with one of these kinds carries imported
+    official evidence (an AEAT justificante PDF, a CSV-attested
+    receipt) rather than a tool-computed calculation revision. This
+    is the gate the modelo-amend path requires before it accepts an
+    amendment baseline.
+    """
+
+    AEAT_JUSTIFICANTE_PDF = "aeat_justificante_pdf"
+    AEAT_CSV_REGISTER = "aeat_csv_register"
+    AEAT_LIVE_CAPTURE = "aeat_live_capture"
+
+
+_EvidenceReference = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
+]
+
+
+class ExternalEvidence(BaseModel):
+    """Imported-evidence metadata for an externally-filed return.
+
+    Populated by the filing-record import path (justificante reader,
+    CSV register importer, AEAT live capture); consumed by the
+    modelo-amend path as the gate that proves the baseline is
+    AEAT-attested and not a fabricated local draft.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    kind: ExternalEvidenceKind
+    reference_id: _EvidenceReference
+    imported_at: datetime
 
 
 def derive_filing_record_id(
@@ -122,6 +158,8 @@ class FilingRecord(BaseModel):
     status: FilingRecordStatus = FilingRecordStatus.CURRENT
     superseded_at: datetime | None = None
     superseded_by_filing_record_id: _FilingRecordId | None = None
+    external_evidence: ExternalEvidence | None = None
+    amends_filing_record_id: _FilingRecordId | None = None
 
     @field_validator("modelo", mode="before")
     @classmethod
@@ -142,24 +180,19 @@ class FilingRecord(BaseModel):
         )
         if derived != self.filing_record_id:
             raise ModeloValidationError(
-                f"filing_record_id {self.filing_record_id!r} does not match the derived id "
-                f"{derived!r}"
+                f"filing_record_id {self.filing_record_id!r} does not match the derived id {derived!r}"
             )
         if self.status is FilingRecordStatus.CURRENT:
             if self.superseded_at is not None or self.superseded_by_filing_record_id is not None:
-                raise ModeloValidationError(
-                    "current filing record must not carry supersession metadata"
-                )
+                raise ModeloValidationError("current filing record must not carry supersession metadata")
         elif self.status is FilingRecordStatus.SUPERSEDED:
             if self.superseded_at is None or self.superseded_by_filing_record_id is None:
                 raise ModeloValidationError(
-                    "superseded filing record must carry superseded_at and "
-                    "superseded_by_filing_record_id"
+                    "superseded filing record must carry superseded_at and superseded_by_filing_record_id"
                 )
             if self.superseded_at < self.filed_at:
                 raise ModeloValidationError(
-                    f"superseded_at {self.superseded_at.isoformat()} precedes "
-                    f"filed_at {self.filed_at.isoformat()}"
+                    f"superseded_at {self.superseded_at.isoformat()} precedes filed_at {self.filed_at.isoformat()}"
                 )
         return self
 
@@ -176,21 +209,20 @@ class FilingRecordCatalogue(BaseModel):
         for key, record in self.records.items():
             if key != record.filing_record_id:
                 raise ModeloValidationError(
-                    f"catalogue key {key!r} does not match filing_record_id "
-                    f"{record.filing_record_id!r}"
+                    f"catalogue key {key!r} does not match filing_record_id {record.filing_record_id!r}"
                 )
         # Exactly one CURRENT record per (bucket, modelo, year, period) tuple.
         currents: dict[tuple[str, str, int, str], str] = {}
         for record in self.records.values():
             if record.status is not FilingRecordStatus.CURRENT:
                 continue
-            key = (record.bucket_id, str(record.modelo), record.filing_year, record.period)
-            if key in currents:
+            current_key = (record.bucket_id, str(record.modelo), record.filing_year, record.period)
+            if current_key in currents:
                 raise ModeloValidationError(
-                    f"more than one current filing record for {key!r}: "
-                    f"{currents[key]!r} and {record.filing_record_id!r}"
+                    f"more than one current filing record for {current_key!r}: "
+                    f"{currents[current_key]!r} and {record.filing_record_id!r}"
                 )
-            currents[key] = record.filing_record_id
+            currents[current_key] = record.filing_record_id
         return self
 
     def get(self, filing_record_id: str) -> FilingRecord | None:
@@ -244,7 +276,7 @@ class FilingRecordCatalogue(BaseModel):
         )
         return tuple(sorted(matching, key=lambda r: r.filed_at))
 
-    def values(self):  # noqa: D401
+    def values(self):
         return self.records.values()
 
     def __iter__(self):  # type: ignore[override]
@@ -262,6 +294,8 @@ class FilingRecordCatalogue(BaseModel):
 
 
 __all__ = [
+    "ExternalEvidence",
+    "ExternalEvidenceKind",
     "FilingRecord",
     "FilingRecordCatalogue",
     "FilingRecordStatus",

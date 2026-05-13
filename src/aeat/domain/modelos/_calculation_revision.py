@@ -42,9 +42,9 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from ._errors import ModeloValidationError
 
@@ -57,6 +57,22 @@ class CalculationRevisionState(StrEnum):
     FILED = "filed"
     FILED_SUPERSEDED = "filed_superseded"
     DISCARDED = "discarded"
+
+
+class CalculationRevisionAmendmentKind(StrEnum):
+    """Closed catalogue of amendment kinds a revision may carry.
+
+    Aligned with Spanish tax law's legally-distinct amendment shapes:
+
+    * ``COMPLEMENTARIA`` — corrective filing that adds to the prior
+      filing's tax due. Filed when the operator discovers an error
+      that under-reported tax.
+    * ``SUSTITUTIVA`` — substitute filing that replaces the prior
+      filing entirely. Used for material restatements.
+    """
+
+    COMPLEMENTARIA = "complementaria"
+    SUSTITUTIVA = "sustitutiva"
 
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
@@ -177,6 +193,9 @@ class CalculationRevision(BaseModel):
     discarded_at: datetime | None = None
     discarded_by: _ActorLabel | None = None
     discard_reason: _DiscardReason | None = None
+    amendment_kind: CalculationRevisionAmendmentKind | None = None
+    amends_filing_record_id: _CalculationRevisionId | None = None
+    amendment_reason: _DiscardReason | None = None
 
     @model_validator(mode="after")
     def _enforce_invariants(self) -> CalculationRevision:
@@ -193,35 +212,54 @@ class CalculationRevision(BaseModel):
             )
         if self.updated_at < self.created_at:
             raise ModeloValidationError(
-                f"updated_at {self.updated_at.isoformat()} precedes created_at "
-                f"{self.created_at.isoformat()}"
+                f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}"
             )
         # State-specific audit-metadata invariants.
         if self.state is CalculationRevisionState.DRAFT:
-            self._require_none("verified_at", "verified_by", "filed_at", "filed_by",
-                               "superseded_at", "discarded_at", "discarded_by", "discard_reason")
+            self._require_none(
+                "verified_at",
+                "verified_by",
+                "filed_at",
+                "filed_by",
+                "superseded_at",
+                "discarded_at",
+                "discarded_by",
+                "discard_reason",
+            )
         elif self.state is CalculationRevisionState.VERIFIED_COMPLETE:
             self._require_set("verified_at", "verified_by")
-            self._require_none("filed_at", "filed_by", "superseded_at",
-                               "discarded_at", "discarded_by", "discard_reason")
+            self._require_none(
+                "filed_at", "filed_by", "superseded_at", "discarded_at", "discarded_by", "discard_reason"
+            )
         elif self.state is CalculationRevisionState.FILED:
             self._require_set("verified_at", "verified_by", "filed_at", "filed_by")
-            self._require_none("superseded_at",
-                               "discarded_at", "discarded_by", "discard_reason")
+            self._require_none("superseded_at", "discarded_at", "discarded_by", "discard_reason")
         elif self.state is CalculationRevisionState.FILED_SUPERSEDED:
             self._require_set("verified_at", "verified_by", "filed_at", "filed_by", "superseded_at")
             self._require_none("discarded_at", "discarded_by", "discard_reason")
         elif self.state is CalculationRevisionState.DISCARDED:
             self._require_set("discarded_at", "discarded_by")
             self._require_none("verified_at", "verified_by", "filed_at", "filed_by", "superseded_at")
+        # Amendment-metadata invariants. ``amendment_kind``,
+        # ``amends_filing_record_id``, and ``amendment_reason`` must
+        # be all-set-or-all-None: an amendment carries every field;
+        # a non-amendment carries none.
+        amendment_set = (
+            self.amendment_kind is not None,
+            self.amends_filing_record_id is not None,
+            self.amendment_reason is not None,
+        )
+        if any(amendment_set) and not all(amendment_set):
+            raise ModeloValidationError(
+                "amendment_kind, amends_filing_record_id, and amendment_reason must "
+                "all be set together or all be None"
+            )
         return self
 
     def _require_set(self, *names: str) -> None:
         for name in names:
             if getattr(self, name) is None:
-                raise ModeloValidationError(
-                    f"calculation revision in state {self.state.value!r} must carry {name!r}"
-                )
+                raise ModeloValidationError(f"calculation revision in state {self.state.value!r} must carry {name!r}")
 
     def _require_none(self, *names: str) -> None:
         for name in names:
@@ -243,15 +281,14 @@ class CalculationRevisionCatalogue(BaseModel):
         for key, revision in self.revisions.items():
             if key != revision.calculation_revision_id:
                 raise ModeloValidationError(
-                    f"catalogue key {key!r} does not match calculation_revision_id "
-                    f"{revision.calculation_revision_id!r}"
+                    f"catalogue key {key!r} does not match calculation_revision_id {revision.calculation_revision_id!r}"
                 )
         return self
 
     def get(self, calculation_revision_id: str) -> CalculationRevision | None:
         return self.revisions.get(calculation_revision_id)
 
-    def values(self):  # noqa: D401
+    def values(self):
         return self.revisions.values()
 
     def for_work_unit(self, work_unit_id: str) -> tuple[CalculationRevision, ...]:
@@ -274,6 +311,7 @@ class CalculationRevisionCatalogue(BaseModel):
 
 __all__ = [
     "CalculationRevision",
+    "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
     "CalculationRevisionState",
     "derive_calculation_revision_id",

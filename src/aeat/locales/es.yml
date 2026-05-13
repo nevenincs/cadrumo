@@ -104,6 +104,12 @@ cli:
           de un informe de verificación
       work:
         actor_help: Actor responsable de la acción (etiqueta libre de hasta 64 caracteres)
+        amend_help: Construir una declaración complementaria sobre una declaración
+          presentada externamente. Requiere un filing record con evidencia oficial
+          importada de la AEAT
+        amendment_kind_help: Tipo legal de la amendación (complementaria o sustitutiva)
+        amendment_reason_help: Motivo libre de la amendación (traza de auditoría del
+          operador)
         app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
           tributario
         bucket_id_help: Identificador del bucket al que pertenece la unidad de trabajo
@@ -117,6 +123,9 @@ cli:
           estado auditable)
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
+        from_filing_record_help: Identificador estable del filing record base a
+          amendar. Debe llevar evidencia externa importada (justificante / CSV /
+          captura en vivo)
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
@@ -131,6 +140,8 @@ cli:
         revision_help: Identificador estable de la revisión registrada del modelo
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
+        set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL
+          (repetible; al menos uno requerido)
         status_help: Mostrar los metadatos de una unidad de trabajo
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
@@ -289,7 +300,6 @@ cli:
       profile_tax_id_required: El perfil activo requiere un NIF/CIF configurado
       set_parse_error: Error al procesar la asignación del campo
     export_help: Exportar una declaración aprobada a un archivo local en formato AEAT
-    format_help: Formato de salida (ej. json, text, table)
     labels:
       blockers: Bloqueos
       by: Por
@@ -708,11 +718,6 @@ cli:
     verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:
     app_help: Gestión del registro de modelos fiscales
-    capture_filed_data_help: Capturar datos ya presentados en la AEAT y actualizar
-      el registro local
-    capture_limit_help: Límite de registros a procesar
-    capture_source_filed_data_help: Capturar observaciones fuente presentadas requeridas
-      por el cálculo de un modelo objetivo
     casilla_help: Id de casilla a comparar; repetir para sustituir las casillas calculadas
       por defecto
     citations:
@@ -723,12 +728,8 @@ cli:
       show_help: Mostrar una normativa y, opcionalmente, uno de sus artículos
       tag_help: Filtrar por etiqueta de dominio fiscal (p. ej. 'irpf', 'iva')
       verify_help: Verificar la integridad del corpus normativo
-    expediente_help: Número de expediente de la AEAT a capturar
-    from_year_help: Año inicial para capturar o revisar registros
     inspect_help: Inspeccionar el estado del registro y las referencias
     inspect_registry_root_help: Ruta al directorio raíz del registro
-    list_filed_data_help: Listar presentaciones existentes en la AEAT para el rango
-      de años especificado
     manuals:
       app_help: Inspeccionar los Manuales prácticos AEAT (Renta, IVA, Sociedades)
       errors:
@@ -789,10 +790,8 @@ cli:
       workbook_count: workbook_count
       workbook_parity_ref_count: workbook_parity_ref_count
       workbook_path: workbook_path
-    modelo_help: Filtro opcional por modelo fiscal (ej. 303, 130)
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
-    output_root_help: Ruta al directorio raíz de salida para los registros
     parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales
     parity_output_help: Archivo JSON de destino para la cinta de paridad generada
     parity_replay_help: Reproducir una cinta de paridad archivada contra el runtime
@@ -803,10 +802,8 @@ cli:
     parity_store_root_help: Directorio raíz usado para guardar las cintas de paridad
       generadas
     parity_tape_help: Ruta a un archivo JSON de cinta de paridad guardada
-    period_help: Filtro opcional por periodo fiscal (ej. Q1, 01)
     source_observation_help: Manifiesto cifrado de observación fuente requerido por
       vínculos de declaraciones previas o relaciones
-    to_year_help: Año final para capturar o revisar registros
     verify_filed_state_help: Comparar el cálculo local del registro con el estado
       presentado capturado de AEAT
     verify_help: Verificar la integridad del registro local
@@ -818,7 +815,6 @@ cli:
     workbooks_root_help: Directorio raíz que contiene las definiciones de los libros
     workbooks_timeout_help: Tiempo de espera máximo (en segundos) para la compilación
     workbooks_verify_help: Verificar la integridad de los libros de trabajo generados
-    year_help: Ejercicio fiscal a consultar o procesar
   review:
     app_help: 'Cola de revisión del operador: clasifica transacciones del libro, justificantes
       de compra e incidencias de modelo'
@@ -859,6 +855,8 @@ cli:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
         --help`.'
+      quick_start_doctor: '  5. `aeat config doctor` - diagnosticar configuración,
+        almacenamiento y salud local.'
       quick_start_heading: Inicio rápido
       quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider
         csv` - añadir tus movimientos bancarios.'
@@ -881,6 +879,7 @@ cli:
       welcome_no_profile: Bienvenido. Todavía no hay un perfil activo configurado;
         empieza por la configuración.
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
+    language_help: Idioma de salida para este comando (sustituye al perfil activo)
     quiet_help: Mostrar solo errores en stderr
     verbose_help: Mostrar logs internos informativos en stderr
     version_help: Mostrar la versión del paquete (añade --detail para el resumen completo
@@ -1077,12 +1076,16 @@ wizard:
     select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
-    unsupported_console: El asistente interactivo necesita cmd.exe o Windows Terminal.
-      Usa `aeat config init --quiet --tax-id NIF --activity ACTIVIDAD` o cambia de
-      terminal.
+    unsupported_console: "No pude abrir el asistente guiado en esta ejecución.\nTodavía\
+      \ no se ha guardado nada.\n\nPrueba otra vez el asistente desde una sesión de\
+      \ terminal interactiva:\n  aeat config init\n\nO empieza con los dos datos obligatorios:\n\
+      \  aeat config init --quiet --tax-id 12345678Z --activity \"desarrollo de software\"\
+      \n\nLa actividad puede ser una descripción normal de tu trabajo o el epígrafe\
+      \ IAE si lo conoces.\nEjecuta `aeat config init --help` para ver todos los campos\
+      \ de configuración."
   progress:
-    question_prefix: '(pregunta %{q_n}/%{q_total}) '
-    section_header: 'Sección %{section_n}/%{section_total}: %{title}'
+    question_prefix: Pregunta %{q_n} de %{q_total}
+    section_header: 'Paso %{section_n} de %{section_total}: %{title}'
   setup:
     description: Asistente de configuración para preparar las declaraciones
     enrollment:
@@ -1101,7 +1104,7 @@ wizard:
       title: Unidad familiar
     flags:
       activity:
-        help: Etiqueta de actividad o clave controlada
+        help: Actividad económica en texto normal, o epígrafe IAE si lo conoces
       address-postcode:
         help: Código postal del domicilio fiscal
       bienes-extranjero-above-threshold:
@@ -1180,6 +1183,19 @@ wizard:
         help: Operaciones con terceros superan el umbral del Modelo 347
       uses-objective-estimation-irpf:
         help: Tributa IRPF en estimación objetiva
+    intro: 'Configuración guiada del perfil tributario
+
+
+      Esto prepara el perfil local que la app usa para los libros registro y las comprobaciones
+      de modelos.
+
+      Hay %{section_total} pasos. Solo %{required_total} respuestas son obligatorias
+      para empezar; puedes dejar en blanco lo que todavía no sepas.
+
+      Ten a mano tu NIF/NIE/CIF, una descripción breve de la actividad, régimen de
+      IVA/IRPF, residencia fiscal y datos familiares si aplican.
+
+      Después de guardar, revisa el progreso con `aeat config profile status`.'
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operaciones intracomunitarias superan 50.000 EUR
@@ -1216,7 +1232,7 @@ wizard:
         prompt: Tributa IRPF en estimación objetiva
     profile:
       activity:
-        prompt: Etiqueta de actividad o clave controlada
+        prompt: Actividad económica (texto normal; usa el epígrafe IAE si lo conoces)
       address-postcode:
         prompt: Código postal del domicilio fiscal
       iva-regime:

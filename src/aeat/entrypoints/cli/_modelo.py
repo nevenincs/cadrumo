@@ -9,6 +9,8 @@ from typing import Annotated, Any, Literal
 import typer
 
 from ...application.modelo import (
+    AmendmentEvidenceMissingError,
+    AmendmentTargetStateError,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     FilingRecordNotFoundError,
@@ -16,6 +18,7 @@ from ...application.modelo import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
+    amend_modelo_revision,
     calculate_modelo_revision,
     create_work_unit,
     discard_work_unit,
@@ -33,7 +36,9 @@ from ...application.modelo import (
 from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
 from ...domain.calculations.registry._errors import RegistrySnapshotError
-from ...domain.modelos._calculation_revision import CalculationRevision
+from decimal import Decimal, InvalidOperation
+
+from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import FilingRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
@@ -930,6 +935,104 @@ def work_file(
         **_filing_record_payload(record),
     }
     lines = ["operation\tmodelo.work.file", *_filing_record_lines(record)]
+    lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
+    _emit(ctx, payload, lines)
+
+
+def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
+    if "=" not in spec:
+        raise typer.BadParameter(f"--set must be CASILLA=DECIMAL; got {spec!r}")
+    key, _, value = spec.partition("=")
+    key = key.strip()
+    if not key:
+        raise typer.BadParameter(f"--set key must be non-empty; got {spec!r}")
+    try:
+        decimal_value = Decimal(value.strip())
+    except (InvalidOperation, ValueError) as exc:
+        raise typer.BadParameter(f"--set value must be a decimal; got {value!r}") from exc
+    return key, decimal_value
+
+
+@work_app.command("amend", help=tr("cli.app.modelo.work.amend_help"))
+def work_amend(
+    ctx: typer.Context,
+    from_filing_record_id: Annotated[
+        str,
+        typer.Option(
+            "--from-filing-record",
+            help=tr("cli.app.modelo.work.from_filing_record_help"),
+        ),
+    ],
+    kind: Annotated[
+        str,
+        typer.Option(
+            "--kind",
+            help=tr("cli.app.modelo.work.amendment_kind_help"),
+        ),
+    ],
+    reason: Annotated[
+        str,
+        typer.Option(
+            "--reason",
+            help=tr("cli.app.modelo.work.amendment_reason_help"),
+        ),
+    ],
+    actor: Annotated[
+        str,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ],
+    set_overrides: Annotated[
+        list[str] | None,
+        typer.Option("--set", help=tr("cli.app.modelo.work.set_override_help")),
+    ] = None,
+) -> None:
+    """Build a complementaria amendment over an externally-filed return."""
+
+    try:
+        amendment_kind = CalculationRevisionAmendmentKind(kind.strip())
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"--kind must be one of "
+            f"{', '.join(repr(k.value) for k in CalculationRevisionAmendmentKind)}; got {kind!r}"
+        ) from exc
+
+    overrides: dict[str, Decimal] = {}
+    for spec in set_overrides or ():
+        key, value = _parse_amendment_casilla(spec)
+        overrides[key] = value
+    if not overrides:
+        raise typer.BadParameter("--set is required at least once for an amendment")
+
+    try:
+        record = amend_modelo_revision(
+            from_filing_record_id=from_filing_record_id,
+            overrides=overrides,
+            amendment_kind=amendment_kind,
+            reason=reason,
+            actor=actor,
+        )
+    except (
+        FilingRecordNotFoundError,
+        AmendmentEvidenceMissingError,
+        AmendmentTargetStateError,
+        CalculationRevisionNotFoundError,
+        CalculationRevisionStateError,
+        WorkUnitNotFoundError,
+    ) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.work.amend",
+        "amendment_kind": amendment_kind.value,
+        "amends_filing_record_id": from_filing_record_id,
+        **_filing_record_payload(record),
+    }
+    lines = [
+        "operation\tmodelo.work.amend",
+        f"amendment_kind\t{amendment_kind.value}",
+        f"amends_filing_record_id\t{from_filing_record_id}",
+        *_filing_record_lines(record),
+    ]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
     _emit(ctx, payload, lines)
 

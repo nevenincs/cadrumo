@@ -99,6 +99,11 @@ cli:
           d'un informe de verificació
       work:
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
+        amend_help: Construir una declaració complementària sobre una declaració
+          presentada externament. Requereix un filing record amb evidència oficial
+          importada de l'AEAT
+        amendment_kind_help: Tipus legal de l'amendació (complementaria o sustitutiva)
+        amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
           tributari
         bucket_id_help: Identificador del bucket al qual pertany la unitat de treball
@@ -113,6 +118,9 @@ cli:
           auditable)
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
+        from_filing_record_help: Identificador estable del filing record base a
+          amendar. Ha de portar evidència externa importada (justificant / CSV /
+          captura en viu)
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
@@ -127,6 +135,8 @@ cli:
         revision_help: Identificador estable de la revisió registrada del model
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
+        set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL
+          (repetible; almenys un requerit)
         status_help: Mostrar les metadades d'una unitat de treball
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
@@ -285,7 +295,6 @@ cli:
       profile_tax_id_required: El perfil actiu requereix un NIF/CIF configurat
       set_parse_error: Error en processar l'assignació del camp
     export_help: Exportar una declaració aprovada a un fitxer local en format AEAT
-    format_help: Format de sortida (ex. json, text, table)
     labels:
       blockers: Bloquejos
       by: Per
@@ -699,11 +708,6 @@ cli:
     verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:
     app_help: Gestió del registre de models fiscals
-    capture_filed_data_help: Capturar dades ja presentades a l'AEAT i actualitzar
-      el registre local
-    capture_limit_help: Límit de registres a processar
-    capture_source_filed_data_help: Capturar observacions font presentades requerides
-      pel càlcul d'un model objectiu
     casilla_help: Id de casella a comparar; repetiu-lo per substituir les caselles
       calculades per defecte
     citations:
@@ -714,12 +718,8 @@ cli:
       show_help: Mostrar una normativa i, opcionalment, un dels seus articles
       tag_help: Filtrar per etiqueta de domini fiscal (p. ex. 'irpf', 'iva')
       verify_help: Verificar la integritat del corpus normatiu
-    expediente_help: Número d'expedient de l'AEAT a capturar
-    from_year_help: Any inicial per capturar o revisar registres
     inspect_help: Inspeccionar l'estat del registre i les referències
     inspect_registry_root_help: Ruta al directori arrel del registre
-    list_filed_data_help: Llistar presentacions existents a l'AEAT per al rang d'anys
-      especificat
     manuals:
       app_help: Inspeccionar els Manuals pràctics AEAT (Renda, IVA, Societats)
       errors:
@@ -779,10 +779,8 @@ cli:
       workbook_count: workbook_count
       workbook_parity_ref_count: workbook_parity_ref_count
       workbook_path: workbook_path
-    modelo_help: Filtre opcional per model fiscal (ex. 303, 130)
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
-    output_root_help: Ruta al directori arrel de sortida per als registres
     parity_app_help: Executar escenaris i cintes de paritat per a comprovacions manuals
     parity_output_help: Fitxer JSON de destinació per a la cinta de paritat generada
     parity_replay_help: Reproduir una cinta de paritat arxivada contra el runtime
@@ -791,10 +789,8 @@ cli:
     parity_scenario_help: Ruta a un fitxer JSON d'escenari de paritat
     parity_store_root_help: Directori arrel usat per desar les cintes de paritat generades
     parity_tape_help: Ruta a un fitxer JSON de cinta de paritat desada
-    period_help: Filtre opcional per període fiscal (ex. Q1, 01)
     source_observation_help: Manifest xifrat d'observació font requerit per vinculacions
       de declaracions prèvies o relacions
-    to_year_help: Any final per capturar o revisar registres
     verify_filed_state_help: Comparar el càlcul local del registre amb l'estat presentat
       capturat de l'AEAT
     verify_help: Verificar la integritat del registre local
@@ -806,7 +802,6 @@ cli:
     workbooks_root_help: Directori arrel que conté les definicions dels llibres
     workbooks_timeout_help: Temps d'espera màxim (en segons) per a la compilació
     workbooks_verify_help: Verificar la integritat dels llibres de treball generats
-    year_help: Exercici fiscal a consultar o processar
   review:
     app_help: Cua de revisió humana per a registres que requereixen criteri de l'operador
     errors:
@@ -846,6 +841,8 @@ cli:
       headline: Assistent fiscal AEAT
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
         app --help`.'
+      quick_start_doctor: '  5. `aeat config doctor` - diagnosticar configuracio,
+        emmagatzematge i salut local.'
       quick_start_heading: Inici rapid
       quick_start_import: '  3. `aeat app ledger import <extracte-bancari.csv> --provider
         csv` - afegir els moviments bancaris.'
@@ -868,6 +865,7 @@ cli:
       welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat;
         comenceu per la configuracio.
       welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
+    language_help: Idioma de sortida per a aquesta ordre (substitueix el perfil actiu)
     quiet_help: Mostrar només errors a stderr
     verbose_help: Mostrar logs interns informatius a stderr
     version_help: Mostrar la versió del paquet (afegeix --detail per al resum complet
@@ -1063,11 +1061,16 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: The interactive wizard requires cmd.exe or Windows Terminal.
-      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch terminals.
+    unsupported_console: "The guided setup could not open an interactive prompt in\
+      \ this run.\nNothing has been saved yet.\n\nProva de nou la configuració guiada\
+      \ des d'una sessió de terminal interactiva:\n  aeat config init\n\nOr start\
+      \ with the two required values:\n  aeat config init --quiet --tax-id 12345678Z\
+      \ --activity \"software development\"\n\nActivity can be a plain description\
+      \ of your work or the IAE heading if you know it.\nRun `aeat config init --help`\
+      \ to see every setup field."
   progress:
-    question_prefix: '(question %{q_n}/%{q_total}) '
-    section_header: 'Section %{section_n}/%{section_total}: %{title}'
+    question_prefix: Question %{q_n} of %{q_total}
+    section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
     description: Auxiliar de configuració per preparar les declaracions
     enrollment:
@@ -1086,7 +1089,7 @@ wizard:
       title: Unitat familiar
     flags:
       activity:
-        help: Etiqueta d'activitat o clau controlada
+        help: Activitat econòmica en text normal, o epígraf IAE si el coneixes
       address-postcode:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
@@ -1165,6 +1168,19 @@ wizard:
         help: Operacions amb tercers superen el llindar del Modelo 347
       uses-objective-estimation-irpf:
         help: Tributa IRPF en estimació objectiva
+    intro: 'Configuració guiada del perfil tributari
+
+
+      Això prepara el perfil local que l''app usa per als llibres registre i les comprovacions
+      de models.
+
+      Hi ha %{section_total} passos. Només %{required_total} respostes són obligatòries
+      per començar; pots deixar en blanc el que encara no sàpigues.
+
+      Tingues a mà el NIF/NIE/CIF, una descripció breu de l''activitat, règim d''IVA/IRPF,
+      residència fiscal i dades familiars si apliquen.
+
+      Després de desar, revisa el progrés amb `aeat config profile status`.'
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operacions intracomunitàries superen 50.000 EUR
@@ -1201,7 +1217,7 @@ wizard:
         prompt: Tributa IRPF en estimació objectiva
     profile:
       activity:
-        prompt: Etiqueta d'activitat o clau controlada
+        prompt: Activitat econòmica (text normal; usa l'epígraf IAE si el coneixes)
       address-postcode:
         prompt: Codi postal del domicili fiscal
       iva-regime:
