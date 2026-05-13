@@ -41,7 +41,7 @@ def _citation() -> CategoryCitation:
 def test_fixed_percentage_requires_percentage() -> None:
     """Fixed-percentage rules must provide the percentage field."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"fixed_percentage rules require fixed_pct"):
         ProportionalityRule(
             kind=ProportionalityKind.FIXED_PERCENTAGE,
             citations=(_citation(),),
@@ -52,7 +52,7 @@ def test_fixed_percentage_requires_percentage() -> None:
 def test_statutory_cap_requires_cap() -> None:
     """Statutory-cap rules must provide the cap field."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"statutory_cap rules require a cap amount"):
         ProportionalityRule(
             kind=ProportionalityKind.STATUTORY_CAP,
             citations=(_citation(),),
@@ -63,7 +63,7 @@ def test_statutory_cap_requires_cap() -> None:
 def test_full_deductible_rejects_default_ratio() -> None:
     """Default ratios are only valid for usage-ratio rules."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"default_ratio is only valid for usage_ratio rules"):
         ProportionalityRule(
             kind=ProportionalityKind.FULL_DEDUCTIBLE,
             default_ratio=Decimal("0.30"),
@@ -75,7 +75,7 @@ def test_full_deductible_rejects_default_ratio() -> None:
 def test_usage_ratio_rejects_statutory_cap_fields() -> None:
     """Usage-ratio rules must reject statutory-cap fields."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"statutory_cap_eur_per_day is only valid for statutory_cap rules"):
         ProportionalityRule(
             kind=ProportionalityKind.USAGE_RATIO_PERSONAL,
             default_ratio=Decimal("0.30"),
@@ -127,7 +127,7 @@ def test_statutory_cap_accepts_daily_cap_variants() -> None:
 def test_statutory_cap_rejects_mixed_cap_modes() -> None:
     """A statutory-cap rule must not mix generic and variant cap modes."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"statutory cap rules must use one cap mode"):
         ProportionalityRule(
             kind=ProportionalityKind.STATUTORY_CAP,
             statutory_cap_eur=Decimal("500"),
