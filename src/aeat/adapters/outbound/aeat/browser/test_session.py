@@ -585,4 +585,6 @@ def test_navigate_probe_raises_on_rate_limit_fixture() -> None:
 
 def test_navigate_probe_passes_on_ok_fixture() -> None:
     body = (_FIXTURES_ROOT / "ok" / "sede_landing.html").read_text(encoding="utf-8")
-    _probe_or_raise(_PROBE_URL, 200, {}, body, rate_limit_retry_after_default=300)
+    assert body, "ok fixture body must be non-empty for the probe test to be meaningful"
+    result = _probe_or_raise(_PROBE_URL, 200, {}, body, rate_limit_retry_after_default=300)
+    assert result is None

@@ -139,7 +139,11 @@ def _calculate_390_from_observations_and_303_filings(
 
 
 def test_validate_accepts_canonical_iva_repercutido_binding() -> None:
-    validate_ledger_iva_aggregation_binding_definition(_binding())
+    binding = _binding()
+    assert binding.id == "modelo-303-iva-repercutido-general-cuota"
+    assert binding.selector, "binding must declare a selector for validation to be meaningful"
+    result = validate_ledger_iva_aggregation_binding_definition(binding)
+    assert result is None
 
 
 def test_validate_rejects_unknown_category() -> None:

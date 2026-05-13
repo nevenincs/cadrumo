@@ -126,7 +126,10 @@ class TestPreflightOnly:
 
     def test_preflight_still_runs_without_transport(self, tmp_path: Path) -> None:
         """Assert preflight executes against a read-only engine."""
-        _build_engine(tmp_path).preflight(_Draft(), today=date(2026, 4, 10))
+        engine = _build_engine(tmp_path)
+        assert hasattr(engine, "preflight")
+        result = engine.preflight(_Draft(), today=date(2026, 4, 10))
+        assert result is None
 
 
 class TestTransportRefusal:

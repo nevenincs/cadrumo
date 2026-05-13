@@ -59,8 +59,10 @@ def test_scripted_prompter_close_raises_on_overflow() -> None:
 
 def test_scripted_prompter_close_succeeds_when_drained() -> None:
     prompter = ScriptedPrompter(["12345678Z"])
-    prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
-    prompter.close()
+    answer = prompter.ask(_question("tax-id", _PROMPT_TAX), default=None)
+    assert answer == "12345678Z"
+    result = prompter.close()
+    assert result is None
 
 
 def test_scripted_prompter_satisfies_prompter_protocol() -> None:

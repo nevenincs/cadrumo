@@ -473,6 +473,9 @@ def test_export_fields_can_reference_structured_bindings() -> None:
         ),
     )
 
+    new_field = bound_revision.export_layouts[0].records[0].fields[0]
+    assert new_field.kind == "binding"
+    assert new_field.binding == revision.bindings[0].id
     RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, bound_revision))
 
 

@@ -76,7 +76,7 @@ def test_census_url_must_match_gcode_pattern() -> None:
 def test_retired_filing_skips_gcode_check() -> None:
     """Retired FILING/CENSUS entries bypass the G-code path check."""
     # Even with a non-G-code path, a retired entry validates.
-    PortalMetadata.model_validate(
+    metadata = PortalMetadata.model_validate(
         _base_kwargs(
             portal=Portal.PORTAL_M037_CENSAL_SIMPLIFICADA,
             category=PortalCategory.CENSUS,
@@ -86,6 +86,9 @@ def test_retired_filing_skips_gcode_check() -> None:
             replaced_by=Portal.PORTAL_M036_CENSAL,
         )
     )
+    assert metadata.url_stability == UrlStability.RETIRED
+    assert metadata.active is False
+    assert metadata.replaced_by == Portal.PORTAL_M036_CENSAL
 
 
 def test_anonymous_is_exclusive() -> None:

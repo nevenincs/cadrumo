@@ -85,7 +85,9 @@ def _revision_with_bindings(*bindings: DataBindingDefinition) -> ModeloRevision:
 
 def test_validate_accepts_canonical_oss_union_binding() -> None:
     binding = _binding()
-    validate_ledger_oss_aggregation_binding_definition(binding)
+    assert binding.selector, "binding must declare a selector for validation to be meaningful"
+    result = validate_ledger_oss_aggregation_binding_definition(binding)
+    assert result is None
 
 
 def test_validate_rejects_unknown_regime() -> None:

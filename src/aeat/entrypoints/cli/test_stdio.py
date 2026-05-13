@@ -117,10 +117,13 @@ def test_configure_stdio_for_utf8_handles_none_streams(monkeypatch: pytest.Monke
     ``sys.stderr`` as ``None``. The helper must accept that without
     raising."""
 
+    import sys
+
     monkeypatch.setattr("sys.stdout", None)
     monkeypatch.setattr("sys.stderr", None)
-
-    configure_stdio_for_utf8()
+    assert sys.stdout is None and sys.stderr is None
+    result = configure_stdio_for_utf8()
+    assert result is None
 
 
 def test_configure_stdio_for_utf8_is_idempotent(monkeypatch: pytest.MonkeyPatch) -> None:

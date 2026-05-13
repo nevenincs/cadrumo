@@ -56,13 +56,15 @@ def _clause(key: str, value: str) -> FilterClause:
 def test_ensure_unique_keys_passes_on_empty_tuple() -> None:
     """An empty clause tuple has no duplicates; the helper returns
     silently."""
-    _ensure_unique_keys((), scope="ledger")
+    result = _ensure_unique_keys((), scope="ledger")
+    assert result is None
 
 
 def test_ensure_unique_keys_passes_when_all_keys_distinct() -> None:
     clauses = (_clause("status", "pending"), _clause("period", "2026-Q1"))
 
-    _ensure_unique_keys(clauses, scope="ledger")
+    result = _ensure_unique_keys(clauses, scope="ledger")
+    assert result is None
 
 
 def test_ensure_unique_keys_raises_on_repeated_key() -> None:
@@ -102,13 +104,15 @@ def test_ensure_unique_keys_raw_token_carries_offending_clause() -> None:
 def test_ensure_known_keys_passes_when_every_key_is_allowed() -> None:
     clauses = (_clause("status", "pending"), _clause("period", "2026-Q1"))
 
-    _ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
+    result = _ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
+    assert result is None
 
 
 def test_ensure_known_keys_passes_on_empty_tuple() -> None:
     """An empty clause tuple has no unknown keys; the helper returns
     silently."""
-    _ensure_known_keys((), scope="ledger", allowed=LedgerReviewFilterKey)
+    result = _ensure_known_keys((), scope="ledger", allowed=LedgerReviewFilterKey)
+    assert result is None
 
 
 def test_ensure_known_keys_raises_on_unknown_key() -> None:

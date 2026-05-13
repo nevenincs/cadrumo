@@ -186,7 +186,11 @@ def test_verify_source_file_checks_hash_and_size(tmp_path: Path) -> None:
     source_path.parent.mkdir(parents=True)
     source_path.write_bytes(payload)
 
-    verify_source_file(tmp_path, _source_reference("corpus/source.xlsx", payload))
+    reference = _source_reference("corpus/source.xlsx", payload)
+    assert source_path.read_bytes() == payload
+    assert reference.sha256, "reference must carry a hash for verification to be meaningful"
+    result = verify_source_file(tmp_path, reference)
+    assert result is None
 
 
 def test_verify_source_file_rejects_hash_mismatch(tmp_path: Path) -> None:
@@ -211,7 +215,10 @@ def test_verify_source_catalogue_checks_every_entry(tmp_path: Path) -> None:
     source_path.parent.mkdir(parents=True)
     source_path.write_bytes(payload)
 
-    verify_source_catalogue(tmp_path, {"aeat-source": _source_reference("corpus/source.xlsx", payload)})
+    catalogue = {"aeat-source": _source_reference("corpus/source.xlsx", payload)}
+    assert len(catalogue) == 1
+    result = verify_source_catalogue(tmp_path, catalogue)
+    assert result is None
 
 
 def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
@@ -262,7 +269,9 @@ def test_verify_legal_catalogue_rejects_key_mismatch() -> None:
 def test_verify_legal_catalogue_accepts_reviewed_reference() -> None:
     reference = _legal_reference()
 
-    verify_legal_catalogue({reference.id: reference})
+    assert reference.id, "reference must have an id for verification to be meaningful"
+    result = verify_legal_catalogue({reference.id: reference})
+    assert result is None
 
 
 def test_verify_legal_catalogue_checks_required_local_corpus_text(tmp_path: Path) -> None:
@@ -294,4 +303,7 @@ def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Pat
         }
     )
 
-    verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+    assert reference.required_text, "reference must declare required_text for the verifier to check"
+    assert corpus_path.exists(), "corpus file must be written before verification"
+    result = verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+    assert result is None
