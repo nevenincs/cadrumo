@@ -223,12 +223,21 @@ async def _navigate_to_casilla(page: Any, casilla_number: str, *, timeout_ms: in
     """
 
     # Expand the secondary toolbar (idempotent — already expanded is fine).
+    # If the locator isn't visible (toolbar already expanded), skip silently
+    # without clicking — _click_expected raises rather than no-ops, which is
+    # the contract we need to gate on visibility first.
     mostrar = page.locator('button[title="Mostrar opciones"]').first
     try:
         await mostrar.wait_for(state="visible", timeout=10_000)
-        await mostrar.click(timeout=10_000)
     except Exception as exc:
         logger.debug("mostrar opciones already expanded or unavailable: %s", exc)
+    else:
+        await _click_expected(
+            mostrar,
+            stage=f"navigate-to-casilla:{casilla_number}:mostrar-opciones",
+            description="Mostrar opciones toolbar expander",
+            timeout_ms=10_000,
+        )
     await _click_expected(
         page.locator('button[title="Buscar casilla"]').first,
         stage=f"navigate-to-casilla:{casilla_number}:open-dialog",
