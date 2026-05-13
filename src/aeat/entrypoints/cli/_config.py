@@ -257,6 +257,10 @@ def _register_wizard_commands(target: typer.Typer) -> None:
                 translated = exc.translated_message or tr("wizard.errors.unsupported_console")
                 typer.echo(translated, err=True)
                 raise typer.Exit(code=78) from exc
+            if kwargs.get("quiet"):
+                profile_name = kwargs.get("profile_name", "default")
+                typer.echo(tr("cli.config.setup.success.saved", profile_name=profile_name))
+                typer.echo(tr("cli.config.setup.success.next_step"))
 
         wrapped = typing.cast(typing.Any, _wrapped)
         wrapped.__signature__ = original.__signature__
