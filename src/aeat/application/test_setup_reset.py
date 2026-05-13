@@ -26,7 +26,7 @@ def test_reset_setup_refuses_without_confirmation(
     from .setup_reset import SetupResetScope, SetupResetUnconfirmedError, reset_setup
 
     _isolate_workflow(monkeypatch, tmp_path)
-    with pytest.raises(SetupResetUnconfirmedError, match=r"setup|reset|unconfirmed"):
+    with pytest.raises(SetupResetUnconfirmedError, match=r"config reset|confirmed must be True"):
         reset_setup(SetupResetScope.ALL, confirmed=False)
 
 
