@@ -232,7 +232,7 @@ def _append_bucket_event(
 ) -> WorkflowState:
     from ..workflow._models import WorkflowEvent
 
-    bucket_id = state.active_profile or "default"
+    bucket_id = state.active_profile_bucket_id() or "default"
     event = WorkflowEvent(action=action, bucket_id=bucket_id, object_id=object_id)
     return state.model_copy(update={"bucket_events": (*state.bucket_events, event)})
 
