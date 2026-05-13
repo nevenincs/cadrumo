@@ -1,3 +1,7 @@
+access_gate:
+  errors:
+    default_translatable: Live AEAT submission is permanently disabled. Produce, verify,
+      export, and upload the file yourself in the AEAT portal.
 aggregation:
   models:
     errors:
@@ -192,6 +196,15 @@ cli:
     get:
       help: Show the current value of one configuration key
       key_help: Key to read (e.g. tax.id, iva.regime)
+    google:
+      client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
+      help: Manage the Google OAuth Desktop integration for Drive and Sheets
+      login_help: Run the OAuth consent flow (or refresh an existing credential)
+      logout_help: Clear the refresh token and metadata; preserve the registered client
+      profile_help: AEAT profile name override (default = active profile on workflow state)
+      refresh_only_help: Skip the consent screen and refresh an existing credential only
+      register_help: Register a Cloud Console Desktop OAuth client JSON for the active profile
+      status_help: Show the current Google OAuth session state for the active profile
     list:
       help: List every configuration key with its current value
     profile:
@@ -482,7 +495,7 @@ cli:
       headline: AEAT Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
         --help`.'
-      quick_start_doctor: '  5. `aeat config repair` - diagnose configuration, storage,
+      quick_start_repair: '  5. `aeat config repair` - diagnose configuration, storage,
         and local health.'
       quick_start_heading: Quick start
       quick_start_import: '  3. `aeat app ledger import <bank-statement.csv> --provider

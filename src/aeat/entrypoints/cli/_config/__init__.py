@@ -11,11 +11,11 @@ import typer
 from ....application.auth._catalogue import implemented_auth_provider_ids, known_auth_provider_ids
 from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES, parse_config_reset_scope
 from ....application.diagnostics import (
-    build_config_doctor_report,
+    build_config_repair_report,
     probe_browser_connectivity,
     quarantine_unreadable_secure_objects,
     render_browser_connectivity_text,
-    render_config_doctor_text,
+    render_config_repair_text,
 )
 from ....application.operator_surface import build_help_document, render_help_text
 from ....core.logging import default_log_file_path
@@ -32,9 +32,9 @@ app = typer.Typer(
 )
 profile_app = typer.Typer(name="profile", help=tr("cli.config.profile.help"), no_args_is_help=True)
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
-doctor_app = typer.Typer(
-    name="doctor",
-    help=tr("cli.config.doctor.help"),
+repair_app = typer.Typer(
+    name="repair",
+    help=tr("cli.config.repair.help"),
     no_args_is_help=False,
     invoke_without_command=True,
 )
@@ -48,7 +48,7 @@ bucket_app = typer.Typer(
 @app.callback()
 def config_root(
     ctx: typer.Context,
-    help_: bool = typer.Option(False, "--help", "-h", help="Show config workflow help.", is_eager=True),
+    help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.config.workflow_help"), is_eager=True),
 ) -> None:
     """Render config-level workflow help when requested."""
 
@@ -58,20 +58,20 @@ def config_root(
         raise typer.Exit()
 
 
-@doctor_app.callback()
-def doctor(ctx: typer.Context) -> None:
-    """Diagnose local configuration, registry, profile, auth, and log state."""
+@repair_app.callback()
+def repair(ctx: typer.Context) -> None:
+    """Diagnose and repair local configuration, registry, profile, auth, and log state."""
 
     if ctx.invoked_subcommand is not None:
         return
-    report = build_config_doctor_report()
-    _emit(ctx, report.model_dump(mode="json"), render_config_doctor_text(report).splitlines())
+    report = build_config_repair_report()
+    _emit(ctx, report.model_dump(mode="json"), render_config_repair_text(report).splitlines())
 
 
-@doctor_app.command("logs", help=tr("cli.config.doctor.logs_help"))
-def doctor_logs(
+@repair_app.command("logs", help=tr("cli.config.repair.logs_help"))
+def repair_logs(
     ctx: typer.Context,
-    lines: int = typer.Option(20, "--lines", min=0, help=tr("cli.config.doctor.logs_lines_help")),
+    lines: int = typer.Option(20, "--lines", min=0, help=tr("cli.config.repair.logs_lines_help")),
 ) -> None:
     """Show the configured log file path and recent lines."""
 
@@ -84,15 +84,15 @@ def doctor_logs(
     )
 
 
-@doctor_app.command("quarantine", help=tr("cli.config.doctor.quarantine_help"))
-def doctor_quarantine(
+@repair_app.command("quarantine", help=tr("cli.config.repair.quarantine_help"))
+def repair_quarantine(
     ctx: typer.Context,
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.doctor.quarantine_yes_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.quarantine_yes_help")),
 ) -> None:
     """Move secure-object rows that fail tag verification into quarantine."""
 
     if not yes:
-        raise CliRefusedBoundaryError(tr("cli.config.doctor.quarantine_requires_yes"))
+        raise CliRefusedBoundaryError(tr("cli.config.repair.quarantine_requires_yes"))
     report = quarantine_unreadable_secure_objects()
     _emit(
         ctx,
@@ -113,15 +113,57 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     return tuple(path.read_text(encoding="utf-8", errors="replace").splitlines()[-count:])
 
 
-@doctor_app.command("connectivity", help=tr("cli.config.doctor.connectivity_help"))
-def doctor_connectivity(
+@repair_app.command("reset-state", help=tr("cli.config.repair.reset_state_help"))
+def repair_reset_state(
+    ctx: typer.Context,
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.reset_state_yes_help")),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run/--no-dry-run",
+        help=tr("cli.config.repair.reset_state_dry_run_help"),
+    ),
+) -> None:
+    """Drop the unreadable workflow-state envelope and emit a reset event."""
+
+    from ....application.workflow._persistence import fingerprint_workflow_state, reset_workflow_state
+
+    if not dry_run and not yes:
+        raise CliRefusedBoundaryError(tr("cli.config.repair.reset_state_requires_yes"))
+    if dry_run:
+        fingerprint = fingerprint_workflow_state()
+        payload = {"dry_run": True, "fingerprint": fingerprint.model_dump(mode="json")}
+        lines = (
+            "dry_run\ttrue",
+            f"schema_version\t{fingerprint.schema_version if fingerprint.schema_version is not None else '<none>'}",
+            f"written_at\t{fingerprint.written_at.isoformat() if fingerprint.written_at is not None else '<none>'}",
+            f"byte_length\t{fingerprint.byte_length if fingerprint.byte_length is not None else '<none>'}",
+            f"reason_class\t{fingerprint.reason_class}",
+            f"recovered_bucket_id\t{fingerprint.recovered_bucket_id or '<none>'}",
+        )
+        _emit(ctx, payload, lines)
+        return
+    fingerprint = reset_workflow_state()
+    payload = {"dry_run": False, "fingerprint": fingerprint.model_dump(mode="json")}
+    lines = (
+        "dry_run\tfalse",
+        f"schema_version\t{fingerprint.schema_version if fingerprint.schema_version is not None else '<none>'}",
+        f"written_at\t{fingerprint.written_at.isoformat() if fingerprint.written_at is not None else '<none>'}",
+        f"byte_length\t{fingerprint.byte_length if fingerprint.byte_length is not None else '<none>'}",
+        f"reason_class\t{fingerprint.reason_class}",
+        f"recovered_bucket_id\t{fingerprint.recovered_bucket_id or '<none>'}",
+    )
+    _emit(ctx, payload, lines)
+
+
+@repair_app.command("connectivity", help=tr("cli.config.repair.connectivity_help"))
+def repair_connectivity(
     ctx: typer.Context,
     target: typing.Annotated[
         str,
         typer.Option(
             "--target",
             click_type=click.Choice(("browser",)),
-            help=tr("cli.config.doctor.connectivity_target_help"),
+            help=tr("cli.config.repair.connectivity_target_help"),
         ),
     ] = "browser",
 ) -> None:
@@ -136,7 +178,7 @@ def doctor_connectivity(
     )
 
 
-app.add_typer(doctor_app, name="doctor")
+app.add_typer(repair_app, name="repair")
 
 
 def _profile_state():
@@ -295,7 +337,7 @@ def _register_wizard_commands(target: typer.Typer) -> None:
         wrapped.__doc__ = original.__doc__
         wrapped.__wizard_flow__ = getattr(original, "__wizard_flow__", None)
         command_name = "init" if flow.id == "setup" else flow.id
-        target.command(name=command_name, help=tr(f"cli.config.{flow.id}.help"))(_wrapped)
+        target.command(name=command_name, help=tr("cli.config.setup.help"))(_wrapped)
 
 
 _register_wizard_commands(app)
@@ -340,7 +382,7 @@ def config_status(ctx: typer.Context) -> None:
         "activity_present": bool(values.get("activity")),
         "iva_regime": values.get("iva.regime", ""),
         "tax_residence_ccaa": values.get("tax.residence.ccaa", ""),
-        "next_action": tr("cli.config.status.next_step"),
+        "next_action": "aeat app overview status",
     }
     _emit(
         ctx,
@@ -550,5 +592,9 @@ def bucket_history(
 app.add_typer(profile_app, name="profile")
 app.add_typer(auth_app, name="auth")
 app.add_typer(bucket_app, name="bucket")
+
+from ._google import google_app  # noqa: E402  -- registered after siblings to keep the alphabetical add order
+
+app.add_typer(google_app, name="google")
 
 __all__ = ["app"]

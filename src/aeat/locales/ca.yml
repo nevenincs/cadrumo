@@ -1,3 +1,8 @@
+access_gate:
+  errors:
+    default_translatable: L'enviament en viu a l'AEAT està desactivat permanentment.
+      Genereu, verifiqueu, exporteu i pugeu el fitxer manualment al portal de
+      l'AEAT.
 aggregation:
   models:
     errors:
@@ -209,6 +214,19 @@ cli:
     get:
       help: Mostrar el valor actual d'una clau de configuració
       key_help: Clau a llegir (ex. tax.id, iva.regime)
+    google:
+      client_json_help: Ruta al fitxer JSON del client OAuth Desktop de Cloud Console
+      help: Gestionar la integració OAuth de Google Desktop per a Drive i Sheets
+      login_help: Executar el flux de consentiment OAuth (o refrescar una credencial
+        existent)
+      logout_help: Esborrar el token de refresc i les metadades; conservar el client
+        registrat
+      profile_help: Perfil AEAT a usar (per defecte = perfil actiu de l'estat de flux)
+      refresh_only_help: Ometre el consentiment i refrescar només una credencial existent
+      register_help: Registrar un JSON de client OAuth Desktop de Cloud Console per
+        al perfil actiu
+      status_help: Mostrar l'estat actual de la sessió OAuth de Google per al perfil
+        actiu
     list:
       help: Llistar totes les claus de configuració amb el seu valor actual
     profile:
@@ -506,7 +524,7 @@ cli:
       headline: Assistent fiscal AEAT
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
         app --help`.'
-      quick_start_doctor: '  5. `aeat config repair` - diagnosticar configuracio,
+      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuracio,
         emmagatzematge i salut local.'
       quick_start_heading: Inici rapid
       quick_start_import: '  3. `aeat app ledger import <extracte-bancari.csv> --provider
