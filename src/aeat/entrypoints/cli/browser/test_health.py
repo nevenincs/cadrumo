@@ -152,12 +152,9 @@ class _RaisingCreateContextSession:
 
     async def create_context(self) -> object:
         self.create_context_calls += 1
-        from ....core.errors import AeatError
+        from ....adapters.outbound.aeat.browser._errors import BrowserError
 
-        class _SimulatedPlaywrightError(AeatError):
-            pass
-
-        raise _SimulatedPlaywrightError("boom from create_context")
+        raise BrowserError("boom from create_context")
 
     async def close(self) -> None:
         self.close_calls += 1
@@ -187,12 +184,9 @@ class _RaisingNewPageSession:
 
 class _RaisingNewPageContext(_StubContext):
     async def new_page(self) -> object:
-        from ....core.errors import AeatError
+        from ....adapters.outbound.aeat.browser._errors import BrowserError
 
-        class _SimulatedPlaywrightError(AeatError):
-            pass
-
-        raise _SimulatedPlaywrightError("boom from new_page")
+        raise BrowserError("boom from new_page")
 
 
 class TestRealProbeCleanup:
