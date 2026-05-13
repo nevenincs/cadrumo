@@ -192,7 +192,7 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
     # being caught statically by the type checker — the test intent
     # is to verify the runtime validators reject the payload, not to
     # exercise call-time static analysis.
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         WorkUnit.model_validate(
             {
                 "work_unit_id": unit.work_unit_id,
@@ -207,7 +207,7 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
                 "unknown_axis": "extra-value",
             }
         )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         unit.name = "renamed"
 
 
@@ -226,7 +226,7 @@ def test_work_unit_rejects_updated_before_created() -> None:
 
     earlier = _T0
     later = datetime(2026, 1, 16, 12, 0, 0, tzinfo=UTC)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"updated_at|created_at|precedes"):
         _build_unit(created_at=later, updated_at=earlier)
 
 
@@ -238,7 +238,7 @@ def test_work_unit_rejects_updated_before_created() -> None:
 def test_catalogue_rejects_key_record_mismatch() -> None:
     unit = _build_unit()
     bad_key = "f" * 64
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"work_unit_id|key|catalogue"):
         WorkUnitCatalogue(work_units={bad_key: unit})
 
 
@@ -538,7 +538,7 @@ def test_work_unit_schema_rejects_discard_metadata_on_draft_state() -> None:
     cross-field model validator refuses such records on
     construction."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"DRAFT|discard|state"):
         _build_unit(
             state=WorkUnitState.DRAFT,
             discarded_at=_T0,
@@ -550,7 +550,7 @@ def test_work_unit_schema_requires_discard_metadata_on_discarded_state() -> None
     """Conversely, a record claiming DISCARDED state must carry
     ``discarded_at`` and ``discarded_by``."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"DISCARDED|discard|state"):
         _build_unit(state=WorkUnitState.DISCARDED)
 
 

@@ -56,11 +56,11 @@ class TestExtractedCasillaShape:
 
     def test_is_frozen(self) -> None:
         record = self._build()
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
             record.casilla_id = "02"  # type: ignore[misc]
 
     def test_extra_fields_rejected(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             ExtractedCasilla.model_validate(
                 {
                     "casilla_id": "01",
@@ -72,13 +72,13 @@ class TestExtractedCasillaShape:
             )
 
     def test_source_page_must_be_positive(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"source_page|greater than"):
             self._build(source_page=0)
 
     def test_extraction_confidence_bounded(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"extraction_confidence|greater than|less than"):
             self._build(extraction_confidence=-0.1)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"extraction_confidence|greater than|less than"):
             self._build(extraction_confidence=1.1)
 
     def test_bbox_accepts_four_floats(self) -> None:
@@ -86,7 +86,7 @@ class TestExtractedCasillaShape:
         assert record.source_bbox == (10.0, 20.0, 30.0, 40.0)
 
     def test_bbox_rejects_wrong_shape(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"source_bbox|Tuple should have"):
             ExtractedCasilla.model_validate(
                 {
                     "casilla_id": "01",

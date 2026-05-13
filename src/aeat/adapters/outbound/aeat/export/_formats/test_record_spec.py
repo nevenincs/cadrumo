@@ -56,11 +56,11 @@ class TestRecordFieldSpec:
 
     def test_frozen_rejects_mutation(self) -> None:
         spec = record_field(offset=1, length=9, field_id="FIELD_TEXT", kind=FieldKind.ALPHANUMERIC)
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
             spec.length = 10  # type: ignore[misc]
 
     def test_offset_must_be_positive(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"offset|greater than"):
             record_field(
                 offset=0,
                 length=9,
@@ -69,7 +69,7 @@ class TestRecordFieldSpec:
             )
 
     def test_extra_forbid(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             RecordFieldSpec.model_validate(
                 {
                     "offset": 1,

@@ -187,7 +187,7 @@ def test_finding_review_item_allows_none_source_for_placeholder_row() -> None:
 
 
 def test_review_item_rejects_naive_since_timestamp() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"since|timezone|tz-aware"):
         TransactionReviewItem(
             item_id="t-1",
             modelo=None,
@@ -200,7 +200,7 @@ def test_review_item_rejects_naive_since_timestamp() -> None:
 
 
 def test_review_item_rejects_empty_item_id() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"item_id|at least 1 character"):
         TransactionReviewItem(
             item_id="",
             modelo=None,
@@ -213,7 +213,7 @@ def test_review_item_rejects_empty_item_id() -> None:
 
 
 def test_review_item_rejects_extra_fields() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         TransactionReviewItem.model_validate(
             {
                 "item_id": "t-1",

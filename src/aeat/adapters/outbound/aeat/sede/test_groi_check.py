@@ -91,18 +91,18 @@ def test_observation_model_round_trips_through_strict_frozen_pydantic() -> None:
 
 
 def test_observation_model_rejects_unknown_verdict() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"verdict|Input should be"):
         GroiNifVerdict.model_validate({"nif": "A28015865", "verdict": "registered"})
 
 
 def test_observation_model_rejects_empty_nif() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"nif|at least 1 character"):
         GroiNifVerdict(nif="", verdict="valid")
 
 
 def test_observation_model_is_frozen() -> None:
     observation = GroiNifVerdict(nif="A28015865", verdict="valid")
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         observation.nif = "B12345678"  # type: ignore[misc]
 
 

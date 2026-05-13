@@ -77,7 +77,7 @@ def test_filter_clause_is_frozen() -> None:
     from pydantic import ValidationError
 
     clause = FilterClause(key="status", value="pending")
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         clause.value = "changed"  # type: ignore[misc]
 
 
@@ -217,7 +217,7 @@ def test_ledger_spec_is_frozen() -> None:
     from pydantic import ValidationError
 
     spec = LedgerReviewFilterSpec.from_strings([])
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         spec.period = "2026-Q1"  # type: ignore[misc]
 
 

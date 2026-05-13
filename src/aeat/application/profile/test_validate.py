@@ -157,7 +157,7 @@ def test_validation_result_is_frozen() -> None:
     from pydantic import ValidationError
 
     result = validate_profile({})
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         result.valid = True  # type: ignore[misc]
 
 

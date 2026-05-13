@@ -77,14 +77,14 @@ def test_diagnostic_is_frozen() -> None:
         severity=LedgerImportDiagnosticSeverity.INFO,
         message=_message(),
     )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         diag.severity = LedgerImportDiagnosticSeverity.ERROR  # type: ignore[misc]
 
 
 def test_diagnostic_rejects_unknown_kind() -> None:
     from pydantic import ValidationError
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"kind|Input should be"):
         LedgerImportDiagnostic.model_validate(
             {
                 "kind": "fictional-kind",

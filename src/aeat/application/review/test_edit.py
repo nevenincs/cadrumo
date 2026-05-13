@@ -77,7 +77,7 @@ def test_edit_clause_is_frozen() -> None:
     from pydantic import ValidationError
 
     clause = EditClause(key="category", raw_value="software")
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         clause.raw_value = "changed"  # type: ignore[misc]
 
 
@@ -303,7 +303,7 @@ def test_ledger_spec_is_frozen() -> None:
     from pydantic import ValidationError
 
     spec = LedgerEditSpec.from_strings([])
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         spec.category = "changed"  # type: ignore[misc]
 
 

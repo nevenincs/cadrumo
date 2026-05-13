@@ -74,7 +74,7 @@ def test_report_is_strict_frozen_pydantic_v2() -> None:
     assert model_config.get("frozen") is True
     assert model_config.get("extra") == "forbid"
     # The report rejects unknown fields per extra="forbid"
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         WizardStatusReport.model_validate(
             {
                 "active_profile": None,

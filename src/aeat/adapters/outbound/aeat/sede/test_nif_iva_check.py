@@ -84,18 +84,18 @@ def test_observation_model_roundtrips_through_strict_frozen_pydantic() -> None:
 
 
 def test_observation_model_rejects_unknown_verdict() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"verdict|Input should be"):
         NifIvaCheckObservation.model_validate({"nif": "DE111", "verdict": "maybe"})
 
 
 def test_observation_model_rejects_empty_nif() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"nif|at least 1 character"):
         NifIvaCheckObservation(nif="", verdict="valid")
 
 
 def test_observation_model_is_frozen() -> None:
     observation = NifIvaCheckObservation(nif="DE111", verdict="valid")
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         observation.nif = "FR222"  # type: ignore[misc]
 
 
