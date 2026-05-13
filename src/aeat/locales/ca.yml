@@ -82,6 +82,22 @@ cli:
         period_help: Període fiscal per acotar les fórmules (p. ex. 2026Q1, 2026-01)
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
+      work:
+        app_help: Gestionar el cicle de vida de les unitats de treball d'un model tributari
+        bucket_id_help: Identificador del bucket al qual pertany la unitat de treball
+        create_help: Crear o reutilitzar una unitat de treball per a (model, exercici,
+          període, revisió)
+        list_help: Llistar les unitats de treball registrades, opcionalment filtrades
+          per bucket
+        modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
+        name_help: Nom de visualització opcional de la unitat de treball
+        period_help: Període fiscal de la unitat (p. ex. Q1, 4T, 0A, 01)
+        rename_help: Actualitzar el nom de visualització d'una unitat de treball
+        revision_help: Identificador estable de la revisió registrada del model
+        status_help: Mostrar les metadades d'una unitat de treball
+        work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
+          de treball
+        year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
   archive:
     app_help: Exportar i importar l'arxiu local xifrat com a paquets JSON portables
     export:
@@ -1024,6 +1040,8 @@ wizard:
         help: Nom visible mostrat en revisions locals
       notes:
         help: Notes per al teu propi record (opcional)
+      output-language:
+        help: Idioma de sortida de la CLI per a aquest perfil
       pays-capital-income-with-retencion:
         help: Paga rendes de capital amb retenció
       pays-professionals-with-retencion:
@@ -1123,6 +1141,17 @@ wizard:
             label: Règim simplificat
       name:
         prompt: Nom visible mostrat en revisions locals
+      output-language:
+        choices:
+          ca:
+            label: Català
+          en:
+            label: Anglès
+          es:
+            label: Castellà
+          hu:
+            label: Hongarès
+        prompt: Idioma de sortida de la CLI per a aquest perfil
       surnames:
         prompt: Cognoms o raó social per a capçaleres d'exportació
       tax-id:

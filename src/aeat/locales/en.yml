@@ -73,6 +73,19 @@ cli:
         period_help: Fiscal period to scope the formulas (e.g. 2026Q1, 2026-01)
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
+      work:
+        app_help: Manage the lifecycle of modelo work units
+        bucket_id_help: Bucket identifier the work unit belongs to
+        create_help: Create or reuse a work unit for (modelo, year, period, revision)
+        list_help: List registered work units, optionally filtered by bucket
+        modelo_help: Tax form code (e.g. 303, 130, 100)
+        name_help: Optional display name for the work unit
+        period_help: Filing period of the work unit (e.g. Q1, 4T, 0A, 01)
+        rename_help: Update the display name of a work unit
+        revision_help: Stable id of the targeted registry modelo revision
+        status_help: Show the metadata of one work unit
+        work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
+        year_help: Tax year of the work unit (e.g. 2026)
   archive:
     app_help: Export and import the encrypted local archive as portable JSON bundles
     export:
@@ -1003,6 +1016,8 @@ wizard:
         help: Display name shown in local reviews
       notes:
         help: Notes for your own records (optional)
+      output-language:
+        help: CLI output language for this profile
       pays-capital-income-with-retencion:
         help: Pays capital income with retención
       pays-professionals-with-retencion:
@@ -1102,6 +1117,17 @@ wizard:
             label: Simplified regime
       name:
         prompt: Display name shown in local reviews
+      output-language:
+        choices:
+          ca:
+            label: Catalan
+          en:
+            label: English
+          es:
+            label: Spanish
+          hu:
+            label: Hungarian
+        prompt: CLI output language for this profile
       surnames:
         prompt: Surnames or company name for export headers
       tax-id:

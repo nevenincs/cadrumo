@@ -1,0 +1,158 @@
+"""Encrypted SQL repository for the modelo work-unit catalogue.
+
+The work-unit catalogue persists at FINANCIAL sensitivity through
+the same :class:`aeat.adapters.persistence.storage.sql.SecureObjectRepository`
+backend the transaction and invoice catalogues use. The catalogue
+is serialised as a single envelope-wrapped JSON payload keyed by a
+stable namespace + object key; the underlying column is encrypted
+so no plaintext work-unit metadata lands on disk.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+from ...adapters.persistence.storage import Envelope, SensitivityClass
+from ...adapters.persistence.storage.errors import (
+    ClassificationError,
+    EnvelopeVersionError,
+)
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.logging import get_logger
+from ._errors import ModeloError
+from ._work_unit import WorkUnit, WorkUnitCatalogue
+
+
+_LOGGER = get_logger(__name__)
+_WORK_UNIT_NAMESPACE = "aeat.domain.modelos.work_units"
+_WORK_UNIT_OBJECT_KEY = "catalogue"
+_WORK_UNIT_CATALOGUE_VERSION = 1
+
+
+class WorkUnitPersistenceError(ModeloError):
+    """Raised when the work-unit catalogue cannot be loaded or saved."""
+
+
+class WorkUnitCatalogueRepository:
+    """Read / write the work-unit catalogue in the encrypted backend.
+
+    A single envelope-wrapped catalogue object holds every work
+    unit. Loads return an empty catalogue when no object has been
+    persisted yet (no separate "fresh install" path is needed).
+    """
+
+    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        self._objects = objects or SecureObjectRepository()
+
+    def exists(self) -> bool:
+        """Return whether a work-unit catalogue object has been persisted."""
+
+        return self._objects.exists(_WORK_UNIT_NAMESPACE, _WORK_UNIT_OBJECT_KEY)
+
+    def load(self) -> WorkUnitCatalogue:
+        """Return the persisted catalogue or an empty catalogue if absent.
+
+        Raises:
+            WorkUnitPersistenceError: When the persisted envelope's
+                classification or schema version disagrees with the
+                consumer's contract. The underlying
+                :exc:`ClassificationError` and
+                :exc:`EnvelopeVersionError` are wrapped so callers
+                can catch a single typed error from the modelo
+                domain.
+        """
+
+        try:
+            record = self._objects.load(
+                _WORK_UNIT_NAMESPACE,
+                _WORK_UNIT_OBJECT_KEY,
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=_WORK_UNIT_CATALOGUE_VERSION,
+            )
+        except (ClassificationError, EnvelopeVersionError) as exc:
+            _LOGGER.error("work-unit catalogue integrity error", exc_info=True)
+            raise WorkUnitPersistenceError(
+                f"work-unit catalogue integrity error: {type(exc).__name__}: {exc}"
+            ) from exc
+        if record is None:
+            _LOGGER.debug("work-unit catalogue not found; returning empty catalogue")
+            return WorkUnitCatalogue()
+        envelope = Envelope[WorkUnitCatalogue].model_validate_json(
+            record.payload.decode("utf-8")
+        )
+        if envelope.classification is not SensitivityClass.FINANCIAL:
+            raise WorkUnitPersistenceError(
+                f"work-unit catalogue has classification {envelope.classification}; "
+                f"FINANCIAL expected"
+            )
+        if envelope.schema_version > _WORK_UNIT_CATALOGUE_VERSION:
+            raise WorkUnitPersistenceError(
+                f"work-unit catalogue is at version {envelope.schema_version}; "
+                f"consumer supports up to {_WORK_UNIT_CATALOGUE_VERSION}"
+            )
+        catalogue = envelope.payload
+        _LOGGER.debug(
+            "loaded work-unit catalogue with %d entr(y/ies)", len(catalogue)
+        )
+        return catalogue
+
+    def save(self, catalogue: WorkUnitCatalogue) -> None:
+        """Persist ``catalogue`` as the encrypted singleton object."""
+
+        envelope = Envelope[WorkUnitCatalogue](
+            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
+            written_at=datetime.now(UTC),
+            classification=SensitivityClass.FINANCIAL,
+            payload=catalogue,
+        )
+        self._objects.save(
+            namespace=_WORK_UNIT_NAMESPACE,
+            object_key=_WORK_UNIT_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_WORK_UNIT_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+        _LOGGER.info(
+            "saved work-unit catalogue with %d entr(y/ies)", len(catalogue)
+        )
+
+
+def upsert_work_unit(
+    catalogue: WorkUnitCatalogue, unit: WorkUnit
+) -> WorkUnitCatalogue:
+    """Return a new catalogue with ``unit`` inserted or replaced.
+
+    The input catalogue is not mutated. The returned catalogue
+    carries the same work units as the input plus ``unit`` at its
+    deterministic ``work_unit_id``; any existing entry under that
+    id is replaced.
+    """
+
+    mapping = dict(catalogue.work_units)
+    mapping[unit.work_unit_id] = unit
+    return WorkUnitCatalogue(work_units=mapping)
+
+
+def remove_work_unit(
+    catalogue: WorkUnitCatalogue, work_unit_id: str
+) -> WorkUnitCatalogue:
+    """Return a new catalogue with ``work_unit_id`` removed.
+
+    Removing an absent id is a no-op that returns a value-equal
+    catalogue. The original is not mutated.
+    """
+
+    if work_unit_id not in catalogue.work_units:
+        return catalogue
+    mapping = dict(catalogue.work_units)
+    del mapping[work_unit_id]
+    return WorkUnitCatalogue(work_units=mapping)
+
+
+__all__ = [
+    "WorkUnitCatalogueRepository",
+    "WorkUnitPersistenceError",
+    "remove_work_unit",
+    "upsert_work_unit",
+]
