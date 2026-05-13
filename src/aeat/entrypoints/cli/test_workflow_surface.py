@@ -108,7 +108,7 @@ def _seed_profile(
 
     ``iva.regime`` defaults to ``GENERAL`` so the seeded profile
     matches the operator's state after a quiet, no-override
-    ``aeat config setup`` run.
+    ``aeat config init`` run.
     """
 
     from aeat.application.profile._actions import set_active_profile, set_profile_values
@@ -145,8 +145,8 @@ def test_root_surface_contains_config_and_app_only() -> None:
         "audits",
     ):
         # The substring may legitimately appear inside an option label
-        # (e.g. ``--install-completion``) or another command name
-        # (e.g. ``config setup``); only the top-level Commands block
+        # (e.g. ``--install-completion``) or another command name;
+        # only the top-level Commands block
         # is checked here.
         commands_section = result.output.split("Commands", 1)[-1] if "Commands" in result.output else ""
         assert removed_command not in commands_section, removed_command
@@ -159,7 +159,7 @@ def test_root_no_args_renders_help_successfully() -> None:
     assert "config" in result.output
     assert "app" in result.output
     assert "--version" in result.output
-    assert "Quickstart: aeat config setup --profile-name NAME --tax-id NIF" in result.output
+    assert "Quickstart: aeat config init --tax-id NIF --activity" in result.output
 
 
 def test_removed_developer_commands_are_not_registered() -> None:
@@ -284,12 +284,16 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
     commands = [
         ["--help"],
         ["config", "--help"],
-        ["config", "setup", "--help"],
-        ["config", "status", "--help"],
+        ["config", "init", "--help"],
+        ["config", "profile", "status", "--help"],
         ["config", "auth", "--help"],
-        ["config", "set", "--help"],
-        ["config", "get", "--help"],
+        ["config", "auth", "providers", "--help"],
+        ["config", "auth", "configure", "--help"],
+        ["config", "profile", "--help"],
+        ["config", "profile", "set", "--help"],
+        ["config", "profile", "get", "--help"],
         ["config", "doctor", "--help"],
+        ["config", "doctor", "connectivity", "--help"],
         ["app", "--help"],
         ["app", "overview", "--help"],
         ["app", "overview", "status", "--help"],
@@ -299,6 +303,9 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
         ["app", "archive", "--help"],
         ["app", "topic", "--help"],
         ["app", "modelo", "--help"],
+        ["app", "review", "--help"],
+        ["app", "review", "queue", "--help"],
+        ["app", "review", "show", "--help"],
     ]
 
     for command in commands:
@@ -362,9 +369,9 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
 ) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
 
-    configure = _invoke(["config", "auth", "--provider", "clave_movil"])
-    unsupported_spelling = _invoke(["config", "auth", "--provider", "clave-movil"])
-    unsupported = _invoke(["config", "auth", "--provider", "clave_permanente"])
+    configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
+    unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
+    unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_permanente"])
 
     assert configure.exit_code == 0, configure.output
     assert "clave_movil" in configure.output
@@ -574,7 +581,7 @@ def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.
     _isolate_user_cli(monkeypatch, tmp_path)
     _seed_profile(tax_id="00000000T", name="kent", activity="design")
 
-    config_status = _invoke(["--format", "json", "config", "status"])
+    config_status = _invoke(["--format", "json", "config", "profile", "status"])
     overview = _invoke(["--format", "json", "app", "overview", "status"])
 
     assert config_status.exit_code == 0, config_status.output
@@ -676,11 +683,11 @@ def test_invoice_import_persists_invoices_as_ciphertext_envelope(encrypted_user_
     assert stored.invoice_number == invoice_number
 
 
-def test_config_set_requires_active_profile_with_typed_error(
+def test_config_profile_set_requires_active_profile_with_typed_error(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """``aeat config set`` rejects assignments when no profile is selected.
+    """``aeat config profile set`` rejects assignments when no profile is selected.
 
     The set verb writes into the active profile's value record; with no
     active profile, the operation is refused with a typed CLI usage
@@ -689,7 +696,7 @@ def test_config_set_requires_active_profile_with_typed_error(
 
     _isolate_user_cli(monkeypatch, tmp_path)
 
-    result = _invoke(["config", "set", "tax.id", "12345678Z"])
+    result = _invoke(["config", "profile", "set", "tax.id", "12345678Z"])
 
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
@@ -723,7 +730,7 @@ def test_operator_n26_modelo_303_tape_builds_registry_draft_from_invoices(
         encoding="utf-8",
     )
     commands = [
-        ["config", "auth", "--provider", "clave_movil"],
+        ["config", "auth", "configure", "--provider", "clave_movil"],
         ["app", "ledger", "import", str(statement), "--provider", "n26", "--dry-run"],
         ["app", "ledger", "import", str(statement), "--provider", "n26", "--period", period, "--verify"],
     ]
@@ -793,13 +800,13 @@ def test_operator_n26_modelo_303_tape_builds_registry_draft_from_invoices(
     assert payload["summary"]["next_action"] == "resolve-blockers"
 
 
-def test_config_set_iva_regime_round_trips_to_deadline_engine(
+def test_config_profile_set_iva_regime_round_trips_to_deadline_engine(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     """Setting ``iva.regime GENERAL`` must reach the deadline engine as IVARegime.GENERAL.
 
-    Round-trip: ``aeat config set iva.regime GENERAL`` -> stored in
+    Round-trip: ``aeat config profile set iva.regime GENERAL`` -> stored in
     workflow state -> ``autonomo_profile_from_mapping`` ->
     ``IVARegime.GENERAL``. The wizard's SELECT validator only accepts
     the canonical uppercase token form.
@@ -810,7 +817,7 @@ def test_config_set_iva_regime_round_trips_to_deadline_engine(
     _isolate_user_cli(monkeypatch, tmp_path)
     _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
 
-    set_result = _invoke(["config", "set", "iva.regime", "GENERAL"])
+    set_result = _invoke(["config", "profile", "set", "iva.regime", "GENERAL"])
     assert set_result.exit_code == 0, set_result.output
 
     state = workflow_state_repository().load()
@@ -824,13 +831,12 @@ def test_config_set_does_intracomunitario_round_trips_to_deadline_engine(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Boolean profile keys must survive the config-set store and reach the engine.
+    """Boolean profile keys must survive the config-profile-set store and reach the engine.
 
     The engine reads ``does_intracomunitario`` as a literal key. The
     user-cli normaliser preserves the underscore form so the stored
     record matches the engine lookup; this test pins the round-trip
-    through ``aeat config set`` (the only writer remaining after the
-    setup-group teardown).
+    through ``aeat config profile set``.
     """
     from aeat.application.workflow import workflow_state_repository
     from aeat.domain.deadlines import autonomo_profile_from_mapping
@@ -838,10 +844,10 @@ def test_config_set_does_intracomunitario_round_trips_to_deadline_engine(
     _isolate_user_cli(monkeypatch, tmp_path)
     _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
 
-    set_result = _invoke(["config", "set", "does_intracomunitario", "true"])
+    set_result = _invoke(["config", "profile", "set", "does_intracomunitario", "true"])
     assert set_result.exit_code == 0, set_result.output
 
-    get_result = _invoke(["--format", "json", "config", "get", "does_intracomunitario"])
+    get_result = _invoke(["--format", "json", "config", "profile", "get", "does_intracomunitario"])
     assert get_result.exit_code == 0, get_result.output
     get_payload = json.loads(_json_output(get_result))
     assert get_payload["value"] == "true"
