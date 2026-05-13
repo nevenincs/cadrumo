@@ -123,8 +123,6 @@ class TestReplayRun:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """The re-entered run context must label its trace with ``replay_of``."""
-        import os
-
         from ..config import PROJECT_ROOT as _PROJECT_ROOT
         from ..config import Settings as _Settings
         from . import (
@@ -151,13 +149,10 @@ class TestReplayRun:
         )
         save_trace(original)
 
-        # Simulate the env var set during a replay:
+        # Simulate the env var set during a replay (monkeypatch auto-cleans on teardown):
         monkeypatch.setenv(REPLAY_ACTIVE_ENV_VAR, original.run_id)
-        try:
-            with run_context(entrypoint="aeat test replay-child", arguments=()) as info:
-                child_run_id = info.run_id
-        finally:
-            os.environ.pop(REPLAY_ACTIVE_ENV_VAR, None)
+        with run_context(entrypoint="aeat test replay-child", arguments=()) as info:
+            child_run_id = info.run_id
 
         child_trace = load_trace(child_run_id)
         assert child_trace.replay_of == original.run_id, "replay-originated traces must carry the original run id"
@@ -168,18 +163,13 @@ class TestReplayRun:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Legacy sentinel ``"1"`` must not pollute the trace."""
-        import os
-
         from . import REPLAY_ACTIVE_ENV_VAR, run_context
         from ._store import load_trace
 
         monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
         monkeypatch.setenv(REPLAY_ACTIVE_ENV_VAR, "1")
-        try:
-            with run_context(entrypoint="aeat test", arguments=()) as info:
-                rid = info.run_id
-        finally:
-            os.environ.pop(REPLAY_ACTIVE_ENV_VAR, None)
+        with run_context(entrypoint="aeat test", arguments=()) as info:
+            rid = info.run_id
 
         trace = load_trace(rid)
         assert trace.replay_of is None, "non-16-hex env value must be ignored"
