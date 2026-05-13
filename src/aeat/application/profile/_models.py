@@ -1,4 +1,4 @@
-"""Strict pydantic v2 records for setup profiles."""
+"""Strict pydantic v2 records for config profiles."""
 
 from __future__ import annotations
 
@@ -10,9 +10,9 @@ from ..workflow._utils import _normalise_key, utc_now
 
 
 class ProfileRecord(BaseModel):
-    """Setup profile values entered by the user."""
+    """Config profile values entered by the user."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     name: str = Field(min_length=1)
     values: dict[str, str] = Field(default_factory=dict)
