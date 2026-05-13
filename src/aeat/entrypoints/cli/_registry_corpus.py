@@ -1,7 +1,5 @@
 """Read-only ``aeat app registry`` exposure of normatives + manuals.
 
-Implements the W31 domain-harvest-normatives ADR's CLI surface:
-
 * ``aeat app registry citations list`` — list every normative codified
   in the project's legal corpus, with an optional tag filter.
 * ``aeat app registry citations show NORMATIVE_ID`` — show one

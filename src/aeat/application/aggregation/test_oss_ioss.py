@@ -375,7 +375,7 @@ def test_aggregator_returns_zero_when_no_candidates_match_a_binding() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Boundary regression guards (W33 P162 + P163)
+# Boundary regression guards
 # ---------------------------------------------------------------------------
 
 
@@ -415,11 +415,10 @@ def test_no_parallel_oss_ioss_aggregator_exists() -> None:
 
 
 def test_no_cli_root_oss_or_ioss_verb_is_registered() -> None:
-    """Per the festivos- / oss- / ioss-ADR, OSS / IOSS has no
-    operator-facing CLI verb. Consumption is via
-    ``aeat app modelo calculate``. The CLI tree must not register an
-    ``oss``, ``ioss``, ``aeat oss``, ``aeat ioss``, ``app vat oss``,
-    or ``app vat ioss`` command."""
+    """OSS / IOSS has no operator-facing CLI verb. Consumption is
+    via ``aeat app modelo calculate``. The CLI tree must not
+    register an ``oss``, ``ioss``, ``aeat oss``, ``aeat ioss``,
+    ``app vat oss``, or ``app vat ioss`` command."""
 
     cli_root = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
     forbidden_command_names = (

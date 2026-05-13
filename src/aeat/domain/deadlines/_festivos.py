@@ -1,8 +1,8 @@
 """Spanish business-day calendar and AEAT deadline shift.
 
-This module implements the holiday-adjustment service that the festivos-
-deadline-shift ADR mandates. It loads BOE-published national plus
-autonomous-community ("CCAA") holiday calendars from the project's
+This module is the holiday-adjustment service. It loads BOE-
+published national plus autonomous-community ("CCAA") holiday
+calendars from the project's
 ``registry/aeat/calendars/`` directory and exposes pure functions that
 answer two questions:
 
@@ -23,10 +23,10 @@ The rule covers national holidays plus the autonomous-community holiday
 of the taxpayer's domicilio fiscal. Local (municipal) holidays do NOT
 affect AEAT filing deadlines and are not part of this calendar.
 
-The ADR documents one well-known exception: **Modelo 369** (OSS / IOSS
-- one-stop-shop) deadlines do NOT shift, even when the close date falls
-on a non-business day, because the OSS / IOSS regime is governed by the
-EU Council Directive's harmonised cutoffs and the AEAT cannot lengthen
+One well-known exception: **Modelo 369** (OSS / IOSS one-stop-shop)
+deadlines do NOT shift, even when the close date falls on a non-
+business day, because the OSS / IOSS regime is governed by the EU
+Council Directive's harmonised cutoffs and the AEAT cannot lengthen
 the EU-wide window unilaterally. The exception list is encoded in
 :data:`MODELOS_WITHOUT_SHIFT` so future modelo additions land as data,
 not as a fork in :func:`shift_deadline`.

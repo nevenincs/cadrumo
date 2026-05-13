@@ -118,22 +118,229 @@ def casillas(
     )
 
 
-@app.command("bindings")
-def bindings(
+bindings_app = typer.Typer(
+    name="bindings",
+    help=tr("cli.app.modelo.bindings.app_help"),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(bindings_app, name="bindings")
+
+#: Readiness category attached to every binding, derived from its
+#: source kind. Fixes the operator-facing vocabulary that
+#: missing-binding errors produce in place of raw registry error
+#: strings.
+_BINDING_SOURCE_TO_READINESS: dict[str, str] = {
+    "constant_value": "casilla",
+    "previous_filing": "prior filed revision",
+    "live_observation": "live observation",
+    "ledger_iva_aggregation": "ledger source",
+    "ledger_oss_aggregation": "ledger source",
+    "ledger_renta_expense_aggregation": "ledger source",
+    "profile_fact": "profile fact",
+    "bucket_state": "bucket",
+    "waiver": "waiver",
+    "blocking_finding": "blocking finding",
+}
+
+
+def _readiness_for_source(source: str) -> str:
+    """Return the readiness category for ``source``.
+
+    Unknown sources fall back to ``"ledger source"`` because every
+    registered source kind today is bucket / ledger-derived. If a
+    new source is added without a readiness mapping the fallback is
+    still operator-readable; stricter exhaustiveness belongs in the
+    bindings-resolution layer.
+    """
+    return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
+
+
+def _parse_binding_override(spec: str) -> tuple[str, str]:
+    """Parse a ``--binding KEY=VALUE`` spec into a ``(key, value)`` pair.
+
+    Scalar, list, and mapping values must survive resolution — the
+    parsing here is intentionally permissive at the CLI boundary;
+    the raw value flows through unchanged so the bindings-
+    resolution layer downstream can coerce it per source type.
+    """
+    if "=" not in spec:
+        raise typer.BadParameter(
+            f"--binding must be KEY=VALUE; got {spec!r}"
+        )
+    key, _, value = spec.partition("=")
+    key = key.strip()
+    if not key:
+        raise typer.BadParameter(
+            f"--binding key must be non-empty; got {spec!r}"
+        )
+    return key, value
+
+
+@bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
+def bindings_list(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Argument(help=tr("cli.app.modelo.bindings.modelo_help"))],
-    period: Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help"))] = None,
-    as_of: Annotated[str | None, typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help"))] = None,
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
+    ],
+    year: Annotated[
+        int,
+        typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
+    ],
+    period: Annotated[
+        str,
+        typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
+    ],
+    missing: Annotated[
+        bool,
+        typer.Option("--missing", help=tr("cli.app.modelo.bindings.missing_help")),
+    ] = False,
+    as_of: Annotated[
+        str | None,
+        typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help")),
+    ] = None,
 ) -> None:
-    report = _run_query(lambda: _service().bindings(modelo, period=period, as_of=_as_of(as_of)))
-    _emit(
-        ctx,
-        report,
-        [
-            "binding_id\tsource\ttyped_enum",
-            *[f"{row.binding_id}\t{row.source}\t{row.typed_enum or '-'}" for row in report.rows],
-        ],
+    """List required and available binding keys for a modelo / year / period.
+
+    With ``--missing`` the list is filtered to bindings whose source
+    is not constant-valued (every non-``constant_value`` binding
+    requires runtime data from the bucket / ledger / profile /
+    prior filing / live observation to resolve).
+    """
+
+    scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
+    report = _run_query(
+        lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of))
     )
+    rows = report.rows
+    if missing:
+        rows = tuple(row for row in rows if row.source != "constant_value")
+    payload = {
+        "operation": "registry.modelo.bindings.list",
+        "modelo": report.code,
+        "revision": report.revision,
+        "filing_year": report.filing_year,
+        "period": report.period,
+        "missing_filter": missing,
+        "binding_count": len(rows),
+        "bindings": [
+            {
+                "binding_id": row.binding_id,
+                "source": row.source,
+                "readiness": _readiness_for_source(row.source),
+                "typed_enum": row.typed_enum,
+            }
+            for row in rows
+        ],
+    }
+    lines = [
+        "operation\tregistry.modelo.bindings.list",
+        f"modelo\t{report.code}",
+        f"revision\t{report.revision}",
+        f"filing_year\t{report.filing_year}",
+        f"period\t{report.period}",
+        f"missing_filter\t{missing}",
+        f"binding_count\t{len(rows)}",
+        "binding_id\tsource\treadiness\ttyped_enum",
+    ]
+    lines.extend(
+        f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}"
+        for row in rows
+    )
+    _emit(ctx, payload, lines)
+
+
+@bindings_app.command("preview", help=tr("cli.app.modelo.bindings.preview_help"))
+def bindings_preview(
+    ctx: typer.Context,
+    modelo: Annotated[
+        str,
+        typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
+    ],
+    year: Annotated[
+        int,
+        typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
+    ],
+    period: Annotated[
+        str,
+        typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
+    ],
+    binding: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--binding",
+            help=tr("cli.app.modelo.bindings.override_help"),
+        ),
+    ] = None,
+    as_of: Annotated[
+        str | None,
+        typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help")),
+    ] = None,
+) -> None:
+    """Resolve temporary ``--binding`` overrides without mutating state.
+
+    The override map is parsed at the CLI boundary; the registry
+    binding catalogue is loaded for the active modelo / year /
+    period and any override targeting a known binding id is
+    echoed back resolved. Unknown override keys fail with a
+    suggestion list sourced from the same catalogue.
+    """
+
+    overrides = dict(_parse_binding_override(spec) for spec in (binding or ()))
+    scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
+    report = _run_query(
+        lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of))
+    )
+    known_ids = {row.binding_id for row in report.rows}
+    unknown_keys = sorted(set(overrides) - known_ids)
+    if unknown_keys:
+        suggestion = ", ".join(sorted(known_ids))
+        raise typer.BadParameter(
+            f"unknown --binding key(s) {unknown_keys!r}; known bindings for "
+            f"{report.code}@{report.revision} ({report.period}): {suggestion}"
+        )
+    payload = {
+        "operation": "registry.modelo.bindings.preview",
+        "modelo": report.code,
+        "revision": report.revision,
+        "filing_year": report.filing_year,
+        "period": report.period,
+        "override_count": len(overrides),
+        "binding_count": len(report.rows),
+        "bindings": [
+            {
+                "binding_id": row.binding_id,
+                "source": row.source,
+                "readiness": _readiness_for_source(row.source),
+                "typed_enum": row.typed_enum,
+                "override": overrides.get(row.binding_id),
+            }
+            for row in report.rows
+        ],
+    }
+    lines = [
+        "operation\tregistry.modelo.bindings.preview",
+        f"modelo\t{report.code}",
+        f"revision\t{report.revision}",
+        f"filing_year\t{report.filing_year}",
+        f"period\t{report.period}",
+        f"override_count\t{len(overrides)}",
+        f"binding_count\t{len(report.rows)}",
+        "binding_id\tsource\treadiness\toverride",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                row.binding_id,
+                row.source,
+                _readiness_for_source(row.source),
+                overrides.get(row.binding_id) or "-",
+            )
+        )
+        for row in report.rows
+    )
+    _emit(ctx, payload, lines)
 
 
 @app.command("formulas")
