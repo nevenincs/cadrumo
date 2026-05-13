@@ -69,7 +69,7 @@ def test_listing_is_frozen() -> None:
     from pydantic import ValidationError
 
     entry = AUTH_PROVIDER_CATALOGUE[0]
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         entry.id = "changed"  # type: ignore[misc]
 
 

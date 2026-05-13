@@ -51,14 +51,14 @@ def test_contract_lifecycle_forbids_live_submission() -> None:
     assert contract.lifecycle.internal_filed_term == "internal filed"
     assert contract.lifecycle.live_submission_enabled is False
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"steps|VERIFY|lifecycle"):
         LifecycleContract(
             steps=(
                 ModeloLifecycleStep.CALCULATE,
                 ModeloLifecycleStep.FILE,
             )
         )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"live_submission_enabled|forbidden|False"):
         LifecycleContract(
             steps=(
                 ModeloLifecycleStep.CALCULATE,
@@ -113,7 +113,7 @@ def test_require_accepted_root_uses_registered_application_error() -> None:
 def test_contract_models_are_strict_and_immutable() -> None:
     root = get_operator_surface_contract().roots[0]
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"required_children|duplicate|unique"):
         RootSurface(
             name=RootSurfaceName.CONFIG,
             purpose="duplicate children",
@@ -121,7 +121,7 @@ def test_contract_models_are_strict_and_immutable() -> None:
             owns_operational_workflow=False,
             required_children=("profile", "profile"),
         )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         extra_kwargs: dict[str, object] = {"unexpected": True}
         RootSurface.model_validate(
             {
@@ -132,7 +132,7 @@ def test_contract_models_are_strict_and_immutable() -> None:
                 **extra_kwargs,
             }
         )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         root.purpose = "mutated"  # type: ignore[misc]
 
 

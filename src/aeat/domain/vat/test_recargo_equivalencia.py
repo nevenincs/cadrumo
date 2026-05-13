@@ -75,7 +75,7 @@ def test_recargo_corpus_excerpt_present_with_boe_quotes() -> None:
 
 
 def test_recargo_record_is_frozen() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         LIVA_ART_161_RECARGO.general_rate = Decimal("0.999")  # type: ignore[misc]
 
 
@@ -102,7 +102,7 @@ def test_recargo_rate_for_exempt_returns_none() -> None:
 
 
 def test_recargo_record_validates_inputs_in_strict_mode() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"general_rate|less than"):
         LivaArt161RecargoRates(
             general_rate=Decimal("1.5"),  # > 1 violates Field constraint
             reducido_rate=Decimal("0.014"),

@@ -153,7 +153,7 @@ def test_repair_hints_rejected_outside_resolve_blockers() -> None:
 def test_summary_is_frozen() -> None:
     draft = _make_draft(status=FilingDraftStatus.VALIDATED)
     summary = summarise_calculation(draft)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         summary.blocker_count = 99  # type: ignore[misc]
 
 

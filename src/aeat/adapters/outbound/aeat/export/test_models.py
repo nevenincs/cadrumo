@@ -42,7 +42,7 @@ class TestSubmissionAttempt:
 
     def test_extra_fields_rejected(self) -> None:
         """Assert ``extra="forbid"`` rejects unknown keys."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             SubmissionAttempt.model_validate(
                 {
                     "attempt_id": "a1",
@@ -56,12 +56,12 @@ class TestSubmissionAttempt:
     def test_frozen(self) -> None:
         """Assert the model is frozen (mutating an attribute raises)."""
         attempt = _attempt()
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
             attempt.attempt_id = "a2"  # type: ignore[misc]
 
     def test_end_before_start_rejected(self) -> None:
         """Assert ``ended_at < started_at`` is rejected by validation."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"ended_at|started_at"):
             SubmissionAttempt(
                 attempt_id="a1",
                 started_at=datetime(2026, 4, 12, 10, 1, 0, tzinfo=UTC),
@@ -71,7 +71,7 @@ class TestSubmissionAttempt:
 
     def test_status_must_be_known(self) -> None:
         """Assert an unknown status string is rejected."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"status|Input should be"):
             SubmissionAttempt.model_validate(
                 {
                     "attempt_id": "a1",
@@ -108,7 +108,7 @@ class TestSubmittedFiling:
 
     def test_extra_fields_rejected(self) -> None:
         """Assert ``extra="forbid"`` rejects unknown keys on :class:`SubmittedFiling`."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             SubmittedFiling.model_validate(
                 {
                     "submission_id": "x",
@@ -125,12 +125,12 @@ class TestSubmittedFiling:
 
     def test_attempts_must_be_nonempty(self) -> None:
         """Assert ``attempts`` cannot be empty."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"attempts|at least 1"):
             self._filing(attempts=())
 
     def test_acknowledged_requires_justificante(self) -> None:
         """Assert ``ACKNOWLEDGED`` status requires a ``justificante_csv`` + PDF path."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"justificante|ACKNOWLEDGED"):
             self._filing(
                 status=SubmissionStatus.ACKNOWLEDGED,
                 acknowledged_at=datetime(2026, 4, 12, 10, 5, 0, tzinfo=UTC),
@@ -138,7 +138,7 @@ class TestSubmittedFiling:
 
     def test_acknowledged_requires_acknowledged_at(self) -> None:
         """Assert ``ACKNOWLEDGED`` status requires ``acknowledged_at``."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"acknowledged_at|ACKNOWLEDGED"):
             self._filing(
                 status=SubmissionStatus.ACKNOWLEDGED,
                 justificante_csv="CSV123",
@@ -147,7 +147,7 @@ class TestSubmittedFiling:
 
     def test_ack_before_submit_rejected(self) -> None:
         """Assert ``acknowledged_at < submitted_at`` is rejected."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"acknowledged_at|submitted_at"):
             self._filing(
                 acknowledged_at=datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC),
             )

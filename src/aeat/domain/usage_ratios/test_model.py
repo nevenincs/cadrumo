@@ -74,7 +74,7 @@ def test_unknown_category_key_rejected_from_json() -> None:
 
 def test_ineligible_category_rejected() -> None:
     """Categories without a USAGE_RATIO_* kind cannot be persisted."""
-    with pytest.raises(ValidationError) as excinfo:
+    with pytest.raises(ValidationError, match=r"material_oficina|ineligible|USAGE_RATIO") as excinfo:
         UsageRatioProfile(ratios={SpendingCategory.MATERIAL_OFICINA: Decimal("0.5")})
     assert "material_oficina" in str(excinfo.value)
 

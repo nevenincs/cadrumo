@@ -79,7 +79,7 @@ def test_persistence_round_trip_preserves_catalogue(tmp_path: Path) -> None:
 
 def test_load_raises_typed_error_for_invalid_json() -> None:
     """Invalid JSON must surface a typed persistence error."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"json|JSON|Invalid"):
         InvoiceCatalogue.model_validate_json("{not-valid")
 
 
@@ -144,7 +144,7 @@ def test_catalogue_rejects_mapping_with_mismatched_keys() -> None:
     """Mapping keys must match each nested invoice's ``invoice_id``."""
     invoice = _valid_invoice()
     payload = {"invoices": {"wrong-key": invoice}}
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"invoice_id|key|mismatch"):
         InvoiceCatalogue.model_validate(payload)
 
 

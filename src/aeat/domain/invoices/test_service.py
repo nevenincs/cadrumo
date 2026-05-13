@@ -62,7 +62,7 @@ def test_reconciliation_suggestion_rejects_short_transaction_id() -> None:
     :class:`aeat.domain.transactions.Transaction` catalogue keyed by
     the 64-character SHA-256 stable hash."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"transaction_id|hex|length|pattern"):
         ReconciliationSuggestion(
             invoice_id="INV-1",
             transaction_id="raw-12345",
@@ -76,7 +76,7 @@ def test_reconciliation_suggestion_rejects_oversized_transaction_id() -> None:
     """A 65-character value (e.g. accidental trailing newline) must
     also fail. ``max_length`` pins the upper edge."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"transaction_id|length|String should have at most"):
         ReconciliationSuggestion(
             invoice_id="INV-1",
             transaction_id=_SAMPLE_HEX_64 + "x",
@@ -101,7 +101,7 @@ def test_link_inconsistency_accepts_64_char_transaction_id() -> None:
 
 
 def test_link_inconsistency_rejects_short_transaction_id() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"transaction_id|hex|length|pattern"):
         LinkInconsistency(
             invoice_id="INV-1",
             transaction_id="raw-12345",
@@ -110,7 +110,7 @@ def test_link_inconsistency_rejects_short_transaction_id() -> None:
 
 
 def test_link_inconsistency_rejects_oversized_transaction_id() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"transaction_id|length|String should have at most"):
         LinkInconsistency(
             invoice_id="INV-1",
             transaction_id=_SAMPLE_HEX_64 + "x",
@@ -122,7 +122,7 @@ def test_link_inconsistency_invoice_id_remains_non_empty_required() -> None:
     """The tightening of ``transaction_id`` did not relax the empty-
     string guard on the other side of the link."""
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"invoice_id|at least 1 character"):
         LinkInconsistency(
             invoice_id="",
             transaction_id=_SAMPLE_HEX_64,

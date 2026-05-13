@@ -166,7 +166,7 @@ def test_aggregation_inputs_are_correctly_carried_into_the_result() -> None:
     )
     assert aggregation.year == 2025
     # The aggregation is immutable.
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         aggregation.year = 2024  # type: ignore[misc]
 
 
@@ -264,7 +264,7 @@ def test_definitiva_orchestrator_skips_other_year_operations() -> None:
 
 
 def test_vat_operation_rejects_negative_base_amount() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"base_amount|greater than|negative"):
         VatOperation(
             operation_id="op",
             operation_date=date(2025, 1, 1),
@@ -276,9 +276,9 @@ def test_vat_operation_rejects_negative_base_amount() -> None:
 
 def test_vat_operation_is_frozen_and_forbids_extras() -> None:
     op = _op("op", year=2025, base_amount="100.00", kind=VatOperationKind.GRANTS_DEDUCTION)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         op.base_amount = Decimal("0")  # type: ignore[misc]
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         extra: dict[str, object] = {"unexpected": True}
         VatOperation.model_validate(
             {
@@ -293,7 +293,7 @@ def test_vat_operation_is_frozen_and_forbids_extras() -> None:
 
 
 def test_vat_operation_rejects_empty_operation_id() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"operation_id|at least 1 character"):
         VatOperation(
             operation_id="",
             operation_date=date(2025, 1, 1),
@@ -306,5 +306,5 @@ def test_vat_operation_rejects_empty_operation_id() -> None:
 def test_prorrata_aggregation_is_immutable() -> None:
     aggregation = aggregate_prorrata_inputs((), year=2025)
     assert isinstance(aggregation, ProrrataAggregation)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         aggregation.operation_count_excluded = 99  # type: ignore[misc]

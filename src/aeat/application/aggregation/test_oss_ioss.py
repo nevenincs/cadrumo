@@ -110,7 +110,7 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
     from pydantic import ValidationError
 
     candidate = _candidate()
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         OssIossLedgerCandidate(
             ledger_id="ledger-1",
             transaction_date=_SUPPLY_DATE,
@@ -123,7 +123,7 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
             iva_amount=Decimal("19"),
             unknown_axis="extra-value",  # ty: ignore[unknown-argument]
         )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         candidate.base_amount = Decimal("200")  # type: ignore[misc]
 
 
@@ -134,9 +134,9 @@ def test_candidate_rejects_negative_amounts() -> None:
 
     from pydantic import ValidationError
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"base_amount|greater than"):
         _candidate(base=Decimal("-1"))
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"iva_amount|greater than"):
         _candidate(iva=Decimal("-1"))
 
 

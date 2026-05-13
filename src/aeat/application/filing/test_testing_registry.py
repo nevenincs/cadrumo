@@ -37,7 +37,7 @@ def test_builds_frozen_draft_through_registry_runtime() -> None:
 
     assert isinstance(draft, FilingDraft)
     assert draft.schema_version.startswith("registry:130:")
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         draft.status = FilingDraftStatus.DRAFT  # type: ignore[misc]
 
 
