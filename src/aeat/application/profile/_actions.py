@@ -13,7 +13,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ..workflow._models import WorkflowEvent, WorkflowState
+from ..workflow._models import ProfileBucketPointer, WorkflowEvent, WorkflowState
 from ..workflow._utils import _normalise_key, utc_now
 from ._models import ProfileRecord
 from ._repository import profile_bucket_id, profile_bucket_repository
@@ -81,7 +81,7 @@ def set_active_profile(state: WorkflowState, name: str) -> WorkflowState:
     created = repository.load(profile_name) is None
     if created:
         repository.save(ProfileRecord(name=profile_name))
-    profiles[profile_name] = {"bucket_id": profile_name}
+    profiles[profile_name] = ProfileBucketPointer(bucket_id=profile_name)
     updated = state.model_copy(update={"active_profile": profile_name, "profiles": profiles, "updated_at": utc_now()})
     if created:
         _emit_profile_bucket_event(
@@ -122,7 +122,7 @@ def set_profile_values(state: WorkflowState, profile_name: str, values: dict[str
     normalised = {_normalise_key(key): raw.strip() for key, raw in values.items()}
     merged = {**current.values, **normalised}
     saved = repository.save(current.model_copy(update={"values": merged, "updated_at": utc_now()}))
-    profiles[bucket_id] = {"bucket_id": bucket_id}
+    profiles[bucket_id] = ProfileBucketPointer(bucket_id=bucket_id)
     updated = state.model_copy(update={"active_profile": bucket_id, "profiles": profiles, "updated_at": utc_now()})
     if created:
         _emit_profile_bucket_event(
@@ -168,7 +168,7 @@ def clear_profile_values(state: WorkflowState, profile_name: str, keys: tuple[st
     for key in normalised:
         values.pop(key, None)
     repository.save(current.model_copy(update={"values": values, "updated_at": utc_now()}))
-    profiles[bucket_id] = {"bucket_id": bucket_id}
+    profiles[bucket_id] = ProfileBucketPointer(bucket_id=bucket_id)
     updated = state.model_copy(update={"active_profile": bucket_id, "profiles": profiles, "updated_at": utc_now()})
     if created:
         _emit_profile_bucket_event(
