@@ -48,7 +48,7 @@ class TestAutonomoProfile:
     """Strictness invariants for :class:`AutonomoProfile`."""
 
     def test_extra_fields_rejected(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
             AutonomoProfile.model_validate(
                 {
                     "tax_id": "X",
@@ -66,11 +66,11 @@ class TestAutonomoProfile:
 
     def test_frozen(self) -> None:
         profile = _profile()
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"frozen"):
             profile.tax_id = "Y9876543K"  # type: ignore[misc]
 
     def test_strict_rejects_int_for_bool(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"valid boolean"):
             AutonomoProfile.model_validate(
                 {
                     "tax_id": "X",
@@ -86,7 +86,7 @@ class TestAutonomoProfile:
             )
 
     def test_iva_regime_must_be_known(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"IVARegime"):
             AutonomoProfile.model_validate(
                 {
                     "tax_id": "X",
@@ -136,7 +136,7 @@ class TestFilingObligation:
     """Window-order and field invariants for :class:`FilingObligation`."""
 
     def test_opens_after_closes_rejected(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"opens_on .* is after closes_on"):
             FilingObligation(
                 modelo="303",
                 period="2026Q1",
@@ -148,7 +148,7 @@ class TestFilingObligation:
             )
 
     def test_payment_after_closes_rejected(self) -> None:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"payment_cutoff_on .* is after closes_on"):
             FilingObligation(
                 modelo="303",
                 period="2026Q1",
