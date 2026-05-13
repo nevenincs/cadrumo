@@ -21,6 +21,7 @@ import json
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 from typer.testing import CliRunner
 
 from aeat.core.paths import PROJECT_ROOT
@@ -32,7 +33,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _RUNNER = CliRunner()
 
 
-def _invoke(*args: str, fmt: str | None = None) -> object:
+def _invoke(*args: str, fmt: str | None = None) -> Result:
     cmd: list[str] = []
     if fmt is not None:
         cmd.extend(["--format", fmt])
@@ -172,11 +173,8 @@ def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
         hits = [needle for needle in forbidden_root_names if needle in text]
         if hits:
             offenders[py_file] = hits
-    assert offenders == {}, (
-        "CLI tree registers a forbidden top-level normatives/manual verb: "
-        + ", ".join(
-            f"{p.relative_to(cli_root)} ({hits})" for p, hits in offenders.items()
-        )
+    assert offenders == {}, "CLI tree registers a forbidden top-level normatives/manual verb: " + ", ".join(
+        f"{p.relative_to(cli_root)} ({hits})" for p, hits in offenders.items()
     )
 
 
@@ -238,7 +236,4 @@ def test_no_aeat_normatives_or_manual_fetch_verb_under_app_registry() -> None:
         hits = [needle for needle in forbidden_command_names if needle in text]
         if hits:
             offenders[py_file] = hits
-    assert offenders == {}, (
-        "Manual / citation fetch verb registered against the read-only "
-        + f"contract: {offenders}"
-    )
+    assert offenders == {}, "Manual / citation fetch verb registered against the read-only " + f"contract: {offenders}"
