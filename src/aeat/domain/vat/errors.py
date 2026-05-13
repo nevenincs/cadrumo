@@ -61,3 +61,24 @@ class VatClassificationError(VatError):
 
 class VatValidationError(VatError, ValueError):
     """Raised on invalid VAT field values. Inherits from ValueError for Pydantic."""
+
+
+class ProrrataError(VatError):
+    """Base error for IVA prorrata calculation failures (LIVA arts. 101-103)."""
+
+
+class ProrrataInputError(ProrrataError, ValueError):
+    """Raised when prorrata inputs violate domain invariants.
+
+    Inherits from ``ValueError`` so pydantic surfaces it as a
+    ``ValidationError`` when raised from a model validator.
+    """
+
+
+class ProrrataSectorError(ProrrataError):
+    """Raised when sectoral-separation inputs are inconsistent.
+
+    Examples: a sector references an unknown id, two sectors share an
+    activity code, or the sector list is empty when sectoral separation
+    is required (LIVA art. 9.1.c).
+    """
