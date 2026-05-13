@@ -2804,56 +2804,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-app-modelo-bindings-s
 
 This Phase delivers backend implementation for modelo bindings behavior as required by `2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr`.
 
-- [ ] `W47.P231.S1381` - Map the `2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr` decision into non-CLI service ownership for modelo bindings behavior; `src/aeat/application/modelo`.
-- [ ] `W47.P231.S1382` - Implement Pydantic command and result contracts for modelo bindings behavior; `src/aeat/application/modelo`.
-- [ ] `W47.P231.S1383` - Wire application or domain services required by modelo bindings behavior; `src/aeat/application/modelo`.
-- [ ] `W47.P231.S1384` - Connect persistence, bucket events, registry data, or provider adapters required by modelo bindings behavior; `src/aeat/application/modelo`.
-- [ ] `W47.P231.S1385` - Route existing backend functionality into the canonical service for modelo bindings behavior; `src/aeat/application/modelo`.
-- [ ] `W47.P231.S1386` - Record service-level error codes and log fields for modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P231.S1381` - Map the `2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr` decision into non-CLI service ownership for modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P231.S1382` - Implement Pydantic command and result contracts for modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P231.S1383` - Wire application or domain services required by modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P231.S1384` - Connect persistence, bucket events, registry data, or provider adapters required by modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P231.S1385` - Route existing backend functionality into the canonical service for modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P231.S1386` - Record service-level error codes and log fields for modelo bindings behavior; `src/aeat/application/modelo`.
 
 ### Phase `W47.P232` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for modelo bindings behavior as required by `2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr`.
 
-- [ ] `W47.P232.S1387` - Audit duplicate implementations that overlap modelo bindings behavior; `src/aeat/application/modelo`.
-- [ ] `W47.P232.S1388` - Delete duplicate backend branches that compete with modelo bindings behavior; `src/aeat/application/modelo`.
-- [ ] `W47.P232.S1389` - Remove stale aliases that bypass the canonical service for modelo bindings behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W47.P232.S1390` - Migrate internal callers to the canonical service for modelo bindings behavior; `src/aeat/application/modelo`.
-- [ ] `W47.P232.S1391` - Remove stale fixtures and tests that encode duplicate behavior for modelo bindings behavior; `tests/application/modelo`.
-- [ ] `W47.P232.S1392` - Update boundary inventory entries that describe duplicate behavior for modelo bindings behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W47.P232.S1387` - Audit duplicate implementations that overlap modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P232.S1388` - Delete duplicate backend branches that compete with modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P232.S1389` - Remove stale aliases that bypass the canonical service for modelo bindings behavior; `src/aeat/entrypoints/cli`.
+- [x] `W47.P232.S1390` - Migrate internal callers to the canonical service for modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P232.S1391` - Remove stale fixtures and tests that encode duplicate behavior for modelo bindings behavior; `tests/application/modelo`.
+- [x] `W47.P232.S1392` - Update boundary inventory entries that describe duplicate behavior for modelo bindings behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W47.P233` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for modelo bindings behavior as required by `2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr`.
 
-- [ ] `W47.P233.S1393` - Delete compatibility shims that preserve rejected behavior for modelo bindings behavior; `src/aeat/application/modelo`.
-- [ ] `W47.P233.S1394` - Delete placeholder stubs that claim support for modelo bindings behavior; `src/aeat/application/modelo`.
-- [ ] `W47.P233.S1395` - Replace stubbed paths with real backend service calls for modelo bindings behavior; `src/aeat/application/modelo`.
-- [ ] `W47.P233.S1396` - Remove deprecated command spelling and help text for modelo bindings behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W47.P233.S1397` - Remove tests that assert shim or stub behavior for modelo bindings behavior; `tests/application/modelo`.
-- [ ] `W47.P233.S1398` - Record the removed shim and stub surfaces for modelo bindings behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W47.P233.S1393` - Delete compatibility shims that preserve rejected behavior for modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P233.S1394` - Delete placeholder stubs that claim support for modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P233.S1395` - Replace stubbed paths with real backend service calls for modelo bindings behavior; `src/aeat/application/modelo`.
+- [x] `W47.P233.S1396` - Remove deprecated command spelling and help text for modelo bindings behavior; `src/aeat/entrypoints/cli`.
+- [x] `W47.P233.S1397` - Remove tests that assert shim or stub behavior for modelo bindings behavior; `tests/application/modelo`.
+- [x] `W47.P233.S1398` - Record the removed shim and stub surfaces for modelo bindings behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W47.P234` - real behavior verification
 
 This Phase delivers real behavior verification for modelo bindings behavior as required by `2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr`.
 
-- [ ] `W47.P234.S1399` - Add service contract tests for modelo bindings behavior; `tests/application/modelo`.
-- [ ] `W47.P234.S1400` - Add persistence or registry integration tests for modelo bindings behavior; `tests/application/modelo`.
-- [ ] `W47.P234.S1401` - Add negative tests proving rejected aliases do not reach modelo bindings behavior; `tests/entrypoints/cli`.
-- [ ] `W47.P234.S1402` - Add command behavior tests that exercise modelo bindings behavior through real services; `tests/entrypoints/cli`.
-- [ ] `W47.P234.S1403` - Add end-to-end workflow coverage for modelo bindings behavior; `tests`.
-- [ ] `W47.P234.S1404` - Run the targeted test slice for modelo bindings behavior without skips or xfails; `tests/application/modelo`.
+- [x] `W47.P234.S1399` - Add service contract tests for modelo bindings behavior; `tests/application/modelo`.
+- [x] `W47.P234.S1400` - Add persistence or registry integration tests for modelo bindings behavior; `tests/application/modelo`.
+- [x] `W47.P234.S1401` - Add negative tests proving rejected aliases do not reach modelo bindings behavior; `tests/entrypoints/cli`.
+- [x] `W47.P234.S1402` - Add command behavior tests that exercise modelo bindings behavior through real services; `tests/entrypoints/cli`.
+- [x] `W47.P234.S1403` - Add end-to-end workflow coverage for modelo bindings behavior; `tests`.
+- [x] `W47.P234.S1404` - Run the targeted test slice for modelo bindings behavior without skips or xfails; `tests/application/modelo`.
 
 ### Phase `W47.P235` - thin cli exposure
 
 This Phase delivers thin cli exposure for modelo bindings behavior as required by `2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr`.
 
-- [ ] `W47.P235.S1405` - Expose accepted command handlers for modelo bindings behavior under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W47.P235.S1406` - Keep argument parsing for modelo bindings behavior separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W47.P235.S1407` - Delegate modelo bindings behavior execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W47.P235.S1408` - Render modelo bindings behavior results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W47.P235.S1409` - Handle modelo bindings behavior failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W47.P235.S1410` - Validate help text for modelo bindings behavior uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W47.P235.S1405` - Expose accepted command handlers for modelo bindings behavior under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W47.P235.S1406` - Keep argument parsing for modelo bindings behavior separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W47.P235.S1407` - Delegate modelo bindings behavior execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W47.P235.S1408` - Render modelo bindings behavior results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W47.P235.S1409` - Handle modelo bindings behavior failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W47.P235.S1410` - Validate help text for modelo bindings behavior uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W48` - borrador 100 binding integration
 
