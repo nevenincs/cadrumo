@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Iterator
 from datetime import datetime
 from typing import Any, cast
@@ -12,6 +11,7 @@ from sqlalchemy import Engine, bindparam, delete, select, text, update
 from sqlalchemy.exc import IntegrityError
 
 from .....core.classification import SensitivityClass
+from .....core.logging import get_logger
 from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
 from ..errors import (
     ClassificationError,
@@ -24,7 +24,7 @@ from . import _orm
 from .engine import get_engine
 from .session import session_scope
 
-_log = logging.getLogger(__name__)
+_log = get_logger(__name__)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
