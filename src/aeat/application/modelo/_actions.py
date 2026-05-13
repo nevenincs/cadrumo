@@ -17,12 +17,21 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from ...domain.buckets import (
+    BucketEvent,
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
+    append_bucket_event,
+    derive_bucket_event_id,
+)
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
 )
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
+    CalculationRevisionAmendmentKind,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
@@ -53,21 +62,12 @@ from ...domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
     upsert_verification_report,
 )
-from ...domain.buckets import (
-    BucketEvent,
-    BucketEventHistoryRepository,
-    BucketEventObjectType,
-    BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
-)
 from ...domain.modelos._work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
     WorkUnitState,
     derive_work_unit_id,
 )
-
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 
@@ -144,6 +144,23 @@ class FilingRecordNotFoundError(ModeloError, KeyError):
 
 class VerificationReportNotFoundError(ModeloError, KeyError):
     """Raised when a verification report lookup fails."""
+
+
+class AmendmentEvidenceMissingError(ModeloError):
+    """Raised when the modelo-amend path is asked to amend a filing
+    record that carries no imported official evidence.
+
+    The amend path is gated on ``external_evidence`` being populated
+    on the baseline filing record. A locally-computed filing record
+    must use the standard re-file supersession path (calculate →
+    verify → file) instead of the amend verb.
+    """
+
+
+class AmendmentTargetStateError(ModeloError):
+    """Raised when the modelo-amend path is asked to amend a filing
+    record that is not in ``CURRENT`` status (e.g., it was already
+    superseded by a later filing)."""
 
 
 def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
@@ -1036,7 +1053,219 @@ def get_verification_report(
     return report
 
 
+def amend_modelo_revision(
+    *,
+    from_filing_record_id: str,
+    overrides: Mapping[str, Decimal],
+    amendment_kind: CalculationRevisionAmendmentKind,
+    reason: str,
+    actor: str,
+    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    filing_repository: FilingRecordCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    clock: datetime | None = None,
+) -> FilingRecord:
+    """Build and file an amendment over an externally-filed return.
+
+    Pipeline:
+
+    1. Load the baseline filing record (must exist, must be CURRENT,
+       must carry ``external_evidence``). The evidence gate ensures
+       the amendment runs against AEAT-attested imported data, not a
+       fabricated local original.
+    2. Load the baseline calculation revision; merge its
+       ``casilla_values`` with the operator-supplied ``overrides``
+       to produce the corrected casilla map.
+    3. Persist a new ``DRAFT`` calculation revision carrying
+       ``amendment_kind``, ``amends_filing_record_id``, and the
+       operator-supplied ``reason``.
+    4. Transition it through ``VERIFIED_COMPLETE`` (the verification
+       contract for amendments is identity-equivalent to the
+       calculate path because the registry-snapshot resolver still
+       applies; here we mark it verified-complete directly because
+       the operator opts in by invoking the amend verb).
+    5. Build a new filing record with
+       ``amends_filing_record_id = baseline.filing_record_id`` and
+       status CURRENT; supersede the baseline record.
+    6. Emit a ``modelo.amended`` bucket event linking the new
+       filing record to the baseline.
+
+    Raises:
+        FilingRecordNotFoundError: When ``from_filing_record_id`` is
+            absent from the catalogue.
+        AmendmentEvidenceMissingError: When the baseline record does
+            not carry ``external_evidence``.
+        AmendmentTargetStateError: When the baseline record is not
+            in ``CURRENT`` status.
+        WorkUnitNotFoundError: When the work unit referenced by the
+            baseline record cannot be loaded.
+    """
+
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
+    fr_repo = filing_repository or FilingRecordCatalogueRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+
+    filing_catalogue = fr_repo.load()
+    baseline = filing_catalogue.get(from_filing_record_id)
+    if baseline is None:
+        raise FilingRecordNotFoundError(f"no filing record with id={from_filing_record_id!r}")
+    if baseline.external_evidence is None:
+        raise AmendmentEvidenceMissingError(
+            f"filing record {from_filing_record_id!r} has no external_evidence; the "
+            f"modelo amend path requires an imported AEAT-attested baseline. Use the "
+            f"standard re-file path (calculate → verify → file) for locally-filed returns."
+        )
+    if baseline.status is not FilingRecordStatus.CURRENT:
+        raise AmendmentTargetStateError(
+            f"filing record {from_filing_record_id!r} is in status {baseline.status.value!r}; "
+            f"only CURRENT filings can be amended"
+        )
+
+    work_units = wu_repo.load()
+    work_unit = work_units.get(baseline.work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(
+            f"filing record {from_filing_record_id!r} references missing work_unit_id={baseline.work_unit_id!r}"
+        )
+
+    revisions = cr_repo.load()
+    baseline_revision = revisions.get(baseline.calculation_revision_id)
+    if baseline_revision is None:
+        raise CalculationRevisionNotFoundError(
+            f"baseline calculation revision {baseline.calculation_revision_id!r} is missing from the catalogue"
+        )
+
+    now = clock or datetime.now(UTC)
+    corrected_values: dict[str, Decimal] = dict(baseline_revision.casilla_values)
+    corrected_values.update(overrides)
+
+    new_revision_id = derive_calculation_revision_id(
+        work_unit_id=baseline.work_unit_id,
+        inputs_snapshot=baseline_revision.inputs_snapshot,
+        binding_overrides=baseline_revision.binding_overrides,
+        casilla_values=corrected_values,
+    )
+    if new_revision_id in revisions:
+        raise CalculationRevisionStateError(
+            f"amendment overrides produce calculation_revision_id {new_revision_id!r} "
+            f"that already exists in the catalogue; no-op overrides cannot be filed as amendments"
+        )
+
+    amendment_draft = CalculationRevision(
+        calculation_revision_id=new_revision_id,
+        work_unit_id=baseline.work_unit_id,
+        state=CalculationRevisionState.DRAFT,
+        inputs_snapshot=baseline_revision.inputs_snapshot,
+        binding_overrides=baseline_revision.binding_overrides,
+        casilla_values=corrected_values,
+        created_at=now,
+        updated_at=now,
+        amendment_kind=amendment_kind,
+        amends_filing_record_id=baseline.filing_record_id,
+        amendment_reason=reason.strip(),
+    )
+    revisions = upsert_calculation_revision(revisions, amendment_draft)
+
+    # Transition draft → verified-complete (operator opts in by calling amend).
+    verified_amendment = amendment_draft.model_copy(
+        update={
+            "state": CalculationRevisionState.VERIFIED_COMPLETE,
+            "verified_at": now,
+            "verified_by": actor.strip(),
+            "updated_at": now,
+        }
+    )
+    revisions = upsert_calculation_revision(revisions, verified_amendment)
+
+    new_filing_id = derive_filing_record_id(
+        work_unit_id=baseline.work_unit_id,
+        calculation_revision_id=new_revision_id,
+        filed_at=now,
+        filed_by=actor.strip(),
+    )
+
+    new_filing = FilingRecord(
+        filing_record_id=new_filing_id,
+        work_unit_id=baseline.work_unit_id,
+        calculation_revision_id=new_revision_id,
+        bucket_id=baseline.bucket_id,
+        modelo=baseline.modelo,
+        filing_year=baseline.filing_year,
+        period=baseline.period,
+        filed_at=now,
+        filed_by=actor.strip(),
+        notes=None,
+        aeat_accepted=False,
+        status=FilingRecordStatus.CURRENT,
+        external_evidence=None,
+        amends_filing_record_id=baseline.filing_record_id,
+    )
+
+    superseded_baseline = baseline.model_copy(
+        update={
+            "status": FilingRecordStatus.SUPERSEDED,
+            "superseded_at": now,
+            "superseded_by_filing_record_id": new_filing_id,
+        }
+    )
+    updated_filing_catalogue = upsert_filing_record(filing_catalogue, superseded_baseline)
+    updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
+
+    filed_amendment = verified_amendment.model_copy(
+        update={
+            "state": CalculationRevisionState.FILED,
+            "filed_at": now,
+            "filed_by": actor.strip(),
+            "updated_at": now,
+        }
+    )
+    revisions = upsert_calculation_revision(revisions, filed_amendment)
+
+    cr_repo.save(revisions)
+    fr_repo.save(updated_filing_catalogue)
+
+    wu_repo.save(
+        upsert_work_unit(
+            work_units,
+            work_unit.model_copy(
+                update={
+                    "current_calculation_revision_id": new_revision_id,
+                    "filed_calculation_revision_id": new_revision_id,
+                    "current_filing_record_id": new_filing_id,
+                    "updated_at": now,
+                }
+            ),
+        )
+    )
+
+    _emit_bucket_event(
+        repository=bv_repo,
+        bucket_id=baseline.bucket_id,
+        event_type=BucketEventType.MODELO_AMENDED,
+        occurred_at=now,
+        actor=actor,
+        object_type=BucketEventObjectType.FILING_RECORD,
+        object_id=new_filing_id,
+        payload={
+            "amends_filing_record_id": baseline.filing_record_id,
+            "calculation_revision_id": new_revision_id,
+            "work_unit_id": baseline.work_unit_id,
+            "modelo": str(baseline.modelo),
+            "filing_year": str(baseline.filing_year),
+            "period": baseline.period,
+            "amendment_kind": amendment_kind.value,
+            "override_count": str(len(overrides)),
+        },
+    )
+
+    return new_filing
+
+
 __all__ = [
+    "AmendmentEvidenceMissingError",
+    "AmendmentTargetStateError",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
     "FilingRecordNotFoundError",
@@ -1044,6 +1273,7 @@ __all__ = [
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",
     "WorkUnitNotFoundError",
+    "amend_modelo_revision",
     "calculate_modelo_revision",
     "create_work_unit",
     "discard_work_unit",

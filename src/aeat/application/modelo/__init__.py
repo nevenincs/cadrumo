@@ -16,6 +16,8 @@ state fixture.
 from __future__ import annotations
 
 from ._actions import (
+    AmendmentEvidenceMissingError,
+    AmendmentTargetStateError,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     FilingRecordNotFoundError,
@@ -23,6 +25,7 @@ from ._actions import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
+    amend_modelo_revision,
     calculate_modelo_revision,
     create_work_unit,
     discard_work_unit,
@@ -41,6 +44,8 @@ from ._actions import (
 )
 
 __all__ = [
+    "AmendmentEvidenceMissingError",
+    "AmendmentTargetStateError",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
     "FilingRecordNotFoundError",
@@ -48,6 +53,7 @@ __all__ = [
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",
     "WorkUnitNotFoundError",
+    "amend_modelo_revision",
     "calculate_modelo_revision",
     "create_work_unit",
     "discard_work_unit",

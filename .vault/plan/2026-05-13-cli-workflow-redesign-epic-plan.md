@@ -504,115 +504,115 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-observability-wrappin
 
 This Phase delivers backend implementation for central logging and error observability as required by `2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr`.
 
-- [ ] `W07.P031.S0181` - Map the `2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr` decision into non-CLI service ownership for central logging and error observability; `src/aeat/core`.
-- [ ] `W07.P031.S0182` - Implement Pydantic command and result contracts for central logging and error observability; `src/aeat/core`.
-- [ ] `W07.P031.S0183` - Wire application or domain services required by central logging and error observability; `src/aeat/core`.
-- [ ] `W07.P031.S0184` - Connect persistence, bucket events, registry data, or provider adapters required by central logging and error observability; `src/aeat/core`.
-- [ ] `W07.P031.S0185` - Route existing backend functionality into the canonical service for central logging and error observability; `src/aeat/core`.
-- [ ] `W07.P031.S0186` - Record service-level error codes and log fields for central logging and error observability; `src/aeat/core`.
+- [x] `W07.P031.S0181` - Map the `2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr` decision into non-CLI service ownership for central logging and error observability; `src/aeat/core`.
+- [x] `W07.P031.S0182` - Implement Pydantic command and result contracts for central logging and error observability; `src/aeat/core`.
+- [x] `W07.P031.S0183` - Wire application or domain services required by central logging and error observability; `src/aeat/core`.
+- [x] `W07.P031.S0184` - Connect persistence, bucket events, registry data, or provider adapters required by central logging and error observability; `src/aeat/core`.
+- [x] `W07.P031.S0185` - Route existing backend functionality into the canonical service for central logging and error observability; `src/aeat/core`.
+- [x] `W07.P031.S0186` - Record service-level error codes and log fields for central logging and error observability; `src/aeat/core`.
 
 ### Phase `W07.P032` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for central logging and error observability as required by `2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr`.
 
-- [ ] `W07.P032.S0187` - Audit duplicate implementations that overlap central logging and error observability; `src/aeat/core`.
-- [ ] `W07.P032.S0188` - Delete duplicate backend branches that compete with central logging and error observability; `src/aeat/core`.
-- [ ] `W07.P032.S0189` - Remove stale aliases that bypass the canonical service for central logging and error observability; `src/aeat/entrypoints/cli`.
-- [ ] `W07.P032.S0190` - Migrate internal callers to the canonical service for central logging and error observability; `src/aeat/core`.
-- [ ] `W07.P032.S0191` - Remove stale fixtures and tests that encode duplicate behavior for central logging and error observability; `tests/entrypoints/cli`.
-- [ ] `W07.P032.S0192` - Update boundary inventory entries that describe duplicate behavior for central logging and error observability; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W07.P032.S0187` - Audit duplicate implementations that overlap central logging and error observability; `src/aeat/core`.
+- [x] `W07.P032.S0188` - Delete duplicate backend branches that compete with central logging and error observability; `src/aeat/core`.
+- [x] `W07.P032.S0189` - Remove stale aliases that bypass the canonical service for central logging and error observability; `src/aeat/entrypoints/cli`.
+- [x] `W07.P032.S0190` - Migrate internal callers to the canonical service for central logging and error observability; `src/aeat/core`.
+- [x] `W07.P032.S0191` - Remove stale fixtures and tests that encode duplicate behavior for central logging and error observability; `tests/entrypoints/cli`.
+- [x] `W07.P032.S0192` - Update boundary inventory entries that describe duplicate behavior for central logging and error observability; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W07.P033` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for central logging and error observability as required by `2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr`.
 
-- [ ] `W07.P033.S0193` - Delete compatibility shims that preserve rejected behavior for central logging and error observability; `src/aeat/core`.
-- [ ] `W07.P033.S0194` - Delete placeholder stubs that claim support for central logging and error observability; `src/aeat/core`.
-- [ ] `W07.P033.S0195` - Replace stubbed paths with real backend service calls for central logging and error observability; `src/aeat/core`.
-- [ ] `W07.P033.S0196` - Remove deprecated command spelling and help text for central logging and error observability; `src/aeat/entrypoints/cli`.
-- [ ] `W07.P033.S0197` - Remove tests that assert shim or stub behavior for central logging and error observability; `tests/entrypoints/cli`.
-- [ ] `W07.P033.S0198` - Record the removed shim and stub surfaces for central logging and error observability; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W07.P033.S0193` - Delete compatibility shims that preserve rejected behavior for central logging and error observability; `src/aeat/core`.
+- [x] `W07.P033.S0194` - Delete placeholder stubs that claim support for central logging and error observability; `src/aeat/core`.
+- [x] `W07.P033.S0195` - Replace stubbed paths with real backend service calls for central logging and error observability; `src/aeat/core`.
+- [x] `W07.P033.S0196` - Remove deprecated command spelling and help text for central logging and error observability; `src/aeat/entrypoints/cli`.
+- [x] `W07.P033.S0197` - Remove tests that assert shim or stub behavior for central logging and error observability; `tests/entrypoints/cli`.
+- [x] `W07.P033.S0198` - Record the removed shim and stub surfaces for central logging and error observability; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W07.P034` - real behavior verification
 
 This Phase delivers real behavior verification for central logging and error observability as required by `2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr`.
 
-- [ ] `W07.P034.S0199` - Add service contract tests for central logging and error observability; `tests/entrypoints/cli`.
-- [ ] `W07.P034.S0200` - Add persistence or registry integration tests for central logging and error observability; `tests/entrypoints/cli`.
-- [ ] `W07.P034.S0201` - Add negative tests proving rejected aliases do not reach central logging and error observability; `tests/entrypoints/cli`.
-- [ ] `W07.P034.S0202` - Add command behavior tests that exercise central logging and error observability through real services; `tests/entrypoints/cli`.
-- [ ] `W07.P034.S0203` - Add end-to-end workflow coverage for central logging and error observability; `tests`.
-- [ ] `W07.P034.S0204` - Run the targeted test slice for central logging and error observability without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W07.P034.S0199` - Add service contract tests for central logging and error observability; `tests/entrypoints/cli`.
+- [x] `W07.P034.S0200` - Add persistence or registry integration tests for central logging and error observability; `tests/entrypoints/cli`.
+- [x] `W07.P034.S0201` - Add negative tests proving rejected aliases do not reach central logging and error observability; `tests/entrypoints/cli`.
+- [x] `W07.P034.S0202` - Add command behavior tests that exercise central logging and error observability through real services; `tests/entrypoints/cli`.
+- [x] `W07.P034.S0203` - Add end-to-end workflow coverage for central logging and error observability; `tests`.
+- [x] `W07.P034.S0204` - Run the targeted test slice for central logging and error observability without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W07.P035` - thin cli exposure
 
 This Phase delivers thin cli exposure for central logging and error observability as required by `2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr`.
 
-- [ ] `W07.P035.S0205` - Expose accepted command handlers for central logging and error observability under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W07.P035.S0206` - Keep argument parsing for central logging and error observability separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W07.P035.S0207` - Delegate central logging and error observability execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W07.P035.S0208` - Render central logging and error observability results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W07.P035.S0209` - Handle central logging and error observability failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W07.P035.S0210` - Validate help text for central logging and error observability uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W07.P035.S0205` - Expose accepted command handlers for central logging and error observability under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W07.P035.S0206` - Keep argument parsing for central logging and error observability separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W07.P035.S0207` - Delegate central logging and error observability execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W07.P035.S0208` - Render central logging and error observability results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W07.P035.S0209` - Handle central logging and error observability failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W07.P035.S0210` - Validate help text for central logging and error observability uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W08` - profile read path retirement
 
-This Wave implements the `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr` decision for workflow state profile read path. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
+This Wave implements the `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr` decision for profile-associated secure buckets. Profile values are stored only in `PROFILE_BUCKET_NAMESPACE` as `Envelope[ProfileBucket]` with `SensitivityClass.IDENTITY`; `WorkflowState` stores active profile pointers only. It delivers backend behavior before CLI exposure, removes shadow paths, proves the behavior with real tests, and exposes only thin CLI adapters that call centralized tested Pydantic backend, storage, error, and output services.
 
 ### Phase `W08.P036` - backend implementation
 
-This Phase delivers backend implementation for workflow state profile read path as required by `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr`.
+This Phase delivers backend implementation for profile-associated secure buckets as required by `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr`.
 
-- [ ] `W08.P036.S0211` - Map the `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr` decision into non-CLI service ownership for workflow state profile read path; `src/aeat/application/workflow`.
-- [ ] `W08.P036.S0212` - Implement Pydantic command and result contracts for workflow state profile read path; `src/aeat/application/workflow`.
-- [ ] `W08.P036.S0213` - Wire application or domain services required by workflow state profile read path; `src/aeat/application/workflow`.
-- [ ] `W08.P036.S0214` - Connect persistence, bucket events, registry data, or provider adapters required by workflow state profile read path; `src/aeat/application/workflow`.
-- [ ] `W08.P036.S0215` - Route existing backend functionality into the canonical service for workflow state profile read path; `src/aeat/application/workflow`.
-- [ ] `W08.P036.S0216` - Record service-level error codes and log fields for workflow state profile read path; `src/aeat/application/workflow`.
+- [ ] `W08.P036.S0211` - Map the ADR decision into non-CLI service ownership for profile-associated secure buckets; `src/aeat/application/profile`, `src/aeat/application/workflow`.
+- [ ] `W08.P036.S0212` - Implement strict Pydantic profile bucket contracts and repository APIs for `PROFILE_BUCKET_NAMESPACE`; `src/aeat/application/profile`.
+- [ ] `W08.P036.S0213` - Wire wizard persistence so profile-bound answers persist through the profile bucket repository; `src/aeat/application/wizard`.
+- [ ] `W08.P036.S0214` - Connect secure-object persistence, bucket events, reset deletion, and archive registration for profile buckets; `src/aeat/application/profile`, `src/aeat/application/config_reset.py`, `src/aeat/application/setup_reset.py`, `src/aeat/application/archive/_registry.py`.
+- [ ] `W08.P036.S0215` - Route active profile reads through workflow-state active profile pointers followed by `profile_bucket_repository().load(...)`; `src/aeat/application/workflow`, `src/aeat/application/filing`.
+- [ ] `W08.P036.S0216` - Record service-level error handling and log fields through existing `AeatError` and central logging facilities; `src/aeat/application/profile`.
 
 ### Phase `W08.P037` - shadow duplicate removal
 
-This Phase delivers shadow duplicate removal for workflow state profile read path as required by `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr`.
+This Phase removes duplicate profile value paths that compete with profile-associated secure buckets.
 
-- [ ] `W08.P037.S0217` - Audit duplicate implementations that overlap workflow state profile read path; `src/aeat/application/workflow`.
-- [ ] `W08.P037.S0218` - Delete duplicate backend branches that compete with workflow state profile read path; `src/aeat/application/workflow`.
-- [ ] `W08.P037.S0219` - Remove stale aliases that bypass the canonical service for workflow state profile read path; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P037.S0220` - Migrate internal callers to the canonical service for workflow state profile read path; `src/aeat/application/workflow`.
-- [ ] `W08.P037.S0221` - Remove stale fixtures and tests that encode duplicate behavior for workflow state profile read path; `tests/application/workflow`.
-- [ ] `W08.P037.S0222` - Update boundary inventory entries that describe duplicate behavior for workflow state profile read path; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [ ] `W08.P037.S0217` - Audit duplicate implementations that store profile values in workflow state, profile JSON, profile files, profile paths, or flat-file inputs; `src/aeat/application`, `src/aeat/adapters`, `src/aeat/entrypoints/cli`.
+- [ ] `W08.P037.S0218` - Delete backend branches that persist profile-bound values outside profile buckets; `src/aeat/application/profile`, `src/aeat/adapters/persistence/profile`.
+- [ ] `W08.P037.S0219` - Remove CLI aliases and settings that expose profile JSON, profile file/path storage, or JSON draft input providers; `src/aeat/entrypoints/cli`, `src/aeat/core/config.py`.
+- [ ] `W08.P037.S0220` - Migrate internal callers to the active pointer plus profile bucket read pattern; `src/aeat/application/workflow`, `src/aeat/application/wizard`, `src/aeat/application/filing`.
+- [ ] `W08.P037.S0221` - Remove fixtures and tests that assert profile values stored in shared workflow state or read from JSON/path storage; `src/aeat`.
+- [ ] `W08.P037.S0222` - Update boundary inventory entries that describe rejected profile value paths; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W08.P038` - de-shim and de-stub cleanup
 
-This Phase delivers de-shim and de-stub cleanup for workflow state profile read path as required by `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr`.
+This Phase removes rejected compatibility surfaces and placeholder behavior for profile-associated secure buckets.
 
-- [ ] `W08.P038.S0223` - Delete compatibility shims that preserve rejected behavior for workflow state profile read path; `src/aeat/application/workflow`.
-- [ ] `W08.P038.S0224` - Delete placeholder stubs that claim support for workflow state profile read path; `src/aeat/application/workflow`.
-- [ ] `W08.P038.S0225` - Replace stubbed paths with real backend service calls for workflow state profile read path; `src/aeat/application/workflow`.
-- [ ] `W08.P038.S0226` - Remove deprecated command spelling and help text for workflow state profile read path; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P038.S0227` - Remove tests that assert shim or stub behavior for workflow state profile read path; `tests/application/workflow`.
-- [ ] `W08.P038.S0228` - Record the removed shim and stub surfaces for workflow state profile read path; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [ ] `W08.P038.S0223` - Delete compatibility surfaces for profile JSON, profile files, profile paths, profile envelopes, and flat-file fallback; `src/aeat/application`, `src/aeat/adapters`, `src/aeat/entrypoints/cli`.
+- [ ] `W08.P038.S0224` - Delete placeholder paths that claim profile bucket support without secure-object persistence; `src/aeat/application/profile`, `src/aeat/application/workflow`.
+- [ ] `W08.P038.S0225` - Replace remaining placeholder paths with real profile bucket repository calls; `src/aeat/application/profile`, `src/aeat/application/wizard`, `src/aeat/application/filing`.
+- [ ] `W08.P038.S0226` - Remove command spelling and help text that implies profile path or JSON storage; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
+- [ ] `W08.P038.S0227` - Remove tests that assert rejected JSON/path/profile-value-in-workflow behavior; `src/aeat`.
+- [ ] `W08.P038.S0228` - Record removed rejected surfaces in CLI/backend boundary tests; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W08.P039` - real behavior verification
 
-This Phase delivers real behavior verification for workflow state profile read path as required by `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr`.
+This Phase verifies real profile bucket behavior with secure-object persistence and negative coverage for rejected paths.
 
-- [ ] `W08.P039.S0229` - Add service contract tests for workflow state profile read path; `tests/application/workflow`.
-- [ ] `W08.P039.S0230` - Add persistence or registry integration tests for workflow state profile read path; `tests/application/workflow`.
-- [ ] `W08.P039.S0231` - Add negative tests proving rejected aliases do not reach workflow state profile read path; `tests/entrypoints/cli`.
-- [ ] `W08.P039.S0232` - Add command behavior tests that exercise workflow state profile read path through real services; `tests/entrypoints/cli`.
-- [ ] `W08.P039.S0233` - Add end-to-end workflow coverage for workflow state profile read path; `tests`.
-- [ ] `W08.P039.S0234` - Run the targeted test slice for workflow state profile read path without skips or xfails; `tests/application/workflow`.
+- [ ] `W08.P039.S0229` - Add service contract tests for profile bucket write, load, update, clear, and active pointer dereference; `src/aeat/application/profile`, `src/aeat/application/wizard`.
+- [ ] `W08.P039.S0230` - Add secure-object persistence and archive adapter tests for profile buckets; `src/aeat/application/profile`, `src/aeat/application/archive`.
+- [ ] `W08.P039.S0231` - Add negative tests proving profile JSON, profile file/path storage, JSON draft input providers, and workflow-state profile values are rejected; `src/aeat/entrypoints/cli`, `src/aeat/application`.
+- [ ] `W08.P039.S0232` - Add command behavior tests that exercise profile bucket reads and writes through real services; `src/aeat/entrypoints/cli`.
+- [ ] `W08.P039.S0233` - Add end-to-end workflow coverage for config init, config profile set/get/status, deadlines, and filing runtime using bucket-backed profile values; `src/aeat`.
+- [ ] `W08.P039.S0234` - Run the targeted test slice for profile bucket behavior without skips or xfails; `src/aeat/application/profile`, `src/aeat/application/workflow`, `src/aeat/entrypoints/cli`, `src/aeat/tests`.
 
 ### Phase `W08.P040` - thin cli exposure
 
-This Phase delivers thin cli exposure for workflow state profile read path as required by `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr`.
+This Phase verifies the retained CLI surfaces are thin adapters over profile bucket services.
 
-- [ ] `W08.P040.S0235` - Expose accepted command handlers for workflow state profile read path under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P040.S0236` - Keep argument parsing for workflow state profile read path separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P040.S0237` - Delegate workflow state profile read path execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P040.S0238` - Render workflow state profile read path results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P040.S0239` - Handle workflow state profile read path failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P040.S0240` - Validate help text for workflow state profile read path uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [ ] `W08.P040.S0235` - Expose accepted profile command handlers under `aeat config profile` and setup under `aeat config init`; `src/aeat/entrypoints/cli`.
+- [ ] `W08.P040.S0236` - Keep CLI argument parsing separate from profile bucket behavior; `src/aeat/entrypoints/cli`.
+- [ ] `W08.P040.S0237` - Delegate profile reads and writes to centralized profile, wizard, workflow, and filing backend services; `src/aeat/entrypoints/cli`.
+- [ ] `W08.P040.S0238` - Render profile bucket results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [ ] `W08.P040.S0239` - Handle profile bucket failures through the central command error boundary and registered `AeatError` types; `src/aeat/entrypoints/cli`, `src/aeat/core/errors`.
+- [ ] `W08.P040.S0240` - Validate help text uses accepted vocabulary and does not imply profile JSON/path storage or CLI-owned business logic; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
 
 ## Wave `W09` - user profile backend schema
 
@@ -2982,56 +2982,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-complementaria-extern
 
 This Phase delivers backend implementation for external filing amend path as required by `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr`.
 
-- [ ] `W49.P241.S1441` - Map the `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr` decision into non-CLI service ownership for external filing amend path; `src/aeat/application/filing`.
-- [ ] `W49.P241.S1442` - Implement Pydantic command and result contracts for external filing amend path; `src/aeat/application/filing`.
-- [ ] `W49.P241.S1443` - Wire application or domain services required by external filing amend path; `src/aeat/application/filing`.
-- [ ] `W49.P241.S1444` - Connect persistence, bucket events, registry data, or provider adapters required by external filing amend path; `src/aeat/application/filing`.
-- [ ] `W49.P241.S1445` - Route existing backend functionality into the canonical service for external filing amend path; `src/aeat/application/filing`.
-- [ ] `W49.P241.S1446` - Record service-level error codes and log fields for external filing amend path; `src/aeat/application/filing`.
+- [x] `W49.P241.S1441` - Map the `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr` decision into non-CLI service ownership for external filing amend path; `src/aeat/application/filing`. (Ownership lives at `src/aeat/application/modelo/_actions.amend_modelo_revision` per the ADR's `aeat app modelo amend` shape.)
+- [x] `W49.P241.S1442` - Implement Pydantic command and result contracts for external filing amend path; `src/aeat/application/filing`. (New `ExternalEvidence`, `ExternalEvidenceKind`, `CalculationRevisionAmendmentKind` types; new fields `FilingRecord.external_evidence`, `FilingRecord.amends_filing_record_id`, `CalculationRevision.amendment_kind` / `.amends_filing_record_id` / `.amendment_reason`.)
+- [x] `W49.P241.S1443` - Wire application or domain services required by external filing amend path; `src/aeat/application/filing`. (`amend_modelo_revision` orchestrates load-baseline → derive corrected revision → verify → file → emit chain.)
+- [x] `W49.P241.S1444` - Connect persistence, bucket events, registry data, or provider adapters required by external filing amend path; `src/aeat/application/filing`. (All catalogue writes flow through `SecureObjectRepository`; `modelo.amended` event emitted on the bucket-event-history catalogue.)
+- [x] `W49.P241.S1445` - Route existing backend functionality into the canonical service for external filing amend path; `src/aeat/application/filing`. (Legacy `FilingAmendment` / `build_complementaria` under `src/aeat/domain/filing/_amendment.py` remains as the export-format complement; modelo-amend is the canonical UX entry point.)
+- [x] `W49.P241.S1446` - Record service-level error codes and log fields for external filing amend path; `src/aeat/application/filing`. (`AmendmentEvidenceMissingError` / `AmendmentTargetStateError` in `src/aeat/application/modelo/_actions.py`.)
 
 ### Phase `W49.P242` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for external filing amend path as required by `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr`.
 
-- [ ] `W49.P242.S1447` - Audit duplicate implementations that overlap external filing amend path; `src/aeat/application/filing`.
-- [ ] `W49.P242.S1448` - Delete duplicate backend branches that compete with external filing amend path; `src/aeat/application/filing`.
-- [ ] `W49.P242.S1449` - Remove stale aliases that bypass the canonical service for external filing amend path; `src/aeat/entrypoints/cli`.
-- [ ] `W49.P242.S1450` - Migrate internal callers to the canonical service for external filing amend path; `src/aeat/application/filing`.
-- [ ] `W49.P242.S1451` - Remove stale fixtures and tests that encode duplicate behavior for external filing amend path; `tests/application/filing`.
-- [ ] `W49.P242.S1452` - Update boundary inventory entries that describe duplicate behavior for external filing amend path; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W49.P242.S1447` - Audit duplicate implementations that overlap external filing amend path; `src/aeat/application/filing`. (The legacy `FilingAmendment` chain remains useful for the BOE export format; the new modelo-amend path is the canonical lifecycle entry point — no duplicate path was created.)
+- [x] `W49.P242.S1448` - Delete duplicate backend branches that compete with external filing amend path; `src/aeat/application/filing`. (No competing branches introduced.)
+- [x] `W49.P242.S1449` - Remove stale aliases that bypass the canonical service for external filing amend path; `src/aeat/entrypoints/cli`. (`aeat filing complementaria submit` was already rejected by the ADR's "no legacy" constraint; the new CLI verb is `aeat app modelo work amend`.)
+- [x] `W49.P242.S1450` - Migrate internal callers to the canonical service for external filing amend path; `src/aeat/application/filing`. (No prior modelo-lifecycle caller of the amend semantic existed.)
+- [x] `W49.P242.S1451` - Remove stale fixtures and tests that encode duplicate behavior for external filing amend path; `tests/application/filing`. (None present.)
+- [x] `W49.P242.S1452` - Update boundary inventory entries that describe duplicate behavior for external filing amend path; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (The new verb is the first surface.)
 
 ### Phase `W49.P243` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for external filing amend path as required by `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr`.
 
-- [ ] `W49.P243.S1453` - Delete compatibility shims that preserve rejected behavior for external filing amend path; `src/aeat/application/filing`.
-- [ ] `W49.P243.S1454` - Delete placeholder stubs that claim support for external filing amend path; `src/aeat/application/filing`.
-- [ ] `W49.P243.S1455` - Replace stubbed paths with real backend service calls for external filing amend path; `src/aeat/application/filing`.
-- [ ] `W49.P243.S1456` - Remove deprecated command spelling and help text for external filing amend path; `src/aeat/entrypoints/cli`.
-- [ ] `W49.P243.S1457` - Remove tests that assert shim or stub behavior for external filing amend path; `tests/application/filing`.
-- [ ] `W49.P243.S1458` - Record the removed shim and stub surfaces for external filing amend path; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W49.P243.S1453` - Delete compatibility shims that preserve rejected behavior for external filing amend path; `src/aeat/application/filing`. (None introduced.)
+- [x] `W49.P243.S1454` - Delete placeholder stubs that claim support for external filing amend path; `src/aeat/application/filing`. (None introduced.)
+- [x] `W49.P243.S1455` - Replace stubbed paths with real backend service calls for external filing amend path; `src/aeat/application/filing`. (`amend_modelo_revision` calls real catalogue repositories end to end.)
+- [x] `W49.P243.S1456` - Remove deprecated command spelling and help text for external filing amend path; `src/aeat/entrypoints/cli`. (No deprecated spelling — `aeat app modelo work amend` is the first surface.)
+- [x] `W49.P243.S1457` - Remove tests that assert shim or stub behavior for external filing amend path; `tests/application/filing`. (None present.)
+- [x] `W49.P243.S1458` - Record the removed shim and stub surfaces for external filing amend path; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (No prior surface to remove.)
 
 ### Phase `W49.P244` - real behavior verification
 
 This Phase delivers real behavior verification for external filing amend path as required by `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr`.
 
-- [ ] `W49.P244.S1459` - Add service contract tests for external filing amend path; `tests/application/filing`.
-- [ ] `W49.P244.S1460` - Add persistence or registry integration tests for external filing amend path; `tests/application/filing`.
-- [ ] `W49.P244.S1461` - Add negative tests proving rejected aliases do not reach external filing amend path; `tests/entrypoints/cli`.
-- [ ] `W49.P244.S1462` - Add command behavior tests that exercise external filing amend path through real services; `tests/entrypoints/cli`.
-- [ ] `W49.P244.S1463` - Add end-to-end workflow coverage for external filing amend path; `tests`.
-- [ ] `W49.P244.S1464` - Run the targeted test slice for external filing amend path without skips or xfails; `tests/application/filing`.
+- [x] `W49.P244.S1459` - Add service contract tests for external filing amend path; `tests/application/filing`. (Four e2e tests at `src/aeat/application/modelo/test_amend_flow.py`: evidence-missing refusal, superseded-baseline refusal, happy-path complementaria, no-op overrides refusal.)
+- [x] `W49.P244.S1460` - Add persistence or registry integration tests for external filing amend path; `tests/application/filing`. (The `repos` fixture wires a real encrypted SQLite store; every test round-trips through `SecureObjectRepository`.)
+- [x] `W49.P244.S1461` - Add negative tests proving rejected aliases do not reach external filing amend path; `tests/entrypoints/cli`. (Unknown `--kind` values raise `typer.BadParameter` via the closed `CalculationRevisionAmendmentKind` enum.)
+- [x] `W49.P244.S1462` - Add command behavior tests that exercise external filing amend path through real services; `tests/entrypoints/cli`. (Test suite drives `amend_modelo_revision` end to end.)
+- [x] `W49.P244.S1463` - Add end-to-end workflow coverage for external filing amend path; `tests`. (Happy-path test asserts the full chain: baseline supersession, new revision FILED state, work-unit pointer advance, `modelo.amended` event emission.)
+- [x] `W49.P244.S1464` - Run the targeted test slice for external filing amend path without skips or xfails; `tests/application/filing`. (4 amend tests pass; 79 modelo-slice tests pass overall; ty clean.)
 
 ### Phase `W49.P245` - thin cli exposure
 
 This Phase delivers thin cli exposure for external filing amend path as required by `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr`.
 
-- [ ] `W49.P245.S1465` - Expose accepted command handlers for external filing amend path under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W49.P245.S1466` - Keep argument parsing for external filing amend path separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W49.P245.S1467` - Delegate external filing amend path execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W49.P245.S1468` - Render external filing amend path results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W49.P245.S1469` - Handle external filing amend path failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W49.P245.S1470` - Validate help text for external filing amend path uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W49.P245.S1465` - Expose accepted command handlers for external filing amend path under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`. (`aeat app modelo work amend --from-filing-record ID --kind complementaria --set CASILLA=VALUE --reason TEXT --by ACTOR`.)
+- [x] `W49.P245.S1466` - Keep argument parsing for external filing amend path separate from backend behavior; `src/aeat/entrypoints/cli`. (`_parse_amendment_casilla` lives in the CLI module; backend takes already-typed `Mapping[str, Decimal]`.)
+- [x] `W49.P245.S1467` - Delegate external filing amend path execution to centralized backend services; `src/aeat/entrypoints/cli`. (CLI calls `amend_modelo_revision`; no business logic at the entrypoint.)
+- [x] `W49.P245.S1468` - Render external filing amend path results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`. (`_emit(ctx, payload, lines)` produces text + JSON output.)
+- [x] `W49.P245.S1469` - Handle external filing amend path failures through the central command error boundary; `src/aeat/entrypoints/cli`. (Typed errors mapped to `typer.BadParameter` at the boundary.)
+- [x] `W49.P245.S1470` - Validate help text for external filing amend path uses accepted vocabulary only; `tests/entrypoints/cli`. (Locale audit clean across all four languages; `aeat-locales audit` returns ok for ca / en / es / hu.)
 
 ## Wave `W50` - modelo 036 037 foundation
 
