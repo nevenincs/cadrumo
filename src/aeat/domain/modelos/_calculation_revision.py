@@ -42,7 +42,6 @@ from collections.abc import Mapping
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from types import MappingProxyType
 from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
@@ -179,15 +178,6 @@ class CalculationRevision(BaseModel):
     discarded_by: _ActorLabel | None = None
     discard_reason: _DiscardReason | None = None
 
-    @field_validator("inputs_snapshot", "binding_overrides", "casilla_values", mode="before")
-    @classmethod
-    def _freeze_mapping(cls, value: Any) -> Mapping[str, Any]:
-        if isinstance(value, MappingProxyType):
-            return value
-        if isinstance(value, Mapping):
-            return MappingProxyType(dict(value))
-        raise ModeloValidationError(f"mapping field must be a Mapping, got {type(value).__name__}")
-
     @model_validator(mode="after")
     def _enforce_invariants(self) -> CalculationRevision:
         derived = derive_calculation_revision_id(
@@ -247,15 +237,6 @@ class CalculationRevisionCatalogue(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     revisions: Mapping[str, CalculationRevision] = Field(default_factory=dict)
-
-    @field_validator("revisions", mode="before")
-    @classmethod
-    def _freeze_revisions(cls, value: Any) -> Mapping[str, CalculationRevision]:
-        if isinstance(value, MappingProxyType):
-            return value
-        if isinstance(value, Mapping):
-            return MappingProxyType(dict(value))
-        raise ModeloValidationError(f"revisions must be a Mapping, got {type(value).__name__}")
 
     @model_validator(mode="after")
     def _enforce_keys_match(self) -> CalculationRevisionCatalogue:

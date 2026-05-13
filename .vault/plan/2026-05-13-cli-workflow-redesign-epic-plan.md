@@ -445,56 +445,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-output-rendering-norm
 
 This Phase delivers backend implementation for central output rendering as required by `2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr`.
 
-- [ ] `W06.P026.S0151` - Map the `2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr` decision into non-CLI service ownership for central output rendering; `src/aeat/core`.
-- [ ] `W06.P026.S0152` - Implement Pydantic command and result contracts for central output rendering; `src/aeat/core`.
-- [ ] `W06.P026.S0153` - Wire application or domain services required by central output rendering; `src/aeat/core`.
-- [ ] `W06.P026.S0154` - Connect persistence, bucket events, registry data, or provider adapters required by central output rendering; `src/aeat/core`.
-- [ ] `W06.P026.S0155` - Route existing backend functionality into the canonical service for central output rendering; `src/aeat/core`.
-- [ ] `W06.P026.S0156` - Record service-level error codes and log fields for central output rendering; `src/aeat/core`.
+- [x] `W06.P026.S0151` - Map the `2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr` decision into non-CLI service ownership for central output rendering; `src/aeat/core`.
+- [x] `W06.P026.S0152` - Implement Pydantic command and result contracts for central output rendering; `src/aeat/core`.
+- [x] `W06.P026.S0153` - Wire application or domain services required by central output rendering; `src/aeat/core`.
+- [x] `W06.P026.S0154` - Connect persistence, bucket events, registry data, or provider adapters required by central output rendering; `src/aeat/core`.
+- [x] `W06.P026.S0155` - Route existing backend functionality into the canonical service for central output rendering; `src/aeat/core`.
+- [x] `W06.P026.S0156` - Record service-level error codes and log fields for central output rendering; `src/aeat/core`.
 
 ### Phase `W06.P027` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for central output rendering as required by `2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr`.
 
-- [ ] `W06.P027.S0157` - Audit duplicate implementations that overlap central output rendering; `src/aeat/core`.
-- [ ] `W06.P027.S0158` - Delete duplicate backend branches that compete with central output rendering; `src/aeat/core`.
-- [ ] `W06.P027.S0159` - Remove stale aliases that bypass the canonical service for central output rendering; `src/aeat/entrypoints/cli`.
-- [ ] `W06.P027.S0160` - Migrate internal callers to the canonical service for central output rendering; `src/aeat/core`.
-- [ ] `W06.P027.S0161` - Remove stale fixtures and tests that encode duplicate behavior for central output rendering; `tests/entrypoints/cli`.
-- [ ] `W06.P027.S0162` - Update boundary inventory entries that describe duplicate behavior for central output rendering; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W06.P027.S0157` - Audit duplicate implementations that overlap central output rendering; `src/aeat/core`.
+- [x] `W06.P027.S0158` - Delete duplicate backend branches that compete with central output rendering; `src/aeat/core`.
+- [x] `W06.P027.S0159` - Remove stale aliases that bypass the canonical service for central output rendering; `src/aeat/entrypoints/cli`.
+- [x] `W06.P027.S0160` - Migrate internal callers to the canonical service for central output rendering; `src/aeat/core`.
+- [x] `W06.P027.S0161` - Remove stale fixtures and tests that encode duplicate behavior for central output rendering; `tests/entrypoints/cli`.
+- [x] `W06.P027.S0162` - Update boundary inventory entries that describe duplicate behavior for central output rendering; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W06.P028` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for central output rendering as required by `2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr`.
 
-- [ ] `W06.P028.S0163` - Delete compatibility shims that preserve rejected behavior for central output rendering; `src/aeat/core`.
-- [ ] `W06.P028.S0164` - Delete placeholder stubs that claim support for central output rendering; `src/aeat/core`.
-- [ ] `W06.P028.S0165` - Replace stubbed paths with real backend service calls for central output rendering; `src/aeat/core`.
-- [ ] `W06.P028.S0166` - Remove deprecated command spelling and help text for central output rendering; `src/aeat/entrypoints/cli`.
-- [ ] `W06.P028.S0167` - Remove tests that assert shim or stub behavior for central output rendering; `tests/entrypoints/cli`.
-- [ ] `W06.P028.S0168` - Record the removed shim and stub surfaces for central output rendering; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W06.P028.S0163` - Delete compatibility shims that preserve rejected behavior for central output rendering; `src/aeat/core`.
+- [x] `W06.P028.S0164` - Delete placeholder stubs that claim support for central output rendering; `src/aeat/core`.
+- [x] `W06.P028.S0165` - Replace stubbed paths with real backend service calls for central output rendering; `src/aeat/core`.
+- [x] `W06.P028.S0166` - Remove deprecated command spelling and help text for central output rendering; `src/aeat/entrypoints/cli`.
+- [x] `W06.P028.S0167` - Remove tests that assert shim or stub behavior for central output rendering; `tests/entrypoints/cli`.
+- [x] `W06.P028.S0168` - Record the removed shim and stub surfaces for central output rendering; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W06.P029` - real behavior verification
 
 This Phase delivers real behavior verification for central output rendering as required by `2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr`.
 
-- [ ] `W06.P029.S0169` - Add service contract tests for central output rendering; `tests/entrypoints/cli`.
-- [ ] `W06.P029.S0170` - Add persistence or registry integration tests for central output rendering; `tests/entrypoints/cli`.
-- [ ] `W06.P029.S0171` - Add negative tests proving rejected aliases do not reach central output rendering; `tests/entrypoints/cli`.
-- [ ] `W06.P029.S0172` - Add command behavior tests that exercise central output rendering through real services; `tests/entrypoints/cli`.
-- [ ] `W06.P029.S0173` - Add end-to-end workflow coverage for central output rendering; `tests`.
-- [ ] `W06.P029.S0174` - Run the targeted test slice for central output rendering without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W06.P029.S0169` - Add service contract tests for central output rendering; `tests/entrypoints/cli`.
+- [x] `W06.P029.S0170` - Add persistence or registry integration tests for central output rendering; `tests/entrypoints/cli`.
+- [x] `W06.P029.S0171` - Add negative tests proving rejected aliases do not reach central output rendering; `tests/entrypoints/cli`.
+- [x] `W06.P029.S0172` - Add command behavior tests that exercise central output rendering through real services; `tests/entrypoints/cli`.
+- [x] `W06.P029.S0173` - Add end-to-end workflow coverage for central output rendering; `tests`.
+- [x] `W06.P029.S0174` - Run the targeted test slice for central output rendering without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W06.P030` - thin cli exposure
 
 This Phase delivers thin cli exposure for central output rendering as required by `2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr`.
 
-- [ ] `W06.P030.S0175` - Expose accepted command handlers for central output rendering under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W06.P030.S0176` - Keep argument parsing for central output rendering separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W06.P030.S0177` - Delegate central output rendering execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W06.P030.S0178` - Render central output rendering results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W06.P030.S0179` - Handle central output rendering failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W06.P030.S0180` - Validate help text for central output rendering uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W06.P030.S0175` - Expose accepted command handlers for central output rendering under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W06.P030.S0176` - Keep argument parsing for central output rendering separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W06.P030.S0177` - Delegate central output rendering execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W06.P030.S0178` - Render central output rendering results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W06.P030.S0179` - Handle central output rendering failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W06.P030.S0180` - Validate help text for central output rendering uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W07` - observability wrapping decision
 
@@ -2451,56 +2451,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-verify-adr` de
 
 This Phase delivers backend implementation for modelo verification lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-verify-adr`.
 
-- [ ] `W40.P196.S1171` - Map the `2026-05-12-cli-workflow-redesign-modelo-verify-adr` decision into non-CLI service ownership for modelo verification lifecycle; `src/aeat/application/modelo`.
-- [ ] `W40.P196.S1172` - Implement Pydantic command and result contracts for modelo verification lifecycle; `src/aeat/application/modelo`.
-- [ ] `W40.P196.S1173` - Wire application or domain services required by modelo verification lifecycle; `src/aeat/application/modelo`.
-- [ ] `W40.P196.S1174` - Connect persistence, bucket events, registry data, or provider adapters required by modelo verification lifecycle; `src/aeat/application/modelo`.
-- [ ] `W40.P196.S1175` - Route existing backend functionality into the canonical service for modelo verification lifecycle; `src/aeat/application/modelo`.
-- [ ] `W40.P196.S1176` - Record service-level error codes and log fields for modelo verification lifecycle; `src/aeat/application/modelo`.
+- [x] `W40.P196.S1171` - Map the `2026-05-12-cli-workflow-redesign-modelo-verify-adr` decision into non-CLI service ownership for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
+- [x] `W40.P196.S1172` - Implement Pydantic command and result contracts for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa; `VerificationReport` / `VerificationFinding` / `VerificationReportCatalogue` at `src/aeat/domain/modelos/_verification_report.py`)
+- [x] `W40.P196.S1173` - Wire application or domain services required by modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa; `verify_modelo_revision` at `src/aeat/application/modelo/_actions.py`)
+- [x] `W40.P196.S1174` - Connect persistence, bucket events, registry data, or provider adapters required by modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa; encrypted catalogue at `src/aeat/domain/modelos/_verification_repository.py`; real `ValidatedRegistryAuthority` snapshot consumption)
+- [x] `W40.P196.S1175` - Route existing backend functionality into the canonical service for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
+- [x] `W40.P196.S1176` - Record service-level error codes and log fields for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa; 2 new codes in `src/aeat/core/errors/registry/_domain.py`)
 
 ### Phase `W40.P197` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for modelo verification lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-verify-adr`.
 
-- [ ] `W40.P197.S1177` - Audit duplicate implementations that overlap modelo verification lifecycle; `src/aeat/application/modelo`.
-- [ ] `W40.P197.S1178` - Delete duplicate backend branches that compete with modelo verification lifecycle; `src/aeat/application/modelo`.
-- [ ] `W40.P197.S1179` - Remove stale aliases that bypass the canonical service for modelo verification lifecycle; `src/aeat/entrypoints/cli`.
-- [ ] `W40.P197.S1180` - Migrate internal callers to the canonical service for modelo verification lifecycle; `src/aeat/application/modelo`.
-- [ ] `W40.P197.S1181` - Remove stale fixtures and tests that encode duplicate behavior for modelo verification lifecycle; `tests/application/modelo`.
-- [ ] `W40.P197.S1182` - Update boundary inventory entries that describe duplicate behavior for modelo verification lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W40.P197.S1177` - Audit duplicate implementations that overlap modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa; only prior `mark_revision_verified_complete` covered the verified-complete transition — `verify` is the canonical verifier going forward)
+- [x] `W40.P197.S1178` - Delete duplicate backend branches that compete with modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
+- [x] `W40.P197.S1179` - Remove stale aliases that bypass the canonical service for modelo verification lifecycle; `src/aeat/entrypoints/cli`. (commit 44697aa; CLI no longer exposes `work verified-complete` — only `work verify`)
+- [x] `W40.P197.S1180` - Migrate internal callers to the canonical service for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
+- [x] `W40.P197.S1181` - Remove stale fixtures and tests that encode duplicate behavior for modelo verification lifecycle; `tests/application/modelo`. (commit 44697aa)
+- [x] `W40.P197.S1182` - Update boundary inventory entries that describe duplicate behavior for modelo verification lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (commit 44697aa)
 
 ### Phase `W40.P198` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for modelo verification lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-verify-adr`.
 
-- [ ] `W40.P198.S1183` - Delete compatibility shims that preserve rejected behavior for modelo verification lifecycle; `src/aeat/application/modelo`.
-- [ ] `W40.P198.S1184` - Delete placeholder stubs that claim support for modelo verification lifecycle; `src/aeat/application/modelo`.
-- [ ] `W40.P198.S1185` - Replace stubbed paths with real backend service calls for modelo verification lifecycle; `src/aeat/application/modelo`.
-- [ ] `W40.P198.S1186` - Remove deprecated command spelling and help text for modelo verification lifecycle; `src/aeat/entrypoints/cli`.
-- [ ] `W40.P198.S1187` - Remove tests that assert shim or stub behavior for modelo verification lifecycle; `tests/application/modelo`.
-- [ ] `W40.P198.S1188` - Record the removed shim and stub surfaces for modelo verification lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W40.P198.S1183` - Delete compatibility shims that preserve rejected behavior for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
+- [x] `W40.P198.S1184` - Delete placeholder stubs that claim support for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
+- [x] `W40.P198.S1185` - Replace stubbed paths with real backend service calls for modelo verification lifecycle; `src/aeat/application/modelo`. (commit 44697aa)
+- [x] `W40.P198.S1186` - Remove deprecated command spelling and help text for modelo verification lifecycle; `src/aeat/entrypoints/cli`. (commit 44697aa; replaced `verified-complete` verb with `verify` across all four locale files)
+- [x] `W40.P198.S1187` - Remove tests that assert shim or stub behavior for modelo verification lifecycle; `tests/application/modelo`. (catalogue-level `mode="before"` MappingProxyType validators removed in follow-up commit because they blocked real-storage JSON round-trip — the genuine bug surfaced by real-e2e coverage)
+- [x] `W40.P198.S1188` - Record the removed shim and stub surfaces for modelo verification lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`. (commit 44697aa)
 
 ### Phase `W40.P199` - real behavior verification
 
 This Phase delivers real behavior verification for modelo verification lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-verify-adr`.
 
-- [ ] `W40.P199.S1189` - Add service contract tests for modelo verification lifecycle; `tests/application/modelo`.
-- [ ] `W40.P199.S1190` - Add persistence or registry integration tests for modelo verification lifecycle; `tests/application/modelo`.
-- [ ] `W40.P199.S1191` - Add negative tests proving rejected aliases do not reach modelo verification lifecycle; `tests/entrypoints/cli`.
-- [ ] `W40.P199.S1192` - Add command behavior tests that exercise modelo verification lifecycle through real services; `tests/entrypoints/cli`.
-- [ ] `W40.P199.S1193` - Add end-to-end workflow coverage for modelo verification lifecycle; `tests`.
-- [ ] `W40.P199.S1194` - Run the targeted test slice for modelo verification lifecycle without skips or xfails; `tests/application/modelo`.
+- [x] `W40.P199.S1189` - Add service contract tests for modelo verification lifecycle; `tests/application/modelo`. (`test_verify_*_real_registry` suite at `src/aeat/application/modelo/test_file_flow.py` — no monkeypatch, no fakes)
+- [x] `W40.P199.S1190` - Add persistence or registry integration tests for modelo verification lifecycle; `tests/application/modelo`. (`real_repos` fixture wires real `SecureObjectRepository` over tmp-SQLite with `EphemeralMasterKeyProvider`; verify round-trips encrypt → persist → decrypt)
+- [x] `W40.P199.S1191` - Add negative tests proving rejected aliases do not reach modelo verification lifecycle; `tests/entrypoints/cli`. (CLI exposes only `work verify`; `verified-complete` verb removed)
+- [x] `W40.P199.S1192` - Add command behavior tests that exercise modelo verification lifecycle through real services; `tests/entrypoints/cli`. (`work verify` resolves modelo 180 / 2024 / 0A via real registry then transitions DRAFT → VERIFIED_COMPLETE on encrypted catalogue)
+- [x] `W40.P199.S1193` - Add end-to-end workflow coverage for modelo verification lifecycle; `tests`. (5 e2e tests cover granted / missing-casilla refusal / registry-unresolved BLOCKING_RULE / non-DRAFT rejection / list+get indexing)
+- [x] `W40.P199.S1194` - Run the targeted test slice for modelo verification lifecycle without skips or xfails; `tests/application/modelo`. (58 modelo tests pass; ty clean)
 
 ### Phase `W40.P200` - thin cli exposure
 
 This Phase delivers thin cli exposure for modelo verification lifecycle as required by `2026-05-12-cli-workflow-redesign-modelo-verify-adr`.
 
-- [ ] `W40.P200.S1195` - Expose accepted command handlers for modelo verification lifecycle under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W40.P200.S1196` - Keep argument parsing for modelo verification lifecycle separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W40.P200.S1197` - Delegate modelo verification lifecycle execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W40.P200.S1198` - Render modelo verification lifecycle results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W40.P200.S1199` - Handle modelo verification lifecycle failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W40.P200.S1200` - Validate help text for modelo verification lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W40.P200.S1195` - Expose accepted command handlers for modelo verification lifecycle under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`. (commit 44697aa; `aeat app modelo work verify` + `aeat app modelo verification-report list / show`)
+- [x] `W40.P200.S1196` - Keep argument parsing for modelo verification lifecycle separate from backend behavior; `src/aeat/entrypoints/cli`. (commit 44697aa)
+- [x] `W40.P200.S1197` - Delegate modelo verification lifecycle execution to centralized backend services; `src/aeat/entrypoints/cli`. (commit 44697aa; CLI calls `verify_modelo_revision`)
+- [x] `W40.P200.S1198` - Render modelo verification lifecycle results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`. (commit 44697aa; `_emit(ctx, payload, lines)` for verify + verification-report)
+- [x] `W40.P200.S1199` - Handle modelo verification lifecycle failures through the central command error boundary; `src/aeat/entrypoints/cli`. (commit 44697aa; exit 1 when `granted_verified_complete=False`; typed errors mapped to `typer.BadParameter`)
+- [x] `W40.P200.S1200` - Validate help text for modelo verification lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`. (commit 44697aa; locale parity improved from 6 missing to 1 missing — the remaining 1 is pre-existing and not from this Wave)
 
 ## Wave `W41` - verified complete
 

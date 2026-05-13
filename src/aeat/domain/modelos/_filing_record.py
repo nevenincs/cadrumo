@@ -29,7 +29,6 @@ import json
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from types import MappingProxyType
 from typing import Annotated, Any
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
@@ -171,15 +170,6 @@ class FilingRecordCatalogue(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     records: Mapping[str, FilingRecord] = Field(default_factory=dict)
-
-    @field_validator("records", mode="before")
-    @classmethod
-    def _freeze_records(cls, value: Any) -> Mapping[str, FilingRecord]:
-        if isinstance(value, MappingProxyType):
-            return value
-        if isinstance(value, Mapping):
-            return MappingProxyType(dict(value))
-        raise ModeloValidationError(f"records must be a Mapping, got {type(value).__name__}")
 
     @model_validator(mode="after")
     def _enforce_keys_match(self) -> FilingRecordCatalogue:
