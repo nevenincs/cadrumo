@@ -137,7 +137,7 @@ def test_invalid_decimal_string_raises() -> None:
     bad_inputs = {key: str(value) for key, value in _valid_inputs().items()}
     bad_inputs["01"] = "not-a-decimal"
 
-    with pytest.raises(InvalidOperation):
+    with pytest.raises(InvalidOperation, match=r"ConversionSyntax|InvalidOperation|conversion"):
         build_registry_filing_draft_from_decimals(
             modelo="130",
             period="1T",
@@ -149,7 +149,7 @@ def test_spanish_thousands_rejected_at_boundary() -> None:
     bad_inputs = {key: str(value) for key, value in _valid_inputs().items()}
     bad_inputs["01"] = "5.550,00"
 
-    with pytest.raises(InvalidOperation):
+    with pytest.raises(InvalidOperation, match=r"ConversionSyntax|InvalidOperation|conversion"):
         build_registry_filing_draft_from_decimals(
             modelo="130",
             period="1T",

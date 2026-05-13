@@ -90,7 +90,7 @@ def test_profile_is_frozen_dataclass() -> None:
     from dataclasses import FrozenInstanceError
 
     profile = resolve_profile("claude")
-    with pytest.raises(FrozenInstanceError):
+    with pytest.raises(FrozenInstanceError, match=r"model_id"):
         setattr(profile, "model_id", "changed")  # noqa: B010
 
 

@@ -73,7 +73,7 @@ def test_aliases_reject_mutation_at_runtime() -> None:
     import typing
 
     mapping = typing.cast(typing.Any, FAMILY_ALIASES)
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError, match=r"item assignment|MappingProxyType|does not support"):
         mapping["new_alias"] = (SpendingCategory.TELEFONIA_MOVIL,)
 
 

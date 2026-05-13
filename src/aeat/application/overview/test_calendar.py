@@ -88,7 +88,7 @@ def test_range_round_trips_canonical_window() -> None:
 
 
 def test_range_rejects_inverted_window() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"from_date|to_date|window|range"):
         OverviewCalendarRange(from_date=date(2026, 4, 20), to_date=date(2026, 1, 1))
 
 
@@ -150,17 +150,17 @@ def test_entry_round_trips_canonical_fields() -> None:
 
 
 def test_entry_rejects_inverted_window() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"opens_on|closes_on|window"):
         _entry(opens_on=date(2026, 4, 21), closes_on=date(2026, 4, 20))
 
 
 def test_entry_rejects_payment_cutoff_after_closes_on() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"payment_cutoff|closes_on"):
         _entry(payment_cutoff_on=date(2026, 4, 25))
 
 
 def test_entry_rejects_user_state_inconsistent_with_engine_status() -> None:
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"user_state|status|inconsistent"):
         _entry(status=ObligationStatus.OVERDUE, user_state=OverviewPeriodState.DUE)
 
 

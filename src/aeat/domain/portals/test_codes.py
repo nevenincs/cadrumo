@@ -34,5 +34,5 @@ def test_portal_roundtrip_from_string() -> None:
 
 def test_portal_unknown_string_raises() -> None:
     """Unknown values raise :class:`ValueError`."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"Portal|not a valid|not_a_portal"):
         Portal("not_a_portal")
