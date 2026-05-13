@@ -279,6 +279,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.transactions._errors.LedgerStorageError",
+        ErrorCode(
+            code="FAIL_FINANCIAL_LEDGER_STORAGE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_financial_ledger_storage",
+            default_suggestion="aeat config doctor",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.transactions._errors.LedgerNoActiveBucketError",
+        ErrorCode(
+            code="REFUSED_FINANCIAL_LEDGER_NO_ACTIVE_BUCKET",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_financial_ledger_no_active_bucket",
+            default_suggestion="aeat config init",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.transactions._errors.LLMClassifierError",
         ErrorCode(
             code="FAIL_TRANSACTION_LLM_CLASSIFIER",
@@ -1529,6 +1551,72 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_USER_PROFILE_NOT_FOUND",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_user_profile_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileNotFoundError",
+        ErrorCode(
+            code="REFUSED_PROFILE_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileAlreadyExistsError",
+        ErrorCode(
+            code="REFUSED_PROFILE_ALREADY_EXISTS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_already_exists",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileSchemaValidationError",
+        ErrorCode(
+            code="REFUSED_PROFILE_SCHEMA_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_schema_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfilePreflightMissingError",
+        ErrorCode(
+            code="REFUSED_PROFILE_PREFLIGHT_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_preflight_missing",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileSnapshotHashMismatchError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_SNAPSHOT_HASH_MISMATCH",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_profile_snapshot_hash_mismatch",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileSnapshotNotFoundError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_profile_snapshot_not_found",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

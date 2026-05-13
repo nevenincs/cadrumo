@@ -7,7 +7,15 @@ runtime values are stored by later application/persistence waves.
 
 from __future__ import annotations
 
-from ._errors import UserProfileSchemaLoadError
+from ._errors import (
+    ProfileAlreadyExistsError,
+    ProfileNotFoundError,
+    ProfilePreflightMissingError,
+    ProfileSchemaValidationError,
+    ProfileSnapshotHashMismatchError,
+    ProfileSnapshotNotFoundError,
+    UserProfileSchemaLoadError,
+)
 from ._loader import DEFAULT_USER_PROFILE_SCHEMA_PATH, load_user_profile_schema
 from ._registry_contract import (
     UserProfileRegistryContractIssue,
@@ -37,12 +45,18 @@ from ._values import (
 
 __all__ = [
     "DEFAULT_USER_PROFILE_SCHEMA_PATH",
+    "ProfileAlreadyExistsError",
     "ProfileFactValue",
     "ProfileFieldDefinition",
     "ProfileFieldType",
+    "ProfileNotFoundError",
+    "ProfilePreflightMissingError",
     "ProfileRemovePolicy",
     "ProfileSchemaDefinition",
+    "ProfileSchemaValidationError",
     "ProfileSectionDefinition",
+    "ProfileSnapshotHashMismatchError",
+    "ProfileSnapshotNotFoundError",
     "ProfileSnapshotPolicy",
     "UserProfileFact",
     "UserProfilePortableExport",

@@ -575,9 +575,9 @@ This Phase delivers backend implementation for profile backend schema as require
 - [x] `W09.P041.S0241` - Map the `2026-05-07-user-profile-backend-schema-adr` decision into non-CLI service ownership for profile backend schema; `src/aeat/application/profile`.
 - [x] `W09.P041.S0242` - Implement Pydantic command and result contracts for profile backend schema; `src/aeat/application/profile`.
 - [x] `W09.P041.S0243` - Wire application or domain services required by profile backend schema; `src/aeat/application/profile`.
-- [ ] `W09.P041.S0244` - Connect persistence, bucket events, registry data, or provider adapters required by profile backend schema; `src/aeat/application/profile`.
+- [x] `W09.P041.S0244` - Connect persistence, bucket events, registry data, or provider adapters required by profile backend schema; `src/aeat/application/profile`.
 - [ ] `W09.P041.S0245` - Route existing backend functionality into the canonical service for profile backend schema; `src/aeat/application/profile`.
-- [ ] `W09.P041.S0246` - Record service-level error codes and log fields for profile backend schema; `src/aeat/application/profile`.
+- [x] `W09.P041.S0246` - Record service-level error codes and log fields for profile backend schema; `src/aeat/application/profile`.
 
 ### Phase `W09.P042` - shadow duplicate removal
 
@@ -3663,7 +3663,7 @@ This Phase audits and fixes the transaction catalogue storage boundary so every 
 
 This Phase creates backend-owned manual ledger mutation contracts that persist complete aggregation-visible transaction facts instead of workflow review overlays.
 
-- [ ] `W61.P302.S1807` - Define manual transaction command and result contracts; `src/aeat/application/ledger`.
+- [x] `W61.P302.S1807` - Define manual transaction command and result contracts; `src/aeat/application/ledger`.
 - [ ] `W61.P302.S1808` - Implement create read list and update service operations for manual ledger rows; `src/aeat/application/ledger`.
 - [ ] `W61.P302.S1809` - Persist aggregation-visible base IVA category classification and business percentage fields; `src/aeat/domain/transactions`.
 - [ ] `W61.P302.S1810` - Validate direction zero amount transfer and correction semantics in backend policy; `src/aeat/application/ledger`.
