@@ -39,7 +39,7 @@ class WorkflowAbortedError(WorkflowError):
     """
 
 
-class WorkflowAbortSignal(WorkflowError):  # noqa: N818 - internal control-flow signal, not a public Error
+class WorkflowAbortSignal(WorkflowError):
     """Internal control-flow signal raised by stage methods to bail out.
 
     Named ``WorkflowAbortSignal`` deliberately (rather than

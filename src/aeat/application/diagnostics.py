@@ -15,10 +15,12 @@ from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectRepository,
 )
 from ..core.config import PROJECT_ROOT
-from ..core.logging import default_log_file_path
+from ..core.logging import default_log_file_path, get_logger
 from ..domain.calculations.registry import ValidatedRegistryAuthority
 from .wizard._status import WizardStatusReport, build_wizard_status
 from .workflow import workflow_state_repository
+
+_log = get_logger(__name__)
 
 DiagnosticStatus = Literal["ok", "warn", "fail"]
 
@@ -230,7 +232,8 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     try:
         repo = SecureObjectRepository()
         namespaces = repo.list_namespaces()
-    except Exception:  # pragma: no cover - engine resolution depends on local backend.
+    except Exception as exc:  # pragma: no cover - engine resolution depends on local backend.
+        _log.debug("secure objects engine unreachable for doctor probe: %s: %s", type(exc).__name__, exc)
         return SecureObjectIntegrityReport()
     integrity = tuple(repo.probe_namespace_integrity(ns) for ns in namespaces)
     readable_total = sum(item.readable for item in integrity)
@@ -279,7 +282,7 @@ def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
             name="profile.active",
             status="warn",
             summary="no active profile",
-            next_action="aeat config setup --profile-name NAME --tax-id NIF",
+            next_action="aeat config init --profile NAME --tax-id NIF",
         )
     if not report.profile_ready:
         return DiagnosticCheck(

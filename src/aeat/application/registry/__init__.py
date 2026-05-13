@@ -1,0 +1,467 @@
+"""Application services for read-only registry workflows."""
+
+from __future__ import annotations
+
+from calendar import monthrange
+from datetime import date
+from decimal import Decimal
+from pathlib import Path
+from typing import NamedTuple, cast
+
+from pydantic import BaseModel, ConfigDict
+
+from ...adapters.outbound.aeat.sede import (
+    FiledDeclarationObservationStore,
+    registry_observation_from_filed_declaration,
+)
+from ...adapters.persistence.storage import MasterKeyProvider
+from ...domain.calculations.registry import (
+    calculate_registry_snapshot,
+    generate_parity_tape_path,
+    load_parity_scenario,
+    load_parity_tape,
+    replay_parity_tape,
+    resolve_previous_filing_binding_values,
+    resolve_relation_values_from_observations,
+    run_parity_scenario,
+    save_parity_tape,
+    verify_workbook_backend,
+)
+from ...domain.calculations.registry._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
+from ...domain.calculations.registry._authority import ValidatedRegistryAuthority
+from ...domain.calculations.registry._filed_state import (
+    RegistryFiledStateComparison,
+    compare_calculation_to_filed_observation,
+)
+from ...domain.calculations.registry._groi_oracle import GroiOracle
+from ...domain.calculations.registry._live_parity import (
+    CrossReferenceApplicabilityDeclaration,
+    LiveParityCatalogue,
+    OracleEnvironment,
+    audit_registry_oracle_bindings,
+    collect_applicability_declarations,
+    collect_orphan_oracle_ids,
+)
+from ...domain.calculations.registry._loader import load_registry_tree
+from ...domain.calculations.registry._workbook_parity import WorkbookBackendVerificationReport
+from ._errors import RegistryApplicationError, RegistryApplicationInputError
+
+
+class RegistryTreeReport(BaseModel):
+    """Read-only registry tree load or verification result."""
+
+    model_config = ConfigDict(frozen=True)
+
+    registry_root: str
+    source_root: str | None = None
+    modelo_count: int
+    revision_count: int
+    legal_reference_count: int
+    source_reference_count: int
+    casilla_count: int
+    formula_count: int
+    extraction_profile_count: int
+    cross_reference_count: int
+    workbook_parity_ref_count: int
+    verification_expectation_count: int
+    application_link_count: int
+    application_link_surfaces: tuple[str, ...]
+    relation_count: int
+    relation_dependency_roles: tuple[str, ...]
+    filing_schedule_count: int
+    modelos: tuple[str, ...]
+    revision_details: tuple[RegistryRevisionDetailReport, ...]
+    verified: bool
+
+
+class RegistryWorkbookParityDetailReport(BaseModel):
+    """Workbook parity coverage declared by one registry revision."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: str
+    workbook_source: str
+    formula_coverage: str
+    runner_required: bool
+    output_cell_count: int
+
+
+class RegistryRevisionDetailReport(BaseModel):
+    """Read-only details for one modelo revision from the central registry."""
+
+    model_config = ConfigDict(frozen=True)
+
+    modelo: str
+    revision: str
+    legal_refs: tuple[str, ...]
+    source_refs: tuple[str, ...]
+    export_layout_ids: tuple[str, ...]
+    export_layout_count: int
+    export_record_count: int
+    export_field_count: int
+    deadline_window_count: int
+    deadline_periods: tuple[str, ...]
+    relation_ids: tuple[str, ...]
+    relation_count: int
+    relation_dependency_roles: tuple[str, ...]
+    filing_schedule_ids: tuple[str, ...]
+    filing_schedule_count: int
+    portal_guard_policy_ids: tuple[str, ...]
+    workbook_parity: tuple[RegistryWorkbookParityDetailReport, ...]
+    support_removal_decision_count: int
+
+
+class FiledStateVerificationReport(BaseModel):
+    """Local registry calculation versus filed AEAT state verification report."""
+
+    model_config = ConfigDict(frozen=True)
+
+    observation_path: str
+    source_observation_paths: tuple[str, ...]
+    comparison: RegistryFiledStateComparison
+
+
+class RegistryOracleAuditReport(BaseModel):
+    """Live-parity oracle binding audit report."""
+
+    model_config = ConfigDict(frozen=True)
+
+    environment: str
+    registered_oracle_ids: tuple[str, ...]
+    failure_count: int
+    failures: tuple[str, ...]
+    applicability_declarations: tuple[CrossReferenceApplicabilityDeclaration, ...]
+    orphan_oracle_ids: tuple[str, ...]
+
+
+class RegistryRevisionInventory(NamedTuple):
+    casilla_count: int
+    formula_count: int
+    extraction_profile_count: int
+    cross_reference_count: int
+    workbook_parity_ref_count: int
+    verification_expectation_count: int
+    application_link_count: int
+    application_link_surfaces: tuple[str, ...]
+    relation_count: int
+    relation_dependency_roles: tuple[str, ...]
+    filing_schedule_count: int
+
+
+def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
+    """Load the registry tree and return stable read-only inventory counts."""
+
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=Path("."))
+    modelos = authority.modelos
+    catalogues = authority.catalogues
+    inventory = _revision_inventory(modelos)
+    return RegistryTreeReport(
+        registry_root=str(registry_root),
+        modelo_count=len(modelos),
+        revision_count=sum(len(modelo.revisions) for modelo in modelos),
+        legal_reference_count=len(catalogues.legal),
+        source_reference_count=len(catalogues.sources),
+        casilla_count=inventory.casilla_count,
+        formula_count=inventory.formula_count,
+        extraction_profile_count=inventory.extraction_profile_count,
+        cross_reference_count=inventory.cross_reference_count,
+        workbook_parity_ref_count=inventory.workbook_parity_ref_count,
+        verification_expectation_count=inventory.verification_expectation_count,
+        application_link_count=inventory.application_link_count,
+        application_link_surfaces=inventory.application_link_surfaces,
+        relation_count=inventory.relation_count,
+        relation_dependency_roles=inventory.relation_dependency_roles,
+        filing_schedule_count=inventory.filing_schedule_count,
+        modelos=tuple(sorted(modelo.id for modelo in modelos)),
+        revision_details=_revision_details(modelos),
+        verified=False,
+    )
+
+
+def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryTreeReport:
+    """Load and fail-fast validate every registry modelo against shared catalogues."""
+
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    authority.validate_registry()
+    modelos = authority.modelos
+    catalogues = authority.catalogues
+    inventory = _revision_inventory(modelos)
+    return RegistryTreeReport(
+        registry_root=str(registry_root),
+        source_root=str(source_root),
+        modelo_count=len(modelos),
+        revision_count=sum(len(modelo.revisions) for modelo in modelos),
+        legal_reference_count=len(catalogues.legal),
+        source_reference_count=len(catalogues.sources),
+        casilla_count=inventory.casilla_count,
+        formula_count=inventory.formula_count,
+        extraction_profile_count=inventory.extraction_profile_count,
+        cross_reference_count=inventory.cross_reference_count,
+        workbook_parity_ref_count=inventory.workbook_parity_ref_count,
+        verification_expectation_count=inventory.verification_expectation_count,
+        application_link_count=inventory.application_link_count,
+        application_link_surfaces=inventory.application_link_surfaces,
+        relation_count=inventory.relation_count,
+        relation_dependency_roles=inventory.relation_dependency_roles,
+        filing_schedule_count=inventory.filing_schedule_count,
+        modelos=tuple(sorted(modelo.id for modelo in modelos)),
+        revision_details=_revision_details(modelos),
+        verified=True,
+    )
+
+
+def audit_registry_oracles(registry_root: Path, *, environment: str) -> RegistryOracleAuditReport:
+    """Audit registered live-parity oracles against every registry cross-reference."""
+
+    if environment not in {"production", "test_environment", "both"}:
+        raise RegistryApplicationInputError(
+            f"environment must be 'production', 'test_environment', or 'both'; got {environment!r}"
+        )
+    modelos, _catalogues = load_registry_tree(registry_root)
+    oracle_catalogue = LiveParityCatalogue()
+    oracle_catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    oracle_catalogue.register(GroiOracle(), environment="production")
+    failures = audit_registry_oracle_bindings(
+        modelos,
+        oracle_catalogue,
+        environment=cast(OracleEnvironment, environment),
+    )
+    applicability_declarations = collect_applicability_declarations(modelos)
+    orphan_oracle_ids = collect_orphan_oracle_ids(modelos, oracle_catalogue)
+    return RegistryOracleAuditReport(
+        environment=environment,
+        registered_oracle_ids=tuple(sorted(oracle_catalogue.ids())),
+        failure_count=len(failures),
+        failures=tuple(failures),
+        applicability_declarations=applicability_declarations,
+        orphan_oracle_ids=tuple(orphan_oracle_ids),
+    )
+
+
+def verify_filed_state(
+    *,
+    observation_path: Path,
+    source_observation_paths: tuple[Path, ...] = (),
+    registry_root: Path = Path("registry/aeat"),
+    source_root: Path = Path("."),
+    required_casillas: tuple[str, ...] = (),
+    master_key_provider: MasterKeyProvider | None = None,
+) -> FiledStateVerificationReport:
+    """Compare a local registry calculation to a captured filed observation."""
+
+    filed_observation = _load_filed_observation(observation_path, master_key_provider=master_key_provider)
+    registry_observation = registry_observation_from_filed_declaration(filed_observation)
+    source_observations = tuple(
+        _load_filed_observation(path, master_key_provider=master_key_provider) for path in source_observation_paths
+    )
+    registry_source_observations = tuple(
+        registry_observation_from_filed_declaration(observation) for observation in source_observations
+    )
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    snapshot = authority.snapshot(
+        filed_observation.modelo,
+        filing_year=filed_observation.ejercicio,
+        period=filed_observation.period,
+    )
+    input_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind != "computed"}
+    inputs: dict[str, Decimal] = {
+        casilla_id: value
+        for casilla_id, value in registry_observation.casilla_values.items()
+        if casilla_id in input_casillas
+    }
+    binding_values = resolve_previous_filing_binding_values(
+        snapshot.revision,
+        registry_source_observations,
+        filing_year=filed_observation.ejercicio,
+        period=filed_observation.period,
+    )
+    relation_values = resolve_relation_values_from_observations(
+        snapshot.revision,
+        registry_source_observations,
+        filing_year=filed_observation.ejercicio,
+        period=filed_observation.period,
+    )
+    calculation = calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": _filing_period_date(filed_observation.period, filed_observation.ejercicio)},
+        binding_values=binding_values,
+        relation_values=relation_values,
+    )
+    casillas = required_casillas or tuple(
+        casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == "computed"
+    )
+    comparison = compare_calculation_to_filed_observation(
+        calculation,
+        registry_observation,
+        required_casillas=casillas,
+    )
+    return FiledStateVerificationReport(
+        observation_path=str(observation_path),
+        source_observation_paths=tuple(str(path) for path in source_observation_paths),
+        comparison=comparison,
+    )
+
+
+def verify_registry_workbooks(
+    *,
+    root: Path,
+    limit: int | None = None,
+    per_file_timeout_seconds: float = 10.0,
+    resume_from: Path | None = None,
+    output: Path | None = None,
+) -> WorkbookBackendVerificationReport:
+    """Run workbook backend verification and optionally persist the JSON report."""
+
+    previous_report = None
+    if resume_from is not None:
+        previous_report = WorkbookBackendVerificationReport.model_validate_json(resume_from.read_text(encoding="utf-8"))
+    report = verify_workbook_backend(
+        root,
+        scan_limit=limit,
+        per_file_timeout_seconds=per_file_timeout_seconds,
+        previous_report=previous_report,
+    )
+    if output is not None:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(report.model_dump_json(indent=2), encoding="utf-8")
+    return report
+
+
+def run_registry_parity(
+    *,
+    scenario_path: Path,
+    registry_root: Path,
+    source_root: Path,
+    store_root: Path,
+    output: Path | None = None,
+):
+    """Run one stored parity scenario and archive the resulting tape."""
+
+    scenario = load_parity_scenario(scenario_path)
+    tape = run_parity_scenario(
+        scenario,
+        registry_root=registry_root,
+        source_root=source_root,
+        scenario_path=scenario_path,
+    )
+    target = output or generate_parity_tape_path(store_root, scenario.id, tape.created_at)
+    save_parity_tape(tape, target)
+    return tape, target
+
+
+def replay_registry_parity(
+    *,
+    tape_path: Path,
+    registry_root: Path,
+    source_root: Path,
+):
+    """Replay one archived parity tape against the current registry runtime."""
+
+    tape = load_parity_tape(tape_path)
+    return replay_parity_tape(
+        tape,
+        registry_root=registry_root,
+        source_root=source_root,
+        tape_path=tape_path,
+    )
+
+
+def _revision_inventory(modelos) -> RegistryRevisionInventory:
+    revisions = tuple(revision for modelo in modelos for revision in modelo.revisions.values())
+    application_surfaces = {link.surface for revision in revisions for link in revision.application_links}
+    relation_roles = {relation.dependency_role for revision in revisions for relation in revision.relations}
+    return RegistryRevisionInventory(
+        casilla_count=sum(len(revision.casillas) for revision in revisions),
+        formula_count=sum(len(revision.formulas) for revision in revisions),
+        extraction_profile_count=sum(len(revision.extraction_profiles) for revision in revisions),
+        cross_reference_count=sum(len(revision.live_cross_references) for revision in revisions),
+        workbook_parity_ref_count=sum(len(revision.workbook_parity_refs) for revision in revisions),
+        verification_expectation_count=sum(len(revision.verification_expectations) for revision in revisions),
+        application_link_count=sum(len(revision.application_links) for revision in revisions),
+        application_link_surfaces=tuple(sorted(application_surfaces)),
+        relation_count=sum(len(revision.relations) for revision in revisions),
+        relation_dependency_roles=tuple(sorted(relation_roles)),
+        filing_schedule_count=sum(len(revision.filing_schedules) for revision in revisions),
+    )
+
+
+def _revision_details(modelos) -> tuple[RegistryRevisionDetailReport, ...]:
+    reports: list[RegistryRevisionDetailReport] = []
+    for modelo in sorted(modelos, key=lambda item: item.id):
+        for revision_id, revision in sorted(modelo.revisions.items()):
+            export_records = tuple(record for layout in revision.export_layouts for record in layout.records)
+            export_fields = tuple(field for record in export_records for field in record.fields)
+            workbook_parity = tuple(
+                RegistryWorkbookParityDetailReport(
+                    id=str(reference.id),
+                    workbook_source=str(reference.workbook_source),
+                    formula_coverage=reference.formula_coverage,
+                    runner_required=reference.runner_required,
+                    output_cell_count=len(reference.output_cells),
+                )
+                for reference in sorted(revision.workbook_parity_refs, key=lambda item: item.id)
+            )
+            reports.append(
+                RegistryRevisionDetailReport(
+                    modelo=str(modelo.id),
+                    revision=str(revision_id),
+                    legal_refs=tuple(str(ref) for ref in revision.legal_refs),
+                    source_refs=tuple(str(ref) for ref in revision.source_refs),
+                    export_layout_ids=tuple(str(layout.id) for layout in revision.export_layouts),
+                    export_layout_count=len(revision.export_layouts),
+                    export_record_count=len(export_records),
+                    export_field_count=len(export_fields),
+                    deadline_window_count=len(revision.deadline_windows),
+                    deadline_periods=tuple(sorted(window.period for window in revision.deadline_windows)),
+                    relation_ids=tuple(str(relation.id) for relation in revision.relations),
+                    relation_count=len(revision.relations),
+                    relation_dependency_roles=tuple(
+                        sorted({relation.dependency_role for relation in revision.relations})
+                    ),
+                    filing_schedule_ids=tuple(str(schedule.id) for schedule in revision.filing_schedules),
+                    filing_schedule_count=len(revision.filing_schedules),
+                    portal_guard_policy_ids=tuple(
+                        sorted({decision.guard_policy_id for decision in revision.live_cross_references})
+                    ),
+                    workbook_parity=workbook_parity,
+                    support_removal_decision_count=len(revision.support_removal_decisions),
+                )
+            )
+    return tuple(reports)
+
+
+def _load_filed_observation(path: Path, *, master_key_provider: MasterKeyProvider | None = None):
+    return FiledDeclarationObservationStore(path.parent, master_key_provider=master_key_provider).load_observation(path)
+
+
+def _filing_period_date(period: str, filing_year: int) -> date:
+    if period == "1T":
+        return date(filing_year, 3, 31)
+    if period == "2T":
+        return date(filing_year, 6, 30)
+    if period == "3T":
+        return date(filing_year, 9, 30)
+    if period in {"4T", "0A"}:
+        return date(filing_year, 12, 31)
+    if period.isdigit() and len(period) == 2:
+        month = int(period)
+        if 1 <= month <= 12:
+            return date(filing_year, month, monthrange(filing_year, month)[1])
+    return date(filing_year, 12, 31)
+
+
+__all__ = [
+    "FiledStateVerificationReport",
+    "RegistryApplicationError",
+    "RegistryApplicationInputError",
+    "RegistryOracleAuditReport",
+    "RegistryTreeReport",
+    "audit_registry_oracles",
+    "inspect_registry_tree",
+    "replay_registry_parity",
+    "run_registry_parity",
+    "verify_filed_state",
+    "verify_registry_tree",
+    "verify_registry_workbooks",
+]

@@ -39,7 +39,7 @@ from ...adapters.outbound.aeat.export import (
 )
 from ...adapters.outbound.aeat.sede import Expediente, NotificationsSnapshot, RemoteNotification
 from ...application.auth import AuthProviderDescription, AuthProviderKind
-from ...core.config import PROJECT_ROOT, Settings
+from ...core.config import Settings
 from ...core.errors import SiteHealthError
 from ...domain.deadlines import (
     AutonomoProfile,
@@ -49,6 +49,7 @@ from ...domain.deadlines import (
     Schedule,
 )
 from ...domain.submission import SubmissionPreflightError
+from ...tests import FIXTURES_DIR
 from ..filing.runtime import build_runtime_schema_provider
 from . import (
     CertificateBundleProtocol,
@@ -571,7 +572,7 @@ class TestSiteUnavailableArm:
 
     def test_site_unavailable_from_deadline_engine(self) -> None:
         """A real ``SiteHealthError`` built from a fixture terminates cleanly."""
-        fixture_path = PROJECT_ROOT / "tests" / "fixtures" / "site_health" / "mantenimiento" / "interstitial.html"
+        fixture_path = FIXTURES_DIR / "site_health" / "mantenimiento" / "interstitial.html"
         body = Path(fixture_path).read_text(encoding="utf-8")
         real_status = evaluate_response(
             "https://sede.agenciatributaria.gob.es/",
@@ -596,7 +597,7 @@ class TestSiteUnavailableArm:
 
     def test_site_unavailable_after_obligation_resolved_matches_run_id(self) -> None:
         """A site-health alert raised AFTER deadlines resolved must agree on run_id."""
-        fixture_path = PROJECT_ROOT / "tests" / "fixtures" / "site_health" / "mantenimiento" / "interstitial.html"
+        fixture_path = FIXTURES_DIR / "site_health" / "mantenimiento" / "interstitial.html"
         body = Path(fixture_path).read_text(encoding="utf-8")
         real_status = evaluate_response(
             "https://sede.agenciatributaria.gob.es/",

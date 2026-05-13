@@ -51,7 +51,6 @@ from ...domain.vat import (
 )
 from ._errors import AggregationValidationError, t
 
-
 _LedgerId = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
@@ -166,9 +165,7 @@ def validate_oss_ioss_observation(
     persisted = candidate.iva_amount.quantize(Decimal("0.01"))
     if abs(persisted - expected) > _IVA_TOLERANCE:
         raise AggregationValidationError(
-            t(
-                "oss_ioss_iva_amount_mismatches_destination_rate"
-            ),
+            t("oss_ioss_iva_amount_mismatches_destination_rate"),
             context={
                 "ledger_id": candidate.ledger_id,
                 "destination_member_state": candidate.destination_member_state.value,

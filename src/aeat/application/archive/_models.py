@@ -53,7 +53,7 @@ class ArchiveRecord(BaseModel):
         hashed_object_key_b64: Base64-encoded 32-byte HMAC digest for
             namespaces whose natural key is not recoverable from the
             payload (path-keyed namespaces such as
-            ``aeat.application.setup.profile``). The receiving side
+            ``aeat.application.profile.bucket``). The receiving side
             must share the master key the digest was computed under;
             cross-master-key restores cannot use this field.
         classification: The :class:`SensitivityClass` declared by the

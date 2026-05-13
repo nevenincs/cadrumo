@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-import contextlib
 from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.logging import get_logger
 from ...domain.invoices import Invoice, InvoiceCatalogue
 from ...domain.transactions import TransactionCatalogue
 from ..review import InvoiceReviewFilterSpec, InvoiceReviewRecord, update_invoice_review
 from ..workflow import WorkflowState
+
+_log = get_logger(__name__)
 
 
 class InvoiceReviewProjection(BaseModel):
@@ -119,8 +121,10 @@ def invoice_display_amounts(
         if rate_raw.startswith("RATE_"):
             rate_decimal = Decimal(rate_raw[5:]) / Decimal("100")
         else:
-            with contextlib.suppress(InvalidOperation):
+            try:
                 rate_decimal = Decimal(rate_raw) / Decimal("100")
+            except InvalidOperation:
+                _log.debug("invoice review iva.rate %r is not a valid decimal; ignoring rate override", rate_raw)
     if "iva.amount" in review.fields:
         iva = Decimal(review.fields["iva.amount"])
     elif rate_decimal is not None and base is not None:

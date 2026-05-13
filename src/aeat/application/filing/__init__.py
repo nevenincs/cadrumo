@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
 from datetime import UTC, date, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
 from ...core.paths import PROJECT_ROOT
@@ -342,7 +342,7 @@ def _decimal_input(input_id: str, value: object) -> Decimal:
     if isinstance(value, int | str):
         try:
             return Decimal(value)
-        except Exception as exc:
+        except (InvalidOperation, ValueError, TypeError) as exc:
             raise FilingBuilderError(f"input {input_id!r} must be a Decimal value") from exc
     raise FilingBuilderError(f"input {input_id!r} must be a Decimal value")
 

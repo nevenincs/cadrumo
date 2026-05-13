@@ -16,10 +16,8 @@ than failing.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from datetime import date
-from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from ...core.config import Settings, load_settings
@@ -128,50 +126,6 @@ class SubmissionEngineAdapter:
         self._engine.preflight(draft, today=today)
 
 
-class JsonFileInputsProvider:
-    """Read casilla inputs from the settings-configured JSON file.
-
-    The JSON file must hold ``modelo -> period -> inputs``. The workflow
-    refuses root-level casilla payloads so a caller cannot bypass the
-    explicit modelo/period registry selection performed by the filing
-    draft builder.
-    """
-
-    def __init__(self, path: Path | None) -> None:
-        """Store the configured inputs file path."""
-        self._path = path
-
-    def load_inputs(
-        self,
-        *,
-        modelo: str,
-        period: str,
-        profile: AutonomoProfile,
-    ) -> Mapping[str, object]:
-        """Read and return the JSON inputs for ``(modelo, period)``."""
-        del profile  # intentionally unused; profile is read by the builder directly
-        if self._path is None:
-            raise WorkflowError("AEAT_WORKFLOW_DRAFT_INPUTS_PATH is unset; cannot build a draft")
-        if not self._path.exists():
-            raise WorkflowError(f"workflow draft inputs file not found: {self._path}")
-        try:
-            raw = json.loads(self._path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            _logger.error("workflow draft inputs file %s is malformed JSON", self._path, exc_info=True)
-            raise WorkflowError(f"workflow draft inputs file {self._path} is not valid JSON: {exc}") from exc
-        if not isinstance(raw, dict):
-            raise WorkflowError(f"workflow draft inputs file {self._path} must be a JSON object")
-        modelo_section = raw.get(modelo)
-        if not isinstance(modelo_section, dict):
-            raise WorkflowError(f"workflow draft inputs file {self._path} must contain object for modelo {modelo!r}")
-        period_section = modelo_section.get(period)
-        if not isinstance(period_section, dict):
-            raise WorkflowError(
-                f"workflow draft inputs file {self._path} must contain object for modelo {modelo!r} period {period!r}"
-            )
-        return period_section
-
-
 def default_engine(
     *,
     submission_engine: SubmissionEngineProtocol,
@@ -198,9 +152,9 @@ def default_engine(
             ``None`` skips both the inbox probe and the already-filed
             probe (both stages record a "not wired" diagnostic).
         certificate_bundle: Optional certificate Protocol.
-        inputs_provider: Optional inputs Protocol; defaults to a
-            :class:`JsonFileInputsProvider` backed by
-            ``settings.aeat_workflow_draft_inputs_path``.
+        inputs_provider: Required inputs Protocol. Sensitive draft
+            inputs come from bucket-backed application services, not
+            JSON files.
         settings: Optional :class:`Settings` override.
 
     Returns:
@@ -215,14 +169,15 @@ def default_engine(
         raise WorkflowError("default_engine requires a deadline_engine adapter")
     if filing_draft_builder is None:
         raise WorkflowError("default_engine requires a filing_draft_builder adapter")
-    provider = inputs_provider or JsonFileInputsProvider(cfg.aeat_workflow_draft_inputs_path)
+    if inputs_provider is None:
+        raise WorkflowError("default_engine requires a bucket-backed filing inputs provider")
     return WorkflowEngine(
         deadline_engine=deadline_engine,
         filing_draft_builder=filing_draft_builder,
         submission_engine=submission_engine,
         session=session,
         certificate_bundle=certificate_bundle,
-        inputs_provider=provider,
+        inputs_provider=inputs_provider,
         settings=cfg,
     )
 
@@ -233,7 +188,6 @@ def default_engine(
 __all__ = [
     "DeadlineEngineAdapter",
     "FilingDraftBuilderAdapter",
-    "JsonFileInputsProvider",
     "SubmissionEngineAdapter",
     "SubmissionPreflightError",
     "default_engine",

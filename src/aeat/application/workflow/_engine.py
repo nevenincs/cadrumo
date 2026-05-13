@@ -32,7 +32,7 @@ from ...domain.deadlines import AutonomoProfile, FilingObligation, Schedule, nex
 from ...domain.filing import FilingBuilderError
 from ...domain.submission import SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
-from ._errors import WorkflowAbortSignal, WorkflowComponentError
+from ._errors import WorkflowAbortSignal, WorkflowComponentError, WorkflowError
 from ._models import (
     DeclarationPointer,
     SiteHealthAlert,
@@ -90,7 +90,7 @@ def _period_to_year(period: str) -> int | None:
 def _registry_period_token(period: str) -> tuple[int, str]:
     year = _period_to_year(period)
     if year is None:
-        raise ValueError(f"cannot derive registry year from workflow period {period!r}")
+        raise WorkflowError(f"cannot derive registry year from workflow period {period!r}")
     if period == str(year) or period == f"{year}A":
         return year, "0A"
     if len(period) == 6 and period.startswith(f"{year}Q") and period[-1] in "1234":
@@ -101,7 +101,7 @@ def _registry_period_token(period: str) -> tuple[int, str]:
             return year, f"{month:02d}"
     if len(period) == 7 and period.startswith(f"{year}-"):
         return year, period[-2:]
-    raise ValueError(f"cannot map workflow period {period!r} to a registry period")
+    raise WorkflowError(f"cannot map workflow period {period!r} to a registry period")
 
 
 _logger = get_logger(__name__)

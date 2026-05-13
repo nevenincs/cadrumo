@@ -15,8 +15,8 @@ Key entry points:
 * :func:`filing_profile_from_autonomo` — projects taxpayer identity from a
   domain :class:`aeat.domain.deadlines.AutonomoProfile` into the runtime
   profile shape without deriving legal filing obligations.
-* :func:`load_default_filing_profile` — loads the configured default
-  profile JSON and returns a runtime profile.
+* :func:`load_default_filing_profile` — loads the active profile bucket
+  and returns a runtime profile.
 * :func:`build_runtime_schema_provider` — requires registry-backed snapshots.
 """
 
@@ -178,12 +178,12 @@ def load_default_filing_profile(
     *,
     display_name: str | None = None,
 ) -> FilingOperatorProfile:
-    """Load the configured default profile for runtime filing commands.
+    """Load the active profile bucket for runtime filing commands.
 
     Resolves the active workflow profile via the wizard descriptor's
     typed projection and re-shapes it as a runtime
     :class:`FilingOperatorProfile`. Operator profile values stored in
-    ``ProfileRecord`` are the single source of truth.
+    the profile bucket are the single source of truth.
 
     Args:
         display_name: Optional friendly label propagated to the
