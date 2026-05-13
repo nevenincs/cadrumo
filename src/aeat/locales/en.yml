@@ -254,67 +254,6 @@ cli:
         no_upcoming: No upcoming deadlines
       year_help: Fiscal year to query
     next_help: Show the next relevant tax deadline
-  declaration:
-    app_help: Prepare and locally export tax declarations
-    approve_help: Approve a declaration for local export
-    calculate_help: Calculate the amounts of a declaration
-    edit_help: Manually edit an existing declaration
-    errors:
-      activate_profile: Please activate a profile before managing declarations
-      at_least_one_edit: At least one field must be edited
-      binding_assignment: 'Invalid --binding assignment: %{value}. Use the form KEY=VALUE
-        (e.g. irpf.previous_year_economic_activity_net_income=13000).'
-      binding_value_not_decimal: The --binding value %{value} is not a decimal number.
-      draft_selector_ambiguous: Use either --id or (--modelo + --period); not both.
-      file_not_found: Declaration file not found
-      filter_parse_error: Error parsing the filter
-      missing_id_or_period_modelo: ID or (period + tax form) must be provided
-      no_draft_for_period: No draft exists for the specified period
-      not_approved_for_export: The declaration must be approved before being exported
-      profile_tax_id_required: 'The active profile requires a configured Tax ID (NIF/CIF).
-        Run: aeat config profile set tax.id <NIF/NIE>'
-      set_parse_error: Error parsing the field assignment
-    export_help: Export an approved declaration to a local AEAT-format file
-    labels:
-      blockers: Blockers
-      by: By
-      bytes: bytes
-      draft_id: Draft ID
-      edits: Edits
-      findings: Findings
-      matches_filter: Matches filter
-      mismatched: Mismatched
-      modelo: Tax Form
-      next: Next
-      'no': 'No'
-      path: Path
-      period: Period
-      sha256: SHA256
-      status: Status
-      values: Values
-      verdict: Verdict
-      warnings: Warnings
-      'yes': 'Yes'
-    opts:
-      binding: Supply a binding value for 'declaration calculate' as KEY=VALUE (repeatable).
-        Use 'aeat app modelo bindings <modelo> --period <P>' to discover required
-        bindings.
-      by: Person who reviewed the declaration
-      draft_id: Local draft ID
-      file: Local exported file to verify
-      filter: Filter by status=pending|approved|stale|submitted|acknowledged
-      modelo: Tax Form
-      output: Validation report or local output path
-      period: Period
-      reason: Audited reason for the change or approval
-      set: Assign (SET)
-    preview_help: Preview the content of a declaration
-    review_help: Review the validations and errors of a declaration
-    status:
-      absent: ABSENT
-    status_help: Show the current status of a declaration
-    validate_help: Run official technical validations on a declaration
-    verify_help: Verify the integrity and consistency of a declaration
   filing:
     amendment:
       delta_table_title: Amendment Delta (Differences)
@@ -406,83 +345,6 @@ cli:
     validate:
       draft_path_help: Path to the draft file to validate
       success: Validation completed successfully. The filing is valid.
-  financial:
-    app_help: Management of financial data and bank accounts
-    catalogue:
-      errors:
-        not_found: Financial catalogue not found
-    ingest:
-      help: Ingest financial data (e.g., bank statements)
-      output_json_help: Output JSON file for the ingested data
-      path_help: Path to the file or directory containing financial data
-      persist_help: Persist the ingested data in the system
-      provider_help: Financial data provider (e.g., bank name)
-      verbose_help: Show detailed information of the ingestion process
-    invoices:
-      app_help: Management of invoices and expense documents
-      apply_help: Apply changes or actions to invoices
-      consistent: Consistent
-      errors:
-        not_found: Invoice not found
-        skipped_suggestion: Suggestion skipped
-      headers:
-        list: List
-        unmatched: Unmatched
-      id_help: Invoice identifier
-      kind_help: Invoice type (e.g., issued, received)
-      labels:
-        applied: Applied
-      link_help: Link an invoice to a bank transaction
-      link_invoice_id_help: Identifier of the invoice to link
-      link_transaction_id_help: Identifier of the bank transaction to link
-      list_help: List invoices
-      no_invoices: No invoices found
-      no_suggestions: No suggestions available
-      no_unmatched: No unmatched invoices found
-      reconcile_help: Interactive reconciliation of invoices and bank transactions
-      show_help: Show invoice details
-      unmatched_help: List invoices that have not been reconciled
-      verify_help: Verify invoice integrity and consistency
-    profile:
-      app_help: Management of financial profiles
-      errors:
-        category_not_eligible: category %{category} does not accept a usage ratio
-        did_you_mean: 'did you mean: %{suggestions}'
-        eligible_categories: 'eligible categories:'
-        family_aliases: 'family aliases:'
-        invalid_ratio: 'invalid ratio: %{raw}'
-        must_be_finite: ratio must be finite (got %{raw})
-        out_of_range: 'ratio out of range: %{raw} not in [0, 1]'
-        unknown_key: 'unknown key: %{raw}'
-      headers:
-        ratios: Ratios / Allocations
-      labels:
-        no_active: No active profile selected
-      ratios_help: Define allocation ratios for the financial profile
-      ratios_list_help: List the allocation ratios defined in the profile
-      set_ratio_help: Set a specific allocation ratio
-      set_ratio_key_help: 'Ratio key or category. Family aliases: %{aliases}'
-      set_ratio_value_help: Ratio value (e.g., 0.5 for 50%)
-      unset_ratio_help: Unset a specific allocation ratio
-      unset_ratio_key_help: 'Ratio key or category to unset. Family aliases: %{aliases}'
-    txs:
-      app_help: Management of bank transactions
-  financial_invoices:
-    headers:
-      inconsistencies: Inconsistencies
-      suggestions: Suggestions
-    labels:
-      'no': 'No'
-      'yes': 'Yes'
-  ingest:
-    errors:
-      at_least_one_row: At least one row of data is required for ingestion
-      auto_detect_failed: Automatic detection of format or provider failed
-      ingest_failed: The ingestion process has failed
-    labels:
-      complete: Complete
-      ingesting: Ingesting...
-      rows_found: Rows found
   inventory:
     app_help: Management of asset and stock inventory
     create:
@@ -527,54 +389,6 @@ cli:
       preview_line: 'Preview: {sku} - {method}'
       year_help: Fiscal year for the valuation report
     valuation_help: Stock valuation management (PMP, FIFO, LIFO)
-  invoice:
-    app_help: Management and processing of invoices
-    edit:
-      help: Manually edit invoice data
-      id_help: Identifier of the invoice to edit
-      reason_help: Reason for the edit or correction
-      set_help: Set invoice fields (base, iva.rate, iva.amount, iva.category, retention.rate,
-        retention.amount, payment.id, document.path)
-    errors:
-      at_least_one_edit: At least one field modification is required
-      file_not_found: Invoice file not found
-      filter_parse_error: Failed to parse invoice filter
-      invalid_kind: Invalid invoice type (kind)
-      invoice_not_found: Invoice not found
-      match_both_required: Both invoice and transaction are required for matching
-      set_parse_error: Failed to parse field assignment (field=value)
-    import:
-      dry_run_help: Run in dry-run mode (without saving changes)
-      help: Import invoices from external sources (e.g., PDF, Excel)
-      kind_help: Type of invoices to import. Accepted values issued or received
-      path_help: Path to the file or directory containing invoices
-    labels:
-      base: Taxable Base
-      dry_run: DRY RUN MODE
-      fields: Fields
-      id: ID
-      imported: Invoices imported
-      iva: VAT
-      kind: Type
-      matched: Invoice matched
-      payment: Payment
-      period: Period
-      rows: Rows
-      skipped: Skipped
-      status: Status
-      unmatched: Unmatched
-      'yes': 'Yes'
-    match:
-      help: Manually match an invoice with a bank transaction
-      invoice_help: Invoice identifier for matching
-      ledger_help: Accounting ledger identifier
-      period_help: Fiscal period for matching
-    review:
-      filter_help: Filter invoices by status=pending|reviewed|matched|paid or kind=issued|received
-      help: Interactive review and validation of invoices
-      id_help: Identifier of the specific invoice to review
-      no_invoices: No invoices pending review
-      verbose_help: Show detailed information during review
   ledger:
     app_help: Management of accounting ledgers and VAT records
     edit:
@@ -842,70 +656,6 @@ cli:
         list registered topics.'
     opts:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
-  txs:
-    app_help: Bank transactions and reconciliation management
-    build:
-      exists_err: The transactions file already exists
-      help: Build a new transactions file
-      replace_help: Replace the transactions file if it already exists
-      source_help: Source transactions file (e.g. Excel, CSV, PDF)
-      success: Transactions file successfully generated at {path}
-    classify:
-      as_help: Category or type to classify the transaction
-      business_category_err: The business category '{cat}' is not valid
-      category_help: Business category to classify the transaction
-      confidence_help: Confidence level or certainty of the classification
-      confidence_range_err: The confidence level must be between 0 and 1
-      help: Manually classify a transaction
-      id_help: Unique identifier of the transaction to classify
-      invalid_confidence_err: The confidence level '{conf}' is not a valid number
-      invalid_pct_err: The deductible percentage '{pct}' is not a valid number
-      mixed_pct_err: The deductible percentage for mixed use must be between 0 and
-        100
-      no_changes_err: No changes provided for classification
-      outgoing_category_err: The expenditure category '{cat}' is not valid
-      pct_help: Deductible percentage for mixed-use transactions
-      reason_help: Reason or justification for the manual classification
-    classify_llm:
-      all_help: Process all pending transactions
-      category_hint_help: Category hint to guide the AI model
-      dry_run_help: Run without saving changes (preview)
-      dry_run_label: DRY RUN (no changes)
-      errors:
-        classification_failed: Failed to classify transaction '{id}'
-        exclusive_all_id: Cannot use --all and a transaction ID at the same time
-        invalid_max_seconds: The maximum processing time must be positive
-        missing_target: You must specify --all or a transaction ID
-        persistence_failed: Failed to save changes to the transactions file
-        save_failed: Could not save classification for '{id}'
-      help: Classify transactions automatically using AI
-      id_help: Identifier of the specific transaction to classify
-      labels:
-        no_targets: No transactions found to process
-      llm_suffix: (via AI)
-      max_seconds_help: Maximum time (in seconds) for AI processing
-      model_alias_help: AI model alias to use (e.g. gemini-pro)
-      model_help: Full name of the AI model (including version)
-      pct_override_help: Force a specific deductible percentage
-      persisted_label: PERSISTED
-      provider_help: AI provider (e.g. google, openai, anthropic)
-      reason_help: Justification or reasoning for the AI classification
-      stopped_early_suffix: (stopped by timeout)
-      summary: 'AI classification summary: {total} processed, {success} successes,
-        {failed} failures'
-      tier_help: Model tier or capability (e.g. flash, pro, ultra)
-      timeout: TIMEOUT
-    list:
-      confidence_below_help: Filter transactions with confidence below the threshold
-      header: Transactions List
-      help: List transactions filtered by criteria
-      no_matches_confidence: No transactions found with confidence below {threshold}%
-      no_transactions: No transactions found
-      state_help: Filter by transaction state (e.g. pending, classified)
-    show:
-      help: Show details of a specific transaction
-      id_help: Identifier of the transaction to show
-      not_found_err: Transaction with ID '{id}' was not found
 filing:
   validation:
     deadline_missed: Submission deadline has passed

@@ -31,11 +31,7 @@ _SENSITIVE_SURFACES = (
     _ROOT / "src" / "aeat" / "adapters" / "outbound" / "aeat" / "sede" / "_observation_store.py",
     _ROOT / "src" / "aeat" / "adapters" / "outbound" / "google",
     _ROOT / "src" / "aeat" / "adapters" / "outbound" / "llm",
-    _ROOT / "src" / "aeat" / "entrypoints" / "cli" / "_declaration.py",
-    _ROOT / "src" / "aeat" / "entrypoints" / "cli" / "auth",
-    _ROOT / "src" / "aeat" / "entrypoints" / "cli" / "financial",
     _ROOT / "src" / "aeat" / "entrypoints" / "cli" / "oauth.py",
-    _ROOT / "src" / "aeat" / "entrypoints" / "cli" / "_invoice.py",
     _ROOT / "src" / "aeat" / "entrypoints" / "cli" / "_ledger.py",
 )
 _PRODUCTION_ROOT = _ROOT / "src" / "aeat"
@@ -53,13 +49,7 @@ _FORBIDDEN_TEXT = (
     ".meta.json",
     "NamedTemporaryFile",
 )
-_SENSITIVE_DIRECT_WRITE_EXCEPTIONS = {
-    (
-        "src/aeat/entrypoints/cli/_declaration.py",
-        "declaration_validate",
-        "output.write_text",
-    ): "explicit user-directed validation report export",
-}
+_SENSITIVE_DIRECT_WRITE_EXCEPTIONS: dict[tuple[str, str, str], str] = {}
 _REVIEWED_PRODUCTION_FILE_WRITES = {
     (
         "src/aeat/adapters/persistence/storage/_rotation.py",
@@ -187,15 +177,10 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "manifest_path.write_text",
     ): "official manual corpus manifest",
     (
-        "src/aeat/entrypoints/cli/_declaration.py",
-        "declaration_validate",
+        "src/aeat/application/registry/__init__.py",
+        "verify_registry_workbooks",
         "output.write_text",
-    ): "explicit user-directed validation report export",
-    (
-        "src/aeat/entrypoints/cli/registry.py",
-        "verify_workbooks_cmd",
-        "output.write_text",
-    ): "explicit developer registry verification report export",
+    ): "explicit developer registry verification report export through the registry service",
     (
         "src/aeat/locales/manager.py",
         "scaffold",
