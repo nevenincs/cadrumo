@@ -718,6 +718,48 @@ def _reject_unknown_override_casillas(
         )
 
 
+def _reject_unknown_import_casillas(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    casilla_values: Mapping[str, Decimal],
+) -> None:
+    """Refuse imported casilla ids the registry does not declare for the modelo / year / period."""
+
+    if not casilla_values:
+        return
+
+    from ...core.config import PROJECT_ROOT
+    from ...domain.calculations.registry import (
+        RegistrySnapshotError,
+        ValidatedRegistryAuthority,
+    )
+
+    try:
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
+    except FileNotFoundError as exc:
+        raise ExternalFilingImportError(
+            f"registry root {_registry_root()} is missing; cannot validate imported casilla ids"
+        ) from exc
+
+    try:
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+    except RegistrySnapshotError as exc:
+        raise ExternalFilingImportError(
+            f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
+            f"period={period!r}; cannot validate imported casilla ids"
+        ) from exc
+
+    known = {str(casilla.id) for casilla in snapshot.revision.casillas}
+    unknown = sorted(casilla_id for casilla_id in casilla_values if casilla_id not in known)
+    if unknown:
+        raise ExternalFilingImportError(
+            f"external-filing import carries casilla ids that are not declared in registry "
+            f"modelo={modelo!r} filing_year={filing_year} period={period!r}: {unknown!r}"
+        )
+
+
 def _required_input_casillas_for_revision(
     *,
     modelo: str,
@@ -1500,6 +1542,13 @@ def import_external_filing_evidence(
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
     if work_unit.state is WorkUnitState.DISCARDED:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot import")
+
+    _reject_unknown_import_casillas(
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        casilla_values=casilla_values,
+    )
 
     inputs_snapshot: dict[str, str] = {}
     binding_overrides: dict[str, str] = {}
