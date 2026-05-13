@@ -115,18 +115,18 @@ This Phase delivers de-shim and de-stub cleanup for apex root and lifecycle cont
 - [ ] `W01.P003.S0013` - Delete compatibility shims that preserve rejected behavior for apex root and lifecycle contract; `src/aeat/application`.
 - [ ] `W01.P003.S0014` - Delete placeholder stubs that claim support for apex root and lifecycle contract; `src/aeat/application`.
 - [ ] `W01.P003.S0015` - Replace stubbed paths with real backend service calls for apex root and lifecycle contract; `src/aeat/application`.
-- [ ] `W01.P003.S0016` - Remove deprecated command spelling and help text for apex root and lifecycle contract; `src/aeat/entrypoints/cli`.
-- [ ] `W01.P003.S0017` - Remove tests that assert shim or stub behavior for apex root and lifecycle contract; `tests/application`.
-- [ ] `W01.P003.S0018` - Record the removed shim and stub surfaces for apex root and lifecycle contract; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W01.P003.S0016` - Remove deprecated command spelling and help text for apex root and lifecycle contract; `src/aeat/entrypoints/cli`.
+- [x] `W01.P003.S0017` - Remove tests that assert shim or stub behavior for apex root and lifecycle contract; `tests/application`.
+- [x] `W01.P003.S0018` - Record the removed shim and stub surfaces for apex root and lifecycle contract; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W01.P004` - real behavior verification
 
 This Phase delivers real behavior verification for apex root and lifecycle contract as required by `2026-05-12-cli-workflow-redesign-adr`.
 
-- [ ] `W01.P004.S0019` - Add service contract tests for apex root and lifecycle contract; `tests/application`.
-- [ ] `W01.P004.S0020` - Add persistence or registry integration tests for apex root and lifecycle contract; `tests/application`.
-- [ ] `W01.P004.S0021` - Add negative tests proving rejected aliases do not reach apex root and lifecycle contract; `tests/entrypoints/cli`.
-- [ ] `W01.P004.S0022` - Add command behavior tests that exercise apex root and lifecycle contract through real services; `tests/entrypoints/cli`.
+- [x] `W01.P004.S0019` - Add service contract tests for apex root and lifecycle contract; `tests/application`.
+- [x] `W01.P004.S0020` - Add persistence or registry integration tests for apex root and lifecycle contract; `tests/application`.
+- [x] `W01.P004.S0021` - Add negative tests proving rejected aliases do not reach apex root and lifecycle contract; `tests/entrypoints/cli`.
+- [x] `W01.P004.S0022` - Add command behavior tests that exercise apex root and lifecycle contract through real services; `tests/entrypoints/cli`.
 - [ ] `W01.P004.S0023` - Add end-to-end workflow coverage for apex root and lifecycle contract; `tests`.
 - [ ] `W01.P004.S0024` - Run the targeted test slice for apex root and lifecycle contract without skips or xfails; `tests/application`.
 
@@ -1919,56 +1919,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-domain-harvest-vat-cl
 
 This Phase delivers backend implementation for vat classification harvest as required by `2026-05-12-cli-workflow-redesign-domain-harvest-vat-classification-adr`.
 
-- [ ] `W32.P156.S0931` - Map the `2026-05-12-cli-workflow-redesign-domain-harvest-vat-classification-adr` decision into non-CLI service ownership for vat classification harvest; `src/aeat/domain/vat`.
-- [ ] `W32.P156.S0932` - Implement Pydantic command and result contracts for vat classification harvest; `src/aeat/domain/vat`.
-- [ ] `W32.P156.S0933` - Wire application or domain services required by vat classification harvest; `src/aeat/domain/vat`.
-- [ ] `W32.P156.S0934` - Connect persistence, bucket events, registry data, or provider adapters required by vat classification harvest; `src/aeat/domain/vat`.
-- [ ] `W32.P156.S0935` - Route existing backend functionality into the canonical service for vat classification harvest; `src/aeat/domain/vat`.
-- [ ] `W32.P156.S0936` - Record service-level error codes and log fields for vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P156.S0931` - Map the `2026-05-12-cli-workflow-redesign-domain-harvest-vat-classification-adr` decision into non-CLI service ownership for vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P156.S0932` - Implement Pydantic command and result contracts for vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P156.S0933` - Wire application or domain services required by vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P156.S0934` - Connect persistence, bucket events, registry data, or provider adapters required by vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P156.S0935` - Route existing backend functionality into the canonical service for vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P156.S0936` - Record service-level error codes and log fields for vat classification harvest; `src/aeat/domain/vat`.
 
 ### Phase `W32.P157` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for vat classification harvest as required by `2026-05-12-cli-workflow-redesign-domain-harvest-vat-classification-adr`.
 
-- [ ] `W32.P157.S0937` - Audit duplicate implementations that overlap vat classification harvest; `src/aeat/domain/vat`.
-- [ ] `W32.P157.S0938` - Delete duplicate backend branches that compete with vat classification harvest; `src/aeat/domain/vat`.
-- [ ] `W32.P157.S0939` - Remove stale aliases that bypass the canonical service for vat classification harvest; `src/aeat/entrypoints/cli`.
-- [ ] `W32.P157.S0940` - Migrate internal callers to the canonical service for vat classification harvest; `src/aeat/domain/vat`.
-- [ ] `W32.P157.S0941` - Remove stale fixtures and tests that encode duplicate behavior for vat classification harvest; `tests/domain/vat`.
-- [ ] `W32.P157.S0942` - Update boundary inventory entries that describe duplicate behavior for vat classification harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W32.P157.S0937` - Audit duplicate implementations that overlap vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P157.S0938` - Delete duplicate backend branches that compete with vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P157.S0939` - Remove stale aliases that bypass the canonical service for vat classification harvest; `src/aeat/entrypoints/cli`.
+- [x] `W32.P157.S0940` - Migrate internal callers to the canonical service for vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P157.S0941` - Remove stale fixtures and tests that encode duplicate behavior for vat classification harvest; `tests/domain/vat`.
+- [x] `W32.P157.S0942` - Update boundary inventory entries that describe duplicate behavior for vat classification harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W32.P158` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for vat classification harvest as required by `2026-05-12-cli-workflow-redesign-domain-harvest-vat-classification-adr`.
 
-- [ ] `W32.P158.S0943` - Delete compatibility shims that preserve rejected behavior for vat classification harvest; `src/aeat/domain/vat`.
-- [ ] `W32.P158.S0944` - Delete placeholder stubs that claim support for vat classification harvest; `src/aeat/domain/vat`.
-- [ ] `W32.P158.S0945` - Replace stubbed paths with real backend service calls for vat classification harvest; `src/aeat/domain/vat`.
-- [ ] `W32.P158.S0946` - Remove deprecated command spelling and help text for vat classification harvest; `src/aeat/entrypoints/cli`.
-- [ ] `W32.P158.S0947` - Remove tests that assert shim or stub behavior for vat classification harvest; `tests/domain/vat`.
-- [ ] `W32.P158.S0948` - Record the removed shim and stub surfaces for vat classification harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W32.P158.S0943` - Delete compatibility shims that preserve rejected behavior for vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P158.S0944` - Delete placeholder stubs that claim support for vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P158.S0945` - Replace stubbed paths with real backend service calls for vat classification harvest; `src/aeat/domain/vat`.
+- [x] `W32.P158.S0946` - Remove deprecated command spelling and help text for vat classification harvest; `src/aeat/entrypoints/cli`.
+- [x] `W32.P158.S0947` - Remove tests that assert shim or stub behavior for vat classification harvest; `tests/domain/vat`.
+- [x] `W32.P158.S0948` - Record the removed shim and stub surfaces for vat classification harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W32.P159` - real behavior verification
 
 This Phase delivers real behavior verification for vat classification harvest as required by `2026-05-12-cli-workflow-redesign-domain-harvest-vat-classification-adr`.
 
-- [ ] `W32.P159.S0949` - Add service contract tests for vat classification harvest; `tests/domain/vat`.
-- [ ] `W32.P159.S0950` - Add persistence or registry integration tests for vat classification harvest; `tests/domain/vat`.
-- [ ] `W32.P159.S0951` - Add negative tests proving rejected aliases do not reach vat classification harvest; `tests/entrypoints/cli`.
-- [ ] `W32.P159.S0952` - Add command behavior tests that exercise vat classification harvest through real services; `tests/entrypoints/cli`.
-- [ ] `W32.P159.S0953` - Add end-to-end workflow coverage for vat classification harvest; `tests`.
-- [ ] `W32.P159.S0954` - Run the targeted test slice for vat classification harvest without skips or xfails; `tests/domain/vat`.
+- [x] `W32.P159.S0949` - Add service contract tests for vat classification harvest; `tests/domain/vat`.
+- [x] `W32.P159.S0950` - Add persistence or registry integration tests for vat classification harvest; `tests/domain/vat`.
+- [x] `W32.P159.S0951` - Add negative tests proving rejected aliases do not reach vat classification harvest; `tests/entrypoints/cli`.
+- [x] `W32.P159.S0952` - Add command behavior tests that exercise vat classification harvest through real services; `tests/entrypoints/cli`.
+- [x] `W32.P159.S0953` - Add end-to-end workflow coverage for vat classification harvest; `tests`.
+- [x] `W32.P159.S0954` - Run the targeted test slice for vat classification harvest without skips or xfails; `tests/domain/vat`.
 
 ### Phase `W32.P160` - thin cli exposure
 
 This Phase delivers thin cli exposure for vat classification harvest as required by `2026-05-12-cli-workflow-redesign-domain-harvest-vat-classification-adr`.
 
-- [ ] `W32.P160.S0955` - Expose accepted command handlers for vat classification harvest under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W32.P160.S0956` - Keep argument parsing for vat classification harvest separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W32.P160.S0957` - Delegate vat classification harvest execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W32.P160.S0958` - Render vat classification harvest results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W32.P160.S0959` - Handle vat classification harvest failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W32.P160.S0960` - Validate help text for vat classification harvest uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W32.P160.S0955` - Expose accepted command handlers for vat classification harvest under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W32.P160.S0956` - Keep argument parsing for vat classification harvest separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W32.P160.S0957` - Delegate vat classification harvest execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W32.P160.S0958` - Render vat classification harvest results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W32.P160.S0959` - Handle vat classification harvest failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W32.P160.S0960` - Validate help text for vat classification harvest uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W33` - domain harvest oss ioss
 
