@@ -116,11 +116,17 @@ def test_derive_work_unit_id_normalises_case_on_modelo_and_period() -> None:
     ``\"Q1\"``) hash to the same id."""
 
     canonical = derive_work_unit_id(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="Q1",
         revision_id="2009-y-siguientes",
     )
     lower_period = derive_work_unit_id(
-        bucket_id="default", modelo="303", filing_year=2026, period="q1",
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="q1",
         revision_id="2009-y-siguientes",
     )
     assert canonical == lower_period
@@ -169,14 +175,14 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
         WorkUnit(
             work_unit_id=unit.work_unit_id,
             bucket_id=unit.bucket_id,
-            modelo="303",  # type: ignore[arg-type]
+            modelo="303",  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             filing_year=2026,
             period="Q1",
             revision_id="2009-y-siguientes",
             name="303-2026-Q1",
             created_at=_T0,
             updated_at=_T0,
-            unknown_axis="extra-value",  # type: ignore[call-arg]
+            unknown_axis="extra-value",  # type: ignore[call-arg]  # ty: ignore[unknown-argument]
         )
     with pytest.raises(ValidationError):
         unit.name = "renamed"  # type: ignore[misc]
@@ -253,7 +259,7 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key() -> None:
         filing_year=2026,
         period="Q1",
         revision_id="2009-y-siguientes",
-        repository=repo,  # type: ignore[arg-type]
+        repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         clock=_T0,
     )
     second = create_work_unit(
@@ -263,7 +269,7 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key() -> None:
         period="Q1",
         revision_id="2009-y-siguientes",
         name="ignored-because-already-exists",
-        repository=repo,  # type: ignore[arg-type]
+        repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         clock=_T0,
     )
     assert first.work_unit_id == second.work_unit_id
@@ -279,7 +285,7 @@ def test_create_work_unit_uses_default_name_when_no_name_supplied() -> None:
         filing_year=2026,
         period="Q1",
         revision_id="2009-y-siguientes",
-        repository=repo,  # type: ignore[arg-type]
+        repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         clock=_T0,
     )
     assert unit.name == "303-2026-Q1"
@@ -294,7 +300,7 @@ def test_create_work_unit_honours_explicit_name() -> None:
         period="Q1",
         revision_id="2009-y-siguientes",
         name="renta-q1-2026-draft",
-        repository=repo,  # type: ignore[arg-type]
+        repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         clock=_T0,
     )
     assert unit.name == "renta-q1-2026-draft"
@@ -318,10 +324,10 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period() -> None:
             filing_year=year,
             period=period,
             revision_id="rev",
-            repository=repo,  # type: ignore[arg-type]
+            repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             clock=_T0,
         )
-    units = list_work_units(repository=repo)  # type: ignore[arg-type]
+    units = list_work_units(repository=repo)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
     keys = tuple((u.bucket_id, str(u.modelo), u.period) for u in units)
     assert keys == (
         ("bucket-A", "130", "Q1"),
@@ -333,14 +339,24 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period() -> None:
 def test_list_work_units_filters_by_bucket_id() -> None:
     repo = _InMemoryWorkUnitRepository()
     create_work_unit(
-        bucket_id="bucket-A", modelo="303", filing_year=2026, period="Q1",
-        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+        bucket_id="bucket-A",
+        modelo="303",
+        filing_year=2026,
+        period="Q1",
+        revision_id="rev",
+        repository=repo,  # ty: ignore[invalid-argument-type]
+        clock=_T0,  # type: ignore[arg-type]
     )
     create_work_unit(
-        bucket_id="bucket-B", modelo="303", filing_year=2026, period="Q2",
-        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+        bucket_id="bucket-B",
+        modelo="303",
+        filing_year=2026,
+        period="Q2",
+        revision_id="rev",
+        repository=repo,  # ty: ignore[invalid-argument-type]
+        clock=_T0,  # type: ignore[arg-type]
     )
-    only_a = list_work_units(bucket_id="bucket-A", repository=repo)  # type: ignore[arg-type]
+    only_a = list_work_units(bucket_id="bucket-A", repository=repo)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
     assert len(only_a) == 1
     assert only_a[0].bucket_id == "bucket-A"
 
@@ -348,20 +364,25 @@ def test_list_work_units_filters_by_bucket_id() -> None:
 def test_get_work_unit_raises_when_id_is_absent() -> None:
     repo = _InMemoryWorkUnitRepository()
     with pytest.raises(WorkUnitNotFoundError):
-        get_work_unit("missing", repository=repo)  # type: ignore[arg-type]
+        get_work_unit("missing", repository=repo)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
 
 def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at() -> None:
     repo = _InMemoryWorkUnitRepository()
     original = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
-        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="Q1",
+        revision_id="rev",
+        repository=repo,  # ty: ignore[invalid-argument-type]
+        clock=_T0,  # type: ignore[arg-type]
     )
     later = datetime(2026, 2, 1, 12, 0, 0, tzinfo=UTC)
     renamed = rename_work_unit(
         original.work_unit_id,
         "renta-q1-2026-final",
-        repository=repo,  # type: ignore[arg-type]
+        repository=repo,  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
         clock=later,
     )
     assert renamed.work_unit_id == original.work_unit_id
@@ -373,7 +394,7 @@ def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at() -> None:
 def test_rename_work_unit_raises_when_id_is_absent() -> None:
     repo = _InMemoryWorkUnitRepository()
     with pytest.raises(WorkUnitNotFoundError):
-        rename_work_unit("missing", "ignored", repository=repo)  # type: ignore[arg-type]
+        rename_work_unit("missing", "ignored", repository=repo)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
 
 
 # ---------------------------------------------------------------------------
@@ -401,10 +422,7 @@ def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
             continue
         if forbidden in py_file.read_text(encoding="utf-8"):
             offenders.append(py_file)
-    assert offenders == [], (
-        "Parallel WorkUnit class outside the canonical module: "
-        f"{[str(p) for p in offenders]}"
-    )
+    assert offenders == [], f"Parallel WorkUnit class outside the canonical module: {[str(p) for p in offenders]}"
 
 
 def test_no_parallel_work_unit_storage_namespace() -> None:
@@ -429,6 +447,5 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
         if forbidden_namespace in py_file.read_text(encoding="utf-8"):
             offenders.append(py_file)
     assert offenders == [], (
-        "Parallel work-unit storage namespace outside the canonical "
-        f"repository: {[str(p) for p in offenders]}"
+        f"Parallel work-unit storage namespace outside the canonical repository: {[str(p) for p in offenders]}"
     )
