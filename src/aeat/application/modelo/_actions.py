@@ -53,12 +53,64 @@ from ...domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
     upsert_verification_report,
 )
+from ...domain.buckets import (
+    BucketEvent,
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
+    append_bucket_event,
+    derive_bucket_event_id,
+)
 from ...domain.modelos._work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
     WorkUnitState,
     derive_work_unit_id,
 )
+
+
+_BUCKET_EVENT_PAYLOAD_VERSION = 1
+
+
+def _emit_bucket_event(
+    *,
+    repository: BucketEventHistoryRepository,
+    bucket_id: str,
+    event_type: BucketEventType,
+    occurred_at: datetime,
+    actor: str,
+    object_type: BucketEventObjectType,
+    object_id: str,
+    payload: Mapping[str, str],
+) -> BucketEvent:
+    """Append one event to the bucket-event-history catalogue and
+    return the persisted record. Content-addressed: re-emitting an
+    identical event is a no-op.
+    """
+
+    event_id = derive_bucket_event_id(
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor.strip(),
+        object_type=object_type,
+        object_id=object_id,
+        payload=payload,
+    )
+    event = BucketEvent(
+        event_id=event_id,
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor.strip(),
+        object_type=object_type,
+        object_id=object_id,
+        payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
+        payload=dict(payload),
+    )
+    catalogue = repository.load()
+    repository.save(append_bucket_event(catalogue, event))
+    return event
 
 
 class WorkUnitNotFoundError(ModeloError, KeyError):
@@ -313,11 +365,13 @@ def discard_work_unit(
 def calculate_modelo_revision(
     work_unit_id: str,
     *,
+    actor: str = "system",
     inputs_snapshot: Mapping[str, str] | None = None,
     binding_overrides: Mapping[str, str] | None = None,
     casilla_values: Mapping[str, Decimal],
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Persist a new draft calculation revision for ``work_unit_id``.
@@ -338,6 +392,7 @@ def calculate_modelo_revision(
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
@@ -382,6 +437,22 @@ def calculate_modelo_revision(
                 }
             ),
         )
+    )
+    _emit_bucket_event(
+        repository=bv_repo,
+        bucket_id=work_unit.bucket_id,
+        event_type=BucketEventType.MODELO_CALCULATION_CREATED,
+        occurred_at=now,
+        actor=actor,
+        object_type=BucketEventObjectType.CALCULATION_REVISION,
+        object_id=revision_id,
+        payload={
+            "work_unit_id": work_unit_id,
+            "modelo": str(work_unit.modelo),
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period,
+            "input_casilla_count": str(len(outputs)),
+        },
     )
     return revision
 
@@ -525,6 +596,7 @@ def verify_modelo_revision(
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
 ) -> VerificationReport:
     """Evaluate a draft revision against the verified-complete contract.
@@ -562,6 +634,7 @@ def verify_modelo_revision(
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
@@ -670,6 +743,28 @@ def verify_modelo_revision(
         )
         cr_repo.save(upsert_calculation_revision(revisions, verified))
 
+    _emit_bucket_event(
+        repository=bv_repo,
+        bucket_id=work_unit.bucket_id,
+        event_type=(
+            BucketEventType.MODELO_VERIFICATION_PASSED if granted else BucketEventType.MODELO_VERIFICATION_REFUSED
+        ),
+        occurred_at=now,
+        actor=actor,
+        object_type=BucketEventObjectType.VERIFICATION_REPORT,
+        object_id=report_id,
+        payload={
+            "calculation_revision_id": calculation_revision_id,
+            "work_unit_id": target.work_unit_id,
+            "modelo": str(work_unit.modelo),
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period,
+            "completeness_status": completeness.value,
+            "finding_count": str(len(findings)),
+            "missing_required_count": str(len(missing_required)),
+        },
+    )
+
     return report
 
 
@@ -681,6 +776,7 @@ def file_modelo_revision(
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     filing_repository: FilingRecordCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
 ) -> FilingRecord:
     """File a verified-complete revision as the current filed answer.
@@ -714,6 +810,7 @@ def file_modelo_revision(
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     fr_repo = filing_repository or FilingRecordCatalogueRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
@@ -817,6 +914,44 @@ def file_modelo_revision(
                 }
             ),
         )
+    )
+
+    # 6. Emit bucket events: one supersession event per prior filing
+    # (if any), then the new modelo.filed event.
+    if prior_current is not None:
+        _emit_bucket_event(
+            repository=bv_repo,
+            bucket_id=work_unit.bucket_id,
+            event_type=BucketEventType.MODELO_FILED_SUPERSEDED,
+            occurred_at=now,
+            actor=actor,
+            object_type=BucketEventObjectType.FILING_RECORD,
+            object_id=prior_current.filing_record_id,
+            payload={
+                "superseded_by_filing_record_id": new_filing_id,
+                "calculation_revision_id": prior_current.calculation_revision_id,
+                "modelo": str(work_unit.modelo),
+                "filing_year": str(work_unit.filing_year),
+                "period": work_unit.period,
+            },
+        )
+
+    _emit_bucket_event(
+        repository=bv_repo,
+        bucket_id=work_unit.bucket_id,
+        event_type=BucketEventType.MODELO_FILED,
+        occurred_at=now,
+        actor=actor,
+        object_type=BucketEventObjectType.FILING_RECORD,
+        object_id=new_filing_id,
+        payload={
+            "calculation_revision_id": calculation_revision_id,
+            "work_unit_id": target.work_unit_id,
+            "modelo": str(work_unit.modelo),
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period,
+            "supersedes_filing_record_id": (prior_current.filing_record_id if prior_current is not None else ""),
+        },
     )
 
     return new_filing

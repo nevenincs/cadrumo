@@ -75,12 +75,6 @@ cli:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         period_help: Adóidőszak a modellrevízió feloldásához (pl. 2026Q1, 2026-01)
-      formulas:
-        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
-        modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: Adóidőszak a képletek szűkítéséhez (pl. 2026Q1, 2026-01)
-      list:
-        year_help: Modellkatalógus szűrése egyetlen adóévre
       filing_record:
         app_help: Belső bejelentési rekordok (filing records) vizsgálata
         bucket_id_help: Szűrés bucket szerint
@@ -89,18 +83,32 @@ cli:
           kihagyva)
         list_help: Regisztrált filing recordok listázása
         show_help: Egy filing record megjelenítése azonosító alapján
+      formulas:
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
+        modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
+        period_help: Adóidőszak a képletek szűkítéséhez (pl. 2026Q1, 2026-01)
+      list:
+        year_help: Modellkatalógus szűrése egyetlen adóévre
+      verification_report:
+        app_help: Rögzített verifikációs jelentések megtekintése
+        list_help: Verifikációs jelentések listázása, opcionálisan egy kalkulációs
+          revízió szerint szűrve
+        show_help: Egy verifikációs jelentés megjelenítése azonosító alapján
+        verification_report_id_help: Egy verifikációs jelentés stabil 64-karakteres
+          SHA-256 azonosítója
       work:
         actor_help: A művelet felelőse (legfeljebb 64 karakteres szabadszöveges címke)
         app_help: Modell-munkaegységek életciklusának kezelése
         bucket_id_help: A munkaegységet tartalmazó bucket azonosítója
         calculate_help: Új draft kalkulációs revízió rögzítése a munkaegységhez
-        calculation_revision_id_help: Egy kalkulációs revízió 64-karakteres SHA-256 azonosítója
+        calculation_revision_id_help: Egy kalkulációs revízió 64-karakteres SHA-256
+          azonosítója
         casilla_help: Cella értéke CASILLA=DECIMAL szintaxissal (ismételhető)
         create_help: Munkaegység létrehozása vagy újrahasználata (modell, év, időszak,
           revízió) kulcsra
         discard_help: Munkaegység megszakítottként megjelölése (auditálható állapotátmenet)
-        file_help: Ellenőrzött revízió belsőleg leadottként megjelölése. NEM küldi el
-          az AEAT-nak
+        file_help: Ellenőrzött revízió belsőleg leadottként megjelölése. NEM küldi
+          el az AEAT-nak
         include_discarded_help: A megszakított munkaegységeket is mutassa a listában
           (alapértelmezetten kihagyva)
         list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint
@@ -110,25 +118,17 @@ cli:
         notes_help: A filing recordhoz fűzött opcionális megjegyzések
         override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
         period_help: A munkaegység adózási időszaka (pl. Q1, 4T, 0A, 01)
-        reason_help: A megszakítás opcionális szabadszöveges indoklása (legfeljebb 500
-          karakter)
+        reason_help: A megszakítás opcionális szabadszöveges indoklása (legfeljebb
+          500 karakter)
         rename_help: Munkaegység megjelenítési nevének módosítása
         revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
         revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
           szűrve
         status_help: Egy munkaegység metaadatainak megjelenítése
-        verified_complete_help: Egy draft kalkulációs revízió verified-complete-té jelölése
         verify_help: Draft kalkulációs revízió verifikálása a verified-complete szerződés
           ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
         year_help: A munkaegység adóéve (pl. 2026)
-      verification_report:
-        app_help: Rögzített verifikációs jelentések megtekintése
-        list_help: Verifikációs jelentések listázása, opcionálisan egy kalkulációs revízió
-          szerint szűrve
-        show_help: Egy verifikációs jelentés megjelenítése azonosító alapján
-        verification_report_id_help: Egy verifikációs jelentés stabil 64-karakteres
-          SHA-256 azonosítója
   archive:
     app_help: A helyi titkosított archívum exportálása és importálása hordozható JSON
       csomagként
@@ -176,6 +176,11 @@ cli:
       test_help: Helyi hitelesítési készültség ellenőrzése
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd
         az ''aeat config auth --help'' parancsot az érvényes azonosítókért.'
+    bucket:
+      bucket_id_help: A bucket azonosítója, amelynek eseménytörténetét megjelenítjük
+      event_type_help: A történet szűrése egy vagy több eseménytípusra (ismételhető)
+      help: Bucket-szintű tároló és eseménytörténet vizsgálata
+      history_help: Egy bucket csak-hozzáfűz eseménytörténetének megjelenítése
     doctor:
       connectivity_help: Böngésző és AEAT Sede kapcsolat ellenőrzése
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
@@ -662,26 +667,43 @@ cli:
     drafts: Tervezetek
     from_help: Naptár kezdő dátuma (YYYY-MM-DD)
     header: "Modell\tIdőszak\tÁllapot\tNyit\tZár"
-    integrity_warning: '%{count} helyi sor nem dekódolható az aktuális főkulccsal;
-      futtasd: ''aeat config doctor'' a részletekért.'
-    invoices: Számlák
     period: Időszak
     period_help: Ellenőrizendő adózási időszak (például 2026-Q1)
-    profile: Profil
+    status:
+      drafts_empty: Nem talalhato mentett bevallastervezet.
+      drafts_present: '%{count} mentett bevallastervezet van ebben a helyi taroloban.
+        Egy friss, ures munkaterulet normal esetben 0-t mutat, tehat ez a profil/adatbazis
+        mar tartalmaz helyi tervezetallapotot.'
+      integrity_next: Futtasd az `aeat config doctor` parancsot a reszletekert. Ne
+        helyezz karantenba sorokat, hacsak nem szandekosan akarod archivalni a nem
+        olvashato regi helyi adatokat.
+      invoices_empty: Meg nincs importalt uzleti muveleti rekord.
+      invoices_present: '%{count} uzleti muveleti rekord var felulvizsgalatra.'
+      next_heading: Mit irj be kovetkezokent
+      next_import_command: '  aeat app ledger import <banki-kivonat.csv> --provider
+        csv - banki tranzakciok importalasa.'
+      next_landing_command: '  aeat --help - vissza a parancsutmutatohoz.'
+      next_review_command: '  aeat app ledger review - importalt sorok ellenorzese.'
+      profile_active: A(z) `%{profile}` profilon dolgozol.
+      profile_missing: Nincs aktiv profil beallitva. Adatok importalasa elott futtasd
+        az `aeat config init` parancsot.
+      storage_ok: A helyi titkositott tarolo olvashato az aktualis mesterkulccsal.
+      storage_warning: '%{count} titkositott helyi tarolosor nem olvashato az aktualis
+        mesterkulccsal. Ezek nem a banki kivonat sorai; uj tranzakciokat importalhatsz,
+        de regi helyi adatok hasznalata elott ellenorizd a diagnosztikat.'
+      title: Munkaterulet allapota
+      transactions_empty: Meg nincs importalt banki tranzakcio.
+      transactions_present: '%{count} banki tranzakcio elerheto a naploban.'
     status_help: Profil, könyvelés, számlák és bevallások állapotának megjelenítése
     to_help: Naptár záró dátuma (YYYY-MM-DD)
-    transactions: Tranzakciók
     verbose_help: Részletek és következő lépés megjelenítése, ha van
   registry:
     app_help: Adózási modellek nyilvántartásának kezelése
     capture_filed_data_help: Az AEAT-hoz már benyújtott adatok rögzítése és a helyi
       nyilvántartás frissítése
-    capture_filed_data_json_help: Kimenet JSON formátumban automatizálási eszközökhöz
     capture_limit_help: A feldolgozandó bejegyzések korlátja
     capture_source_filed_data_help: A célmodell számításához szükséges benyújtott
       forrásmegfigyelések rögzítése
-    capture_source_filed_data_json_help: A benyújtott forrásadat-rögzítési jelentés
-      kiírása JSON-ként
     casilla_help: Összehasonlítandó casilla azonosító; ismételhető az alapértelmezett
       számított casillák felülírásához
     citations:
@@ -692,16 +714,11 @@ cli:
       show_help: Egy jogszabály és opcionálisan az egyik cikke megjelenítése
       tag_help: Szűrés adónemtag szerint (pl. 'irpf', 'iva')
       verify_help: Jogi korpusz integritásának ellenőrzése
-    errors:
-      invalid_year_range: Érvénytelen évtartomány
-      unknown_modelo: 'A registry nem tartalmaz definíciót ehhez a modellhez: {modelo}'
     expediente_help: A rögzítendő AEAT ügyszám
     from_year_help: Kezdő év a bejegyzések rögzítéséhez vagy felülvizsgálatához
     inspect_help: A nyilvántartás állapotának és hivatkozásainak ellenőrzése
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának útvonala
-    json_help: Kimenet JSON formátumban
     list_filed_data_help: Meglévő AEAT benyújtások listázása a megadott évtartományra
-    list_filed_data_json_help: Kimenet JSON formátumban automatizálási eszközökhöz
     manuals:
       app_help: AEAT Manual práctico bejegyzések vizsgálata (Renta, IVA, Sociedades)
       errors:
@@ -820,9 +837,36 @@ cli:
 
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVITY'
+    app_help_help: cli.root.app_help_help
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     detail_help: Also show the detailed registry summary
     format_help: A parancseredmények kimeneti formátuma
+    help_help: cli.root.help_help
+    landing:
+      headline: AEAT adoasszisztens
+      help_line: 'Tovabbi segitseg: futtasd az `aeat --help`, `aeat config --help`
+        vagy `aeat app --help` parancsot.'
+      quick_start_heading: Gyors kezdes
+      quick_start_import: '  3. `aeat app ledger import <banki-kivonat.csv> --provider
+        csv` - banki tranzakciok hozzaadasa.'
+      quick_start_review: '  4. `aeat app ledger review` - importalt sorok ellenorzese
+        es osztalyozasa.'
+      quick_start_setup_done: '  1. `aeat config profile status` - aktiv profil ellenorzese
+        az operativ munka elott.'
+      quick_start_setup_needed: '  1. `aeat config init` - eloszor hozd letre a helyi
+        adozasi profilt.'
+      quick_start_status: '  2. `aeat app overview status` - aktualis munkaterulet-allapot
+        es diagnosztika olvasasa.'
+      section_config: '  config - profilbeallitas, hitelesites, diagnosztika'
+      section_ledger: '  app ledger - banki importok es tranzakcio-felulvizsgalat'
+      section_modelo: '  app modelo - adonyomtatvany-katalogus es munkaegysegek'
+      section_overview: '  app overview - munkaterulet-allapot es bevallasi naptar'
+      section_registry: '  app registry - helyi AEAT-regiszteradatok'
+      section_review: '  app review - kezeloi figyelmet igenylo elemek'
+      sections_heading: Fo szakaszok
+      tagline: Helyi elso spanyol adozasi munkafolyamat autonomoknak.
+      welcome_no_profile: Udvozlet. Meg nincs aktiv profil beallitva; kezdd a beallitassal.
+      welcome_profile: Udvozlet ujra. Az aktiv profil `%{profile}`.
     quiet_help: Csak hibák megjelenítése stderr-en
     verbose_help: Belső információs naplók megjelenítése stderr-en
     version_help: Csomagverzió megjelenítése (a --detail kapcsoló mutatja a teljes
@@ -909,10 +953,9 @@ filing:
     schema_mismatch: Eltérés a várt sémától
 profile:
   keys:
+    description: profile.keys.description
     tax:
       id: Tax identifier (NIF/NIE/CIF)
-  test_keys:
-    description_490119: x
 review:
   adapters:
     t_135562: belső átutalás

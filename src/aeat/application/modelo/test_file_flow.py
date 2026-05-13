@@ -101,17 +101,9 @@ def _registry_required_manual_casillas() -> tuple[str, ...]:
     will demand for modelo 180 / 2024 / period 0A. Reads the real
     registry — no duplication of revision data in the test."""
 
-    authority = ValidatedRegistryAuthority.load(
-        Path("registry/aeat"), source_root=Path(".")
-    )
-    snapshot = authority.snapshot(
-        _VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD
-    )
-    return tuple(
-        str(c.id)
-        for c in snapshot.revision.casillas
-        if c.required and c.input_kind == "manual"
-    )
+    authority = ValidatedRegistryAuthority.load(Path("registry/aeat"), source_root=Path("."))
+    snapshot = authority.snapshot(_VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD)
+    return tuple(str(c.id) for c in snapshot.revision.casillas if c.required and c.input_kind == "manual")
 
 
 @pytest.fixture
@@ -124,9 +116,7 @@ def repos(tmp_path):
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     db_path = tmp_path / "modelo_flow.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-    )
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
     Base.metadata.create_all(engine)
     try:
         objects = SecureObjectRepository(engine=engine)
@@ -600,7 +590,7 @@ def test_calculate_refused_on_discarded_work_unit(repos) -> None:
 
 def test_get_filing_record_raises_on_missing_id(repos) -> None:
     _, _, fr_repo, _, _ = repos
-    with pytest.raises(FilingRecordNotFoundError):
+    with pytest.raises(FilingRecordNotFoundError, match=r"filing|record|not|found"):
         get_filing_record(
             "0" * 64,
             filing_repository=fr_repo,
@@ -609,7 +599,7 @@ def test_get_filing_record_raises_on_missing_id(repos) -> None:
 
 def test_get_calculation_revision_raises_on_missing_id(repos) -> None:
     _, cr_repo, _, _, _ = repos
-    with pytest.raises(CalculationRevisionNotFoundError):
+    with pytest.raises(CalculationRevisionNotFoundError, match=r"calculation|revision|not|found"):
         get_calculation_revision(
             "0" * 64,
             calculation_repository=cr_repo,
@@ -618,110 +608,13 @@ def test_get_calculation_revision_raises_on_missing_id(repos) -> None:
 
 # ---------------------------------------------------------------------------
 # verify_modelo_revision — real-registry, encrypted-SQL end-to-end coverage.
-#
-# These tests deliberately reject monkeypatches, stubs, and in-memory
-# fake repositories. The verifier reaches the real registry root and the
-# real ``SecureObjectRepository`` so the encrypt → persist → decrypt
-# round-trip is exercised. Inputs are drawn from registry ground truth
-# (modelo 180, revision ``2023-y-siguientes``, period ``0A``), which
-# carries ten ``required=True`` casillas with ``input_kind="manual"``.
+# Inputs are drawn from registry ground truth (modelo 180, revision
+# ``2023-y-siguientes``, period ``0A``).
 # ---------------------------------------------------------------------------
 
 
-from pathlib import Path  # noqa: E402
-
-from aeat.adapters.persistence.storage import (  # noqa: E402
-    EphemeralMasterKeyProvider,
-    override_master_key_provider,
-)
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository  # noqa: E402
-from aeat.adapters.persistence.storage.sql._orm import Base  # noqa: E402
-from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings  # noqa: E402
-from aeat.application.modelo import (  # noqa: E402
-    VerificationReportNotFoundError,
-    get_verification_report,
-    list_verification_reports,
-    verify_modelo_revision,
-)
-from aeat.core.config import Settings  # noqa: E402
-from aeat.domain.calculations.registry import ValidatedRegistryAuthority  # noqa: E402
-from aeat.domain.modelos._calculation_repository import (  # noqa: E402
-    CalculationRevisionCatalogueRepository,
-)
-from aeat.domain.modelos._filing_repository import FilingRecordCatalogueRepository  # noqa: E402
-from aeat.domain.modelos._repository import WorkUnitCatalogueRepository  # noqa: E402
-from aeat.domain.modelos._verification_report import (  # noqa: E402
-    VerificationCompletenessStatus,
-    VerificationFindingKind,
-    VerificationFindingSeverity,
-)
-from aeat.domain.modelos._verification_repository import (  # noqa: E402
-    VerificationReportCatalogueRepository,
-)
-
-_VERIFY_MODELO = "180"
-_VERIFY_REVISION = "2023-y-siguientes"
-_VERIFY_PERIOD = "0A"
-_VERIFY_YEAR = 2024
-
-
-def _registry_required_manual_casillas() -> tuple[str, ...]:
-    """Return the required ``input_kind=manual`` casilla ids the verifier
-    will demand for (180, 2024, 0A). Reads the real registry — no test
-    duplication of revision data."""
-
-    authority = ValidatedRegistryAuthority.load(
-        Path("registry/aeat"), source_root=Path(".")
-    )
-    snapshot = authority.snapshot(
-        _VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD
-    )
-    return tuple(
-        str(c.id)
-        for c in snapshot.revision.casillas
-        if c.required and c.input_kind == "manual"
-    )
-
-
-@pytest.fixture
-def real_repos(tmp_path):
-    """Wire the four catalogue repositories against a fresh encrypted
-    SQLite database. Yields ``(wu_repo, cr_repo, fr_repo, vr_repo)``
-    and tears down the master-key override after the test."""
-
-    provider = EphemeralMasterKeyProvider()
-    override_master_key_provider(provider)
-    db_path = tmp_path / "modelo_verify_flow.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-    )
-    Base.metadata.create_all(engine)
-    try:
-        objects = SecureObjectRepository(engine=engine)
-        wu = WorkUnitCatalogueRepository(objects=objects)
-        cr = CalculationRevisionCatalogueRepository(objects=objects)
-        fr = FilingRecordCatalogueRepository(objects=objects)
-        vr = VerificationReportCatalogueRepository(objects=objects)
-        yield wu, cr, fr, vr
-    finally:
-        engine.dispose()
-        override_master_key_provider(None)
-
-
-def _seed_modelo_180_work_unit(wu_repo):
-    return create_work_unit(
-        bucket_id="default",
-        modelo=_VERIFY_MODELO,
-        filing_year=_VERIFY_YEAR,
-        period=_VERIFY_PERIOD,
-        revision_id=_VERIFY_REVISION,
-        repository=wu_repo,
-        clock=_T0,
-    )
-
-
 def test_verify_grants_when_all_required_casillas_present_real_registry(
-    real_repos,
+    repos,
 ) -> None:
     """Real e2e: registry resolves modelo 180 (2024, 0A); every required
     manual casilla is supplied; the verifier persists a granted report
@@ -729,7 +622,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     DRAFT → VERIFIED_COMPLETE. No mocks, no in-memory fakes — the
     SQL repository encrypts on save and decrypts on load."""
 
-    wu_repo, cr_repo, _, vr_repo = real_repos
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     required = _registry_required_manual_casillas()
     assert required, "registry must declare at least one required manual casilla"
 
@@ -740,6 +633,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
         casilla_values=casilla_values,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T1,
     )
 
@@ -749,6 +643,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
 
@@ -776,14 +671,14 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
 
 
 def test_verify_refuses_when_required_casilla_missing_real_registry(
-    real_repos,
+    repos,
 ) -> None:
     """Real e2e: omit one required casilla; the verifier emits a
     BLOCKING ``MISSING_REQUIRED_CASILLA`` finding for it; the
     revision stays DRAFT; the refused report is still persisted so
     the audit trail records the refusal."""
 
-    wu_repo, cr_repo, _, vr_repo = real_repos
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     required = _registry_required_manual_casillas()
     assert len(required) >= 2
 
@@ -796,6 +691,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         casilla_values=supplied,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T1,
     )
 
@@ -805,6 +701,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
 
@@ -832,14 +729,14 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
 
 
 def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
-    real_repos,
+    repos,
 ) -> None:
     """Real e2e: a work unit anchored to a year that predates modelo
     180's earliest revision (``valid_from=2019``) cannot resolve a
     registry snapshot. The verifier surfaces a BLOCKING_RULE finding
     and refuses the transition. The revision stays DRAFT."""
 
-    wu_repo, cr_repo, _, vr_repo = real_repos
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
 
     work_unit = create_work_unit(
         bucket_id="default",
@@ -855,6 +752,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         casilla_values={"perc.base": Decimal("1")},
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T1,
     )
 
@@ -864,14 +762,13 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
 
     assert report.granted_verified_complete is False
     assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
-    assert any(
-        f.kind is VerificationFindingKind.BLOCKING_RULE for f in report.findings
-    )
+    assert any(f.kind is VerificationFindingKind.BLOCKING_RULE for f in report.findings)
 
     refreshed = get_calculation_revision(
         revision.calculation_revision_id,
@@ -880,12 +777,12 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     assert refreshed.state is CalculationRevisionState.DRAFT
 
 
-def test_verify_rejects_non_draft_revision_real_registry(real_repos) -> None:
+def test_verify_rejects_non_draft_revision_real_registry(repos) -> None:
     """Real e2e: a verified-complete revision cannot be re-verified.
     The operator must produce a fresh draft (which lands as DRAFT)
     to verify again."""
 
-    wu_repo, cr_repo, _, vr_repo = real_repos
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     required = _registry_required_manual_casillas()
     work_unit = _seed_modelo_180_work_unit(wu_repo)
     revision = calculate_modelo_revision(
@@ -893,6 +790,7 @@ def test_verify_rejects_non_draft_revision_real_registry(real_repos) -> None:
         casilla_values={cid: Decimal("1") for cid in required},
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T1,
     )
     verify_modelo_revision(
@@ -901,6 +799,7 @@ def test_verify_rejects_non_draft_revision_real_registry(real_repos) -> None:
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
 
@@ -911,15 +810,16 @@ def test_verify_rejects_non_draft_revision_real_registry(real_repos) -> None:
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
             clock=_T3,
         )
 
 
-def test_list_and_get_verification_reports_real_registry(real_repos) -> None:
+def test_list_and_get_verification_reports_real_registry(repos) -> None:
     """Real e2e: reports persist through the encrypted catalogue and
     are indexable by id and by calculation_revision_id."""
 
-    wu_repo, cr_repo, _, vr_repo = real_repos
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     required = _registry_required_manual_casillas()
     work_unit = _seed_modelo_180_work_unit(wu_repo)
     revision = calculate_modelo_revision(
@@ -927,6 +827,7 @@ def test_list_and_get_verification_reports_real_registry(real_repos) -> None:
         casilla_values={cid: Decimal("1") for cid in required},
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T1,
     )
     report = verify_modelo_revision(
@@ -935,6 +836,7 @@ def test_list_and_get_verification_reports_real_registry(real_repos) -> None:
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
         clock=_T2,
     )
 
@@ -942,9 +844,7 @@ def test_list_and_get_verification_reports_real_registry(real_repos) -> None:
         calculation_revision_id=revision.calculation_revision_id,
         verification_repository=vr_repo,
     )
-    assert tuple(r.verification_report_id for r in listed) == (
-        report.verification_report_id,
-    )
+    assert tuple(r.verification_report_id for r in listed) == (report.verification_report_id,)
 
     fetched = get_verification_report(
         report.verification_report_id,
@@ -952,8 +852,278 @@ def test_list_and_get_verification_reports_real_registry(real_repos) -> None:
     )
     assert fetched.verification_report_id == report.verification_report_id
 
-    with pytest.raises(VerificationReportNotFoundError):
+    with pytest.raises(VerificationReportNotFoundError, match=r"verification|report|not|found"):
         get_verification_report(
             "0" * 64,
             verification_repository=vr_repo,
         )
+
+
+# ---------------------------------------------------------------------------
+# bucket-event emission — modelo.calculation.created /
+# modelo.verification.{passed,refused} / modelo.filed /
+# modelo.filed_superseded.
+#
+# Every domain write that lands above must also append a row to the
+# bucket-event-history catalogue. These tests exercise the encrypted
+# round-trip on the bucket-event catalogue itself: emit, save, load,
+# query.
+# ---------------------------------------------------------------------------
+
+
+def test_calculate_emits_modelo_calculation_created_event(repos) -> None:
+    """calculate_modelo_revision appends a ``modelo.calculation.created``
+    event with the new revision id as object_id and the work unit's
+    (modelo, year, period) carried in the payload."""
+
+    wu_repo, cr_repo, _, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        casilla_values={"01": Decimal("1000")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+
+    catalogue = bv_repo.load()
+    events = catalogue.for_bucket(work_unit.bucket_id)
+    assert len(events) == 1
+    event = events[0]
+    assert event.event_type is BucketEventType.MODELO_CALCULATION_CREATED
+    assert event.object_type is BucketEventObjectType.CALCULATION_REVISION
+    assert event.object_id == revision.calculation_revision_id
+    assert event.actor == "operator-A"
+    assert event.occurred_at == _T1
+    assert event.payload["work_unit_id"] == work_unit.work_unit_id
+    assert event.payload["modelo"] == str(work_unit.modelo)
+    assert event.payload["filing_year"] == str(work_unit.filing_year)
+    assert event.payload["period"] == work_unit.period
+
+
+def test_verify_emits_passed_event_on_success(repos) -> None:
+    """verify_modelo_revision emits ``modelo.verification.passed``
+    when the verifier grants verified-complete; the event id matches
+    the persisted verification report."""
+
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    required = _registry_required_manual_casillas()
+    work_unit = _seed_modelo_180_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        casilla_values={cid: Decimal("1") for cid in required},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+
+    catalogue = bv_repo.load()
+    verification_events = catalogue.for_bucket(
+        work_unit.bucket_id,
+        event_types=(
+            BucketEventType.MODELO_VERIFICATION_PASSED,
+            BucketEventType.MODELO_VERIFICATION_REFUSED,
+        ),
+    )
+    assert len(verification_events) == 1
+    event = verification_events[0]
+    assert event.event_type is BucketEventType.MODELO_VERIFICATION_PASSED
+    assert event.object_type is BucketEventObjectType.VERIFICATION_REPORT
+    assert event.object_id == report.verification_report_id
+    assert event.payload["calculation_revision_id"] == revision.calculation_revision_id
+    assert event.payload["completeness_status"] == "complete"
+
+
+def test_verify_emits_refused_event_on_missing_casilla(repos) -> None:
+    """verify_modelo_revision emits ``modelo.verification.refused``
+    when a required casilla is missing; the calculation revision
+    stays DRAFT and the refusal lands in the bucket event log."""
+
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    required = _registry_required_manual_casillas()
+    omitted = required[0]
+    supplied = {cid: Decimal("1") for cid in required[1:]}
+
+    work_unit = _seed_modelo_180_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        casilla_values=supplied,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+    assert report.granted_verified_complete is False
+
+    catalogue = bv_repo.load()
+    refused = catalogue.for_bucket(
+        work_unit.bucket_id,
+        event_types=(BucketEventType.MODELO_VERIFICATION_REFUSED,),
+    )
+    assert len(refused) == 1
+    event = refused[0]
+    assert event.event_type is BucketEventType.MODELO_VERIFICATION_REFUSED
+    assert event.payload["completeness_status"] == "incomplete"
+    assert int(event.payload["missing_required_count"]) >= 1
+    assert omitted not in event.payload  # omitted casilla id stays in the report, not the event payload
+
+
+def test_file_emits_modelo_filed_event(repos) -> None:
+    """file_modelo_revision appends a ``modelo.filed`` event
+    referencing the new filing record id and carrying the modelo /
+    year / period plus the underlying revision id."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        casilla_values={"01": Decimal("1000")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    mark_revision_verified_complete(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        clock=_T2,
+    )
+    filing = file_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T3,
+    )
+
+    catalogue = bv_repo.load()
+    filed_events = catalogue.for_bucket(
+        work_unit.bucket_id,
+        event_types=(BucketEventType.MODELO_FILED,),
+    )
+    assert len(filed_events) == 1
+    event = filed_events[0]
+    assert event.object_id == filing.filing_record_id
+    assert event.payload["calculation_revision_id"] == revision.calculation_revision_id
+    assert event.payload["modelo"] == str(work_unit.modelo)
+    # No prior filing was superseded — payload carries empty string.
+    assert event.payload["supersedes_filing_record_id"] == ""
+
+
+def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None:
+    """A second filing supersedes the prior one. The bucket-event
+    log carries one ``modelo.filed_superseded`` event for the prior
+    record (object_id = prior filing record id) and one new
+    ``modelo.filed`` event for the new record (with the prior id in
+    the ``supersedes_filing_record_id`` payload key)."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    revision_one = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        casilla_values={"01": Decimal("1000")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    mark_revision_verified_complete(
+        revision_one.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        clock=_T2,
+    )
+    filing_one = file_modelo_revision(
+        revision_one.calculation_revision_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T3,
+    )
+
+    revision_two = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        casilla_values={"01": Decimal("1200"), "02": Decimal("100")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+    mark_revision_verified_complete(
+        revision_two.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        clock=_T4,
+    )
+    filing_two = file_modelo_revision(
+        revision_two.calculation_revision_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T5,
+    )
+
+    catalogue = bv_repo.load()
+    superseded_events = catalogue.for_object(
+        object_type=BucketEventObjectType.FILING_RECORD,
+        object_id=filing_one.filing_record_id,
+    )
+    types = tuple(e.event_type for e in superseded_events)
+    assert BucketEventType.MODELO_FILED in types
+    assert BucketEventType.MODELO_FILED_SUPERSEDED in types
+
+    # The new filing.filed event references the prior record id.
+    new_filed_events = catalogue.for_object(
+        object_type=BucketEventObjectType.FILING_RECORD,
+        object_id=filing_two.filing_record_id,
+    )
+    assert len(new_filed_events) == 1
+    assert new_filed_events[0].event_type is BucketEventType.MODELO_FILED
+    assert new_filed_events[0].payload["supersedes_filing_record_id"] == filing_one.filing_record_id
+
+    # Whole chain in chronological order for the bucket:
+    # calc1, filed1, calc2, superseded1+filed2.
+    all_events = catalogue.for_bucket(work_unit.bucket_id)
+    type_chain = tuple(e.event_type for e in all_events)
+    assert type_chain == (
+        BucketEventType.MODELO_CALCULATION_CREATED,
+        BucketEventType.MODELO_FILED,
+        BucketEventType.MODELO_CALCULATION_CREATED,
+        BucketEventType.MODELO_FILED_SUPERSEDED,
+        BucketEventType.MODELO_FILED,
+    )
