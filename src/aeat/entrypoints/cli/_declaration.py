@@ -30,9 +30,9 @@ from ...application.workflow import (
     update_declaration_pointer,
     workflow_state_repository,
 )
+from ...core.output_rendering import jsonable_output_payload
 from ._common import (
     _FORMAT_JSON,
-    _FORMAT_TABLE,
     _aggregate_filing_inputs,
     _bad,
     _canonical_period,
@@ -41,7 +41,6 @@ from ._common import (
     _emit,
     _exit,
     _format_of,
-    _json_default,
     _state,
     _translate,
 )
@@ -217,7 +216,6 @@ def declaration_review(
     period: str | None = typer.Option(None, "--period", help=tr("cli.declaration.opts.period")),
     modelo: str | None = typer.Option(None, "--modelo", help=tr("cli.declaration.opts.modelo")),
     draft_id: str | None = typer.Option(None, "--id", help=tr("cli.declaration.opts.draft_id")),
-    format_: str = typer.Option(_FORMAT_TABLE, "--format", help=tr("cli.declaration.format_help")),
 ) -> None:
     if draft_id is not None:
         draft = _draft_by_id(draft_id)
@@ -231,7 +229,7 @@ def declaration_review(
         if pointer is None or pointer.draft_id is None:
             raise _bad(tr("cli.declaration.errors.no_draft_for_period"))
         draft = _draft_by_id(pointer.draft_id)
-    if format_.lower() == _FORMAT_JSON or _format_of(ctx) == _FORMAT_JSON:
+    if _format_of(ctx) == _FORMAT_JSON:
         ctx.ensure_object(dict)["format"] = _FORMAT_JSON
     payload = {"draft": draft, "values": list(draft.values), "findings": list(draft.findings)}
     lines: list[str] = [
@@ -443,7 +441,7 @@ def declaration_validate(
         import json as _json
 
         output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(_json.dumps(payload, default=_json_default, ensure_ascii=False, indent=2), encoding="utf-8")
+        output.write_text(_json.dumps(jsonable_output_payload(payload), ensure_ascii=False, indent=2), encoding="utf-8")
     _emit(
         ctx,
         payload,

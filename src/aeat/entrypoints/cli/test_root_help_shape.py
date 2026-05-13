@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -32,6 +35,23 @@ def _invoke(args: list[str]):
     return _RUNNER.invoke(app, args)
 
 
+def _console_env(tmp_path: Path) -> dict[str, str]:
+    env = dict(os.environ)
+    env.update(
+        {
+            "AEAT_SECRET_STORE_BACKEND": "unsecured",
+            "AEAT_ALLOW_UNENCRYPTED": "1",
+            "AEAT_DATABASE_URL": f"sqlite:///{(tmp_path / 'console.db').as_posix()}",
+            "AEAT_TOKEN_DIR": str(tmp_path / "tokens"),
+            "AEAT_RUNS_DIR": str(tmp_path / "runs"),
+            "AEAT_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
+            "AEAT_INVOICES_DIR": str(tmp_path / "invoices"),
+            "AEAT_DRAFTS_DIR": str(tmp_path / "drafts"),
+        }
+    )
+    return env
+
+
 def _command_path_for_help_probe(command: str) -> list[str] | None:
     if " -> " in command or "rejected" in command:
         return None
@@ -51,7 +71,7 @@ def test_root_help_uses_curated_two_root_shape() -> None:
     assert "Common mistypes" in result.output
     assert "aeat config init" in result.output
     assert "aeat app overview status" in result.output
-    assert "aeat app live" not in result.output
+    assert "aeat app live filed list" in result.output
     assert "aeat config bucket" not in result.output
 
 
@@ -67,6 +87,7 @@ def test_config_and_app_help_use_curated_subtree_shape() -> None:
     assert app_result.exit_code == 0, app_result.output
     assert "aeat app - operational tax work" in app_result.output
     assert "aeat app ledger import" in app_result.output
+    assert "aeat app live filed capture" in app_result.output
     assert "aeat app modelo bindings" in app_result.output
     assert "aeat app invoice" not in app_result.output
     assert "aeat app declaration" not in app_result.output
@@ -92,13 +113,71 @@ def test_bare_invocation_reports_profile_state_without_cli_only_storage() -> Non
     overview = _invoke(["app", "overview", "status"])
 
     assert missing.exit_code == 0, missing.output
-    assert "No active profile." in missing.output
-    assert "Next: aeat config init" in missing.output
+    assert "aeat config init" in missing.output
+    assert "aeat app overview status" in missing.output
+    assert "aeat app ledger import" in missing.output
 
     assert active.exit_code == 0, active.output
     assert overview.exit_code == 0, overview.output
-    assert active.output == overview.output
-    assert "profile\toperator" in active.output
+    assert active.output != overview.output
+    assert "aeat app overview status" in active.output
+    assert "aeat app ledger import" in active.output
+    assert "`operator`" in overview.output
+    assert "profile\t" not in overview.output.lower()
+    assert "integrity-warning" not in overview.output
+    assert "unreadable_rows" not in overview.output
+
+
+def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -> None:
+    aeat_exe = shutil.which("aeat")
+    assert aeat_exe is not None
+
+    result = subprocess.run(
+        [aeat_exe],
+        cwd=Path.cwd(),
+        env=_console_env(tmp_path),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+
+    combined_output = f"{result.stdout}\n{result.stderr}"
+    assert result.returncode == 0, combined_output
+    assert "aeat config init" in result.stdout
+    assert "aeat app overview status" in result.stdout
+    assert "aeat app ledger import" in result.stdout
+    assert "aeat config doctor" in result.stdout
+    assert "Traceback" not in combined_output
+    assert "ImportError" not in combined_output
+    assert "integrity-warning" not in combined_output
+    assert "unreadable_rows" not in combined_output
+
+
+def test_installed_console_config_init_fails_fast_without_prompt_host(tmp_path: Path) -> None:
+    aeat_exe = shutil.which("aeat")
+    assert aeat_exe is not None
+
+    result = subprocess.run(
+        [aeat_exe, "config", "init"],
+        cwd=Path.cwd(),
+        env=_console_env(tmp_path),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+
+    combined_output = f"{result.stdout}\n{result.stderr}"
+    assert result.returncode != 0, combined_output
+    assert "aeat config init" in combined_output
+    assert "aeat config init --quiet --tax-id 12345678Z --activity" in combined_output
+    assert "aeat config init --help" in combined_output
+    assert "1/9" not in combined_output
+    assert "REFUSED" not in combined_output
+    assert "Traceback" not in combined_output
 
 
 def test_root_help_and_bare_invocation_use_root_format_json() -> None:

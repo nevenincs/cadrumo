@@ -4,11 +4,11 @@ from datetime import date as _date
 
 import typer
 
-from ...application.diagnostics import secure_object_unreadable_total
 from ...application.overview import (
     OverviewCalendar,
     OverviewCalendarRange,
     build_overview_calendar,
+    build_overview_status_report,
 )
 from ._common import (
     _bad,
@@ -22,6 +22,7 @@ from ._common import (
     _state,
 )
 from ._i18n import tr
+from ._overview_rendering import render_cli_overview_status_lines
 
 app = typer.Typer(
     name="overview",
@@ -46,10 +47,10 @@ def overview_status(
 ) -> None:
     """Render workspace state, calendar view, or per-period detail."""
     current = _state()
-    transactions = _load_transactions()
-    invoices = _load_invoices()
-    drafts = _load_drafts()
     if calendar:
+        transactions = _load_transactions()
+        invoices = _load_invoices()
+        drafts = _load_drafts()
         if not from_date or not to_date:
             raise _bad(tr("cli.overview.calendar_requires_dates"))
         rng = OverviewCalendarRange(
@@ -98,6 +99,7 @@ def overview_status(
         _emit(ctx, payload, lines)
         return
     if period is not None:
+        drafts = _load_drafts()
         canonical = _canonical_period(period)
         per_modelo_drafts = [d for d in drafts if d.period == canonical]
         payload = {
@@ -107,28 +109,13 @@ def overview_status(
             ],
             "verbose": verbose,
         }
-        lines: list[str] = [
+        period_lines: list[str] = [
             f"{tr('cli.overview.period')}\t{canonical}",
             f"{tr('cli.overview.drafts')}\t{len(per_modelo_drafts)}",
         ]
         for d in per_modelo_drafts:
-            lines.append(f"{d.modelo}\t{d.draft_id}\t{d.status.value}")
-        _emit(ctx, payload, lines)
+            period_lines.append(f"{d.modelo}\t{d.draft_id}\t{d.status.value}")
+        _emit(ctx, payload, period_lines)
         return
-    unreadable = secure_object_unreadable_total()
-    payload = {
-        "active_profile": current.active_profile,
-        "transactions": len(transactions.transactions),
-        "invoices": len(invoices),
-        "drafts": len(drafts),
-        "unreadable_rows": unreadable,
-    }
-    lines = [
-        f"{tr('cli.overview.profile')}\t{current.active_profile or ''}",
-        f"{tr('cli.overview.transactions')}\t{len(transactions.transactions)}",
-        f"{tr('cli.overview.invoices')}\t{len(invoices)}",
-        f"{tr('cli.overview.drafts')}\t{len(drafts)}",
-    ]
-    if unreadable > 0:
-        lines.append(tr("cli.overview.integrity_warning", count=unreadable))
-    _emit(ctx, payload, lines)
+    report = build_overview_status_report(state=current)
+    _emit(ctx, report, render_cli_overview_status_lines(report))

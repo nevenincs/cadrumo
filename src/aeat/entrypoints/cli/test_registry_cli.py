@@ -9,7 +9,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-import typer
 from pydantic import AnyHttpUrl
 from typer.testing import CliRunner
 
@@ -22,16 +21,19 @@ from aeat.adapters.outbound.aeat.sede import (
 )
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.application.auth import AuthProviderKind
+from aeat.application.live import (
+    capture_source_filed_data,
+    filed_data_listing_row,
+    select_declarations_for_capture,
+)
+from aeat.application.registry import (
+    verify_filed_state,
+)
+from aeat.core.access_gate import AeatLiveReadNotEnabledError
 from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.calculations.registry import build_snapshot, calculate_registry_snapshot, load_registry_tree
 
 from . import app
-from .registry import (
-    _filed_data_listing_row,
-    capture_source_filed_data,
-    select_declarations_for_capture,
-    verify_filed_state,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -63,12 +65,13 @@ def test_registry_inspect_cli_reports_tree_inventory() -> None:
     result = _RUNNER.invoke(
         app,
         [
+            "--format",
+            "json",
             "app",
             "registry",
             "inspect",
             "--registry-root",
             str(_REGISTRY_ROOT),
-            "--json",
         ],
     )
 
@@ -117,6 +120,8 @@ def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
     result = _RUNNER.invoke(
         app,
         [
+            "--format",
+            "json",
             "app",
             "registry",
             "verify",
@@ -124,7 +129,6 @@ def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
             str(_REGISTRY_ROOT),
             "--source-root",
             str(PROJECT_ROOT),
-            "--json",
         ],
     )
 
@@ -158,13 +162,15 @@ def test_registry_verify_cli_fails_fast_on_missing_corpus_source(tmp_path) -> No
     )
 
     assert result.exit_code != 0
-    assert "missing corpus file" in str(result.exception)
+    assert "missing corpus file" in result.output
 
 
 def test_registry_workbook_verify_cli_reports_json_from_official_corpus() -> None:
     result = _RUNNER.invoke(
         app,
         [
+            "--format",
+            "json",
             "app",
             "registry",
             "workbooks",
@@ -173,7 +179,6 @@ def test_registry_workbook_verify_cli_reports_json_from_official_corpus() -> Non
             str(_WORKBOOK_ROOT),
             "--limit",
             "1",
-            "--json",
         ],
     )
 
@@ -212,6 +217,8 @@ def test_registry_workbook_verify_cli_writes_json_report_from_official_corpus(tm
     result = _RUNNER.invoke(
         app,
         [
+            "--format",
+            "json",
             "app",
             "registry",
             "workbooks",
@@ -238,6 +245,8 @@ def test_registry_workbook_verify_cli_resumes_from_json_report_from_official_cor
     first = _RUNNER.invoke(
         app,
         [
+            "--format",
+            "json",
             "app",
             "registry",
             "workbooks",
@@ -255,6 +264,8 @@ def test_registry_workbook_verify_cli_resumes_from_json_report_from_official_cor
     second = _RUNNER.invoke(
         app,
         [
+            "--format",
+            "json",
             "app",
             "registry",
             "workbooks",
@@ -265,7 +276,6 @@ def test_registry_workbook_verify_cli_resumes_from_json_report_from_official_cor
             "1",
             "--resume-from",
             str(output),
-            "--json",
         ],
     )
 
@@ -273,6 +283,43 @@ def test_registry_workbook_verify_cli_resumes_from_json_report_from_official_cor
     payload = json.loads(second.output)
     assert payload["workbook_count"] >= 1
     assert payload["failed_count"] == 0
+
+
+def test_registry_retained_commands_reject_command_local_json_flag() -> None:
+    result = _RUNNER.invoke(
+        app,
+        [
+            "app",
+            "registry",
+            "inspect",
+            "--registry-root",
+            str(_REGISTRY_ROOT),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "No such option" in result.output
+
+
+def test_registry_commands_refuse_unsupported_root_output_format() -> None:
+    result = _RUNNER.invoke(
+        app,
+        [
+            "--format",
+            "xml",
+            "app",
+            "registry",
+            "inspect",
+            "--registry-root",
+            str(_REGISTRY_ROOT),
+        ],
+    )
+
+    assert result.exit_code == 2
+    assert "REFUSED" in result.output
+    assert "unsupported output format" in result.output
+    assert "unexpected internal error" not in result.output.lower()
 
 
 def test_capture_selector_filters_register_rows_by_period_and_expediente() -> None:
@@ -300,7 +347,7 @@ def test_filed_data_listing_row_reports_available_read_surfaces() -> None:
         }
     )
 
-    listed = _filed_data_listing_row(row)
+    listed = filed_data_listing_row(row)
 
     assert listed.modelo == modelo
     assert listed.year == 2025
@@ -374,16 +421,26 @@ def test_verify_filed_state_cli_help_resolves_locale_keys() -> None:
     assert "--source-observation" in result.output
 
 
-def test_capture_source_filed_data_cli_help_resolves_locale_keys() -> None:
+def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -> None:
     result = _RUNNER.invoke(
         app,
-        ["app", "registry", "capture-source-filed-data", "--help"],
+        ["app", "live", "filed", "capture-sources", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
 
     assert result.exit_code == 0
-    assert "cli.registry.capture_source_filed_data_help" not in result.output
     assert "--source-root" in result.output
+
+    old = _RUNNER.invoke(app, ["app", "registry", "capture-source-filed-data", "--help"])
+    assert old.exit_code != 0
+    assert "No such command" in old.output
+
+    old_list = _RUNNER.invoke(app, ["app", "registry", "list-filed-data", "--help"])
+    old_capture = _RUNNER.invoke(app, ["app", "registry", "capture-filed-data", "--help"])
+    assert old_list.exit_code != 0
+    assert old_capture.exit_code != 0
+    assert "No such command" in old_list.output
+    assert "No such command" in old_capture.output
 
 
 def test_list_filed_data_cli_requires_live_gate_before_remote_read(tmp_path: Path) -> None:
@@ -399,8 +456,9 @@ def test_list_filed_data_cli_requires_live_gate_before_remote_read(tmp_path: Pat
         app,
         [
             "app",
-            "registry",
-            "list-filed-data",
+            "live",
+            "filed",
+            "list",
             "--modelo",
             _first_registry_modelo(),
             "--from-year",
@@ -433,8 +491,9 @@ def test_capture_filed_data_cli_requires_live_gate_before_local_writes(tmp_path:
         app,
         [
             "app",
-            "registry",
-            "capture-filed-data",
+            "live",
+            "filed",
+            "capture",
             "--modelo",
             _first_registry_modelo(),
             "--year",
@@ -468,7 +527,7 @@ def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_pa
     )
     output_root = tmp_path / "captured-sources"
 
-    with pytest.raises(typer.BadParameter, match="live AEAT reads require AEAT_LIVE_TESTS_ENABLED=1"):
+    with pytest.raises(AeatLiveReadNotEnabledError, match="live AEAT reads require AEAT_LIVE_TESTS_ENABLED=1"):
         asyncio.run(
             capture_source_filed_data(
                 modelo="180",

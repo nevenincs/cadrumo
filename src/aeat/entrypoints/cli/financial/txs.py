@@ -23,6 +23,7 @@ from ....adapters.inbound.financial._decimal import canonical_decimal
 from ....adapters.inbound.financial.providers import detect_provider, provider_for_extension
 from ....adapters.inbound.financial.providers._base import FinancialProviderError
 from ....core.errors import AeatError
+from ....core.logging import get_logger
 from ....domain.categories import CATEGORY_PROFILES_2025, ProportionalityKind, SpendingCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -39,17 +40,18 @@ from ....domain.transactions import (
     set_classification,
 )
 from .._i18n import tr
-
-
-class TxsArgumentError(AeatError):
-    """Raised on invalid CLI arguments in the txs group."""
-
-
 from ._catalogue import (
     catalogue_repository,
     load_catalogue_or_empty,
     load_catalogue_required,
 )
+
+_log = get_logger(__name__)
+
+
+class TxsArgumentError(AeatError):
+    """Raised on invalid CLI arguments in the txs group."""
+
 
 _CONFIDENCE_MIN = Decimal("0")
 """Inclusive lower bound for confidence and percentage decimals."""
@@ -972,7 +974,12 @@ def _read_ndjson_text(source: Path) -> str:
     for encoding in candidates:
         try:
             return raw.decode(encoding)
-        except UnicodeDecodeError:
+        except UnicodeDecodeError as decode_exc:
+            _log.debug(
+                "ndjson decode: candidate %r rejected (%s); trying next",
+                encoding,
+                decode_exc,
+            )
             continue
     raise UnicodeDecodeError("ndjson", raw, 0, len(raw), "unsupported NDJSON encoding")
 

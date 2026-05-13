@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -33,6 +34,7 @@ def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'profile-language.db').as_posix()}")
     monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
+    monkeypatch.delenv("AEAT_CLI_LANGUAGE", raising=False)
     dispose_engine()
 
 
@@ -86,7 +88,7 @@ def test_config_init_writes_profile_output_language(monkeypatch: pytest.MonkeyPa
         event.action == "profile.values.updated"
         and event.bucket_id == "default"
         and event.object_id is not None
-        and "output.language" in event.object_id
+        and event.object_id.startswith("keys:")
         for event in state.bucket_events
     )
     assert output_language() == "en"
@@ -120,3 +122,24 @@ def test_config_profile_set_validates_profile_output_language(
     reloaded = workflow_state_repository().load().active_profile_record()
     assert reloaded is not None
     assert reloaded.values["output.language"] == "ca"
+
+
+def test_global_language_flag_overrides_profile_for_invocation(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    from aeat.application.profile._actions import set_profile_values
+    from aeat.application.workflow._persistence import workflow_state_repository
+    from aeat.core.i18n import output_language
+
+    _isolate(monkeypatch, tmp_path)
+    _seed_profile()
+    workflow_state_repository().update(
+        lambda state: set_profile_values(state, "default", {"output.language": "ca"})
+    )
+
+    result = _invoke(["--language", "en", "--format", "json"])
+
+    assert result.exit_code == 0, result.output
+    assert output_language() == "en"
+    assert os.environ["AEAT_CLI_LANGUAGE"] == "en"

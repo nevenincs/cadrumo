@@ -1078,6 +1078,23 @@ wizard:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
+    codes:
+      disability-grade:
+        choices:
+          33-64:
+            label: 33% és 64% közötti fogyatékossági fok
+          65-plus:
+            label: 65% vagy magasabb fogyatékossági fok
+          assistance-or-mobility:
+            label: Harmadik személy segítsége vagy csökkent mozgásképesség
+          judicial-incapacity:
+            label: Bírósági cselekvőképtelenség vagy azzal egyenértékű állapot
+      sex:
+        choices:
+          h:
+            label: H - férfi
+          m:
+            label: M - nő
     description: Operátorbarát beállítás varázsló a bevallások előkészítéséhez
     enrollment:
       enrollment-large-company:
@@ -1255,6 +1272,13 @@ wizard:
       tax-id:
         prompt: Adóazonosító (NIF/NIE) bevallásokhoz
       taxation-type:
+        choices:
+          individual:
+            description: Akkor használja, ha csak az egyéni bevallását adja be
+            label: 1 - egyéni
+          joint:
+            description: Csak családi egység közös adózásához használja
+            label: 2 - közös
         prompt: Adózási típus kódja
       title: Profil azonosítása
     residence:
@@ -1321,6 +1345,15 @@ wizard:
       taxpayer-disability-grade:
         prompt: Az első adózó fogyatékossági kódja
       taxpayer-marital-status:
+        choices:
+          casado:
+            label: 2 - házas
+          separado-divorciado:
+            label: 4 - külön élő vagy elvált
+          soltero:
+            label: 1 - egyedülálló
+          viudo:
+            label: 3 - özvegy
         prompt: Az első adózó családi állapota
       taxpayer-sex:
         prompt: Az első adózó neme

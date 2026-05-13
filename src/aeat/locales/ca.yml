@@ -1075,6 +1075,23 @@ wizard:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
+    codes:
+      disability-grade:
+        choices:
+          33-64:
+            label: Discapacitat del 33% al 64%
+          65-plus:
+            label: Discapacitat del 65% o superior
+          assistance-or-mobility:
+            label: Ajuda de tercers o mobilitat reduïda
+          judicial-incapacity:
+            label: Incapacitat judicial o equivalent
+      sex:
+        choices:
+          h:
+            label: H - home
+          m:
+            label: M - dona
     description: Auxiliar de configuració per preparar les declaracions
     enrollment:
       enrollment-large-company:
@@ -1251,6 +1268,13 @@ wizard:
       tax-id:
         prompt: Identificador fiscal (NIF/NIE) per a declaracions
       taxation-type:
+        choices:
+          individual:
+            description: Useu aquest valor quan presenteu només la declaració individual
+            label: 1 - individual
+          joint:
+            description: Useu aquest valor només per a tributació conjunta de la unitat familiar
+            label: 2 - conjunta
         prompt: Codi del tipus de tributació
       title: Identitat del perfil
     residence:
@@ -1317,6 +1341,15 @@ wizard:
       taxpayer-disability-grade:
         prompt: Clau de discapacitat del primer declarant
       taxpayer-marital-status:
+        choices:
+          casado:
+            label: 2 - casat
+          separado-divorciado:
+            label: 4 - separat o divorciat
+          soltero:
+            label: 1 - solter
+          viudo:
+            label: 3 - vidu
         prompt: Estat civil del primer declarant
       taxpayer-sex:
         prompt: Sexe del primer declarant

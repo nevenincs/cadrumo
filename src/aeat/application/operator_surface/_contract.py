@@ -37,7 +37,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         purpose="operational tax workflow over the active profile bucket",
         owns_storage_maintenance=False,
         owns_operational_workflow=True,
-        required_children=("overview", "ledger", "modelo", "registry", "review"),
+        required_children=("overview", "ledger", "live", "modelo", "registry", "review"),
     ),
 )
 
@@ -195,6 +195,15 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         operator_question="ingest and review ledger transactions in the active bucket",
         service_owner="aeat.application.transactions",
         commands=("import", "review", "edit"),
+        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
+    ),
+    MountedCommandFamily(
+        domain=MountedCommandDomain.LIVE,
+        root=RootSurfaceName.APP,
+        child="live",
+        operator_question="perform explicit read-only AEAT live observations",
+        service_owner="aeat.application.live",
+        commands=("filed",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(

@@ -5,8 +5,11 @@ from __future__ import annotations
 import typing
 from pathlib import Path
 
+import click
 import typer
 
+from ...application.auth import implemented_auth_provider_ids, known_auth_provider_ids
+from ...application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES, parse_config_reset_scope
 from ...application.diagnostics import (
     build_config_doctor_report,
     quarantine_unreadable_secure_objects,
@@ -15,7 +18,7 @@ from ...application.diagnostics import (
 from ...application.operator_surface import build_help_document, render_help_text
 from ...core.logging import default_log_file_path
 from ._common import _emit
-from ._errors import CliRefusedBoundaryError
+from ._errors import CliRefusedBoundaryError, write_stderr
 from ._i18n import tr
 
 app = typer.Typer(
@@ -262,7 +265,8 @@ def _register_wizard_commands(target: typer.Typer) -> None:
                 translated = exc.translated_message or tr("cli.config.setup.errors.missing_required_flags")
                 raise CliRefusedBoundaryError(translated) from exc
             except WizardUnsupportedConsoleError as exc:
-                raise exc
+                write_stderr(f"{exc}\n")
+                raise typer.Exit(2) from exc
             if kwargs.get("quiet"):
                 profile_name = kwargs.get("profile_name", "default")
                 typer.echo(tr("cli.config.setup.success.saved", profile_name=profile_name))
@@ -340,20 +344,21 @@ def config_status(ctx: typer.Context) -> None:
 @app.command("reset", help=tr("cli.config.reset.help"))
 def config_reset(
     ctx: typer.Context,
-    scope: str = typer.Option("all", "--scope", help=tr("cli.config.reset.scope_help")),
+    scope: str = typer.Option(
+        "all",
+        "--scope",
+        click_type=click.Choice(CONFIG_RESET_SCOPE_CLI_VALUES),
+        help=tr("cli.config.reset.scope_help"),
+    ),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.reset.yes_help")),
 ) -> None:
     """Reset operator-entered configuration scopes."""
 
-    from ...application.config_reset import ConfigResetScope, reset_config
+    from ...application.config_reset import reset_config
 
     if not yes:
         raise CliRefusedBoundaryError(tr("cli.config.reset.requires_yes"))
-    try:
-        scope_enum = ConfigResetScope(scope.strip().upper())
-    except ValueError as exc:
-        valid = ", ".join(member.value.lower() for member in ConfigResetScope)
-        raise CliRefusedBoundaryError(tr("cli.config.reset.invalid_scope", scope=scope, valid=valid)) from exc
+    scope_enum = parse_config_reset_scope(scope)
     report = reset_config(scope_enum, confirmed=True)
     _emit(
         ctx,
@@ -387,7 +392,12 @@ def auth_providers(ctx: typer.Context) -> None:
 @auth_app.command("configure", help=tr("cli.config.auth.configure_help"))
 def auth_configure(
     ctx: typer.Context,
-    provider: str = typer.Option(..., "--provider", help=tr("cli.config.auth.provider_help")),
+    provider: str = typer.Option(
+        ...,
+        "--provider",
+        click_type=click.Choice(implemented_auth_provider_ids()),
+        help=tr("cli.config.auth.provider_help"),
+    ),
     file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
 ) -> None:
     """Configure the active authentication provider."""
@@ -404,7 +414,10 @@ def auth_configure(
 
 
 @auth_app.command("status", help=tr("cli.config.auth.status_help"))
-def auth_status(ctx: typer.Context, provider: str | None = typer.Option(None, "--provider")) -> None:
+def auth_status(
+    ctx: typer.Context,
+    provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(known_auth_provider_ids())),
+) -> None:
     """Show the configured local authentication state."""
 
     from ...application.auth import inspect_operator_auth
@@ -418,7 +431,10 @@ def auth_status(ctx: typer.Context, provider: str | None = typer.Option(None, "-
 
 
 @auth_app.command("test", help=tr("cli.config.auth.test_help"))
-def auth_test(ctx: typer.Context, provider: str | None = typer.Option(None, "--provider")) -> None:
+def auth_test(
+    ctx: typer.Context,
+    provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(implemented_auth_provider_ids())),
+) -> None:
     """Render auth readiness through the application-owned auth state."""
 
     from ...application.auth import test_operator_auth
@@ -434,7 +450,7 @@ def auth_test(ctx: typer.Context, provider: str | None = typer.Option(None, "--p
 @auth_app.command("clear", help=tr("cli.config.auth.clear_help"))
 def auth_clear(
     ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider"),
+    provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(implemented_auth_provider_ids())),
     all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.clear_all_help")),
     sessions: bool = typer.Option(False, "--sessions", help=tr("cli.config.auth.clear_sessions_help")),
     locks: bool = typer.Option(False, "--locks", help=tr("cli.config.auth.clear_locks_help")),
