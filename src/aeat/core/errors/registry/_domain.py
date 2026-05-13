@@ -1005,6 +1005,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.vat.errors.ProrrataError",
+        ErrorCode(
+            code="ERROR_VAT_PRORRATA",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_vat_prorrata",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.vat.errors.ProrrataInputError",
+        ErrorCode(
+            code="ERROR_VAT_PRORRATA_INPUT",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_vat_prorrata_input",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.vat.errors.ProrrataSectorError",
+        ErrorCode(
+            code="ERROR_VAT_PRORRATA_SECTOR",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_vat_prorrata_sector",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.modelos._errors.ModeloError",
         ErrorCode(
             code="ERROR_MODELOS",
