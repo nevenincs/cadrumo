@@ -82,9 +82,7 @@ def test_committed_modelo_347_workbook_parity_refs_resolve_to_corpus() -> None:
 def test_committed_modelo_347_static_cross_reference_forbids_remote_writes() -> None:
     modelo, _ = _load_modelo_347()
     for revision in modelo.revisions.values():
-        decision = next(
-            ref for ref in revision.live_cross_references if ref.surface == "static_official_documentation"
-        )
+        decision = next(ref for ref in revision.live_cross_references if ref.surface == "static_official_documentation")
         assert decision.requires_authentication is False
         assert decision.synthetic_data_allowed is False
         assert _FORBIDDEN_REMOTE_ACTIONS.issubset(decision.forbidden_actions), revision.id
@@ -93,9 +91,7 @@ def test_committed_modelo_347_static_cross_reference_forbids_remote_writes() -> 
 def test_committed_modelo_347_authenticated_read_surface_is_read_only_and_guarded() -> None:
     modelo, _ = _load_modelo_347()
     for revision in modelo.revisions.values():
-        decision = next(
-            ref for ref in revision.live_cross_references if ref.surface == "authenticated_read_surface"
-        )
+        decision = next(ref for ref in revision.live_cross_references if ref.surface == "authenticated_read_surface")
         assert decision.requires_authentication is True
         assert decision.requires_aeat_authorization is True
         assert decision.synthetic_data_allowed is False

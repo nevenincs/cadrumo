@@ -4,6 +4,17 @@ from aeat.core.errors._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "aeat.application.operator_surface._errors.OperatorSurfaceContractError",
+        ErrorCode(
+            code="REFUSED_OPERATOR_SURFACE_CONTRACT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_operator_surface_contract",
+            default_suggestion="aeat --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._acquisition_lock.AuthAcquisitionLockedError",
         ErrorCode(
             code="LOCKED_AUTH_ACQUISITION",

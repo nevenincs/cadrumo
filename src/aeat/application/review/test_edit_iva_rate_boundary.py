@@ -57,9 +57,7 @@ def test_invoice_edit_retention_rate_rejects_out_of_range_values(bad_value: str)
 
 
 def test_invoice_edit_with_canonical_iva_and_retention_round_trips() -> None:
-    spec = InvoiceEditSpec.from_strings(
-        ["base=100.00", "iva.rate=21", "iva.amount=21.00", "retention.rate=15"]
-    )
+    spec = InvoiceEditSpec.from_strings(["base=100.00", "iva.rate=21", "iva.amount=21.00", "retention.rate=15"])
     assert spec.base == Decimal("100.00")
     assert spec.iva_rate == Decimal("21")
     assert spec.iva_amount == Decimal("21.00")

@@ -57,8 +57,25 @@ def test_renta_ccaa_carries_17_autonomous_communities_plus_ceuta_melilla() -> No
     must layer a separate selector.
     """
     expected = {
-        "AND", "ARA", "AST", "BAL", "CAN", "CAB", "CLM", "CYL", "CAT", "EXT",
-        "GAL", "MAD", "MUR", "NAV", "PVA", "LAR", "VAL", "CEU", "MEL",
+        "AND",
+        "ARA",
+        "AST",
+        "BAL",
+        "CAN",
+        "CAB",
+        "CLM",
+        "CYL",
+        "CAT",
+        "EXT",
+        "GAL",
+        "MAD",
+        "MUR",
+        "NAV",
+        "PVA",
+        "LAR",
+        "VAL",
+        "CEU",
+        "MEL",
     }
     assert {member.name for member in RentaCCAA} == expected
 

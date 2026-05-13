@@ -77,9 +77,7 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
         old_raw = parameters[_OLD_OR_NO_REVISION_PARAM_ID]["value"]
         lookback_raw = parameters[_LOOKBACK_PARAM_ID]["value"]
     except KeyError as exc:
-        raise KeyError(
-            f"registry/aeat/legal/irpf.toml is missing LIRPF art. 85 parameter {exc.args[0]!r}"
-        ) from exc
+        raise KeyError(f"registry/aeat/legal/irpf.toml is missing LIRPF art. 85 parameter {exc.args[0]!r}") from exc
 
     return LirpfArt85ImputacionParameters(
         recent_revision_rate=Decimal(str(recent_raw)),
