@@ -61,7 +61,7 @@ cli:
         missing_help: Filtrar a los bindings sin valor resuelto (requieren datos del
           bucket / libro / perfil)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        override_help: 'Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)'
+        override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
         period_help: Periodo fiscal para acotar los bindings (p. ej. Q1, 2026-01)
         preview_help: Previsualizar bindings con sobrescrituras temporales sin mutar
           el estado
@@ -101,8 +101,8 @@ cli:
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
         revision_help: Identificador estable de la revisión registrada del modelo
         status_help: Mostrar los metadatos de una unidad de trabajo
-        work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la unidad
-          de trabajo
+        work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
+          unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
   archive:
     app_help: Exportar e importar el archivo local cifrado como paquetes JSON portables
@@ -144,7 +144,8 @@ cli:
       help: Configurar el proveedor de autenticación activo
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
       providers_help: Listar proveedores de autenticación soportados
-      reserved_provider: 'Proveedor de autenticación reservado pero no disponible: %{provider}.'
+      reserved_provider: 'Proveedor de autenticación reservado pero no disponible:
+        %{provider}.'
       status_help: Mostrar el estado de autenticación configurado
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
@@ -212,7 +213,6 @@ cli:
     app_help: Gestión del calendario y plazos del contribuyente
     explain:
       modelo_help: Número del modelo tributario (ej. 303, 111)
-      profile_help: Perfil del contribuyente (ej. autonomo, pyme)
     explain_help: Explicar los plazos y obligaciones para un modelo y perfil específicos
     list:
       closes_on_col: Cierre el
@@ -221,7 +221,6 @@ cli:
       modelo_col: Modelo
       opens_on_col: Apertura el
       period_col: Periodo
-      profile_help: Filtrar por perfil del contribuyente (ej. pyme, gran_empresa)
       status_col: Estado
       table_title: Calendario de Plazos Tributarios
       year_help: Ejercicio fiscal a consultar
@@ -230,7 +229,6 @@ cli:
       labels:
         closes: Cierra
         no_upcoming: No hay plazos próximos
-      profile_help: Filtrar por perfil del contribuyente (ej. pyme)
       year_help: Ejercicio fiscal a consultar
     next_help: Mostrar el próximo plazo tributario relevante
   declaration:
@@ -304,7 +302,6 @@ cli:
       inputs_help: Archivos o directorios de entrada para construir la declaración
       modelo_help: Modelo tributario a construir (p. ej., 303, 111, 130)
       period_help: Periodo fiscal (p. ej., 1T, 2T, 01, 12)
-      profile_help: Perfil de contribuyente a utilizar
       profile_name_help: Nombre del perfil de contribuyente
       profile_tax_id_help: NIF del contribuyente
       success: Declaración construida correctamente
@@ -333,7 +330,6 @@ cli:
       modelo_mismatch: El modelo tributario no coincide
       multiple_import_sources: Se encontraron múltiples fuentes de importación
       period_mismatch: El periodo fiscal no coincide
-      profile_tax_id_required: Se requiere el NIF del contribuyente en el perfil
       reasons_not_object: Los motivos deben ser un objeto (JSON)
       submission_not_found: Presentación no encontrada
       submission_validation_failed: Fallo en la validación de la presentación
@@ -669,19 +665,6 @@ cli:
       show_help: Mostrar una normativa y, opcionalmente, uno de sus artículos
       tag_help: Filtrar por etiqueta de dominio fiscal (p. ej. 'irpf', 'iva')
       verify_help: Verificar la integridad del corpus normativo
-    manuals:
-      app_help: Inspeccionar los Manuales prácticos AEAT (Renta, IVA, Sociedades)
-      errors:
-        unknown_section: La sección {section} no se encontró en el manual
-      kind_help: Filtrar por tipo de regla del manual
-      list_help: Listar los manuales disponibles localmente
-      manual_help: Identificador del manual (renta, iva, sociedades)
-      part_help: Volumen del manual (single, part1, part2-deducciones-autonomicas, part3)
-      rules_help: Listar las reglas codificadas en un manual
-      section_help: Identificador opcional de sección a mostrar
-      show_help: Mostrar la estructura de un manual y, opcionalmente, una sección
-      verify_help: Verificar la integridad del manual contra su contrato
-      year_help: Año fiscal del manual (p. ej. 2024)
     errors:
       invalid_year_range: Rango de años no válido
       unknown_modelo: El registro no contiene una definición del modelo {modelo}
@@ -693,6 +676,20 @@ cli:
     list_filed_data_help: Listar presentaciones existentes en la AEAT para el rango
       de años especificado
     list_filed_data_json_help: Salida en formato JSON para herramientas de automatización
+    manuals:
+      app_help: Inspeccionar los Manuales prácticos AEAT (Renta, IVA, Sociedades)
+      errors:
+        unknown_section: La sección {section} no se encontró en el manual
+      kind_help: Filtrar por tipo de regla del manual
+      list_help: Listar los manuales disponibles localmente
+      manual_help: Identificador del manual (renta, iva, sociedades)
+      part_help: Volumen del manual (single, part1, part2-deducciones-autonomicas,
+        part3)
+      rules_help: Listar las reglas codificadas en un manual
+      section_help: Identificador opcional de sección a mostrar
+      show_help: Mostrar la estructura de un manual y, opcionalmente, una sección
+      verify_help: Verificar la integridad del manual contra su contrato
+      year_help: Año fiscal del manual (p. ej. 2024)
     metrics:
       applicability_declaration_count: applicability_declaration_count
       application_link_count: application_link_count
@@ -770,14 +767,14 @@ cli:
     workbooks_verify_help: Verificar la integridad de los libros de trabajo generados
     year_help: Ejercicio fiscal a consultar o procesar
   review:
-    app_help: 'Cola de revisión del operador: clasifica transacciones del libro,
-      justificantes de compra e incidencias de modelo'
+    app_help: 'Cola de revisión del operador: clasifica transacciones del libro, justificantes
+      de compra e incidencias de modelo'
     errors:
       invalid_state: 'Estado de revisión inválido: %{state}'
     labels:
-      id: ID
       affected_object_id: Objeto
       bucket: Bucket
+      id: ID
       kind: Tipo
       next: Siguiente
       period: Periodo
@@ -794,19 +791,19 @@ cli:
       help: Mostrar detalles de revisión de un elemento
       id_help: Identificador del elemento en la cola
   root:
-    app_app_help: Espacio de trabajo fiscal para overview, ledger, modelo, registry y review
+    app_app_help: Espacio de trabajo fiscal para overview, ledger, modelo, registry
+      y review
     app_help: 'Asistente de flujo fiscal español
 
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVIDAD'
     debug_help: Mostrar logs internos de depuración en stderr
+    detail_help: Mostrar también el resumen detallado del registro
     format_help: Formato de salida para los resultados del comando
     quiet_help: Mostrar solo errores en stderr
     verbose_help: Mostrar logs internos informativos en stderr
-    detail_help: Mostrar también el resumen detallado del registro
-    version_command_help: Mostrar la versión del paquete y el resumen del registro
-    version_help: Mostrar la versión del paquete (añade --detail para el resumen
-      completo del registro)
+    version_help: Mostrar la versión del paquete (añade --detail para el resumen completo
+      del registro)
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
@@ -886,6 +883,9 @@ filing:
     required_missing: Falta campo obligatorio
     schema_mismatch: Discrepancia con el esquema esperado
 profile:
+  keys:
+    tax:
+      id: Identificador fiscal (NIF/NIE/CIF)
   test_keys:
     description_490119: x
 review:
@@ -997,9 +997,9 @@ wizard:
     select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
       %{choices}.'
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
-    unsupported_console: 'El asistente interactivo necesita cmd.exe o Windows Terminal.
+    unsupported_console: El asistente interactivo necesita cmd.exe o Windows Terminal.
       Usa `aeat config init --quiet --tax-id NIF --activity ACTIVIDAD` o cambia de
-      terminal.'
+      terminal.
   progress:
     question_prefix: '(pregunta %{q_n}/%{q_total}) '
     section_header: 'Sección %{section_n}/%{section_total}: %{title}'
@@ -1026,8 +1026,6 @@ wizard:
         help: Código postal del domicilio fiscal
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
-      taxation-type:
-        help: Código del tipo de tributación
       does-intracomunitario:
         help: Realiza operaciones intracomunitarias
       enrollment-large-company:
@@ -1086,6 +1084,8 @@ wizard:
         help: Identificador fiscal (NIF/NIE) del perfil activo
       tax-residence-ccaa:
         help: Comunidad autónoma de residencia fiscal
+      taxation-type:
+        help: Código del tipo de tributación
       taxpayer-birth-date:
         help: Fecha de nacimiento del primer declarante
       taxpayer-death-date:
@@ -1139,8 +1139,6 @@ wizard:
         prompt: Etiqueta de actividad o clave controlada
       address-postcode:
         prompt: Código postal del domicilio fiscal
-      taxation-type:
-        prompt: Código del tipo de tributación
       iva-regime:
         choices:
           exento:
@@ -1168,6 +1166,8 @@ wizard:
         prompt: Apellidos o razón social para cabeceras de exportación
       tax-id:
         prompt: Identificador fiscal (NIF/NIE) para declaraciones
+      taxation-type:
+        prompt: Código del tipo de tributación
       title: Identidad del perfil
     residence:
       ccaa:
