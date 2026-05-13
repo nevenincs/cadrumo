@@ -268,56 +268,56 @@ This Wave implements the `2026-04-24-aeat-cli-wireframe-adr` decision for operat
 
 This Phase delivers backend implementation for operator command journey wireframe as required by `2026-04-24-aeat-cli-wireframe-adr`.
 
-- [ ] `W03.P011.S0061` - Map the `2026-04-24-aeat-cli-wireframe-adr` decision into non-CLI service ownership for operator command journey wireframe; `src/aeat/application`.
-- [ ] `W03.P011.S0062` - Implement Pydantic command and result contracts for operator command journey wireframe; `src/aeat/application`.
-- [ ] `W03.P011.S0063` - Wire application or domain services required by operator command journey wireframe; `src/aeat/application`.
-- [ ] `W03.P011.S0064` - Connect persistence, bucket events, registry data, or provider adapters required by operator command journey wireframe; `src/aeat/application`.
-- [ ] `W03.P011.S0065` - Route existing backend functionality into the canonical service for operator command journey wireframe; `src/aeat/application`.
-- [ ] `W03.P011.S0066` - Record service-level error codes and log fields for operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P011.S0061` - Map the `2026-04-24-aeat-cli-wireframe-adr` decision into non-CLI service ownership for operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P011.S0062` - Implement Pydantic command and result contracts for operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P011.S0063` - Wire application or domain services required by operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P011.S0064` - Connect persistence, bucket events, registry data, or provider adapters required by operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P011.S0065` - Route existing backend functionality into the canonical service for operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P011.S0066` - Record service-level error codes and log fields for operator command journey wireframe; `src/aeat/application`.
 
 ### Phase `W03.P012` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for operator command journey wireframe as required by `2026-04-24-aeat-cli-wireframe-adr`.
 
-- [ ] `W03.P012.S0067` - Audit duplicate implementations that overlap operator command journey wireframe; `src/aeat/application`.
-- [ ] `W03.P012.S0068` - Delete duplicate backend branches that compete with operator command journey wireframe; `src/aeat/application`.
-- [ ] `W03.P012.S0069` - Remove stale aliases that bypass the canonical service for operator command journey wireframe; `src/aeat/entrypoints/cli`.
-- [ ] `W03.P012.S0070` - Migrate internal callers to the canonical service for operator command journey wireframe; `src/aeat/application`.
-- [ ] `W03.P012.S0071` - Remove stale fixtures and tests that encode duplicate behavior for operator command journey wireframe; `tests/entrypoints/cli`.
-- [ ] `W03.P012.S0072` - Update boundary inventory entries that describe duplicate behavior for operator command journey wireframe; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W03.P012.S0067` - Audit duplicate implementations that overlap operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P012.S0068` - Delete duplicate backend branches that compete with operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P012.S0069` - Remove stale aliases that bypass the canonical service for operator command journey wireframe; `src/aeat/entrypoints/cli`.
+- [x] `W03.P012.S0070` - Migrate internal callers to the canonical service for operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P012.S0071` - Remove stale fixtures and tests that encode duplicate behavior for operator command journey wireframe; `tests/entrypoints/cli`.
+- [x] `W03.P012.S0072` - Update boundary inventory entries that describe duplicate behavior for operator command journey wireframe; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W03.P013` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for operator command journey wireframe as required by `2026-04-24-aeat-cli-wireframe-adr`.
 
-- [ ] `W03.P013.S0073` - Delete compatibility shims that preserve rejected behavior for operator command journey wireframe; `src/aeat/application`.
-- [ ] `W03.P013.S0074` - Delete placeholder stubs that claim support for operator command journey wireframe; `src/aeat/application`.
-- [ ] `W03.P013.S0075` - Replace stubbed paths with real backend service calls for operator command journey wireframe; `src/aeat/application`.
-- [ ] `W03.P013.S0076` - Remove deprecated command spelling and help text for operator command journey wireframe; `src/aeat/entrypoints/cli`.
-- [ ] `W03.P013.S0077` - Remove tests that assert shim or stub behavior for operator command journey wireframe; `tests/entrypoints/cli`.
-- [ ] `W03.P013.S0078` - Record the removed shim and stub surfaces for operator command journey wireframe; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W03.P013.S0073` - Delete compatibility shims that preserve rejected behavior for operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P013.S0074` - Delete placeholder stubs that claim support for operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P013.S0075` - Replace stubbed paths with real backend service calls for operator command journey wireframe; `src/aeat/application`.
+- [x] `W03.P013.S0076` - Remove deprecated command spelling and help text for operator command journey wireframe; `src/aeat/entrypoints/cli`.
+- [x] `W03.P013.S0077` - Remove tests that assert shim or stub behavior for operator command journey wireframe; `tests/entrypoints/cli`.
+- [x] `W03.P013.S0078` - Record the removed shim and stub surfaces for operator command journey wireframe; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W03.P014` - real behavior verification
 
 This Phase delivers real behavior verification for operator command journey wireframe as required by `2026-04-24-aeat-cli-wireframe-adr`.
 
-- [ ] `W03.P014.S0079` - Add service contract tests for operator command journey wireframe; `tests/entrypoints/cli`.
-- [ ] `W03.P014.S0080` - Add persistence or registry integration tests for operator command journey wireframe; `tests/entrypoints/cli`.
-- [ ] `W03.P014.S0081` - Add negative tests proving rejected aliases do not reach operator command journey wireframe; `tests/entrypoints/cli`.
-- [ ] `W03.P014.S0082` - Add command behavior tests that exercise operator command journey wireframe through real services; `tests/entrypoints/cli`.
-- [ ] `W03.P014.S0083` - Add end-to-end workflow coverage for operator command journey wireframe; `tests`.
-- [ ] `W03.P014.S0084` - Run the targeted test slice for operator command journey wireframe without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W03.P014.S0079` - Add service contract tests for operator command journey wireframe; `tests/entrypoints/cli`.
+- [x] `W03.P014.S0080` - Add persistence or registry integration tests for operator command journey wireframe; `tests/entrypoints/cli`.
+- [x] `W03.P014.S0081` - Add negative tests proving rejected aliases do not reach operator command journey wireframe; `tests/entrypoints/cli`.
+- [x] `W03.P014.S0082` - Add command behavior tests that exercise operator command journey wireframe through real services; `tests/entrypoints/cli`.
+- [x] `W03.P014.S0083` - Add end-to-end workflow coverage for operator command journey wireframe; `tests`.
+- [x] `W03.P014.S0084` - Run the targeted test slice for operator command journey wireframe without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W03.P015` - thin cli exposure
 
 This Phase delivers thin cli exposure for operator command journey wireframe as required by `2026-04-24-aeat-cli-wireframe-adr`.
 
-- [ ] `W03.P015.S0085` - Expose accepted command handlers for operator command journey wireframe under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W03.P015.S0086` - Keep argument parsing for operator command journey wireframe separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W03.P015.S0087` - Delegate operator command journey wireframe execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W03.P015.S0088` - Render operator command journey wireframe results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W03.P015.S0089` - Handle operator command journey wireframe failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W03.P015.S0090` - Validate help text for operator command journey wireframe uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W03.P015.S0085` - Expose accepted command handlers for operator command journey wireframe under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W03.P015.S0086` - Keep argument parsing for operator command journey wireframe separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W03.P015.S0087` - Delegate operator command journey wireframe execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W03.P015.S0088` - Render operator command journey wireframe results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W03.P015.S0089` - Handle operator command journey wireframe failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W03.P015.S0090` - Validate help text for operator command journey wireframe uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W04` - aeat cli redesign
 
@@ -327,56 +327,56 @@ This Wave implements the `2026-05-02-aeat-cli-redesign-adr` decision for histori
 
 This Phase delivers backend implementation for historical cli redesign consolidation as required by `2026-05-02-aeat-cli-redesign-adr`.
 
-- [ ] `W04.P016.S0091` - Map the `2026-05-02-aeat-cli-redesign-adr` decision into non-CLI service ownership for historical cli redesign consolidation; `src/aeat/application`.
-- [ ] `W04.P016.S0092` - Implement Pydantic command and result contracts for historical cli redesign consolidation; `src/aeat/application`.
-- [ ] `W04.P016.S0093` - Wire application or domain services required by historical cli redesign consolidation; `src/aeat/application`.
-- [ ] `W04.P016.S0094` - Connect persistence, bucket events, registry data, or provider adapters required by historical cli redesign consolidation; `src/aeat/application`.
-- [ ] `W04.P016.S0095` - Route existing backend functionality into the canonical service for historical cli redesign consolidation; `src/aeat/application`.
-- [ ] `W04.P016.S0096` - Record service-level error codes and log fields for historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P016.S0091` - Map the `2026-05-02-aeat-cli-redesign-adr` decision into non-CLI service ownership for historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P016.S0092` - Implement Pydantic command and result contracts for historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P016.S0093` - Wire application or domain services required by historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P016.S0094` - Connect persistence, bucket events, registry data, or provider adapters required by historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P016.S0095` - Route existing backend functionality into the canonical service for historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P016.S0096` - Record service-level error codes and log fields for historical cli redesign consolidation; `src/aeat/application`.
 
 ### Phase `W04.P017` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for historical cli redesign consolidation as required by `2026-05-02-aeat-cli-redesign-adr`.
 
-- [ ] `W04.P017.S0097` - Audit duplicate implementations that overlap historical cli redesign consolidation; `src/aeat/application`.
-- [ ] `W04.P017.S0098` - Delete duplicate backend branches that compete with historical cli redesign consolidation; `src/aeat/application`.
-- [ ] `W04.P017.S0099` - Remove stale aliases that bypass the canonical service for historical cli redesign consolidation; `src/aeat/entrypoints/cli`.
-- [ ] `W04.P017.S0100` - Migrate internal callers to the canonical service for historical cli redesign consolidation; `src/aeat/application`.
-- [ ] `W04.P017.S0101` - Remove stale fixtures and tests that encode duplicate behavior for historical cli redesign consolidation; `tests/entrypoints/cli`.
-- [ ] `W04.P017.S0102` - Update boundary inventory entries that describe duplicate behavior for historical cli redesign consolidation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W04.P017.S0097` - Audit duplicate implementations that overlap historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P017.S0098` - Delete duplicate backend branches that compete with historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P017.S0099` - Remove stale aliases that bypass the canonical service for historical cli redesign consolidation; `src/aeat/entrypoints/cli`.
+- [x] `W04.P017.S0100` - Migrate internal callers to the canonical service for historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P017.S0101` - Remove stale fixtures and tests that encode duplicate behavior for historical cli redesign consolidation; `tests/entrypoints/cli`.
+- [x] `W04.P017.S0102` - Update boundary inventory entries that describe duplicate behavior for historical cli redesign consolidation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W04.P018` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for historical cli redesign consolidation as required by `2026-05-02-aeat-cli-redesign-adr`.
 
-- [ ] `W04.P018.S0103` - Delete compatibility shims that preserve rejected behavior for historical cli redesign consolidation; `src/aeat/application`.
-- [ ] `W04.P018.S0104` - Delete placeholder stubs that claim support for historical cli redesign consolidation; `src/aeat/application`.
-- [ ] `W04.P018.S0105` - Replace stubbed paths with real backend service calls for historical cli redesign consolidation; `src/aeat/application`.
-- [ ] `W04.P018.S0106` - Remove deprecated command spelling and help text for historical cli redesign consolidation; `src/aeat/entrypoints/cli`.
-- [ ] `W04.P018.S0107` - Remove tests that assert shim or stub behavior for historical cli redesign consolidation; `tests/entrypoints/cli`.
-- [ ] `W04.P018.S0108` - Record the removed shim and stub surfaces for historical cli redesign consolidation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W04.P018.S0103` - Delete compatibility shims that preserve rejected behavior for historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P018.S0104` - Delete placeholder stubs that claim support for historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P018.S0105` - Replace stubbed paths with real backend service calls for historical cli redesign consolidation; `src/aeat/application`.
+- [x] `W04.P018.S0106` - Remove deprecated command spelling and help text for historical cli redesign consolidation; `src/aeat/entrypoints/cli`.
+- [x] `W04.P018.S0107` - Remove tests that assert shim or stub behavior for historical cli redesign consolidation; `tests/entrypoints/cli`.
+- [x] `W04.P018.S0108` - Record the removed shim and stub surfaces for historical cli redesign consolidation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W04.P019` - real behavior verification
 
 This Phase delivers real behavior verification for historical cli redesign consolidation as required by `2026-05-02-aeat-cli-redesign-adr`.
 
-- [ ] `W04.P019.S0109` - Add service contract tests for historical cli redesign consolidation; `tests/entrypoints/cli`.
-- [ ] `W04.P019.S0110` - Add persistence or registry integration tests for historical cli redesign consolidation; `tests/entrypoints/cli`.
-- [ ] `W04.P019.S0111` - Add negative tests proving rejected aliases do not reach historical cli redesign consolidation; `tests/entrypoints/cli`.
-- [ ] `W04.P019.S0112` - Add command behavior tests that exercise historical cli redesign consolidation through real services; `tests/entrypoints/cli`.
-- [ ] `W04.P019.S0113` - Add end-to-end workflow coverage for historical cli redesign consolidation; `tests`.
-- [ ] `W04.P019.S0114` - Run the targeted test slice for historical cli redesign consolidation without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W04.P019.S0109` - Add service contract tests for historical cli redesign consolidation; `tests/entrypoints/cli`.
+- [x] `W04.P019.S0110` - Add persistence or registry integration tests for historical cli redesign consolidation; `tests/entrypoints/cli`.
+- [x] `W04.P019.S0111` - Add negative tests proving rejected aliases do not reach historical cli redesign consolidation; `tests/entrypoints/cli`.
+- [x] `W04.P019.S0112` - Add command behavior tests that exercise historical cli redesign consolidation through real services; `tests/entrypoints/cli`.
+- [x] `W04.P019.S0113` - Add end-to-end workflow coverage for historical cli redesign consolidation; `tests`.
+- [x] `W04.P019.S0114` - Run the targeted test slice for historical cli redesign consolidation without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W04.P020` - thin cli exposure
 
 This Phase delivers thin cli exposure for historical cli redesign consolidation as required by `2026-05-02-aeat-cli-redesign-adr`.
 
-- [ ] `W04.P020.S0115` - Expose accepted command handlers for historical cli redesign consolidation under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W04.P020.S0116` - Keep argument parsing for historical cli redesign consolidation separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W04.P020.S0117` - Delegate historical cli redesign consolidation execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W04.P020.S0118` - Render historical cli redesign consolidation results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W04.P020.S0119` - Handle historical cli redesign consolidation failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W04.P020.S0120` - Validate help text for historical cli redesign consolidation uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W04.P020.S0115` - Expose accepted command handlers for historical cli redesign consolidation under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W04.P020.S0116` - Keep argument parsing for historical cli redesign consolidation separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W04.P020.S0117` - Delegate historical cli redesign consolidation execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W04.P020.S0118` - Render historical cli redesign consolidation results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W04.P020.S0119` - Handle historical cli redesign consolidation failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W04.P020.S0120` - Validate help text for historical cli redesign consolidation uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W05` - root help shape
 
@@ -386,56 +386,56 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-root-help-shape-adr` 
 
 This Phase delivers backend implementation for root help and discovery behavior as required by `2026-05-13-cli-workflow-redesign-root-help-shape-adr`.
 
-- [ ] `W05.P021.S0121` - Map the `2026-05-13-cli-workflow-redesign-root-help-shape-adr` decision into non-CLI service ownership for root help and discovery behavior; `src/aeat/application`.
-- [ ] `W05.P021.S0122` - Implement Pydantic command and result contracts for root help and discovery behavior; `src/aeat/application`.
-- [ ] `W05.P021.S0123` - Wire application or domain services required by root help and discovery behavior; `src/aeat/application`.
-- [ ] `W05.P021.S0124` - Connect persistence, bucket events, registry data, or provider adapters required by root help and discovery behavior; `src/aeat/application`.
-- [ ] `W05.P021.S0125` - Route existing backend functionality into the canonical service for root help and discovery behavior; `src/aeat/application`.
-- [ ] `W05.P021.S0126` - Record service-level error codes and log fields for root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P021.S0121` - Map the `2026-05-13-cli-workflow-redesign-root-help-shape-adr` decision into non-CLI service ownership for root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P021.S0122` - Implement Pydantic command and result contracts for root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P021.S0123` - Wire application or domain services required by root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P021.S0124` - Connect persistence, bucket events, registry data, or provider adapters required by root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P021.S0125` - Route existing backend functionality into the canonical service for root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P021.S0126` - Record service-level error codes and log fields for root help and discovery behavior; `src/aeat/application`.
 
 ### Phase `W05.P022` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for root help and discovery behavior as required by `2026-05-13-cli-workflow-redesign-root-help-shape-adr`.
 
-- [ ] `W05.P022.S0127` - Audit duplicate implementations that overlap root help and discovery behavior; `src/aeat/application`.
-- [ ] `W05.P022.S0128` - Delete duplicate backend branches that compete with root help and discovery behavior; `src/aeat/application`.
-- [ ] `W05.P022.S0129` - Remove stale aliases that bypass the canonical service for root help and discovery behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W05.P022.S0130` - Migrate internal callers to the canonical service for root help and discovery behavior; `src/aeat/application`.
-- [ ] `W05.P022.S0131` - Remove stale fixtures and tests that encode duplicate behavior for root help and discovery behavior; `tests/entrypoints/cli`.
-- [ ] `W05.P022.S0132` - Update boundary inventory entries that describe duplicate behavior for root help and discovery behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W05.P022.S0127` - Audit duplicate implementations that overlap root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P022.S0128` - Delete duplicate backend branches that compete with root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P022.S0129` - Remove stale aliases that bypass the canonical service for root help and discovery behavior; `src/aeat/entrypoints/cli`.
+- [x] `W05.P022.S0130` - Migrate internal callers to the canonical service for root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P022.S0131` - Remove stale fixtures and tests that encode duplicate behavior for root help and discovery behavior; `tests/entrypoints/cli`.
+- [x] `W05.P022.S0132` - Update boundary inventory entries that describe duplicate behavior for root help and discovery behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W05.P023` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for root help and discovery behavior as required by `2026-05-13-cli-workflow-redesign-root-help-shape-adr`.
 
-- [ ] `W05.P023.S0133` - Delete compatibility shims that preserve rejected behavior for root help and discovery behavior; `src/aeat/application`.
-- [ ] `W05.P023.S0134` - Delete placeholder stubs that claim support for root help and discovery behavior; `src/aeat/application`.
-- [ ] `W05.P023.S0135` - Replace stubbed paths with real backend service calls for root help and discovery behavior; `src/aeat/application`.
-- [ ] `W05.P023.S0136` - Remove deprecated command spelling and help text for root help and discovery behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W05.P023.S0137` - Remove tests that assert shim or stub behavior for root help and discovery behavior; `tests/entrypoints/cli`.
-- [ ] `W05.P023.S0138` - Record the removed shim and stub surfaces for root help and discovery behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W05.P023.S0133` - Delete compatibility shims that preserve rejected behavior for root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P023.S0134` - Delete placeholder stubs that claim support for root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P023.S0135` - Replace stubbed paths with real backend service calls for root help and discovery behavior; `src/aeat/application`.
+- [x] `W05.P023.S0136` - Remove deprecated command spelling and help text for root help and discovery behavior; `src/aeat/entrypoints/cli`.
+- [x] `W05.P023.S0137` - Remove tests that assert shim or stub behavior for root help and discovery behavior; `tests/entrypoints/cli`.
+- [x] `W05.P023.S0138` - Record the removed shim and stub surfaces for root help and discovery behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W05.P024` - real behavior verification
 
 This Phase delivers real behavior verification for root help and discovery behavior as required by `2026-05-13-cli-workflow-redesign-root-help-shape-adr`.
 
-- [ ] `W05.P024.S0139` - Add service contract tests for root help and discovery behavior; `tests/entrypoints/cli`.
-- [ ] `W05.P024.S0140` - Add persistence or registry integration tests for root help and discovery behavior; `tests/entrypoints/cli`.
-- [ ] `W05.P024.S0141` - Add negative tests proving rejected aliases do not reach root help and discovery behavior; `tests/entrypoints/cli`.
-- [ ] `W05.P024.S0142` - Add command behavior tests that exercise root help and discovery behavior through real services; `tests/entrypoints/cli`.
-- [ ] `W05.P024.S0143` - Add end-to-end workflow coverage for root help and discovery behavior; `tests`.
-- [ ] `W05.P024.S0144` - Run the targeted test slice for root help and discovery behavior without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W05.P024.S0139` - Add service contract tests for root help and discovery behavior; `tests/entrypoints/cli`.
+- [x] `W05.P024.S0140` - Add persistence or registry integration tests for root help and discovery behavior; `tests/entrypoints/cli`.
+- [x] `W05.P024.S0141` - Add negative tests proving rejected aliases do not reach root help and discovery behavior; `tests/entrypoints/cli`.
+- [x] `W05.P024.S0142` - Add command behavior tests that exercise root help and discovery behavior through real services; `tests/entrypoints/cli`.
+- [x] `W05.P024.S0143` - Add end-to-end workflow coverage for root help and discovery behavior; `tests`.
+- [x] `W05.P024.S0144` - Run the targeted test slice for root help and discovery behavior without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W05.P025` - thin cli exposure
 
 This Phase delivers thin cli exposure for root help and discovery behavior as required by `2026-05-13-cli-workflow-redesign-root-help-shape-adr`.
 
-- [ ] `W05.P025.S0145` - Expose accepted command handlers for root help and discovery behavior under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W05.P025.S0146` - Keep argument parsing for root help and discovery behavior separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W05.P025.S0147` - Delegate root help and discovery behavior execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W05.P025.S0148` - Render root help and discovery behavior results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W05.P025.S0149` - Handle root help and discovery behavior failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W05.P025.S0150` - Validate help text for root help and discovery behavior uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W05.P025.S0145` - Expose accepted command handlers for root help and discovery behavior under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W05.P025.S0146` - Keep argument parsing for root help and discovery behavior separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W05.P025.S0147` - Delegate root help and discovery behavior execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W05.P025.S0148` - Render root help and discovery behavior results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W05.P025.S0149` - Handle root help and discovery behavior failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W05.P025.S0150` - Validate help text for root help and discovery behavior uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W06` - output rendering normalization
 
@@ -2392,56 +2392,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-calculate-revi
 
 This Phase delivers backend implementation for modelo calculation revisions as required by `2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr`.
 
-- [ ] `W39.P191.S1141` - Map the `2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr` decision into non-CLI service ownership for modelo calculation revisions; `src/aeat/application/modelo`.
-- [ ] `W39.P191.S1142` - Implement Pydantic command and result contracts for modelo calculation revisions; `src/aeat/application/modelo`.
-- [ ] `W39.P191.S1143` - Wire application or domain services required by modelo calculation revisions; `src/aeat/application/modelo`.
-- [ ] `W39.P191.S1144` - Connect persistence, bucket events, registry data, or provider adapters required by modelo calculation revisions; `src/aeat/application/modelo`.
-- [ ] `W39.P191.S1145` - Route existing backend functionality into the canonical service for modelo calculation revisions; `src/aeat/application/modelo`.
-- [ ] `W39.P191.S1146` - Record service-level error codes and log fields for modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P191.S1141` - Map the `2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr` decision into non-CLI service ownership for modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P191.S1142` - Implement Pydantic command and result contracts for modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P191.S1143` - Wire application or domain services required by modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P191.S1144` - Connect persistence, bucket events, registry data, or provider adapters required by modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P191.S1145` - Route existing backend functionality into the canonical service for modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P191.S1146` - Record service-level error codes and log fields for modelo calculation revisions; `src/aeat/application/modelo`.
 
 ### Phase `W39.P192` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for modelo calculation revisions as required by `2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr`.
 
-- [ ] `W39.P192.S1147` - Audit duplicate implementations that overlap modelo calculation revisions; `src/aeat/application/modelo`.
-- [ ] `W39.P192.S1148` - Delete duplicate backend branches that compete with modelo calculation revisions; `src/aeat/application/modelo`.
-- [ ] `W39.P192.S1149` - Remove stale aliases that bypass the canonical service for modelo calculation revisions; `src/aeat/entrypoints/cli`.
-- [ ] `W39.P192.S1150` - Migrate internal callers to the canonical service for modelo calculation revisions; `src/aeat/application/modelo`.
-- [ ] `W39.P192.S1151` - Remove stale fixtures and tests that encode duplicate behavior for modelo calculation revisions; `tests/application/modelo`.
-- [ ] `W39.P192.S1152` - Update boundary inventory entries that describe duplicate behavior for modelo calculation revisions; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W39.P192.S1147` - Audit duplicate implementations that overlap modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P192.S1148` - Delete duplicate backend branches that compete with modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P192.S1149` - Remove stale aliases that bypass the canonical service for modelo calculation revisions; `src/aeat/entrypoints/cli`.
+- [x] `W39.P192.S1150` - Migrate internal callers to the canonical service for modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P192.S1151` - Remove stale fixtures and tests that encode duplicate behavior for modelo calculation revisions; `tests/application/modelo`.
+- [x] `W39.P192.S1152` - Update boundary inventory entries that describe duplicate behavior for modelo calculation revisions; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W39.P193` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for modelo calculation revisions as required by `2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr`.
 
-- [ ] `W39.P193.S1153` - Delete compatibility shims that preserve rejected behavior for modelo calculation revisions; `src/aeat/application/modelo`.
-- [ ] `W39.P193.S1154` - Delete placeholder stubs that claim support for modelo calculation revisions; `src/aeat/application/modelo`.
-- [ ] `W39.P193.S1155` - Replace stubbed paths with real backend service calls for modelo calculation revisions; `src/aeat/application/modelo`.
-- [ ] `W39.P193.S1156` - Remove deprecated command spelling and help text for modelo calculation revisions; `src/aeat/entrypoints/cli`.
-- [ ] `W39.P193.S1157` - Remove tests that assert shim or stub behavior for modelo calculation revisions; `tests/application/modelo`.
-- [ ] `W39.P193.S1158` - Record the removed shim and stub surfaces for modelo calculation revisions; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W39.P193.S1153` - Delete compatibility shims that preserve rejected behavior for modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P193.S1154` - Delete placeholder stubs that claim support for modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P193.S1155` - Replace stubbed paths with real backend service calls for modelo calculation revisions; `src/aeat/application/modelo`.
+- [x] `W39.P193.S1156` - Remove deprecated command spelling and help text for modelo calculation revisions; `src/aeat/entrypoints/cli`.
+- [x] `W39.P193.S1157` - Remove tests that assert shim or stub behavior for modelo calculation revisions; `tests/application/modelo`.
+- [x] `W39.P193.S1158` - Record the removed shim and stub surfaces for modelo calculation revisions; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W39.P194` - real behavior verification
 
 This Phase delivers real behavior verification for modelo calculation revisions as required by `2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr`.
 
-- [ ] `W39.P194.S1159` - Add service contract tests for modelo calculation revisions; `tests/application/modelo`.
-- [ ] `W39.P194.S1160` - Add persistence or registry integration tests for modelo calculation revisions; `tests/application/modelo`.
-- [ ] `W39.P194.S1161` - Add negative tests proving rejected aliases do not reach modelo calculation revisions; `tests/entrypoints/cli`.
-- [ ] `W39.P194.S1162` - Add command behavior tests that exercise modelo calculation revisions through real services; `tests/entrypoints/cli`.
-- [ ] `W39.P194.S1163` - Add end-to-end workflow coverage for modelo calculation revisions; `tests`.
-- [ ] `W39.P194.S1164` - Run the targeted test slice for modelo calculation revisions without skips or xfails; `tests/application/modelo`.
+- [x] `W39.P194.S1159` - Add service contract tests for modelo calculation revisions; `tests/application/modelo`.
+- [x] `W39.P194.S1160` - Add persistence or registry integration tests for modelo calculation revisions; `tests/application/modelo`.
+- [x] `W39.P194.S1161` - Add negative tests proving rejected aliases do not reach modelo calculation revisions; `tests/entrypoints/cli`.
+- [x] `W39.P194.S1162` - Add command behavior tests that exercise modelo calculation revisions through real services; `tests/entrypoints/cli`.
+- [x] `W39.P194.S1163` - Add end-to-end workflow coverage for modelo calculation revisions; `tests`.
+- [x] `W39.P194.S1164` - Run the targeted test slice for modelo calculation revisions without skips or xfails; `tests/application/modelo`.
 
 ### Phase `W39.P195` - thin cli exposure
 
 This Phase delivers thin cli exposure for modelo calculation revisions as required by `2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr`.
 
-- [ ] `W39.P195.S1165` - Expose accepted command handlers for modelo calculation revisions under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W39.P195.S1166` - Keep argument parsing for modelo calculation revisions separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W39.P195.S1167` - Delegate modelo calculation revisions execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W39.P195.S1168` - Render modelo calculation revisions results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W39.P195.S1169` - Handle modelo calculation revisions failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W39.P195.S1170` - Validate help text for modelo calculation revisions uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W39.P195.S1165` - Expose accepted command handlers for modelo calculation revisions under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W39.P195.S1166` - Keep argument parsing for modelo calculation revisions separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W39.P195.S1167` - Delegate modelo calculation revisions execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W39.P195.S1168` - Render modelo calculation revisions results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W39.P195.S1169` - Handle modelo calculation revisions failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W39.P195.S1170` - Validate help text for modelo calculation revisions uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W40` - modelo verify
 
@@ -2510,56 +2510,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-verified-complete-adr
 
 This Phase delivers backend implementation for verified complete state as required by `2026-05-12-cli-workflow-redesign-verified-complete-adr`.
 
-- [ ] `W41.P201.S1201` - Map the `2026-05-12-cli-workflow-redesign-verified-complete-adr` decision into non-CLI service ownership for verified complete state; `src/aeat/application/modelo`.
-- [ ] `W41.P201.S1202` - Implement Pydantic command and result contracts for verified complete state; `src/aeat/application/modelo`.
-- [ ] `W41.P201.S1203` - Wire application or domain services required by verified complete state; `src/aeat/application/modelo`.
-- [ ] `W41.P201.S1204` - Connect persistence, bucket events, registry data, or provider adapters required by verified complete state; `src/aeat/application/modelo`.
-- [ ] `W41.P201.S1205` - Route existing backend functionality into the canonical service for verified complete state; `src/aeat/application/modelo`.
-- [ ] `W41.P201.S1206` - Record service-level error codes and log fields for verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P201.S1201` - Map the `2026-05-12-cli-workflow-redesign-verified-complete-adr` decision into non-CLI service ownership for verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P201.S1202` - Implement Pydantic command and result contracts for verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P201.S1203` - Wire application or domain services required by verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P201.S1204` - Connect persistence, bucket events, registry data, or provider adapters required by verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P201.S1205` - Route existing backend functionality into the canonical service for verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P201.S1206` - Record service-level error codes and log fields for verified complete state; `src/aeat/application/modelo`.
 
 ### Phase `W41.P202` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for verified complete state as required by `2026-05-12-cli-workflow-redesign-verified-complete-adr`.
 
-- [ ] `W41.P202.S1207` - Audit duplicate implementations that overlap verified complete state; `src/aeat/application/modelo`.
-- [ ] `W41.P202.S1208` - Delete duplicate backend branches that compete with verified complete state; `src/aeat/application/modelo`.
-- [ ] `W41.P202.S1209` - Remove stale aliases that bypass the canonical service for verified complete state; `src/aeat/entrypoints/cli`.
-- [ ] `W41.P202.S1210` - Migrate internal callers to the canonical service for verified complete state; `src/aeat/application/modelo`.
-- [ ] `W41.P202.S1211` - Remove stale fixtures and tests that encode duplicate behavior for verified complete state; `tests/application/modelo`.
-- [ ] `W41.P202.S1212` - Update boundary inventory entries that describe duplicate behavior for verified complete state; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W41.P202.S1207` - Audit duplicate implementations that overlap verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P202.S1208` - Delete duplicate backend branches that compete with verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P202.S1209` - Remove stale aliases that bypass the canonical service for verified complete state; `src/aeat/entrypoints/cli`.
+- [x] `W41.P202.S1210` - Migrate internal callers to the canonical service for verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P202.S1211` - Remove stale fixtures and tests that encode duplicate behavior for verified complete state; `tests/application/modelo`.
+- [x] `W41.P202.S1212` - Update boundary inventory entries that describe duplicate behavior for verified complete state; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W41.P203` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for verified complete state as required by `2026-05-12-cli-workflow-redesign-verified-complete-adr`.
 
-- [ ] `W41.P203.S1213` - Delete compatibility shims that preserve rejected behavior for verified complete state; `src/aeat/application/modelo`.
-- [ ] `W41.P203.S1214` - Delete placeholder stubs that claim support for verified complete state; `src/aeat/application/modelo`.
-- [ ] `W41.P203.S1215` - Replace stubbed paths with real backend service calls for verified complete state; `src/aeat/application/modelo`.
-- [ ] `W41.P203.S1216` - Remove deprecated command spelling and help text for verified complete state; `src/aeat/entrypoints/cli`.
-- [ ] `W41.P203.S1217` - Remove tests that assert shim or stub behavior for verified complete state; `tests/application/modelo`.
-- [ ] `W41.P203.S1218` - Record the removed shim and stub surfaces for verified complete state; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W41.P203.S1213` - Delete compatibility shims that preserve rejected behavior for verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P203.S1214` - Delete placeholder stubs that claim support for verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P203.S1215` - Replace stubbed paths with real backend service calls for verified complete state; `src/aeat/application/modelo`.
+- [x] `W41.P203.S1216` - Remove deprecated command spelling and help text for verified complete state; `src/aeat/entrypoints/cli`.
+- [x] `W41.P203.S1217` - Remove tests that assert shim or stub behavior for verified complete state; `tests/application/modelo`.
+- [x] `W41.P203.S1218` - Record the removed shim and stub surfaces for verified complete state; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W41.P204` - real behavior verification
 
 This Phase delivers real behavior verification for verified complete state as required by `2026-05-12-cli-workflow-redesign-verified-complete-adr`.
 
-- [ ] `W41.P204.S1219` - Add service contract tests for verified complete state; `tests/application/modelo`.
-- [ ] `W41.P204.S1220` - Add persistence or registry integration tests for verified complete state; `tests/application/modelo`.
-- [ ] `W41.P204.S1221` - Add negative tests proving rejected aliases do not reach verified complete state; `tests/entrypoints/cli`.
-- [ ] `W41.P204.S1222` - Add command behavior tests that exercise verified complete state through real services; `tests/entrypoints/cli`.
-- [ ] `W41.P204.S1223` - Add end-to-end workflow coverage for verified complete state; `tests`.
-- [ ] `W41.P204.S1224` - Run the targeted test slice for verified complete state without skips or xfails; `tests/application/modelo`.
+- [x] `W41.P204.S1219` - Add service contract tests for verified complete state; `tests/application/modelo`.
+- [x] `W41.P204.S1220` - Add persistence or registry integration tests for verified complete state; `tests/application/modelo`.
+- [x] `W41.P204.S1221` - Add negative tests proving rejected aliases do not reach verified complete state; `tests/entrypoints/cli`.
+- [x] `W41.P204.S1222` - Add command behavior tests that exercise verified complete state through real services; `tests/entrypoints/cli`.
+- [x] `W41.P204.S1223` - Add end-to-end workflow coverage for verified complete state; `tests`.
+- [x] `W41.P204.S1224` - Run the targeted test slice for verified complete state without skips or xfails; `tests/application/modelo`.
 
 ### Phase `W41.P205` - thin cli exposure
 
 This Phase delivers thin cli exposure for verified complete state as required by `2026-05-12-cli-workflow-redesign-verified-complete-adr`.
 
-- [ ] `W41.P205.S1225` - Expose accepted command handlers for verified complete state under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W41.P205.S1226` - Keep argument parsing for verified complete state separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W41.P205.S1227` - Delegate verified complete state execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W41.P205.S1228` - Render verified complete state results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W41.P205.S1229` - Handle verified complete state failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W41.P205.S1230` - Validate help text for verified complete state uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W41.P205.S1225` - Expose accepted command handlers for verified complete state under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W41.P205.S1226` - Keep argument parsing for verified complete state separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W41.P205.S1227` - Delegate verified complete state execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W41.P205.S1228` - Render verified complete state results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W41.P205.S1229` - Handle verified complete state failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W41.P205.S1230` - Validate help text for verified complete state uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W42` - modelo file
 
@@ -2569,56 +2569,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-file-adr` deci
 
 This Phase delivers backend implementation for internal filed state as required by `2026-05-12-cli-workflow-redesign-modelo-file-adr`.
 
-- [ ] `W42.P206.S1231` - Map the `2026-05-12-cli-workflow-redesign-modelo-file-adr` decision into non-CLI service ownership for internal filed state; `src/aeat/application/modelo`.
-- [ ] `W42.P206.S1232` - Implement Pydantic command and result contracts for internal filed state; `src/aeat/application/modelo`.
-- [ ] `W42.P206.S1233` - Wire application or domain services required by internal filed state; `src/aeat/application/modelo`.
-- [ ] `W42.P206.S1234` - Connect persistence, bucket events, registry data, or provider adapters required by internal filed state; `src/aeat/application/modelo`.
-- [ ] `W42.P206.S1235` - Route existing backend functionality into the canonical service for internal filed state; `src/aeat/application/modelo`.
-- [ ] `W42.P206.S1236` - Record service-level error codes and log fields for internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P206.S1231` - Map the `2026-05-12-cli-workflow-redesign-modelo-file-adr` decision into non-CLI service ownership for internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P206.S1232` - Implement Pydantic command and result contracts for internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P206.S1233` - Wire application or domain services required by internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P206.S1234` - Connect persistence, bucket events, registry data, or provider adapters required by internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P206.S1235` - Route existing backend functionality into the canonical service for internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P206.S1236` - Record service-level error codes and log fields for internal filed state; `src/aeat/application/modelo`.
 
 ### Phase `W42.P207` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for internal filed state as required by `2026-05-12-cli-workflow-redesign-modelo-file-adr`.
 
-- [ ] `W42.P207.S1237` - Audit duplicate implementations that overlap internal filed state; `src/aeat/application/modelo`.
-- [ ] `W42.P207.S1238` - Delete duplicate backend branches that compete with internal filed state; `src/aeat/application/modelo`.
-- [ ] `W42.P207.S1239` - Remove stale aliases that bypass the canonical service for internal filed state; `src/aeat/entrypoints/cli`.
-- [ ] `W42.P207.S1240` - Migrate internal callers to the canonical service for internal filed state; `src/aeat/application/modelo`.
-- [ ] `W42.P207.S1241` - Remove stale fixtures and tests that encode duplicate behavior for internal filed state; `tests/application/modelo`.
-- [ ] `W42.P207.S1242` - Update boundary inventory entries that describe duplicate behavior for internal filed state; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W42.P207.S1237` - Audit duplicate implementations that overlap internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P207.S1238` - Delete duplicate backend branches that compete with internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P207.S1239` - Remove stale aliases that bypass the canonical service for internal filed state; `src/aeat/entrypoints/cli`.
+- [x] `W42.P207.S1240` - Migrate internal callers to the canonical service for internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P207.S1241` - Remove stale fixtures and tests that encode duplicate behavior for internal filed state; `tests/application/modelo`.
+- [x] `W42.P207.S1242` - Update boundary inventory entries that describe duplicate behavior for internal filed state; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W42.P208` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for internal filed state as required by `2026-05-12-cli-workflow-redesign-modelo-file-adr`.
 
-- [ ] `W42.P208.S1243` - Delete compatibility shims that preserve rejected behavior for internal filed state; `src/aeat/application/modelo`.
-- [ ] `W42.P208.S1244` - Delete placeholder stubs that claim support for internal filed state; `src/aeat/application/modelo`.
-- [ ] `W42.P208.S1245` - Replace stubbed paths with real backend service calls for internal filed state; `src/aeat/application/modelo`.
-- [ ] `W42.P208.S1246` - Remove deprecated command spelling and help text for internal filed state; `src/aeat/entrypoints/cli`.
-- [ ] `W42.P208.S1247` - Remove tests that assert shim or stub behavior for internal filed state; `tests/application/modelo`.
-- [ ] `W42.P208.S1248` - Record the removed shim and stub surfaces for internal filed state; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W42.P208.S1243` - Delete compatibility shims that preserve rejected behavior for internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P208.S1244` - Delete placeholder stubs that claim support for internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P208.S1245` - Replace stubbed paths with real backend service calls for internal filed state; `src/aeat/application/modelo`.
+- [x] `W42.P208.S1246` - Remove deprecated command spelling and help text for internal filed state; `src/aeat/entrypoints/cli`.
+- [x] `W42.P208.S1247` - Remove tests that assert shim or stub behavior for internal filed state; `tests/application/modelo`.
+- [x] `W42.P208.S1248` - Record the removed shim and stub surfaces for internal filed state; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W42.P209` - real behavior verification
 
 This Phase delivers real behavior verification for internal filed state as required by `2026-05-12-cli-workflow-redesign-modelo-file-adr`.
 
-- [ ] `W42.P209.S1249` - Add service contract tests for internal filed state; `tests/application/modelo`.
-- [ ] `W42.P209.S1250` - Add persistence or registry integration tests for internal filed state; `tests/application/modelo`.
-- [ ] `W42.P209.S1251` - Add negative tests proving rejected aliases do not reach internal filed state; `tests/entrypoints/cli`.
-- [ ] `W42.P209.S1252` - Add command behavior tests that exercise internal filed state through real services; `tests/entrypoints/cli`.
-- [ ] `W42.P209.S1253` - Add end-to-end workflow coverage for internal filed state; `tests`.
-- [ ] `W42.P209.S1254` - Run the targeted test slice for internal filed state without skips or xfails; `tests/application/modelo`.
+- [x] `W42.P209.S1249` - Add service contract tests for internal filed state; `tests/application/modelo`.
+- [x] `W42.P209.S1250` - Add persistence or registry integration tests for internal filed state; `tests/application/modelo`.
+- [x] `W42.P209.S1251` - Add negative tests proving rejected aliases do not reach internal filed state; `tests/entrypoints/cli`.
+- [x] `W42.P209.S1252` - Add command behavior tests that exercise internal filed state through real services; `tests/entrypoints/cli`.
+- [x] `W42.P209.S1253` - Add end-to-end workflow coverage for internal filed state; `tests`.
+- [x] `W42.P209.S1254` - Run the targeted test slice for internal filed state without skips or xfails; `tests/application/modelo`.
 
 ### Phase `W42.P210` - thin cli exposure
 
 This Phase delivers thin cli exposure for internal filed state as required by `2026-05-12-cli-workflow-redesign-modelo-file-adr`.
 
-- [ ] `W42.P210.S1255` - Expose accepted command handlers for internal filed state under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W42.P210.S1256` - Keep argument parsing for internal filed state separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W42.P210.S1257` - Delegate internal filed state execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W42.P210.S1258` - Render internal filed state results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W42.P210.S1259` - Handle internal filed state failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W42.P210.S1260` - Validate help text for internal filed state uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W42.P210.S1255` - Expose accepted command handlers for internal filed state under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W42.P210.S1256` - Keep argument parsing for internal filed state separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W42.P210.S1257` - Delegate internal filed state execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W42.P210.S1258` - Render internal filed state results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W42.P210.S1259` - Handle internal filed state failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W42.P210.S1260` - Validate help text for internal filed state uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W43` - modelo filing record
 
@@ -2628,56 +2628,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-filing-record-
 
 This Phase delivers backend implementation for filing record and submission status as required by `2026-05-12-cli-workflow-redesign-modelo-filing-record-adr`.
 
-- [ ] `W43.P211.S1261` - Map the `2026-05-12-cli-workflow-redesign-modelo-filing-record-adr` decision into non-CLI service ownership for filing record and submission status; `src/aeat/application/modelo`.
-- [ ] `W43.P211.S1262` - Implement Pydantic command and result contracts for filing record and submission status; `src/aeat/application/modelo`.
-- [ ] `W43.P211.S1263` - Wire application or domain services required by filing record and submission status; `src/aeat/application/modelo`.
-- [ ] `W43.P211.S1264` - Connect persistence, bucket events, registry data, or provider adapters required by filing record and submission status; `src/aeat/application/modelo`.
-- [ ] `W43.P211.S1265` - Route existing backend functionality into the canonical service for filing record and submission status; `src/aeat/application/modelo`.
-- [ ] `W43.P211.S1266` - Record service-level error codes and log fields for filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P211.S1261` - Map the `2026-05-12-cli-workflow-redesign-modelo-filing-record-adr` decision into non-CLI service ownership for filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P211.S1262` - Implement Pydantic command and result contracts for filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P211.S1263` - Wire application or domain services required by filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P211.S1264` - Connect persistence, bucket events, registry data, or provider adapters required by filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P211.S1265` - Route existing backend functionality into the canonical service for filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P211.S1266` - Record service-level error codes and log fields for filing record and submission status; `src/aeat/application/modelo`.
 
 ### Phase `W43.P212` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for filing record and submission status as required by `2026-05-12-cli-workflow-redesign-modelo-filing-record-adr`.
 
-- [ ] `W43.P212.S1267` - Audit duplicate implementations that overlap filing record and submission status; `src/aeat/application/modelo`.
-- [ ] `W43.P212.S1268` - Delete duplicate backend branches that compete with filing record and submission status; `src/aeat/application/modelo`.
-- [ ] `W43.P212.S1269` - Remove stale aliases that bypass the canonical service for filing record and submission status; `src/aeat/entrypoints/cli`.
-- [ ] `W43.P212.S1270` - Migrate internal callers to the canonical service for filing record and submission status; `src/aeat/application/modelo`.
-- [ ] `W43.P212.S1271` - Remove stale fixtures and tests that encode duplicate behavior for filing record and submission status; `tests/application/modelo`.
-- [ ] `W43.P212.S1272` - Update boundary inventory entries that describe duplicate behavior for filing record and submission status; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W43.P212.S1267` - Audit duplicate implementations that overlap filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P212.S1268` - Delete duplicate backend branches that compete with filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P212.S1269` - Remove stale aliases that bypass the canonical service for filing record and submission status; `src/aeat/entrypoints/cli`.
+- [x] `W43.P212.S1270` - Migrate internal callers to the canonical service for filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P212.S1271` - Remove stale fixtures and tests that encode duplicate behavior for filing record and submission status; `tests/application/modelo`.
+- [x] `W43.P212.S1272` - Update boundary inventory entries that describe duplicate behavior for filing record and submission status; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W43.P213` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for filing record and submission status as required by `2026-05-12-cli-workflow-redesign-modelo-filing-record-adr`.
 
-- [ ] `W43.P213.S1273` - Delete compatibility shims that preserve rejected behavior for filing record and submission status; `src/aeat/application/modelo`.
-- [ ] `W43.P213.S1274` - Delete placeholder stubs that claim support for filing record and submission status; `src/aeat/application/modelo`.
-- [ ] `W43.P213.S1275` - Replace stubbed paths with real backend service calls for filing record and submission status; `src/aeat/application/modelo`.
-- [ ] `W43.P213.S1276` - Remove deprecated command spelling and help text for filing record and submission status; `src/aeat/entrypoints/cli`.
-- [ ] `W43.P213.S1277` - Remove tests that assert shim or stub behavior for filing record and submission status; `tests/application/modelo`.
-- [ ] `W43.P213.S1278` - Record the removed shim and stub surfaces for filing record and submission status; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W43.P213.S1273` - Delete compatibility shims that preserve rejected behavior for filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P213.S1274` - Delete placeholder stubs that claim support for filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P213.S1275` - Replace stubbed paths with real backend service calls for filing record and submission status; `src/aeat/application/modelo`.
+- [x] `W43.P213.S1276` - Remove deprecated command spelling and help text for filing record and submission status; `src/aeat/entrypoints/cli`.
+- [x] `W43.P213.S1277` - Remove tests that assert shim or stub behavior for filing record and submission status; `tests/application/modelo`.
+- [x] `W43.P213.S1278` - Record the removed shim and stub surfaces for filing record and submission status; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W43.P214` - real behavior verification
 
 This Phase delivers real behavior verification for filing record and submission status as required by `2026-05-12-cli-workflow-redesign-modelo-filing-record-adr`.
 
-- [ ] `W43.P214.S1279` - Add service contract tests for filing record and submission status; `tests/application/modelo`.
-- [ ] `W43.P214.S1280` - Add persistence or registry integration tests for filing record and submission status; `tests/application/modelo`.
-- [ ] `W43.P214.S1281` - Add negative tests proving rejected aliases do not reach filing record and submission status; `tests/entrypoints/cli`.
-- [ ] `W43.P214.S1282` - Add command behavior tests that exercise filing record and submission status through real services; `tests/entrypoints/cli`.
-- [ ] `W43.P214.S1283` - Add end-to-end workflow coverage for filing record and submission status; `tests`.
-- [ ] `W43.P214.S1284` - Run the targeted test slice for filing record and submission status without skips or xfails; `tests/application/modelo`.
+- [x] `W43.P214.S1279` - Add service contract tests for filing record and submission status; `tests/application/modelo`.
+- [x] `W43.P214.S1280` - Add persistence or registry integration tests for filing record and submission status; `tests/application/modelo`.
+- [x] `W43.P214.S1281` - Add negative tests proving rejected aliases do not reach filing record and submission status; `tests/entrypoints/cli`.
+- [x] `W43.P214.S1282` - Add command behavior tests that exercise filing record and submission status through real services; `tests/entrypoints/cli`.
+- [x] `W43.P214.S1283` - Add end-to-end workflow coverage for filing record and submission status; `tests`.
+- [x] `W43.P214.S1284` - Run the targeted test slice for filing record and submission status without skips or xfails; `tests/application/modelo`.
 
 ### Phase `W43.P215` - thin cli exposure
 
 This Phase delivers thin cli exposure for filing record and submission status as required by `2026-05-12-cli-workflow-redesign-modelo-filing-record-adr`.
 
-- [ ] `W43.P215.S1285` - Expose accepted command handlers for filing record and submission status under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W43.P215.S1286` - Keep argument parsing for filing record and submission status separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W43.P215.S1287` - Delegate filing record and submission status execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W43.P215.S1288` - Render filing record and submission status results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W43.P215.S1289` - Handle filing record and submission status failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W43.P215.S1290` - Validate help text for filing record and submission status uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W43.P215.S1285` - Expose accepted command handlers for filing record and submission status under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W43.P215.S1286` - Keep argument parsing for filing record and submission status separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W43.P215.S1287` - Delegate filing record and submission status execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W43.P215.S1288` - Render filing record and submission status results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W43.P215.S1289` - Handle filing record and submission status failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W43.P215.S1290` - Validate help text for filing record and submission status uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W44` - actor attribution
 
