@@ -1,9 +1,6 @@
-scenarios_total: 4
-scenarios_with_payload: 0
-scenarios_uncovered: 4
-coverage_pct: 0.0
+scenarios_total: 5
+scenarios_with_payload: 5
+scenarios_uncovered: 0
+coverage_pct: 100.0
 uncovered_ids:
-  - base-imponible-with-negative-capital-gains
-  - base-liquidable-with-reductions
-  - minimo-aggregation-estatal
-  - minimo-clip-to-base-liquidable
+  (none)
