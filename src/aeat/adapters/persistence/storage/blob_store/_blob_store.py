@@ -411,8 +411,13 @@ class EncryptedBlobStore:
                 decrypt_record(wrapped_blob, key=new_master_key, associated_data=_DEK_AAD)
                 skipped += 1
                 continue
-            except (DecryptionError, EncryptionError):
-                pass
+            except (DecryptionError, EncryptionError) as exc:
+                _log.debug(
+                    "blob_store rotate_master_key: new key cannot decrypt wrapped_dek for %s; "
+                    "falling back to old key (%s)",
+                    manifest_path,
+                    exc,
+                )
             # Fall back to the old key.
             try:
                 dek = decrypt_record(wrapped_blob, key=old_master_key, associated_data=_DEK_AAD)
@@ -523,7 +528,7 @@ class EncryptedBlobStore:
         # filesystems / antivirus hooks). NamedTemporaryFile itself
         # raising means no file was created; the ``except OSError``
         # below re-raises cleanly.
-        handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+        handle = tempfile.NamedTemporaryFile(
             mode="wb",
             dir=target.parent,
             prefix=f"{target.stem}.",

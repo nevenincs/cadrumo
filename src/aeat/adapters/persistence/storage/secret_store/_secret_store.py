@@ -220,7 +220,7 @@ class SecretStore:
         self._store_dir.mkdir(parents=True, exist_ok=True)
         target = self._index_path()
         payload = index.model_dump_json(indent=2)
-        handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+        handle = tempfile.NamedTemporaryFile(
             mode="w",
             encoding="utf-8",
             dir=target.parent,

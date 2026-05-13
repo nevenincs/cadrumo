@@ -83,7 +83,7 @@ KEYRING_SERVICE: Final[str] = "aeat:secure-persistence"
 KEYRING_USERNAME: Final[str] = "master"
 """Account identifier for the master-key entry in the OS keychain."""
 
-PASSPHRASE_ENV_VAR: Final[str] = "AEAT_SECRET_PASSPHRASE"  # noqa: S105 — env var name, not a value
+PASSPHRASE_ENV_VAR: Final[str] = "AEAT_SECRET_PASSPHRASE"
 """Environment variable consulted by the file backend before prompting."""
 
 _ARGON2_MEMORY_COST_KIB: Final[int] = 19 * 1024

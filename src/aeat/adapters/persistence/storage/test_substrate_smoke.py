@@ -189,7 +189,7 @@ def test_cross_process_lock_contention(tmp_path: Path) -> None:
     from . import LockAcquisitionError
 
     target = tmp_path / "contended.json"
-    proc = subprocess.Popen(  # noqa: S603 - inline script, no shell, args are typed Paths/floats
+    proc = subprocess.Popen(
         [sys.executable, "-c", _LOCK_HOLDER_SCRIPT, str(target), "0.5"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

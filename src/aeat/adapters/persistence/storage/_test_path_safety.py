@@ -72,7 +72,7 @@ class TestSafeRepositoryId:
         assert safe_repository_id("abc123-de", context="test_id") == "abc123-de"
 
     def test_uuid_shape_accepted(self) -> None:
-        token = "550e8400-e29b-41d4-a716-446655440000"  # noqa: S105 - UUID literal, not a secret
+        token = "550e8400-e29b-41d4-a716-446655440000"
         assert safe_repository_id(token, context="submission_id") == token
 
     def test_empty_rejected(self) -> None:

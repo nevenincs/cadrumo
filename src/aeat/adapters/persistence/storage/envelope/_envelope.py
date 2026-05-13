@@ -162,7 +162,7 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
     # Assign tmp_path BEFORE the ``with`` so cleanup works even when
     # context entry raises. NamedTemporaryFile raising means no file
     # was created; the outer except re-raises cleanly.
-    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+    handle = tempfile.NamedTemporaryFile(
         mode="w",
         encoding="utf-8",
         dir=target.parent,
@@ -396,7 +396,7 @@ def save_encrypted_envelope(
     # Assign tmp_path BEFORE the ``with`` so cleanup works even when
     # context entry raises. NamedTemporaryFile raising means no file
     # was created; the outer except re-raises cleanly.
-    handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+    handle = tempfile.NamedTemporaryFile(
         mode="w",
         encoding="utf-8",
         dir=target.parent,
