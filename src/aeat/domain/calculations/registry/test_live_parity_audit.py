@@ -204,10 +204,13 @@ def test_collect_applicability_declarations_omits_cross_references_with_no_predi
     unconditional default; the helper documents them as out-of-scope."""
     declarations = collect_applicability_declarations(_committed_modelos())
 
+    inspected = 0
     for declaration in declarations:
         assert declaration.predicate_fields, (
             f"declaration {declaration.cross_reference_id} surfaced with empty predicates"
         )
+        inspected += 1
+    assert inspected == len(declarations), "every declaration must be inspected by the loop"
 
 
 def test_collect_applicability_declarations_returns_typed_records() -> None:

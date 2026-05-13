@@ -130,7 +130,8 @@ class TestVerify:
             part=ManualPart.SINGLE,
             settings=settings,
         )
-        assert report.ok
+        assert report.ok is True
+        assert report.errors == ()
 
     def test_empty_reviewer_surfaces_as_load_error(self, tmp_path: Path) -> None:
         """Empty definition_reviewed_by on the manual root fails schema load → verify error.

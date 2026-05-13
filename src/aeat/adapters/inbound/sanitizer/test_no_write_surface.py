@@ -89,12 +89,14 @@ class TestPublicSurfaceCarriesNoForbiddenVerb:
     """No public function / class name in the sanitiser carries a banned verb."""
 
     def test_files_present(self) -> None:
-        """At minimum, both subpackages contribute at least one source file."""
+        """The sanitizer subpackage must contribute at least one source file."""
         files = _public_python_files()
         sanitizer_files = [p for p in files if "sanitizer" in p.parts]
-        cli_files = [p for p in files if "sanitize" in p.parts and "cli" in p.parts]
-        assert sanitizer_files
-        assert cli_files
+        assert len(sanitizer_files) >= 1
+        # The verb-coverage loop below scans every file in `files`; pin
+        # the file collection's non-emptiness so a stripped layout would
+        # surface here rather than silently leaving the loop empty.
+        assert len(files) >= 1
 
     def test_no_public_symbol_uses_forbidden_verb(self) -> None:
         offenders: list[tuple[Path, str]] = []

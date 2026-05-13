@@ -63,8 +63,8 @@ def _record_kwargs(**overrides: Any) -> dict[str, Any]:
 def test_archive_record_accepts_tz_aware_written_at() -> None:
     record = ArchiveRecord(**_record_kwargs())
 
-    assert record.written_at.tzinfo is not None
-    assert record.written_at.utcoffset() is not None
+    assert record.written_at == datetime(2026, 4, 5, 12, 0, tzinfo=UTC)
+    assert record.written_at.tzinfo is UTC
 
 
 def test_archive_record_rejects_naive_written_at() -> None:
@@ -123,7 +123,8 @@ def test_archive_bundle_accepts_tz_aware_created_at() -> None:
         records=(),
     )
 
-    assert bundle.created_at.tzinfo is not None
+    assert bundle.created_at == datetime(2026, 4, 5, 12, 0, tzinfo=UTC)
+    assert bundle.created_at.tzinfo is UTC
 
 
 def test_archive_bundle_rejects_naive_created_at() -> None:

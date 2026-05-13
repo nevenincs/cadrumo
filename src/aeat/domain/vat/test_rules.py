@@ -36,5 +36,9 @@ def test_cite_domestic_general_mentions_ley_37_1992() -> None:
 
 
 def test_every_committed_regulation_has_citations() -> None:
+    assert len(_CATALOGUE) > 0, "VAT regulation catalogue must be non-empty for citation check to mean anything"
+    checked = 0
     for regulation in _CATALOGUE:
         assert regulation.citations, regulation.category.value
+        checked += 1
+    assert checked == len(_CATALOGUE), "every regulation in the catalogue must be checked"

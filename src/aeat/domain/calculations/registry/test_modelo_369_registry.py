@@ -321,10 +321,14 @@ def test_modelo_369_each_revision_declares_at_least_one_oss_aggregation_binding(
     binding so the calculation chain has a substrate-grounded source for
     its destination-MS aggregations."""
     modelo, _ = _load_modelo_369()
-    for revision_id in ("esquema-exterior", "esquema-union", "esquema-importacion"):
+    expected_revisions = ("esquema-exterior", "esquema-union", "esquema-importacion")
+    checked = 0
+    for revision_id in expected_revisions:
         revision = modelo.revisions[revision_id]
         oss_bindings = [binding for binding in revision.bindings if binding.source == "ledger_oss_aggregation"]
-        assert oss_bindings, f"{revision_id} declares no ledger_oss_aggregation bindings"
+        assert len(oss_bindings) >= 1, f"{revision_id} declares no ledger_oss_aggregation bindings"
+        checked += 1
+    assert checked == len(expected_revisions)
 
 
 def test_modelo_369_esquema_union_demonstrator_bindings_resolve_end_to_end() -> None:
