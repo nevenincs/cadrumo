@@ -108,12 +108,21 @@ cli:
   config:
     app_help: Gestionar configuració local i diagnòstics
     auth:
+      clear_all_help: Netejar tots els proveïdors d'autenticació configurats
+      clear_help: Netejar metadades locals d'autenticació
+      clear_locks_help: Netejar bloquejos d'adquisició d'autenticació
+      clear_sessions_help: Netejar sessions AEAT persistides
+      configure_help: Configurar el proveïdor d'autenticació actiu
       file_help: Ruta al fitxer de credencials (certificat o clau)
       help: Configurar el proveïdor d'autenticació actiu
       provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
+      providers_help: Llistar proveïdors d'autenticació suportats
+      status_help: Mostrar l'estat d'autenticació configurat
+      test_help: Comprovar la preparació d'autenticació local
       unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
         ''aeat config auth --help'' per veure els identificadors vàlids.'
     doctor:
+      connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       help: Diagnosticar configuració local, registre, perfil, autenticació i logs
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
@@ -124,15 +133,17 @@ cli:
       quarantine_yes_help: Confirmar explícitament l'operació de quarantena
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
-      no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config setup --tax-id
+      no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config init --tax-id
         <NIF>' primer.
       unknown_key: 'Clau de configuració desconeguda: %{name}. Executa ''aeat config
-        list'' per veure les claus disponibles.'
+        profile list'' per veure les claus disponibles.'
     get:
       help: Mostrar el valor actual d'una clau de configuració
       key_help: Clau a llegir (ex. tax.id, iva.regime)
     list:
       help: Llistar totes les claus de configuració amb el seu valor actual
+    profile:
+      help: Gestionar valors de configuració del perfil actiu
     reset:
       help: Reiniciar àmbits de configuració introduïts per l'operador
       invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
@@ -154,6 +165,7 @@ cli:
       quiet_help: Executar el flux sense interacció utilitzant només els valors de
         les banderes
     status:
+      empty_profile: No profile configured. Run `aeat config init` to get started.
       help: Mostrar l'estat del perfil de configuració actiu
     unset:
       help: Eliminar el valor assignat a una clau de configuració
@@ -658,7 +670,7 @@ cli:
     app_help: 'Assistent per preparar declaracions tributàries espanyoles
 
 
-      Quickstart: aeat config setup --profile-name NAME --tax-id NIF'
+      Quickstart: aeat config init --profile NAME --tax-id NIF'
     debug_help: Mostrar logs interns de depuració a stderr
     format_help: Format de sortida per als resultats de l'ordre
     quiet_help: Mostrar només errors a stderr
@@ -668,7 +680,7 @@ cli:
   topic:
     app_help: Mostrar ajuda conceptual sobre règims, models i processos AEAT
     errors:
-      not_found: 'Tema no trobat: %{slug}. Executeu ''aeat app topic'' per llistar els
+      not_found: 'Tema no trobat: %{slug}. Executeu ''aeat app registry citations'' per llistar els
         temes registrats.'
     opts:
       slug: Identificador del tema (kebab-case, ex. iva-regime)

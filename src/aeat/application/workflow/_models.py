@@ -126,9 +126,11 @@ class WorkflowState(BaseModel):
             return None
         record = self.profiles.get(self.active_profile)
         if isinstance(record, dict):
+            import json as _json
+
             from ..profile._models import ProfileRecord
 
-            return ProfileRecord.model_validate(record)
+            return ProfileRecord.model_validate_json(_json.dumps(record, default=str))
         return record
 
 
@@ -143,11 +145,13 @@ def update_declaration_pointer(
     verified: bool | None = None,
 ) -> WorkflowState:
     """Return ``state`` with the declaration pointer upserted for ``(modelo, period)``."""
+    import json as _json
+
     declarations: dict[str, Any] = dict(state.declarations)
     key = declaration_key(modelo, period)
     current = declarations.get(key)
     if isinstance(current, dict):
-        current = DeclarationPointer.model_validate(current)
+        current = DeclarationPointer.model_validate_json(_json.dumps(current, default=str))
 
     update_fields: dict[str, Any] = {
         "draft_id": draft_id,

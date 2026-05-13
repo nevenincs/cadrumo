@@ -105,12 +105,21 @@ cli:
   config:
     app_help: Helyi konfiguráció és diagnosztika kezelése
     auth:
+      clear_all_help: Minden konfigurált hitelesítési szolgáltató törlése
+      clear_help: Helyi hitelesítési metaadatok törlése
+      clear_locks_help: Hitelesítési beszerzési zárolások törlése
+      clear_sessions_help: Perzisztált AEAT hitelesítési munkamenetek törlése
+      configure_help: Az aktív hitelesítési szolgáltató beállítása
       file_help: A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs)
       help: Az aktív hitelesítési szolgáltató beállítása
       provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico)
+      providers_help: Támogatott hitelesítési szolgáltatók listázása
+      status_help: Beállított hitelesítési állapot megjelenítése
+      test_help: Helyi hitelesítési készültség ellenőrzése
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd
         az ''aeat config auth --help'' parancsot az érvényes azonosítókért.'
     doctor:
+      connectivity_help: Böngésző és AEAT Sede kapcsolat ellenőrzése
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
       logs_lines_help: Megjelenítendő friss naplósorok száma
@@ -121,15 +130,17 @@ cli:
       quarantine_yes_help: A karantén művelet kifejezett megerősítése
     errors:
       invalid_value: 'Érvénytelen érték a %{name} kulcshoz: %{value}'
-      no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config setup
+      no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config init
         --tax-id <NIF>' parancsot.
-      unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Az ''aeat config list''
+      unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Az ''aeat config profile list''
         listázza az érvényes kulcsokat.'
     get:
       help: Egy konfigurációs kulcs aktuális értékének megjelenítése
       key_help: A kiolvasandó kulcs (pl. tax.id, iva.regime)
     list:
       help: Az összes konfigurációs kulcs és aktuális értékének listázása
+    profile:
+      help: Az aktív profil konfigurációs értékeinek kezelése
     reset:
       help: Operátor által megadott konfigurációs hatókörök visszaállítása
       invalid_scope: 'Érvénytelen hatókör: %{scope}. Az érvényes hatókörök: %{valid}.'
@@ -152,6 +163,7 @@ cli:
       quiet_help: A folyamat futtatása interakció nélkül, csak a kapcsolók értékeit
         használva
     status:
+      empty_profile: No profile configured. Run `aeat config init` to get started.
       help: Az aktív konfigurációs profil készenlétének megjelenítése
     unset:
       help: Egy konfigurációs kulcshoz rendelt érték törlése
@@ -659,7 +671,7 @@ cli:
     app_help: 'Spanyol adóbevallási segéd
 
 
-      Quickstart: aeat config setup --profile-name NAME --tax-id NIF'
+      Quickstart: aeat config init --profile NAME --tax-id NIF'
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     format_help: A parancseredmények kimeneti formátuma
     quiet_help: Csak hibák megjelenítése stderr-en
@@ -670,7 +682,7 @@ cli:
     app_help: Konceptuális segítség megjelenítése a rezsimekről, modellekről és AEAT
       folyamatokról
     errors:
-      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat app topic'' a regisztrált
+      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat app registry citations'' a regisztrált
         témák listájához.'
     opts:
       slug: Téma azonosító (kebab-case, pl. iva-regime)
