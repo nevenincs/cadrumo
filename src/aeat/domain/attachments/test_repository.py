@@ -48,7 +48,7 @@ def _attachment(body: bytes, *, tx_id: str = "tx-001") -> Attachment:
 
 
 def test_blob_and_manifest_round_trip_without_plaintext_files(tmp_path: Path) -> None:
-    store = AttachmentStore.at(tmp_path / "attachments")
+    store = AttachmentStore()
     body = b"%PDF-1.4\nATTACHMENT_CANARY_00000000T\n%%EOF"
     digest = store.put_bytes(body)
     attachment = _attachment(body)
@@ -62,7 +62,6 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(tmp_path: Path) ->
     assert tuple(store.iter_manifests()) == (attachment,)
     store.verify_blob(digest)
 
-    assert list((tmp_path / "attachments").rglob("*")) == []
     database_bytes = (tmp_path / "aeat.db").read_bytes()
     assert b"secure_objects" in database_bytes
     assert body not in database_bytes
@@ -75,21 +74,21 @@ def test_put_file_reads_source_but_persists_only_secure_database_object(tmp_path
     source = tmp_path / "source.pdf"
     body = b"%PDF-1.4\nsource invoice\n%%EOF"
     source.write_bytes(body)
-    store = AttachmentStore.at(tmp_path / "attachments")
+    store = AttachmentStore()
 
     digest, size = store.put_file(source)
 
     assert digest == hashlib.sha256(body).hexdigest()
     assert size == len(body)
     assert store.read_bytes(digest) == body
-    assert list((tmp_path / "attachments").rglob("*")) == []
+    assert not (tmp_path / "attachments").exists()
 
 
 def test_missing_blob_and_invalid_digest_fail_closed(tmp_path: Path) -> None:
-    store = AttachmentStore.at(tmp_path / "attachments")
+    store = AttachmentStore()
     missing = "a" * 64
 
     with pytest.raises(AttachmentNotFoundError, match=r"attachment|not|found"):
         store.read_bytes(missing)
-    with pytest.raises(AttachmentValidationError, match=r"attachment|validation"):
+    with pytest.raises(AttachmentValidationError, match=r"sha256 must be a 64-character lowercase hex digest"):
         store.read_bytes("../escape")
