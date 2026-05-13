@@ -55,6 +55,7 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr]]'
+  - '[[2026-05-13-cli-workflow-redesign-modelo-external-filing-import-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-modelo-145-foundation-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr]]'
@@ -3032,6 +3033,33 @@ This Phase delivers thin cli exposure for external filing amend path as required
 - [x] `W49.P245.S1468` - Render external filing amend path results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`. (`_emit(ctx, payload, lines)` produces text + JSON output.)
 - [x] `W49.P245.S1469` - Handle external filing amend path failures through the central command error boundary; `src/aeat/entrypoints/cli`. (Typed errors mapped to `typer.BadParameter` at the boundary.)
 - [x] `W49.P245.S1470` - Validate help text for external filing amend path uses accepted vocabulary only; `tests/entrypoints/cli`. (Locale audit clean across all four languages; `aeat-locales audit` returns ok for ca / en / es / hu.)
+
+## Wave `W49b` - modelo external filing import
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-modelo-external-filing-import-adr` decision. It is the production source of `FilingRecord.external_evidence` and unlocks the amend path end to end: an operator imports an AEAT-attested baseline (justificante PDF, CSV register, live capture), then `aeat app modelo work amend` can build a complementaria over it.
+
+### Phase `W49b.P246` - backend implementation
+
+- [x] `W49b.P246.S1471` - Map the external-evidence import contract into the modelo lifecycle service namespace; `src/aeat/application/modelo`. (`import_external_filing_evidence` lives next to `file_modelo_revision` and `amend_modelo_revision`.)
+- [x] `W49b.P246.S1472` - Implement Pydantic command and result contracts; `src/aeat/application/modelo`. (Reuses the existing `FilingRecord` / `ExternalEvidence` / `ExternalEvidenceKind` shapes that W49 introduced.)
+- [x] `W49b.P246.S1473` - Wire the application service; `src/aeat/application/modelo/_actions.py`. (`import_external_filing_evidence` orchestrates validate-inputs → derive-revision → build-filing-record → supersede-prior-current → advance-pointers → emit chain.)
+- [x] `W49b.P246.S1474` - Connect persistence and bucket-event emission; `src/aeat/application/modelo`. (Encrypted SQL via existing repositories; new closed enum value `BucketEventType.MODELO_FILING_IMPORTED`.)
+- [x] `W49b.P246.S1475` - Route the action through the canonical supersession chain; `src/aeat/application/modelo`. (Same chain `file_modelo_revision` uses — second import for the same tuple supersedes the prior current.)
+- [x] `W49b.P246.S1476` - Record service-level error codes; `src/aeat/application/modelo`. (`ExternalFilingImportError` for empty values / empty evidence reference.)
+
+### Phase `W49b.P247` - real behavior verification
+
+- [x] `W49b.P247.S1477` - Add service contract tests covering import happy path, supersession, evidence-reference validation, casilla validation, and discarded-work-unit refusal; `src/aeat/application/modelo/test_import_flow.py`. (8 tests pass over real encrypted SQLite.)
+- [x] `W49b.P247.S1478` - Prove the import path unlocks the amend gate end to end; `src/aeat/application/modelo/test_import_flow.py`. (`test_import_then_amend_unlocks_amendment_path` exercises the chain in production shape and asserts the chronological bucket-event sequence `MODELO_FILING_IMPORTED → MODELO_AMENDED`.)
+- [x] `W49b.P247.S1479` - Prove the amend gate still refuses locally-filed records after the import path lands; `src/aeat/application/modelo/test_import_flow.py`. (`test_amend_locally_filed_still_refused_after_import_path_exists` regression-pins the gate.)
+
+### Phase `W49b.P248` - thin cli exposure
+
+- [x] `W49b.P248.S1480` - Expose the action under `aeat app modelo filing-record import`; `src/aeat/entrypoints/cli/_modelo.py`. (Verb takes `WORK_UNIT_ID --evidence-kind X --evidence-id Y --set CASILLA=VALUE ... --by ACTOR`.)
+- [x] `W49b.P248.S1481` - Keep argument parsing separate from backend behavior; `src/aeat/entrypoints/cli/_modelo.py`. (`_parse_amendment_casilla` is reused; `ExternalEvidenceKind` parsing maps unknown values to `typer.BadParameter` via the closed enum.)
+- [x] `W49b.P248.S1482` - Render results with `_emit`; `src/aeat/entrypoints/cli/_modelo.py`. (`filing_disambiguation = "(imported AEAT-attested baseline)"` distinguishes the import from live submission.)
+- [x] `W49b.P248.S1483` - Handle failures through the central error boundary; `src/aeat/entrypoints/cli/_modelo.py`. (Typed errors mapped to `typer.BadParameter`.)
+- [x] `W49b.P248.S1484` - Validate help-text vocabulary; locale audit clean across ca / en / es / hu.
 
 ## Wave `W50` - modelo 036 037 foundation
 

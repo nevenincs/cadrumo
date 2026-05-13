@@ -38,6 +38,8 @@ from ...domain.modelos._calculation_revision import (
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import (
+    ExternalEvidence,
+    ExternalEvidenceKind,
     FilingRecord,
     FilingRecordStatus,
     derive_filing_record_id,
@@ -161,6 +163,12 @@ class AmendmentTargetStateError(ModeloError):
     """Raised when the modelo-amend path is asked to amend a filing
     record that is not in ``CURRENT`` status (e.g., it was already
     superseded by a later filing)."""
+
+
+class ExternalFilingImportError(ModeloError):
+    """Raised when the external-filing import path cannot persist an
+    imported baseline (e.g., empty casilla values, missing evidence
+    reference)."""
 
 
 def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
@@ -1263,11 +1271,211 @@ def amend_modelo_revision(
     return new_filing
 
 
+def import_external_filing_evidence(
+    *,
+    work_unit_id: str,
+    casilla_values: Mapping[str, Decimal],
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+    actor: str = "aeat-import",
+    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    filing_repository: FilingRecordCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    clock: datetime | None = None,
+) -> FilingRecord:
+    """Persist an externally-filed return as a baseline filing record.
+
+    This is the canonical entry point the import path (justificante
+    PDF reader, AEAT CSV register importer, AEAT live capture) uses
+    to land an externally-filed return as the bucket's baseline:
+
+    1. Verify the work unit exists and is not discarded.
+    2. Persist a fresh ``FILED`` calculation revision carrying the
+       imported casilla values (no inputs / overrides — the operator
+       did not compute this locally; AEAT's records are the source
+       of truth).
+    3. Build a ``CURRENT`` filing record with ``external_evidence``
+       populated and ``aeat_accepted=True``.
+    4. If a prior current filing exists for the (bucket, modelo,
+       year, period) tuple, supersede it (same supersession chain
+       the file path uses).
+    5. Advance the work-unit pointers to the imported baseline.
+    6. Emit a ``modelo.filing.imported`` bucket event linking the
+       new filing record id to the evidence reference.
+
+    The amend path consumes records produced here as its baseline.
+
+    Raises:
+        WorkUnitNotFoundError: when ``work_unit_id`` is absent.
+        WorkUnitMutationRefusedError: when the work unit is discarded.
+        ExternalFilingImportError: when ``casilla_values`` is empty or
+            ``evidence_reference_id`` is empty.
+    """
+
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
+    fr_repo = filing_repository or FilingRecordCatalogueRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+
+    if not casilla_values:
+        raise ExternalFilingImportError(
+            "external-filing import requires at least one casilla value; "
+            "got an empty mapping"
+        )
+    cleaned_reference = evidence_reference_id.strip()
+    if not cleaned_reference:
+        raise ExternalFilingImportError(
+            "external-filing import requires a non-empty evidence_reference_id"
+        )
+
+    work_units = wu_repo.load()
+    work_unit = work_units.get(work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+    if work_unit.state is WorkUnitState.DISCARDED:
+        raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot import")
+
+    inputs_snapshot: dict[str, str] = {}
+    binding_overrides: dict[str, str] = {}
+    outputs = dict(casilla_values)
+
+    now = clock or datetime.now(UTC)
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        inputs_snapshot=inputs_snapshot,
+        binding_overrides=binding_overrides,
+        casilla_values=outputs,
+    )
+    revisions = cr_repo.load()
+    if revision_id in revisions:
+        raise ExternalFilingImportError(
+            f"calculation revision id={revision_id!r} already exists in the catalogue; "
+            f"an identical import was already recorded"
+        )
+
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.FILED,
+        inputs_snapshot=inputs_snapshot,
+        binding_overrides=binding_overrides,
+        casilla_values=outputs,
+        created_at=now,
+        updated_at=now,
+        verified_at=now,
+        verified_by=actor.strip(),
+        filed_at=now,
+        filed_by=actor.strip(),
+    )
+    revisions = upsert_calculation_revision(revisions, revision)
+
+    new_filing_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_at=now,
+        filed_by=actor.strip(),
+    )
+
+    filing_catalogue = fr_repo.load()
+    prior_current = filing_catalogue.current_for(
+        bucket_id=work_unit.bucket_id,
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+
+    new_filing = FilingRecord(
+        filing_record_id=new_filing_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        filed_at=now,
+        filed_by=actor.strip(),
+        notes=None,
+        aeat_accepted=True,
+        status=FilingRecordStatus.CURRENT,
+        external_evidence=ExternalEvidence(
+            kind=evidence_kind,
+            reference_id=cleaned_reference,
+            imported_at=now,
+        ),
+    )
+
+    updated_filing_catalogue = filing_catalogue
+    if prior_current is not None:
+        superseded_prior = prior_current.model_copy(
+            update={
+                "status": FilingRecordStatus.SUPERSEDED,
+                "superseded_at": now,
+                "superseded_by_filing_record_id": new_filing_id,
+            }
+        )
+        updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, superseded_prior)
+        prior_revision = revisions.get(prior_current.calculation_revision_id)
+        if prior_revision is not None and prior_revision.state is CalculationRevisionState.FILED:
+            superseded_revision = prior_revision.model_copy(
+                update={
+                    "state": CalculationRevisionState.FILED_SUPERSEDED,
+                    "superseded_at": now,
+                    "updated_at": now,
+                }
+            )
+            revisions = upsert_calculation_revision(revisions, superseded_revision)
+    updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
+
+    cr_repo.save(revisions)
+    fr_repo.save(updated_filing_catalogue)
+
+    wu_repo.save(
+        upsert_work_unit(
+            work_units,
+            work_unit.model_copy(
+                update={
+                    "current_calculation_revision_id": revision_id,
+                    "filed_calculation_revision_id": revision_id,
+                    "current_filing_record_id": new_filing_id,
+                    "updated_at": now,
+                }
+            ),
+        )
+    )
+
+    _emit_bucket_event(
+        repository=bv_repo,
+        bucket_id=work_unit.bucket_id,
+        event_type=BucketEventType.MODELO_FILING_IMPORTED,
+        occurred_at=now,
+        actor=actor,
+        object_type=BucketEventObjectType.FILING_RECORD,
+        object_id=new_filing_id,
+        payload={
+            "work_unit_id": work_unit_id,
+            "calculation_revision_id": revision_id,
+            "modelo": str(work_unit.modelo),
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period,
+            "evidence_kind": evidence_kind.value,
+            "evidence_reference_id": cleaned_reference,
+            "supersedes_filing_record_id": (
+                prior_current.filing_record_id if prior_current is not None else ""
+            ),
+            "casilla_count": str(len(outputs)),
+        },
+    )
+
+    return new_filing
+
+
 __all__ = [
     "AmendmentEvidenceMissingError",
     "AmendmentTargetStateError",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
+    "ExternalFilingImportError",
     "FilingRecordNotFoundError",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
@@ -1275,6 +1483,7 @@ __all__ = [
     "WorkUnitNotFoundError",
     "amend_modelo_revision",
     "calculate_modelo_revision",
+    "import_external_filing_evidence",
     "create_work_unit",
     "discard_work_unit",
     "file_modelo_revision",

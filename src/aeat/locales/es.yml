@@ -83,7 +83,15 @@ cli:
       filing_record:
         app_help: Inspeccionar las presentaciones internas (filing records) registradas
         bucket_id_help: Filtrar por bucket
+        evidence_kind_help: Tipo de evidencia importada (aeat_justificante_pdf,
+          aeat_csv_register, aeat_live_capture)
+        evidence_reference_id_help: Identificador estable de la evidencia importada
+          (número de justificante, id del registro CSV, id de captura en vivo)
         filing_record_id_help: Identificador estable de un filing record
+        import_casilla_help: Valor de casilla importado con sintaxis CASILLA=DECIMAL
+          (repetible; al menos uno requerido)
+        import_help: Persistir una declaración presentada externamente como filing
+          record base con evidencia oficial importada de la AEAT
         include_superseded_help: Incluir los filing records superados (excluidos por
           defecto)
         list_help: Listar los filing records registrados
@@ -123,9 +131,9 @@ cli:
           estado auditable)
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
-        from_filing_record_help: Identificador estable del filing record base a
-          amendar. Debe llevar evidencia externa importada (justificante / CSV /
-          captura en vivo)
+        from_filing_record_help: Identificador estable del filing record base a amendar.
+          Debe llevar evidencia externa importada (justificante / CSV / captura en
+          vivo)
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
@@ -346,12 +354,8 @@ cli:
       title: Declaración Complementaria / Rectificativa
     app_help: Gestión y presentación de declaraciones tributarias
     build:
-      inputs_help: Archivos o directorios de entrada para construir la declaración
       modelo_help: Modelo tributario a construir (p. ej., 303, 111, 130)
       period_help: Periodo fiscal (p. ej., 1T, 2T, 01, 12)
-      profile_name_help: Nombre del perfil de contribuyente
-      profile_tax_id_help: NIF del contribuyente
-      success: Declaración construida correctamente
     complementaria:
       app_help: Gestión de declaraciones complementarias y rectificativas
       build:
@@ -367,7 +371,6 @@ cli:
       casilla_key_not_string: La clave de la casilla debe ser una cadena de texto
         (string)
       failed_to_load_draft: Fallo al cargar el borrador de la declaración
-      inputs_not_found: No se encontraron los archivos de entrada
       inputs_not_object: Los datos de entrada deben ser un objeto (JSON)
       invalid_json: Archivo JSON no válido
       invalid_status: Estado de la declaración no válido

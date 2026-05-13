@@ -78,7 +78,15 @@ cli:
       filing_record:
         app_help: Belső bejelentési rekordok (filing records) vizsgálata
         bucket_id_help: Szűrés bucket szerint
+        evidence_kind_help: Importált evidencia típusa (aeat_justificante_pdf,
+          aeat_csv_register, aeat_live_capture)
+        evidence_reference_id_help: Az importált evidencia stabil hivatkozási
+          azonosítója (justificante szám, CSV regiszter id, élő rögzítés id)
         filing_record_id_help: Filing record stabil azonosítója
+        import_casilla_help: Importált cellaérték CASILLA=DECIMAL szintaxissal
+          (ismételhető; legalább egy kötelező)
+        import_help: Külsőleg leadott bevallás rögzítése alap filing recordként,
+          importált AEAT-hitelesített evidenciával
         include_superseded_help: A felülírt filing recordokat is mutassa (alapértelmezetten
           kihagyva)
         list_help: Regisztrált filing recordok listázása
@@ -131,8 +139,8 @@ cli:
         revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
         revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
           szűrve
-        set_override_help: Helyesbített cellaérték CASILLA=DECIMAL szintaxissal
-          (ismételhető; legalább egy kötelező)
+        set_override_help: Helyesbített cellaérték CASILLA=DECIMAL szintaxissal (ismételhető;
+          legalább egy kötelező)
         status_help: Egy munkaegység metaadatainak megjelenítése
         verify_help: Draft kalkulációs revízió verifikálása a verified-complete szerződés
           ellen
@@ -341,12 +349,8 @@ cli:
       title: Módosító / Önellenőrző bevallás
     app_help: Adóbevallások kezelése és benyújtása
     build:
-      inputs_help: Bemeneti fájlok vagy könyvtárak a bevallás összeállításához
       modelo_help: Összeállítandó adómodell (pl. 303, 111, 130)
       period_help: Adózási időszak (pl. 1T, 2T, 01, 12)
-      profile_name_help: Adózói profil neve
-      profile_tax_id_help: Az adózó adószáma (NIF)
-      success: A bevallás összeállítása sikeres
     complementaria:
       app_help: Módosító és önellenőrző bevallások kezelése
       build:
@@ -362,7 +366,6 @@ cli:
       casilla_key_not_string: A mező (casilla) kulcsának szövegesnek (string) kell
         lennie
       failed_to_load_draft: A bevallás tervezetének betöltése sikertelen
-      inputs_not_found: Bemeneti fájlok nem találhatók
       inputs_not_object: A bemeneti adatoknak objektumnak (JSON) kell lenniük
       invalid_json: Érvénytelen JSON fájl
       invalid_status: Érvénytelen bevallási állapot

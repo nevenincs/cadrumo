@@ -71,7 +71,15 @@ cli:
       filing_record:
         app_help: Inspect internal filing records
         bucket_id_help: Filter by bucket
+        evidence_kind_help: Kind of imported evidence (aeat_justificante_pdf,
+          aeat_csv_register, aeat_live_capture)
+        evidence_reference_id_help: Stable reference id of the imported evidence
+          (justificante number, CSV register id, live capture id)
         filing_record_id_help: Stable filing-record identifier
+        import_casilla_help: Imported casilla value with CASILLA=DECIMAL syntax
+          (repeatable; at least one required)
+        import_help: Persist an externally-filed return as a baseline filing record
+          carrying imported AEAT-attested evidence
         include_superseded_help: Include superseded filing records (excluded by default)
         list_help: List registered filing records
         show_help: Show one filing record by id
@@ -93,7 +101,8 @@ cli:
         amend_help: Build a corrective amendment over an externally-filed return.
           Requires a filing record with imported AEAT-attested evidence
         amendment_kind_help: Legal kind of the amendment (complementaria or sustitutiva)
-        amendment_reason_help: Free-text reason for the amendment (operator audit trail)
+        amendment_reason_help: Free-text reason for the amendment (operator audit
+          trail)
         app_help: Manage the lifecycle of modelo work units
         bucket_id_help: Bucket identifier the work unit belongs to
         calculate_help: Persist a new draft calculation revision for the work unit
@@ -105,7 +114,8 @@ cli:
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
         from_filing_record_help: Stable id of the baseline filing record to amend.
-          Must carry imported external evidence (justificante / CSV register / live capture)
+          Must carry imported external evidence (justificante / CSV register / live
+          capture)
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         list_help: List registered work units, optionally filtered by bucket
@@ -323,12 +333,8 @@ cli:
       title: Amendment / Supplementary Return
     app_help: Management and submission of tax filings
     build:
-      inputs_help: Input files or directories to build the filing
       modelo_help: Tax model to build (e.g., 303, 111, 130)
       period_help: Tax period (e.g., 1T, 2T, 01, 12)
-      profile_name_help: Taxpayer profile name
-      profile_tax_id_help: Taxpayer's Tax ID (NIF)
-      success: Filing successfully built
     complementaria:
       app_help: Management of supplementary and corrective filings
       build:
@@ -343,7 +349,6 @@ cli:
       amendment_success: Supplementary filing successfully processed
       casilla_key_not_string: Box (casilla) key must be a string
       failed_to_load_draft: Failed to load filing draft
-      inputs_not_found: Input files not found
       inputs_not_object: Input data must be an object (JSON)
       invalid_json: Invalid JSON file
       invalid_status: Invalid filing status
