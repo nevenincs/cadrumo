@@ -255,9 +255,9 @@ def test_especial_not_mandatory_when_both_deductions_are_zero() -> None:
 
 
 def test_is_especial_mandatory_rejects_negative_amounts() -> None:
-    with pytest.raises(ProrrataInputError):
+    with pytest.raises(ProrrataInputError, match=r"deduction amounts must be non-negative"):
         is_especial_mandatory(Decimal("-1"), Decimal("100"))
-    with pytest.raises(ProrrataInputError):
+    with pytest.raises(ProrrataInputError, match=r"deduction amounts must be non-negative"):
         is_especial_mandatory(Decimal("100"), Decimal("-1"))
 
 
@@ -320,7 +320,7 @@ def test_sectoral_separation_rejects_duplicate_sector_ids() -> None:
         _sector("duplicate", con_derecho="100", sin_derecho="0"),
         _sector("duplicate", con_derecho="50", sin_derecho="50"),
     )
-    with pytest.raises(ProrrataSectorError):
+    with pytest.raises(ProrrataSectorError, match=r"duplicate sector_id"):
         requires_sectoral_separation(sectors)
 
 
@@ -344,7 +344,7 @@ def test_compute_sectoral_prorrata_produces_one_result_per_sector() -> None:
 
 
 def test_compute_sectoral_prorrata_rejects_empty_input() -> None:
-    with pytest.raises(ProrrataSectorError):
+    with pytest.raises(ProrrataSectorError, match=r"sectors sequence must not be empty"):
         compute_sectoral_prorrata((), year=2026, kind=ProrrataKind.DEFINITIVA)
 
 
@@ -354,12 +354,12 @@ def test_compute_sectoral_prorrata_rejects_empty_input() -> None:
 
 
 def test_inputs_rejects_negative_amounts() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"greater than or equal to 0"):
         ProrrataInputs(
             operaciones_con_derecho_deduccion=Decimal("-1"),
             operaciones_sin_derecho_deduccion=Decimal("0"),
         )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"greater than or equal to 0"):
         ProrrataInputs(
             operaciones_con_derecho_deduccion=Decimal("0"),
             operaciones_sin_derecho_deduccion=Decimal("-1"),
@@ -371,9 +371,9 @@ def test_inputs_is_frozen_and_forbids_extras() -> None:
         operaciones_con_derecho_deduccion=Decimal("100"),
         operaciones_sin_derecho_deduccion=Decimal("50"),
     )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"frozen"):
         inputs.operaciones_con_derecho_deduccion = Decimal("0")  # type: ignore[misc]
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         extra_kwargs: dict[str, object] = {"unexpected_field": Decimal("1")}
         ProrrataInputs.model_validate(
             {
@@ -389,7 +389,7 @@ def test_result_provisional_requires_period() -> None:
         operaciones_con_derecho_deduccion=Decimal("100"),
         operaciones_sin_derecho_deduccion=Decimal("0"),
     )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"provisional prorrata result must carry a period"):
         ProrrataResult(
             regime=ProrrataRegime.GENERAL,
             kind=ProrrataKind.PROVISIONAL,
@@ -405,7 +405,7 @@ def test_result_definitiva_rejects_non_annual_period() -> None:
         operaciones_con_derecho_deduccion=Decimal("100"),
         operaciones_sin_derecho_deduccion=Decimal("0"),
     )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"definitiva prorrata result period must be 'annual' or omitted"):
         ProrrataResult(
             regime=ProrrataRegime.GENERAL,
             kind=ProrrataKind.DEFINITIVA,
@@ -421,14 +421,14 @@ def test_compute_general_rejects_year_out_of_range() -> None:
         operaciones_con_derecho_deduccion=Decimal("100"),
         operaciones_sin_derecho_deduccion=Decimal("0"),
     )
-    with pytest.raises(ProrrataInputError):
+    with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000..2100"):
         compute_prorrata_general(inputs, year=1999, kind=ProrrataKind.DEFINITIVA)
-    with pytest.raises(ProrrataInputError):
+    with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000..2100"):
         compute_prorrata_general(inputs, year=2101, kind=ProrrataKind.DEFINITIVA)
 
 
 def test_classify_input_rejects_negative_vat_amount() -> None:
-    with pytest.raises(ProrrataInputError):
+    with pytest.raises(ProrrataInputError, match=r"input_vat_amount must be non-negative"):
         classify_input_deduction(
             InputClassification.COMMON,
             input_vat_amount=Decimal("-1.00"),
@@ -437,13 +437,13 @@ def test_classify_input_rejects_negative_vat_amount() -> None:
 
 
 def test_classify_input_rejects_out_of_range_general_percentage() -> None:
-    with pytest.raises(ProrrataInputError):
+    with pytest.raises(ProrrataInputError, match=r"general_percentage out of range 0..100"):
         classify_input_deduction(
             InputClassification.COMMON,
             input_vat_amount=Decimal("10.00"),
             general_percentage=Decimal("-1"),
         )
-    with pytest.raises(ProrrataInputError):
+    with pytest.raises(ProrrataInputError, match=r"general_percentage out of range 0..100"):
         classify_input_deduction(
             InputClassification.COMMON,
             input_vat_amount=Decimal("10.00"),
@@ -452,7 +452,7 @@ def test_classify_input_rejects_out_of_range_general_percentage() -> None:
 
 
 def test_sector_rejects_empty_sector_id() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"sector_id"):
         ProrrataSector(
             sector_id="",
             name="empty id",
@@ -464,7 +464,7 @@ def test_sector_rejects_empty_sector_id() -> None:
 
 
 def test_sector_rejects_invalid_sector_id_pattern() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=r"sector_id"):
         ProrrataSector(
             sector_id="has spaces and unicode ñ",
             name="bad pattern",
