@@ -875,12 +875,56 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._actions.CalculationRegistryUnavailableError",
+        ErrorCode(
+            code="ERROR_MODELO_CALCULATION_REGISTRY_UNAVAILABLE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_calculation_registry_unavailable",
+            default_suggestion="aeat app modelo work status WORK_UNIT_ID",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._actions.FilingRecordNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_FILING_RECORD_NOT_FOUND",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_filing_record_not_found",
             default_suggestion="aeat app modelo filing-record list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.AmendmentEvidenceMissingError",
+        ErrorCode(
+            code="ERROR_MODELO_AMENDMENT_EVIDENCE_MISSING",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_amendment_evidence_missing",
+            default_suggestion="aeat app modelo filing-record list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.AmendmentTargetStateError",
+        ErrorCode(
+            code="ERROR_MODELO_AMENDMENT_TARGET_STATE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_amendment_target_state",
+            default_suggestion="aeat app modelo filing-record list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.ExternalFilingImportError",
+        ErrorCode(
+            code="ERROR_MODELO_EXTERNAL_FILING_IMPORT",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_external_filing_import",
+            default_suggestion="aeat app live filed capture",
             retryable=False,
             runbook_id=None,
         ),

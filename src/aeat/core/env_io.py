@@ -23,6 +23,9 @@ import tempfile
 from pathlib import Path
 
 from .errors import CoreValidationError
+from .logging import get_logger
+
+_log = get_logger(__name__)
 
 
 def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> None:
@@ -56,7 +59,7 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
     # would leak the tempfile on non-OSError exceptions.
     tmp_path: Path | None = None
     try:
-        handle = tempfile.NamedTemporaryFile(  # noqa: SIM115 - context-managed via `with handle:` below
+        handle = tempfile.NamedTemporaryFile(
             mode="w",
             encoding=encoding,
             dir=path.parent,
@@ -81,12 +84,16 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
         # durability hardening, not a correctness gate, and the
         # storage package may be unimportable in minimal install
         # contexts where env_io still runs.
-        import contextlib
-
-        with contextlib.suppress(Exception):  # pragma: no cover - defensive
+        try:  # pragma: no cover - defensive
             from .locks import fsync_parent_dir
 
             fsync_parent_dir(path)
+        except Exception as fsync_exc:
+            _log.debug(
+                "env_io atomic_write: parent-dir fsync skipped for %s (%s)",
+                path,
+                fsync_exc,
+            )
     finally:
         if tmp_path is not None:
             tmp_path.unlink(missing_ok=True)

@@ -65,7 +65,7 @@ class SensitivityClass(StrEnum):
             (e.g. seven days); explicit redaction; opt-in capture.
     """
 
-    SECRET = "secret"  # noqa: S105 — sensitivity tag, not a credential
+    SECRET = "secret"
     SESSION = "session"
     IDENTITY = "identity"
     FINANCIAL = "financial"

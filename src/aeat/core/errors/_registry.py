@@ -104,7 +104,7 @@ def register(code: ErrorCode) -> ErrorCode:
     return code
 
 
-from aeat.core.errors.registry import _ALL_DECLARED_ERROR_CODES  # noqa: E402
+from aeat.core.errors.registry import _ALL_DECLARED_ERROR_CODES
 
 _DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = MappingProxyType(
     {qualname: register(code) for qualname, code in _ALL_DECLARED_ERROR_CODES}
@@ -151,11 +151,16 @@ def resolve_output_language() -> str:
     """Resolve the configured output language, defaulting to ``es``."""
 
     try:
-        from ..config import load_settings
+        from ..i18n import output_language
 
-        value = load_settings().aeat_output_language
-        return str(value).lower().strip()
-    except (ValueError, OSError, AttributeError):
+        return output_language()
+    except (ValueError, OSError, AttributeError) as exc:
+        import logging as _logging
+
+        _logging.getLogger(__name__).debug(
+            "resolve_output_language: i18n resolution failed; falling back to 'es' (%s)",
+            exc,
+        )
         return "es"
 
 
