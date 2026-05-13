@@ -515,3 +515,124 @@ def test_sum_deductible_amounts_returns_zero_for_empty_iterable() -> None:
     total = sum_deductible_amounts(())
     assert total == Decimal("0")
     assert isinstance(total, Decimal)
+
+
+# ---------------------------------------------------------------------------
+# Boundary / non-existence assertions (W36.P177 + W36.P178).
+#
+# The IVA-prorrata domain substrate is the unique owner of prorrata logic.
+# These tests assert the boundary contract: no shadow duplicates, no shim
+# translating usage_ratios into prorrata, no parallel CLI surface. They
+# regress-protect the W36 rollout against future "convenience" wrappers
+# that would re-introduce the rejected shapes named in the ADR's Constraints.
+# ---------------------------------------------------------------------------
+
+
+def test_no_parallel_prorrata_implementation_exists() -> None:
+    """Only ``aeat.domain.vat._prorrata`` owns prorrata semantics.
+
+    Walk the source tree and assert that ``compute_prorrata_general``,
+    ``classify_input_deduction``, ``is_especial_mandatory``, and
+    ``requires_sectoral_separation`` exist exclusively in the canonical
+    module. Any other module declaring a function with the same name is
+    a duplicate implementation and must be removed before this test
+    re-passes.
+    """
+
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[4]
+    source_root = repo_root / "src" / "aeat"
+    canonical_module = source_root / "domain" / "vat" / "_prorrata.py"
+
+    canonical_symbols = (
+        "compute_prorrata_general",
+        "classify_input_deduction",
+        "is_especial_mandatory",
+        "requires_sectoral_separation",
+        "compute_sectoral_prorrata",
+    )
+
+    for py_file in source_root.rglob("*.py"):
+        if py_file == canonical_module:
+            continue
+        text = py_file.read_text(encoding="utf-8", errors="ignore")
+        for symbol in canonical_symbols:
+            assert f"def {symbol}" not in text, (
+                f"shadow prorrata implementation detected: "
+                f"{py_file} defines `def {symbol}`; the canonical "
+                f"owner is `aeat.domain.vat._prorrata`."
+            )
+
+
+def test_no_usage_ratios_to_prorrata_shim_exists() -> None:
+    """``domain.usage_ratios`` and ``aeat.domain.vat._prorrata`` are
+    distinct concepts. No module may translate usage-ratios values into
+    prorrata percentages — the ADR explicitly rejects that shim.
+    """
+
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[4]
+    source_root = repo_root / "src" / "aeat"
+
+    forbidden_patterns = (
+        # An import that pulls both modules together is a structural
+        # signal that the importer is about to bridge them.
+        ("from aeat.domain.usage_ratios", "ProrrataInputs"),
+        ("from aeat.domain.usage_ratios", "ProrrataResult"),
+        ("from ...domain.usage_ratios", "ProrrataInputs"),
+        ("from ...domain.usage_ratios", "ProrrataResult"),
+        ("from ..usage_ratios", "ProrrataInputs"),
+        ("from ..usage_ratios", "ProrrataResult"),
+    )
+
+    for py_file in source_root.rglob("*.py"):
+        # Test files may legitimately reference both module names while
+        # asserting boundary contracts (this very test does so).
+        if py_file.name.startswith("test_"):
+            continue
+        text = py_file.read_text(encoding="utf-8", errors="ignore")
+        for first, second in forbidden_patterns:
+            assert not (first in text and second in text), (
+                f"shim detected: {py_file} imports both "
+                f"`{first}` and `{second}`. "
+                f"usage_ratios is proportional-expense allocation; "
+                f"prorrata is the legal LIVA arts. 101-103 deduction "
+                f"mechanism. They MUST NOT be bridged."
+            )
+
+
+def test_no_parallel_prorrata_cli_surface_exists() -> None:
+    """No ``aeat ... prorrata`` CLI verb survives.
+
+    The accepted operator path for prorrata is `aeat app modelo bindings
+    list --modelo 303` (or 390) which surfaces a "prorrata percentage
+    missing" readiness category. A standalone `app prorrata`,
+    `app ledger prorrata`, or `app modelo prorrata` verb is rejected by
+    the ADR and must not appear in the entrypoints CLI tree.
+    """
+
+    from pathlib import Path
+
+    repo_root = Path(__file__).resolve().parents[4]
+    cli_root = repo_root / "src" / "aeat" / "entrypoints" / "cli"
+
+    forbidden_command_decorations = (
+        '@app.command("prorrata"',
+        '@app_app.command("prorrata"',
+        '.command(name="prorrata"',
+        # Add typer sub-app registration spelled `prorrata` as the name.
+        '.add_typer(_prorrata',
+        'add_typer(prorrata_module',
+        'name="prorrata"',
+    )
+
+    for py_file in cli_root.rglob("*.py"):
+        text = py_file.read_text(encoding="utf-8", errors="ignore")
+        for needle in forbidden_command_decorations:
+            assert needle not in text, (
+                f"rejected prorrata CLI surface detected in {py_file}: "
+                f"`{needle}`. Prorrata is consumed via "
+                f"`app modelo bindings list` per the ADR."
+            )
