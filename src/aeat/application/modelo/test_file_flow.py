@@ -106,6 +106,18 @@ def _registry_required_manual_casillas() -> tuple[str, ...]:
     return tuple(str(c.id) for c in snapshot.revision.casillas if c.required and c.input_kind == "manual")
 
 
+_DEFAULT_180_RELATION_VALUES: dict[str, Decimal] = {
+    "modelo-180-rel-115-perceptores-anual": Decimal("0"),
+    "modelo-180-rel-115-base-anual": Decimal("0"),
+    "modelo-180-rel-115-retenciones-anual": Decimal("0"),
+}
+_DEFAULT_180_BINDING_VALUES: dict[str, Decimal] = {
+    "modelo-180-115-perceptores-anual": Decimal("0"),
+    "modelo-180-115-base-anual": Decimal("0"),
+    "modelo-180-115-retenciones-anual": Decimal("0"),
+}
+
+
 @pytest.fixture
 def repos(tmp_path):
     """Yield the five catalogue repositories over an encrypted SQLite
@@ -135,11 +147,15 @@ def _seed_work_unit(
     wu_repo,
     *,
     bucket_id: str = "default",
-    modelo: str = "303",
+    modelo: str = "130",
     filing_year: int = 2026,
-    period: str = "Q1",
-    revision_id: str = "2009-y-siguientes",
+    period: str = "1T",
+    revision_id: str = "2019-y-siguientes",
 ):
+    """Default fixture: modelo 130 1T 2026 — autónomo IRPF quarterly,
+    9 manual casillas + 10 formulas + 1 prior-filing binding.
+    Registry-resolvable so the formula engine runs end-to-end."""
+
     return create_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -149,6 +165,22 @@ def _seed_work_unit(
         repository=wu_repo,
         clock=_T0,
     )
+
+
+_DEFAULT_130_BINDING_VALUES = {
+    "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+}
+_DEFAULT_130_BASELINE_INPUTS: dict[str, Decimal] = {
+    "01": Decimal("10000"),  # economic-activity gross income
+    "02": Decimal("3000"),  # economic-activity gross expenses
+    "05": Decimal("0"),
+    "06": Decimal("0"),
+    "08": Decimal("0"),
+    "10": Decimal("0"),
+    "15": Decimal("0"),
+    "16": Decimal("0"),
+    "18": Decimal("0"),
+}
 
 
 def _seed_modelo_180_work_unit(wu_repo):
@@ -174,7 +206,8 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos) -> None
 
     first = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -183,7 +216,8 @@ def test_two_calculates_under_one_work_unit_produce_two_revisions(repos) -> None
 
     second = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("2000"), "02": Decimal("500")},
+        casilla_inputs={"01": Decimal("2000"), "02": Decimal("500")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -223,7 +257,8 @@ def test_calculate_is_idempotent_on_identical_inputs(repos) -> None:
 
     first = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -231,7 +266,8 @@ def test_calculate_is_idempotent_on_identical_inputs(repos) -> None:
     )
     second = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -253,7 +289,8 @@ def test_mark_verified_complete_requires_draft_state(repos) -> None:
     work_unit = _seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -285,7 +322,8 @@ def test_file_requires_verified_complete_state(repos) -> None:
     work_unit = _seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -315,7 +353,8 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
 
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -388,7 +427,8 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     # First filing: revision-1, filed at T3.
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -413,7 +453,8 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     # Second filing: revision-2 with corrected inputs, filed at T5.
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1200"), "02": Decimal("100")},
+        casilla_inputs={"01": Decimal("1200"), "02": Decimal("100")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -501,7 +542,8 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
 
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -525,7 +567,8 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
 
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={"01": Decimal("1200")},
+        casilla_inputs={"01": Decimal("1200")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -580,7 +623,8 @@ def test_calculate_refused_on_discarded_work_unit(repos) -> None:
     with pytest.raises(WorkUnitMutationRefusedError, match=r"discard|state|DISCARDED|work_unit"):
         calculate_modelo_revision(
             work_unit.work_unit_id,
-            casilla_values={"01": Decimal("1000")},
+            casilla_inputs={"01": Decimal("1000")},
+            binding_values=_DEFAULT_130_BINDING_VALUES,
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             bucket_event_repository=bv_repo,
@@ -630,7 +674,9 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     casilla_values = {cid: Decimal("1") for cid in required}
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values=casilla_values,
+        casilla_inputs=casilla_values,
+        binding_values=_DEFAULT_180_BINDING_VALUES,
+        relation_values=_DEFAULT_180_RELATION_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -688,7 +734,9 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     work_unit = _seed_modelo_180_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values=supplied,
+        casilla_inputs=supplied,
+        binding_values=_DEFAULT_180_BINDING_VALUES,
+        relation_values=_DEFAULT_180_RELATION_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -747,14 +795,40 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         repository=wu_repo,
         clock=_T0,
     )
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_values={"perc.base": Decimal("1")},
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T1,
+    # Direct-seed a DRAFT revision because ``calculate_modelo_revision``
+    # now runs the formula engine and would refuse the unresolvable
+    # snapshot at calculate time. This test exercises verify's
+    # BLOCKING_RULE path explicitly: the work unit was anchored at a
+    # year that predates the modelo's earliest revision, so verify's
+    # registry-snapshot resolution still fails.
+    from aeat.domain.modelos._calculation_repository import (
+        upsert_calculation_revision as _upsert_revision,
     )
+    from aeat.domain.modelos._calculation_revision import (
+        CalculationRevision as _CR,
+        derive_calculation_revision_id as _derive_id,
+    )
+
+    inputs: dict[str, str] = {"perc.base": "1"}
+    overrides_map: dict[str, str] = {}
+    casillas: dict[str, Decimal] = {"perc.base": Decimal("1")}
+    rid = _derive_id(
+        work_unit_id=work_unit.work_unit_id,
+        inputs_snapshot=inputs,
+        binding_overrides=overrides_map,
+        casilla_values=casillas,
+    )
+    revision = _CR(
+        calculation_revision_id=rid,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.DRAFT,
+        inputs_snapshot=inputs,
+        binding_overrides=overrides_map,
+        casilla_values=casillas,
+        created_at=_T1,
+        updated_at=_T1,
+    )
+    cr_repo.save(_upsert_revision(cr_repo.load(), revision))
 
     report = verify_modelo_revision(
         revision.calculation_revision_id,
@@ -787,7 +861,9 @@ def test_verify_rejects_non_draft_revision_real_registry(repos) -> None:
     work_unit = _seed_modelo_180_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={cid: Decimal("1") for cid in required},
+        casilla_inputs={cid: Decimal("1") for cid in required},
+        binding_values=_DEFAULT_180_BINDING_VALUES,
+        relation_values=_DEFAULT_180_RELATION_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -824,7 +900,9 @@ def test_list_and_get_verification_reports_real_registry(repos) -> None:
     work_unit = _seed_modelo_180_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_values={cid: Decimal("1") for cid in required},
+        casilla_inputs={cid: Decimal("1") for cid in required},
+        binding_values=_DEFAULT_180_BINDING_VALUES,
+        relation_values=_DEFAULT_180_RELATION_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -882,7 +960,8 @@ def test_calculate_emits_modelo_calculation_created_event(repos) -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -915,7 +994,9 @@ def test_verify_emits_passed_event_on_success(repos) -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_values={cid: Decimal("1") for cid in required},
+        casilla_inputs={cid: Decimal("1") for cid in required},
+        binding_values=_DEFAULT_180_BINDING_VALUES,
+        relation_values=_DEFAULT_180_RELATION_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -962,7 +1043,9 @@ def test_verify_emits_refused_event_on_missing_casilla(repos) -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_values=supplied,
+        casilla_inputs=supplied,
+        binding_values=_DEFAULT_180_BINDING_VALUES,
+        relation_values=_DEFAULT_180_RELATION_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -1002,7 +1085,8 @@ def test_file_emits_modelo_filed_event(repos) -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -1051,7 +1135,8 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None
     revision_one = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -1076,7 +1161,8 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None
     revision_two = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_values={"01": Decimal("1200"), "02": Decimal("100")},
+        casilla_inputs={"01": Decimal("1200"), "02": Decimal("100")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
@@ -1127,3 +1213,98 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None
         BucketEventType.MODELO_FILED_SUPERSEDED,
         BucketEventType.MODELO_FILED,
     )
+
+
+# ---------------------------------------------------------------------------
+# Formula-engine wiring
+# ---------------------------------------------------------------------------
+
+
+def test_calculate_runs_registry_formula_engine(repos) -> None:
+    """``calculate_modelo_revision`` runs the registry's formula engine
+    over the operator-supplied inputs and persists the FULL computed
+    casilla map. Modelo 130 1T 2026 declares 9 manual casillas plus
+    10 computed formulas; given inputs for casilla 01 and 02, the
+    engine derives casilla 03 = 01 - 02 (subtract).
+
+    The persisted revision carries the operator inputs in
+    ``inputs_snapshot`` (canonical decimal strings) and the full
+    engine output — inputs ∪ formula targets — in ``casilla_values``.
+    The bucket event payload reports the formula count from the
+    engine result."""
+
+    wu_repo, cr_repo, _, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        casilla_inputs={"01": Decimal("10000"), "02": Decimal("3000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+
+    # Operator inputs surface in ``inputs_snapshot``.
+    assert revision.inputs_snapshot["01"] == "10000"
+    assert revision.inputs_snapshot["02"] == "3000"
+    assert "03" not in revision.inputs_snapshot  # 03 is a formula target, not an input
+
+    # Engine output contains BOTH the operator inputs AND every
+    # formula target. Casilla 03 = 01 - 02 = 7000 (subtract formula).
+    assert revision.casilla_values["01"] == Decimal("10000")
+    assert revision.casilla_values["02"] == Decimal("3000")
+    assert revision.casilla_values["03"] == Decimal("7000.00")
+    # Every casilla declared in the 130 1T 2026 revision is now in
+    # the output — 9 manual + 10 formula targets = 19 entries.
+    assert len(revision.casilla_values) >= 19
+
+    # Bucket-event payload reports the formula count from the engine.
+    catalogue = bv_repo.load()
+    created_events = catalogue.for_bucket(
+        work_unit.bucket_id,
+        event_types=(BucketEventType.MODELO_CALCULATION_CREATED,),
+    )
+    assert len(created_events) == 1
+    assert int(created_events[0].payload["formula_count"]) >= 1
+    assert int(created_events[0].payload["casilla_count"]) >= 19
+
+
+def test_calculate_refuses_when_registry_snapshot_unresolvable(repos) -> None:
+    """``calculate_modelo_revision`` runs the formula engine, so it
+    cannot operate on a work unit whose (modelo, year, period) tuple
+    does not resolve a registry snapshot. The action raises
+    ``CalculationRegistryUnavailableError`` rather than persisting a
+    revision that bypasses the engine."""
+
+    from aeat.application.modelo import CalculationRegistryUnavailableError
+
+    wu_repo, cr_repo, _, _, bv_repo = repos
+    # Modelo 130 at year 2010 predates the registry's earliest
+    # revision (``2019-y-siguientes``), so the snapshot lookup fails.
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo="130",
+        filing_year=2010,
+        period="1T",
+        revision_id="2019-y-siguientes",
+        repository=wu_repo,
+        clock=_T0,
+    )
+
+    with pytest.raises(
+        CalculationRegistryUnavailableError,
+        match=r"registry snapshot|could not be resolved",
+    ):
+        calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator-A",
+            casilla_inputs={"01": Decimal("1000")},
+            binding_values=_DEFAULT_130_BINDING_VALUES,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )

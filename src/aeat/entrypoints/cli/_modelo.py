@@ -744,24 +744,38 @@ def work_calculate(
 ) -> None:
     """Persist a new draft calculation revision for the work unit."""
 
-    from decimal import Decimal, InvalidOperation
+    from ...application.modelo import CalculationRegistryUnavailableError
 
     casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
-    casilla_values: dict[str, Decimal] = {}
+    casilla_inputs: dict[str, Decimal] = {}
     for k, v in casilla_pairs.items():
         try:
-            casilla_values[k] = Decimal(v)
+            casilla_inputs[k] = Decimal(v)
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(f"--casilla value for {k!r} is not a decimal: {v!r}") from exc
-    binding_overrides = dict(_parse_casilla_override(spec) for spec in (binding or ()))
+    binding_pairs = dict(_parse_casilla_override(spec) for spec in (binding or ()))
+    binding_values: dict[str, Decimal] = {}
+    enum_binding_values: dict[str, str] = {}
+    for k, v in binding_pairs.items():
+        try:
+            binding_values[k] = Decimal(v)
+        except (InvalidOperation, ValueError):
+            # Non-decimal binding overrides flow into the enum-binding
+            # channel (e.g. profile-sourced enums like CCAA).
+            enum_binding_values[k] = v
 
     try:
         revision = calculate_modelo_revision(
             work_unit_id,
-            casilla_values=casilla_values,
-            binding_overrides=binding_overrides,
+            casilla_inputs=casilla_inputs,
+            binding_values=binding_values or None,
+            enum_binding_values=enum_binding_values or None,
         )
-    except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
+    except (
+        WorkUnitNotFoundError,
+        WorkUnitMutationRefusedError,
+        CalculationRegistryUnavailableError,
+    ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
     payload = {

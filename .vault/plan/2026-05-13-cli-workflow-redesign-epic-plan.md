@@ -56,6 +56,7 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-modelo-external-filing-import-adr]]'
+  - '[[2026-05-13-cli-workflow-redesign-modelo-calculate-engine-wiring-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-modelo-145-foundation-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr]]'
@@ -560,60 +561,62 @@ This Phase delivers thin cli exposure for central logging and error observabilit
 
 This Wave implements the `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr` decision for profile-associated secure buckets. Profile values are stored only in `PROFILE_BUCKET_NAMESPACE` as `Envelope[ProfileBucket]` with `SensitivityClass.IDENTITY`; `WorkflowState` stores active profile pointers only. It delivers backend behavior before CLI exposure, removes shadow paths, proves the behavior with real tests, and exposes only thin CLI adapters that call centralized tested Pydantic backend, storage, error, and output services.
 
+Implementation note: W08 corrected secure profile persistence so profile values live only in `PROFILE_BUCKET_NAMESPACE = "aeat.application.profile.bucket"` as `Envelope[ProfileBucket]` with `SensitivityClass.IDENTITY`. `WorkflowState.profiles` stores pointer records only; profile-bound reads resolve the active pointer through `state.active_profile_record()` before loading values with `profile_bucket_repository().load(...)`. Wizard persistence writes profile-bound answers through `set_profile_values` into the profile bucket. Config/setup reset delete both workflow pointers and actual profile buckets. The filing CLI no longer exposes `filing build --inputs`; retained filing commands are `validate`, `show`, `list`, `import`, and `complementaria build`. Verification: `uv run --no-sync pytest src/aeat/application/profile/test_actions.py src/aeat/application/archive/test_archive.py src/aeat/application/workflow/test_adapters.py src/aeat/application/wizard/test_status.py src/aeat/application/wizard/test_status_next_action.py src/aeat/application/test_config_reset.py src/aeat/application/test_setup_reset.py src/aeat/application/test_config_parity.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/test_backend_boundary.py src/aeat/entrypoints/cli/test_workflow_surface.py::test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_bucket src/aeat/tests/test_config.py -q` reported 93 passed in 138.99s.
+
 ### Phase `W08.P036` - backend implementation
 
 This Phase delivers backend implementation for profile-associated secure buckets as required by `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr`.
 
-- [ ] `W08.P036.S0211` - Map the ADR decision into non-CLI service ownership for profile-associated secure buckets; `src/aeat/application/profile`, `src/aeat/application/workflow`.
-- [ ] `W08.P036.S0212` - Implement strict Pydantic profile bucket contracts and repository APIs for `PROFILE_BUCKET_NAMESPACE`; `src/aeat/application/profile`.
-- [ ] `W08.P036.S0213` - Wire wizard persistence so profile-bound answers persist through the profile bucket repository; `src/aeat/application/wizard`.
-- [ ] `W08.P036.S0214` - Connect secure-object persistence, bucket events, reset deletion, and archive registration for profile buckets; `src/aeat/application/profile`, `src/aeat/application/config_reset.py`, `src/aeat/application/setup_reset.py`, `src/aeat/application/archive/_registry.py`.
-- [ ] `W08.P036.S0215` - Route active profile reads through workflow-state active profile pointers followed by `profile_bucket_repository().load(...)`; `src/aeat/application/workflow`, `src/aeat/application/filing`.
-- [ ] `W08.P036.S0216` - Record service-level error handling and log fields through existing `AeatError` and central logging facilities; `src/aeat/application/profile`.
+- [x] `W08.P036.S0211` - Map the ADR decision into non-CLI service ownership for profile-associated secure buckets; `src/aeat/application/profile`, `src/aeat/application/workflow`.
+- [x] `W08.P036.S0212` - Implement strict Pydantic profile bucket contracts and repository APIs for `PROFILE_BUCKET_NAMESPACE`; `src/aeat/application/profile`.
+- [x] `W08.P036.S0213` - Wire wizard persistence so profile-bound answers persist through the profile bucket repository; `src/aeat/application/wizard`.
+- [x] `W08.P036.S0214` - Connect secure-object persistence, bucket events, reset deletion, and archive registration for profile buckets; `src/aeat/application/profile`, `src/aeat/application/config_reset.py`, `src/aeat/application/setup_reset.py`, `src/aeat/application/archive/_registry.py`.
+- [x] `W08.P036.S0215` - Route active profile reads through workflow-state active profile pointers followed by `profile_bucket_repository().load(...)`; `src/aeat/application/workflow`, `src/aeat/application/filing`.
+- [x] `W08.P036.S0216` - Record service-level error handling and log fields through existing `AeatError` and central logging facilities; `src/aeat/application/profile`.
 
 ### Phase `W08.P037` - shadow duplicate removal
 
 This Phase removes duplicate profile value paths that compete with profile-associated secure buckets.
 
-- [ ] `W08.P037.S0217` - Audit duplicate implementations that store profile values in workflow state, profile JSON, profile files, profile paths, or flat-file inputs; `src/aeat/application`, `src/aeat/adapters`, `src/aeat/entrypoints/cli`.
-- [ ] `W08.P037.S0218` - Delete backend branches that persist profile-bound values outside profile buckets; `src/aeat/application/profile`, `src/aeat/adapters/persistence/profile`.
-- [ ] `W08.P037.S0219` - Remove CLI aliases and settings that expose profile JSON, profile file/path storage, or JSON draft input providers; `src/aeat/entrypoints/cli`, `src/aeat/core/config.py`.
-- [ ] `W08.P037.S0220` - Migrate internal callers to the active pointer plus profile bucket read pattern; `src/aeat/application/workflow`, `src/aeat/application/wizard`, `src/aeat/application/filing`.
-- [ ] `W08.P037.S0221` - Remove fixtures and tests that assert profile values stored in shared workflow state or read from JSON/path storage; `src/aeat`.
-- [ ] `W08.P037.S0222` - Update boundary inventory entries that describe rejected profile value paths; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W08.P037.S0217` - Audit duplicate implementations that store profile values in workflow state, profile JSON, profile files, profile paths, or flat-file inputs; `src/aeat/application`, `src/aeat/adapters`, `src/aeat/entrypoints/cli`.
+- [x] `W08.P037.S0218` - Delete backend branches that persist profile-bound values outside profile buckets; `src/aeat/application/profile`, `src/aeat/adapters/persistence/profile`.
+- [x] `W08.P037.S0219` - Remove CLI aliases and settings that expose profile JSON, profile file/path storage, or JSON draft input providers; `src/aeat/entrypoints/cli`, `src/aeat/core/config.py`.
+- [x] `W08.P037.S0220` - Migrate internal callers to the active pointer plus profile bucket read pattern; `src/aeat/application/workflow`, `src/aeat/application/wizard`, `src/aeat/application/filing`.
+- [x] `W08.P037.S0221` - Remove fixtures and tests that assert profile values stored in shared workflow state or read from JSON/path storage; `src/aeat`.
+- [x] `W08.P037.S0222` - Update boundary inventory entries that describe rejected profile value paths; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W08.P038` - de-shim and de-stub cleanup
 
 This Phase removes rejected compatibility surfaces and placeholder behavior for profile-associated secure buckets.
 
-- [ ] `W08.P038.S0223` - Delete compatibility surfaces for profile JSON, profile files, profile paths, profile envelopes, and flat-file fallback; `src/aeat/application`, `src/aeat/adapters`, `src/aeat/entrypoints/cli`.
-- [ ] `W08.P038.S0224` - Delete placeholder paths that claim profile bucket support without secure-object persistence; `src/aeat/application/profile`, `src/aeat/application/workflow`.
-- [ ] `W08.P038.S0225` - Replace remaining placeholder paths with real profile bucket repository calls; `src/aeat/application/profile`, `src/aeat/application/wizard`, `src/aeat/application/filing`.
-- [ ] `W08.P038.S0226` - Remove command spelling and help text that implies profile path or JSON storage; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
-- [ ] `W08.P038.S0227` - Remove tests that assert rejected JSON/path/profile-value-in-workflow behavior; `src/aeat`.
-- [ ] `W08.P038.S0228` - Record removed rejected surfaces in CLI/backend boundary tests; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W08.P038.S0223` - Delete compatibility surfaces for profile JSON, profile files, profile paths, profile envelopes, and flat-file fallback; `src/aeat/application`, `src/aeat/adapters`, `src/aeat/entrypoints/cli`.
+- [x] `W08.P038.S0224` - Delete placeholder paths that claim profile bucket support without secure-object persistence; `src/aeat/application/profile`, `src/aeat/application/workflow`.
+- [x] `W08.P038.S0225` - Replace remaining placeholder paths with real profile bucket repository calls; `src/aeat/application/profile`, `src/aeat/application/wizard`, `src/aeat/application/filing`.
+- [x] `W08.P038.S0226` - Remove command spelling and help text that implies profile path or JSON storage; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
+- [x] `W08.P038.S0227` - Remove tests that assert rejected JSON/path/profile-value-in-workflow behavior; `src/aeat`.
+- [x] `W08.P038.S0228` - Record removed rejected surfaces in CLI/backend boundary tests; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W08.P039` - real behavior verification
 
 This Phase verifies real profile bucket behavior with secure-object persistence and negative coverage for rejected paths.
 
-- [ ] `W08.P039.S0229` - Add service contract tests for profile bucket write, load, update, clear, and active pointer dereference; `src/aeat/application/profile`, `src/aeat/application/wizard`.
-- [ ] `W08.P039.S0230` - Add secure-object persistence and archive adapter tests for profile buckets; `src/aeat/application/profile`, `src/aeat/application/archive`.
-- [ ] `W08.P039.S0231` - Add negative tests proving profile JSON, profile file/path storage, JSON draft input providers, and workflow-state profile values are rejected; `src/aeat/entrypoints/cli`, `src/aeat/application`.
-- [ ] `W08.P039.S0232` - Add command behavior tests that exercise profile bucket reads and writes through real services; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P039.S0233` - Add end-to-end workflow coverage for config init, config profile set/get/status, deadlines, and filing runtime using bucket-backed profile values; `src/aeat`.
-- [ ] `W08.P039.S0234` - Run the targeted test slice for profile bucket behavior without skips or xfails; `src/aeat/application/profile`, `src/aeat/application/workflow`, `src/aeat/entrypoints/cli`, `src/aeat/tests`.
+- [x] `W08.P039.S0229` - Add service contract tests for profile bucket write, load, update, clear, and active pointer dereference; `src/aeat/application/profile`, `src/aeat/application/wizard`.
+- [x] `W08.P039.S0230` - Add secure-object persistence and archive adapter tests for profile buckets; `src/aeat/application/profile`, `src/aeat/application/archive`.
+- [x] `W08.P039.S0231` - Add negative tests proving profile JSON, profile file/path storage, JSON draft input providers, and workflow-state profile values are rejected; `src/aeat/entrypoints/cli`, `src/aeat/application`.
+- [x] `W08.P039.S0232` - Add command behavior tests that exercise profile bucket reads and writes through real services; `src/aeat/entrypoints/cli`.
+- [x] `W08.P039.S0233` - Add end-to-end workflow coverage for config init, config profile set/get/status, deadlines, and filing runtime using bucket-backed profile values; `src/aeat`.
+- [x] `W08.P039.S0234` - Run the targeted test slice for profile bucket behavior without skips or xfails; `src/aeat/application/profile`, `src/aeat/application/workflow`, `src/aeat/entrypoints/cli`, `src/aeat/tests`.
 
 ### Phase `W08.P040` - thin cli exposure
 
 This Phase verifies the retained CLI surfaces are thin adapters over profile bucket services.
 
-- [ ] `W08.P040.S0235` - Expose accepted profile command handlers under `aeat config profile` and setup under `aeat config init`; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P040.S0236` - Keep CLI argument parsing separate from profile bucket behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P040.S0237` - Delegate profile reads and writes to centralized profile, wizard, workflow, and filing backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P040.S0238` - Render profile bucket results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W08.P040.S0239` - Handle profile bucket failures through the central command error boundary and registered `AeatError` types; `src/aeat/entrypoints/cli`, `src/aeat/core/errors`.
-- [ ] `W08.P040.S0240` - Validate help text uses accepted vocabulary and does not imply profile JSON/path storage or CLI-owned business logic; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
+- [x] `W08.P040.S0235` - Expose accepted profile command handlers under `aeat config profile` and setup under `aeat config init`; `src/aeat/entrypoints/cli`.
+- [x] `W08.P040.S0236` - Keep CLI argument parsing separate from profile bucket behavior; `src/aeat/entrypoints/cli`.
+- [x] `W08.P040.S0237` - Delegate profile reads and writes to centralized profile, wizard, workflow, and filing backend services; `src/aeat/entrypoints/cli`.
+- [x] `W08.P040.S0238` - Render profile bucket results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W08.P040.S0239` - Handle profile bucket failures through the central command error boundary and registered `AeatError` types; `src/aeat/entrypoints/cli`, `src/aeat/core/errors`.
+- [x] `W08.P040.S0240` - Validate help text uses accepted vocabulary and does not imply profile JSON/path storage or CLI-owned business logic; `src/aeat/entrypoints/cli`, `src/aeat/locales`.
 
 ## Wave `W09` - user profile backend schema
 
@@ -3060,6 +3063,31 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-modelo-external-filin
 - [x] `W49b.P248.S1482` - Render results with `_emit`; `src/aeat/entrypoints/cli/_modelo.py`. (`filing_disambiguation = "(imported AEAT-attested baseline)"` distinguishes the import from live submission.)
 - [x] `W49b.P248.S1483` - Handle failures through the central error boundary; `src/aeat/entrypoints/cli/_modelo.py`. (Typed errors mapped to `typer.BadParameter`.)
 - [x] `W49b.P248.S1484` - Validate help-text vocabulary; locale audit clean across ca / en / es / hu.
+
+## Wave `W39b` - modelo calculate engine wiring
+
+This Wave implements the `2026-05-13-cli-workflow-redesign-modelo-calculate-engine-wiring-adr` decision. It elevates `calculate_modelo_revision` from a store-as-given persistence path to a real-registry computation path: every locally-computed revision runs through the registry's `calculate_registry_snapshot` formula engine and the persisted `casilla_values` reflects what the modelo's formulas produce.
+
+### Phase `W39b.P249` - backend implementation
+
+- [x] `W39b.P249.S1485` - Map the engine-wiring contract into `calculate_modelo_revision`; `src/aeat/application/modelo/_actions.py`. (New required `casilla_inputs` parameter replaces operator-provided `casilla_values`; new `binding_values`, `enum_binding_values`, `relation_values`, `filing_period_date` parameters thread through to `calculate_registry_snapshot`.)
+- [x] `W39b.P249.S1486` - Resolve the registry snapshot at calculate time; `src/aeat/application/modelo/_actions.py`. (`ValidatedRegistryAuthority.load(...).snapshot(modelo, filing_year, period)`; failure raises `CalculationRegistryUnavailableError`.)
+- [x] `W39b.P249.S1487` - Run the formula engine and use its full output as the persisted `casilla_values`; `src/aeat/application/modelo/_actions.py`. (`engine_result.values` includes every declared casilla — operator inputs ∪ formula targets.)
+- [x] `W39b.P249.S1488` - Canonicalise `inputs_snapshot` and `binding_overrides` (sorted, decimal-normalised) so the content-addressed revision id is stable across re-runs; `src/aeat/application/modelo/_actions.py`.
+- [x] `W39b.P249.S1489` - Switch verify's "missing required casilla" check from `casilla_values` to `inputs_snapshot`; `src/aeat/application/modelo/_actions.py`. (With the engine wired, `casilla_values` carries every declared casilla — operator intent lives in `inputs_snapshot`.)
+- [x] `W39b.P249.S1490` - Extend the `modelo.calculation.created` bucket-event payload with `formula_count` and `casilla_count` so audit history records the engine outcome; `src/aeat/application/modelo/_actions.py`.
+
+### Phase `W39b.P250` - real behavior verification
+
+- [x] `W39b.P250.S1491` - Add a dedicated engine-wiring assertion; `src/aeat/application/modelo/test_file_flow.py`. (`test_calculate_runs_registry_formula_engine` proves: inputs in `inputs_snapshot`, formula outputs in `casilla_values`, casilla 03 = 01 - 02 = 7000, ≥19 casillas in the output, bucket-event payload reports `formula_count` and `casilla_count` from the engine.)
+- [x] `W39b.P250.S1492` - Add the registry-unresolvable refusal; `src/aeat/application/modelo/test_file_flow.py`. (`test_calculate_refuses_when_registry_snapshot_unresolvable` exercises modelo 130 / year 2010 — the year predates the registry's earliest revision; the action raises `CalculationRegistryUnavailableError`.)
+- [x] `W39b.P250.S1493` - Move the file-flow / amend-flow / import-flow fixtures from registry-unresolvable 303/Q1 to registry-resolvable 130/1T; `src/aeat/application/modelo/test_*_flow.py`. (Default `_seed_work_unit` is now modelo 130 1T 2026; binding values default to `_DEFAULT_130_BINDING_VALUES`. Verify-section continues to use modelo 180 with its declared bindings + relations.)
+- [x] `W39b.P250.S1494` - Run the targeted modelo slice without skips or xfails; 89/89 modelo-slice tests pass; ty clean on touched modules.
+
+### Phase `W39b.P251` - thin cli exposure
+
+- [x] `W39b.P251.S1495` - Wire the CLI verb to the new action shape; `src/aeat/entrypoints/cli/_modelo.py`. (`aeat app modelo work calculate` routes `--casilla` into `casilla_inputs`; `--binding KEY=VALUE` routes into `binding_values` when the value parses as Decimal, otherwise into `enum_binding_values`.)
+- [x] `W39b.P251.S1496` - Map `CalculationRegistryUnavailableError` to `typer.BadParameter` at the boundary; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ## Wave `W50` - modelo 036 037 foundation
 

@@ -101,15 +101,24 @@ def repos(tmp_path):
 
 
 def _seed_work_unit(wu_repo):
+    """Modelo 130 1T 2026 — registry-resolvable for the
+    ``calculate_modelo_revision`` formula-engine path used by the
+    locally-filed regression test."""
+
     return create_work_unit(
         bucket_id="default",
-        modelo="303",
+        modelo="130",
         filing_year=2026,
-        period="Q1",
-        revision_id="2009-y-siguientes",
+        period="1T",
+        revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,
     )
+
+
+_DEFAULT_130_BINDING_VALUES = {
+    "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+}
 
 
 def test_import_persists_filing_with_external_evidence(repos) -> None:
@@ -373,7 +382,8 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos) -> No
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_values={"01": Decimal("1500")},
+        casilla_inputs={"01": Decimal("1500")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,

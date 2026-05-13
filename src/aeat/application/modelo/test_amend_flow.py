@@ -66,7 +66,6 @@ from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
@@ -102,15 +101,23 @@ def repos(tmp_path):
 
 
 def _seed_work_unit(wu_repo):
+    """Modelo 130 1T 2026 — registry-resolvable so the formula engine
+    in ``calculate_modelo_revision`` has a snapshot to operate on."""
+
     return create_work_unit(
         bucket_id="default",
-        modelo="303",
+        modelo="130",
         filing_year=2026,
-        period="Q1",
-        revision_id="2009-y-siguientes",
+        period="1T",
+        revision_id="2019-y-siguientes",
         repository=wu_repo,
         clock=_T0,
     )
+
+
+_DEFAULT_130_BINDING_VALUES = {
+    "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+}
 
 
 def _seed_external_baseline(repos_tuple, *, casilla_values):
@@ -182,7 +189,8 @@ def test_amend_refuses_without_external_evidence(repos) -> None:
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_values={"01": Decimal("1000")},
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
