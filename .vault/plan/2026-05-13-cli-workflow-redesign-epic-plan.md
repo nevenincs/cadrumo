@@ -917,15 +917,17 @@ This Phase delivers thin cli exposure for profile scoped storage bucket as requi
 
 This Wave implements the `2026-05-12-cli-workflow-redesign-bucket-event-history-adr` decision for bucket event history ledger. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
 
+> **Completion note.** Append-only bucket event store lives at `src/aeat/domain/buckets/` (`BucketEvent`, `BucketEventType`, `BucketEventObjectType`, `BucketEventHistoryCatalogue`, `BucketEventHistoryRepository`, `derive_bucket_event_id`, `append_bucket_event`). Encrypted SQL persistence over `SecureObjectRepository` namespace `aeat.domain.buckets.event_history` (FINANCIAL classification). The closed `BucketEventType` enum currently covers the modelo lifecycle families: `MODELO_CALCULATION_CREATED`, `MODELO_VERIFICATION_PASSED`, `MODELO_VERIFICATION_REFUSED`, `MODELO_FILED`, `MODELO_FILED_SUPERSEDED`, `MODELO_AMENDED`, `MODELO_FILING_IMPORTED`. Emission helper `_emit_bucket_event` at `src/aeat/application/modelo/_actions.py` is consumed by calculate / verify / file / amend / import. CLI surface `aeat config bucket history BUCKET_ID [--event-type ...]` at `src/aeat/entrypoints/cli/_config.py`. Per-service emitters for non-modelo families (transactions, invoices, rental, profile, auth, review queue, live-read snapshot capture) land with their owning waves; their enum additions extend `BucketEventType` as those waves close.
+
 ### Phase `W14.P066` - backend implementation
 
 This Phase delivers backend implementation for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
 - [x] `W14.P066.S0391` - Map the `2026-05-12-cli-workflow-redesign-bucket-event-history-adr` decision into non-CLI service ownership for bucket event history ledger; `src/aeat/adapters/persistence`. (Domain ownership lands at `src/aeat/domain/buckets/` — events are part of the domain contract; the encrypted-SQL repository is the persistence adapter)
 - [x] `W14.P066.S0392` - Implement Pydantic command and result contracts for bucket event history ledger; `src/aeat/adapters/persistence`. (`BucketEvent`, `BucketEventType`, `BucketEventObjectType`, `BucketEventHistoryCatalogue` at `src/aeat/domain/buckets/_event.py`; closed enum scopes per ADR per-service emission table)
-- [x] `W14.P066.S0393` - Wire application or domain services required by bucket event history ledger; `src/aeat/adapters/persistence`. (`_emit_bucket_event` helper in `src/aeat/application/modelo/_actions.py`; wired into calculate / verify / file)
+- [x] `W14.P066.S0393` - Wire application or domain services required by bucket event history ledger; `src/aeat/adapters/persistence`. (`_emit_bucket_event` helper in `src/aeat/application/modelo/_actions.py`; wired into calculate / verify / file / amend / import — the full modelo lifecycle.)
 - [x] `W14.P066.S0394` - Connect persistence, bucket events, registry data, or provider adapters required by bucket event history ledger; `src/aeat/adapters/persistence`. (`BucketEventHistoryRepository` at `src/aeat/domain/buckets/_event_repository.py` over `SecureObjectRepository`, namespace `aeat.domain.buckets.event_history`)
-- [x] `W14.P066.S0395` - Route existing backend functionality into the canonical service for bucket event history ledger; `src/aeat/adapters/persistence`. (modelo lifecycle services now route through the canonical bucket-event emitter)
+- [x] `W14.P066.S0395` - Route existing backend functionality into the canonical service for bucket event history ledger; `src/aeat/adapters/persistence`. (modelo lifecycle services — calculate, verify, file, amend, import — all route through the canonical `_emit_bucket_event` helper. The closed `BucketEventType` enum now covers `MODELO_CALCULATION_CREATED`, `MODELO_VERIFICATION_PASSED`, `MODELO_VERIFICATION_REFUSED`, `MODELO_FILED`, `MODELO_FILED_SUPERSEDED`, `MODELO_AMENDED`, `MODELO_FILING_IMPORTED`. Per-service emitters for non-modelo families — transactions, invoices, rental, etc. — land with their own waves and are scoped out of W14.)
 - [x] `W14.P066.S0396` - Record service-level error codes and log fields for bucket event history ledger; `src/aeat/adapters/persistence`. (`BucketsError` / `BucketEventValidationError` / `BucketEventHistoryPersistenceError` taxonomy; logger `aeat.domain.buckets._event_repository`)
 
 ### Phase `W14.P067` - shadow duplicate removal
@@ -965,12 +967,12 @@ This Phase delivers real behavior verification for bucket event history ledger a
 
 This Phase delivers thin cli exposure for bucket event history ledger as required by `2026-05-12-cli-workflow-redesign-bucket-event-history-adr`.
 
-- [ ] `W14.P070.S0415` - Expose accepted command handlers for bucket event history ledger under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W14.P070.S0416` - Keep argument parsing for bucket event history ledger separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W14.P070.S0417` - Delegate bucket event history ledger execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W14.P070.S0418` - Render bucket event history ledger results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W14.P070.S0419` - Handle bucket event history ledger failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W14.P070.S0420` - Validate help text for bucket event history ledger uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W14.P070.S0415` - Expose accepted command handlers for bucket event history ledger under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`. (`aeat config bucket history BUCKET_ID [--event-type ...]` lives at `src/aeat/entrypoints/cli/_config.py`.)
+- [x] `W14.P070.S0416` - Keep argument parsing for bucket event history ledger separate from backend behavior; `src/aeat/entrypoints/cli`. (CLI parses `--event-type` strings into the closed `BucketEventType` enum; backend takes typed enum tuples.)
+- [x] `W14.P070.S0417` - Delegate bucket event history ledger execution to centralized backend services; `src/aeat/entrypoints/cli`. (CLI calls `BucketEventHistoryRepository().load().for_bucket(...)`; no business logic at entrypoint.)
+- [x] `W14.P070.S0418` - Render bucket event history ledger results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`. (`_emit(ctx, payload, lines)` produces text + JSON output.)
+- [x] `W14.P070.S0419` - Handle bucket event history ledger failures through the central command error boundary; `src/aeat/entrypoints/cli`. (Unknown event-type strings raise `typer.BadParameter` against the closed enum.)
+- [x] `W14.P070.S0420` - Validate help text for bucket event history ledger uses accepted vocabulary only; `tests/entrypoints/cli`. (Locale audit clean across ca / en / es / hu.)
 
 ## Wave `W15` - config init shape
 
@@ -2392,6 +2394,8 @@ This Phase delivers thin cli exposure for modelo work unit lifecycle as required
 
 This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr` decision for modelo calculation revisions. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
 
+> **Completion note.** W39 landed in two passes: the original cut delivered the lifecycle plumbing (CalculationRevision pydantic, content-addressed id, DRAFT state, supersession chain) with `calculate_modelo_revision` accepting a pre-computed `casilla_values` mapping. The follow-up wave `W39b` (modelo calculate engine wiring) replaces that with a real-registry computation path: every locally-computed revision now runs through `calculate_registry_snapshot`. See `[[2026-05-13-cli-workflow-redesign-modelo-calculate-engine-wiring-adr]]` for the engine-wiring contract and `W39b` for per-step trace.
+
 ### Phase `W39.P191` - backend implementation
 
 This Phase delivers backend implementation for modelo calculation revisions as required by `2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr`.
@@ -2450,6 +2454,8 @@ This Phase delivers thin cli exposure for modelo calculation revisions as requir
 ## Wave `W40` - modelo verify
 
 This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-verify-adr` decision for modelo verification lifecycle. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
+
+> **Completion note.** `VerificationReport` + `VerificationReportCatalogue` at `src/aeat/domain/modelos/_verification_report.py`; encrypted SQL persistence via `VerificationReportCatalogueRepository`. `verify_modelo_revision` at `src/aeat/application/modelo/_actions.py` resolves the registry snapshot, identifies required-manual-input casillas, builds a `VerificationReport` with `MISSING_REQUIRED_CASILLA` / `BLOCKING_RULE` findings, and grants verified-complete iff no blocking findings. The W39b engine-wiring follow-up shifted verify's "missing required" gate from `casilla_values` to `inputs_snapshot` since the engine now fills `casilla_values` for every declared casilla. CLI verbs `aeat app modelo work verify` and `aeat app modelo verification-report list / show`.
 
 ### Phase `W40.P196` - backend implementation
 
@@ -2510,6 +2516,8 @@ This Phase delivers thin cli exposure for modelo verification lifecycle as requi
 
 This Wave implements the `2026-05-12-cli-workflow-redesign-verified-complete-adr` decision for verified complete state. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
 
+> **Completion note.** The `VERIFIED_COMPLETE` state lives on `CalculationRevision` at `src/aeat/domain/modelos/_calculation_revision.py`. The transition is performed by `mark_revision_verified_complete` at `src/aeat/application/modelo/_actions.py` and as a side effect of `verify_modelo_revision` granting verified-complete (per the W40 verify ADR). Wave W40 supersedes the manual `mark-verified-complete` CLI verb with `aeat app modelo work verify`; the underlying state-machine semantics are unchanged.
+
 ### Phase `W41.P201` - backend implementation
 
 This Phase delivers backend implementation for verified complete state as required by `2026-05-12-cli-workflow-redesign-verified-complete-adr`.
@@ -2569,6 +2577,8 @@ This Phase delivers thin cli exposure for verified complete state as required by
 
 This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-file-adr` decision for internal filed state. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
 
+> **Completion note.** `file_modelo_revision` at `src/aeat/application/modelo/_actions.py` performs the FILED transition, builds the `FilingRecord`, supersedes any prior current filing for the tuple, and advances the work-unit pointers atomically. CLI verb `aeat app modelo work file` carries `filing_disambiguation = "(internal only — does not submit to AEAT)"` to keep operators from confusing the internal filed flag for live submission. The W14 follow-up wired `MODELO_FILED` / `MODELO_FILED_SUPERSEDED` bucket events; W49 added the `amends_filing_record_id` link used by the amend path.
+
 ### Phase `W42.P206` - backend implementation
 
 This Phase delivers backend implementation for internal filed state as required by `2026-05-12-cli-workflow-redesign-modelo-file-adr`.
@@ -2627,6 +2637,8 @@ This Phase delivers thin cli exposure for internal filed state as required by `2
 ## Wave `W43` - modelo filing record
 
 This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-filing-record-adr` decision for filing record and submission status. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
+
+> **Completion note.** `FilingRecord` + `FilingRecordCatalogue` at `src/aeat/domain/modelos/_filing_record.py`; encrypted SQL persistence via `FilingRecordCatalogueRepository`. CLI verbs `aeat app modelo filing-record list / show / import` provide read access plus the W49b external-evidence import surface. The W49 follow-up added the `external_evidence` and `amends_filing_record_id` fields that pair the record with imported AEAT-attested baselines.
 
 ### Phase `W43.P211` - backend implementation
 
