@@ -181,10 +181,16 @@ def test_capture_profile_variant_replay_payload(
 
     _REPLAY_DIR.mkdir(parents=True, exist_ok=True)
     payload_path = _REPLAY_DIR / f"{scenario_id}.json"
-    expected_by_label = {label: str(value) for label, value in _BASELINE_EXPECTED.items()}
+    # The live observation IS the oracle truth for this variant — derive
+    # the expected block from the observed Spanish-formatted decimals so
+    # the replay parity test asserts registry == AEAT for the same
+    # profile inputs. (The baseline default values in _BASELINE_EXPECTED
+    # only apply to the default-profile capture; CCAA variants produce
+    # different autonomic mínimos.)
+    expected_by_label = {label: _parse_spanish_decimal(value) for label, value in observed.items()}
     expected_by_casilla = {
-        _LABEL_TO_CASILLA[label]: str(value)
-        for label, value in _BASELINE_EXPECTED.items()
+        _LABEL_TO_CASILLA[label]: _parse_spanish_decimal(value)
+        for label, value in observed.items()
         if label in _LABEL_TO_CASILLA
     }
     observed_by_casilla = {
@@ -201,6 +207,12 @@ def test_capture_profile_variant_replay_payload(
     }
     payload_path.write_text(json.dumps(document, ensure_ascii=False, indent=2), encoding="utf-8")
     assert payload_path.exists()
+
+
+def _parse_spanish_decimal(value: str) -> str:
+    """Convert a Spanish-formatted decimal ("5.956,65") to plain form ("5956.65")."""
+
+    return value.replace(".", "").replace(",", ".")
 
 
 # Per-scenario casilla overrides + scrape lists. Each entry mirrors the
