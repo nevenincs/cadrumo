@@ -79,6 +79,12 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
     return findings
 
 
+_KEY_PREFIX_RE = re.compile(r"^\w+(?:\.\w+)*\.$", re.UNICODE)
+"""An f-string literal head qualifies as a key prefix when it ends in a
+dot and carries at least one word segment before it (e.g. ``topic.``,
+``cli.registry.metrics.``)."""
+
+
 def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
     """Walk every f-string literal whose leading segment matches the
     dotted-key shape and emit ``<prefix>.*`` namespace markers.
@@ -86,6 +92,11 @@ def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
     Covers both inline call sites (``tr(f"cli.registry.metrics.{x}")``)
     and the assignment form (``key = f"wizard.errors.{reason}"``)
     that the runtime then passes to a downstream call.
+
+    The head literal must end in a dot — that's the explicit
+    key-segment marker. ``f"topic.{slug}.title"`` qualifies because
+    the head ``topic.`` ends in a dot; ``f"plain text {value}"``
+    does not.
     """
 
     findings: set[str] = set()
@@ -97,12 +108,10 @@ def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
         head = node.values[0]
         if not isinstance(head, ast.Constant) or not isinstance(head.value, str):
             continue
-        literal = head.value.rstrip(".")
-        if not _is_dotted_literal(literal):
+        if not _KEY_PREFIX_RE.match(head.value):
             continue
-        if len(literal.split(".")) < _KEY_PATTERN_PREFIX_MIN_PARTS:
-            continue
-        findings.add(f"{literal}.*")
+        prefix = head.value.rstrip(".")
+        findings.add(f"{prefix}.*")
     return findings
 
 
@@ -142,11 +151,21 @@ def _extract_concat_prefixes(tree: ast.AST) -> set[str]:
 
 
 def scan_source_tree(root: Path) -> set[str]:
-    """Walk ``root`` for `.py` files and emit discovered locale keys."""
+    """Walk ``root`` for `.py` files and emit concrete dotted locale keys.
+
+    Concrete keys are literal translation keys passed to error
+    constructors (positional first argument or ``message_key=`` kwarg).
+    Dynamic namespaces (f-string and concatenation patterns) are
+    returned by :func:`scan_namespace_markers` and routed through a
+    separate parity check that asserts at least one concrete locale
+    entry exists under each declared namespace prefix.
+    """
 
     findings: set[str] = set()
     for module in root.rglob("*.py"):
         if module.name in {"test_parity.py", "manager.py", "_ast_scanner.py"}:
+            continue
+        if module.name.startswith("test_") or module.name.startswith("_test_") or "/tests/" in module.as_posix():
             continue
         try:
             source = module.read_text(encoding="utf-8", errors="ignore")
@@ -159,9 +178,38 @@ def scan_source_tree(root: Path) -> set[str]:
             _log.debug("locale ast scan: parse failure %s (%s)", module, exc)
             continue
         findings.update(_extract_error_constructor_keys(tree))
+    return findings
+
+
+def scan_namespace_markers(root: Path) -> set[str]:
+    """Walk ``root`` for `.py` files and emit dynamic-namespace markers.
+
+    A namespace marker is a ``<prefix>.*`` string identifying a
+    family of keys whose tail is computed at runtime (f-string
+    interpolation or string concatenation). Each marker passes the
+    parity check when at least one concrete locale key starts with
+    its prefix.
+    """
+
+    findings: set[str] = set()
+    for module in root.rglob("*.py"):
+        if module.name in {"test_parity.py", "manager.py", "_ast_scanner.py"}:
+            continue
+        if module.name.startswith("test_") or module.name.startswith("_test_") or "/tests/" in module.as_posix():
+            continue
+        try:
+            source = module.read_text(encoding="utf-8", errors="ignore")
+        except OSError as exc:
+            _log.debug("locale ast scan: skipping %s (%s)", module, exc)
+            continue
+        try:
+            tree = ast.parse(source, filename=str(module))
+        except SyntaxError as exc:
+            _log.debug("locale ast scan: parse failure %s (%s)", module, exc)
+            continue
         findings.update(_extract_fstring_prefixes(tree))
         findings.update(_extract_concat_prefixes(tree))
     return findings
 
 
-__all__ = ["scan_source_tree"]
+__all__ = ["scan_namespace_markers", "scan_source_tree"]

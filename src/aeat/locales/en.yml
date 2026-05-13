@@ -48,11 +48,12 @@ cli:
       bindings:
         app_help: Inspect and preview the bindings of an AEAT tax form
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
-        list_help: List the required and available bindings for a modelo / year / period
-        missing_help: Filter to bindings without a resolved value (require bucket /
-          ledger / profile data)
+        list_help: List the required and available bindings for a modelo / year /
+          period
+        missing_help: Filter to bindings without a resolved value (require bucket
+          / ledger / profile data)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        override_help: 'Temporary binding override with KEY=VALUE syntax (repeatable)'
+        override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
         period_help: Fiscal period to scope the bindings (e.g. Q1, 2026-01)
         preview_help: Preview bindings with temporary overrides without mutating state
         year_help: Tax year of the modelo (e.g. 2026)
@@ -192,7 +193,6 @@ cli:
     app_help: Management of the taxpayer calendar and deadlines
     explain:
       modelo_help: Tax form number (e.g. 303, 111)
-      profile_help: Taxpayer profile (e.g. autonomo, pyme)
     explain_help: Explain the deadlines and obligations for a specific tax form and
       profile
     list:
@@ -202,7 +202,6 @@ cli:
       modelo_col: Form
       opens_on_col: Opens On
       period_col: Period
-      profile_help: Filter by taxpayer profile (e.g. pyme, gran_empresa)
       status_col: Status
       table_title: Tax Deadline Calendar
       year_help: Fiscal year to query
@@ -211,7 +210,6 @@ cli:
       labels:
         closes: Closes
         no_upcoming: No upcoming deadlines
-      profile_help: Filter by taxpayer profile (e.g. pyme)
       year_help: Fiscal year to query
     next_help: Show the next relevant tax deadline
   declaration:
@@ -285,7 +283,6 @@ cli:
       inputs_help: Input files or directories to build the filing
       modelo_help: Tax model to build (e.g., 303, 111, 130)
       period_help: Tax period (e.g., 1T, 2T, 01, 12)
-      profile_help: Taxpayer profile to use
       profile_name_help: Taxpayer profile name
       profile_tax_id_help: Taxpayer's Tax ID (NIF)
       success: Filing successfully built
@@ -313,7 +310,6 @@ cli:
       modelo_mismatch: Tax model mismatch
       multiple_import_sources: Multiple import sources found
       period_mismatch: Tax period mismatch
-      profile_tax_id_required: Taxpayer's Tax ID (NIF) is required in the profile
       reasons_not_object: Reasons must be an object (JSON)
       submission_not_found: Submission not found
       submission_validation_failed: Submission validation failed
@@ -640,6 +636,16 @@ cli:
       show_help: Show one normative and, optionally, one of its articles
       tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
       verify_help: Verify the legal-norm corpus integrity
+    errors:
+      invalid_year_range: Invalid year range
+      unknown_modelo: Registry has no modelo definition for {modelo}
+    expediente_help: AEAT file number to capture
+    from_year_help: Start year to capture or review records
+    inspect_help: Inspect registry status and references
+    inspect_registry_root_help: Path to the registry root directory
+    json_help: JSON format output
+    list_filed_data_help: List existing filings in AEAT for the specified year range
+    list_filed_data_json_help: Output in JSON format for automation tools
     manuals:
       app_help: Inspect AEAT Manual práctico records (Renta, IVA, Sociedades)
       errors:
@@ -653,16 +659,6 @@ cli:
       show_help: Show a manual structure and, optionally, one section
       verify_help: Verify the manual integrity against its contract
       year_help: Tax year of the manual (e.g. 2024)
-    errors:
-      invalid_year_range: Invalid year range
-      unknown_modelo: Registry has no modelo definition for {modelo}
-    expediente_help: AEAT file number to capture
-    from_year_help: Start year to capture or review records
-    inspect_help: Inspect registry status and references
-    inspect_registry_root_help: Path to the registry root directory
-    json_help: JSON format output
-    list_filed_data_help: List existing filings in AEAT for the specified year range
-    list_filed_data_json_help: Output in JSON format for automation tools
     metrics:
       applicability_declaration_count: applicability_declaration_count
       application_link_count: application_link_count
@@ -738,13 +734,14 @@ cli:
     workbooks_verify_help: Verify the integrity of the generated workbooks
     year_help: Fiscal year to query or process
   review:
-    app_help: 'Operator review queue: triage ledger transactions, purchase evidence, and modelo findings'
+    app_help: 'Operator review queue: triage ledger transactions, purchase evidence,
+      and modelo findings'
     errors:
       invalid_state: 'Invalid review state: %{state}'
     labels:
-      id: ID
       affected_object_id: Object
       bucket: Bucket
+      id: ID
       kind: Kind
       next: Next
       period: Period
@@ -767,11 +764,10 @@ cli:
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVITY'
     debug_help: Show internal debug logs on stderr
+    detail_help: Also show the detailed registry summary
     format_help: Output format for command results
     quiet_help: Show only errors on stderr
     verbose_help: Show internal informational logs on stderr
-    detail_help: Also show the detailed registry summary
-    version_command_help: Show package version and registry summary
     version_help: Show package version (add --detail for the full registry summary)
   topic:
     app_help: Show conceptual help about regimes, modelos, and AEAT processes
@@ -852,6 +848,9 @@ filing:
     required_missing: Required field missing
     schema_mismatch: Mismatch with expected schema
 profile:
+  keys:
+    tax:
+      id: Tax identifier (NIF/NIE/CIF)
   test_keys:
     description_490119: x
 review:
@@ -961,9 +960,8 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: 'The interactive wizard requires cmd.exe or Windows Terminal.
-      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch
-      terminals.'
+    unsupported_console: The interactive wizard requires cmd.exe or Windows Terminal.
+      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch terminals.
   progress:
     question_prefix: '(question %{q_n}/%{q_total}) '
     section_header: 'Section %{section_n}/%{section_total}: %{title}'
@@ -990,8 +988,6 @@ wizard:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
-      taxation-type:
-        help: Taxation type code
       does-intracomunitario:
         help: Conducts intracomunitario operations
       enrollment-large-company:
@@ -1050,6 +1046,8 @@ wizard:
         help: Tax identifier (NIF/NIE) for the active profile
       tax-residence-ccaa:
         help: Tax-residence autonomous community
+      taxation-type:
+        help: Taxation type code
       taxpayer-birth-date:
         help: First taxpayer birth date
       taxpayer-death-date:
@@ -1103,8 +1101,6 @@ wizard:
         prompt: Business activity label or controlled key
       address-postcode:
         prompt: Tax address postcode
-      taxation-type:
-        prompt: Taxation type code
       iva-regime:
         choices:
           exento:
@@ -1132,6 +1128,8 @@ wizard:
         prompt: Surnames or company name for export headers
       tax-id:
         prompt: Tax identifier (NIF/NIE) for the active profile
+      taxation-type:
+        prompt: Taxation type code
       title: Profile identity
     residence:
       ccaa:

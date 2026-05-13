@@ -59,9 +59,10 @@ cli:
         missing_help: Szűrés azokra a bindingekre, amelyeknek nincs feloldott értékük
           (bucket / nyilvántartás / profil adatra van szükségük)
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        override_help: 'Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)'
+        override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
         period_help: Adóidőszak a bindingek szűkítéséhez (pl. Q1, 2026-01)
-        preview_help: Bindingek előnézete ideiglenes felülírásokkal, állapotmutáció nélkül
+        preview_help: Bindingek előnézete ideiglenes felülírásokkal, állapotmutáció
+          nélkül
         year_help: A modell adóéve (pl. 2026)
       casillas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
@@ -205,7 +206,6 @@ cli:
     app_help: Az adózói naptár és a határidők kezelése
     explain:
       modelo_help: Adónyomtatvány száma (pl. 303, 111)
-      profile_help: Adózói profil (pl. autonomo, pyme)
     explain_help: Határidők és kötelezettségek ismertetése egy adott nyomtatványhoz
       és profilhoz
     list:
@@ -215,7 +215,6 @@ cli:
       modelo_col: Nyomtatvány
       opens_on_col: Kezdés
       period_col: Időszak
-      profile_help: Szűrés adózói profil szerint (pl. pyme, gran_empresa)
       status_col: Állapot
       table_title: Adózási határidők naptára
       year_help: Lekérdezendő adóév
@@ -224,7 +223,6 @@ cli:
       labels:
         closes: Lezárul
         no_upcoming: Nincsenek közelgő határidők
-      profile_help: Szűrés adózói profil szerint (pl. pyme)
       year_help: Lekérdezendő adóév
     next_help: A következő releváns adózási határidő megjelenítése
   declaration:
@@ -300,7 +298,6 @@ cli:
       inputs_help: Bemeneti fájlok vagy könyvtárak a bevallás összeállításához
       modelo_help: Összeállítandó adómodell (pl. 303, 111, 130)
       period_help: Adózási időszak (pl. 1T, 2T, 01, 12)
-      profile_help: Használandó adózói profil
       profile_name_help: Adózói profil neve
       profile_tax_id_help: Az adózó adószáma (NIF)
       success: A bevallás összeállítása sikeres
@@ -329,7 +326,6 @@ cli:
       modelo_mismatch: Az adómodell nem egyezik
       multiple_import_sources: Több importálási forrás is található
       period_mismatch: Az adózási időszak nem egyezik
-      profile_tax_id_required: Az adózó adószáma (NIF) szükséges a profilban
       reasons_not_object: Az indokoknak objektumnak (JSON) kell lenniük
       submission_not_found: Benyújtás nem található
       submission_validation_failed: A benyújtás ellenőrzése sikertelen
@@ -663,19 +659,6 @@ cli:
       show_help: Egy jogszabály és opcionálisan az egyik cikke megjelenítése
       tag_help: Szűrés adónemtag szerint (pl. 'irpf', 'iva')
       verify_help: Jogi korpusz integritásának ellenőrzése
-    manuals:
-      app_help: AEAT Manual práctico bejegyzések vizsgálata (Renta, IVA, Sociedades)
-      errors:
-        unknown_section: 'A(z) {section} szakasz nem található a kézikönyvben'
-      kind_help: Szűrés kézikönyvi szabálytípus szerint
-      list_help: Helyben elérhető kézikönyvrészek listázása
-      manual_help: Kézikönyv-azonosító (renta, iva, sociedades)
-      part_help: Kézikönyvkötet (single, part1, part2-deducciones-autonomicas, part3)
-      rules_help: Egy kézikönyvben kódolt szabályok listázása
-      section_help: Opcionális szakasz-azonosító megjelenítéshez
-      show_help: Kézikönyv struktúrájának és opcionálisan egy szakaszának megjelenítése
-      verify_help: Kézikönyv integritásának ellenőrzése a szerződésével szemben
-      year_help: 'A kézikönyv adóéve (pl. 2024)'
     errors:
       invalid_year_range: Érvénytelen évtartomány
       unknown_modelo: 'A registry nem tartalmaz definíciót ehhez a modellhez: {modelo}'
@@ -686,6 +669,19 @@ cli:
     json_help: Kimenet JSON formátumban
     list_filed_data_help: Meglévő AEAT benyújtások listázása a megadott évtartományra
     list_filed_data_json_help: Kimenet JSON formátumban automatizálási eszközökhöz
+    manuals:
+      app_help: AEAT Manual práctico bejegyzések vizsgálata (Renta, IVA, Sociedades)
+      errors:
+        unknown_section: A(z) {section} szakasz nem található a kézikönyvben
+      kind_help: Szűrés kézikönyvi szabálytípus szerint
+      list_help: Helyben elérhető kézikönyvrészek listázása
+      manual_help: Kézikönyv-azonosító (renta, iva, sociedades)
+      part_help: Kézikönyvkötet (single, part1, part2-deducciones-autonomicas, part3)
+      rules_help: Egy kézikönyvben kódolt szabályok listázása
+      section_help: Opcionális szakasz-azonosító megjelenítéshez
+      show_help: Kézikönyv struktúrájának és opcionálisan egy szakaszának megjelenítése
+      verify_help: Kézikönyv integritásának ellenőrzése a szerződésével szemben
+      year_help: A kézikönyv adóéve (pl. 2024)
     metrics:
       applicability_declaration_count: applicability_declaration_count
       application_link_count: application_link_count
@@ -766,9 +762,9 @@ cli:
     errors:
       invalid_state: 'Érvénytelen felülvizsgálati állapot: %{state}'
     labels:
-      id: ID
       affected_object_id: Objektum
       bucket: Bucket
+      id: ID
       kind: Típus
       next: Következő
       period: Időszak
@@ -785,17 +781,17 @@ cli:
       help: Egy felülvizsgálati elem megjelenítése
       id_help: Felülvizsgálati elem azonosítója
   root:
-    app_app_help: Adózási munkaterület overview, ledger, modelo, registry és review számára
+    app_app_help: Adózási munkaterület overview, ledger, modelo, registry és review
+      számára
     app_help: 'Spanyol adóbevallási segéd
 
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVITY'
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
+    detail_help: Also show the detailed registry summary
     format_help: A parancseredmények kimeneti formátuma
     quiet_help: Csak hibák megjelenítése stderr-en
     verbose_help: Belső információs naplók megjelenítése stderr-en
-    detail_help: Also show the detailed registry summary
-    version_command_help: Csomagverzió és regiszter-összefoglaló megjelenítése
     version_help: Csomagverzió megjelenítése (a --detail kapcsoló mutatja a teljes
       regiszter-összefoglalót)
   topic:
@@ -879,6 +875,9 @@ filing:
     required_missing: Hiányzó kötelező mező
     schema_mismatch: Eltérés a várt sémától
 profile:
+  keys:
+    tax:
+      id: Tax identifier (NIF/NIE/CIF)
   test_keys:
     description_490119: x
 review:
@@ -991,9 +990,8 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: 'The interactive wizard requires cmd.exe or Windows Terminal.
-      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch
-      terminals.'
+    unsupported_console: The interactive wizard requires cmd.exe or Windows Terminal.
+      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch terminals.
   progress:
     question_prefix: '(question %{q_n}/%{q_total}) '
     section_header: 'Section %{section_n}/%{section_total}: %{title}'
@@ -1020,8 +1018,6 @@ wizard:
         help: Adózási cím irányítószáma
       bienes-extranjero-above-threshold:
         help: Külföldön tartott eszközök a törvényi küszöb felett
-      taxation-type:
-        help: Adózási típus kódja
       does-intracomunitario:
         help: Közösségi műveleteket végez
       enrollment-large-company:
@@ -1080,6 +1076,8 @@ wizard:
         help: Az aktív profil adóazonosítója (NIF/NIE)
       tax-residence-ccaa:
         help: Adóügyi rezidens autonóm közösség
+      taxation-type:
+        help: Adózási típus kódja
       taxpayer-birth-date:
         help: Az első adózó születési dátuma
       taxpayer-death-date:
@@ -1133,8 +1131,6 @@ wizard:
         prompt: Tevékenységcímke vagy ellenőrzött kulcs
       address-postcode:
         prompt: Adózási cím irányítószáma
-      taxation-type:
-        prompt: Adózási típus kódja
       iva-regime:
         choices:
           exento:
@@ -1162,6 +1158,8 @@ wizard:
         prompt: Vezetéknév vagy cégnév az exportfejlécekhez
       tax-id:
         prompt: Adóazonosító (NIF/NIE) bevallásokhoz
+      taxation-type:
+        prompt: Adózási típus kódja
       title: Profil azonosítása
     residence:
       ccaa:

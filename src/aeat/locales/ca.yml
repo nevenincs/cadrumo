@@ -59,7 +59,7 @@ cli:
         missing_help: Filtrar als bindings sense valor resolt (requereixen dades del
           bucket / llibre / perfil)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        override_help: 'Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)'
+        override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
         period_help: Període fiscal per acotar els bindings (p. ex. Q1, 2026-01)
         preview_help: Previsualitzar els bindings amb sobreescriptures temporals sense
           mutar l'estat
@@ -83,7 +83,8 @@ cli:
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
       work:
-        app_help: Gestionar el cicle de vida de les unitats de treball d'un model tributari
+        app_help: Gestionar el cicle de vida de les unitats de treball d'un model
+          tributari
         bucket_id_help: Identificador del bucket al qual pertany la unitat de treball
         create_help: Crear o reutilitzar una unitat de treball per a (model, exercici,
           període, revisió)
@@ -206,7 +207,6 @@ cli:
     app_help: Gestió del calendari i terminis del contribuent
     explain:
       modelo_help: Número del model tributari (ex. 303, 111)
-      profile_help: Perfil del contribuent (ex. autonom, pyme)
     explain_help: Explicar els terminis i obligacions per a un model i perfil específics
     list:
       closes_on_col: Tancament el
@@ -215,7 +215,6 @@ cli:
       modelo_col: Model
       opens_on_col: Obertura el
       period_col: Període
-      profile_help: Filtrar per perfil del contribuent (ex. pyme, gran_empresa)
       status_col: Estat
       table_title: Calendari de Terminis Tributaris
       year_help: Exercici fiscal a consultar
@@ -224,7 +223,6 @@ cli:
       labels:
         closes: Tanca
         no_upcoming: No hi ha terminis propers
-      profile_help: Filtrar per perfil del contribuent (ex. pyme)
       year_help: Exercici fiscal a consultar
     next_help: Mostrar el proper termini tributari rellevant
   declaration:
@@ -298,7 +296,6 @@ cli:
       inputs_help: Fitxers o directoris d'entrada per construir la declaració
       modelo_help: Model tributari a construir (p. ex., 303, 111, 130)
       period_help: Periode fiscal (p. ex., 1T, 2T, 01, 12)
-      profile_help: Perfil de contribuent a utilitzar
       profile_name_help: Nom del perfil de contribuent
       profile_tax_id_help: NIF del contribuent
       success: Declaració construïda correctament
@@ -326,7 +323,6 @@ cli:
       modelo_mismatch: El model tributari no coincideix
       multiple_import_sources: S'han trobat múltiples fonts d'importació
       period_mismatch: El periode fiscal no coincideix
-      profile_tax_id_required: Es requereix el NIF del contribuent al perfil
       reasons_not_object: Els motius han de ser un objecte (JSON)
       submission_not_found: Presentació no trobada
       submission_validation_failed: Fallada en la validació de la presentació
@@ -661,6 +657,17 @@ cli:
       show_help: Mostrar una normativa i, opcionalment, un dels seus articles
       tag_help: Filtrar per etiqueta de domini fiscal (p. ex. 'irpf', 'iva')
       verify_help: Verificar la integritat del corpus normatiu
+    errors:
+      invalid_year_range: Rang d'anys no vàlid
+      unknown_modelo: El registre no conté cap definició del model {modelo}
+    expediente_help: Número d'expedient de l'AEAT a capturar
+    from_year_help: Any inicial per capturar o revisar registres
+    inspect_help: Inspeccionar l'estat del registre i les referències
+    inspect_registry_root_help: Ruta al directori arrel del registre
+    json_help: Sortida en format JSON
+    list_filed_data_help: Llistar presentacions existents a l'AEAT per al rang d'anys
+      especificat
+    list_filed_data_json_help: Sortida en format JSON per a eines d'automatització
     manuals:
       app_help: Inspeccionar els Manuals pràctics AEAT (Renda, IVA, Societats)
       errors:
@@ -674,17 +681,6 @@ cli:
       show_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
       verify_help: Verificar la integritat del manual contra el seu contracte
       year_help: Any fiscal del manual (p. ex. 2024)
-    errors:
-      invalid_year_range: Rang d'anys no vàlid
-      unknown_modelo: El registre no conté cap definició del model {modelo}
-    expediente_help: Número d'expedient de l'AEAT a capturar
-    from_year_help: Any inicial per capturar o revisar registres
-    inspect_help: Inspeccionar l'estat del registre i les referències
-    inspect_registry_root_help: Ruta al directori arrel del registre
-    json_help: Sortida en format JSON
-    list_filed_data_help: Llistar presentacions existents a l'AEAT per al rang d'anys
-      especificat
-    list_filed_data_json_help: Sortida en format JSON per a eines d'automatització
     metrics:
       applicability_declaration_count: applicability_declaration_count
       application_link_count: application_link_count
@@ -764,9 +760,9 @@ cli:
     errors:
       invalid_state: 'Estat de revisió no vàlid: %{state}'
     labels:
-      id: ID
       affected_object_id: Objecte
       bucket: Bucket
+      id: ID
       kind: Tipus
       next: Següent
       period: Període
@@ -783,17 +779,17 @@ cli:
       help: Mostrar un element de la cua de revisió
       id_help: Identificador de l'element de revisió
   root:
-    app_app_help: Espai de treball fiscal per a overview, ledger, modelo, registry i review
+    app_app_help: Espai de treball fiscal per a overview, ledger, modelo, registry
+      i review
     app_help: 'Assistent per preparar declaracions tributàries espanyoles
 
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVITAT'
     debug_help: Mostrar logs interns de depuració a stderr
+    detail_help: Also show the detailed registry summary
     format_help: Format de sortida per als resultats de l'ordre
     quiet_help: Mostrar només errors a stderr
     verbose_help: Mostrar logs interns informatius a stderr
-    detail_help: Also show the detailed registry summary
-    version_command_help: Mostrar la versió del paquet i el resum del registre
     version_help: Mostrar la versió del paquet (afegeix --detail per al resum complet
       del registre)
   topic:
@@ -875,6 +871,9 @@ filing:
     required_missing: Falta camp obligatori
     schema_mismatch: Discrepància amb l'esquema esperat
 profile:
+  keys:
+    tax:
+      id: Tax identifier (NIF/NIE/CIF)
   test_keys:
     description_490119: x
 review:
@@ -985,9 +984,8 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: 'The interactive wizard requires cmd.exe or Windows Terminal.
-      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch
-      terminals.'
+    unsupported_console: The interactive wizard requires cmd.exe or Windows Terminal.
+      Use `aeat config init --quiet --tax-id NIF --activity ACTIVITY` or switch terminals.
   progress:
     question_prefix: '(question %{q_n}/%{q_total}) '
     section_header: 'Section %{section_n}/%{section_total}: %{title}'
@@ -1014,8 +1012,6 @@ wizard:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
-      taxation-type:
-        help: Codi del tipus de tributació
       does-intracomunitario:
         help: Realitza operacions intracomunitàries
       enrollment-large-company:
@@ -1074,6 +1070,8 @@ wizard:
         help: Identificador fiscal (NIF/NIE) del perfil actiu
       tax-residence-ccaa:
         help: Comunitat autònoma de residència fiscal
+      taxation-type:
+        help: Codi del tipus de tributació
       taxpayer-birth-date:
         help: Data de naixement del primer declarant
       taxpayer-death-date:
@@ -1127,8 +1125,6 @@ wizard:
         prompt: Etiqueta d'activitat o clau controlada
       address-postcode:
         prompt: Codi postal del domicili fiscal
-      taxation-type:
-        prompt: Codi del tipus de tributació
       iva-regime:
         choices:
           exento:
@@ -1156,6 +1152,8 @@ wizard:
         prompt: Cognoms o raó social per a capçaleres d'exportació
       tax-id:
         prompt: Identificador fiscal (NIF/NIE) per a declaracions
+      taxation-type:
+        prompt: Codi del tipus de tributació
       title: Identitat del perfil
     residence:
       ccaa:
