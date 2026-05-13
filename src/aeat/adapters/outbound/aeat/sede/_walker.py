@@ -17,7 +17,6 @@ surface.
 
 from __future__ import annotations
 
-import contextlib
 import hashlib
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -292,8 +291,12 @@ async def _snapshot_html(page: object) -> str:
     last_exc: BaseException | None = None
     for _ in range(8):
         if wait_for_load_state is not None:
-            with contextlib.suppress(Exception):
+            try:
                 await wait_for_load_state("domcontentloaded", timeout=2_000)
+            except PlaywrightError as wait_exc:
+                log.debug(
+                    "sede walker: wait_for_load_state did not settle; proceeding to content() anyway (%s)", wait_exc
+                )
         try:
             return await content()
         except PlaywrightError as exc:

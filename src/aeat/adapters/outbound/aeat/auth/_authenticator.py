@@ -766,7 +766,7 @@ class AeatAuthenticator:
             backend = CertificateBackend(self._settings.aeat_certificate_backend.name)
             health = self._certificate_health_check(
                 self._settings.aeat_certificate_path,
-                password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 - env var NAME, not a secret
+                password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",
                 warn_days=self._settings.aeat_cert_warn_days,
                 critical_days=self._settings.aeat_cert_critical_days,
                 backend=backend,
@@ -802,6 +802,11 @@ class AeatAuthenticator:
                 health_summary=f"{health.severity.value}:{health.days_until_expiry}",
             )
         except Exception as exc:
+            log.debug(
+                "AeatAuthenticator.describe: surfacing unavailable status (%s)",
+                type(exc).__name__,
+                exc_info=True,
+            )
             return AuthProviderDescription(
                 kind=self.kind,
                 label="AEAT certificate",
@@ -1152,7 +1157,7 @@ class AeatAuthenticator:
             raise CertificateLoadError("AEAT_CERTIFICATE_PATH is not set; cannot build CertificateBundle")
         return CertificateBundle(
             path=path,
-            password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",  # noqa: S106 — env var NAME, not a secret
+            password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",
             friendly_name=self._settings.aeat_certificate_friendly_name,
             backend=CertificateBackend(self._settings.aeat_certificate_backend.name),
         )

@@ -138,7 +138,13 @@ async def assert_click_target_safe(
     """
     try:
         text = await locator.inner_text(timeout=timeout_ms)
-    except Exception:
+    except Exception as exc:
+        logger.debug(
+            "renta web open safety: inner_text probe failed stage=%s description=%s: %s",
+            stage,
+            description,
+            exc,
+        )
         text = ""
     normalised_text = _normalise(text)
     matched = _matches_forbidden_token(normalised_text)
@@ -161,7 +167,14 @@ async def assert_click_target_safe(
     for attr in ("href", "formaction", "data-href"):
         try:
             attr_value = await locator.get_attribute(attr)
-        except Exception:
+        except Exception as exc:
+            logger.debug(
+                "renta web open safety: get_attribute(%s) probe failed stage=%s description=%s: %s",
+                attr,
+                stage,
+                description,
+                exc,
+            )
             attr_value = None
         if attr_value:
             normalised_url = attr_value.lower()

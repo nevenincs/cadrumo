@@ -1,6 +1,6 @@
 """Round-trip parser tests for committed sanitised fixtures.
 
-Every committed fixture under ``tests/fixtures/justificantes/`` must
+Every committed fixture under ``src/aeat/tests/fixtures/justificantes/`` must
 remain parseable by :func:`aeat.adapters.inbound.justificante.parse_justificante`
 after sanitisation — the test fixture's whole point is to exercise
 the production extractor against a synthetic-but-shape-preserving
@@ -30,17 +30,15 @@ from pathlib import Path
 
 import pytest
 
+from aeat.tests import FIXTURES_DIR
+
 from ..justificante import Justificante, parse_justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
-def _project_root() -> Path:
-    return Path(__file__).resolve().parents[5]
-
-
 def _committed_fixture_pairs() -> list[tuple[Path, Path]]:
-    fixture_root = _project_root() / "tests" / "fixtures" / "justificantes"
+    fixture_root = FIXTURES_DIR / "justificantes"
     if not fixture_root.is_dir():
         return []
     pairs: list[tuple[Path, Path]] = []

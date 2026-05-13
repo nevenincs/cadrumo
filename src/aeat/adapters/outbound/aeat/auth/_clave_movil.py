@@ -444,6 +444,11 @@ class ClaveMovilAuthProvider:
                     session_cookie_present = True
         except Exception as exc:
             error_message = f"{type(exc).__name__}: {exc}"
+            log.warning(
+                "ClaveMovilAuthProvider.verify: probe navigation failed for %s",
+                probe_url,
+                exc_info=True,
+            )
         finally:
             if page is not None:
                 try:

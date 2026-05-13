@@ -32,7 +32,7 @@ from decimal import Decimal, InvalidOperation
 # group was ``(?:\.[0-9]{3})*`` which caused an AEAT
 # amount formatted with a non-breaking space ("1\xa0234,56") to be
 # silently captured as "234,56" — a 1000x underreport.
-SPANISH_AMOUNT_GROUP = r"(-?[0-9]{1,3}(?:[.  ][0-9]{3})*,[0-9]{2})"  # noqa: RUF001
+SPANISH_AMOUNT_GROUP = r"(-?[0-9]{1,3}(?:[.  ][0-9]{3})*,[0-9]{2})"
 """Capture group for AEAT-printed monetary amounts (Spanish locale).
 
 Matches optional sign, 1-3 leading digits, zero or more groups of

@@ -10,7 +10,7 @@ from pathlib import Path
 from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClass
 from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ....persistence.storage.sql import SecureObjectRepository
-from ._errors import SedeValidationError
+from ._errors import ExpedienteNotFoundError, SedeValidationError
 from ._schema import FiledDeclarationArtefact, FiledDeclarationObservation
 
 _SAFE_SEGMENT_RE = re.compile(r"[^0-9A-Za-z_.-]+")
@@ -67,7 +67,7 @@ class FiledDeclarationObservationStore:
             max_supported_version=1,
         )
         if record is None:
-            raise FileNotFoundError(f"filed-declaration artefact not found: {digest}")
+            raise ExpedienteNotFoundError(f"filed-declaration artefact not found: {digest}")
         return record.payload
 
     def persist_observation(self, observation: FiledDeclarationObservation) -> Path:
@@ -106,7 +106,7 @@ class FiledDeclarationObservationStore:
             max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
         )
         if record is None:
-            raise FileNotFoundError(f"filed-declaration observation not found: {object_key}")
+            raise ExpedienteNotFoundError(f"filed-declaration observation not found: {object_key}")
         envelope = Envelope[FiledDeclarationObservation].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not _OBSERVATION_CLASSIFICATION:
             raise ClassificationError(

@@ -1,15 +1,15 @@
 """Notifications-parser tests against real AEAT HTML captures (identity-redacted).
 
-Fixtures under ``tests/fixtures/aeat-sede/notifications-*.html`` are
-live captures with NIF and name scrubbed. Pins the parser to the
+Fixtures under ``src/aeat/tests/fixtures/aeat-sede/notifications-*.html``
+are live captures with NIF and name scrubbed. Pins the parser to the
 actual column shape AEAT serves.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+
+from aeat.tests import FIXTURES_DIR
 
 from ._notifications import (
     parse_notifications_query,
@@ -19,7 +19,7 @@ from ._notifications import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
-_FIXTURE_ROOT = Path(__file__).resolve().parents[6] / "tests" / "fixtures" / "aeat-sede"
+_FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
 _SUMMARY_URL = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/ResumenInteresados"
 _QUERY_URL = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
 

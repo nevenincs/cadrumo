@@ -19,6 +19,7 @@ from .....domain.calculations.registry import (
     RentaWebOpenSyntheticProfile,
     parse_renta_web_open_live_payload,
 )
+from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory
 from ._adapter_utils import registry_failure_message
 from ._browser_stage import build_playwright_stage_runner
@@ -344,12 +345,22 @@ async def _scrape_casilla_form_value(
 
     try:
         await _navigate_to_casilla(page, casilla_number, timeout_ms=timeout_ms)
-    except SedeNavigationError:
+    except SedeNavigationError as exc:
+        logger.debug(
+            "renta web open: navigation to casilla %s failed; treating as unreadable (%s)",
+            casilla_number,
+            exc,
+        )
         return None
     try:
         locator = await _locate_casilla_input(page, casilla_number, timeout_ms=timeout_ms)
         return cast(str, await locator.input_value(timeout=timeout_ms))
-    except Exception:
+    except (PlaywrightError, PlaywrightTimeoutError, BrowserError, SedeError) as exc:
+        logger.debug(
+            "renta web open: input read for casilla %s failed; treating as unreadable (%s)",
+            casilla_number,
+            exc,
+        )
         return None
 
 

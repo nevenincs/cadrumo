@@ -310,7 +310,7 @@ class TestTokenMapShape:
             # `frozen=True` causes pydantic to reject this assignment;
             # `setattr` keeps the static type checker happy because it
             # only sees a generic attribute write.
-            setattr(mapping, "nif", ())  # noqa: B010
+            mapping.nif = ()
 
     def test_unknown_field_rejected(self) -> None:
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
