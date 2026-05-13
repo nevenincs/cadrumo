@@ -21,6 +21,9 @@ def _load_modelo_322() -> tuple[ModeloDefinition, RegistryCatalogues]:
 
 def test_modelo_322_validator_accepts_committed_definition() -> None:
     modelo, catalogues = _load_modelo_322()
+    assert modelo.id == "322"
+    assert modelo.revisions, "322 must declare at least one revision"
+    assert any(rev.casillas for rev in modelo.revisions.values()), "322 must declare casillas"
     RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
 
 

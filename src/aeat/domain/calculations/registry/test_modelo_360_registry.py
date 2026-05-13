@@ -21,6 +21,9 @@ def _load_modelo_360() -> tuple[ModeloDefinition, RegistryCatalogues]:
 
 def test_modelo_360_validator_accepts_committed_definition() -> None:
     modelo, catalogues = _load_modelo_360()
+    assert modelo.id == "360"
+    assert modelo.revisions, "360 must declare at least one revision"
+    assert any(rev.casillas for rev in modelo.revisions.values()), "360 must declare casillas"
     RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
 
 
