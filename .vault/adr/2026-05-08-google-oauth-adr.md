@@ -21,7 +21,7 @@ related:
 
 ## Problem Statement
 
-The codebase has no working Google authentication. The previous gcloud-CLI-anchored stack was excised on 2026-05-06 (commit `ab952f74`); `src/aeat/adapters/outbound/google/` is now a `NotImplementedError` scaffold. The forthcoming Google integration (Drive + Sheets read/write, mirrored bucket hierarchy, calculation visualisation, incoming-bucket ingestion) is gated on an authentication primitive that does not exist. ADR-0 defines that primitive: how the desktop app obtains, stores, refreshes, and revokes Google OAuth credentials per operator profile.
+The codebase has no working Google authentication. The forthcoming Google integration (Drive + Sheets read/write, mirrored bucket hierarchy, calculation visualisation, incoming-bucket ingestion) is gated on an authentication primitive that does not exist. ADR-0 defines that primitive: how the desktop app obtains, stores, refreshes, and revokes Google OAuth credentials per operator profile. The implementation plan replaces the post-teardown scaffold under `src/aeat/adapters/outbound/google/` in full; no shim, stub, or scaffold artifact survives ADR-0's execution.
 
 This ADR is the foundation for ADRs 1-7 of the `google-oauth` series. Every subsequent ADR consumes the auth contract defined here; none of them re-decide it.
 
@@ -69,11 +69,11 @@ No device-authorisation-grant fallback. No manual-paste fallback. No headless mo
 "google-api-python-client>=2.195.0",
 ```
 
-Dropped from the previous direction (excised in `ab952f74`):
+Explicitly not added (the codebase audit refuted the case for each):
 
-- `google-auth-httplib2` — upstream archived 2026-03; transport replaced by `requests` (already a transitive dep of `google-auth`).
-- `gspread` — bus-factor-1 wrapper; we use `google-api-python-client` directly for Sheets v4.
-- `google-cloud-functions`, `google-cloud-run`, `google-cloud-storage` — GCP product clients; the codebase audit confirmed zero non-test callers.
+- `google-auth-httplib2` — upstream archived 2026-03; transport is `requests` (already a transitive dep of `google-auth`).
+- `gspread` — bus-factor-1 wrapper; `google-api-python-client` is used directly for Sheets v4.
+- `google-cloud-functions`, `google-cloud-run`, `google-cloud-storage` — GCP product clients; the audit confirmed zero non-test callers.
 
 Not added in v1 (deferred): `google-api-python-client` Docs API helpers (no consumer; audit refuted Docs round-trip).
 
@@ -125,13 +125,13 @@ A new top-level `aeat config` sub-app is introduced for external-service configu
 ```
 aeat config google register --client-json <path> [--profile <id>]
 aeat config google login    [--profile <id>] [--refresh-only]
-aeat config google status   [--profile <id>] [--json]
+aeat config google status   [--profile <id>] [--format json|text]
 aeat config google logout   [--profile <id>]
 ```
 
 - `register` reads the operator's downloaded Cloud Console JSON, validates its shape (`installed.client_id`, `installed.client_secret`, `installed.redirect_uris`), persists as `oauth-client` (SECRET-class). Re-running replaces. The original file is operator-deletable post-import.
 - `login` reads the stored `oauth-client`, runs the loopback flow, persists the resulting refresh token as `oauth-token`, records `granted_scopes` and `account_email` in `oauth-metadata`. `--refresh-only` skips the consent flow and exercises an existing refresh token end-to-end (operator pre-warming before long batch operations).
-- `status` reports: profile, account email, granted scopes, refresh-token issued-at, last-refresh-at, `reauth_required` flag, substrate readiness. `--json` for machine consumption.
+- `status` reports: profile, account email, granted scopes, refresh-token issued-at, last-refresh-at, `reauth_required` flag, substrate readiness. Root `--format json|text` controls machine vs human rendering per the cli-workflow-redesign EPIC.
 - `logout` deletes the `oauth-token` and `oauth-metadata` records. Does not remove the `oauth-client`. Re-`login` proceeds from the same client. To replace the OAuth client, operator re-runs `register`.
 
 ### 8. Refresh + revocation lifecycle
