@@ -208,6 +208,11 @@ class TestPublicReexports:
     def test_all_public_names_are_importable(self) -> None:
         sanitizer = import_module(__package__ or "aeat.adapters.inbound.sanitizer")
 
+        assert sanitizer.__all__, "package must declare a non-empty __all__"
         for name in sanitizer.__all__:
             attr = getattr(sanitizer, name, None)
             assert attr is not None, f"missing public re-export: {name}"
+            # Hardening: empty __all__ would silently make the loop a no-op
+            # and the test would still pass; pinning len > 0 above + the
+            # per-symbol assert below makes both regressions detectable.
+        assert len(sanitizer.__all__) >= 1

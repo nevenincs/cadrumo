@@ -32,7 +32,9 @@ def schema_provider():
 def test_runtime_schema_provider_exposes_imported_modelo_schema() -> None:
     collection = build_runtime_schema_provider().get_collection("130")
 
-    assert collection.get("19") is not None
+    casilla_19 = collection.get("19")
+    assert casilla_19 is not None
+    assert casilla_19.id == "19"
 
 
 class TestImportFromJustificante:

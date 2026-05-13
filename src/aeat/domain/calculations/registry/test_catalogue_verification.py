@@ -30,9 +30,9 @@ def _catalogues() -> RegistryCatalogues:
 def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
     modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
 
-    assert modelos
-    assert catalogues.legal
-    assert catalogues.sources
+    assert len(modelos) >= 5, "committed registry must declare several modelos"
+    assert len(catalogues.legal) > 0, "shared legal catalogue must be non-empty"
+    assert len(catalogues.sources) > 0, "shared sources catalogue must be non-empty"
     verify_legal_catalogue(catalogues.legal, source_root=PROJECT_ROOT)
     verify_source_catalogue(PROJECT_ROOT, catalogues.sources)
     validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)

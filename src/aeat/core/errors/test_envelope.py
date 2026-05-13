@@ -75,7 +75,17 @@ def test_envelope_message_renders_under_every_supported_language() -> None:
     A locale that produced ``None`` or an empty string would mean the
     i18n routing collapsed for that language.
     """
-    for language in ("es", "en", "hu", "ca"):
+    languages = ("es", "en", "hu", "ca")
+    rendered_per_language: dict[str, str] = {}
+    for language in languages:
         with _output_language(language):
             envelope = build_error_envelope(LockAcquisitionError())
             assert envelope.message, f"empty envelope.message for locale {language!r}"
+            rendered_per_language[language] = envelope.message
+    # Pin that EVERY supported locale rendered SOMETHING — the original
+    # `assert envelope.message` inside the loop catches per-locale empty,
+    # this catches a silent loop-skip where the iterator yielded zero
+    # languages.
+    assert set(rendered_per_language) == set(languages), (
+        f"expected every locale to render, got {sorted(rendered_per_language)}"
+    )

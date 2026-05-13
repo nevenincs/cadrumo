@@ -54,10 +54,12 @@ def test_update_auth_provider_strips_whitespace_and_lowercases() -> None:
 
 def test_update_auth_provider_stamps_configured_at() -> None:
     state = WorkflowState()
+    assert state.auth.configured_at is None
 
     updated = update_auth(state, provider="certificate")
 
     assert updated.auth.configured_at is not None
+    assert updated.auth.configured_at.tzinfo is not None, "stamp must be tz-aware"
 
 
 # ---------------------------------------------------------------------------
@@ -95,10 +97,12 @@ def test_update_auth_certificate_path_empty_becomes_none() -> None:
 
 def test_update_auth_certificate_path_stamps_configured_at() -> None:
     state = WorkflowState()
+    assert state.auth.configured_at is None
 
     updated = update_auth(state, certificate_path="data/certs/kent.pem")
 
     assert updated.auth.configured_at is not None
+    assert updated.auth.configured_at.tzinfo is not None, "stamp must be tz-aware"
 
 
 # ---------------------------------------------------------------------------
@@ -108,10 +112,12 @@ def test_update_auth_certificate_path_stamps_configured_at() -> None:
 
 def test_update_auth_authenticated_true_stamps_authenticated_at() -> None:
     state = WorkflowState()
+    assert state.auth.authenticated_at is None
 
     updated = update_auth(state, authenticated=True)
 
     assert updated.auth.authenticated_at is not None
+    assert updated.auth.authenticated_at.tzinfo is not None, "stamp must be tz-aware"
 
 
 def test_update_auth_authenticated_false_clears_authenticated_at() -> None:

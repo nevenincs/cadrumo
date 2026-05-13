@@ -109,7 +109,19 @@ def test_portals_for_modelo_excludes_census_for_036() -> None:
 def test_portals_for_modelo_accepts_string_code() -> None:
     """``portals_for_modelo`` accepts the canonical string code."""
     entries = portals_for_modelo("130")
-    assert entries
+    assert len(entries) > 0
+    # Pin sort contract — entries must be sorted by portal value so callers
+    # can rely on deterministic iteration.
+    portal_values = [entry.portal.value for entry in entries]
+    assert portal_values == sorted(portal_values), (
+        f"portals_for_modelo must return entries sorted by portal.value, got {portal_values}"
+    )
+    # Pin category contract — every returned entry must be a FILING or
+    # BORRADOR portal (CENSUS portals are excluded by the function's spec).
+    for entry in entries:
+        assert entry.category.value in {"filing", "borrador"}, (
+            f"portals_for_modelo returned a non-filing/borrador entry: {entry.portal} ({entry.category})"
+        )
 
 
 def test_portals_for_modelo_without_portal_returns_empty_tuple() -> None:
