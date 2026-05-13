@@ -83,16 +83,22 @@ cli:
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
       work:
+        actor_help: Actor responsable del descart (etiqueta lliure de fins a 64 caràcters)
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
           tributari
         bucket_id_help: Identificador del bucket al qual pertany la unitat de treball
         create_help: Crear o reutilitzar una unitat de treball per a (model, exercici,
           període, revisió)
+        discard_help: Marcar una unitat de treball com descartada (transició d'estat
+          auditable)
+        include_discarded_help: Incloure les unitats descartades en el llistat (excloses
+          per defecte)
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per bucket
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la unitat de treball
         period_help: Període fiscal de la unitat (p. ex. Q1, 4T, 0A, 01)
+        reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
         revision_help: Identificador estable de la revisió registrada del model
         status_help: Mostrar les metadades d'una unitat de treball

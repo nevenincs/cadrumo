@@ -88,16 +88,22 @@ cli:
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
       work:
+        actor_help: Actor responsable del descarte (etiqueta libre de hasta 64 caracteres)
         app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
           tributario
         bucket_id_help: Identificador del bucket al que pertenece la unidad de trabajo
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
           periodo, revisión)
+        discard_help: Marcar una unidad de trabajo como descartada (transición de estado
+          auditable)
+        include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
+          por defecto)
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por bucket
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         name_help: Nombre de visualización opcional de la unidad de trabajo
         period_help: Periodo fiscal de la unidad (p. ej. Q1, 4T, 0A, 01)
+        reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
         revision_help: Identificador estable de la revisión registrada del modelo
         status_help: Mostrar los metadatos de una unidad de trabajo

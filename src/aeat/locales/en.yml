@@ -75,13 +75,18 @@ cli:
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
       work:
+        actor_help: Actor responsible for the discard (free-text label up to 64 chars)
         app_help: Manage the lifecycle of modelo work units
         bucket_id_help: Bucket identifier the work unit belongs to
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
+        discard_help: Mark a work unit as discarded (auditable state transition)
+        include_discarded_help: Include discarded work units in the listing (excluded
+          by default)
         list_help: List registered work units, optionally filtered by bucket
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
         period_help: Filing period of the work unit (e.g. Q1, 4T, 0A, 01)
+        reason_help: Optional free-text reason for the discard (up to 500 chars)
         rename_help: Update the display name of a work unit
         revision_help: Stable id of the targeted registry modelo revision
         status_help: Show the metadata of one work unit
