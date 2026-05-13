@@ -160,7 +160,7 @@ class TestLoader:
     def test_load_manual_missing_structure_raises_not_found(self, tmp_path: Path) -> None:
         """A part root without structure/ raises ManualNotFoundError."""
         settings = _settings_with_root(tmp_path)
-        with pytest.raises(ManualNotFoundError):
+        with pytest.raises(ManualNotFoundError, match=r"IVA|manual|structure|2025"):
             load_manual(ManualId.IVA, 2025, ManualPart.SINGLE, settings=settings)
 
     def test_load_manual_rejects_malformed_section(self, tmp_path: Path) -> None:

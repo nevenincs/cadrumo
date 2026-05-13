@@ -162,7 +162,7 @@ class TestRefuseIfSigned:
         buffer = io.BytesIO()
         pdf.save(buffer)
 
-        with pytest.raises(SignaturePresentError):
+        with pytest.raises(SignaturePresentError, match=r"signature|SigFlags|signed|AcroForm"):
             sanitize_pdf(buffer.getvalue(), TokenMap())
 
     def test_raises_when_signature_field_present(self) -> None:
@@ -173,7 +173,7 @@ class TestRefuseIfSigned:
         buffer = io.BytesIO()
         pdf.save(buffer)
 
-        with pytest.raises(SignaturePresentError):
+        with pytest.raises(SignaturePresentError, match=r"signature|SigFlags|signed|AcroForm"):
             sanitize_pdf(buffer.getvalue(), TokenMap())
 
 

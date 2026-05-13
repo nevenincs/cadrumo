@@ -91,7 +91,7 @@ def test_report_is_strict_frozen_pydantic_v2() -> None:
 
 def test_load_active_autonomo_profile_raises_wizard_status_error_when_no_profile() -> None:
     state = WorkflowState()
-    with pytest.raises(WizardStatusError):
+    with pytest.raises(WizardStatusError, match=r"profile|active|autonomo"):
         load_active_autonomo_profile(state)
 
 
@@ -100,5 +100,5 @@ def test_load_active_autonomo_profile_raises_wizard_status_error_when_tax_id_mis
         set_profile_values(WorkflowState(), "operator", {"activity": "design"}),
         "operator",
     )
-    with pytest.raises(WizardStatusError):
+    with pytest.raises(WizardStatusError, match=r"tax|profile|operator|missing"):
         load_active_autonomo_profile(state)

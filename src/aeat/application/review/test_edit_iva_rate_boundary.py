@@ -34,12 +34,12 @@ def test_invoice_edit_iva_rate_rejects_non_canonical_values(bad_value: str) -> N
 
 
 def test_invoice_edit_iva_rate_rejects_negative_decimal() -> None:
-    with pytest.raises(EditParseError):
+    with pytest.raises(EditParseError, match=r"iva|rate|invalid"):
         InvoiceEditSpec.from_strings(["iva.rate=-21"])
 
 
 def test_invoice_edit_iva_rate_rejects_garbage_string() -> None:
-    with pytest.raises(EditParseError):
+    with pytest.raises(EditParseError, match=r"iva|rate|invalid"):
         InvoiceEditSpec.from_strings(["iva.rate=twenty-one"])
 
 

@@ -56,19 +56,19 @@ def test_resolve_annual_period_coerces_annual_string_to_period() -> None:
 
 
 def test_resolve_annual_period_rejects_quarterly_period_string() -> None:
-    with pytest.raises(AggregationPeriodError):
+    with pytest.raises(AggregationPeriodError, match=r"annual|period|quarterly|2025Q1"):
         _resolve_annual_period("2025Q1")
 
 
 def test_resolve_annual_period_rejects_monthly_period_string() -> None:
-    with pytest.raises(AggregationPeriodError):
+    with pytest.raises(AggregationPeriodError, match=r"annual|period|monthly|2025-03"):
         _resolve_annual_period("2025-03")
 
 
 def test_resolve_annual_period_rejects_already_validated_quarterly_period() -> None:
     quarterly = Period.model_validate("2025Q2")
 
-    with pytest.raises(AggregationPeriodError):
+    with pytest.raises(AggregationPeriodError, match=r"annual|period|quarterly"):
         _resolve_annual_period(quarterly)
 
 

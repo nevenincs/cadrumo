@@ -338,7 +338,7 @@ class TestParseListbox:
 
     def test_missing_listbox_raises_parse_error(self) -> None:
         """Assert HTML without a listbox raises :exc:`SedeParseError`."""
-        with pytest.raises(SedeParseError):
+        with pytest.raises(SedeParseError, match=r"listbox|missing|parse"):
             _parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=2022)
 
 

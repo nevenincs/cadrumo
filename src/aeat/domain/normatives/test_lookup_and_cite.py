@@ -54,7 +54,7 @@ class TestLookup:
 
     def test_find_reference_miss(self) -> None:
         catalogue = _catalogue()
-        with pytest.raises(NormativeNotFoundError):
+        with pytest.raises(NormativeNotFoundError, match=r"ley-0-0000|reference"):
             find_reference(catalogue, "ley-0-0000")
 
     def test_find_articulo_hit(self) -> None:
@@ -64,12 +64,12 @@ class TestLookup:
 
     def test_find_articulo_miss_reference(self) -> None:
         catalogue = _catalogue()
-        with pytest.raises(NormativeNotFoundError):
+        with pytest.raises(NormativeNotFoundError, match=r"ley-0-0000|reference"):
             find_articulo(catalogue, "ley-0-0000", "32")
 
     def test_find_articulo_miss_numero(self) -> None:
         catalogue = _catalogue()
-        with pytest.raises(NormativeNotFoundError):
+        with pytest.raises(NormativeNotFoundError, match=r"999|articulo|numero"):
             find_articulo(catalogue, "ley-35-2006", "999")
 
 
