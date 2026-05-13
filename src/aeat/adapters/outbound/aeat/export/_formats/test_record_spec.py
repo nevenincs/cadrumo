@@ -297,7 +297,10 @@ class TestValidateRecordSpecs:
 
     def test_happy_path(self) -> None:
         specs = self._three_field_spec()
-        validate_record_specs(specs, total_length=16)
+        assert len(specs) == 3
+        assert sum(s.length for s in specs) == 16
+        result = validate_record_specs(specs, total_length=16)
+        assert result is None
 
     def test_empty_specs_raises(self) -> None:
         with pytest.raises(ValueError, match="must not be empty"):

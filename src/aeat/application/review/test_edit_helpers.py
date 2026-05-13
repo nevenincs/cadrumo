@@ -225,7 +225,8 @@ def test_coerce_path_does_not_check_filesystem_existence() -> None:
 def test_ensure_unique_keys_passes_when_all_keys_distinct() -> None:
     clauses = (_clause("base", "120"), _clause("iva.rate", "21"))
 
-    _ensure_unique_keys(clauses, scope="invoice")
+    result = _ensure_unique_keys(clauses, scope="invoice")
+    assert result is None
 
 
 def test_ensure_unique_keys_raises_edit_parse_error_on_repeated_key() -> None:
@@ -258,7 +259,8 @@ def test_ensure_known_keys_passes_when_every_key_is_allowed() -> None:
     allowed = {"base", "iva.rate"}
     clauses = (_clause("base", "120"), _clause("iva.rate", "21"))
 
-    _ensure_known_keys(clauses, scope="invoice", allowed=allowed)
+    result = _ensure_known_keys(clauses, scope="invoice", allowed=allowed)
+    assert result is None
 
 
 def test_ensure_known_keys_raises_edit_parse_error_on_unknown_key() -> None:

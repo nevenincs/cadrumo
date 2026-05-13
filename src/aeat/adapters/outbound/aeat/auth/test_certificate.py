@@ -338,7 +338,9 @@ def test_playwright_preload_accepts_marked_context(
             self._aeat_certificate_thumbprint = thumbprint
 
     ctx = _MarkedContext(loaded.sha256_thumbprint)
-    preload_into_browser_context(loaded, ctx)  # must not raise
+    assert ctx._aeat_certificate_thumbprint == loaded.sha256_thumbprint
+    result = preload_into_browser_context(loaded, ctx)
+    assert result is None
 
 
 def test_playwright_client_certificates_kwarg_materialises_secret(
