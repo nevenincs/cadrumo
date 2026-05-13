@@ -1,0 +1,207 @@
+"""Canonical lifecycle service for the schema-driven user-profile backend.
+
+This service is the single sanctioned write path for live user-profile
+values. It routes every register / edit / remove / duplicate / list /
+read operation through the secure-DB repository and the schema-aware
+validation service. CLI thin adapters (W09.P045) and migrated
+consumers (W09.P042) call this surface; no caller should construct
+``UserProfileRecord`` aggregates or touch the secure repository
+directly.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
+from datetime import date
+
+from ...domain.user_profile import (
+    ProfileAlreadyExistsError,
+    ProfileNotFoundError,
+    ProfileSchemaValidationError,
+    UserProfileFact,
+    UserProfileRecord,
+    UserProfileStatus,
+)
+from ...domain.user_profile._values import utc_now
+from . import (
+    DuplicateProfileCommand,
+    EditProfileFieldCommand,
+    EditProfileSectionCommand,
+    ProfileLifecycleResult,
+    ProfileListing,
+    ProfileListResult,
+    ProfileValidationSeverity,
+    RegisterProfileCommand,
+    RemoveProfileCommand,
+)
+from ._repository import UserProfileLifecycleRepository
+from ._validation import ProfileValidationService
+
+
+class ProfileLifecycleService:
+    """Schema-validated, secure-DB-backed user-profile lifecycle service."""
+
+    def __init__(
+        self,
+        *,
+        repository: UserProfileLifecycleRepository,
+        validator: ProfileValidationService,
+    ) -> None:
+        self._repository = repository
+        self._validator = validator
+
+    # ── register / list / read ─────────────────────────────────────
+
+    def register(self, command: RegisterProfileCommand) -> ProfileLifecycleResult:
+        """Register a new active profile aggregate."""
+
+        if self._repository.exists(command.profile_id):
+            raise ProfileAlreadyExistsError(
+                f"profile {command.profile_id!r} already exists in bucket {self._repository.bucket_id!r}",
+            )
+        self._reject_invalid(command.profile_id, command.facts)
+        now = utc_now()
+        record = UserProfileRecord(
+            schema_id=self._validator.schema.id,
+            schema_version=self._validator.schema.version,
+            profile_id=command.profile_id,
+            display_name=command.display_name,
+            facts=command.facts,
+            created_at=now,
+            updated_at=now,
+        )
+        self._repository.save(record)
+        return ProfileLifecycleResult(profile=record, applied_at=now)
+
+    def read(self, profile_id: str) -> UserProfileRecord:
+        """Return the live profile aggregate or raise :class:`ProfileNotFoundError`."""
+
+        return self._repository.load(profile_id)
+
+    def list_profiles(self) -> ProfileListResult:
+        """List every profile currently visible in the active bucket."""
+
+        listings: list[ProfileListing] = []
+        for record in self._iter_profiles():
+            listings.append(
+                ProfileListing(
+                    profile_id=record.profile_id,
+                    display_name=record.display_name,
+                    status=record.status,
+                    created_at=record.created_at,
+                    updated_at=record.updated_at,
+                )
+            )
+        listings.sort(key=lambda row: row.profile_id)
+        return ProfileListResult(profiles=tuple(listings))
+
+    # ── edit / remove / duplicate ──────────────────────────────────
+
+    def edit_field(self, command: EditProfileFieldCommand) -> ProfileLifecycleResult:
+        """Upsert one effective-dated fact into a profile aggregate."""
+
+        record = self._repository.load(command.profile_id)
+        new_fact = UserProfileFact(
+            path=command.path,
+            value=command.value,
+            valid_from=command.valid_from,
+            valid_to=command.valid_to,
+            source=command.source,
+        )
+        next_facts = self._merge_facts(record.facts, (new_fact,))
+        self._reject_invalid(command.profile_id, next_facts)
+        return self._save_updated(record, next_facts)
+
+    def edit_section(self, command: EditProfileSectionCommand) -> ProfileLifecycleResult:
+        """Replace every fact in one schema section with the supplied facts."""
+
+        record = self._repository.load(command.profile_id)
+        retained = tuple(fact for fact in record.facts if not fact.path.startswith(f"{command.section_key}."))
+        merged = self._merge_facts(retained, command.facts)
+        self._reject_invalid(command.profile_id, merged)
+        return self._save_updated(record, merged)
+
+    def remove(self, command: RemoveProfileCommand) -> ProfileLifecycleResult:
+        """Tombstone the live root. Immutable filing snapshots are retained."""
+
+        record = self._repository.load(command.profile_id)
+        tombstoned = record.tombstone()
+        self._repository.save(tombstoned)
+        return ProfileLifecycleResult(profile=tombstoned, applied_at=tombstoned.updated_at)
+
+    def duplicate(self, command: DuplicateProfileCommand) -> ProfileLifecycleResult:
+        """Copy an existing live profile under a new id and display name."""
+
+        if self._repository.exists(command.target_profile_id):
+            raise ProfileAlreadyExistsError(
+                f"profile {command.target_profile_id!r} already exists in bucket {self._repository.bucket_id!r}",
+            )
+        source = self._repository.load(command.source_profile_id)
+        if source.status is not UserProfileStatus.ACTIVE:
+            raise ProfileNotFoundError(
+                f"source profile {command.source_profile_id!r} is tombstoned; cannot duplicate",
+            )
+        now = utc_now()
+        target = source.model_copy(
+            update={
+                "profile_id": command.target_profile_id,
+                "display_name": command.target_display_name,
+                "created_at": now,
+                "updated_at": now,
+                "removed_at": None,
+                "status": UserProfileStatus.ACTIVE,
+            }
+        )
+        self._repository.save(target)
+        return ProfileLifecycleResult(profile=target, applied_at=now)
+
+    # ── helpers ────────────────────────────────────────────────────
+
+    def _reject_invalid(self, profile_id: str, facts: Iterable[UserProfileFact]) -> None:
+        report = self._validator.validate_facts(profile_id, facts)
+        blocking = [issue for issue in report.issues if issue.severity is ProfileValidationSeverity.ERROR]
+        if blocking:
+            codes = ", ".join(sorted({issue.code for issue in blocking}))
+            raise ProfileSchemaValidationError(
+                f"profile {profile_id!r} rejected by schema validation: {codes}",
+            )
+
+    def _save_updated(
+        self,
+        record: UserProfileRecord,
+        facts: tuple[UserProfileFact, ...],
+    ) -> ProfileLifecycleResult:
+        now = utc_now()
+        updated = record.model_copy(update={"facts": facts, "updated_at": now})
+        self._repository.save(updated)
+        return ProfileLifecycleResult(profile=updated, applied_at=now)
+
+    @staticmethod
+    def _merge_facts(
+        base: tuple[UserProfileFact, ...],
+        incoming: tuple[UserProfileFact, ...],
+    ) -> tuple[UserProfileFact, ...]:
+        merged: dict[tuple[str, date | None, date | None], UserProfileFact] = {
+            (fact.path, fact.valid_from, fact.valid_to): fact for fact in base
+        }
+        for fact in incoming:
+            merged[(fact.path, fact.valid_from, fact.valid_to)] = fact
+        return tuple(merged.values())
+
+    def _iter_profiles(self) -> Iterable[UserProfileRecord]:
+        # Listing requires walking the secure-object backend by namespace.
+        # The repository's underlying SecureObjectRepository supports list_records.
+        objects = self._repository._objects
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
+        from ._repository import USER_PROFILE_VALUE_NAMESPACE
+
+        for raw in objects.list_records(
+            USER_PROFILE_VALUE_NAMESPACE,
+            expected_class=SensitivityClass.IDENTITY,
+            max_supported_version=1,
+        ):
+            envelope = Envelope[UserProfileRecord].model_validate_json(raw.payload.decode("utf-8"))
+            yield envelope.payload
+
+
+__all__ = ["ProfileLifecycleService"]

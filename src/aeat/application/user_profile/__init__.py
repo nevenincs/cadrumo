@@ -256,6 +256,10 @@ class ProfileImportResult(BaseModel):
 def __getattr__(name: str):
     """Lazy-import the service modules to keep the contract surface light."""
 
+    if name == "ProfileLifecycleService":
+        from ._lifecycle import ProfileLifecycleService
+
+        return ProfileLifecycleService
     if name == "ProfilePreflightService":
         from ._preflight import ProfilePreflightService
 
@@ -287,6 +291,7 @@ __all__ = [
     "ProfileExportBundle",
     "ProfileImportResult",
     "ProfileLifecycleResult",
+    "ProfileLifecycleService",
     "ProfileListResult",
     "ProfileListing",
     "ProfilePreflightReport",
