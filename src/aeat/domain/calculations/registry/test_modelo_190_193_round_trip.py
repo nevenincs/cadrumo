@@ -67,5 +67,3 @@ def test_modelo_193_copies_three_relations_into_three_output_casillas() -> None:
     assert result.values["decl.total-perceptores"] == Decimal("12")
     assert result.values["decl.base-total"] == Decimal("7000.50")
     assert result.values["decl.retenciones-total"] == Decimal("1330.10")
-
-

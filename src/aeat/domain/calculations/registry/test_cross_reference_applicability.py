@@ -262,9 +262,7 @@ def test_ixvi_349_binding_evaluates_under_does_intracomunitario_predicate() -> N
     audit-oracles by giving the NIF-IVA checker a real binding.
     """
 
-    binding = _load_binding(
-        "349", "2020-y-siguientes", "modelo-349-ixvi-foreign-counterparty-check"
-    )
+    binding = _load_binding("349", "2020-y-siguientes", "modelo-349-ixvi-foreign-counterparty-check")
     assert binding.oracle_id == "aeat-nif-iva-checker"
     assert binding.surface == "authenticated_simulator"
     assert binding.applicability_predicates, "IXVI binding must declare an applicability gate"

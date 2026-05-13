@@ -53,7 +53,7 @@ The IVA settlement model rests on two cornerstone concepts:
   limits.
 
 The cuota neta a ingresar (or a devolver) at the period level is
-**devengada − deducible**; this is the canonical Modelo 303 "resultado
+**devengada - deducible**; this is the canonical Modelo 303 "resultado
 régimen general" line.
 
 Every :class:`IvaFlowDirection` member contributes to one or both
@@ -72,7 +72,7 @@ the SAME operation: the recipient self-assesses an output entry
 (devengada) and a matching input entry (deducible) for the cuota
 that would have been repercutida by a non-existent or non-EU
 supplier. The two entries cancel arithmetically inside Modelo 303
-(devengada − deducible = 0 for that line) but both must be booked
+(devengada - deducible = 0 for that line) but both must be booked
 to satisfy the LIVA art. 84.Uno.2 inversión-del-sujeto-pasivo
 mechanism.
 
@@ -190,25 +190,19 @@ class IvaSettlementSide(StrEnum):
 _FLOW_TO_SETTLEMENT_SIDES: dict[IvaFlowDirection, frozenset[IvaSettlementSide]] = {
     IvaFlowDirection.REPERCUTIDO: frozenset({IvaSettlementSide.DEVENGADA}),
     IvaFlowDirection.SOPORTADO: frozenset({IvaSettlementSide.DEDUCIBLE}),
-    IvaFlowDirection.AUTOREPERCUTIDO: frozenset(
-        {IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}
-    ),
+    IvaFlowDirection.AUTOREPERCUTIDO: frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE}),
 }
 """Closed mapping from flow direction to the settlement side(s) it
 contributes to. AUTOREPERCUTIDO is the only flow that contributes to
 both sides on the same operation (LIVA art. 84.Uno.2 mechanism)."""
 
 _DEVENGADA_FLOWS: frozenset[IvaFlowDirection] = frozenset(
-    flow
-    for flow, sides in _FLOW_TO_SETTLEMENT_SIDES.items()
-    if IvaSettlementSide.DEVENGADA in sides
+    flow for flow, sides in _FLOW_TO_SETTLEMENT_SIDES.items() if IvaSettlementSide.DEVENGADA in sides
 )
 """Frozen set of flow directions that contribute to cuota devengada."""
 
 _DEDUCIBLE_FLOWS: frozenset[IvaFlowDirection] = frozenset(
-    flow
-    for flow, sides in _FLOW_TO_SETTLEMENT_SIDES.items()
-    if IvaSettlementSide.DEDUCIBLE in sides
+    flow for flow, sides in _FLOW_TO_SETTLEMENT_SIDES.items() if IvaSettlementSide.DEDUCIBLE in sides
 )
 """Frozen set of flow directions that contribute to cuota deducible."""
 

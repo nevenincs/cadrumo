@@ -131,9 +131,7 @@ def _load_modelo_directory_cached(
             rev_data = _freeze_toml(_read_toml(path))
             _reject_local_catalogues(path, rev_data)
             if "modelo" in rev_data:
-                raise RegistryLoadError(
-                    f"{path}: revision file must not declare [modelo]; that lives in manifest.toml"
-                )
+                raise RegistryLoadError(f"{path}: revision file must not declare [modelo]; that lives in manifest.toml")
             file_revisions = rev_data.get("revisions")
             if not isinstance(file_revisions, dict) or not file_revisions:
                 raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")

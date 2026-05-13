@@ -114,12 +114,14 @@ def test_resolver_rehab_lookback_helper_falls_back_for_unregistered_year() -> No
 @pytest.mark.parametrize("year", _SUPPORTED_YEARS)
 def test_joven_tenant_age_parameters_registered_for_every_ejercicio(year: int) -> None:
     age_min = read_parameter(
-        "100", str(year),
+        "100",
+        str(year),
         f"renta-{year}-rental-joven-tenant-age-min",
         date_context={"filing_period": date(year, 12, 31)},
     )
     age_max = read_parameter(
-        "100", str(year),
+        "100",
+        str(year),
         f"renta-{year}-rental-joven-tenant-age-max",
         date_context={"filing_period": date(year, 12, 31)},
     )
@@ -140,14 +142,20 @@ def test_resolver_joven_age_range_helper_falls_back_for_unregistered_year() -> N
     assert (age_min, age_max) == (JOVEN_TENANT_AGE_MIN, JOVEN_TENANT_AGE_MAX)
 
 
-_TIER_RATES = (("tier-50", Decimal("0.50")), ("tier-60", Decimal("0.60")), ("tier-70", Decimal("0.70")), ("tier-90", Decimal("0.90")))
+_TIER_RATES = (
+    ("tier-50", Decimal("0.50")),
+    ("tier-60", Decimal("0.60")),
+    ("tier-70", Decimal("0.70")),
+    ("tier-90", Decimal("0.90")),
+)
 
 
 @pytest.mark.parametrize("year", _SUPPORTED_YEARS)
 @pytest.mark.parametrize(("tier_id", "expected"), _TIER_RATES)
 def test_tier_reduccion_rate_parameter_registered_for_every_year(year: int, tier_id: str, expected: Decimal) -> None:
     value = read_parameter(
-        "100", str(year),
+        "100",
+        str(year),
         f"renta-{year}-rental-reduccion-rate-{tier_id}",
         date_context={"filing_period": date(year, 12, 31)},
     )

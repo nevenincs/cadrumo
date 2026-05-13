@@ -147,8 +147,8 @@ dev = [
   "time-machine>=2.16.0",
   "ty>=0.0.1a1",
   # Vault tooling — contributor-only; not imported by src/aeat/.
-  "vaultspec-core>=0.1.14",
-  "vaultspec-rag>=0.2.3",
+  "vaultspec-core>=0.1.18",
+  "vaultspec-rag>=0.2.8",
   # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/aeat/.
   "sphinx>=8.1",
