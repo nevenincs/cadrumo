@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from . import (
     PROFILE_KEYS,
     ProfileKey,

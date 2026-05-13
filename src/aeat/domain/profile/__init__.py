@@ -22,6 +22,7 @@ from ._keys import (
     optional_profile_keys,
     required_profile_keys,
 )
+from ._renta_codes import RentaDeclarationType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
 from .family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
 if TYPE_CHECKING:
@@ -150,8 +151,12 @@ __all__ = [
     "ProfileKeyRequirement",
     "ProfileNotConfiguredError",
     "RentaAscendantProfile",
+    "RentaDeclarationType",
     "RentaDescendantProfile",
+    "RentaDisabilityGrade",
     "RentaFamilyProfile",
+    "RentaMaritalStatus",
+    "RentaSexCode",
     "ResidenceChange",
     "TaxResidenceProfile",
     "TaxResidenceProfileError",

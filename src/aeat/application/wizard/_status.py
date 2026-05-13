@@ -4,8 +4,7 @@
 strict :class:`WizardStatusReport` consumed by the config doctor and
 the ``aeat config status`` command. ``load_active_autonomo_profile``
 is the typed bridge the deadline engine and the filing runtime call
-to obtain an ``AutonomoProfile`` without round-tripping through a
-JSON envelope on disk.
+to obtain an ``AutonomoProfile`` from the active profile bucket.
 """
 
 from __future__ import annotations
@@ -122,7 +121,7 @@ def _next_wizard_action(
     login_ready: bool,
 ) -> str:
     if not has_profile:
-        return "aeat config setup --profile-name NAME"
+        return "aeat config init --profile NAME"
     if missing_required:
         return f"aeat config set {missing_required[0]} VALUE"
     if missing_enrolment:
@@ -140,7 +139,7 @@ def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
     The bridge runs the canonical-token dict through ``project_answers``
     and re-shapes the typed fields onto the ``AutonomoProfile`` record
     consumed by the deadline engine and the filing runtime. Values come
-    from the workflow state.
+    from the profile bucket selected by the workflow state.
 
     Raises:
         WizardStatusError: When no profile is active or the active

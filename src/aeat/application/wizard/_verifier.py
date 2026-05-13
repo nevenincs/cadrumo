@@ -80,7 +80,7 @@ def _check_activity_present(answers: SetupAnswers) -> WizardCheckFinding:
 
 
 def _check_spouse_consistency(answers: SetupAnswers) -> WizardCheckFinding:
-    if answers.declaration_type == "2" and not answers.spouse_tax_id:
+    if answers.taxation_type == "2" and not answers.spouse_tax_id:
         return WizardCheckFinding(
             name="spouse_consistency",
             severity=WizardCheckSeverity.ERROR,
