@@ -2,10 +2,9 @@
 
 Drives the root ``aeat`` Typer app via :class:`typer.testing.CliRunner`
 against per-test ``tmp_path`` directories wired through
-``AEAT_DRAFTS_DIR``, ``AEAT_FINANCIAL_TXS_DIR``, and
-``AEAT_DEFAULT_PROFILE_PATH``. Profile and submission fixtures
-round-trip through the real encrypted persistence layer rather than the
-production master key.
+``AEAT_DRAFTS_DIR`` and ``AEAT_FINANCIAL_TXS_DIR``. Draft, profile, and
+submission fixtures round-trip through the real encrypted persistence
+layer.
 """
 
 from __future__ import annotations
@@ -18,14 +17,14 @@ import pytest
 from typer.testing import CliRunner
 
 from ....application.filing import FilingBuilderError, FilingOperatorProfile, build_draft, build_runtime_schema_provider
-from ....core.config import PROJECT_ROOT
 from ....domain.filing import FilingAmendmentRepository, FilingDraftRepository
 from ....domain.submission import SubmissionAttempt, SubmissionRepository, SubmissionStatus, SubmittedFiling
+from ....tests import FIXTURES_DIR
 from . import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_JUSTIFICANTE_FIXTURES = PROJECT_ROOT / "tests" / "fixtures" / "justificantes"
+_JUSTIFICANTE_FIXTURES = FIXTURES_DIR / "justificantes"
 
 runner = CliRunner()
 
@@ -48,12 +47,22 @@ def _registry_modelo_calculable_without_inputs() -> str:
     raise AssertionError("registry has no modelo calculable without explicit inputs")
 
 
-def _write_inputs(tmp_path: Path) -> Path:
-    """Write a JSON inputs file for registry-backed CLI build tests."""
-    payload: dict[str, object] = {}
-    target = tmp_path / "inputs.json"
-    target.write_text(json.dumps(payload), encoding="utf-8")
-    return target
+def _persist_registry_draft(*, modelo: str | None = None, period: str = "2026Q1") -> Path:
+    """Persist a registry-backed draft through the secure repository."""
+
+    provider = build_runtime_schema_provider()
+    selected_modelo = modelo or _registry_modelo_calculable_without_inputs()
+    profile = FilingOperatorProfile(tax_id="00000000T", display_name="CLI filing")
+    draft = build_draft(
+        modelo=selected_modelo,
+        period=period,
+        profile=profile,
+        inputs={},
+        schema_provider=provider,
+    )
+    repository = FilingDraftRepository()
+    repository.save(draft)
+    return repository.envelope_path_for(draft.draft_id)
 
 
 def _write_submitted_filing(
@@ -131,100 +140,19 @@ def transactions_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return target
 
 
-@pytest.fixture
-def active_workflow_profile(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Seed the workflow state with an active profile for filing-build tests."""
-
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'workflow.db').as_posix()}")
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    from ....adapters.persistence.storage.sql.engine import dispose_engine
-    from ....application.profile._actions import set_active_profile, set_profile_values
-    from ....application.workflow._persistence import workflow_state_repository
-
-    dispose_engine()
-    repository = workflow_state_repository()
-    repository.update(
-        lambda state: set_active_profile(
-            set_profile_values(
-                state,
-                "operator",
-                {"tax.id": "00000000T", "activity": "design", "iva.regime": "GENERAL"},
-            ),
-            "operator",
-        )
-    )
-
-
 class TestFilingCLI:
-    """Smoke coverage for ``aeat filing`` build, show, validate, list, import paths."""
+    """Smoke coverage for ``aeat filing`` show, validate, list, import paths."""
 
-    def test_build_uses_active_workflow_profile(
-        self,
-        tmp_path: Path,
-        drafts_dir: Path,
-        active_workflow_profile: None,
-    ) -> None:
-        del active_workflow_profile
-        inputs = _write_inputs(tmp_path)
-        modelo = _registry_modelo_calculable_without_inputs()
-        result = runner.invoke(
-            app,
-            [
-                "build",
-                "--modelo",
-                modelo,
-                "--period",
-                "2026Q1",
-                "--inputs",
-                str(inputs),
-                "--profile-name",
-                "Configured operator",
-            ],
-        )
-        assert result.exit_code == 0, result.output
-        assert f"registry:{modelo}:" in result.output
-        assert _single_draft_path(drafts_dir).name
+    def test_build_command_is_not_exposed(self) -> None:
+        result = runner.invoke(app, ["build", "--help"])
 
-    def test_build_persists_draft_in_secure_backend(self, tmp_path: Path, drafts_dir: Path) -> None:
-        inputs = _write_inputs(tmp_path)
-        modelo = _registry_modelo_calculable_without_inputs()
-        result = runner.invoke(
-            app,
-            [
-                "build",
-                "--modelo",
-                modelo,
-                "--period",
-                "2026Q1",
-                "--inputs",
-                str(inputs),
-                "--profile-tax-id",
-                "00000000T",
-            ],
-        )
-        assert result.exit_code == 0, result.output
-        assert f"registry:{modelo}:" in result.output
-        assert _single_draft_path(drafts_dir).name
+        assert result.exit_code == 2, result.output
+        assert "no such command" in result.output.lower()
 
     def test_show_and_validate_round_trip(self, tmp_path: Path, drafts_dir: Path, transactions_dir: Path) -> None:
-        inputs = _write_inputs(tmp_path)
+        del tmp_path, transactions_dir
         modelo = _registry_modelo_calculable_without_inputs()
-        build_result = runner.invoke(
-            app,
-            [
-                "build",
-                "--modelo",
-                modelo,
-                "--period",
-                "2026Q1",
-                "--inputs",
-                str(inputs),
-                "--profile-tax-id",
-                "00000000T",
-            ],
-        )
-        assert build_result.exit_code == 0, build_result.output
+        _persist_registry_draft(modelo=modelo)
         draft_path = _single_draft_path(drafts_dir)
 
         show_result = runner.invoke(app, ["show", str(draft_path)])
@@ -241,24 +169,9 @@ class TestFilingCLI:
         drafts_dir: Path,
         transactions_dir: Path,
     ) -> None:
-        del transactions_dir
-        inputs = _write_inputs(tmp_path)
+        del tmp_path, transactions_dir
         modelo = _registry_modelo_calculable_without_inputs()
-        result = runner.invoke(
-            app,
-            [
-                "build",
-                "--modelo",
-                modelo,
-                "--period",
-                "2026Q1",
-                "--inputs",
-                str(inputs),
-                "--profile-tax-id",
-                "00000000T",
-            ],
-        )
-        assert result.exit_code == 0, result.output
+        _persist_registry_draft(modelo=modelo)
         draft_path = _single_draft_path(drafts_dir)
 
         validate_result = runner.invoke(app, ["validate", str(draft_path)])
@@ -266,23 +179,9 @@ class TestFilingCLI:
         assert "READY_TO_SUBMIT" in validate_result.output
 
     def test_list_filters_by_modelo(self, tmp_path: Path, drafts_dir: Path) -> None:
-        inputs = _write_inputs(tmp_path)
+        del tmp_path, drafts_dir
         modelo = _registry_modelo_calculable_without_inputs()
-        build_result = runner.invoke(
-            app,
-            [
-                "build",
-                "--modelo",
-                modelo,
-                "--period",
-                "2026Q1",
-                "--inputs",
-                str(inputs),
-                "--profile-tax-id",
-                "00000000T",
-            ],
-        )
-        assert build_result.exit_code == 0, build_result.output
+        _persist_registry_draft(modelo=modelo)
         result = runner.invoke(app, ["list", "--modelo", modelo], terminal_width=240)
         assert result.exit_code == 0, result.output
         assert modelo in result.output
@@ -293,6 +192,7 @@ class TestFilingCLI:
         drafts_dir: Path,
         submissions_dir: Path,
     ) -> None:
+        del drafts_dir, submissions_dir
         pdf = _JUSTIFICANTE_FIXTURES / "modelo_130_2026Q1.pdf"
         result = runner.invoke(
             app,
@@ -302,8 +202,8 @@ class TestFilingCLI:
         assert result.exit_code != 0, result.output
         assert "registry calculation failed" in result.output
         assert "irpf.previous_year_economic_activity_net_income" in result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
-        assert not list(submissions_dir.glob("*.envelope.json"))
+        assert _draft_count() == 0
+        assert SubmissionRepository().list_submission_ids() == ()
 
     def test_import_rejects_missing_pdf(
         self,
@@ -311,28 +211,30 @@ class TestFilingCLI:
         drafts_dir: Path,
         submissions_dir: Path,
     ) -> None:
+        del drafts_dir, submissions_dir
         missing = tmp_path / "nowhere.pdf"
         result = runner.invoke(
             app,
             ["import", "--from-justificante", str(missing)],
         )
         assert result.exit_code != 0, result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
-        assert not list(submissions_dir.glob("*.envelope.json"))
+        assert _draft_count() == 0
+        assert SubmissionRepository().list_submission_ids() == ()
 
     def test_import_rejects_unsupported_modelo(
         self,
         drafts_dir: Path,
         submissions_dir: Path,
     ) -> None:
+        del drafts_dir, submissions_dir
         pdf = _JUSTIFICANTE_FIXTURES / "modelo_100_2025A.pdf"
         result = runner.invoke(
             app,
             ["import", "--from-justificante", str(pdf)],
         )
         assert result.exit_code != 0, result.output
-        assert not list(drafts_dir.glob("*.envelope.json"))
-        assert not list(submissions_dir.glob("*.envelope.json"))
+        assert _draft_count() == 0
+        assert SubmissionRepository().list_submission_ids() == ()
 
     def test_complementaria_submit_command_is_absent(
         self,
@@ -371,26 +273,12 @@ class TestFilingCLI:
         submissions_dir: Path,
         tmp_path: Path,
     ) -> None:
-        inputs = _write_inputs(tmp_path)
+        del tmp_path
         modelo = _registry_modelo_calculable_without_inputs()
         period = "2024Q1"
-        build_result = runner.invoke(
-            app,
-            [
-                "build",
-                "--modelo",
-                modelo,
-                "--period",
-                period,
-                "--inputs",
-                str(inputs),
-                "--profile-tax-id",
-                "00000000T",
-            ],
-        )
-        assert build_result.exit_code == 0, build_result.output
+        _persist_registry_draft(modelo=modelo, period=period)
         draft_path = _single_draft_path(drafts_dir)
-        draft_id = draft_path.name.removesuffix(".envelope.json")
+        draft_id = draft_path.name
         submitted = _write_submitted_filing(submissions_dir, modelo=modelo, period=period, draft_id=draft_id)
         payload = {
             "original_submission_id": submitted.submission_id,

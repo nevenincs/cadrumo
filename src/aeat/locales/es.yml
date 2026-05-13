@@ -1090,6 +1090,23 @@ wizard:
     question_prefix: Pregunta %{q_n} de %{q_total}
     section_header: 'Paso %{section_n} de %{section_total}: %{title}'
   setup:
+    codes:
+      disability-grade:
+        choices:
+          33-64:
+            label: Discapacidad del 33% al 64%
+          65-plus:
+            label: Discapacidad del 65% o superior
+          assistance-or-mobility:
+            label: Ayuda de terceros o movilidad reducida
+          judicial-incapacity:
+            label: Incapacidad judicial o equivalente
+      sex:
+        choices:
+          h:
+            label: H - hombre
+          m:
+            label: M - mujer
     description: Asistente de configuración para preparar las declaraciones
     enrollment:
       enrollment-large-company:
@@ -1266,6 +1283,13 @@ wizard:
       tax-id:
         prompt: Identificador fiscal (NIF/NIE) para declaraciones
       taxation-type:
+        choices:
+          individual:
+            description: Use este valor cuando presente solo su declaración individual
+            label: 1 - individual
+          joint:
+            description: Use este valor solo para tributación conjunta de unidad familiar
+            label: 2 - conjunta
         prompt: Código del tipo de tributación
       title: Identidad del perfil
     residence:
@@ -1332,6 +1356,15 @@ wizard:
       taxpayer-disability-grade:
         prompt: Clave de discapacidad del primer declarante
       taxpayer-marital-status:
+        choices:
+          casado:
+            label: 2 - casado
+          separado-divorciado:
+            label: 4 - separado o divorciado
+          soltero:
+            label: 1 - soltero
+          viudo:
+            label: 3 - viudo
         prompt: Estado civil del primer declarante
       taxpayer-sex:
         prompt: Sexo del primer declarante

@@ -1048,6 +1048,23 @@ wizard:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
+    codes:
+      disability-grade:
+        choices:
+          33-64:
+            label: Disability grade 33% to 64%
+          65-plus:
+            label: Disability grade 65% or higher
+          assistance-or-mobility:
+            label: Third-party assistance or reduced mobility
+          judicial-incapacity:
+            label: Judicial incapacity or equivalent
+      sex:
+        choices:
+          h:
+            label: H - male
+          m:
+            label: M - female
     description: Operator-facing setup wizard for tax filing readiness
     enrollment:
       enrollment-large-company:
@@ -1224,6 +1241,13 @@ wizard:
       tax-id:
         prompt: Tax identifier (NIF/NIE) for the active profile
       taxation-type:
+        choices:
+          individual:
+            description: Use when you are filing only your own individual return
+            label: 1 - individual
+          joint:
+            description: Use only for joint family-unit taxation
+            label: 2 - joint
         prompt: Taxation type code
       title: Profile identity
     residence:
@@ -1290,6 +1314,15 @@ wizard:
       taxpayer-disability-grade:
         prompt: First taxpayer disability code
       taxpayer-marital-status:
+        choices:
+          casado:
+            label: 2 - married
+          separado-divorciado:
+            label: 4 - separated or divorced
+          soltero:
+            label: 1 - single
+          viudo:
+            label: 3 - widowed
         prompt: First taxpayer marital status
       taxpayer-sex:
         prompt: First taxpayer sex code

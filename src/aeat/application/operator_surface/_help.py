@@ -94,6 +94,7 @@ def _root_help() -> HelpDocument:
                 "Diagnostics",
                 _entry("aeat config doctor", "Run local health checks"),
                 _entry("aeat app overview status", "Show cross-domain readiness"),
+                _entry("aeat app live filed list", "List filed declarations through an explicit live-read command"),
                 _entry("aeat app review queue", "List items needing attention"),
                 _entry("aeat app registry inspect", "Inspect local registry data"),
             ),
@@ -150,7 +151,7 @@ def _app_help() -> HelpDocument:
     return HelpDocument(
         surface=HelpSurface.APP,
         heading="aeat app - operational tax work for the active profile",
-        paragraphs=("Use app for ledger, modelo, review, overview, and registry workflows.",),
+        paragraphs=("Use app for ledger, modelo, live-read, review, overview, and registry workflows.",),
         sections=(
             _section(
                 "Overview",
@@ -175,6 +176,12 @@ def _app_help() -> HelpDocument:
                 _entry("aeat app review show ID", "Show one review item"),
                 _entry("aeat app registry inspect", "Inspect local registry data"),
                 _entry("aeat app registry verify", "Verify local registry data"),
+            ),
+            _section(
+                "Live reads",
+                _entry("aeat app live filed list", "List filed declarations from AEAT"),
+                _entry("aeat app live filed capture", "Capture filed declaration observations"),
+                _entry("aeat app live filed capture-sources", "Capture source observations for a target filing"),
             ),
         ),
         footer="Run aeat --help for the full overview.",

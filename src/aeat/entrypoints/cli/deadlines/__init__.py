@@ -2,14 +2,14 @@
 
 Wires three subcommands under ``aeat deadlines``:
 
-- ``aeat deadlines list --year YYYY [--profile PATH]``
-- ``aeat deadlines next [--year YYYY] [--profile PATH]``
-- ``aeat deadlines explain MODELO [--profile PATH]``
+- ``aeat deadlines list --year YYYY``
+- ``aeat deadlines next [--year YYYY]``
+- ``aeat deadlines explain MODELO``
 
-The commands are pure typer glue: they parse arguments, load the
-profile from disk (or from the optional ``AEAT_DEFAULT_PROFILE_PATH``
-setting), construct an in-process catalogue implementation, and delegate
-every domain decision to :mod:`aeat.domain.deadlines`.
+The commands are pure typer glue: they parse arguments, load the active
+profile bucket through workflow state, construct an in-process catalogue
+implementation, and delegate every domain decision to
+:mod:`aeat.domain.deadlines`.
 """
 
 from __future__ import annotations

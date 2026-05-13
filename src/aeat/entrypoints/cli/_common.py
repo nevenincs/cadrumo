@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import json as _json
 import re as _re
 from collections.abc import Iterable
 from datetime import date as _date
-from datetime import datetime
 from decimal import Decimal
-from pathlib import Path
 from typing import Any
 
 import typer
@@ -14,6 +11,7 @@ import typer
 from ...application.aggregation import aggregate_renta_ledger_expenses_from_repositories
 from ...application.auth import AuthProviderListing
 from ...application.workflow import WorkflowState, workflow_state_repository
+from ...core.output_rendering import render_command_output
 from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry import (
     ModeloRevision,
@@ -43,35 +41,9 @@ def _format_of(ctx: typer.Context) -> str:
 
 def _emit(ctx: typer.Context, payload: Any, lines: Iterable[str]) -> None:
     """Render the result either as JSON or as line-formatted text."""
-    if _format_of(ctx) == _FORMAT_JSON:
-        typer.echo(_json.dumps(payload, default=_json_default, ensure_ascii=False))
-        return
-    for line in lines:
-        typer.echo(line)
-
-
-from ...core.errors import AeatError
-
-
-class JsonEncodingError(AeatError):
-    """Raised when an object cannot be serialized to JSON."""
-
-
-def _json_default(value: Any) -> Any:
-    """Coerce non-JSON-native values from typed records."""
-    from pydantic import BaseModel
-
-    if isinstance(value, BaseModel):
-        return value.model_dump(mode="json")
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, _date | datetime):
-        return value.isoformat()
-    if isinstance(value, Decimal):
-        return format(value, "f")
-    if isinstance(value, set | frozenset):
-        return sorted(value)
-    raise JsonEncodingError(f"cannot JSON-encode {type(value).__name__}")
+    rendered = render_command_output(format_name=_format_of(ctx), payload=payload, lines=lines)
+    if rendered.text:
+        typer.echo(rendered.text)
 
 
 def _bad(message: str) -> typer.BadParameter:

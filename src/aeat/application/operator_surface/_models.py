@@ -56,6 +56,7 @@ class MountedCommandDomain(StrEnum):
     DIAGNOSTICS = "diagnostics"
     OVERVIEW = "overview"
     LEDGER = "ledger"
+    LIVE = "live"
     MODELO = "modelo"
     REVIEW = "review"
     REGISTRY = "registry"
