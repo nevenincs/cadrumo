@@ -19,8 +19,11 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.application.modelo import (
+    WorkUnitAlreadyDiscardedError,
+    WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     create_work_unit,
+    discard_work_unit,
     get_work_unit,
     list_work_units,
     rename_work_unit,
@@ -30,6 +33,7 @@ from aeat.domain.modelos._repository import remove_work_unit, upsert_work_unit
 from aeat.domain.modelos._work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
+    WorkUnitState,
     derive_work_unit_id,
 )
 
@@ -153,17 +157,23 @@ def _build_unit(**overrides: Any) -> WorkUnit:
             revision_id=revision_id,
         ),
     )
-    return WorkUnit(
-        work_unit_id=wid,
-        bucket_id=bucket_id,
-        modelo=modelo,  # type: ignore[arg-type]
-        filing_year=filing_year,
-        period=period,
-        revision_id=revision_id,
-        name=overrides.pop("name", "303-2026-Q1"),
-        created_at=overrides.pop("created_at", _T0),
-        updated_at=overrides.pop("updated_at", _T0),
-    )
+    kwargs: dict[str, Any] = {
+        "work_unit_id": wid,
+        "bucket_id": bucket_id,
+        "modelo": modelo,
+        "filing_year": filing_year,
+        "period": period,
+        "revision_id": revision_id,
+        "name": overrides.pop("name", "303-2026-Q1"),
+        "created_at": overrides.pop("created_at", _T0),
+        "updated_at": overrides.pop("updated_at", _T0),
+    }
+    # Pass through any remaining state / discard-metadata overrides
+    # so the schema's cross-field validator can fire on them.
+    for key in ("state", "discarded_at", "discarded_by", "discard_reason"):
+        if key in overrides:
+            kwargs[key] = overrides.pop(key)
+    return WorkUnit(**kwargs)
 
 
 def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
@@ -395,6 +405,156 @@ def test_rename_work_unit_raises_when_id_is_absent() -> None:
     repo = _InMemoryWorkUnitRepository()
     with pytest.raises(WorkUnitNotFoundError):
         rename_work_unit("missing", "ignored", repository=repo)  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
+
+
+# ---------------------------------------------------------------------------
+# Application actions — discard + state transitions
+# ---------------------------------------------------------------------------
+
+
+def test_discard_work_unit_transitions_to_discarded_state() -> None:
+    """A fresh draft work unit is moved to DISCARDED with audit
+    metadata captured (actor + reason + timestamp)."""
+
+    repo = _InMemoryWorkUnitRepository()
+    original = create_work_unit(
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
+        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+    )
+    discard_time = datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC)
+    discarded = discard_work_unit(
+        original.work_unit_id,
+        actor="operator-A",
+        reason="wrong-profile",
+        repository=repo,  # type: ignore[arg-type]
+        clock=discard_time,
+    )
+    assert discarded.work_unit_id == original.work_unit_id
+    assert discarded.state is WorkUnitState.DISCARDED
+    assert discarded.discarded_at == discard_time
+    assert discarded.discarded_by == "operator-A"
+    assert discarded.discard_reason == "wrong-profile"
+    assert discarded.updated_at == discard_time
+
+
+def test_discard_work_unit_accepts_omitted_reason() -> None:
+    repo = _InMemoryWorkUnitRepository()
+    original = create_work_unit(
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
+        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+    )
+    discarded = discard_work_unit(
+        original.work_unit_id,
+        actor="operator-A",
+        repository=repo,  # type: ignore[arg-type]
+        clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    assert discarded.discard_reason is None
+
+
+def test_discard_work_unit_raises_on_missing_id() -> None:
+    repo = _InMemoryWorkUnitRepository()
+    with pytest.raises(WorkUnitNotFoundError):
+        discard_work_unit("missing", actor="operator-A", repository=repo)  # type: ignore[arg-type]
+
+
+def test_discard_work_unit_raises_when_already_discarded() -> None:
+    """Idempotent retries are not supported — re-discarding would
+    corrupt the audit trail. The error names the original actor /
+    timestamp so the operator can correlate."""
+
+    repo = _InMemoryWorkUnitRepository()
+    unit = create_work_unit(
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
+        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+    )
+    discard_work_unit(
+        unit.work_unit_id, actor="operator-A", repository=repo,  # type: ignore[arg-type]
+        clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    with pytest.raises(WorkUnitAlreadyDiscardedError):
+        discard_work_unit(
+            unit.work_unit_id, actor="operator-B", repository=repo,  # type: ignore[arg-type]
+            clock=datetime(2026, 3, 2, 12, 0, 0, tzinfo=UTC),
+        )
+
+
+def test_rename_refuses_to_mutate_a_discarded_work_unit() -> None:
+    """Once discarded, the work unit's metadata is frozen.
+    Attempting to rename it raises WorkUnitMutationRefusedError so
+    the operator can correct course (create a fresh work unit)."""
+
+    repo = _InMemoryWorkUnitRepository()
+    unit = create_work_unit(
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
+        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+    )
+    discard_work_unit(
+        unit.work_unit_id, actor="operator-A", repository=repo,  # type: ignore[arg-type]
+        clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    with pytest.raises(WorkUnitMutationRefusedError):
+        rename_work_unit(unit.work_unit_id, "new-name", repository=repo)  # type: ignore[arg-type]
+
+
+def test_list_work_units_excludes_discarded_by_default() -> None:
+    repo = _InMemoryWorkUnitRepository()
+    unit_draft = create_work_unit(
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
+        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+    )
+    unit_to_discard = create_work_unit(
+        bucket_id="default", modelo="130", filing_year=2026, period="Q1",
+        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+    )
+    discard_work_unit(
+        unit_to_discard.work_unit_id, actor="operator-A", repository=repo,  # type: ignore[arg-type]
+        clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    visible = list_work_units(repository=repo)  # type: ignore[arg-type]
+    assert {u.work_unit_id for u in visible} == {unit_draft.work_unit_id}
+
+
+def test_list_work_units_includes_discarded_when_flag_set() -> None:
+    repo = _InMemoryWorkUnitRepository()
+    unit_draft = create_work_unit(
+        bucket_id="default", modelo="303", filing_year=2026, period="Q1",
+        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+    )
+    unit_to_discard = create_work_unit(
+        bucket_id="default", modelo="130", filing_year=2026, period="Q1",
+        revision_id="rev", repository=repo, clock=_T0,  # type: ignore[arg-type]
+    )
+    discard_work_unit(
+        unit_to_discard.work_unit_id, actor="operator-A", repository=repo,  # type: ignore[arg-type]
+        clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    visible = list_work_units(include_discarded=True, repository=repo)  # type: ignore[arg-type]
+    assert {u.work_unit_id for u in visible} == {
+        unit_draft.work_unit_id,
+        unit_to_discard.work_unit_id,
+    }
+
+
+def test_work_unit_schema_rejects_discard_metadata_on_draft_state() -> None:
+    """A draft work unit must NOT carry discard metadata — the
+    cross-field model validator refuses such records on
+    construction."""
+
+    with pytest.raises(ValidationError):
+        _build_unit(
+            state=WorkUnitState.DRAFT,
+            discarded_at=_T0,
+            discarded_by="operator-A",
+        )
+
+
+def test_work_unit_schema_requires_discard_metadata_on_discarded_state() -> None:
+    """Conversely, a record claiming DISCARDED state must carry
+    ``discarded_at`` and ``discarded_by``."""
+
+    with pytest.raises(ValidationError):
+        _build_unit(state=WorkUnitState.DISCARDED)
 
 
 # ---------------------------------------------------------------------------

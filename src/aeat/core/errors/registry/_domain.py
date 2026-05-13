@@ -829,6 +829,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._actions.WorkUnitAlreadyDiscardedError",
+        ErrorCode(
+            code="ERROR_MODELO_WORK_UNIT_ALREADY_DISCARDED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_work_unit_already_discarded",
+            default_suggestion="aeat app modelo work list --include-discarded",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.WorkUnitMutationRefusedError",
+        ErrorCode(
+            code="ERROR_MODELO_WORK_UNIT_MUTATION_REFUSED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_work_unit_mutation_refused",
+            default_suggestion="aeat app modelo work create --modelo MODELO --year YEAR --period PERIOD --revision REVISION",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.period.PeriodError",
         ErrorCode(
             code="ERROR_PERIOD",

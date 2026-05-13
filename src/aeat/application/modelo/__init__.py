@@ -16,8 +16,11 @@ state fixture.
 from __future__ import annotations
 
 from ._actions import (
+    WorkUnitAlreadyDiscardedError,
+    WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     create_work_unit,
+    discard_work_unit,
     get_work_unit,
     list_work_units,
     rename_work_unit,
@@ -25,8 +28,11 @@ from ._actions import (
 
 
 __all__ = [
+    "WorkUnitAlreadyDiscardedError",
+    "WorkUnitMutationRefusedError",
     "WorkUnitNotFoundError",
     "create_work_unit",
+    "discard_work_unit",
     "get_work_unit",
     "list_work_units",
     "rename_work_unit",

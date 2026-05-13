@@ -22,6 +22,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Mapping
 from datetime import datetime
+from enum import StrEnum
 from types import MappingProxyType
 from typing import Annotated, Any, cast
 
@@ -29,6 +30,32 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
+
+
+class WorkUnitState(StrEnum):
+    """Closed enumeration of work-unit lifecycle states.
+
+    * ``DRAFT`` — default state at creation. The work unit
+      participates in default listings and accepts mutation
+      (rename, future calculation revisions).
+    * ``DISCARDED`` — operator marked the work unit abandoned.
+      Excluded from default listings; mutations are rejected.
+      Revision payloads remain in storage for audit; the work
+      unit cannot be re-activated.
+    """
+
+    DRAFT = "draft"
+    DISCARDED = "discarded"
+
+
+_ActorLabel = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
+]
+_DiscardReason = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=500),
+]
 
 _HEX_WORK_UNIT_ID_LENGTH = 64
 """Length of the SHA-256 hex digest used as the work-unit identifier."""
@@ -117,6 +144,16 @@ class WorkUnit(BaseModel):
         created_at: Timezone-aware UTC timestamp at first creation.
         updated_at: Timezone-aware UTC timestamp at the most recent
             mutation. Equals ``created_at`` on a fresh work unit.
+        state: Lifecycle state — ``DRAFT`` by default, ``DISCARDED``
+            once the operator marks the unit abandoned via the
+            discard verb.
+        discarded_at: Timezone-aware UTC timestamp set at discard
+            time. ``None`` for non-discarded units.
+        discarded_by: Actor label captured at discard time.
+            ``None`` for non-discarded units.
+        discard_reason: Operator-supplied free-text reason for
+            the discard. ``None`` when no reason was given (or
+            when the unit is not discarded).
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -130,6 +167,10 @@ class WorkUnit(BaseModel):
     name: _DisplayName
     created_at: datetime
     updated_at: datetime
+    state: WorkUnitState = WorkUnitState.DRAFT
+    discarded_at: datetime | None = None
+    discarded_by: _ActorLabel | None = None
+    discard_reason: _DiscardReason | None = None
 
     @field_validator("modelo", mode="before")
     @classmethod
@@ -173,6 +214,27 @@ class WorkUnit(BaseModel):
             raise ModeloValidationError(
                 f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}"
             )
+        if self.state is WorkUnitState.DRAFT:
+            if (
+                self.discarded_at is not None
+                or self.discarded_by is not None
+                or self.discard_reason is not None
+            ):
+                raise ModeloValidationError(
+                    "draft work unit must not carry discard metadata "
+                    "(discarded_at / discarded_by / discard_reason)"
+                )
+        elif self.state is WorkUnitState.DISCARDED:
+            if self.discarded_at is None or self.discarded_by is None:
+                raise ModeloValidationError(
+                    "discarded work unit must carry discarded_at and "
+                    "discarded_by"
+                )
+            if self.discarded_at < self.created_at:
+                raise ModeloValidationError(
+                    f"discarded_at {self.discarded_at.isoformat()} precedes "
+                    f"created_at {self.created_at.isoformat()}"
+                )
         return self
 
 
@@ -248,5 +310,6 @@ class WorkUnitCatalogue(BaseModel):
 __all__ = [
     "WorkUnit",
     "WorkUnitCatalogue",
+    "WorkUnitState",
     "derive_work_unit_id",
 ]

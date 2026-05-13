@@ -9,8 +9,11 @@ from typing import Annotated, Any, Literal
 import typer
 
 from ...application.modelo import (
+    WorkUnitAlreadyDiscardedError,
+    WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     create_work_unit,
+    discard_work_unit,
     get_work_unit,
     list_work_units,
     rename_work_unit,
@@ -391,13 +394,17 @@ def _work_unit_payload(unit: WorkUnit) -> dict[str, Any]:
         "period": unit.period,
         "revision_id": unit.revision_id,
         "name": unit.name,
+        "state": unit.state.value,
         "created_at": unit.created_at.isoformat(),
         "updated_at": unit.updated_at.isoformat(),
+        "discarded_at": unit.discarded_at.isoformat() if unit.discarded_at else None,
+        "discarded_by": unit.discarded_by,
+        "discard_reason": unit.discard_reason,
     }
 
 
 def _work_unit_lines(unit: WorkUnit) -> list[str]:
-    return [
+    lines = [
         f"work_unit_id\t{unit.work_unit_id}",
         f"bucket_id\t{unit.bucket_id}",
         f"modelo\t{unit.modelo}",
@@ -405,9 +412,17 @@ def _work_unit_lines(unit: WorkUnit) -> list[str]:
         f"period\t{unit.period}",
         f"revision_id\t{unit.revision_id}",
         f"name\t{unit.name}",
+        f"state\t{unit.state.value}",
         f"created_at\t{unit.created_at.isoformat()}",
         f"updated_at\t{unit.updated_at.isoformat()}",
     ]
+    if unit.discarded_at is not None:
+        lines.append(f"discarded_at\t{unit.discarded_at.isoformat()}")
+    if unit.discarded_by is not None:
+        lines.append(f"discarded_by\t{unit.discarded_by}")
+    if unit.discard_reason is not None:
+        lines.append(f"discard_reason\t{unit.discard_reason}")
+    return lines
 
 
 @work_app.command("create", help=tr("cli.app.modelo.work.create_help"))
@@ -463,21 +478,30 @@ def work_list(
         str | None,
         typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
     ] = None,
+    include_discarded: Annotated[
+        bool,
+        typer.Option(
+            "--include-discarded",
+            help=tr("cli.app.modelo.work.include_discarded_help"),
+        ),
+    ] = False,
 ) -> None:
-    """List modelo work units. Filtered by bucket when supplied."""
+    """List modelo work units. Discarded units are excluded unless asked."""
 
-    units = list_work_units(bucket_id=bucket_id)
+    units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
     payload = {
         "operation": "modelo.work.list",
         "bucket_id_filter": bucket_id,
+        "include_discarded": include_discarded,
         "work_unit_count": len(units),
         "work_units": [_work_unit_payload(unit) for unit in units],
     }
     lines = [
         "operation\tmodelo.work.list",
         f"bucket_id_filter\t{bucket_id or ''}",
+        f"include_discarded\t{include_discarded}",
         f"work_unit_count\t{len(units)}",
-        "work_unit_id\tbucket_id\tmodelo\tyear\tperiod\trevision_id\tname",
+        "work_unit_id\tbucket_id\tmodelo\tyear\tperiod\trevision_id\tstate\tname",
     ]
     lines.extend(
         "\t".join(
@@ -488,6 +512,7 @@ def work_list(
                 str(unit.filing_year),
                 unit.period,
                 unit.revision_id,
+                unit.state.value,
                 unit.name,
             )
         )
@@ -534,13 +559,50 @@ def work_rename(
 
     try:
         unit = rename_work_unit(work_unit_id, name)
-    except WorkUnitNotFoundError as exc:
+    except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
         raise typer.BadParameter(str(exc)) from exc
     payload = {
         "operation": "modelo.work.rename",
         **_work_unit_payload(unit),
     }
     lines = ["operation\tmodelo.work.rename", *_work_unit_lines(unit)]
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("discard", help=tr("cli.app.modelo.work.discard_help"))
+def work_discard(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+    actor: Annotated[
+        str,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ],
+    reason: Annotated[
+        str | None,
+        typer.Option("--reason", help=tr("cli.app.modelo.work.reason_help")),
+    ] = None,
+) -> None:
+    """Transition a work unit to discarded state.
+
+    The discard is an audit-grade state transition: revision
+    payloads are preserved, the work unit is marked discarded
+    with actor + reason captured, and subsequent mutations are
+    rejected. Discarded units are excluded from default
+    ``aeat app modelo work list`` output.
+    """
+
+    try:
+        unit = discard_work_unit(work_unit_id, actor=actor, reason=reason)
+    except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    payload = {
+        "operation": "modelo.work.discard",
+        **_work_unit_payload(unit),
+    }
+    lines = ["operation\tmodelo.work.discard", *_work_unit_lines(unit)]
     _emit(ctx, payload, lines)
 
 
