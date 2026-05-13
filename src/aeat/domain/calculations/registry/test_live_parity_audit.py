@@ -11,12 +11,10 @@ consumes to surface oracle-binding drift across modelos:
   declaring applicability predicates, deterministically ordered for
   audit output.
 
-Both helpers are pure (no profile-fact evaluation, no I/O) and were
-previously exercised only indirectly through
-``test_audit_oracle_bindings.py`` and
-``test_cross_reference_applicability.py``. A regression in the
-orphan-set difference, the predicate filter, or the lexicographic
-sort would silently mask the drift CI is supposed to catch.
+Both helpers are pure (no profile-fact evaluation, no I/O). A
+regression in the orphan-set difference, the predicate filter, or the
+lexicographic sort would silently mask the drift CI is supposed to
+catch, which is why this module exercises each at unit level.
 """
 
 from __future__ import annotations
