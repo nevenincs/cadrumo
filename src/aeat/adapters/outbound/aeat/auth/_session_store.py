@@ -20,7 +20,7 @@ _SESSION_VERSION = 1
 class PersistedBrowserSession(BaseModel):
     """Encrypted browser session state plus provider-specific metadata."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     schema_version: int = Field(default=_SESSION_VERSION, ge=1)
     storage_state: dict[str, Any]
