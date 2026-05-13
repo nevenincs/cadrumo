@@ -2,7 +2,7 @@
 
 ``build_wizard_command(flow)`` returns a Typer-compatible callable
 whose signature is composed at construction time from the flow's
-questions plus three fixed mode flags (``--profile-name``,
+questions plus three fixed mode flags (``--profile``,
 ``--quiet``, ``--accept-defaults``). The closure walks the flow
 against a ``Prompter`` and persists the typed answers.
 
@@ -143,6 +143,8 @@ def _python_parameter(
 
     flag = _flag_name(question)
     help_text = tr(_help_key(flow, question))
+    annotation: object
+    default: object
     match question.widget:
         case WizardWidget.CONFIRM:
             option = typer.Option(
@@ -188,7 +190,13 @@ def _python_parameter(
             annotation = Annotated[str | None, option]
             default = None
         case WizardWidget.TEXT:
-            option = typer.Option(flag, help=help_text, rich_help_panel=section_title)
+            option_kwargs: dict[str, object] = {
+                "help": help_text,
+                "rich_help_panel": section_title,
+            }
+            if question.choices:
+                option_kwargs["click_type"] = click.Choice([choice.value for choice in question.choices])
+            option = typer.Option(flag, **option_kwargs)
             annotation = Annotated[str | None, option]
             default = None
     return inspect.Parameter(
@@ -211,7 +219,6 @@ def _mode_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
             str,
             typer.Option(
                 "--profile",
-                "--profile-name",
                 help=tr("cli.config.setup.profile_name_help"),
             ),
         ],

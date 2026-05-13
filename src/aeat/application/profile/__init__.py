@@ -1,6 +1,6 @@
 """Application-layer profile validation for the CLI.
 
-``aeat setup profile validate`` consumes the domain-layer
+``aeat config profile status`` consumes the domain-layer
 :class:`aeat.domain.profile.ProfileKey` registry rather than carrying
 its own hardcoded list of mandatory keys. This module exposes the typed
 validation result and factory the CLI calls; the CLI binding stays pure
@@ -31,6 +31,7 @@ from ._actions import (
     set_profile_values,
 )
 from ._models import ProfileRecord
+from ._repository import ProfileBucket, ProfileBucketRepository, profile_bucket_repository
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` for profile validation records."""
@@ -141,7 +142,7 @@ def validate_profile(values: Mapping[str, str]) -> ProfileValidationResult:
 def list_profile_key_records() -> tuple[ProfileKey, ...]:
     """Return the full :data:`PROFILE_KEYS` tuple in registry order.
 
-    Provided so the CLI's ``aeat setup profile list-keys`` command can
+    Provided so the CLI's ``aeat config profile list`` command can
     render the catalogue without importing from the domain underscore
     module directly. The tuple is :data:`PROFILE_KEYS` itself; the
     function exists so the CLI binding has a stable application-layer
@@ -186,12 +187,18 @@ def list_profile_value_rows(
 
 
 __all__ = [
+    "ProfileBucket",
+    "ProfileBucketRepository",
     "ProfileKey",
     "ProfileKeyRequirement",
     "ProfileRecord",
     "ProfileValidationResult",
     "ProfileValueRow",
+    "clear_profile_values",
     "list_profile_key_records",
     "list_profile_value_rows",
+    "profile_bucket_repository",
+    "set_active_profile",
+    "set_profile_values",
     "validate_profile",
 ]

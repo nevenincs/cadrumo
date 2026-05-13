@@ -32,7 +32,7 @@ def test_next_wizard_action_returns_setup_command_when_no_profile() -> None:
             auth_provider="certificate",
             login_ready=True,
         )
-        == "aeat config setup --profile-name NAME"
+        == "aeat config init --profile NAME"
     )
 
 

@@ -8,6 +8,9 @@ exercised: the report is the structural contract that doctor and
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -21,6 +24,21 @@ from aeat.application.wizard._status import (
 from aeat.application.workflow._models import WorkflowState
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+@pytest.fixture(autouse=True)
+def _isolated_secure_bucket_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'wizard-status.db').as_posix()}")
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+
+    from ...adapters.persistence.storage.sql.engine import dispose_engine
+
+    dispose_engine()
+    try:
+        yield
+    finally:
+        dispose_engine()
 
 
 def test_empty_state_yields_no_active_profile_report() -> None:
@@ -62,10 +80,10 @@ def test_active_profile_with_identity_and_iva_regime_is_profile_ready() -> None:
     assert report.missing_enrolment == ()
 
 
-def test_next_action_for_empty_state_directs_to_aeat_config_setup() -> None:
+def test_next_action_for_empty_state_directs_to_aeat_config_init() -> None:
     state = WorkflowState()
     report = build_wizard_status(state)
-    assert report.next_action.startswith("aeat config setup")
+    assert report.next_action == "aeat config init --profile NAME"
 
 
 def test_report_is_strict_frozen_pydantic_v2() -> None:

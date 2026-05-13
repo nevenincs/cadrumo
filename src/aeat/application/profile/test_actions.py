@@ -1,34 +1,44 @@
-"""Focused unit tests for application.profile._actions.
+"""Tests for profile actions across workflow pointers and profile buckets.
 
-Three pure state-transition helpers operate on `WorkflowState` and
-return new states via `model_copy` (no in-place mutation):
-
-- `set_active_profile(state, name)` — selects or creates an active
-  profile; trims name; raises on blank.
-- `set_profile_values(state, profile_name, values)` — merges values
-  into the named profile; normalises keys via `_normalise_key`;
-  selects the profile as active.
-- `clear_profile_values(state, profile_name, keys)` — removes the
-  specified normalised keys; tolerates absent keys; selects the
-  profile as active.
-
-Previously no direct unit-test coverage. A regression in any branch
-(dropping the key-normalisation, mutating the input state, skipping
-the active_profile swap) would silently corrupt every operator's
-profile-management flow.
-
-Tests pin each helper's documented state-transition contract.
+Profile values are stored only in the profile bucket namespace. Workflow state
+keeps pointer records, and actions resolve the active pointer before reading or
+writing profile-bound values through the profile bucket repository.
 """
 
 from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
 from ..workflow._models import WorkflowState
 from ._actions import clear_profile_values, set_active_profile, set_profile_values
 from ._models import ProfileRecord
+from ._repository import profile_bucket_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+@pytest.fixture(autouse=True)
+def _isolated_secure_bucket_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'profiles.db').as_posix()}")
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+
+    from ...adapters.persistence.storage.sql.engine import dispose_engine
+
+    dispose_engine()
+    try:
+        yield
+    finally:
+        dispose_engine()
+
+
+def _stored_profile(name: str) -> ProfileRecord:
+    profile = profile_bucket_repository().load(name)
+    assert isinstance(profile, ProfileRecord)
+    return profile
 
 
 # ---------------------------------------------------------------------------
@@ -43,21 +53,24 @@ def test_set_active_profile_creates_new_profile_when_absent() -> None:
 
     assert updated.active_profile == "kent"
     assert "kent" in updated.profiles
+    assert updated.profiles["kent"] == {"bucket_id": "kent"}
+    assert _stored_profile("kent").values == {}
+    assert [(event.action, event.bucket_id, event.object_id) for event in updated.bucket_events] == [
+        ("profile.created", "kent", "kent"),
+        ("profile.selected", "kent", "kent"),
+    ]
 
 
 def test_set_active_profile_preserves_existing_profile_entry() -> None:
-    """When the profile exists, the entry is left intact — only
+    """When the profile exists, the bucket is left intact — only
     active_profile updates."""
-    initial = WorkflowState().model_copy(
-        update={"profiles": {"kent": ProfileRecord(name="kent", values={"tax.id": "12345678Z"})}}
-    )
+    profile_bucket_repository().save(ProfileRecord(name="kent", values={"tax.id": "12345678Z"}))
+    initial = WorkflowState().model_copy(update={"profiles": {"kent": {"bucket_id": "kent"}}})
 
     updated = set_active_profile(initial, "kent")
 
     assert updated.active_profile == "kent"
-    profile = updated.profiles["kent"]
-    assert isinstance(profile, ProfileRecord)
-    assert profile.values["tax.id"] == "12345678Z"
+    assert _stored_profile("kent").values["tax.id"] == "12345678Z"
 
 
 def test_set_active_profile_raises_on_blank_name() -> None:
@@ -86,32 +99,47 @@ def test_set_profile_values_creates_new_profile_with_normalised_keys() -> None:
 
     updated = set_profile_values(state, "kent", {"TAX.ID": "12345678Z"})
 
-    profile = updated.profiles["kent"]
-    assert isinstance(profile, ProfileRecord)
+    assert updated.profiles["kent"] == {"bucket_id": "kent"}
+    profile = _stored_profile("kent")
     assert profile.values == {"tax.id": "12345678Z"}
+    assert [(event.action, event.bucket_id, event.object_id) for event in updated.bucket_events] == [
+        ("profile.created", "kent", "kent"),
+        ("profile.values.updated", "kent", "tax.id"),
+    ]
 
 
 def test_set_profile_values_merges_new_values_into_existing_profile() -> None:
-    initial = WorkflowState().model_copy(
-        update={"profiles": {"kent": ProfileRecord(name="kent", values={"tax.id": "12345678Z"})}}
-    )
+    profile_bucket_repository().save(ProfileRecord(name="kent", values={"tax.id": "12345678Z"}))
+    initial = WorkflowState().model_copy(update={"profiles": {"kent": {"bucket_id": "kent"}}})
 
-    updated = set_profile_values(initial, "kent", {"activity": "software"})
+    set_profile_values(initial, "kent", {"activity": "software"})
 
-    profile = updated.profiles["kent"]
-    assert isinstance(profile, ProfileRecord)
+    profile = _stored_profile("kent")
     assert profile.values == {"tax.id": "12345678Z", "activity": "software"}
 
 
+def test_set_profile_values_summarises_large_update_event_ids() -> None:
+    state = WorkflowState()
+    values = {f"very.long.profile.key.{index:03d}": "set" for index in range(40)}
+
+    updated = set_profile_values(state, "kent", values)
+
+    profile = _stored_profile("kent")
+    assert set(profile.values) == set(values)
+    event = updated.bucket_events[-1]
+    assert event.action == "profile.values.updated"
+    assert event.object_id is not None
+    assert event.object_id.startswith("keys:40:")
+    assert len(event.object_id) < 128
+
+
 def test_set_profile_values_overwrites_overlapping_keys() -> None:
-    initial = WorkflowState().model_copy(
-        update={"profiles": {"kent": ProfileRecord(name="kent", values={"tax.id": "12345678Z"})}}
-    )
+    profile_bucket_repository().save(ProfileRecord(name="kent", values={"tax.id": "12345678Z"}))
+    initial = WorkflowState().model_copy(update={"profiles": {"kent": {"bucket_id": "kent"}}})
 
-    updated = set_profile_values(initial, "kent", {"tax.id": "87654321B"})
+    set_profile_values(initial, "kent", {"tax.id": "87654321B"})
 
-    profile = updated.profiles["kent"]
-    assert isinstance(profile, ProfileRecord)
+    profile = _stored_profile("kent")
     assert profile.values["tax.id"] == "87654321B"
 
 
@@ -120,20 +148,18 @@ def test_set_profile_values_folds_dash_into_dot_via_normalise_key() -> None:
     domain.profile._normalise._normalise_key."""
     state = WorkflowState()
 
-    updated = set_profile_values(state, "kent", {"tax-id": "12345678Z"})
+    set_profile_values(state, "kent", {"tax-id": "12345678Z"})
 
-    profile = updated.profiles["kent"]
-    assert isinstance(profile, ProfileRecord)
+    profile = _stored_profile("kent")
     assert profile.values == {"tax.id": "12345678Z"}
 
 
 def test_set_profile_values_strips_value_whitespace() -> None:
     state = WorkflowState()
 
-    updated = set_profile_values(state, "kent", {"tax.id": "  12345678Z  "})
+    set_profile_values(state, "kent", {"tax.id": "  12345678Z  "})
 
-    profile = updated.profiles["kent"]
-    assert isinstance(profile, ProfileRecord)
+    profile = _stored_profile("kent")
     assert profile.values["tax.id"] == "12345678Z"
 
 
@@ -143,7 +169,7 @@ def test_set_profile_values_sets_active_profile_invariant() -> None:
     initial = WorkflowState().model_copy(
         update={
             "active_profile": "other",
-            "profiles": {"other": ProfileRecord(name="other")},
+            "profiles": {"other": {"bucket_id": "other"}},
         }
     )
 
@@ -161,29 +187,30 @@ def test_clear_profile_values_removes_existing_key() -> None:
     initial = WorkflowState().model_copy(
         update={
             "profiles": {
-                "kent": ProfileRecord(name="kent", values={"tax.id": "12345678Z", "activity": "software"}),
+                "kent": {"bucket_id": "kent"},
             }
         }
     )
+    profile_bucket_repository().save(ProfileRecord(name="kent", values={"tax.id": "12345678Z", "activity": "software"}))
 
     updated = clear_profile_values(initial, "kent", ("tax.id",))
 
-    profile = updated.profiles["kent"]
-    assert isinstance(profile, ProfileRecord)
+    profile = _stored_profile("kent")
     assert "tax.id" not in profile.values
     assert profile.values["activity"] == "software"
+    assert [(event.action, event.bucket_id, event.object_id) for event in updated.bucket_events] == [
+        ("profile.values.cleared", "kent", "tax.id"),
+    ]
 
 
 def test_clear_profile_values_tolerates_absent_key() -> None:
     """Missing key → no-op, no raise."""
-    initial = WorkflowState().model_copy(
-        update={"profiles": {"kent": ProfileRecord(name="kent", values={"tax.id": "12345678Z"})}}
-    )
+    profile_bucket_repository().save(ProfileRecord(name="kent", values={"tax.id": "12345678Z"}))
+    initial = WorkflowState().model_copy(update={"profiles": {"kent": {"bucket_id": "kent"}}})
 
-    updated = clear_profile_values(initial, "kent", ("not-a-real-key",))
+    clear_profile_values(initial, "kent", ("not-a-real-key",))
 
-    profile = updated.profiles["kent"]
-    assert isinstance(profile, ProfileRecord)
+    profile = _stored_profile("kent")
     assert profile.values == {"tax.id": "12345678Z"}
 
 
@@ -191,32 +218,29 @@ def test_clear_profile_values_removes_multiple_keys() -> None:
     initial = WorkflowState().model_copy(
         update={
             "profiles": {
-                "kent": ProfileRecord(
-                    name="kent",
-                    values={"tax.id": "12345678Z", "activity": "software", "iva.regime": "general"},
-                ),
+                "kent": {"bucket_id": "kent"},
             }
         }
     )
+    profile_bucket_repository().save(
+        ProfileRecord(name="kent", values={"tax.id": "12345678Z", "activity": "software", "iva.regime": "general"})
+    )
 
-    updated = clear_profile_values(initial, "kent", ("tax.id", "iva.regime"))
+    clear_profile_values(initial, "kent", ("tax.id", "iva.regime"))
 
-    profile = updated.profiles["kent"]
-    assert isinstance(profile, ProfileRecord)
+    profile = _stored_profile("kent")
     assert profile.values == {"activity": "software"}
 
 
 def test_clear_profile_values_normalises_key_before_lookup() -> None:
     """Passing `'TAX-ID'` removes the entry stored under `'tax.id'`.
     Mirrors `set_profile_values`'s key-normalisation invariant."""
-    initial = WorkflowState().model_copy(
-        update={"profiles": {"kent": ProfileRecord(name="kent", values={"tax.id": "12345678Z"})}}
-    )
+    profile_bucket_repository().save(ProfileRecord(name="kent", values={"tax.id": "12345678Z"}))
+    initial = WorkflowState().model_copy(update={"profiles": {"kent": {"bucket_id": "kent"}}})
 
-    updated = clear_profile_values(initial, "kent", ("TAX-ID",))
+    clear_profile_values(initial, "kent", ("TAX-ID",))
 
-    profile = updated.profiles["kent"]
-    assert isinstance(profile, ProfileRecord)
+    profile = _stored_profile("kent")
     assert profile.values == {}
 
 
@@ -228,8 +252,8 @@ def test_clear_profile_values_sets_active_profile_even_when_no_values_change() -
         update={
             "active_profile": "other",
             "profiles": {
-                "other": ProfileRecord(name="other"),
-                "kent": ProfileRecord(name="kent"),
+                "other": {"bucket_id": "other"},
+                "kent": {"bucket_id": "kent"},
             },
         }
     )
