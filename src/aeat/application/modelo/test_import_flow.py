@@ -277,6 +277,29 @@ def test_import_then_amend_unlocks_amendment_path(repos) -> None:
     )
 
 
+def test_import_refuses_casilla_ids_not_in_registry(repos) -> None:
+    """The import path refuses casilla ids the registry does not
+    declare for the work unit's modelo / filing_year / period.
+    Imported baselines are the legal source of truth for amend
+    paths — fabricated casilla ids cannot be silently accepted."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    with pytest.raises(ExternalFilingImportError, match=r"9999|not declared"):
+        import_external_filing_evidence(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_values={"9999": Decimal("100")},
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id="JUST-FABRICATED",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )
+
+
 def test_import_refuses_empty_casilla_values(repos) -> None:
     """The import path requires at least one casilla value — a
     zero-value mapping doesn't represent any real receipt."""
