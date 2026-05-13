@@ -45,52 +45,44 @@ categories:
 cli:
   app:
     modelo:
-      app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el
-        registro
+      app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el registro
       bindings:
-        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
-          indicada (AAAA-MM-DD)
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
+          (AAAA-MM-DD)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Periodo fiscal para acotar los bindings (p. ej. 2026Q1,
-          2026-01)
+        period_help: Periodo fiscal para acotar los bindings (p. ej. 2026Q1, 2026-01)
       casillas:
-        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
-          indicada (AAAA-MM-DD)
-        input_kind_help: Filtrar las casillas por tipo de entrada (manual,
-          bound, computed, informational)
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
+          (AAAA-MM-DD)
+        input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
+          computed, informational)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Periodo fiscal para acotar las casillas (p. ej. 2026Q1,
-          2026-01)
+        period_help: Periodo fiscal para acotar las casillas (p. ej. 2026Q1, 2026-01)
         required_help: Mostrar solo las casillas marcadas como obligatorias
       describe:
-        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
-          indicada (AAAA-MM-DD)
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
+          (AAAA-MM-DD)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Periodo fiscal para resolver la revisión del modelo (p. ej.
-          2026Q1, 2026-01)
-      formulas:
-        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO
-          indicada (AAAA-MM-DD)
-        modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Periodo fiscal para acotar las fórmulas (p. ej. 2026Q1,
+        period_help: Periodo fiscal para resolver la revisión del modelo (p. ej. 2026Q1,
           2026-01)
+      formulas:
+        as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
+          (AAAA-MM-DD)
+        modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        period_help: Periodo fiscal para acotar las fórmulas (p. ej. 2026Q1, 2026-01)
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
   archive:
-    app_help: Exportar e importar el archivo local cifrado como paquetes JSON
-      portables
+    app_help: Exportar e importar el archivo local cifrado como paquetes JSON portables
     export:
-      bundle_id_help: Sobrescribir el identificador de paquete generado
-        automáticamente
+      bundle_id_help: Sobrescribir el identificador de paquete generado automáticamente
       help: Escribir un paquete JSON portable del catálogo de objetos seguros
-      namespace_help: Restringir el paquete a uno o varios espacios de nombres
-        (repetible)
+      namespace_help: Restringir el paquete a uno o varios espacios de nombres (repetible)
       path_help: Ruta de destino del paquete JSON
     import:
       conflict_help: 'Política de conflicto al restaurar registros colisionantes:
         fail, overwrite o keep'
-      help: Restaurar un paquete de archivo en el catálogo cifrado de objetos
-        seguros
+      help: Restaurar un paquete de archivo en el catálogo cifrado de objetos seguros
       path_help: Ruta del paquete JSON a restaurar
   browser:
     app_help: Gestión de la automatización del navegador (Playwright)
@@ -120,6 +112,8 @@ cli:
       help: Configurar el proveedor de autenticación activo
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
       providers_help: Listar proveedores de autenticación soportados
+      reserved_provider: 'Proveedor de autenticación reservado pero no disponible
+        aún: {{provider}}.'
       status_help: Mostrar el estado de autenticación configurado
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
@@ -337,6 +331,7 @@ cli:
       value: Valor
     import:
       actual: Actual (Encontrado)
+      año_help: Año fiscal para la operación de importación (AAAA)
       borrador_unsupported: La importación desde borrador oficial no está soportada
         para este modelo
       casilla_label: Casilla
@@ -603,7 +598,7 @@ cli:
     app_help: Revisar el estado actual del espacio de trabajo fiscal
     calendar_help: Mostrar calendario de obligaciones para un rango de fechas
     calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta
-      ''aeat config set <clave> <valor>'' o usa --allow-incomplete para ver
+      ''aeat config profile set <clave> <valor>'' o usa --allow-incomplete para ver
       el calendario calculado bajo valores por defecto.'
     calendar_requires_dates: Use --from y --to al consultar el calendario
     drafts: Borradores
@@ -642,6 +637,52 @@ cli:
     list_filed_data_help: Listar presentaciones existentes en la AEAT para el rango
       de años especificado
     list_filed_data_json_help: Salida en formato JSON para herramientas de automatización
+    metrics:
+      applicability_declaration_count: applicability_declaration_count
+      application_link_count: application_link_count
+      application_link_surfaces: application_link_surfaces
+      artefact_refs: artefact_refs
+      backend_exists: backend_exists
+      captured_count: captured_count
+      casilla_count: casilla_count
+      compared_casillas: compared_casillas
+      comparison_count: comparison_count
+      cross_reference_count: cross_reference_count
+      difference_count: difference_count
+      differences: differences
+      drift_count: drift_count
+      environment: environment
+      extraction_profile_count: extraction_profile_count
+      failed_count: failed_count
+      failure_count: failure_count
+      formula_count: formula_count
+      formula_workbook_count: formula_workbook_count
+      legal_reference_count: legal_reference_count
+      missing_filed_casillas: missing_filed_casillas
+      missing_local_casillas: missing_local_casillas
+      modelo: modelo
+      modelo_count: modelo_count
+      modelos: modelos
+      observation_paths: observation_paths
+      orphan_oracle_ids: orphan_oracle_ids
+      passed: passed
+      registered_oracle_ids: registered_oracle_ids
+      revision: revision
+      revision_count: revision_count
+      row_count: row_count
+      runner_detail: runner_detail
+      runner_status: runner_status
+      scanned_count: scanned_count
+      scenario_id: scenario_id
+      source_reference_count: source_reference_count
+      status: status
+      tape_path: tape_path
+      unsupported_xls_count: unsupported_xls_count
+      verification_expectation_count: verification_expectation_count
+      verified: verified
+      workbook_count: workbook_count
+      workbook_parity_ref_count: workbook_parity_ref_count
+      workbook_path: workbook_path
     modelo_help: Filtro opcional por modelo fiscal (ej. 303, 130)
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
@@ -672,6 +713,25 @@ cli:
     workbooks_timeout_help: Tiempo de espera máximo (en segundos) para la compilación
     workbooks_verify_help: Verificar la integridad de los libros de trabajo generados
     year_help: Ejercicio fiscal a consultar o procesar
+  review:
+    app_help: 'Cola de revisión del operador: clasifica transacciones, facturas e
+      incidencias'
+    errors:
+      invalid_state: 'Estado de revisión inválido: {{state}}'
+    labels:
+      id: ID
+      kind: Tipo
+      next: Siguiente
+      severity: Severidad
+    queue:
+      empty: No hay elementos pendientes de revisión.
+      help: Listar elementos pendientes de revisión
+      kind_help: Restringir la cola a un tipo de elemento
+      modelo_help: Restringir la cola a un modelo
+      state_help: Restringir la cola a un estado de revisión
+    show:
+      help: Mostrar detalles de revisión de un elemento
+      id_help: Identificador del elemento en la cola
   root:
     app_app_help: Espacio de trabajo fiscal para libros, facturas y declaraciones
     app_help: 'Asistente para preparar declaraciones tributarias españolas
@@ -687,8 +747,8 @@ cli:
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
-      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat app registry citations'' para listar
-        los temas registrados.'
+      not_found: 'Tema no encontrado: %{slug}. Ejecuta ''aeat app registry citations''
+        para listar los temas registrados.'
     opts:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
   txs:
@@ -787,8 +847,8 @@ review:
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
-      digital (FNMT / equivalente). Configura un proveedor con 'aeat config auth --provider certificate'
-      y verifica con 'aeat config status'.
+      digital (FNMT / equivalente). Configura un proveedor con 'aeat config auth configure
+      --provider certificate' y verifica con 'aeat config auth test'.
     title: Autenticación con la AEAT
   calendar:
     body: El calendario muestra las obligaciones de presentación (modelos y periodos)
@@ -827,7 +887,7 @@ topic:
   profile:
     body: El perfil local contiene tu identificación fiscal (NIF), actividad principal,
       régimen IVA / IRPF y enrolamientos opcionales (SII, Verifactu, intracomunitario).
-      Edítalo con 'aeat config set <clave> <valor>'.
+      Edítalo con 'aeat config profile set <clave> <valor>'.
     title: Perfil del contribuyente
   providers:
     body: Proveedores de autenticación soportados; cada uno requiere requisitos distintos.
@@ -860,18 +920,20 @@ transactions:
     message: Falta el mes 2026-03 en el archivo importado.
 wizard:
   errors:
-    blank_integer: 'Valor entero requerido para %{prompt_key}.'
-    blank_path: 'Ruta requerida para %{prompt_key}.'
-    blank_secret: 'Valor secreto requerido para %{prompt_key}.'
-    blank_text: 'Valor obligatorio para %{prompt_key}.'
-    checkbox_required: 'Selecciona al menos una opción para %{prompt_key}.'
-    checkbox_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas: %{choices}.'
-    checkbox_without_choices: 'La pregunta %{prompt_key} no declara opciones para checkbox.'
+    blank_integer: Valor entero requerido para %{prompt_key}.
+    blank_path: Ruta requerida para %{prompt_key}.
+    blank_secret: Valor secreto requerido para %{prompt_key}.
+    blank_text: Valor obligatorio para %{prompt_key}.
+    checkbox_required: Selecciona al menos una opción para %{prompt_key}.
+    checkbox_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
+      %{choices}.'
+    checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para checkbox.
     invalid_confirm: 'Respuesta booleana no válida para %{prompt_key}: %{raw}.'
     invalid_integer: 'Entero no válido para %{prompt_key}: %{raw}.'
     invalid_tax_id: 'NIF/NIE/CIF no válido para %{prompt_key}: %{raw}. %{detail}.'
-    select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas: %{choices}.'
-    select_without_choices: 'La pregunta %{prompt_key} no declara opciones para select.'
+    select_unknown: 'Valor no reconocido para %{prompt_key}: %{raw}. Opciones válidas:
+      %{choices}.'
+    select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
   setup:
     description: Asistente de configuración para preparar las declaraciones
     enrollment:

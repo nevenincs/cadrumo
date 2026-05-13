@@ -38,53 +38,53 @@ auth:
     clave_movil_description: Cl@ve-rendszerben regisztrált mobilon megjelenő push-jóváhagyásos
       hitelesítés. DNI/NIE, Cl@ve-regisztráció és párosított készülék szükséges.
     clave_movil_label: Cl@ve Móvil
+    clave_permanente_description: Fenntartott, zárt szolgáltatóhely a Cl@ve Permanente
+      számára.
+    clave_permanente_label: Cl@ve Permanente
+    clave_pin_description: Fenntartott, zárt szolgáltatóhely a Cl@ve PIN számára.
+    clave_pin_label: Cl@ve PIN
+    dnie_pkcs_description: Fenntartott, zárt szolgáltatóhely a DNI-e PKCS számára.
+    dnie_pkcs_label: DNI-e PKCS
 categories:
   test_profile:
     display_label_851219: Megjelenítési címke 851219
 cli:
   app:
     modelo:
-      app_help: AEAT adóbevallás-modellek (modelos) regisztrációs katalógusának
-        áttekintése
+      app_help: AEAT adóbevallás-modellek (modelos) regisztrációs katalógusának áttekintése
       bindings:
-        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
-          feloldása
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: 'Adóidőszak a bindingek szűkítéséhez (pl. 2026Q1, 2026-01)'
+        period_help: Adóidőszak a bindingek szűkítéséhez (pl. 2026Q1, 2026-01)
       casillas:
-        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
-          feloldása
-        input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound,
-          computed, informational)
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
+        input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound, computed,
+          informational)
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: 'Adóidőszak a cellák szűkítéséhez (pl. 2026Q1, 2026-01)'
+        period_help: Adóidőszak a cellák szűkítéséhez (pl. 2026Q1, 2026-01)
         required_help: Csak a kötelezőként megjelölt cellák megjelenítése
       describe:
-        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
-          feloldása
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: Adóidőszak a modellrevízió feloldásához (pl. 2026Q1,
-          2026-01)
+        period_help: Adóidőszak a modellrevízió feloldásához (pl. 2026Q1, 2026-01)
       formulas:
-        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió
-          feloldása
+        as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: 'Adóidőszak a képletek szűkítéséhez (pl. 2026Q1, 2026-01)'
+        period_help: Adóidőszak a képletek szűkítéséhez (pl. 2026Q1, 2026-01)
       list:
         year_help: Modellkatalógus szűrése egyetlen adóévre
   archive:
-    app_help: A helyi titkosított archívum exportálása és importálása hordozható
-      JSON csomagként
+    app_help: A helyi titkosított archívum exportálása és importálása hordozható JSON
+      csomagként
     export:
       bundle_id_help: Az automatikusan generált csomag-azonosító felülírása
       help: Hordozható JSON csomag írása a biztonságos objektumkatalógusból
       namespace_help: A csomag szűkítése egy vagy több névtérre (ismételhető)
       path_help: A JSON csomag cél elérési útja
     import:
-      conflict_help: 'Ütközéskezelési szabály ütköző rekordok visszaállításakor:
-        fail, overwrite vagy keep'
-      help: Archívumcsomag visszaállítása a titkosított biztonságos
-        objektumkatalógusba
+      conflict_help: 'Ütközéskezelési szabály ütköző rekordok visszaállításakor: fail,
+        overwrite vagy keep'
+      help: Archívumcsomag visszaállítása a titkosított biztonságos objektumkatalógusba
       path_help: A visszaállítandó JSON csomag elérési útja
   browser:
     app_help: Böngésző automatizálási feladatok kezelése (Playwright)
@@ -114,6 +114,8 @@ cli:
       help: Az aktív hitelesítési szolgáltató beállítása
       provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico)
       providers_help: Támogatott hitelesítési szolgáltatók listázása
+      reserved_provider: 'Fenntartott, de nem implementált hitelesítési szolgáltató:
+        %{provider}.'
       status_help: Beállított hitelesítési állapot megjelenítése
       test_help: Helyi hitelesítési készültség ellenőrzése
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd
@@ -132,8 +134,8 @@ cli:
       invalid_value: 'Érvénytelen érték a %{name} kulcshoz: %{value}'
       no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config init
         --tax-id <NIF>' parancsot.
-      unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Az ''aeat config profile list''
-        listázza az érvényes kulcsokat.'
+      unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Az ''aeat config profile
+        list'' listázza az érvényes kulcsokat.'
     get:
       help: Egy konfigurációs kulcs aktuális értékének megjelenítése
       key_help: A kiolvasandó kulcs (pl. tax.id, iva.regime)
@@ -335,6 +337,7 @@ cli:
       value: Érték
     import:
       actual: Tényleges (Talált)
+      año_help: Fiscal year for the import operation (YYYY)
       borrador_unsupported: Hivatalos tervezetből történő importálás nem támogatott
         ennél a modellnél
       casilla_label: Mező
@@ -599,7 +602,7 @@ cli:
     app_help: Az aktuális adózási munkaterület áttekintése
     calendar_help: Kötelezettségi naptár megjelenítése dátumtartományra
     calendar_refused_incomplete: 'A profil nem deklarálja ezeket a kulcsokat: %{keys}.
-      Futtasd: ''aeat config set <kulcs> <érték>'' vagy add meg --allow-incomplete
+      Futtasd: ''aeat config profile set <kulcs> <érték>'' vagy add meg --allow-incomplete
       a naptár alapértelmezett értékekkel történő számításához.'
     calendar_requires_dates: Naptárhoz használja a --from és --to opciókat
     drafts: Tervezetek
@@ -637,6 +640,52 @@ cli:
     json_help: Kimenet JSON formátumban
     list_filed_data_help: Meglévő AEAT benyújtások listázása a megadott évtartományra
     list_filed_data_json_help: Kimenet JSON formátumban automatizálási eszközökhöz
+    metrics:
+      applicability_declaration_count: applicability_declaration_count
+      application_link_count: application_link_count
+      application_link_surfaces: application_link_surfaces
+      artefact_refs: artefact_refs
+      backend_exists: backend_exists
+      captured_count: captured_count
+      casilla_count: casilla_count
+      compared_casillas: compared_casillas
+      comparison_count: comparison_count
+      cross_reference_count: cross_reference_count
+      difference_count: difference_count
+      differences: differences
+      drift_count: drift_count
+      environment: environment
+      extraction_profile_count: extraction_profile_count
+      failed_count: failed_count
+      failure_count: failure_count
+      formula_count: formula_count
+      formula_workbook_count: formula_workbook_count
+      legal_reference_count: legal_reference_count
+      missing_filed_casillas: missing_filed_casillas
+      missing_local_casillas: missing_local_casillas
+      modelo: modelo
+      modelo_count: modelo_count
+      modelos: modelos
+      observation_paths: observation_paths
+      orphan_oracle_ids: orphan_oracle_ids
+      passed: passed
+      registered_oracle_ids: registered_oracle_ids
+      revision: revision
+      revision_count: revision_count
+      row_count: row_count
+      runner_detail: runner_detail
+      runner_status: runner_status
+      scanned_count: scanned_count
+      scenario_id: scenario_id
+      source_reference_count: source_reference_count
+      status: status
+      tape_path: tape_path
+      unsupported_xls_count: unsupported_xls_count
+      verification_expectation_count: verification_expectation_count
+      verified: verified
+      workbook_count: workbook_count
+      workbook_parity_ref_count: workbook_parity_ref_count
+      workbook_path: workbook_path
     modelo_help: Opcionális szűrő adózási modell szerint (pl. 303, 130)
     observation_help: Ellenőrizendő titkosított benyújtott bevallási megfigyelési
       manifeszt
@@ -666,6 +715,24 @@ cli:
     workbooks_timeout_help: A fordítás maximális időkorlátja (másodpercben)
     workbooks_verify_help: A generált munkafüzetek integritásának ellenőrzése
     year_help: Lekérdezendő vagy feldolgozandó adóév
+  review:
+    app_help: Emberi felülvizsgálati sor a kezelői döntést igénylő rekordokhoz
+    errors:
+      invalid_state: 'Érvénytelen felülvizsgálati állapot: %{state}'
+    labels:
+      id: ID
+      kind: Típus
+      next: Következő
+      severity: Súlyosság
+    queue:
+      empty: Nincsenek felülvizsgálati elemek
+      help: Felülvizsgálati sor elemeinek listázása
+      kind_help: Szűrés forrástípus szerint
+      modelo_help: Szűrés modelo szerint
+      state_help: Állapotszűrés (pending vagy all)
+    show:
+      help: Egy felülvizsgálati elem megjelenítése
+      id_help: Felülvizsgálati elem azonosítója
   root:
     app_app_help: Adózási munkaterület könyveléshez, számlákhoz és bevallásokhoz
     app_help: 'Spanyol adóbevallási segéd
@@ -682,8 +749,8 @@ cli:
     app_help: Konceptuális segítség megjelenítése a rezsimekről, modellekről és AEAT
       folyamatokról
     errors:
-      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat app registry citations'' a regisztrált
-        témák listájához.'
+      not_found: 'Téma nem található: %{slug}. Futtasd: ''aeat app registry citations''
+        a regisztrált témák listájához.'
     opts:
       slug: Téma azonosító (kebab-case, pl. iva-regime)
   txs:
@@ -784,7 +851,8 @@ topic:
   authentication:
     body: 'Az AEAT hitelesítés Cl@ve Móvilt (push a regisztrált mobilra) vagy digitális
       tanúsítványt (FNMT / megfelelő) használ. Állíts be szolgáltatót az ''aeat config
-      auth --provider certificate'' paranccsal és ellenőrizd: ''aeat config status''.'
+      auth configure --provider certificate'' paranccsal és ellenőrizd: ''aeat config
+      auth test''.'
     title: AEAT hitelesítés
   calendar:
     body: A naptár megjeleníti a benyújtási kötelezettségeket (modellek és időszakok)
@@ -823,7 +891,7 @@ topic:
   profile:
     body: 'A helyi profil tartalmazza az adóazonosítódat (NIF), fő tevékenységedet,
       ÁFA / IRPF rezsimedet és opcionális regisztrációkat (SII, Verifactu, intracomunitario).
-      Szerkeszd: ''aeat config set <kulcs> <érték>''.'
+      Szerkeszd: ''aeat config profile set <kulcs> <érték>''.'
     title: Adózói profil
   providers:
     body: Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő követelményei
@@ -856,18 +924,20 @@ transactions:
     message: A 2026-03 hónap hiányzik az importált fájlból.
 wizard:
   errors:
-    blank_integer: 'Integer value required for %{prompt_key}.'
-    blank_path: 'Path required for %{prompt_key}.'
-    blank_secret: 'Secret value required for %{prompt_key}.'
-    blank_text: 'Value required for %{prompt_key}.'
-    checkbox_required: 'Select at least one option for %{prompt_key}.'
-    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options: %{choices}.'
-    checkbox_without_choices: 'Question %{prompt_key} declares no checkbox options.'
+    blank_integer: Integer value required for %{prompt_key}.
+    blank_path: Path required for %{prompt_key}.
+    blank_secret: Secret value required for %{prompt_key}.
+    blank_text: Value required for %{prompt_key}.
+    checkbox_required: Select at least one option for %{prompt_key}.
+    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
+    checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
     invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
     invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
     invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}.'
-    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options: %{choices}.'
-    select_without_choices: 'Question %{prompt_key} declares no select options.'
+    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+      %{choices}.'
+    select_without_choices: Question %{prompt_key} declares no select options.
   setup:
     description: Operátorbarát beállítás varázsló a bevallások előkészítéséhez
     enrollment:
