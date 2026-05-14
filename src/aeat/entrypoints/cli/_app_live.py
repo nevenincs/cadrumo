@@ -214,4 +214,94 @@ def filed_capture_sources_cmd(
     )
 
 
-__all__ = ["app", "filed_app", "filed_capture_cmd", "filed_capture_sources_cmd", "filed_list_cmd"]
+# ─────────────────────────────────────────────────────────────────────────
+# Portals subgroup (W79 app-live-shape, apex §4.4 + R13)
+# ─────────────────────────────────────────────────────────────────────────
+# Portals list and show are local-only catalogue reads. They do NOT call
+# AEAT and therefore do not invoke require_live_read; per apex §4.4 the
+# subgroup lives under aeat app live for operator-discovery convenience.
+
+portals_app = typer.Typer(
+    name="portals",
+    help=tr("cli.app.live.portals.app_help", default="Local AEAT portal registry catalogue (read-only)."),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(portals_app, name="portals")
+
+
+def _portal_row(metadata) -> dict[str, object]:
+    return {
+        "portal": metadata.portal.value,
+        "category": metadata.category.value,
+        "subdomain": metadata.subdomain.value,
+        "url": str(metadata.url),
+        "auth_methods": ",".join(sorted(method.value for method in metadata.auth_methods)),
+        "url_stability": metadata.url_stability.value,
+        "label": str(metadata.label),
+        "purpose": str(metadata.purpose),
+        "active": metadata.active,
+    }
+
+
+@portals_app.command("list", help=tr("cli.app.live.portals.list_help", default="List portal-registry entries (optionally filtered)."))
+def portals_list(
+    ctx: typer.Context,
+    category: Annotated[
+        str | None,
+        typer.Option("--category", help=tr("cli.app.live.portals.category_help", default="Filter to one PortalCategory value.")),
+    ] = None,
+    modelo: Annotated[
+        str | None,
+        typer.Option("--modelo", help=tr("cli.app.live.portals.modelo_help", default="Filter to portals bound to one modelo code (e.g. 303).")),
+    ] = None,
+) -> None:
+    from ...domain.portals import PORTAL_REGISTRY, PortalCategory, portals_by_category, portals_for_modelo
+
+    if category and modelo:
+        raise typer.BadParameter("--category and --modelo are mutually exclusive")
+    if category:
+        try:
+            cat = PortalCategory(category)
+        except ValueError as exc:
+            raise typer.BadParameter(f"Unknown portal category: {category!r}") from exc
+        entries = portals_by_category(cat)
+    elif modelo:
+        entries = portals_for_modelo(modelo)
+    else:
+        entries = tuple(PORTAL_REGISTRY.values())
+
+    rows = [_portal_row(m) for m in entries]
+    payload = {"count": len(rows), "rows": rows}
+    lines = [f"count\t{len(rows)}"]
+    for row in rows:
+        lines.append(f"{row['portal']}\t{row['category']}\t{row['url_stability']}\t{row['label']}")
+    _emit(ctx, payload, lines)
+
+
+@portals_app.command("show", help=tr("cli.app.live.portals.show_help", default="Show one portal-registry entry by Portal id."))
+def portals_show(
+    ctx: typer.Context,
+    portal_id: Annotated[str, typer.Argument(help=tr("cli.app.live.portals.portal_id_help", default="Portal enum value."))],
+) -> None:
+    from ...domain.portals import get_portal
+
+    try:
+        metadata = get_portal(portal_id)
+    except Exception as exc:  # PortalLookupError + similar typed registry errors
+        raise typer.BadParameter(str(exc)) from exc
+    payload = _portal_row(metadata)
+    lines = [f"{key}\t{value}" for key, value in payload.items() if value != ""]
+    _emit(ctx, payload, lines)
+
+
+__all__ = [
+    "app",
+    "filed_app",
+    "filed_capture_cmd",
+    "filed_capture_sources_cmd",
+    "filed_list_cmd",
+    "portals_app",
+    "portals_list",
+    "portals_show",
+]
