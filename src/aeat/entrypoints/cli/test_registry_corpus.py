@@ -146,10 +146,10 @@ def test_citations_show_emits_text_and_json_payloads_through_root_format(tmp_pat
     _write_valid_normative(tmp_path)
     env = _env_with_normatives_root(tmp_path)
 
-    text = _invoke_with_env("citations", "show", "ley-35-2006", "--articulo", "32", env=env)
+    text = _invoke_with_env("citations", "view", "ley-35-2006", "--articulo", "32", env=env)
     json_result = _invoke_with_env(
         "citations",
-        "show",
+        "view",
         "ley-35-2006",
         "--articulo",
         "32",

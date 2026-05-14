@@ -1,0 +1,58 @@
+"""Strict pydantic v2 record for the active-bucket pointer file.
+
+The pointer file lives at ``<aeat-root>/active-bucket`` and carries the
+canonical default for the active-bucket precedence chain (flag > env >
+pointer) defined in ADR-2 section 5. This record is the typed wrapper
+around the pointer file's plaintext content.
+
+The on-disk representation is single-document TOML keyed by
+``bucket_id`` and ``schema_version``. P02.S04 materialises the
+write-then-rename atomic IO over this record; P04 wires the resolver.
+"""
+
+from __future__ import annotations
+
+import tomllib
+
+from pydantic import BaseModel, ConfigDict, Field
+
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class BucketPointer(BaseModel):
+    """Plaintext pointer to the active bucket id."""
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str = Field(min_length=1)
+    schema_version: int = Field(ge=1)
+
+    def to_toml(self) -> str:
+        """Serialise the pointer to its single-document TOML representation.
+
+        Emits a deterministic two-line document keyed by ``bucket_id`` and
+        ``schema_version``. The output ends with a trailing newline so the
+        atomic write-then-rename helper in P02.S04 produces a POSIX-clean
+        file.
+        """
+
+        # Hand-formatted to keep the dependency footprint minimal and the
+        # output deterministic; the format is fixed at two scalar keys.
+        bucket_id_escaped = self.bucket_id.replace("\\", "\\\\").replace('"', '\\"')
+        return f'bucket_id = "{bucket_id_escaped}"\nschema_version = {self.schema_version}\n'
+
+    @classmethod
+    def from_toml(cls, text: str) -> BucketPointer:
+        """Parse the single-document TOML representation back into a record.
+
+        Raises:
+            ValueError: If the TOML payload is malformed or fails strict
+                pydantic validation (unknown keys, wrong types, empty
+                ``bucket_id``, non-positive ``schema_version``).
+        """
+
+        payload = tomllib.loads(text)
+        return cls.model_validate(payload)
+
+
+__all__ = ["BucketPointer"]

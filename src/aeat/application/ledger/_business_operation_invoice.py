@@ -1,15 +1,16 @@
 """Payable and collectible invoice CRUD services.
 
-Implements the W73A invoice noun-group CRUD mounts per apex ADR §12.b. Two
-noun-groups (``payable_invoice``, ``collectible_invoice``) each expose the
-canonical five-verb CRUD spine ``add``/``remove``/``update``/``view``/``list``.
-Records are bucket-scoped and persisted as JSONL files per noun-kind.
+Two noun-groups (``payable_invoice``, ``collectible_invoice``) each
+expose the canonical five-verb CRUD spine
+``add``/``remove``/``update``/``view``/``list``. Records are
+bucket-scoped and persisted as JSONL files per noun-kind.
 
-The records are intentionally slim. Business-detail enrichment
-(line items, IVA breakdown, reconciliation linkages) belongs to the
-domain/invoices module's richer ``Invoice`` aggregate consumed by modelo
-aggregation pipelines. The noun-group records here are the canonical
-operator-edit surface for the source-kind taxonomy locked in apex §2.
+The records are intentionally slim. Business-detail enrichment (line
+items, IVA breakdown, reconciliation linkages) belongs to the
+:mod:`aeat.domain.invoices` richer ``Invoice`` aggregate consumed by
+modelo aggregation pipelines. The noun-group records here are the
+canonical operator-edit surface for the two source-kind variants
+covered.
 
 Bucket events emitted per CRUD verb:
     ``add``     -> ``payable_invoice.created`` / ``collectible_invoice.created``
@@ -34,10 +35,16 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.config import Settings
 from ...core.errors import AeatError
+from ...domain.buckets import (
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
+    append_bucket_event,
+)
 
 
 class BusinessOperationInvoiceSourceKind(StrEnum):
-    """The two source-kind variants this module covers per apex §2 taxonomy."""
+    """The two source-kind variants this module covers."""
 
     PAYABLE_INVOICE = "payable_invoice"
     COLLECTIBLE_INVOICE = "collectible_invoice"
@@ -107,6 +114,76 @@ class BusinessOperationInvoicePatch(BaseModel):
     notes: str | None = Field(default=None, max_length=2000)
 
 
+class BusinessOperationInvoiceResult(BaseModel):
+    """Return record from a mutating invoice verb — record plus emitted event id."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    record: BusinessOperationInvoice
+    bucket_event_ids: tuple[str, ...] = ()
+
+
+_INVOICE_EVENT_PAYLOAD_VERSION = 1
+
+# Map source_kind to the three event types (created, updated, removed).
+_EVENT_MAP: dict[str, tuple[BucketEventType, BucketEventType, BucketEventType]] = {
+    "payable_invoice": (
+        BucketEventType.PAYABLE_INVOICE_CREATED,
+        BucketEventType.PAYABLE_INVOICE_UPDATED,
+        BucketEventType.PAYABLE_INVOICE_REMOVED,
+    ),
+    "collectible_invoice": (
+        BucketEventType.COLLECTIBLE_INVOICE_CREATED,
+        BucketEventType.COLLECTIBLE_INVOICE_UPDATED,
+        BucketEventType.COLLECTIBLE_INVOICE_REMOVED,
+    ),
+}
+
+_OBJECT_TYPE_MAP: dict[str, BucketEventObjectType] = {
+    "payable_invoice": BucketEventObjectType.PAYABLE_INVOICE,
+    "collectible_invoice": BucketEventObjectType.COLLECTIBLE_INVOICE,
+}
+
+
+def _emit_invoice_event(
+    *,
+    event_repository: BucketEventHistoryRepository,
+    record: BusinessOperationInvoice,
+    event_type: BucketEventType,
+    occurred_at: datetime,
+    actor: str,
+) -> str:
+    from ...domain.buckets._event import BucketEvent, derive_bucket_event_id
+
+    object_type = _OBJECT_TYPE_MAP[record.source_kind.value]
+    payload = {
+        "invoice_number": record.invoice_number,
+        "invoice_date": record.invoice_date,
+        "counterparty_nif": record.counterparty_nif,
+    }
+    event = BucketEvent(
+        event_id=derive_bucket_event_id(
+            bucket_id=record.bucket_id,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            actor=actor,
+            object_type=object_type,
+            object_id=record.invoice_id,
+            payload=payload,
+        ),
+        bucket_id=record.bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=object_type,
+        object_id=record.invoice_id,
+        payload_version=_INVOICE_EVENT_PAYLOAD_VERSION,
+        payload=payload,
+    )
+    event_repository.save(append_bucket_event(event_repository.load(), event))
+    return event.event_id
+
+
 def _now() -> datetime:
     return datetime.now(tz=UTC)
 
@@ -167,8 +244,13 @@ class _BusinessOperationInvoiceService:
 
     source_kind: BusinessOperationInvoiceSourceKind
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        bucket_event_repository: BucketEventHistoryRepository | None = None,
+    ) -> None:
         self._settings = settings or Settings()
+        self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
 
     def add(
         self,
@@ -184,7 +266,8 @@ class _BusinessOperationInvoiceService:
         iva_amount: Decimal = Decimal("0"),
         total_amount: Decimal = Decimal("0"),
         notes: str = "",
-    ) -> BusinessOperationInvoice:
+        actor: str = "cli",
+    ) -> BusinessOperationInvoiceResult:
         now = _now()
         record = BusinessOperationInvoice(
             invoice_id=uuid.uuid4().hex[:16],
@@ -206,7 +289,15 @@ class _BusinessOperationInvoiceService:
         records = _load(self._settings, self.source_kind, bucket_id)
         records.append(record)
         _save(self._settings, self.source_kind, bucket_id, records)
-        return record
+        created_type = _EVENT_MAP[self.source_kind.value][0]
+        event_id = _emit_invoice_event(
+            event_repository=self._event_repository,
+            record=record,
+            event_type=created_type,
+            occurred_at=now,
+            actor=actor,
+        )
+        return BusinessOperationInvoiceResult(record=record, bucket_event_ids=(event_id,))
 
     def view(self, *, bucket_id: str, invoice_id: str) -> BusinessOperationInvoice:
         records = _load(self._settings, self.source_kind, bucket_id)
@@ -221,7 +312,8 @@ class _BusinessOperationInvoiceService:
         bucket_id: str,
         invoice_id: str,
         patch: BusinessOperationInvoicePatch,
-    ) -> BusinessOperationInvoice:
+        actor: str = "cli",
+    ) -> BusinessOperationInvoiceResult:
         records = _load(self._settings, self.source_kind, bucket_id)
         target = _resolve_id(records, invoice_id)
         index = records.index(target)
@@ -229,18 +321,42 @@ class _BusinessOperationInvoiceService:
         for key, value in patch.model_dump(exclude_unset=True).items():
             if value is not None:
                 data[key] = value
-        data["updated_at"] = _now()
+        now = _now()
+        data["updated_at"] = now
         updated = BusinessOperationInvoice.model_validate(data)
         records[index] = updated
         _save(self._settings, self.source_kind, bucket_id, records)
-        return updated
+        updated_type = _EVENT_MAP[self.source_kind.value][1]
+        event_id = _emit_invoice_event(
+            event_repository=self._event_repository,
+            record=updated,
+            event_type=updated_type,
+            occurred_at=now,
+            actor=actor,
+        )
+        return BusinessOperationInvoiceResult(record=updated, bucket_event_ids=(event_id,))
 
-    def remove(self, *, bucket_id: str, invoice_id: str) -> BusinessOperationInvoice:
+    def remove(
+        self,
+        *,
+        bucket_id: str,
+        invoice_id: str,
+        actor: str = "cli",
+    ) -> BusinessOperationInvoiceResult:
         records = _load(self._settings, self.source_kind, bucket_id)
         target = _resolve_id(records, invoice_id)
         records.remove(target)
+        now = _now()
         _save(self._settings, self.source_kind, bucket_id, records)
-        return target
+        removed_type = _EVENT_MAP[self.source_kind.value][2]
+        event_id = _emit_invoice_event(
+            event_repository=self._event_repository,
+            record=target,
+            event_type=removed_type,
+            occurred_at=now,
+            actor=actor,
+        )
+        return BusinessOperationInvoiceResult(record=target, bucket_event_ids=(event_id,))
 
 
 class PayableInvoiceService(_BusinessOperationInvoiceService):
@@ -260,6 +376,7 @@ __all__ = [
     "BusinessOperationInvoiceInputError",
     "BusinessOperationInvoiceNotFoundError",
     "BusinessOperationInvoicePatch",
+    "BusinessOperationInvoiceResult",
     "BusinessOperationInvoiceSourceKind",
     "CollectibleInvoiceService",
     "PayableInvoiceService",

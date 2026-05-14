@@ -16,15 +16,21 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-# The two scopes the desktop app requests at first login. The
-# `drive.file` scope is non-sensitive and only grants access to files
-# the app creates or the operator explicitly opens via the Drive
-# picker. The `spreadsheets` scope is sensitive but works for the
-# operator's own account inside Testing mode without going through
-# verification.
+# Scopes the desktop app requests at first login. Per Google's
+# Identity Platform "Sign in with Google" guidance, an OAuth flow that
+# needs to display *which* Google account is linked must request the
+# `openid` + `userinfo.email` scope pair so Google returns a verifiable
+# id_token carrying the user's email claim. The data-access scopes
+# (`drive.file`, `spreadsheets`) cover the integration's substrate
+# read/write surface. `drive.file` is non-sensitive (only files the
+# app creates or the operator explicitly picks); `spreadsheets` is
+# sensitive (full read/write) and surfaces on the consent screen.
+# Reference: https://developers.google.com/identity/openid-connect/openid-connect
+OPENID_SCOPE: str = "openid"
+EMAIL_SCOPE: str = "https://www.googleapis.com/auth/userinfo.email"
 DRIVE_FILE_SCOPE: str = "https://www.googleapis.com/auth/drive.file"
 SHEETS_SCOPE: str = "https://www.googleapis.com/auth/spreadsheets"
-REQUIRED_SCOPES: tuple[str, ...] = (DRIVE_FILE_SCOPE, SHEETS_SCOPE)
+REQUIRED_SCOPES: tuple[str, ...] = (OPENID_SCOPE, EMAIL_SCOPE, DRIVE_FILE_SCOPE, SHEETS_SCOPE)
 
 
 class OAuthClient(BaseModel):
@@ -91,19 +97,35 @@ class OAuthMetadata(BaseModel):
 
     @field_validator("granted_scopes")
     @classmethod
-    def _require_drive_and_sheets(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        """Reject metadata that omits either required scope.
+    def _require_all_scopes(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Reject metadata that omits any required scope.
 
         The CLI's `login` flow may only persist `OAuthMetadata` after
-        the consent screen returns both scopes; this validator guards
-        the in-memory model against accidental writes that would leave
-        the integration unable to call Sheets or Drive.
+        the consent screen returns every scope in `REQUIRED_SCOPES`
+        (openid + email + drive.file + spreadsheets). Guards against
+        accidental writes that would leave the integration unable to
+        call Sheets, Drive, or display which account is linked.
         """
 
         missing = tuple(scope for scope in REQUIRED_SCOPES if scope not in value)
         if missing:
             raise ValueError(f"granted_scopes missing required scopes: {missing!r}")
         return value
+
+
+class DriveConfig(BaseModel):
+    """Per-profile Drive backend configuration persisted alongside OAuth records.
+
+    Carries the operator's chosen `aeat-vault/` parent folder id. Set
+    via `aeat config google folder set <id>`; loaded by the storage
+    provider factory as the canonical source for the Drive root folder
+    (precedence above the legacy `AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID`
+    env var so env vars only act as overrides for one-off / CI runs).
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    root_folder_id: str = Field(min_length=1)
 
 
 class DriveAppProperties(BaseModel):
@@ -129,9 +151,12 @@ class DriveAppProperties(BaseModel):
 
 __all__ = [
     "DRIVE_FILE_SCOPE",
+    "EMAIL_SCOPE",
+    "OPENID_SCOPE",
     "REQUIRED_SCOPES",
     "SHEETS_SCOPE",
     "DriveAppProperties",
+    "DriveConfig",
     "OAuthClient",
     "OAuthMetadata",
     "OAuthToken",

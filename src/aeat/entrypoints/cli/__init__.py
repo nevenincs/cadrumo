@@ -241,4 +241,11 @@ else:
 decorate_typer_app(app)
 
 
-__all__ = ["app"]
+def main() -> None:
+    """Console-script entry point. Pins ``prog_name`` so Typer's usage
+    lines say ``aeat`` even when the launcher is ``aeat.EXE`` on Windows."""
+
+    app(prog_name="aeat")
+
+
+__all__ = ["app", "main"]

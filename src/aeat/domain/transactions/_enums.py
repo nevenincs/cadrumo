@@ -56,11 +56,52 @@ class BusinessClassification(StrEnum):
 
 
 class TransactionLifecycleState(StrEnum):
-    """Supported lifecycle states for one ledger transaction row."""
+    """Supported lifecycle states for one ledger transaction row.
+
+    Attributes:
+        ACTIVE: The row participates in every default list, every tax
+            aggregation, and every readiness check. The only state in
+            which `update_manual_transaction` accepts a mutation.
+        ARCHIVED: Operator chose to remove the row from default
+            attention without deleting it. Reversible.
+        STASHED: Operator parked the row pending classification or
+            review. Reversible.
+        SPLIT: The row is the parent of an N-way split; its amount
+            has been redistributed into ``N`` child rows that now
+            carry the active balance. The parent is preserved for
+            audit lineage. A SPLIT row is invisible to default lists,
+            tax aggregations, and readiness checks; only the
+            ``merge_transactions`` action can transition a SPLIT
+            parent back to ARCHIVED (never to ACTIVE).
+    """
 
     ACTIVE = "ACTIVE"
     ARCHIVED = "ARCHIVED"
     STASHED = "STASHED"
+    SPLIT = "SPLIT"
+
+
+class SplitRole(StrEnum):
+    """Role of a transaction within a split-lineage relationship.
+
+    Attributes:
+        PARENT: The original row whose amount was redistributed.
+            Carries the canonical ``split_group_id`` and the full
+            tuple of child ids in ``sibling_transaction_ids``.
+        CHILD: One of the N derived rows produced by a split. Sums of
+            every CHILD amount under one ``split_group_id`` equal the
+            PARENT amount exactly. Carries the parent id plus every
+            other child id in ``sibling_transaction_ids``.
+        MERGED: A new row produced by re-merging a complete cohort
+            of CHILD rows. The PARENT transitions to ARCHIVED; the
+            CHILD rows transition to ARCHIVED; the MERGED row carries
+            a fresh content-addressed id and the merged-cohort ids
+            in ``sibling_transaction_ids``.
+    """
+
+    PARENT = "PARENT"
+    CHILD = "CHILD"
+    MERGED = "MERGED"
 
 
 CLASSIFIED_STATES: frozenset[BusinessClassification] = frozenset(

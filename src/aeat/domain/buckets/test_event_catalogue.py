@@ -182,6 +182,8 @@ def test_ledger_event_catalogue_uses_approved_transaction_vocabulary() -> None:
     assert BucketEventType.LEDGER_TRANSACTION_ARCHIVED.value == "ledger.transaction.archived"
     assert BucketEventType.LEDGER_TRANSACTION_STASHED.value == "ledger.transaction.stashed"
     assert BucketEventType.LEDGER_TRANSACTION_EXPORTED.value == "ledger.transaction.exported"
+    assert BucketEventType.LEDGER_TRANSACTION_SPLIT.value == "ledger.transaction.split"
+    assert BucketEventType.LEDGER_TRANSACTION_MERGED.value == "ledger.transaction.merged"
     assert BucketEventType.LEDGER_CATALOGUE_RESET.value == "ledger.catalogue.reset"
     assert BucketEventType.LEDGER_SANITIZATION_COMPLETED.value == "ledger.sanitization.completed"
     assert BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED.value == "purchase_invoice_evidence.attached"

@@ -1,0 +1,101 @@
+"""Filesystem provisioning and path resolution for per-bucket directories.
+
+The per-bucket on-disk model lives at ``<aeat-root>/buckets/<bucket-id>/``
+and carries exactly three subdirectories per ADR-2 section 2:
+
+- ``db/``    relational state (SQLite database files).
+- ``blobs/`` opaque artefact storage (sealed ciphertext blobs).
+- ``audit/`` append-only audit-trail log files.
+
+Provisioning is fail-closed: a re-attempt against an already-provisioned
+bucket id raises rather than silently masking a configuration error. The
+typed :class:`BucketPaths` record carries each resolved subpath so callers
+never compose the layout themselves.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict, Field
+
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
+
+_BUCKETS_DIRNAME = "buckets"
+_DB_DIRNAME = "db"
+_BLOBS_DIRNAME = "blobs"
+_AUDIT_DIRNAME = "audit"
+
+
+class BucketPaths(BaseModel):
+    """Typed record carrying the resolved paths for one bucket directory."""
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str = Field(min_length=1)
+    root: Path
+    bucket_dir: Path
+    db_dir: Path
+    blobs_dir: Path
+    audit_dir: Path
+
+
+def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
+    """Resolve the typed paths for ``<root>/buckets/<bucket_id>/`` without IO.
+
+    Args:
+        root: AEAT root directory (the parent of ``buckets/``).
+        bucket_id: The bucket identifier; must be non-empty.
+
+    Returns:
+        A :class:`BucketPaths` record carrying every resolved subpath.
+
+    Raises:
+        ValueError: If ``bucket_id`` is empty or contains a path separator.
+    """
+
+    if not bucket_id:
+        raise ValueError("bucket_id must be non-empty")
+    if "/" in bucket_id or "\\" in bucket_id:
+        raise ValueError("bucket_id must not contain a path separator")
+
+    bucket_dir = root / _BUCKETS_DIRNAME / bucket_id
+    return BucketPaths(
+        bucket_id=bucket_id,
+        root=root,
+        bucket_dir=bucket_dir,
+        db_dir=bucket_dir / _DB_DIRNAME,
+        blobs_dir=bucket_dir / _BLOBS_DIRNAME,
+        audit_dir=bucket_dir / _AUDIT_DIRNAME,
+    )
+
+
+def provision_bucket_directory(root: Path, bucket_id: str) -> BucketPaths:
+    """Materialise the ``<root>/buckets/<bucket_id>/{db,blobs,audit}/`` tree.
+
+    Provisioning is fail-closed: if the bucket directory already exists,
+    the function raises rather than reusing the partial state. The parent
+    ``<root>/buckets/`` directory is created lazily.
+
+    Args:
+        root: AEAT root directory (the parent of ``buckets/``).
+        bucket_id: The bucket identifier; must be non-empty.
+
+    Returns:
+        A :class:`BucketPaths` record carrying every resolved subpath.
+
+    Raises:
+        FileExistsError: If ``<root>/buckets/<bucket_id>/`` already exists.
+        ValueError: If ``bucket_id`` is empty or contains a path separator.
+    """
+
+    paths = bucket_paths(root, bucket_id)
+    paths.bucket_dir.parent.mkdir(parents=True, exist_ok=True)
+    paths.bucket_dir.mkdir(parents=False, exist_ok=False)
+    paths.db_dir.mkdir(parents=False, exist_ok=False)
+    paths.blobs_dir.mkdir(parents=False, exist_ok=False)
+    paths.audit_dir.mkdir(parents=False, exist_ok=False)
+    return paths
+
+
+__all__ = ["BucketPaths", "bucket_paths", "provision_bucket_directory"]

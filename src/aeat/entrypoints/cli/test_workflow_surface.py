@@ -113,7 +113,12 @@ def _seed_profile(
     from aeat.application.workflow._persistence import workflow_state_repository
 
     repo = workflow_state_repository()
-    values = {"identity.tax_id": tax_id, "identity.name": name, "activities.description": activity, "iva.regime": iva_regime}
+    values = {
+        "identity.tax_id": tax_id,
+        "identity.name": name,
+        "activities.description": activity,
+        "iva.regime": iva_regime,
+    }
     if extra_values:
         values.update(extra_values)
     repo.update(
@@ -152,6 +157,8 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
             "Servicios",
             "--iva-regime",
             "GENERAL",
+            "--tax-residence-ccaa",
+            "madrid",
         ]
     )
     assert init_result.exit_code == 0, init_result.output
@@ -246,8 +253,10 @@ def test_retired_commands_are_not_registered() -> None:
         ["app", "declarations", "--help"],
         ["app", "workspaces", "--help"],
         ["app", "audits", "--help"],
-        ["app", "ledger", "split", "--help"],
-        ["app", "invoice", "show", "--help"],
+        ["app", "ledger", "create", "--help"],
+        ["app", "ledger", "edit", "--help"],
+        ["app", "ledger", "read", "--help"],
+        ["app", "invoice", "view", "--help"],
     ]
 
     for command in removed_commands:
@@ -271,7 +280,7 @@ def test_config_repair_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch
     assert "registry.load" in text_result.output
     payload = json.loads(_json_output(json_result))
     assert payload["registry"]["available"] is True
-    assert "registry.load" in {check["identity.name"] for check in payload["checks"]}
+    assert "registry.load" in {check["name"] for check in payload["checks"]}
     assert logs_result.exit_code == 0, logs_result.output
     assert "path\t" in logs_result.output
 
@@ -396,7 +405,7 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
         ["app", "modelo", "--help"],
         ["app", "review", "--help"],
         ["app", "review", "queue", "--help"],
-        ["app", "review", "show", "--help"],
+        ["app", "review", "view", "--help"],
     ]
 
     for command in commands:
@@ -405,15 +414,21 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
         assert "cli." not in result.output, command
 
 
-def test_ledger_split_is_nested_inside_edit() -> None:
+def test_ledger_split_is_top_level_verb_with_yes_and_reason() -> None:
+    """Per the 2026-05-14 ledger-transaction-lifecycle ADR, `split` is the
+    canonical N-way row splitter — a first-class top-level verb, not a
+    flag nested under `update`. It requires --yes confirmation and accepts
+    --reason for the bucket-event payload."""
+
     ledger = _invoke(["app", "ledger", "--help"])
-    edit = _invoke(["app", "ledger", "edit", "--help"])
+    split = _invoke(["app", "ledger", "split", "--help"])
 
     assert ledger.exit_code == 0, ledger.output
-    assert edit.exit_code == 0, edit.output
-    assert "--split" in edit.output
-    assert "--skip" in edit.output
-    assert "--reason" in edit.output
+    assert split.exit_code == 0, split.output
+    assert "--child-amount" in split.output
+    assert "--child-description" in split.output
+    assert "--yes" in split.output
+    assert "--reason" in split.output
 
 
 def test_review_and_ledger_share_review_wording_without_retired_invoice_surface() -> None:
@@ -698,10 +713,10 @@ def test_config_set_does_intracomunitario_round_trips_to_deadline_engine(
     _isolate_user_cli(monkeypatch, tmp_path)
     _seed_profile(tax_id="00000000T", name="operator", activity="Servicios")
 
-    set_result = _invoke(["config", "profile", "set", "does_intracomunitario", "true"])
+    set_result = _invoke(["config", "profile", "set", "iva.does_intracomunitario", "true"])
     assert set_result.exit_code == 0, set_result.output
 
-    get_result = _invoke(["--format", "json", "config", "profile", "get", "does_intracomunitario"])
+    get_result = _invoke(["--format", "json", "config", "profile", "get", "iva.does_intracomunitario"])
     assert get_result.exit_code == 0, get_result.output
     get_payload = json.loads(_json_output(get_result))
     assert get_payload["value"] == "true"

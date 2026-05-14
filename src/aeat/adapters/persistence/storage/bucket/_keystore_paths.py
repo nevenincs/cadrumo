@@ -1,0 +1,104 @@
+"""Keystore separation contract enforcing the ADR-1/ADR-2 isolation invariant.
+
+The KEK / DEK / passphrase / OS-keystore custody artefacts live under a
+keystore root that is structurally outside the buckets parent. The two
+invariants enforced here are:
+
+- The keystore root is sibling to ``buckets/`` under the AEAT root
+  (``<aeat-root>/keystore/<bucket-id>/``), never nested inside any bucket
+  directory and never co-located under the relational database directory.
+- A configuration that resolves the keystore path under either parent is
+  rejected by :func:`validate_keystore_separation` so a subsequent unlock
+  cannot silently violate the invariant.
+
+The pure helpers do not materialise the directory; the cryptographic core
+(P03) owns provisioning when an enrolment first lands.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from ._layout import BucketPaths, bucket_paths
+
+_KEYSTORE_DIRNAME = "keystore"
+_BUCKETS_DIRNAME = "buckets"
+
+
+def keystore_root(root: Path) -> Path:
+    """Return the keystore parent ``<root>/keystore/`` (no IO)."""
+
+    return root / _KEYSTORE_DIRNAME
+
+
+def keystore_path(root: Path, bucket_id: str) -> Path:
+    """Return ``<root>/keystore/<bucket_id>/`` (no IO).
+
+    Raises:
+        ValueError: If ``bucket_id`` is empty or carries a path separator.
+    """
+
+    if not bucket_id:
+        raise ValueError("bucket_id must be non-empty")
+    if "/" in bucket_id or "\\" in bucket_id:
+        raise ValueError("bucket_id must not contain a path separator")
+    return keystore_root(root) / bucket_id
+
+
+def _is_under(child: Path, parent: Path) -> bool:
+    """True if ``child`` resolves to a path beneath ``parent``.
+
+    Uses ``Path.relative_to`` semantics on the lexically-resolved forms so
+    the check is OS-portable; symlink traversal is intentionally not
+    followed because the call site validates configuration before any
+    filesystem state exists.
+    """
+
+    try:
+        resolved_child = child.resolve(strict=False)
+        resolved_parent = parent.resolve(strict=False)
+    except OSError:
+        resolved_child = child
+        resolved_parent = parent
+    try:
+        resolved_child.relative_to(resolved_parent)
+    except ValueError:
+        return False
+    return True
+
+
+def validate_keystore_separation(
+    root: Path,
+    bucket_id: str,
+    *,
+    configured_keystore: Path | None = None,
+) -> None:
+    """Fail closed if the keystore path resolves under the buckets parent or db dir.
+
+    Args:
+        root: The AEAT root directory.
+        bucket_id: The bucket identifier whose layout to validate against.
+        configured_keystore: Optional override path; defaults to
+            :func:`keystore_path`. A custom configuration that points at a
+            location nested under the buckets parent or the per-bucket
+            relational database directory is rejected.
+
+    Raises:
+        ValueError: If the configured keystore path violates separation.
+    """
+
+    paths: BucketPaths = bucket_paths(root, bucket_id)
+    target = configured_keystore if configured_keystore is not None else keystore_path(root, bucket_id)
+
+    buckets_parent = root / _BUCKETS_DIRNAME
+    if _is_under(target, buckets_parent):
+        raise ValueError(
+            f"keystore path {target!s} resolves under buckets parent {buckets_parent!s}",
+        )
+    if _is_under(target, paths.db_dir):
+        raise ValueError(
+            f"keystore path {target!s} resolves under bucket db dir {paths.db_dir!s}",
+        )
+
+
+__all__ = ["keystore_path", "keystore_root", "validate_keystore_separation"]

@@ -1,7 +1,15 @@
+access_gate:
+  errors:
+    default_translatable: live AEAT submission is permanently forbidden; use produce
+      -> verify -> export and upload the file yourself in the AEAT portal
 aggregation:
   iva_ledger:
     errors:
-      bucket_mismatch: Transaction repository bucket does not match the requested aggregation bucket.
+      bucket_mismatch: Transaction repository bucket does not match the requested
+        aggregation bucket.
+  modelo_bindings:
+    errors:
+      unsupported_period: Unsupported modelo period for ledger aggregation.
   models:
     errors:
       annual_period_mixed: Period cannot mix annual and sub-annual (quarter/month)
@@ -10,15 +18,20 @@ aggregation:
       period_type_ambiguous: Period type is ambiguous; specify quarter or month explicitly.
       quarter_required: Quarterly period type requires a quarter value.
     t_944805: Invalid period format. Use YYYY, YYYY-Qn, or YYYY-MM.
+  per_modelo:
+    errors:
+      unsupported_modelo: aggregation.per_modelo.errors.unsupported_modelo
+    registry:
+      errors:
+        invalid_accrued_on: aggregation.per_modelo.registry.errors.invalid_accrued_on
+        unsupported_provider: aggregation.per_modelo.registry.errors.unsupported_provider
   renta_ledger:
     errors:
       annual_period_required: Annual period is required for Renta ledger aggregation.
-      bucket_mismatch: Transaction repository bucket does not match the requested Renta ledger bucket.
+      bucket_mismatch: Transaction repository bucket does not match the requested
+        Renta ledger bucket.
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
-  modelo_bindings:
-    errors:
-      unsupported_period: Unsupported modelo period for ledger aggregation.
 application:
   auth:
     provider_impact:
@@ -50,9 +63,98 @@ categories:
     display_label_851219: Display label 851219
 cli:
   app:
+    ledger:
+      collectible_invoice:
+        add_help: cli.app.ledger.collectible_invoice.add_help
+        group_help: cli.app.ledger.collectible_invoice.group_help
+        invoice_date_help: cli.app.ledger.collectible_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.collectible_invoice.invoice_id_help
+        list_help: cli.app.ledger.collectible_invoice.list_help
+        remove_help: cli.app.ledger.collectible_invoice.remove_help
+        update_help: cli.app.ledger.collectible_invoice.update_help
+        view_help: cli.app.ledger.collectible_invoice.view_help
+        yes_help: cli.app.ledger.collectible_invoice.yes_help
+        yes_required: cli.app.ledger.collectible_invoice.yes_required
+      evidence:
+        add_help: cli.app.ledger.evidence.add_help
+        evidence_id_help: cli.app.ledger.evidence.evidence_id_help
+        group_help: cli.app.ledger.evidence.group_help
+        invoice_date_help: cli.app.ledger.evidence.invoice_date_help
+        invoice_number_help: cli.app.ledger.evidence.invoice_number_help
+        iva_amount_help: cli.app.ledger.evidence.iva_amount_help
+        iva_rate_help: cli.app.ledger.evidence.iva_rate_help
+        list_help: cli.app.ledger.evidence.list_help
+        notes_help: cli.app.ledger.evidence.notes_help
+        remove_help: cli.app.ledger.evidence.remove_help
+        source_path_help: cli.app.ledger.evidence.source_path_help
+        supplier_help: cli.app.ledger.evidence.supplier_help
+        taxable_base_help: cli.app.ledger.evidence.taxable_base_help
+        update_help: cli.app.ledger.evidence.update_help
+        view_help: cli.app.ledger.evidence.view_help
+        yes_help: cli.app.ledger.evidence.yes_help
+        yes_required: cli.app.ledger.evidence.yes_required
+      inventory:
+        actividad_id_help: cli.app.ledger.inventory.actividad_id_help
+        create_help: cli.app.ledger.inventory.create_help
+        group_help: cli.app.ledger.inventory.group_help
+        list_help: cli.app.ledger.inventory.list_help
+        movement_add_help: cli.app.ledger.inventory.movement_add_help
+        movement_date_help: cli.app.ledger.inventory.movement_date_help
+        movement_group_help: cli.app.ledger.inventory.movement_group_help
+        movement_id_help: cli.app.ledger.inventory.movement_id_help
+        movement_kind_help: cli.app.ledger.inventory.movement_kind_help
+        opening_stock_help: cli.app.ledger.inventory.opening_stock_help
+        quantity_help: cli.app.ledger.inventory.quantity_help
+        taxable_base_help: cli.app.ledger.inventory.taxable_base_help
+        unit_cost_help: cli.app.ledger.inventory.unit_cost_help
+        unknown_movement_kind: cli.app.ledger.inventory.unknown_movement_kind
+        valuation_group_help: cli.app.ledger.inventory.valuation_group_help
+        valuation_method_help: cli.app.ledger.inventory.valuation_method_help
+        valuation_preview_help: cli.app.ledger.inventory.valuation_preview_help
+        vat_rate_help: cli.app.ledger.inventory.vat_rate_help
+        year_help: cli.app.ledger.inventory.year_help
+      payable_invoice:
+        add_help: cli.app.ledger.payable_invoice.add_help
+        group_help: cli.app.ledger.payable_invoice.group_help
+        invoice_date_help: cli.app.ledger.payable_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.payable_invoice.invoice_id_help
+        list_help: cli.app.ledger.payable_invoice.list_help
+        remove_help: cli.app.ledger.payable_invoice.remove_help
+        update_help: cli.app.ledger.payable_invoice.update_help
+        view_help: cli.app.ledger.payable_invoice.view_help
+        yes_help: cli.app.ledger.payable_invoice.yes_help
+        yes_required: cli.app.ledger.payable_invoice.yes_required
+      ratios:
+        category_help: cli.app.ledger.ratios.category_help
+        eligible_help: cli.app.ledger.ratios.eligible_help
+        group_help: cli.app.ledger.ratios.group_help
+        list_help: cli.app.ledger.ratios.list_help
+        no_override_error: cli.app.ledger.ratios.no_override_error
+        ratio_help: cli.app.ledger.ratios.ratio_help
+        set_help: cli.app.ledger.ratios.set_help
+        unknown_category: cli.app.ledger.ratios.unknown_category
+        unset_category_help: cli.app.ledger.ratios.unset_category_help
+        unset_help: cli.app.ledger.ratios.unset_help
+        validate_help: cli.app.ledger.ratios.validate_help
     live:
       app_help: Read-only AEAT live observation commands
+      borrador:
+        app_help: Modelo 100 borrador snapshots
+        filing_year_help: Filing year (e.g. 2024)
+        latest_help: Show the most recent active snapshot for a filing year
+        list_help: List persisted Modelo 100 borrador snapshots
+        modelo_100_help: Modelo 100 borrador snapshot commands
+        snapshot_id_help: Snapshot id (or unambiguous prefix)
+        state_help: 'Snapshot state filter: active, superseded, discarded, or all'
+        view_help: Show one Modelo 100 borrador snapshot
       expediente_help: AEAT expediente identifier
+      expedientes:
+        app_help: cli.app.live.expedientes.app_help
+        capture_help: cli.app.live.expedientes.capture_help
+        latest_help: cli.app.live.expedientes.latest_help
+        list_help: cli.app.live.expedientes.list_help
+        snapshot_id_help: cli.app.live.expedientes.snapshot_id_help
+        view_help: cli.app.live.expedientes.view_help
       filed:
         capture_help: Capture filed declaration data from AEAT
         capture_sources_help: Capture filed observations required by a target filing
@@ -61,14 +163,67 @@ cli:
       from_year_help: First filing year
       limit_help: Maximum rows to capture
       modelo_help: Modelo code
+      notifications:
+        app_help: cli.app.live.notifications.app_help
+        capture_help: cli.app.live.notifications.capture_help
+        list_help: cli.app.live.notifications.list_help
+        snapshot_id_help: cli.app.live.notifications.snapshot_id_help
+        view_help: cli.app.live.notifications.view_help
       output_root_help: Directory for captured filed-declaration observations
       period_help: Filing period
+      portals:
+        app_help: cli.app.live.portals.app_help
+        category_help: cli.app.live.portals.category_help
+        list_help: cli.app.live.portals.list_help
+        modelo_help: cli.app.live.portals.modelo_help
+        portal_id_help: cli.app.live.portals.portal_id_help
+        view_help: cli.app.live.portals.view_help
       registry_root_help: Registry root
       source_root_help: Project source root
       to_year_help: Last filing year
+      verify:
+        app_help: cli.app.live.verify.app_help
+        expected_help: cli.app.live.verify.expected_help
+        latest_help: cli.app.live.verify.latest_help
+        latest_nif_help: cli.app.live.verify.latest_nif_help
+        latest_surface_help: cli.app.live.verify.latest_surface_help
+        list_help: cli.app.live.verify.list_help
+        nif_help: cli.app.live.verify.nif_help
+        nif_iva_arg_help: cli.app.live.verify.nif_iva_arg_help
+        nif_iva_help: cli.app.live.verify.nif_iva_help
+        observation_id_help: cli.app.live.verify.observation_id_help
+        surface_help: cli.app.live.verify.surface_help
+        tgvi_arg_help: cli.app.live.verify.tgvi_arg_help
+        tgvi_help: cli.app.live.verify.tgvi_help
+        view_help: cli.app.live.verify.view_help
       year_help: Filing year
     modelo:
+      aggregate:
+        counterpart_observation_help: JSON CounterpartObservation object. The source_kind
+          value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
+          or collectible_invoice. Repeat for multiple observations.
+        foreign_asset_observation_help: JSON ForeignAssetObservation object. The source_kind
+          value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
+          or collectible_invoice. Repeat for multiple observations.
+        modelo_help: Supported modelo code for the backend aggregation service (111,
+          115, 123, 180, 190, 193, 347, 349, or 720).
+        period_help: Aggregation period passed to the backend service.
+        retencion_observation_help: JSON RetencionObservation object. The source_kind
+          value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
+          or collectible_invoice. Repeat for multiple observations.
+      aggregate_help: Run the backend per-modelo aggregation service from explicit
+        canonical observations. Accepted source_kind values are ledger_transaction,
+        purchase_invoice_evidence, payable_invoice, and collectible_invoice.
       app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
+      audit:
+        bundle_id_help: cli.app.modelo.audit.bundle_id_help
+        check_help: cli.app.modelo.audit.check_help
+        export_help: cli.app.modelo.audit.export_help
+        force_incomplete_help: cli.app.modelo.audit.force_incomplete_help
+        group_help: cli.app.modelo.audit.group_help
+        output_help: cli.app.modelo.audit.output_help
+        replay_help: cli.app.modelo.audit.replay_help
+        view_help: cli.app.modelo.audit.view_help
       bindings:
         app_help: Inspect and preview the bindings of an AEAT tax form
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -79,20 +234,23 @@ cli:
         missing_required_options: 'Missing required options: %{options}'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
-        period_help: Fiscal period to scope the bindings (e.g. 2026Q1, 2026-01)
+        period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
+          periodic examples include 2026Q1 and 2026-01
         preview_help: Preview bindings with temporary overrides without mutating state
         year_help: Tax year of the modelo (e.g. 2026)
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Fiscal period to scope the casillas (e.g. 2026Q1, 2026-01)
+        period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
+          periodic examples include 2026Q1 and 2026-01
         required_help: Show only casillas the modelo marks as required
       describe:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Fiscal period to resolve the modelo revision against (e.g. 2026Q1,
-          2026-01)
+        period_help: Period token used to resolve the modelo revision; for Modelo
+          036 use alta, modificacion, or baja; periodic examples include 2026Q1 and
+          2026-01
       filing_record:
         app_help: Inspect internal filing records
         bucket_id_help: Filter by bucket
@@ -107,20 +265,26 @@ cli:
           carrying imported AEAT-attested evidence
         include_superseded_help: Include superseded filing records (excluded by default)
         list_help: List registered filing records
-        show_help: Show one filing record by id
+        view_help: Show one filing record by id
       formulas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Fiscal period to scope the formulas (e.g. 2026Q1, 2026-01)
+        period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
+          periodic examples include 2026Q1 and 2026-01
+      history:
+        modelo_help: cli.app.modelo.history.modelo_help
+        period_help: cli.app.modelo.history.period_help
+        year_help: cli.app.modelo.history.year_help
+      history_help: cli.app.modelo.history_help
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
           revision
-        show_help: Show one verification report by id
         verification_report_id_help: Stable 64-character SHA-256 identifier of a verification
           report
+        view_help: Show one verification report by id
       work:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
         amend_help: Build a corrective amendment over an externally-filed return.
@@ -129,6 +293,9 @@ cli:
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
         app_help: Manage the lifecycle of modelo work units
+        borrador_help: Modelo 100 borrador snapshot id (full or unambiguous prefix).
+          Snapshot binding values are used only for registry bindings marked aeat_prefilled;
+          caller --binding overrides always take precedence.
         bucket_id_help: Bucket identifier the work unit belongs to
         calculate_help: Persist a new draft calculation revision for the work unit
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
@@ -141,6 +308,8 @@ cli:
         from_filing_record_help: Stable id of the baseline filing record to amend.
           Must carry imported external evidence (justificante / CSV register / live
           capture)
+        history_help: cli.app.modelo.work.history_help
+        history_work_unit_id_help: cli.app.modelo.work.history_work_unit_id_help
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         list_help: List registered work units, optionally filtered by bucket
@@ -148,9 +317,12 @@ cli:
         name_help: Optional display name for the work unit
         notes_help: Optional notes attached to the filing record
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
-        period_help: Filing period of the work unit (e.g. Q1, 4T, 0A, 01)
+        period_help: Work-unit period token; for Modelo 036 use alta, modificacion,
+          or baja; periodic examples include Q1, 4T, 0A, and 01
         reason_help: Optional free-text reason for the discard (up to 500 chars)
         rename_help: Update the display name of a work unit
+        resume_help: cli.app.modelo.work.resume_help
+        resume_workflow_run_id_help: cli.app.modelo.work.resume_workflow_run_id_help
         revision_help: Stable id of the targeted registry modelo revision
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
@@ -171,6 +343,29 @@ cli:
   config:
     app_help: Manage local configuration and diagnostics
     auth:
+      apoderado:
+        check_help: Read-only live verification
+        clear_help: Retire the apoderado configuration
+        configure:
+          represented_nif_help: NIF of the represented party
+          scope_help: Scope tokens (can be repeated)
+        configure_help: Set active apoderado configuration
+        help: Manage apoderado configuration
+        scope:
+          censo: Census declarations (registration, modification, deregistration)
+            (modelo 036)
+          exped: Files and procedures
+          generalnt: General tax procedures
+          inform: Informative declarations (modelo 347, 349, 720)
+          iva: VAT periodic and annual returns (modelo 303, 390)
+          notific: Notifications and communications
+          pagosf: Quarterly self-employed instalments (modelo 130, 131)
+          rent: Income tax and wealth declaration (modelo 100, 714)
+          reten: Withholding tax declarations (modelo 111, 115, 123, 180, 190, 193)
+        scopes:
+          help: Manage apoderado scope vocabulary
+          list_help: List accepted apoderado scopes
+        status_help: Show active apoderado configuration
       clear_all_help: Clear all configured auth providers
       clear_help: Clear local authentication metadata
       clear_locks_help: Clear auth acquisition locks
@@ -186,14 +381,18 @@ cli:
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
     bucket:
-      actor_help: Filter the history to events recorded by a specific actor (exact match)
+      actor_help: Filter the history to events recorded by a specific actor (exact
+        match)
       bucket_id_help: Bucket identifier whose event history should be inspected
       event_type_help: Filter the history to one or more event types (repeatable)
       help: Inspect bucket-scoped storage and event history
       history_help: Show the append-only event history for one bucket
-      object_id_help: Filter the history to events targeting a specific object_id (exact match)
-      since_help: Filter the history to events at or after this ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00)
-      until_help: Filter the history to events at or before this ISO-8601 timestamp (e.g. 2026-04-30T23:59:59+00:00)
+      object_id_help: Filter the history to events targeting a specific object_id
+        (exact match)
+      since_help: Filter the history to events at or after this ISO-8601 timestamp
+        (e.g. 2026-04-01T00:00:00+00:00)
+      until_help: Filter the history to events at or before this ISO-8601 timestamp
+        (e.g. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config init --tax-id <NIF>'
@@ -205,22 +404,107 @@ cli:
       key_help: Key to read (e.g. tax.id, iva.regime)
     google:
       client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
+      folder:
+        folder_id_help: Google Drive folder id
+        get_help: Show the configured Google Drive root folder
+        help: Manage the Google Drive root folder binding
+        set_help: Bind a Google Drive folder id to the active profile
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow (or refresh an existing credential)
       logout_help: Clear the refresh token and metadata; preserve the registered client
-      profile_help: AEAT profile name override (default = active profile on workflow state)
-      refresh_only_help: Skip the consent screen and refresh an existing credential only
-      register_help: Register a Cloud Console Desktop OAuth client JSON for the active profile
+      profile_help: AEAT profile name override (default = active profile on workflow
+        state)
+      refresh_only_help: Skip the consent screen and refresh an existing credential
+        only
+      register_help: Register a Cloud Console Desktop OAuth client JSON for the active
+        profile
       status_help: Show the current Google OAuth session state for the active profile
+      sync:
+        calc:
+          export:
+            modelo_help: Modelo id to export (e.g. 130, 303, 100)
+            period_help: Filing period code (e.g. 1T, 2T, 0A)
+            root_folder_required: No Drive root folder id is configured; run `aeat
+              config google folder set <id>` first
+            unknown_modelo: Unknown modelo {modelo!r}; available modelos are {available}
+            year_help: Filing year (e.g. 2025)
+          export_help: Export the registry calculation surface for a modelo+period
+            to a Google Sheets workbook in the operator's `aeat-vault/`
+          help: Schema-to-sheet calc surface (export and pull)
+        help: Push and probe local data against the configured Google Drive folder
+        probe_help: Probe the configured Google Drive folder for read/write access
+        probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
+        push_dry_run_help: Plan the push without uploading any files
+        push_help: Push the local data namespaces to the configured Google Drive folder
+        push_limit_help: Maximum number of files to push (defaults to no limit)
+        push_namespace_help: Namespace to push (repeatable; defaults to every namespace)
+        root_folder_id_unset: No Google Drive root folder is configured; run `aeat
+          config google folder set <id>` first
+    init:
+      activity_help: Economic activity description (e.g. 761.1, programador)
+      auth_provider_help: Authentication provider ID to use for the profile
+      certificate_password_env_help: Environment variable name containing the certificate
+        password
+      certificate_path_help: Path to the .p12 or .pfx certificate file
+      drafts_dir_help: Directory to store local filing drafts
+      dry_run_help: Report changes without modifying the configuration
+      from_help: Source profile ID to import settings from
+      help: Initialize a new active profile and config bucket.
+      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
+      manuals_root_help: Root directory for AEAT technical manuals
+      non_interactive_help: Run without prompting for user input
+      output_language_help: Primary language for CLI output (en, es, ca)
+      profile_name_help: Unique identifier for this configuration profile
+      quiet_help: Skip the success message after init
+      submissions_dir_help: Directory to store submitted filing receipts
+      success:
+        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
+      tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
+      tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every configuration key with its current value
     profile:
+      already_exists: Profile %{name} already exists. Pick a different target id.
+      duplicate_display_name_help: Display name for the new profile (defaults to the
+        target id)
+      duplicate_help: Copy a profile under a new id and display name
+      duplicate_source_help: Source profile id to duplicate
+      duplicate_target_help: Target profile id for the duplicate
       help: Manage active profile configuration values
+      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
+        first.
+      preflight_help: Report whether the active profile is ready for one modelo /
+        year / period.
+      preflight_modelo_help: Modelo code (e.g. 303).
+      preflight_period_help: Period token (e.g. Q1, annual).
+      preflight_revision_help: Registry revision id.
+      preflight_year_help: Filing year.
+      remove_help: Tombstone a profile (immutable filing snapshots are retained)
+      remove_name_help: Profile id to tombstone
+      remove_requires_yes: Removal is destructive. Re-run 'aeat config profile remove
+        %{name} --yes' to confirm.
+      remove_yes_help: Explicitly confirm the tombstone operation
+      show_name_help: Profile id to show (defaults to the active profile)
+      unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list''
+        to see registered profiles.'
+      use_help: Select an existing profile as the active profile
+      use_name_help: Profile id to make active
+      validate_help: Validate the active profile against the schema.
+      view_help: Show one profile's facts (defaults to the active profile)
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       connectivity_target_help: Connectivity target to probe
-      help: Diagnose and repair local configuration, registry, profile, auth,
-        and logs
+      help: Diagnose and repair local configuration, registry, profile, auth, and
+        logs
+      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
+        all).
+      integrity_namespace_help: Restrict the integrity probe to one namespace.
+      list_all_help: Return every key, including unreadable.
+      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
+        or neither.
+      list_help: List secure-object keys stored under one namespace.
+      list_namespace_help: Namespace to inventory.
+      list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
       quarantine_help: Move undecryptable rows into a quarantine table (destructive;
@@ -228,13 +512,13 @@ cli:
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
+      reset_state_dry_run_help: Report the envelope fingerprint without deleting the
+        row
       reset_state_help: Drop the unreadable workflow-state envelope (destructive;
         requires --yes)
-      reset_state_requires_yes: This operation is destructive. Re-run with --yes
-        to confirm or pass --dry-run to inspect the fingerprint.
+      reset_state_requires_yes: This operation is destructive. Re-run with --yes to
+        confirm or pass --dry-run to inspect the fingerprint.
       reset_state_yes_help: Explicitly confirm the workflow-state reset
-      reset_state_dry_run_help: Report the envelope fingerprint without deleting
-        the row
     reset:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
@@ -265,28 +549,29 @@ cli:
       key_help: Key to clear
     workflow_help: Show config workflow help
   ledger:
-    app_help: Management of accounting ledgers and VAT records
-    create:
+    add:
       actor_help: Operator name recorded on the bucket event
-      amount_help: Signed transaction amount; outgoing values are negative
-      attachment_help: Secure attachment id to link to the transaction; repeat for multiple attachments
-      business_pct_help: Business-use share for MIXED classification, from 0 to 1
+      amount_help: Signed transaction amount in the bucket currency
+      attachment_help: Supplementary attachment id (repeatable)
+      business_pct_help: Business-use share from 0 to 1 (only when classification
+        is MIXED)
       category_help: Spending or income category id
-      classification_help: Business classification state for the transaction
-      counterparty_help: Counterparty name shown in the ledger
-      currency_help: ISO 4217 currency code
-      date_help: Booking date (YYYY-MM-DD)
-      description_help: Ledger transaction description
-      direction_help: Transaction direction
-      help: Create a manual ledger transaction in the active profile bucket
-      idempotency_key_help: Stable key used to make repeated manual entry idempotent
-      irpf_category_help: IRPF category for modelo calculations
-      iva_amount_help: IVA amount
-      iva_rate_help: IVA rate as a decimal, for example 0.21
-      notes_help: Operator notes stored with the ledger transaction
-      prorrata_reference_help: IVA prorrata reference for VAT workflows
-      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the transaction
-      taxable_base_help: Taxable base amount
+      classification_help: Business classification (BUSINESS / PERSONAL / MIXED /
+        ...)
+      counterparty_help: Counterparty descriptor
+      currency_help: Three-letter ISO 4217 currency code
+      date_help: Booked date (YYYY-MM-DD)
+      description_help: Non-blank narrative
+      direction_help: Transaction direction (INCOMING / OUTGOING / INTERNAL_TRANSFER)
+      help: Add one manual ledger transaction in the active profile bucket
+      idempotency_key_help: Caller-supplied idempotency key recorded with the row
+      irpf_category_help: IRPF-specific category key
+      iva_amount_help: Optional IVA amount on the row
+      iva_rate_help: Optional IVA rate as a decimal fraction
+      notes_help: Operator notes stored with the transaction
+      prorrata_reference_help: IVA prorrata substrate reference
+      purchase_invoice_evidence_help: Canonical purchase-invoice evidence id
+      taxable_base_help: VAT-exclusive base amount
       usage_ratio_help: Usage-ratio id for proportional business use
       value_date_help: Value date (YYYY-MM-DD)
     allocate:
@@ -297,17 +582,21 @@ cli:
       id_help: Ledger transaction id to allocate
       prorrata_reference_help: IVA prorrata reference for VAT workflows
       usage_ratio_help: Usage-ratio id for proportional business use
+    app_help: Management of accounting ledgers and VAT records
     archive:
       actor_help: Operator name recorded on the bucket event
       help: Archive one ledger transaction in the active profile bucket
       id_help: Ledger transaction id to archive
       reason_help: Reason recorded in lifecycle history
+      yes_help: Confirm archiving the ledger transaction
     attach:
       actor_help: Operator name recorded on the bucket event
-      attachment_help: Secure attachment id to link to the transaction; repeat for multiple attachments
+      attachment_help: Secure attachment id to link to the transaction; repeat for
+        multiple attachments
       help: Attach secure evidence objects to one ledger transaction
       id_help: Ledger transaction id to attach evidence to
-      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the transaction
+      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
+        transaction
     classify:
       actor_help: Operator name recorded on the bucket event
       category_help: Spending or income category id
@@ -318,35 +607,30 @@ cli:
       iva_amount_help: IVA amount
       iva_rate_help: IVA rate as a decimal, for example 0.21
       taxable_base_help: Taxable base amount
-    edit:
-      actor_help: Operator name recorded on the bucket event
-      amount_help: Signed transaction amount; outgoing values are negative
-      counterparty_help: Counterparty name shown in the ledger
-      currency_help: ISO 4217 currency code
-      date_help: Booking date (YYYY-MM-DD)
-      description_help: Ledger transaction description
-      direction_help: Transaction direction
-      help: Correct editable ledger transaction facts in the active profile bucket
-      id_help: Ledger transaction id to edit
-      irpf_category_help: IRPF category for modelo calculations
-      iva_amount_help: IVA amount
-      iva_rate_help: IVA rate as a decimal, for example 0.21
-      notes_help: Operator notes stored with the ledger transaction
-      taxable_base_help: Taxable base amount
-      value_date_help: Value date (YYYY-MM-DD)
+    errors:
+      confirm_required: Pass --yes to confirm this destructive ledger operation, or
+        use --dry-run first
+      filter_parse_error: Failed to parse ledger filter
+      id_prefix_collision: 'Transaction id prefix %{prefix!r} matches more than one
+        transaction: %{candidates}. Lengthen the prefix to disambiguate.'
+      id_prefix_empty: Transaction id prefix is empty; pass at least one hex character.
+      id_prefix_not_found: No transaction matches id prefix %{prefix!r}.
+      id_prefix_not_hex: 'Transaction id prefix %{prefix!r} contains non-hex characters
+        (allowed: 0-9, a-f).'
+      id_prefix_too_long: Transaction id prefix %{prefix!r} is longer than 64 characters
+        (a full SHA-256 digest).
+      invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
     export:
       actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format
       help: Export canonical ledger rows from the active profile bucket
       include_inactive_help: Include archived and stashed ledger transactions
       output_help: Path to write the exported ledger file
-    list:
-      header: ACCOUNTING LEDGER TRANSACTIONS
-      help: List ledger transactions in the active profile bucket
-    errors:
-      confirm_required: Pass --yes to confirm this destructive ledger operation, or use --dry-run first
-      filter_parse_error: Failed to parse ledger filter
-      invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
+    history:
+      help: Emit the chronological bucket-event chain for one ledger transaction id
+      id_help: Ledger transaction id (or unambiguous hex prefix) to inspect
+      include_split_siblings_help: Expand the chain to include events for every split
+        sibling that shares a split_group_id with this transaction
     import:
       dry_run_help: Run the import in dry-run mode (without saving)
       help: Import bank statements or records into the accounting ledger
@@ -357,22 +641,27 @@ cli:
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
     labels:
+      active: Active
       amount: Amount
+      archived: Archived
+      bucket: Bucket
+      checked: Checked transactions
+      children: Children
+      created_event_id: Created bucket event
       date: Date
       description: Description
       dialect: Detected format
       dry_run: DRY RUN MODE
+      event_count: Event count
+      event_id: Event id
+      export_id: Export ID
       id: ID
       imported: Entries imported
-      active: Active
-      archived: Archived
-      bucket: Bucket
-      checked: Checked transactions
-      created_event_id: Created bucket event
       lifecycle_state: Lifecycle state
+      merged_id: Merged transaction id
       'no': 'No'
-      export_id: Export ID
       output: Output
+      parent_id: Parent transaction id
       pending: Pending review
       period: Period
       readiness_issues: Readiness issues
@@ -385,20 +674,24 @@ cli:
       sha256: SHA-256
       skipped: Skipped
       source: Source
+      split_group_id: Split group id
       stashed: Stashed
       valid: Valid
       warnings: Warnings
       'yes': 'Yes'
-    review:
-      filter_help: Filter rows by status, period, issue, or import
-      header: ACCOUNTING LEDGER REVIEW SESSION
-      help: Interactive review and validation of ledger entries
-      id_help: Identifier of the specific entry to review
-      no_rows: No ledger entries pending review
-      verbose_help: Show detailed information during review
-    read:
-      help: Read one ledger transaction from the active profile bucket
-      transaction_id_help: Ledger transaction id to read
+    list:
+      header: ACCOUNTING LEDGER TRANSACTIONS
+      help: List ledger transactions in the active profile bucket
+    merge:
+      actor_help: Operator name recorded on the LEDGER_TRANSACTION_MERGED event
+      child_id_help: One child id (or unambiguous prefix) to merge. Repeat for every
+        sibling in the cohort; partial merges are refused.
+      errors:
+        min_two_children: ledger merge requires at least two --child-id values
+      help: Re-merge a complete cohort of split children into a fresh transaction
+      reason_help: Reason recorded in the bucket-event payload and lifecycle history
+      yes_help: Confirm the merge (archives every child and the parent, persists a
+        fresh content-addressed merged transaction)
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
@@ -412,17 +705,62 @@ cli:
       help: Reset the active profile bucket ledger catalogue
       reason_help: Reason recorded in reset history
       yes_help: Confirm clearing the active ledger catalogue
+    review:
+      filter_help: Filter rows by status, period, issue, or import
+      header: ACCOUNTING LEDGER REVIEW SESSION
+      help: Interactive review and validation of ledger entries
+      id_help: Identifier of the specific entry to review
+      no_rows: No ledger entries pending review
+      verbose_help: Show detailed information during review
+    split:
+      actor_help: Operator name recorded on the LEDGER_TRANSACTION_SPLIT event
+      child_amount_help: One child amount (signed Decimal in the parent's currency).
+        Repeat once per child; the count must match --child-description.
+      child_description_help: One child narrative. Repeat once per child; the count
+        must match --child-amount.
+      errors:
+        child_args_mismatch: ledger split requires the same number of --child-amount
+          and --child-description arguments
+        min_two_children: ledger split requires at least two --child-amount / --child-description
+          pairs
+      help: Redistribute one parent transaction into N child transactions whose amounts
+        sum to the parent amount exactly
+      id_help: Parent transaction id (or unambiguous hex prefix) to split
+      reason_help: Reason recorded in the bucket-event payload and lifecycle history
+      yes_help: Confirm the split (transitions the parent to SPLIT and persists N
+        child transactions)
     stash:
       actor_help: Operator name recorded on the bucket event
       help: Stash one ledger transaction in the active profile bucket
       id_help: Ledger transaction id to stash
       reason_help: Reason recorded in lifecycle history
+      yes_help: Confirm stashing the ledger transaction
     status:
-      help: Summarize ledger state and calculation readiness for the active profile bucket
+      help: Summarize ledger state and calculation readiness for the active profile
+        bucket
       period_help: Fiscal period to preflight (YYYY-MM or modelo period)
     track:
       help: Show the event lineage for one ledger transaction
       transaction_id_help: Ledger transaction id to inspect
+    update:
+      actor_help: Operator name recorded on the bucket event
+      amount_help: New signed amount (full replace)
+      counterparty_help: New counterparty descriptor
+      currency_help: New three-letter ISO 4217 currency code
+      date_help: New booked date (YYYY-MM-DD)
+      description_help: New narrative
+      direction_help: New transaction direction
+      help: Update one ledger transaction with full-replace field semantics
+      id_help: Ledger transaction id (or unambiguous hex prefix) to update
+      irpf_category_help: New IRPF-specific category key
+      iva_amount_help: New IVA amount
+      iva_rate_help: New IVA rate as a decimal fraction
+      notes_help: New operator notes
+      taxable_base_help: New VAT-exclusive base amount
+      value_date_help: New value date (YYYY-MM-DD)
+    view:
+      help: View one ledger transaction in the active profile bucket
+      transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
     app_help: Audit and scaffold locale catalogues
     scaffold_check_help: Report drift without writing locale files
@@ -479,9 +817,9 @@ cli:
       articulo_help: Specific article to show (e.g. 91.Uno.2.1º)
       list_help: List the normatives codified in the legal corpus
       normative_id_help: Stable normative id (e.g. ley-37-1992)
-      show_help: Show one normative and, optionally, one of its articles
       tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
       verify_help: Verify the legal-norm corpus integrity
+      view_help: Show one normative and, optionally, one of its articles
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:
@@ -492,55 +830,55 @@ cli:
       part_help: Manual volume (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: List the rules codified in a manual
       section_help: Optional section identifier to show
-      show_help: Show a manual structure and, optionally, one section
       verify_help: Verify the manual integrity against its contract
+      view_help: Show a manual structure and, optionally, one section
       year_help: Tax year of the manual (e.g. 2024)
     metrics:
-      applicability_declaration_count: applicability_declaration_count
-      application_link_count: application_link_count
-      application_link_surfaces: application_link_surfaces
-      artefact_refs: artefact_refs
-      backend_exists: backend_exists
-      captured_count: captured_count
-      casilla_count: casilla_count
-      compared_casillas: compared_casillas
-      comparison_count: comparison_count
-      cross_reference_count: cross_reference_count
-      difference_count: difference_count
-      differences: differences
-      drift_count: drift_count
-      environment: environment
-      extraction_profile_count: extraction_profile_count
-      failed_count: failed_count
-      failure_count: failure_count
-      formula_count: formula_count
-      formula_workbook_count: formula_workbook_count
-      legal_reference_count: legal_reference_count
-      missing_filed_casillas: missing_filed_casillas
-      missing_local_casillas: missing_local_casillas
-      modelo: modelo
-      modelo_count: modelo_count
-      modelos: modelos
-      observation_paths: observation_paths
-      orphan_oracle_ids: orphan_oracle_ids
-      passed: passed
-      registered_oracle_ids: registered_oracle_ids
-      revision: revision
-      revision_count: revision_count
-      row_count: row_count
-      runner_detail: runner_detail
-      runner_status: runner_status
-      scanned_count: scanned_count
-      scenario_id: scenario_id
-      source_reference_count: source_reference_count
-      status: status
-      tape_path: tape_path
-      unsupported_xls_count: unsupported_xls_count
-      verification_expectation_count: verification_expectation_count
-      verified: verified
-      workbook_count: workbook_count
-      workbook_parity_ref_count: workbook_parity_ref_count
-      workbook_path: workbook_path
+      applicability_declaration_count: Applicability declaration count
+      application_link_count: Application link count
+      application_link_surfaces: Application link surfaces
+      artefact_refs: Artefact references
+      backend_exists: Backend exists
+      captured_count: Captured count
+      casilla_count: Casilla count
+      compared_casillas: Compared casillas
+      comparison_count: Comparison count
+      cross_reference_count: Cross reference count
+      difference_count: Difference count
+      differences: Differences
+      drift_count: Drift count
+      environment: Environment
+      extraction_profile_count: Extraction profile count
+      failed_count: Failed count
+      failure_count: Failure count
+      formula_count: Formula count
+      formula_workbook_count: Formula workbook count
+      legal_reference_count: Legal reference count
+      missing_filed_casillas: Missing filed casillas
+      missing_local_casillas: Missing local casillas
+      modelo: Modelo
+      modelo_count: Modelo count
+      modelos: Modelos
+      observation_paths: Observation paths
+      orphan_oracle_ids: Orphan oracle ids
+      passed: Passed
+      registered_oracle_ids: Registered oracle ids
+      revision: Revision
+      revision_count: Revision count
+      row_count: Row count
+      runner_detail: Runner detail
+      runner_status: Runner status
+      scanned_count: Scanned count
+      scenario_id: Scenario id
+      source_reference_count: Source reference count
+      status: Status
+      tape_path: Tape path
+      unsupported_xls_count: Unsupported XLS count
+      verification_expectation_count: Verification expectation count
+      verified: Verified
+      workbook_count: Workbook count
+      workbook_parity_ref_count: Workbook parity ref count
+      workbook_path: Workbook path
     observation_help: Encrypted filed-declaration observation manifest to verify
     parity_app_help: Scenario and tape parity runner for manual calculation checks
     parity_output_help: Destination JSON file for the generated parity tape
@@ -603,11 +941,11 @@ cli:
       headline: AEAT Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
         --help`.'
-      quick_start_repair: '  5. `aeat config repair` - diagnose configuration, storage,
-        and local health.'
       quick_start_heading: Quick start
       quick_start_import: '  3. `aeat app ledger import <bank-statement.csv> --provider
         csv` - add your bank transactions.'
+      quick_start_repair: '  5. `aeat config repair` - diagnose configuration, storage,
+        and local health.'
       quick_start_review: '  4. `aeat app ledger review` - check and classify imported
         rows.'
       quick_start_setup_done: '  1. `aeat config profile status` - check the active
@@ -640,6 +978,8 @@ cli:
         list registered topics.'
     opts:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
+dotted:
+  key: dotted.key
 filing:
   validation:
     deadline_missed: Submission deadline has passed
@@ -649,7 +989,7 @@ filing:
     schema_mismatch: Mismatch with expected schema
 profile:
   keys:
-    description: profile.keys.description
+    description: Profile configuration keys and their descriptions
     tax:
       id: Tax identifier (NIF/NIE/CIF)
 topic:
@@ -726,15 +1066,15 @@ transactions:
     message: Month 2026-03 is missing from the imported file.
 wizard:
   choices:
-    general: wizard.choices.general
-    irpf: wizard.choices.irpf
-    iva: wizard.choices.iva
-    simplificado: wizard.choices.simplificado
+    general: General
+    irpf: IRPF
+    iva: IVA
+    simplificado: Simplified
   demo:
-    description: wizard.demo.description
+    description: A demonstration section to test wizard functionality
     section:
-      title: wizard.demo.section.title
-    title: wizard.demo.title
+      title: Demo section
+    title: Demo
   errors:
     blank_integer: Integer value required for %{prompt_key}.
     blank_path: Path required for %{prompt_key}.
@@ -757,17 +1097,17 @@ wizard:
       \ only local profile state and start over:\n  aeat config reset --scope profile\
       \ --yes"
   other:
-    description: wizard.other.description
+    description: Other configuration options
     section:
-      title: wizard.other.section.title
-    title: wizard.other.title
+      title: Other settings
+    title: Other
   progress:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
     certificate:
       path:
-        prompt: wizard.setup.certificate.path.prompt
+        prompt: Enter the path to your digital certificate (.p12, .pfx)
     codes:
       disability-grade:
         choices:
@@ -957,7 +1297,7 @@ wizard:
             label: Hungarian
         prompt: CLI output language for this profile
       regimes:
-        prompt: wizard.setup.profile.regimes.prompt
+        prompt: Select your applicable tax regimes
       surnames:
         prompt: Surnames or company name for export headers
       tax-id:
@@ -1051,14 +1391,14 @@ wizard:
       title: First taxpayer
     title: Setup wizard
   test:
-    description: wizard.test.description
+    description: Test your configuration and connectivity
     example:
       choices:
         'yes':
-          description: wizard.test.example.choices.yes.description
-          label: wizard.test.example.choices.yes.label
-      help: wizard.test.example.help
-      prompt: wizard.test.example.prompt
+          description: Select this to confirm
+          label: true
+      help: Example help text for testing
+      prompt: Example test question
     main:
-      title: wizard.test.main.title
-    title: wizard.test.title
+      title: Main test
+    title: Test

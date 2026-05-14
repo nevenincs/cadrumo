@@ -4,6 +4,50 @@ from aeat.core.errors._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "aeat.application.live._notifications.NotificationsSnapshotNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_NOTIFICATIONS_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_notifications_snapshot_not_found",
+            default_suggestion="aeat app live notifications list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.live._expedientes.ExpedientesSnapshotNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_EXPEDIENTES_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_expedientes_snapshot_not_found",
+            default_suggestion="aeat app live expedientes list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.live._verify.VerifyObservationNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_VERIFY_OBSERVATION_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_verify_observation_not_found",
+            default_suggestion="aeat app live verify nif-iva",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.portals._service.PortalNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_PORTAL_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_portal_not_found",
+            default_suggestion="aeat app live portals list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.justificante._errors.PdfFilingImportError",
         ErrorCode(
             code="ERROR_PDF_IMPORT_PDF_FILING_IMPORT",
@@ -286,6 +330,94 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             message_key="errors.refused.refused_ledger_business_operation_invoice_not_found",
             default_suggestion="aeat app ledger payable-invoice list",
             retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.evidence._models.EvidenceBundleNotFoundError",
+        ErrorCode(
+            code="REFUSED_EVIDENCE_BUNDLE_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_evidence_bundle_not_found",
+            default_suggestion="aeat app modelo audit check",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.evidence._models.EvidenceBundleVerificationError",
+        ErrorCode(
+            code="REFUSED_EVIDENCE_BUNDLE_VERIFICATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_evidence_bundle_verification",
+            default_suggestion="aeat app modelo audit check",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.inventory._errors.InventoryServiceInputError",
+        ErrorCode(
+            code="REFUSED_INVENTORY_SERVICE_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_inventory_service_input",
+            default_suggestion="aeat app ledger inventory list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.inventory._errors.InventoryActividadNotFoundError",
+        ErrorCode(
+            code="REFUSED_INVENTORY_ACTIVIDAD_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_inventory_actividad_not_found",
+            default_suggestion="aeat app ledger inventory list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.inventory._errors.InventoryActividadConflictError",
+        ErrorCode(
+            code="REFUSED_INVENTORY_ACTIVIDAD_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_inventory_actividad_conflict",
+            default_suggestion="aeat app ledger inventory show",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.auth.apoderamientos._catalogue.UnknownScopeError",
+        ErrorCode(
+            code="REFUSED_APODERADO_UNKNOWN_SCOPE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_apoderado_unknown_scope",
+            default_suggestion="aeat config auth apoderado configure --scope ALL",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.auth._apoderado.ApoderadoConfigurationNotSetError",
+        ErrorCode(
+            code="REFUSED_APODERADO_NOT_CONFIGURED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_apoderado_not_configured",
+            default_suggestion="aeat config auth apoderado configure",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.auth._apoderado.ApoderadoLiveCheckUnavailableError",
+        ErrorCode(
+            code="REFUSED_APODERADO_LIVE_CHECK_UNAVAILABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_apoderado_live_check_unavailable",
+            default_suggestion="aeat config auth apoderado status",
+            retryable=True,
             runbook_id=None,
         ),
     ),
@@ -813,6 +945,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_modelo_work_unit_persistence",
             default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.ModeloWorkflowGateError",
+        ErrorCode(
+            code="REFUSED_MODELO_WORKFLOW_GATE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_workflow_gate",
+            default_suggestion="aeat app modelo work list",
             retryable=False,
             runbook_id=None,
         ),
@@ -1617,6 +1760,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="INTEGRITY_PROFILE_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.INTEGRITY,
             message_key="errors.integrity.integrity_profile_snapshot_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.currency._errors.CurrencyError",
+        ErrorCode(
+            code="FAIL_CURRENCY_ERROR",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.currency_error",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.currency._errors.MissingExchangeRateError",
+        ErrorCode(
+            code="FAIL_MISSING_EXCHANGE_RATE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.missing_exchange_rate",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.currency._errors.UnsupportedCurrencyError",
+        ErrorCode(
+            code="REFUSED_UNSUPPORTED_CURRENCY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.unsupported_currency",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

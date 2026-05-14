@@ -22,11 +22,12 @@ from datetime import UTC, datetime
 
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.classification import SensitivityClass
-from ._records import OAuthClient, OAuthMetadata, OAuthToken
+from ._records import DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 _NAMESPACE_CLIENT = "aeat.google.oauth.client"
 _NAMESPACE_TOKEN = "aeat.google.oauth.token"
 _NAMESPACE_METADATA = "aeat.google.oauth.metadata"
+_NAMESPACE_DRIVE_CONFIG = "aeat.google.drive.config"
 _RECORD_VERSION = 1
 
 
@@ -111,8 +112,35 @@ def load_metadata(profile: str) -> OAuthMetadata | None:
     return OAuthMetadata.model_validate_json(record.payload.decode("utf-8"))
 
 
+def save_drive_config(profile: str, config: DriveConfig) -> None:
+    """Persist the per-profile Drive backend configuration."""
+
+    SecureObjectRepository().save(
+        namespace=_NAMESPACE_DRIVE_CONFIG,
+        object_key=profile,
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=_RECORD_VERSION,
+        written_at=datetime.now(UTC),
+        payload=config.model_dump_json().encode("utf-8"),
+    )
+
+
+def load_drive_config(profile: str) -> DriveConfig | None:
+    """Load the per-profile Drive backend configuration or return ``None``."""
+
+    record = SecureObjectRepository().load(
+        _NAMESPACE_DRIVE_CONFIG,
+        profile,
+        expected_class=SensitivityClass.FINANCIAL,
+        max_supported_version=_RECORD_VERSION,
+    )
+    if record is None:
+        return None
+    return DriveConfig.model_validate_json(record.payload.decode("utf-8"))
+
+
 def delete_session(profile: str) -> tuple[bool, bool]:
-    """Delete the refresh token and audit metadata; preserve the client.
+    """Delete the refresh token and audit metadata; preserve the client and drive config.
 
     Returns:
         A pair `(token_removed, metadata_removed)`.
@@ -127,9 +155,11 @@ def delete_session(profile: str) -> tuple[bool, bool]:
 __all__ = [
     "delete_session",
     "load_client",
+    "load_drive_config",
     "load_metadata",
     "load_token",
     "save_client",
+    "save_drive_config",
     "save_metadata",
     "save_token",
 ]

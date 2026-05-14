@@ -1,19 +1,20 @@
 """Standardized CRUD verb contract for mutating noun-groups.
 
 Locks the canonical five-verb mutating-noun-group shape
-(``add``/``remove``/``update``/``view``/``list``) per apex ADR §12.b. Every
-operator-facing CLI domain that exposes an edit work surface over persisted
-records (ledger transactions, purchase invoice evidence, payable and
+(``add``/``remove``/``update``/``view``/``list``). Every operator-facing
+CLI domain that exposes an edit work surface over persisted records
+(ledger transactions, purchase invoice evidence, payable and
 collectible invoices, profile values, auth providers, apoderado
-configuration, inventory rows, bucket records, usage ratios) must satisfy
-this contract or declare an explicit exception.
+configuration, inventory rows, bucket records, usage ratios) must
+satisfy this contract or declare an explicit exception.
 
-The reference shape is the locked W70.P333 ``aeat app ledger evidence`` verb
-group: five CRUD verbs with strict semantics. Orthogonal-axis verbs and
-lifecycle-state verbs remain at the noun-group level but are explicitly
-demoted to sub-verbs, not CRUD substitutes. Key-value-as-record noun-groups
-adopt a documented ``set``/``get``/``unset`` exception where records are
-conceptually keyed scalars rather than entities.
+The reference shape is the ``aeat app ledger evidence`` verb group:
+five CRUD verbs with strict semantics. Orthogonal-axis verbs and
+lifecycle-state verbs remain at the noun-group level but are
+explicitly demoted to sub-verbs, not CRUD substitutes. Key-value-as-
+record noun-groups adopt a documented ``set``/``get``/``unset``
+exception where records are conceptually keyed scalars rather than
+entities.
 """
 
 from __future__ import annotations

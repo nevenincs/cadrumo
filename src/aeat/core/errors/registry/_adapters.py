@@ -1248,4 +1248,92 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.adapters.persistence.storage.bucket._errors.BucketError",
+        ErrorCode(
+            code="ERROR_STORAGE_BUCKET",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._errors.NoActiveBucketError",
+        ErrorCode(
+            code="REFUSED_STORAGE_BUCKET_NO_ACTIVE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_bucket_no_active",
+            default_suggestion="aeat config list-buckets",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._errors.BucketBusyError",
+        ErrorCode(
+            code="LOCKED_STORAGE_BUCKET_BUSY",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_storage_bucket_busy",
+            default_suggestion=None,
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._errors.BucketAlreadyPresentError",
+        ErrorCode(
+            code="REFUSED_STORAGE_BUCKET_ALREADY_PRESENT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_bucket_already_present",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._errors.BucketLockedError",
+        ErrorCode(
+            code="LOCKED_STORAGE_BUCKET_SESSION",
+            category=ErrorCategory.LOCKED,
+            message_key="errors.locked.locked_storage_bucket_session",
+            default_suggestion="aeat config unlock",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._errors.LegacyLayoutDetectedError",
+        ErrorCode(
+            code="REFUSED_STORAGE_BUCKET_LEGACY_LAYOUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_storage_bucket_legacy_layout",
+            default_suggestion="aeat config init",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._errors.RecoveryUnavailableError",
+        ErrorCode(
+            code="FAIL_STORAGE_BUCKET_RECOVERY_UNAVAILABLE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_storage_bucket_recovery_unavailable",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._errors.RecoveryVerificationError",
+        ErrorCode(
+            code="AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION",
+            category=ErrorCategory.AUTH,
+            message_key="errors.auth.auth_storage_bucket_recovery_verification",
+            default_suggestion="aeat config verify-recovery",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

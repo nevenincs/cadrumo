@@ -60,7 +60,7 @@ def _create_manual_ledger_row(description: str, *, amount: str = "-25.00", key: 
             "json",
             "app",
             "ledger",
-            "create",
+            "add",
             "--date",
             "2026-05-03",
             "--amount",
@@ -196,7 +196,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
             "json",
             "app",
             "ledger",
-            "create",
+            "add",
             "--date",
             "2026-05-02",
             "--amount",
@@ -238,7 +238,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     assert [row["transaction_id"] for row in listed_payload["rows"]] == [payload["transaction_id"]]
     assert listed_payload["rows"][0]["review_status"] == "reviewed"
 
-    read = _invoke(["--format", "json", "app", "ledger", "read", payload["transaction_id"]])
+    read = _invoke(["--format", "json", "app", "ledger", "view", payload["transaction_id"]])
     assert read.exit_code == 0, read.output
     read_payload = json.loads(read.output)
     assert read_payload["bucket_id"] == "operator"
@@ -252,7 +252,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
             "json",
             "app",
             "ledger",
-            "edit",
+            "update",
             "--id",
             payload["transaction_id"],
             "--amount",
@@ -452,6 +452,7 @@ def test_app_ledger_lifecycle_attach_remove_reset_and_export_use_backend_bucket(
             str(archive_row["transaction_id"]),
             "--reason",
             "wrong account",
+            "--yes",
         ]
     )
     assert archived.exit_code == 0, archived.output
@@ -469,6 +470,7 @@ def test_app_ledger_lifecycle_attach_remove_reset_and_export_use_backend_bucket(
             str(stash_row["transaction_id"]),
             "--reason",
             "needs review",
+            "--yes",
         ]
     )
     assert stashed.exit_code == 0, stashed.output
@@ -578,6 +580,10 @@ def test_legacy_ledger_ratio_aliases_are_not_registered(
     tmp_path: Path,
 ) -> None:
     _isolate(monkeypatch, tmp_path)
-    for command in ("set-ratio", "split"):
+    # `split` was the deleted single-row allocation knob (see
+    # 2026-05-14 ledger-transaction-lifecycle ADR); the new `split` verb
+    # is the true N-way row splitter and is intentionally registered.
+    # Only legacy ratio aliases must remain refused.
+    for command in ("set-ratio",):
         result = _invoke(["app", "ledger", command, "--help"])
         assert result.exit_code != 0

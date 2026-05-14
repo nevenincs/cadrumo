@@ -150,7 +150,7 @@ def test_transaction_lineage_fields_are_typed_and_round_trip_through_json() -> N
             "raw": _sample_raw(),
             "direction": TransactionDirection.OUTGOING,
             "created_by": "operator-A",
-            "source_command": "aeat app ledger create",
+            "source_command": "aeat app ledger add",
             "created_event_id": "c" * 64,
             "purchase_invoice_evidence_id": "purchase-evidence-1",
             "attachment_ids": ("a" * 64,),
@@ -159,7 +159,7 @@ def test_transaction_lineage_fields_are_typed_and_round_trip_through_json() -> N
                     "evidence_id": "purchase-evidence-1",
                     "evidence_kind": "purchase_invoice_evidence",
                     "actor": "operator-A",
-                    "source_command": "aeat app ledger create",
+                    "source_command": "aeat app ledger add",
                     "linked_at": datetime(2026, 4, 14, 10, 0, tzinfo=UTC),
                     "bucket_event_id": "c" * 64,
                 },
@@ -168,7 +168,7 @@ def test_transaction_lineage_fields_are_typed_and_round_trip_through_json() -> N
                 {
                     "previous_transaction_id": "b" * 64,
                     "actor": "operator-B",
-                    "source_command": "aeat app ledger edit",
+                    "source_command": "aeat app ledger update",
                     "edited_at": datetime(2026, 4, 15, 10, 0, tzinfo=UTC),
                     "bucket_event_id": "d" * 64,
                 },
@@ -179,7 +179,7 @@ def test_transaction_lineage_fields_are_typed_and_round_trip_through_json() -> N
     restored = Transaction.model_validate_json(original.model_dump_json())
 
     assert restored.created_by == "operator-A"
-    assert restored.source_command == "aeat app ledger create"
+    assert restored.source_command == "aeat app ledger add"
     assert restored.created_event_id == "c" * 64
     assert restored.evidence_provenance[0].evidence_kind == "purchase_invoice_evidence"
     assert restored.evidence_provenance[0].actor == "operator-A"

@@ -1,0 +1,108 @@
+"""Tests for the ``ratios eligible`` and ``ratios validate`` extensions."""
+
+from __future__ import annotations
+
+from decimal import Decimal
+
+import pytest
+
+from aeat.application.ledger._ratios import (
+    eligible_ratio_categories,
+    validate_ratios_profile,
+)
+from aeat.domain.categories import SpendingCategory
+from aeat.domain.usage_ratios import (
+    ELIGIBLE_USAGE_RATIO_CATEGORIES,
+    UsageRatioProfile,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+class TestEligible:
+    def test_eligible_lists_every_eligible_category(self) -> None:
+        empty_profile = UsageRatioProfile()
+        rows = eligible_ratio_categories(empty_profile)
+        assert {row.category for row in rows} == set(ELIGIBLE_USAGE_RATIO_CATEGORIES)
+
+    def test_eligible_rows_are_sorted_by_category_value(self) -> None:
+        rows = eligible_ratio_categories(UsageRatioProfile())
+        category_values = [row.category.value for row in rows]
+        assert category_values == sorted(category_values)
+
+    def test_eligible_flags_override_presence(self) -> None:
+        sample_category = next(iter(ELIGIBLE_USAGE_RATIO_CATEGORIES))
+        profile = UsageRatioProfile(ratios={sample_category: Decimal("0.40")})
+        rows = eligible_ratio_categories(profile)
+        targeted = next(row for row in rows if row.category is sample_category)
+        assert targeted.override_present is True
+        others = [row for row in rows if row.category is not sample_category]
+        assert all(row.override_present is False for row in others)
+
+    def test_eligible_default_ratios_are_in_range_when_present(self) -> None:
+        rows = eligible_ratio_categories(UsageRatioProfile())
+        for row in rows:
+            if row.default_ratio is not None:
+                assert Decimal("0") <= row.default_ratio <= Decimal("1")
+
+
+class TestValidate:
+    def test_validate_empty_profile_is_clean(self) -> None:
+        report = validate_ratios_profile(
+            bucket_id="bucket-001",
+            profile=UsageRatioProfile(),
+        )
+        assert report.bucket_id == "bucket-001"
+        assert report.profile_present is False
+        assert report.overrides_count == 0
+        assert report.findings == ()
+        assert report.missing_overrides == ()
+
+    def test_validate_reports_missing_required_overrides(self) -> None:
+        categories = tuple(ELIGIBLE_USAGE_RATIO_CATEGORIES)
+        if len(categories) < 2:
+            pytest.skip("requires at least two eligible categories")
+        present, absent = categories[0], categories[1]
+        profile = UsageRatioProfile(ratios={present: Decimal("0.30")})
+        report = validate_ratios_profile(
+            bucket_id="b1",
+            profile=profile,
+            require_overrides_for=(present, absent),
+        )
+        assert report.profile_present is True
+        assert report.overrides_count == 1
+        assert report.missing_overrides == (absent,)
+        # The present override is not flagged
+        assert report.findings == ()
+
+    def test_validate_flags_non_eligible_required_category(self) -> None:
+        # Find a category that is NOT eligible for user ratios.
+        all_categories = set(SpendingCategory)
+        non_eligible = next(c for c in all_categories if c not in ELIGIBLE_USAGE_RATIO_CATEGORIES)
+        profile = UsageRatioProfile()
+        report = validate_ratios_profile(
+            bucket_id="b1",
+            profile=profile,
+            require_overrides_for=(non_eligible,),
+        )
+        assert any(f.kind == "not_eligible" for f in report.findings)
+
+    def test_validate_clean_when_all_required_categories_have_overrides(self) -> None:
+        categories = tuple(ELIGIBLE_USAGE_RATIO_CATEGORIES)
+        if not categories:
+            pytest.skip("requires at least one eligible category")
+        required = categories[:2] if len(categories) >= 2 else categories[:1]
+        profile = UsageRatioProfile(ratios={c: Decimal("0.50") for c in required})
+        report = validate_ratios_profile(
+            bucket_id="b1",
+            profile=profile,
+            require_overrides_for=required,
+        )
+        assert report.missing_overrides == ()
+        assert report.findings == ()
+
+
+class TestReportFields:
+    def test_report_eligible_count_matches_domain_set(self) -> None:
+        report = validate_ratios_profile(bucket_id="b1", profile=UsageRatioProfile())
+        assert report.eligible_count == len(ELIGIBLE_USAGE_RATIO_CATEGORIES)

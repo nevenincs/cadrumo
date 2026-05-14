@@ -577,13 +577,13 @@ def test_sum_deductible_amounts_returns_zero_for_empty_iterable() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Boundary / non-existence assertions (W36.P177 + W36.P178).
+# Boundary / non-existence assertions.
 #
 # The IVA-prorrata domain substrate is the unique owner of prorrata logic.
 # These tests assert the boundary contract: no shadow duplicates, no shim
 # translating usage_ratios into prorrata, no parallel CLI surface. They
-# regress-protect the W36 rollout against future "convenience" wrappers
-# that would re-introduce the rejected shapes named in the ADR's Constraints.
+# regress-protect the rollout against future "convenience" wrappers that
+# would re-introduce the rejected shapes.
 # ---------------------------------------------------------------------------
 
 
@@ -693,5 +693,5 @@ def test_no_parallel_prorrata_cli_surface_exists() -> None:
             assert needle not in text, (
                 f"rejected prorrata CLI surface detected in {py_file}: "
                 f"`{needle}`. Prorrata is consumed via "
-                f"`app modelo bindings list` per the ADR."
+                f"`app modelo bindings list`."
             )

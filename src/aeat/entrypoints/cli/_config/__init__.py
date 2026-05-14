@@ -32,6 +32,7 @@ app = typer.Typer(
 )
 profile_app = typer.Typer(name="profile", help=tr("cli.config.profile.help"), no_args_is_help=True)
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
+apoderado_app = typer.Typer(name="apoderado", help=tr("cli.config.auth.apoderado.help", default="Manage apoderado configuration"), no_args_is_help=True)
 repair_app = typer.Typer(
     name="repair",
     help=tr("cli.config.repair.help"),
@@ -152,6 +153,77 @@ def repair_reset_state(
         f"reason_class\t{fingerprint.reason_class}",
         f"recovered_bucket_id\t{fingerprint.recovered_bucket_id or '<none>'}",
     )
+    _emit(ctx, payload, lines)
+
+
+@repair_app.command(
+    "integrity",
+    help=tr(
+        "cli.config.repair.integrity_help",
+        default="Probe AES-256-GCM tag verification across one namespace (or all).",
+    ),
+)
+def repair_integrity(
+    ctx: typer.Context,
+    namespace: str | None = typer.Option(
+        None,
+        "--namespace",
+        help=tr(
+            "cli.config.repair.integrity_namespace_help",
+            default="Restrict the integrity probe to one namespace.",
+        ),
+    ),
+) -> None:
+    """Wrap build_repair_integrity_report and render through _emit."""
+
+    from ....application.repair_integrity import build_repair_integrity_report
+
+    report = build_repair_integrity_report(namespace=namespace)
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"readable\t{report.readable_total}",
+        f"unreadable\t{report.unreadable_total}",
+        f"status\t{report.check.status}",
+        f"summary\t{report.check.summary}",
+    ]
+    for ns in report.namespaces:
+        lines.append(f"{ns.namespace}\treadable={ns.readable}\tunreadable={ns.unreadable}")
+    _emit(ctx, payload, lines)
+
+
+@repair_app.command(
+    "list",
+    help=tr(
+        "cli.config.repair.list_help",
+        default="List secure-object keys stored under one namespace.",
+    ),
+)
+def repair_list(
+    ctx: typer.Context,
+    namespace: str = typer.Argument(..., help=tr("cli.config.repair.list_namespace_help", default="Namespace to inventory.")),
+    include_all: bool = typer.Option(False, "--all", help=tr("cli.config.repair.list_all_help", default="Return every key, including unreadable.")),
+    only_unreadable: bool = typer.Option(False, "--unreadable", help=tr("cli.config.repair.list_unreadable_help", default="Restrict to undecryptable rows.")),
+) -> None:
+    """Wrap build_repair_list_report and render through _emit."""
+
+    from ....application.repair_integrity import build_repair_list_report
+
+    if include_all and only_unreadable:
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.repair.list_conflicting_flags",
+                default="--all and --unreadable cannot be combined; pass one or neither.",
+            )
+        )
+    report = build_repair_list_report(
+        namespace=namespace,
+        include_all=include_all,
+        only_unreadable=only_unreadable,
+    )
+    payload = report.model_dump(mode="json")
+    lines = [f"namespace\t{namespace}", f"count\t{len(report.rows)}"]
+    for row in report.rows:
+        lines.append(f"{row.namespace}\t{row.object_key_digest}")
     _emit(ctx, payload, lines)
 
 
@@ -304,47 +376,323 @@ def config_unset(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli
     _emit(ctx, {"key": key, "value": ""}, (f"{key}\t<unset>",))
 
 
-def _register_wizard_commands(target: typer.Typer) -> None:
-    """Register every wizard flow as a sub-command of ``target``."""
+@profile_app.command("validate", help=tr("cli.config.profile.validate_help", default="Validate the active profile against the schema."))
+def config_profile_validate(ctx: typer.Context) -> None:
+    """Run the canonical ProfileValidationService over the active profile."""
 
-    from ....application.wizard._catalogue import WIZARD_FLOWS
-    from ....application.wizard._commands import build_wizard_command
-    from ....application.wizard._errors import WizardMissingFlagError
+    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....domain.user_profile import ProfileNotFoundError
+
+    state = _profile_state().load()
+    if state.active_profile is None:
+        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    pointer = state.profiles.get(state.active_profile)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    try:
+        record = service.read(state.active_profile)
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(
+            tr("cli.config.profile.unknown_profile", name=state.active_profile)
+        ) from exc
+    report = service._validator.validate_record(record)
+    blocking = [issue for issue in report.issues if issue.severity.value == "error"]
+    payload = report.model_dump(mode="json")
+    payload["valid"] = not blocking
+    lines = [
+        f"profile_id\t{record.profile_id}",
+        f"schema_version\t{report.schema_version}",
+        f"valid\t{not blocking}",
+        f"issues\t{len(report.issues)}",
+    ]
+    for issue in report.issues:
+        lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
+    _emit(ctx, payload, lines)
+
+
+@profile_app.command(
+    "preflight",
+    help=tr(
+        "cli.config.profile.preflight_help",
+        default="Report whether the active profile is ready for one modelo / year / period.",
+    ),
+)
+def config_profile_preflight(
+    ctx: typer.Context,
+    modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.profile.preflight_modelo_help", default="Modelo code (e.g. 303).")),
+    revision_id: str = typer.Option(..., "--revision-id", help=tr("cli.config.profile.preflight_revision_help", default="Registry revision id.")),
+    filing_year: int = typer.Option(..., "--year", help=tr("cli.config.profile.preflight_year_help", default="Filing year.")),
+    period: str = typer.Option(..., "--period", help=tr("cli.config.profile.preflight_period_help", default="Period token (e.g. Q1, annual).")),
+) -> None:
+    """Wrap ProfilePreflightService over the active profile for one modelo target."""
+
+    from ....application.user_profile._orchestration import _shared_schema, build_lifecycle_service
+    from ....application.user_profile._preflight import ProfilePreflightService
+    from ....domain.user_profile import ProfileNotFoundError
+
+    state = _profile_state().load()
+    if state.active_profile is None:
+        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    pointer = state.profiles.get(state.active_profile)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    try:
+        record = service.read(state.active_profile)
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(
+            tr("cli.config.profile.unknown_profile", name=state.active_profile)
+        ) from exc
+    preflight = ProfilePreflightService(schema=_shared_schema())
+    report = preflight.report(
+        record=record,
+        modelo=modelo,
+        revision_id=revision_id,
+        filing_year=filing_year,
+        period=period,
+    )
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"profile_id\t{record.profile_id}",
+        f"modelo\t{modelo}",
+        f"revision_id\t{revision_id}",
+        f"filing_year\t{filing_year}",
+        f"period\t{period}",
+        f"ready\t{report.ready}",
+        f"missing\t{len(report.missing)}",
+    ]
+    for requirement in report.missing:
+        lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
+    _emit(ctx, payload, lines)
+
+
+@profile_app.command("use", help=tr("cli.config.profile.use_help"))
+def config_profile_use(
+    ctx: typer.Context,
+    name: str = typer.Argument(..., help=tr("cli.config.profile.use_name_help")),
+) -> None:
+    """Select an existing profile as the active profile."""
+
+    from ....application.user_profile._orchestration import select_profile
+    from ....domain.user_profile import ProfileNotFoundError
+
+    repository = _profile_state()
+    try:
+        updated = repository.update(lambda current: select_profile(current, profile_id=name))
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(
+            tr("cli.config.profile.unknown_profile", name=name)
+        ) from exc
+    _emit(
+        ctx,
+        {"active_profile": updated.active_profile},
+        (f"active_profile\t{updated.active_profile or ''}",),
+    )
+
+
+@profile_app.command("view", help=tr("cli.config.profile.view_help"))
+def config_profile_show(
+    ctx: typer.Context,
+    name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
+) -> None:
+    """View one profile's facts (defaults to the active profile)."""
+
+    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....application.user_profile._projections import record_to_path_values
+    from ....domain.user_profile import ProfileNotFoundError
+
+    state = _profile_state().load()
+    target = name or state.active_profile
+    if target is None:
+        raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+    pointer = state.profiles.get(target)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target))
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    try:
+        record = service.read(target)
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=target)) from exc
+    values = record_to_path_values(record)
+    payload = {
+        "profile_id": record.profile_id,
+        "display_name": record.display_name,
+        "status": record.status.value,
+        "facts": [{"path": path, "value": value} for path, value in sorted(values.items())],
+    }
+    lines = [
+        f"profile_id\t{record.profile_id}",
+        f"display_name\t{record.display_name}",
+        f"status\t{record.status.value}",
+    ]
+    lines.extend(f"{path}\t{value}" for path, value in sorted(values.items()))
+    _emit(ctx, payload, lines)
+
+
+@profile_app.command("remove", help=tr("cli.config.profile.remove_help"))
+def config_profile_remove(
+    ctx: typer.Context,
+    name: str = typer.Argument(..., help=tr("cli.config.profile.remove_name_help")),
+    confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.profile.remove_yes_help")),
+) -> None:
+    """Tombstone a profile. Immutable filing snapshots are retained."""
+
+    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....application.user_profile import RemoveProfileCommand
+    from ....domain.user_profile import ProfileNotFoundError
+
+    if not confirmed:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.remove_requires_yes", name=name))
+    repository = _profile_state()
+    state = repository.load()
+    pointer = state.profiles.get(name)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    try:
+        result = service.remove(RemoveProfileCommand(profile_id=name))
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
+    if state.active_profile == name:
+        from ....application.workflow._utils import utc_now
+
+        repository.update(lambda current: current.model_copy(update={"active_profile": None, "updated_at": utc_now()}))
+    _emit(
+        ctx,
+        {"profile_id": result.profile.profile_id, "status": result.profile.status.value},
+        (f"profile_id\t{result.profile.profile_id}", f"status\t{result.profile.status.value}"),
+    )
+
+
+@profile_app.command("duplicate", help=tr("cli.config.profile.duplicate_help"))
+def config_profile_duplicate(
+    ctx: typer.Context,
+    source: str = typer.Argument(..., help=tr("cli.config.profile.duplicate_source_help")),
+    target: str = typer.Argument(..., help=tr("cli.config.profile.duplicate_target_help")),
+    display_name: str | None = typer.Option(
+        None, "--display-name", help=tr("cli.config.profile.duplicate_display_name_help")
+    ),
+) -> None:
+    """Copy SOURCE into TARGET as a new active profile."""
+
+    from ....application.user_profile import DuplicateProfileCommand
+    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....application.workflow._models import ProfileBucketPointer
+    from ....application.workflow._utils import utc_now
+    from ....domain.user_profile import ProfileAlreadyExistsError, ProfileNotFoundError
+
+    repository = _profile_state()
+    state = repository.load()
+    pointer = state.profiles.get(source)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source))
+    if target in state.profiles:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    try:
+        result = service.duplicate(
+            DuplicateProfileCommand(
+                source_profile_id=source,
+                target_profile_id=target,
+                target_display_name=display_name or target,
+            )
+        )
+    except ProfileAlreadyExistsError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target)) from exc
+    except ProfileNotFoundError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
+
+    def _register_target(current):
+        profiles = dict(current.profiles)
+        profiles[target] = ProfileBucketPointer(bucket_id=pointer.bucket_id)
+        return current.model_copy(update={"profiles": profiles, "updated_at": utc_now()})
+
+    repository.update(_register_target)
+    _emit(
+        ctx,
+        {
+            "source_profile_id": source,
+            "target_profile_id": result.profile.profile_id,
+            "display_name": result.profile.display_name,
+        },
+        (
+            f"source_profile_id\t{source}",
+            f"target_profile_id\t{result.profile.profile_id}",
+            f"display_name\t{result.profile.display_name}",
+        ),
+    )
+
+
+@app.command("init", help=tr("cli.config.init.help", default="Initialize a new active profile and config bucket."))
+def config_init(
+    ctx: typer.Context,
+    profile_name: str = typer.Option("default", "--profile", help=tr("cli.config.init.profile_name_help")),
+    tax_id: str | None = typer.Option(None, "--tax-id", help=tr("cli.config.init.tax_id_help")),
+    activity: str = typer.Option("Servicios", "--activity", help=tr("cli.config.init.activity_help")),
+    iva_regime: str = typer.Option("general", "--iva-regime", help=tr("cli.config.init.iva_regime_help")),
+    tax_residence_ccaa: str | None = typer.Option(
+        None,
+        "--tax-residence-ccaa",
+        "--tax-residence",
+        help=tr("cli.config.init.tax_residence_ccaa_help"),
+    ),
+    auth_provider: str = typer.Option("none", "--auth-provider", help=tr("cli.config.init.auth_provider_help")),
+    certificate_path: Path | None = typer.Option(None, "--certificate-path", help=tr("cli.config.init.certificate_path_help")),
+    certificate_password_env: str | None = typer.Option(None, "--certificate-password-env", help=tr("cli.config.init.certificate_password_env_help")),
+    output_language: str | None = typer.Option(None, "--output-language", help=tr("cli.config.init.output_language_help")),
+    drafts_dir: Path | None = typer.Option(None, "--drafts-dir", help=tr("cli.config.init.drafts_dir_help")),
+    submissions_dir: Path | None = typer.Option(None, "--submissions-dir", help=tr("cli.config.init.submissions_dir_help")),
+    manuals_root: Path | None = typer.Option(None, "--manuals-root", help=tr("cli.config.init.manuals_root_help")),
+    from_path: Path | None = typer.Option(None, "--from", help=tr("cli.config.init.from_help")),
+    non_interactive: bool = typer.Option(False, "--non-interactive", help=tr("cli.config.init.non_interactive_help")),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        help=tr("cli.config.init.quiet_help", default="Skip the success message after init."),
+    ),
+    dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.config.init.dry_run_help")),
+) -> None:
+    """Initialize a new active profile and config bucket."""
+
+    from ....application.setup import InitializeWorkspaceCommand, initialize_workspace
     from ....application.wizard._prompter import WizardUnsupportedConsoleError
 
-    for flow in WIZARD_FLOWS:
-        command_callable = build_wizard_command(flow)
-        original = typing.cast(typing.Any, command_callable)
+    if dry_run:
+        # Avoid execution on dry-run
+        payload = {"dry_run": True, "profile_name": profile_name}
+        _emit(ctx, payload, ("dry_run\ttrue", f"profile_name\t{profile_name}"))
+        return
 
-        def _wrapped(
-            *args: object,
-            _callable: typing.Callable[..., None] = command_callable,
-            **kwargs: object,
-        ) -> None:
-            try:
-                _callable(*args, **kwargs)
-            except WizardMissingFlagError as exc:
-                translated = exc.translated_message or tr("cli.config.setup.errors.missing_required_flags")
-                raise CliRefusedBoundaryError(translated) from exc
-            except WizardUnsupportedConsoleError as exc:
-                write_stderr(f"{exc}\n")
-                raise typer.Exit(2) from exc
-            if kwargs.get("quiet"):
-                profile_name = kwargs.get("profile_name", "default")
-                typer.echo(tr("cli.config.setup.success.saved", profile_name=profile_name))
-                typer.echo(tr("cli.config.setup.success.next_step"))
+    if tax_id is None:
+        raise WizardUnsupportedConsoleError(tr("wizard.errors.unsupported_console"))
 
-        wrapped = typing.cast(typing.Any, _wrapped)
-        wrapped.__signature__ = original.__signature__
-        wrapped.__annotations__ = original.__annotations__
-        wrapped.__name__ = original.__name__
-        wrapped.__doc__ = original.__doc__
-        wrapped.__wizard_flow__ = getattr(original, "__wizard_flow__", None)
-        command_name = "init" if flow.id == "setup" else flow.id
-        target.command(name=command_name, help=tr("cli.config.setup.help"))(_wrapped)
-
-
-_register_wizard_commands(app)
+    command = InitializeWorkspaceCommand(
+        profile_name=profile_name,
+        tax_id=tax_id,
+        activity=activity,
+        iva_regime=iva_regime,
+        tax_residence_ccaa=tax_residence_ccaa,
+        auth_provider=auth_provider,
+        certificate_path=certificate_path,
+        certificate_password_env=certificate_password_env,
+        output_language=output_language,
+        drafts_dir=drafts_dir,
+        submissions_dir=submissions_dir,
+        manuals_root=manuals_root,
+    )
+    result = initialize_workspace(command)
+    payload = result.model_dump(mode="json")
+    lines: tuple[str, ...] = (
+        f"profile_id\t{result.profile_id}",
+        f"bucket_id\t{result.bucket_id}",
+        f"auth_configured\t{result.auth_configured}",
+    )
+    if not quiet:
+        lines = lines + (
+            tr("cli.config.init.success.next_step", default="Próximo paso: ejecuta `aeat app overview status`"),
+        )
+    _emit(ctx, payload, lines)
 
 
 @profile_app.command("status", help=tr("cli.config.status.help"))
@@ -541,6 +889,125 @@ def auth_clear(
     )
 
 
+scopes_app = typer.Typer(name="scopes", help=tr("cli.config.auth.apoderado.scopes.help", default="Manage apoderado scope vocabulary"), no_args_is_help=True)
+apoderado_app.add_typer(scopes_app, name="scopes")
+
+
+@scopes_app.command("list", help=tr("cli.config.auth.apoderado.scopes.list_help", default="List accepted apoderado scopes"))
+def apoderado_scopes_list(ctx: typer.Context) -> None:
+    """List all available representative scopes in the vocabulary."""
+    from ....application.auth._apoderado import ApoderadoService
+    svc = ApoderadoService()
+    payload = svc.catalogue.model_dump(mode="json")
+    lines = [f"{s.code}\t{tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in svc.catalogue.scopes]
+    _emit(ctx, payload, lines)
+
+
+@apoderado_app.command("status", help=tr("cli.config.auth.apoderado.status_help", default="Show active apoderado configuration"))
+def apoderado_status(ctx: typer.Context) -> None:
+    from ....application.auth._apoderado import ApoderadoService
+    from ....application.workflow._persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    if not state.active_profile:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
+    
+    pointer = state.profiles[state.active_profile]
+    svc = ApoderadoService()
+    result = svc.status(bucket_id=pointer.bucket_id)
+    
+    payload = result.model_dump(mode="json")
+    lines = [
+        f"bucket_id\t{result.bucket_id}",
+        f"configured\t{result.configured}",
+    ]
+    if result.configured:
+        lines.append(f"represented_nif\t{result.represented_nif}")
+        lines.append(f"granted_scopes\t{','.join(result.granted_scopes)}")
+    
+    _emit(ctx, payload, lines)
+
+
+@apoderado_app.command("configure", help=tr("cli.config.auth.apoderado.configure_help", default="Set active apoderado configuration"))
+def apoderado_configure(
+    ctx: typer.Context,
+    represented_nif: str = typer.Option(..., "--represented-nif", help=tr("cli.config.auth.apoderado.configure.represented_nif_help", default="NIF of the represented party")),
+    scope: list[str] = typer.Option(..., "--scope", help=tr("cli.config.auth.apoderado.configure.scope_help", default="Scope tokens (can be repeated)")),
+) -> None:
+    from ....application.auth._apoderado import ApoderadoService
+    from ....application.workflow._persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    if not state.active_profile:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
+    
+    pointer = state.profiles[state.active_profile]
+    svc = ApoderadoService()
+    result = svc.configure(
+        bucket_id=pointer.bucket_id,
+        represented_nif=represented_nif,
+        scope_tokens=tuple(scope),
+    )
+    
+    payload = result.model_dump(mode="json")
+    lines = [
+        f"bucket_id\t{result.bucket_id}",
+        f"represented_nif\t{result.represented_nif}",
+        f"granted_scopes\t{','.join(result.granted_scopes)}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@apoderado_app.command("clear", help=tr("cli.config.auth.apoderado.clear_help", default="Retire the apoderado configuration"))
+def apoderado_clear(ctx: typer.Context) -> None:
+    from ....application.auth._apoderado import ApoderadoService
+    from ....application.workflow._persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    if not state.active_profile:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
+    
+    pointer = state.profiles[state.active_profile]
+    svc = ApoderadoService()
+    cleared = svc.clear(bucket_id=pointer.bucket_id)
+    
+    payload = {"bucket_id": pointer.bucket_id, "cleared": cleared}
+    lines = [
+        f"bucket_id\t{pointer.bucket_id}",
+        f"cleared\t{cleared}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@apoderado_app.command("check", help=tr("cli.config.auth.apoderado.check_help", default="Read-only live verification"))
+def apoderado_check(ctx: typer.Context) -> None:
+    from ....application.auth._apoderado import ApoderadoService, ApoderadoLiveCheckUnavailableError
+    from ....application.workflow._persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    if not state.active_profile:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
+    
+    pointer = state.profiles[state.active_profile]
+    svc = ApoderadoService()
+    
+    try:
+        result = svc.check(bucket_id=pointer.bucket_id)
+    except ApoderadoLiveCheckUnavailableError as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+        
+    payload = result.model_dump(mode="json")
+    lines = [
+        f"bucket_id\t{result.bucket_id}",
+        f"configured\t{result.configured}",
+    ]
+    if result.configured:
+        lines.append(f"represented_nif\t{result.represented_nif}")
+        lines.append(f"granted_scopes\t{','.join(result.granted_scopes)}")
+    
+    _emit(ctx, payload, lines)
+
+
 @bucket_app.command("history", help=tr("cli.config.bucket.history_help"))
 def bucket_history(
     ctx: typer.Context,
@@ -654,6 +1121,7 @@ def bucket_history(
 
 
 app.add_typer(profile_app, name="profile")
+auth_app.add_typer(apoderado_app, name="apoderado")
 app.add_typer(auth_app, name="auth")
 app.add_typer(bucket_app, name="bucket")
 

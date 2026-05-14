@@ -1,0 +1,340 @@
+"""347/349 counterpart aggregator (informational declarations).
+
+Modelo 347: Operaciones con terceros — annual declaration of operations
+with the same counterparty whose total in the year exceeds €3,005.06.
+Modelo 349: Operaciones intracomunitarias — quarterly + annual EU
+member-state operations (delivery, acquisition, services).
+
+Both modelos aggregate per (source_kind, counterparty_nif, operation_kind)
+and apply a declaration threshold downstream. The aggregator here produces
+the raw per-counterparty rollups; the threshold gate (€3005.06 for 347)
+lives in the modelo binding consumer.
+
+Bare ``invoice`` source-kind is rejected at observation construction;
+the four canonical source kinds are accepted.
+"""
+
+from __future__ import annotations
+
+from decimal import Decimal
+from enum import StrEnum
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+_CANONICAL_SOURCE_KINDS: frozenset[str] = frozenset(
+    {
+        "ledger_transaction",
+        "purchase_invoice_evidence",
+        "payable_invoice",
+        "collectible_invoice",
+    },
+)
+
+
+def _validate_source_kind(value: str) -> str:
+    if value not in _CANONICAL_SOURCE_KINDS:
+        raise ValueError(
+            "unsupported source_kind; use one of ledger_transaction, "
+            "purchase_invoice_evidence, payable_invoice, collectible_invoice",
+        )
+    return value
+
+
+def _validate_country(value: str, *, field_name: str) -> str:
+    if len(value) != 2 or any(char < "A" or char > "Z" for char in value):
+        raise ValueError(f"{field_name} must be uppercase ISO-3166 alpha-2, got {value!r}")
+    return value
+
+
+class OperationKind347(StrEnum):
+    """Modelo 347 operation kinds (clave de operación).
+
+    Source: AEAT Modelo 347 instrucciones.
+    """
+
+    DELIVERY = "entregas_y_prestaciones"          # clave A
+    ACQUISITION = "adquisiciones_y_recepciones"   # clave B
+    INSURANCE = "operaciones_seguros"             # clave C
+    RENTAL = "arrendamientos_locales"             # clave D
+    SUBSIDY = "subvenciones_y_ayudas"             # clave E
+
+
+class OperationKind349(StrEnum):
+    """Modelo 349 intracomunitarias operation kinds.
+
+    Source: AEAT Modelo 349 instrucciones. The clave maps from the
+    underlying directionality (entrega/adquisición) and operation
+    type (bienes/servicios).
+    """
+
+    INTRA_DELIVERY = "entrega_intracomunitaria_bienes"        # clave E
+    INTRA_ACQUISITION = "adquisicion_intracomunitaria_bienes" # clave A
+    INTRA_SERVICE_OUT = "prestacion_servicios_intracom"        # clave S
+    INTRA_SERVICE_IN = "adquisicion_servicios_intracom"        # clave I
+    TRIANGULAR = "triangular"                                   # clave T
+
+
+class CounterpartObservation(BaseModel):
+    """One typed observation for a 347 or 349 aggregator pass."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_kind: str = Field(min_length=1)
+    source_object_id: str = Field(min_length=1)
+    counterparty_nif: str = Field(min_length=1, max_length=20)
+    counterparty_name: str = Field(default="", max_length=200)
+    counterparty_country: str = Field(default="ES", min_length=2, max_length=2)
+    operation_kind: str = Field(min_length=1)
+    operation_period: str = Field(min_length=1)  # ISO quarter / year identifier
+    taxable_base: Decimal = Field(ge=Decimal("0"))
+    invoice_total: Decimal = Field(ge=Decimal("0"))
+    accrued_on: str = Field(min_length=10, max_length=10)
+    groi_verified: bool = False
+    nif_iva_verified: bool = False
+
+    @field_validator("source_kind")
+    @classmethod
+    def _source_kind_is_canonical(cls, value: str) -> str:
+        return _validate_source_kind(value)
+
+    @field_validator("counterparty_country")
+    @classmethod
+    def _country_is_uppercase(cls, value: str) -> str:
+        return _validate_country(value, field_name="counterparty_country")
+
+
+class CounterpartRollup(BaseModel):
+    """One (source_kind, counterparty_nif, operation_kind) rollup row."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_kind: str = Field(min_length=1)
+    counterparty_nif: str = Field(min_length=1, max_length=20)
+    counterparty_name: str = Field(default="", max_length=200)
+    counterparty_country: str = Field(min_length=2, max_length=2)
+    operation_kind: str = Field(min_length=1)
+    observations_count: int = Field(ge=0)
+    total_taxable_base: Decimal = Field(ge=Decimal("0"))
+    total_invoice_total: Decimal = Field(ge=Decimal("0"))
+    requires_groi_check: bool = False
+    requires_nif_iva_check: bool = False
+    groi_ready: bool = True
+    nif_iva_ready: bool = True
+    declarable_readiness_satisfied: bool = True
+
+    @field_validator("source_kind")
+    @classmethod
+    def _source_kind_is_canonical(cls, value: str) -> str:
+        return _validate_source_kind(value)
+
+    @field_validator("counterparty_country")
+    @classmethod
+    def _country_is_uppercase(cls, value: str) -> str:
+        return _validate_country(value, field_name="counterparty_country")
+
+
+class CounterpartAggregation(BaseModel):
+    """347 / 349 counterpart aggregation output."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    modelo: str = Field(min_length=1)
+    period: str = Field(min_length=1)
+    rollups: tuple[CounterpartRollup, ...] = Field(default_factory=tuple)
+    total_counterparties: int = Field(ge=0)
+    total_taxable_base: Decimal = Field(ge=Decimal("0"))
+    total_invoice_total: Decimal = Field(ge=Decimal("0"))
+
+    @model_validator(mode="after")
+    def _totals_match_rollups(self) -> CounterpartAggregation:
+        computed_base = sum((row.total_taxable_base for row in self.rollups), Decimal("0"))
+        computed_total = sum((row.total_invoice_total for row in self.rollups), Decimal("0"))
+        if computed_base != self.total_taxable_base:
+            raise ValueError(
+                f"total_taxable_base {self.total_taxable_base} != sum of rollups {computed_base}",
+            )
+        if computed_total != self.total_invoice_total:
+            raise ValueError(
+                f"total_invoice_total {self.total_invoice_total} != sum of rollups {computed_total}",
+            )
+        unique_counterparties = {row.counterparty_nif for row in self.rollups}
+        if len(unique_counterparties) != self.total_counterparties:
+            raise ValueError(
+                f"total_counterparties {self.total_counterparties} != distinct NIFs "
+                f"{len(unique_counterparties)}",
+            )
+        return self
+
+
+_MODELO_347_KINDS: frozenset[str] = frozenset(k.value for k in OperationKind347)
+_MODELO_349_KINDS: frozenset[str] = frozenset(k.value for k in OperationKind349)
+_MODELO_KIND_CATALOGUE: dict[str, frozenset[str]] = {
+    "347": _MODELO_347_KINDS,
+    "349": _MODELO_349_KINDS,
+}
+
+
+def _filter_observations_for_modelo(
+    observations: tuple[CounterpartObservation, ...],
+    modelo: str,
+) -> tuple[CounterpartObservation, ...]:
+    if modelo not in _MODELO_KIND_CATALOGUE:
+        msg = f"counterpart aggregator for modelo {modelo!r} is not implemented"
+        raise NotImplementedError(msg)
+    eligible = _MODELO_KIND_CATALOGUE[modelo]
+    return tuple(o for o in observations if o.operation_kind in eligible)
+
+
+def _aggregate_for_modelo(
+    observations: tuple[CounterpartObservation, ...],
+    *,
+    modelo: str,
+    period: str,
+) -> CounterpartAggregation:
+    filtered = _filter_observations_for_modelo(observations, modelo=modelo)
+    grouped: dict[tuple[str, str, str], list[CounterpartObservation]] = {}
+    names: dict[tuple[str, str], str] = {}
+    for obs in filtered:
+        key = (obs.source_kind, obs.counterparty_nif, obs.operation_kind)
+        grouped.setdefault(key, []).append(obs)
+        identity_key = (obs.source_kind, obs.counterparty_nif)
+        if obs.counterparty_name and not names.get(identity_key):
+            names[identity_key] = obs.counterparty_name
+    rollups: list[CounterpartRollup] = []
+    for (source_kind, nif, op_kind), group in sorted(grouped.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2])):
+        total_base = sum((g.taxable_base for g in group), Decimal("0"))
+        total_invoice = sum((g.invoice_total for g in group), Decimal("0"))
+        country = _single_counterparty_country(
+            observations=tuple(group),
+            source_kind=source_kind,
+            counterparty_nif=nif,
+            operation_kind=op_kind,
+        )
+        readiness = _counterpart_readiness_for_modelo(modelo=modelo, country=country, observations=tuple(group))
+        rollups.append(
+            CounterpartRollup(
+                source_kind=source_kind,
+                counterparty_nif=nif,
+                counterparty_name=names.get((source_kind, nif), ""),
+                counterparty_country=country,
+                operation_kind=op_kind,
+                observations_count=len(group),
+                total_taxable_base=total_base,
+                total_invoice_total=total_invoice,
+                **readiness,
+            ),
+        )
+    counterparties = {row.counterparty_nif for row in rollups}
+    return CounterpartAggregation(
+        modelo=modelo,
+        period=period,
+        rollups=tuple(rollups),
+        total_counterparties=len(counterparties),
+        total_taxable_base=sum((row.total_taxable_base for row in rollups), Decimal("0")),
+        total_invoice_total=sum((row.total_invoice_total for row in rollups), Decimal("0")),
+    )
+
+
+def _single_counterparty_country(
+    *,
+    observations: tuple[CounterpartObservation, ...],
+    source_kind: str,
+    counterparty_nif: str,
+    operation_kind: str,
+) -> str:
+    countries = frozenset(observation.counterparty_country for observation in observations)
+    if len(countries) != 1:
+        raise ValueError(
+            "conflicting counterparty_country values for counterpart aggregation cohort "
+            f"source_kind={source_kind!r}, counterparty_nif={counterparty_nif!r}, "
+            f"operation_kind={operation_kind!r}: {sorted(countries)!r}",
+        )
+    return next(iter(countries))
+
+
+def aggregate_counterpart_347(
+    observations: tuple[CounterpartObservation, ...],
+    *,
+    period: str,
+) -> CounterpartAggregation:
+    """Aggregate Modelo 347 (operaciones con terceros, annual).
+
+    Filters to 347 operation kinds. Threshold gating (the €3,005.06
+    declaration floor) belongs to the modelo binding consumer; this
+    aggregator returns raw per-counterparty totals.
+    """
+    return _aggregate_for_modelo(observations, modelo="347", period=period)
+
+
+def aggregate_counterpart_349(
+    observations: tuple[CounterpartObservation, ...],
+    *,
+    period: str,
+) -> CounterpartAggregation:
+    """Aggregate Modelo 349 (operaciones intracomunitarias).
+
+    Filters to 349 intracomunitarias operation kinds. Rollups carry
+    the additional NIF-IVA / GROI readiness gates: Spanish
+    counterparties require GROI readiness and non-Spanish
+    counterparties require NIF-IVA readiness.
+    """
+    return _aggregate_for_modelo(observations, modelo="349", period=period)
+
+
+def _counterpart_readiness_for_modelo(
+    *,
+    modelo: str,
+    country: str,
+    observations: tuple[CounterpartObservation, ...],
+) -> dict[str, bool]:
+    if modelo != "349":
+        return {
+            "requires_groi_check": False,
+            "requires_nif_iva_check": False,
+            "groi_ready": True,
+            "nif_iva_ready": True,
+            "declarable_readiness_satisfied": True,
+        }
+    requires_groi = country == "ES"
+    requires_nif_iva = country != "ES"
+    groi_ready = (not requires_groi) or all(obs.groi_verified for obs in observations)
+    nif_iva_ready = (not requires_nif_iva) or all(obs.nif_iva_verified for obs in observations)
+    return {
+        "requires_groi_check": requires_groi,
+        "requires_nif_iva_check": requires_nif_iva,
+        "groi_ready": groi_ready,
+        "nif_iva_ready": nif_iva_ready,
+        "declarable_readiness_satisfied": groi_ready and nif_iva_ready,
+    }
+
+
+THRESHOLD_347_EUR: Decimal = Decimal("3005.06")
+"""Modelo 347 declaration floor: counterparties whose annual operations
+total to at most this amount are NOT declarable per AEAT instrucciones."""
+
+
+def declarable_counterparty_nifs_347(aggregation: CounterpartAggregation) -> frozenset[str]:
+    """Return counterparties whose full Modelo 347 total exceeds the declaration floor."""
+    totals: dict[str, Decimal] = {}
+    for rollup in aggregation.rollups:
+        totals[rollup.counterparty_nif] = totals.get(rollup.counterparty_nif, Decimal("0")) + rollup.total_invoice_total
+    return frozenset(nif for nif, total in totals.items() if total > THRESHOLD_347_EUR)
+
+
+def declarable_for_347(aggregation: CounterpartAggregation, *, counterparty_nif: str) -> bool:
+    """Return True iff a counterparty exceeds the 347 declaration floor across all cohorts."""
+    return counterparty_nif in declarable_counterparty_nifs_347(aggregation)
+
+
+__all__ = [
+    "THRESHOLD_347_EUR",
+    "CounterpartAggregation",
+    "CounterpartObservation",
+    "CounterpartRollup",
+    "OperationKind347",
+    "OperationKind349",
+    "aggregate_counterpart_347",
+    "aggregate_counterpart_349",
+    "declarable_counterparty_nifs_347",
+    "declarable_for_347",
+]

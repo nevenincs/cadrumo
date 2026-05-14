@@ -51,14 +51,10 @@ class LiveSubmitForbiddenError(AccessGateSubmissionPreflightError):
             "export and upload the file yourself in the AEAT portal"
         ),
         *,
-        translated_message: str | None = None,
+        translated_message: str = "access_gate.errors.default_translatable",
     ) -> None:
         """Construct the permanent live-submit refusal error."""
-        default_translatable: str = "access_gate.errors.default_translatable"
-        super().__init__(
-            message,
-            translated_message=translated_message or default_translatable,
-        )
+        super().__init__(message, translated_message=translated_message)
 
 
 class AeatLiveReadNotEnabledError(AeatError):

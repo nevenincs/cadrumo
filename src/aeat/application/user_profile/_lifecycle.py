@@ -3,14 +3,14 @@
 This service is the single sanctioned write path for live user-profile
 values. It routes every register / edit / remove / duplicate / list /
 read operation through the secure-DB repository and the schema-aware
-validation service. CLI thin adapters (W09.P045) and migrated
-consumers (W09.P042) call this surface; no caller should construct
-``UserProfileRecord`` aggregates or touch the secure repository
-directly.
+validation service. CLI thin adapters and downstream consumers call
+this surface; no caller should construct ``UserProfileRecord``
+aggregates or touch the secure repository directly.
 """
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Iterable
 from datetime import date, datetime
 
@@ -49,9 +49,11 @@ _PROFILE_LIFECYCLE_ACTOR = "aeat.application.user_profile"
 
 
 def _paths_payload(facts: tuple[UserProfileFact, ...]) -> dict[str, str]:
-    """Return a stable comma-joined ``paths`` payload for a bucket event."""
+    """Return bounded path summary payload for a bucket event."""
 
-    return {"paths": ",".join(sorted({fact.path for fact in facts}))}
+    paths = sorted({fact.path for fact in facts})
+    encoded = "\n".join(paths).encode("utf-8")
+    return {"path_count": str(len(paths)), "paths_sha256": hashlib.sha256(encoded).hexdigest()}
 
 
 class ProfileLifecycleService:
@@ -143,9 +145,7 @@ class ProfileLifecycleService:
         self._reject_invalid(command.profile_id, next_facts)
         result = self._save_updated(record, next_facts)
         event_type = (
-            BucketEventType.PROFILE_VALUES_CLEARED
-            if new_fact.value is None
-            else BucketEventType.PROFILE_VALUES_UPDATED
+            BucketEventType.PROFILE_VALUES_CLEARED if new_fact.value is None else BucketEventType.PROFILE_VALUES_UPDATED
         )
         self._emit_event(
             event_type=event_type,
@@ -167,7 +167,7 @@ class ProfileLifecycleService:
             event_type=BucketEventType.PROFILE_VALUES_UPDATED,
             object_id=record.profile_id,
             occurred_at=result.applied_at,
-            payload={"section": command.section_key, "fields": _paths_payload(command.facts)["paths"]},
+            payload={"section": command.section_key, **_paths_payload(command.facts)},
         )
         return result
 

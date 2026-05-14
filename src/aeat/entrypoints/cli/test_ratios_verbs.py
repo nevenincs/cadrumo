@@ -1,0 +1,89 @@
+"""CLI surface tests for `aeat app ledger ratios {list, set, unset, eligible, validate}`."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
+
+import pytest
+from typer.testing import CliRunner
+
+from aeat.application.user_profile._testing import register_minimal_profile
+from aeat.application.workflow._persistence import workflow_state_repository
+from aeat.entrypoints.cli._ledger import ratios_app
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'ratios-verbs.db').as_posix()}")
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    dispose_engine()
+    try:
+        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
+        yield
+    finally:
+        dispose_engine()
+
+
+@pytest.fixture
+def cli_runner() -> CliRunner:
+    return CliRunner()
+
+
+def test_ratios_list_starts_empty(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(ratios_app, ["list"])
+    assert result.exit_code == 0, result.output
+    assert "count\t0" in result.output
+
+
+def test_ratios_set_persists_and_list_reflects(cli_runner: CliRunner) -> None:
+    set_result = cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "0.5"])
+    assert set_result.exit_code == 0, set_result.output
+    assert "vehiculo_combustible\t0.5" in set_result.output
+
+    list_result = cli_runner.invoke(ratios_app, ["list"])
+    assert list_result.exit_code == 0, list_result.output
+    assert "count\t1" in list_result.output
+    assert "vehiculo_combustible\t0.5" in list_result.output
+
+
+def test_ratios_unset_clears(cli_runner: CliRunner) -> None:
+    cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "0.5"])
+    result = cli_runner.invoke(ratios_app, ["unset", "vehiculo_combustible"])
+    assert result.exit_code == 0, result.output
+    assert "vehiculo_combustible\t<unset>" in result.output
+
+    list_result = cli_runner.invoke(ratios_app, ["list"])
+    assert "count\t0" in list_result.output
+
+
+def test_ratios_unset_refuses_unknown_override(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(ratios_app, ["unset", "vehiculo_combustible"])
+    assert result.exit_code != 0
+
+
+def test_ratios_set_refuses_unknown_category(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(ratios_app, ["set", "NOT_A_CATEGORY", "0.5"])
+    assert result.exit_code != 0
+
+
+def test_ratios_set_refuses_out_of_bounds(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "1.5"])
+    assert result.exit_code != 0
+
+
+def test_ratios_eligible_lists_categories(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(ratios_app, ["eligible"])
+    assert result.exit_code == 0, result.output
+    assert "vehiculo_" in result.output or "telefonia_" in result.output
+
+
+def test_ratios_validate_reports_clean_when_empty(cli_runner: CliRunner) -> None:
+    result = cli_runner.invoke(ratios_app, ["validate"])
+    assert result.exit_code == 0, result.output
+    assert "profile_present\tFalse" in result.output

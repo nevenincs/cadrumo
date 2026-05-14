@@ -25,7 +25,6 @@ class ProviderKind(StrEnum):
 
     LOCAL_FILESYSTEM = "local_filesystem"
     GOOGLE_DRIVE = "google_drive"
-    IN_MEMORY = "in_memory"
 
 
 class ProviderObjectMetadata(BaseModel):

@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from ._enums import (
     CLASSIFIED_STATES,
     BusinessClassification,
+    SplitRole,
     TransactionDirection,
     TransactionLifecycleState,
     is_classified,
@@ -53,11 +54,13 @@ from ._model_tier import ModelCapability, catalogue, profiles_for_provider, reso
 from ._models import (
     BucketTransactionRef,
     ClassificationHistoryEntry,
+    SplitLineage,
     Transaction,
     TransactionCatalogue,
     TransactionEditLineageEntry,
     TransactionEvidenceProvenanceEntry,
     TransactionLifecycleLineageEntry,
+    derive_split_group_id,
     derive_transaction_id,
 )
 from ._raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -121,6 +124,7 @@ __all__ = [
     "RawProvenance",
     "RawTransaction",
     "SourceFormat",
+    "SplitLineage",
     "SubprocessLLMClassifier",
     "Transaction",
     "TransactionCatalogue",
@@ -131,6 +135,7 @@ __all__ = [
     "TransactionError",
     "TransactionEvidenceProvenanceEntry",
     "TransactionLifecycleLineageEntry",
+    "SplitRole",
     "TransactionLifecycleState",
     "TransactionIdPrefixError",
     "TransactionNotFoundError",
@@ -142,6 +147,7 @@ __all__ = [
     "catalogue",
     "default_classification_choices",
     "default_prompt_spec",
+    "derive_split_group_id",
     "derive_transaction_id",
     "find_transaction",
     "is_classified",

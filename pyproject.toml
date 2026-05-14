@@ -41,6 +41,11 @@ dependencies = [
   "google-auth>=2.50.0",
   "google-auth-oauthlib>=1.3.1",
   "google-api-python-client>=2.195.0",
+  # In-process Excel-formula evaluator. Used by the schema-to-sheet
+  # parity oracle to evaluate translated Sheets formulas locally and
+  # assert exact-after-per-casilla-rounding identity against the
+  # canonical Python calc engine. No network IO; runs in-process.
+  "formulas>=1.2.0",
   # HTTP client
   "httpx>=0.28.1",
   # OS-keychain abstraction for the master-key provider (Windows
@@ -83,7 +88,7 @@ dependencies = [
 ]
 
 [project.scripts]
-aeat = "aeat.entrypoints.cli:app"
+aeat = "aeat.entrypoints.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/wgergely/aeat"

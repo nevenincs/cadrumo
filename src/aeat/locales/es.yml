@@ -1,7 +1,16 @@
+access_gate:
+  errors:
+    default_translatable: el envío en vivo a la AEAT está permanentemente prohibido;
+      usa produce -> verify -> export y sube el fichero manualmente en el portal de
+      la AEAT
 aggregation:
   iva_ledger:
     errors:
-      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el bucket de agregación solicitado.
+      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
+        bucket de agregación solicitado.
+  modelo_bindings:
+    errors:
+      unsupported_period: Periodo de modelo no soportado para la agregación del libro.
   models:
     errors:
       annual_period_mixed: El periodo no puede mezclar valores anuales y subaños (trimestre/mes).
@@ -10,18 +19,23 @@ aggregation:
         o mes explícitamente.
       quarter_required: El tipo de periodo trimestral requiere un valor de trimestre.
     t_944805: Periodo no valido. Usa YYYY-Qn
+  per_modelo:
+    errors:
+      unsupported_modelo: aggregation.per_modelo.errors.unsupported_modelo
+    registry:
+      errors:
+        invalid_accrued_on: aggregation.per_modelo.registry.errors.invalid_accrued_on
+        unsupported_provider: aggregation.per_modelo.registry.errors.unsupported_provider
   renta_ledger:
     errors:
       annual_period_required: Se requiere un periodo anual para la agregación del
         libro de Renta.
-      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el bucket solicitado del libro de Renta.
+      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
+        bucket solicitado del libro de Renta.
       modelo_mismatch: El modelo tributario no coincide con el modelo esperado del
         libro de Renta.
       period_mismatch: El periodo no coincide con el periodo esperado del libro de
         Renta.
-  modelo_bindings:
-    errors:
-      unsupported_period: Periodo de modelo no soportado para la agregación del libro.
 application:
   auth:
     provider_impact:
@@ -57,9 +71,99 @@ categories:
     display_label_851219: Etiqueta de visualización 851219
 cli:
   app:
+    ledger:
+      collectible_invoice:
+        add_help: cli.app.ledger.collectible_invoice.add_help
+        group_help: cli.app.ledger.collectible_invoice.group_help
+        invoice_date_help: cli.app.ledger.collectible_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.collectible_invoice.invoice_id_help
+        list_help: cli.app.ledger.collectible_invoice.list_help
+        remove_help: cli.app.ledger.collectible_invoice.remove_help
+        update_help: cli.app.ledger.collectible_invoice.update_help
+        view_help: cli.app.ledger.collectible_invoice.view_help
+        yes_help: cli.app.ledger.collectible_invoice.yes_help
+        yes_required: cli.app.ledger.collectible_invoice.yes_required
+      evidence:
+        add_help: cli.app.ledger.evidence.add_help
+        evidence_id_help: cli.app.ledger.evidence.evidence_id_help
+        group_help: cli.app.ledger.evidence.group_help
+        invoice_date_help: cli.app.ledger.evidence.invoice_date_help
+        invoice_number_help: cli.app.ledger.evidence.invoice_number_help
+        iva_amount_help: cli.app.ledger.evidence.iva_amount_help
+        iva_rate_help: cli.app.ledger.evidence.iva_rate_help
+        list_help: cli.app.ledger.evidence.list_help
+        notes_help: cli.app.ledger.evidence.notes_help
+        remove_help: cli.app.ledger.evidence.remove_help
+        source_path_help: cli.app.ledger.evidence.source_path_help
+        supplier_help: cli.app.ledger.evidence.supplier_help
+        taxable_base_help: cli.app.ledger.evidence.taxable_base_help
+        update_help: cli.app.ledger.evidence.update_help
+        view_help: cli.app.ledger.evidence.view_help
+        yes_help: cli.app.ledger.evidence.yes_help
+        yes_required: cli.app.ledger.evidence.yes_required
+      inventory:
+        actividad_id_help: cli.app.ledger.inventory.actividad_id_help
+        create_help: cli.app.ledger.inventory.create_help
+        group_help: cli.app.ledger.inventory.group_help
+        list_help: cli.app.ledger.inventory.list_help
+        movement_add_help: cli.app.ledger.inventory.movement_add_help
+        movement_date_help: cli.app.ledger.inventory.movement_date_help
+        movement_group_help: cli.app.ledger.inventory.movement_group_help
+        movement_id_help: cli.app.ledger.inventory.movement_id_help
+        movement_kind_help: cli.app.ledger.inventory.movement_kind_help
+        opening_stock_help: cli.app.ledger.inventory.opening_stock_help
+        quantity_help: cli.app.ledger.inventory.quantity_help
+        taxable_base_help: cli.app.ledger.inventory.taxable_base_help
+        unit_cost_help: cli.app.ledger.inventory.unit_cost_help
+        unknown_movement_kind: cli.app.ledger.inventory.unknown_movement_kind
+        valuation_group_help: cli.app.ledger.inventory.valuation_group_help
+        valuation_method_help: cli.app.ledger.inventory.valuation_method_help
+        valuation_preview_help: cli.app.ledger.inventory.valuation_preview_help
+        vat_rate_help: cli.app.ledger.inventory.vat_rate_help
+        year_help: cli.app.ledger.inventory.year_help
+      payable_invoice:
+        add_help: cli.app.ledger.payable_invoice.add_help
+        group_help: cli.app.ledger.payable_invoice.group_help
+        invoice_date_help: cli.app.ledger.payable_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.payable_invoice.invoice_id_help
+        list_help: cli.app.ledger.payable_invoice.list_help
+        remove_help: cli.app.ledger.payable_invoice.remove_help
+        update_help: cli.app.ledger.payable_invoice.update_help
+        view_help: cli.app.ledger.payable_invoice.view_help
+        yes_help: cli.app.ledger.payable_invoice.yes_help
+        yes_required: cli.app.ledger.payable_invoice.yes_required
+      ratios:
+        category_help: cli.app.ledger.ratios.category_help
+        eligible_help: cli.app.ledger.ratios.eligible_help
+        group_help: cli.app.ledger.ratios.group_help
+        list_help: cli.app.ledger.ratios.list_help
+        no_override_error: cli.app.ledger.ratios.no_override_error
+        ratio_help: cli.app.ledger.ratios.ratio_help
+        set_help: cli.app.ledger.ratios.set_help
+        unknown_category: cli.app.ledger.ratios.unknown_category
+        unset_category_help: cli.app.ledger.ratios.unset_category_help
+        unset_help: cli.app.ledger.ratios.unset_help
+        validate_help: cli.app.ledger.ratios.validate_help
     live:
       app_help: Comandos de observación AEAT en vivo de solo lectura
+      borrador:
+        app_help: Snapshots de borrador del modelo 100
+        filing_year_help: Ejercicio fiscal (p. ej. 2024)
+        latest_help: Mostrar el snapshot activo más reciente de un ejercicio fiscal
+        list_help: Listar snapshots persistidos del borrador del modelo 100
+        modelo_100_help: Comandos de snapshots del borrador del modelo 100
+        snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
+        state_help: 'Filtro de estado del snapshot: active, superseded, discarded
+          o all'
+        view_help: Mostrar un snapshot del borrador del modelo 100
       expediente_help: Identificador de expediente AEAT
+      expedientes:
+        app_help: cli.app.live.expedientes.app_help
+        capture_help: cli.app.live.expedientes.capture_help
+        latest_help: cli.app.live.expedientes.latest_help
+        list_help: cli.app.live.expedientes.list_help
+        snapshot_id_help: cli.app.live.expedientes.snapshot_id_help
+        view_help: cli.app.live.expedientes.view_help
       filed:
         capture_help: Capturar datos de declaraciones presentadas desde AEAT
         capture_sources_help: Capturar observaciones presentadas requeridas por una
@@ -69,15 +173,68 @@ cli:
       from_year_help: Primer ejercicio de presentación
       limit_help: Número máximo de filas a capturar
       modelo_help: Código de modelo
+      notifications:
+        app_help: cli.app.live.notifications.app_help
+        capture_help: cli.app.live.notifications.capture_help
+        list_help: cli.app.live.notifications.list_help
+        snapshot_id_help: cli.app.live.notifications.snapshot_id_help
+        view_help: cli.app.live.notifications.view_help
       output_root_help: Directorio para observaciones capturadas de declaraciones
         presentadas
       period_help: Periodo de presentación
+      portals:
+        app_help: cli.app.live.portals.app_help
+        category_help: cli.app.live.portals.category_help
+        list_help: cli.app.live.portals.list_help
+        modelo_help: cli.app.live.portals.modelo_help
+        portal_id_help: cli.app.live.portals.portal_id_help
+        view_help: cli.app.live.portals.view_help
       registry_root_help: Raíz del registro
       source_root_help: Raíz del proyecto
       to_year_help: Último ejercicio de presentación
+      verify:
+        app_help: cli.app.live.verify.app_help
+        expected_help: cli.app.live.verify.expected_help
+        latest_help: cli.app.live.verify.latest_help
+        latest_nif_help: cli.app.live.verify.latest_nif_help
+        latest_surface_help: cli.app.live.verify.latest_surface_help
+        list_help: cli.app.live.verify.list_help
+        nif_help: cli.app.live.verify.nif_help
+        nif_iva_arg_help: cli.app.live.verify.nif_iva_arg_help
+        nif_iva_help: cli.app.live.verify.nif_iva_help
+        observation_id_help: cli.app.live.verify.observation_id_help
+        surface_help: cli.app.live.verify.surface_help
+        tgvi_arg_help: cli.app.live.verify.tgvi_arg_help
+        tgvi_help: cli.app.live.verify.tgvi_help
+        view_help: cli.app.live.verify.view_help
       year_help: Ejercicio de presentación
     modelo:
+      aggregate:
+        counterpart_observation_help: Objeto JSON CounterpartObservation. El valor
+          source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
+          o collectible_invoice. Repetible para varias observaciones.
+        foreign_asset_observation_help: Objeto JSON ForeignAssetObservation. El valor
+          source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
+          o collectible_invoice. Repetible para varias observaciones.
+        modelo_help: Codigo de modelo soportado por el servicio backend de agregacion
+          (111, 115, 123, 180, 190, 193, 347, 349 o 720).
+        period_help: Periodo de agregacion enviado al servicio backend.
+        retencion_observation_help: Objeto JSON RetencionObservation. El valor source_kind
+          debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
+          o collectible_invoice. Repetible para varias observaciones.
+      aggregate_help: Ejecuta el servicio backend de agregacion por modelo con observaciones
+        canonicas explicitas. Los valores source_kind aceptados son ledger_transaction,
+        purchase_invoice_evidence, payable_invoice y collectible_invoice.
       app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el registro
+      audit:
+        bundle_id_help: cli.app.modelo.audit.bundle_id_help
+        check_help: cli.app.modelo.audit.check_help
+        export_help: cli.app.modelo.audit.export_help
+        force_incomplete_help: cli.app.modelo.audit.force_incomplete_help
+        group_help: cli.app.modelo.audit.group_help
+        output_help: cli.app.modelo.audit.output_help
+        replay_help: cli.app.modelo.audit.replay_help
+        view_help: cli.app.modelo.audit.view_help
       bindings:
         app_help: Inspeccionar y previsualizar los bindings de un modelo tributario
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -89,7 +246,8 @@ cli:
         missing_required_options: 'Faltan opciones obligatorias: %{options}'
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
-        period_help: Periodo fiscal para acotar los bindings (p. ej. 2026Q1, 2026-01)
+        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
+          ejemplos periodicos incluyen 2026Q1 y 2026-01
         preview_help: Previsualizar bindings con sobrescrituras temporales sin mutar
           el estado
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
@@ -99,14 +257,16 @@ cli:
         input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
           computed, informational)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Periodo fiscal para acotar las casillas (p. ej. 2026Q1, 2026-01)
+        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
+          ejemplos periodicos incluyen 2026Q1 y 2026-01
         required_help: Mostrar solo las casillas marcadas como obligatorias
       describe:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Periodo fiscal para resolver la revisión del modelo (p. ej. 2026Q1,
-          2026-01)
+        period_help: Token de periodo para resolver la revision del modelo; para Modelo
+          036 usa alta, modificacion o baja; ejemplos periodicos incluyen 2026Q1 y
+          2026-01
       filing_record:
         app_help: Inspeccionar las presentaciones internas (filing records) registradas
         bucket_id_help: Filtrar por bucket
@@ -122,21 +282,27 @@ cli:
         include_superseded_help: Incluir los filing records superados (excluidos por
           defecto)
         list_help: Listar los filing records registrados
-        show_help: Mostrar un filing record por id
+        view_help: Mostrar un filing record por id
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: Periodo fiscal para acotar las fórmulas (p. ej. 2026Q1, 2026-01)
+        period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
+          ejemplos periodicos incluyen 2026Q1 y 2026-01
+      history:
+        modelo_help: cli.app.modelo.history.modelo_help
+        period_help: cli.app.modelo.history.period_help
+        year_help: cli.app.modelo.history.year_help
+      history_help: cli.app.modelo.history_help
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
       verification_report:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
           revisión de cálculo
-        show_help: Mostrar un informe de verificación por id
         verification_report_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de un informe de verificación
+        view_help: Mostrar un informe de verificación por id
       work:
         actor_help: Actor responsable de la acción (etiqueta libre de hasta 64 caracteres)
         amend_help: Construir una declaración complementaria sobre una declaración
@@ -147,6 +313,10 @@ cli:
           operador)
         app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
           tributario
+        borrador_help: Id del snapshot de borrador del modelo 100 (completo o prefijo
+          no ambiguo). Sus valores de binding se usan solo para bindings marcados
+          aeat_prefilled; las sobrescrituras --binding del operador siempre tienen
+          prioridad.
         bucket_id_help: Identificador del bucket al que pertenece la unidad de trabajo
         calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
@@ -161,6 +331,8 @@ cli:
         from_filing_record_help: Identificador estable del filing record base a amendar.
           Debe llevar evidencia externa importada (justificante / CSV / captura en
           vivo)
+        history_help: cli.app.modelo.work.history_help
+        history_work_unit_id_help: cli.app.modelo.work.history_work_unit_id_help
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
@@ -169,9 +341,12 @@ cli:
         name_help: Nombre de visualización opcional de la unidad de trabajo
         notes_help: Notas opcionales asociadas al filing record
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
-        period_help: Periodo fiscal de la unidad (p. ej. Q1, 4T, 0A, 01)
+        period_help: Token de periodo de la unidad; para Modelo 036 usa alta, modificacion
+          o baja; ejemplos periodicos incluyen Q1, 4T, 0A y 01
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
+        resume_help: cli.app.modelo.work.resume_help
+        resume_workflow_run_id_help: cli.app.modelo.work.resume_workflow_run_id_help
         revision_help: Identificador estable de la revisión registrada del modelo
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
@@ -192,6 +367,28 @@ cli:
   config:
     app_help: Gestionar configuración local y diagnósticos
     auth:
+      apoderado:
+        check_help: Verificación en vivo de solo lectura
+        clear_help: Retirar la configuración de apoderado
+        configure:
+          represented_nif_help: NIF de la parte representada
+          scope_help: Tokens de ámbito (se pueden repetir)
+        configure_help: Establecer la configuración de apoderado activa
+        help: Gestionar la configuración de apoderado
+        scope:
+          censo: Censo (modelo 036)
+          exped: Expedientes y trámites
+          generalnt: Trámites tributarios (general)
+          inform: Declaraciones informativas (modelo 347, 349, 720)
+          iva: IVA (modelo 303, 390)
+          notific: Notificaciones y comunicaciones
+          pagosf: Pagos fraccionados (modelo 130, 131)
+          rent: Renta y patrimonio (modelo 100, 714)
+          reten: Retenciones (modelo 111, 115, 123, 180, 190, 193)
+        scopes:
+          help: Gestionar el vocabulario de ámbitos de apoderado
+          list_help: Listar los ámbitos de apoderado aceptados
+        status_help: Mostrar la configuración de apoderado activa
       clear_all_help: Limpiar todos los proveedores de autenticación configurados
       clear_help: Limpiar metadatos locales de autenticación
       clear_locks_help: Limpiar bloqueos de adquisición de autenticación
@@ -208,14 +405,18 @@ cli:
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
     bucket:
-      actor_help: Filtrar el historial a eventos registrados por un actor concreto (coincidencia exacta)
+      actor_help: Filtrar el historial a eventos registrados por un actor concreto
+        (coincidencia exacta)
       bucket_id_help: Identificador del bucket cuyo historial de eventos se inspecciona
       event_type_help: Filtrar el historial por uno o varios tipos de evento (repetible)
       help: Inspeccionar el almacenamiento por bucket y su historial de eventos
       history_help: Mostrar el historial de eventos solo-append de un bucket
-      object_id_help: Filtrar el historial a eventos sobre un object_id concreto (coincidencia exacta)
-      since_help: Filtrar el historial a eventos en o tras esta marca ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00)
-      until_help: Filtrar el historial a eventos en o antes de esta marca ISO-8601 (p. ej. 2026-04-30T23:59:59+00:00)
+      object_id_help: Filtrar el historial a eventos sobre un object_id concreto (coincidencia
+        exacta)
+      since_help: Filtrar el historial a eventos en o tras esta marca ISO-8601 (p.
+        ej. 2026-04-01T00:00:00+00:00)
+      until_help: Filtrar el historial a eventos en o antes de esta marca ISO-8601
+        (p. ej. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
       no_active_profile: No hay un perfil activo. Ejecuta 'aeat config init --tax-id
@@ -227,6 +428,11 @@ cli:
       key_help: Clave a leer (ej. tax.id, iva.regime)
     google:
       client_json_help: Ruta al archivo JSON del cliente OAuth Desktop de Cloud Console
+      folder:
+        folder_id_help: cli.config.google.folder.folder_id_help
+        get_help: cli.config.google.folder.get_help
+        help: cli.config.google.folder.help
+        set_help: cli.config.google.folder.set_help
       help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
       login_help: Ejecutar el flujo de consentimiento OAuth (o refrescar una credencial
         existente)
@@ -240,15 +446,92 @@ cli:
         el perfil activo
       status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil
         activo
+      sync:
+        calc:
+          export:
+            modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
+            period_help: Código de período (p. ej. 1T, 2T, 0A)
+            root_folder_required: No hay carpeta raíz de Drive configurada; ejecute
+              `aeat config google folder set <id>` primero
+            unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles
+              son {available}
+            year_help: Año de declaración (p. ej. 2025)
+          export_help: Exporta la superficie de cálculo del registro para un modelo
+            y período a una hoja de Google Sheets dentro de `aeat-vault/`
+          help: Superficie de cálculo esquema-a-hoja (exportar y recuperar)
+        help: cli.config.google.sync.help
+        probe_help: cli.config.google.sync.probe_help
+        probe_read_only_help: cli.config.google.sync.probe_read_only_help
+        push_dry_run_help: cli.config.google.sync.push_dry_run_help
+        push_help: cli.config.google.sync.push_help
+        push_limit_help: cli.config.google.sync.push_limit_help
+        push_namespace_help: cli.config.google.sync.push_namespace_help
+        root_folder_id_unset: cli.config.google.sync.root_folder_id_unset
+    init:
+      activity_help: Economic activity description (e.g. 761.1, programador)
+      auth_provider_help: Authentication provider ID to use for the profile
+      certificate_password_env_help: Environment variable name containing the certificate
+        password
+      certificate_path_help: Path to the .p12 or .pfx certificate file
+      drafts_dir_help: Directory to store local filing drafts
+      dry_run_help: Report changes without modifying the configuration
+      from_help: Source profile ID to import settings from
+      help: Initialize a new active profile and config bucket.
+      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
+      manuals_root_help: Root directory for AEAT technical manuals
+      non_interactive_help: Run without prompting for user input
+      output_language_help: Primary language for CLI output (en, es, ca)
+      profile_name_help: Unique identifier for this configuration profile
+      quiet_help: cli.config.init.quiet_help
+      submissions_dir_help: Directory to store submitted filing receipts
+      success:
+        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
+      tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
+      tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Listar todas las claves de configuración y sus valores actuales
     profile:
+      already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
+      duplicate_display_name_help: Nombre visible para el nuevo perfil (por defecto
+        el id de destino)
+      duplicate_help: Copiar un perfil bajo un nuevo id y nombre visible
+      duplicate_source_help: Id del perfil de origen a duplicar
+      duplicate_target_help: Id del perfil de destino para el duplicado
       help: Gestionar valores de configuración del perfil activo
+      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
+        first.
+      preflight_help: Report whether the active profile is ready for one modelo /
+        year / period.
+      preflight_modelo_help: Modelo code (e.g. 303).
+      preflight_period_help: Period token (e.g. Q1, annual).
+      preflight_revision_help: Registry revision id.
+      preflight_year_help: Filing year.
+      remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
+      remove_name_help: Id del perfil a retirar
+      remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config
+        profile remove %{name} --yes' para confirmar.
+      remove_yes_help: Confirma explícitamente la operación de retirada
+      show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
+      unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile
+        list'' para ver los perfiles registrados.'
+      use_help: Seleccionar un perfil existente como perfil activo
+      use_name_help: Id del perfil que se activará
+      validate_help: Validate the active profile against the schema.
+      view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
       help: Diagnosticar y reparar configuración local, registro, perfil, autenticación
         y logs
+      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
+        all).
+      integrity_namespace_help: Restrict the integrity probe to one namespace.
+      list_all_help: Return every key, including unreadable.
+      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
+        or neither.
+      list_help: List secure-object keys stored under one namespace.
+      list_namespace_help: Namespace to inventory.
+      list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
       quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción
@@ -256,14 +539,14 @@ cli:
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
-      reset_state_help: Descartar el envoltorio ilegible del estado del flujo de
-        trabajo (destructivo; requiere --yes)
-      reset_state_requires_yes: Esta operación es destructiva. Vuelve a ejecutar
-        con --yes para confirmar o pasa --dry-run para inspeccionar la huella.
-      reset_state_yes_help: Confirmar explícitamente el reinicio del estado del
-        flujo de trabajo
       reset_state_dry_run_help: Informar la huella del envoltorio sin eliminar la
         fila
+      reset_state_help: Descartar el envoltorio ilegible del estado del flujo de trabajo
+        (destructivo; requiere --yes)
+      reset_state_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
+        --yes para confirmar o pasa --dry-run para inspeccionar la huella.
+      reset_state_yes_help: Confirmar explícitamente el reinicio del estado del flujo
+        de trabajo
     reset:
       help: Reiniciar ámbitos de configuración introducidos por el operador
       invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
@@ -296,49 +579,53 @@ cli:
       key_help: Clave a limpiar
     workflow_help: Mostrar ayuda del flujo de configuración
   ledger:
-    app_help: Gestión de libros contables y registros de IVA
-    create:
-      actor_help: Nombre del operador registrado en el evento del bucket
-      amount_help: Importe firmado del movimiento; las salidas son negativas
-      attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para varios adjuntos
-      business_pct_help: Proporción de uso profesional para clasificación MIXED, de 0 a 1
-      category_help: Id de categoría de gasto o ingreso
-      classification_help: Estado de clasificación profesional del movimiento
-      counterparty_help: Nombre de la contraparte mostrado en el libro
-      currency_help: Código de moneda ISO 4217
-      date_help: Fecha contable (AAAA-MM-DD)
-      description_help: Descripción del movimiento del libro
-      direction_help: Dirección del movimiento
-      help: Crear un movimiento manual del libro en el bucket del perfil activo
-      idempotency_key_help: Clave estable para hacer idempotente la entrada manual repetida
-      irpf_category_help: Categoría de IRPF para cálculos de modelos
-      iva_amount_help: Importe de IVA
-      iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
-      notes_help: Notas del operador guardadas con el movimiento del libro
-      prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
-      purchase_invoice_evidence_help: Id de justificante de factura de compra que soporta el movimiento
-      taxable_base_help: Importe de base imponible
-      usage_ratio_help: Id de proporción de uso para uso profesional proporcional
-      value_date_help: Fecha valor (AAAA-MM-DD)
+    add:
+      actor_help: cli.ledger.add.actor_help
+      amount_help: cli.ledger.add.amount_help
+      attachment_help: cli.ledger.add.attachment_help
+      business_pct_help: cli.ledger.add.business_pct_help
+      category_help: cli.ledger.add.category_help
+      classification_help: cli.ledger.add.classification_help
+      counterparty_help: cli.ledger.add.counterparty_help
+      currency_help: cli.ledger.add.currency_help
+      date_help: cli.ledger.add.date_help
+      description_help: cli.ledger.add.description_help
+      direction_help: cli.ledger.add.direction_help
+      help: cli.ledger.add.help
+      idempotency_key_help: cli.ledger.add.idempotency_key_help
+      irpf_category_help: cli.ledger.add.irpf_category_help
+      iva_amount_help: cli.ledger.add.iva_amount_help
+      iva_rate_help: cli.ledger.add.iva_rate_help
+      notes_help: cli.ledger.add.notes_help
+      prorrata_reference_help: cli.ledger.add.prorrata_reference_help
+      purchase_invoice_evidence_help: cli.ledger.add.purchase_invoice_evidence_help
+      taxable_base_help: cli.ledger.add.taxable_base_help
+      usage_ratio_help: cli.ledger.add.usage_ratio_help
+      value_date_help: cli.ledger.add.value_date_help
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
       business_pct_help: Proporción de uso profesional de 0 a 1
       category_help: Id de categoría de gasto o ingreso
-      help: Registrar proporcionalidad profesional/personal para un movimiento del libro
+      help: Registrar proporcionalidad profesional/personal para un movimiento del
+        libro
       id_help: Id del movimiento del libro a asignar
       prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
       usage_ratio_help: Id de proporción de uso para uso profesional proporcional
+    app_help: Gestión de libros contables y registros de IVA
     archive:
       actor_help: Nombre del operador registrado en el evento del bucket
       help: Archivar un movimiento del libro en el bucket del perfil activo
       id_help: Id del movimiento del libro a archivar
       reason_help: Motivo registrado en el historial de ciclo de vida
+      yes_help: cli.ledger.archive.yes_help
     attach:
       actor_help: Nombre del operador registrado en el evento del bucket
-      attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para varios adjuntos
+      attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
+        varios adjuntos
       help: Adjuntar objetos de evidencia segura a un movimiento del libro
       id_help: Id del movimiento del libro al que adjuntar evidencia
-      purchase_invoice_evidence_help: Id de justificante de factura de compra que soporta el movimiento
+      purchase_invoice_evidence_help: Id de justificante de factura de compra que
+        soporta el movimiento
     classify:
       actor_help: Nombre del operador registrado en el evento del bucket
       category_help: Id de categoría de gasto o ingreso
@@ -349,35 +636,26 @@ cli:
       iva_amount_help: Importe de IVA
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       taxable_base_help: Importe de base imponible
-    edit:
-      actor_help: Nombre del operador registrado en el evento del bucket
-      amount_help: Importe firmado del movimiento; las salidas son negativas
-      counterparty_help: Nombre de la contraparte mostrado en el libro
-      currency_help: Código de moneda ISO 4217
-      date_help: Fecha contable (AAAA-MM-DD)
-      description_help: Descripción del movimiento del libro
-      direction_help: Dirección del movimiento
-      help: Corregir datos editables de un movimiento del libro en el bucket del perfil activo
-      id_help: Id del movimiento del libro a editar
-      irpf_category_help: Categoría de IRPF para cálculos de modelos
-      iva_amount_help: Importe de IVA
-      iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
-      notes_help: Notas del operador guardadas con el movimiento del libro
-      taxable_base_help: Importe de base imponible
-      value_date_help: Fecha valor (AAAA-MM-DD)
+    errors:
+      confirm_required: Pasa --yes para confirmar esta operación destructiva del libro,
+        o usa --dry-run primero
+      filter_parse_error: Fallo al analizar el filtro del libro
+      id_prefix_collision: cli.ledger.errors.id_prefix_collision
+      id_prefix_empty: cli.ledger.errors.id_prefix_empty
+      id_prefix_not_found: cli.ledger.errors.id_prefix_not_found
+      id_prefix_not_hex: cli.ledger.errors.id_prefix_not_hex
+      id_prefix_too_long: cli.ledger.errors.id_prefix_too_long
+      invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
     export:
       actor_help: Nombre del operador registrado en el evento del bucket
       format_help: Formato de serialización de exportación
       help: Exportar movimientos canónicos del libro desde el bucket del perfil activo
       include_inactive_help: Incluir movimientos archivados y apartados
       output_help: Ruta donde escribir el archivo exportado del libro
-    list:
-      header: MOVIMIENTOS DEL LIBRO CONTABLE
-      help: Listar movimientos del libro en el bucket del perfil activo
-    errors:
-      confirm_required: Pasa --yes para confirmar esta operación destructiva del libro, o usa --dry-run primero
-      filter_parse_error: Fallo al analizar el filtro del libro
-      invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
+    history:
+      help: cli.ledger.history.help
+      id_help: cli.ledger.history.id_help
+      include_split_siblings_help: cli.ledger.history.include_split_siblings_help
     import:
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
       help: Importar extractos bancarios o registros al libro contable
@@ -388,22 +666,27 @@ cli:
       verbose_help: Mostrar información detallada durante la importación
       verify_help: Verificar las entradas después de la importación
     labels:
+      active: Activas
       amount: Importe
+      archived: Archivadas
+      bucket: Bucket
+      checked: Movimientos comprobados
+      children: cli.ledger.labels.children
+      created_event_id: Evento bucket de creación
       date: Fecha
       description: Descripción
       dialect: Formato detectado
       dry_run: MODO DE PRUEBA (DRY RUN)
+      event_count: cli.ledger.labels.event_count
+      event_id: cli.ledger.labels.event_id
+      export_id: ID de exportación
       id: ID
       imported: Entradas importadas
-      active: Activas
-      archived: Archivadas
-      bucket: Bucket
-      checked: Movimientos comprobados
-      created_event_id: Evento bucket de creación
       lifecycle_state: Estado de ciclo de vida
+      merged_id: cli.ledger.labels.merged_id
       'no': 'No'
-      export_id: ID de exportación
       output: Salida
+      parent_id: cli.ledger.labels.parent_id
       pending: Pendientes de revisión
       period: Periodo
       readiness_issues: Incidencias de preparación
@@ -416,20 +699,22 @@ cli:
       sha256: SHA-256
       skipped: Omitidos
       source: Origen
+      split_group_id: cli.ledger.labels.split_group_id
       stashed: Apartadas
       valid: Válido
       warnings: Avisos
       'yes': Sí
-    review:
-      filter_help: Filtrar filas por status, period, issue o import
-      header: SESIÓN DE REVISIÓN DEL LIBRO CONTABLE
-      help: Revisión interactiva y validación de entradas del libro
-      id_help: Identificador de la entrada específica a revisar
-      no_rows: No hay entradas del libro pendientes de revisión
-      verbose_help: Mostrar información detallada durante la revisión
-    read:
-      help: Leer un movimiento del libro desde el bucket del perfil activo
-      transaction_id_help: Id del movimiento del libro a leer
+    list:
+      header: MOVIMIENTOS DEL LIBRO CONTABLE
+      help: Listar movimientos del libro en el bucket del perfil activo
+    merge:
+      actor_help: cli.ledger.merge.actor_help
+      child_id_help: cli.ledger.merge.child_id_help
+      errors:
+        min_two_children: cli.ledger.merge.errors.min_two_children
+      help: cli.ledger.merge.help
+      reason_help: cli.ledger.merge.reason_help
+      yes_help: cli.ledger.merge.yes_help
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro
@@ -443,17 +728,56 @@ cli:
       help: Reiniciar el catálogo del libro del bucket del perfil activo
       reason_help: Motivo registrado en el historial de reinicio
       yes_help: Confirmar el vaciado del catálogo activo del libro
+    review:
+      filter_help: Filtrar filas por status, period, issue o import
+      header: SESIÓN DE REVISIÓN DEL LIBRO CONTABLE
+      help: Revisión interactiva y validación de entradas del libro
+      id_help: Identificador de la entrada específica a revisar
+      no_rows: No hay entradas del libro pendientes de revisión
+      verbose_help: Mostrar información detallada durante la revisión
+    split:
+      actor_help: cli.ledger.split.actor_help
+      child_amount_help: cli.ledger.split.child_amount_help
+      child_description_help: cli.ledger.split.child_description_help
+      errors:
+        child_args_mismatch: cli.ledger.split.errors.child_args_mismatch
+        min_two_children: cli.ledger.split.errors.min_two_children
+      help: cli.ledger.split.help
+      id_help: cli.ledger.split.id_help
+      reason_help: cli.ledger.split.reason_help
+      yes_help: cli.ledger.split.yes_help
     stash:
       actor_help: Nombre del operador registrado en el evento del bucket
       help: Apartar un movimiento del libro en el bucket del perfil activo
       id_help: Id del movimiento del libro a apartar
       reason_help: Motivo registrado en el historial de ciclo de vida
+      yes_help: cli.ledger.stash.yes_help
     status:
-      help: Resumir el estado del libro y la preparación de cálculo del bucket del perfil activo
+      help: Resumir el estado del libro y la preparación de cálculo del bucket del
+        perfil activo
       period_help: Periodo fiscal para preflight (AAAA-MM o periodo de modelo)
     track:
       help: Mostrar el linaje de eventos de un movimiento del libro
       transaction_id_help: Id del movimiento del libro a inspeccionar
+    update:
+      actor_help: cli.ledger.update.actor_help
+      amount_help: cli.ledger.update.amount_help
+      counterparty_help: cli.ledger.update.counterparty_help
+      currency_help: cli.ledger.update.currency_help
+      date_help: cli.ledger.update.date_help
+      description_help: cli.ledger.update.description_help
+      direction_help: cli.ledger.update.direction_help
+      help: cli.ledger.update.help
+      id_help: cli.ledger.update.id_help
+      irpf_category_help: cli.ledger.update.irpf_category_help
+      iva_amount_help: cli.ledger.update.iva_amount_help
+      iva_rate_help: cli.ledger.update.iva_rate_help
+      notes_help: cli.ledger.update.notes_help
+      taxable_base_help: cli.ledger.update.taxable_base_help
+      value_date_help: cli.ledger.update.value_date_help
+    view:
+      help: cli.ledger.view.help
+      transaction_id_help: cli.ledger.view.transaction_id_help
   locales:
     app_help: Auditar y generar catálogos de traducción
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
@@ -516,9 +840,9 @@ cli:
       articulo_help: Artículo concreto a mostrar (p. ej. 91.Uno.2.1º)
       list_help: Listar las normativas registradas en el corpus legal
       normative_id_help: Id estable de la normativa (p. ej. ley-37-1992)
-      show_help: Mostrar una normativa y, opcionalmente, uno de sus artículos
       tag_help: Filtrar por etiqueta de dominio fiscal (p. ej. 'irpf', 'iva')
       verify_help: Verificar la integridad del corpus normativo
+      view_help: Mostrar una normativa y, opcionalmente, uno de sus artículos
     inspect_help: Inspeccionar el estado del registro y las referencias
     inspect_registry_root_help: Ruta al directorio raíz del registro
     manuals:
@@ -530,55 +854,55 @@ cli:
         part3)
       rules_help: Listar las reglas codificadas en un manual
       section_help: Identificador opcional de sección a mostrar
-      show_help: Mostrar la estructura de un manual y, opcionalmente, una sección
       verify_help: Verificar la integridad del manual contra su contrato
+      view_help: Mostrar la estructura de un manual y, opcionalmente, una sección
       year_help: Año fiscal del manual (p. ej. 2024)
     metrics:
-      applicability_declaration_count: applicability_declaration_count
-      application_link_count: application_link_count
-      application_link_surfaces: application_link_surfaces
-      artefact_refs: artefact_refs
-      backend_exists: backend_exists
-      captured_count: captured_count
-      casilla_count: casilla_count
-      compared_casillas: compared_casillas
-      comparison_count: comparison_count
-      cross_reference_count: cross_reference_count
-      difference_count: difference_count
-      differences: differences
-      drift_count: drift_count
-      environment: environment
-      extraction_profile_count: extraction_profile_count
-      failed_count: failed_count
-      failure_count: failure_count
-      formula_count: formula_count
-      formula_workbook_count: formula_workbook_count
-      legal_reference_count: legal_reference_count
-      missing_filed_casillas: missing_filed_casillas
-      missing_local_casillas: missing_local_casillas
-      modelo: modelo
-      modelo_count: modelo_count
-      modelos: modelos
-      observation_paths: observation_paths
-      orphan_oracle_ids: orphan_oracle_ids
-      passed: passed
-      registered_oracle_ids: registered_oracle_ids
-      revision: revision
-      revision_count: revision_count
-      row_count: row_count
-      runner_detail: runner_detail
-      runner_status: runner_status
-      scanned_count: scanned_count
-      scenario_id: scenario_id
-      source_reference_count: source_reference_count
-      status: status
-      tape_path: tape_path
-      unsupported_xls_count: unsupported_xls_count
-      verification_expectation_count: verification_expectation_count
-      verified: verified
-      workbook_count: workbook_count
-      workbook_parity_ref_count: workbook_parity_ref_count
-      workbook_path: workbook_path
+      applicability_declaration_count: Nº declaraciones de aplicabilidad
+      application_link_count: Nº enlaces de aplicación
+      application_link_surfaces: Superficies de enlace de aplicación
+      artefact_refs: Referencias de artefactos
+      backend_exists: Backend existe
+      captured_count: Nº capturados
+      casilla_count: Nº casillas
+      compared_casillas: Casillas comparadas
+      comparison_count: Nº comparaciones
+      cross_reference_count: Nº referencias cruzadas
+      difference_count: Nº diferencias
+      differences: Diferencias
+      drift_count: Nº desviaciones (drift)
+      environment: Entorno
+      extraction_profile_count: Nº perfiles de extracción
+      failed_count: Nº fallidos
+      failure_count: Nº fallos
+      formula_count: Nº fórmulas
+      formula_workbook_count: Nº libros de fórmulas
+      legal_reference_count: Nº referencias legales
+      missing_filed_casillas: Casillas presentadas faltantes
+      missing_local_casillas: Casillas locales faltantes
+      modelo: Modelo
+      modelo_count: Nº modelos
+      modelos: Modelos
+      observation_paths: Rutas de observación
+      orphan_oracle_ids: IDs de oráculo huérfanos
+      passed: Pasados
+      registered_oracle_ids: IDs de oráculo registrados
+      revision: Revisión
+      revision_count: Nº revisiones
+      row_count: Nº filas
+      runner_detail: Detalle del ejecutor
+      runner_status: Estado del ejecutor
+      scanned_count: Nº escaneados
+      scenario_id: ID de escenario
+      source_reference_count: Nº referencias de origen
+      status: Estado
+      tape_path: Ruta de la cinta
+      unsupported_xls_count: Nº XLS no soportados
+      verification_expectation_count: Nº expectativas de verificación
+      verified: Verificado
+      workbook_count: Nº libros (workbooks)
+      workbook_parity_ref_count: Nº referencias de paridad de libro
+      workbook_path: Ruta del libro
     observation_help: Manifiesto cifrado de observación de declaración presentada
       que se va a verificar
     parity_app_help: Ejecutar escenarios y cintas de paridad para comprobaciones manuales
@@ -644,11 +968,11 @@ cli:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
         --help`.'
-      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuración,
-        almacenamiento y salud local.'
       quick_start_heading: Inicio rápido
       quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider
         csv` - añadir tus movimientos bancarios.'
+      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuración,
+        almacenamiento y salud local.'
       quick_start_review: '  4. `aeat app ledger review` - revisar y clasificar las
         filas importadas.'
       quick_start_setup_done: '  1. `aeat config profile status` - comprobar el perfil
@@ -682,6 +1006,8 @@ cli:
         para listar los temas registrados.'
     opts:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
+dotted:
+  key: dotted.key
 filing:
   validation:
     deadline_missed: Plazo de presentación vencido
@@ -691,7 +1017,7 @@ filing:
     schema_mismatch: Discrepancia con el esquema esperado
 profile:
   keys:
-    description: profile.keys.description
+    description: Profile configuration keys and their descriptions
     tax:
       id: Identificador fiscal (NIF/NIE/CIF)
 topic:
@@ -770,15 +1096,15 @@ transactions:
     message: Falta el mes 2026-03 en el archivo importado.
 wizard:
   choices:
-    general: wizard.choices.general
-    irpf: wizard.choices.irpf
-    iva: wizard.choices.iva
-    simplificado: wizard.choices.simplificado
+    general: General
+    irpf: IRPF
+    iva: IVA
+    simplificado: Simplified
   demo:
-    description: wizard.demo.description
+    description: A demonstration section to test wizard functionality
     section:
-      title: wizard.demo.section.title
-    title: wizard.demo.title
+      title: Demo section
+    title: Demo
   errors:
     blank_integer: Valor entero requerido para %{prompt_key}.
     blank_path: Ruta requerida para %{prompt_key}.
@@ -801,17 +1127,17 @@ wizard:
       \ descartar solo el estado local del perfil y empezar de nuevo:\n  aeat config\
       \ reset --scope profile --yes"
   other:
-    description: wizard.other.description
+    description: Other configuration options
     section:
-      title: wizard.other.section.title
-    title: wizard.other.title
+      title: Other settings
+    title: Other
   progress:
     question_prefix: Pregunta %{q_n} de %{q_total}
     section_header: 'Paso %{section_n} de %{section_total}: %{title}'
   setup:
     certificate:
       path:
-        prompt: wizard.setup.certificate.path.prompt
+        prompt: Enter the path to your digital certificate (.p12, .pfx)
     codes:
       disability-grade:
         choices:
@@ -1001,7 +1327,7 @@ wizard:
             label: Húngaro
         prompt: Idioma de salida de la CLI para este perfil
       regimes:
-        prompt: wizard.setup.profile.regimes.prompt
+        prompt: Select your applicable tax regimes
       surnames:
         prompt: Apellidos o razón social para cabeceras de exportación
       tax-id:
@@ -1095,14 +1421,14 @@ wizard:
       title: Primer declarante
     title: Asistente de configuración
   test:
-    description: wizard.test.description
+    description: Test your configuration and connectivity
     example:
       choices:
         'yes':
-          description: wizard.test.example.choices.yes.description
-          label: wizard.test.example.choices.yes.label
-      help: wizard.test.example.help
-      prompt: wizard.test.example.prompt
+          description: Select this to confirm
+          label: true
+      help: Example help text for testing
+      prompt: Example test question
     main:
-      title: wizard.test.main.title
-    title: wizard.test.title
+      title: Main test
+    title: Test

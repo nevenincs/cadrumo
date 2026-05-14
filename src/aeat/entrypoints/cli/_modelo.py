@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
+from contextlib import suppress
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 from typing import Annotated, Any, Literal
 
 import typer
 
+from ...application.aggregation import (
+    PerModeloAggregationCommand,
+    aggregate_per_modelo,
+)
 from ...application.modelo import (
     AmendmentEvidenceMissingError,
     AmendmentTargetStateError,
@@ -51,6 +58,26 @@ app = typer.Typer(
     help=tr("cli.app.modelo.app_help"),
     no_args_is_help=True,
 )
+
+
+def _resolve_default_actor() -> str:
+    """Return the active profile display_name, or a permanent fallback label.
+
+    Per the actor attribution specification, ``--by`` defaults to the active profile's
+    display name. When no active profile exists or the bucket is empty the
+    fallback label keeps the audit record populated rather than raising.
+    """
+
+    with suppress(Exception):
+        from ...application.workflow._persistence import workflow_state_repository
+
+        state = workflow_state_repository().load()
+        record = state.active_profile_record()
+        if record is not None and record.display_name:
+            return record.display_name
+        if state.active_profile:
+            return state.active_profile
+    return "operator"
 
 
 def _run_query[T](call: Callable[[], T]) -> T:
@@ -257,20 +284,23 @@ def bindings_list(
     """
 
     service = _service()
-    targets: tuple[str, ...]
-    if modelo is None:
-        targets = tuple(str(m.id) for m in service._authority.modelos)
-    else:
-        targets = (modelo,)
-    scoped_period = (
-        f"{year}-{period}" if year is not None and period is not None and not period.startswith(str(year)) else period
-    )
+    targets = tuple(str(m.id) for m in service._authority.modelos) if modelo is None else (modelo,)
     per_modelo_reports = []
     for target in targets:
         try:
-            report = _run_query(
-                lambda code=target: service.bindings(code, period=scoped_period, as_of=_as_of(as_of))
-            )
+            if year is not None and period is not None:
+                report = _run_query(
+                    lambda code=target: service.bindings_for_scope(
+                        code,
+                        filing_year=year,
+                        period=period,
+                        as_of=_as_of(as_of),
+                    )
+                )
+            else:
+                report = _run_query(
+                    lambda code=target: service.bindings(code, period=period, as_of=_as_of(as_of))
+                )
         except Exception:
             if modelo is not None:
                 raise
@@ -362,8 +392,9 @@ def bindings_preview(
     assert year is not None
     assert period is not None
     overrides = dict(_parse_binding_override(spec) for spec in (binding or ()))
-    scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
-    report = _run_query(lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of)))
+    report = _run_query(
+        lambda: _service().bindings_for_scope(modelo, filing_year=year, period=period, as_of=_as_of(as_of))
+    )
     known_ids = {row.binding_id for row in report.rows}
     unknown_keys = sorted(set(overrides) - known_ids)
     if unknown_keys:
@@ -447,6 +478,95 @@ def formulas(
             ],
         ],
     )
+
+
+def _parse_json_object_options(values: list[str] | None, *, flag: str) -> tuple[dict[str, object], ...]:
+    parsed: list[dict[str, object]] = []
+    for raw in values or ():
+        try:
+            value = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise typer.BadParameter(f"{flag} must be a JSON object; invalid JSON at byte {exc.pos}") from exc
+        if not isinstance(value, dict):
+            raise typer.BadParameter(f"{flag} must be a JSON object")
+        parsed.append(value)
+    return tuple(parsed)
+
+
+@app.command(
+    "aggregate",
+    help=tr(
+        "cli.app.modelo.aggregate_help",
+        default=(
+            "Run the backend per-modelo aggregation service from explicit canonical observations "
+            "(ledger_transaction, purchase_invoice_evidence, payable_invoice, collectible_invoice)."
+        ),
+    ),
+)
+def aggregate_modelo(
+    ctx: typer.Context,
+    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.modelo.aggregate.modelo_help"))],
+    period: Annotated[str, typer.Option("--period", help=tr("cli.app.modelo.aggregate.period_help"))],
+    retencion_observation: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--retencion-observation",
+            help=tr("cli.app.modelo.aggregate.retencion_observation_help"),
+        ),
+    ] = None,
+    counterpart_observation: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--counterpart-observation",
+            help=tr("cli.app.modelo.aggregate.counterpart_observation_help"),
+        ),
+    ] = None,
+    foreign_asset_observation: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--foreign-asset-observation",
+            help=tr("cli.app.modelo.aggregate.foreign_asset_observation_help"),
+        ),
+    ] = None,
+) -> None:
+    """Delegate per-modelo aggregation execution to the backend service."""
+
+    command = PerModeloAggregationCommand.model_validate_json(
+        json.dumps(
+            {
+                "modelo": modelo,
+                "period": period,
+                "retencion_observations": _parse_json_object_options(
+                    retencion_observation,
+                    flag="--retencion-observation",
+                ),
+                "counterpart_observations": _parse_json_object_options(
+                    counterpart_observation,
+                    flag="--counterpart-observation",
+                ),
+                "foreign_asset_observations": _parse_json_object_options(
+                    foreign_asset_observation,
+                    flag="--foreign-asset-observation",
+                ),
+            }
+        )
+    )
+    result = aggregate_per_modelo(command)
+    payload = {
+        "operation": "modelo.aggregate",
+        **result.model_dump(mode="json"),
+    }
+    source_kinds = ", ".join(source_kind.value for source_kind in result.source_kinds) or "-"
+    lines = [
+        "operation\tmodelo.aggregate",
+        f"modelo\t{result.modelo}",
+        f"period\t{result.period}",
+        f"provider\t{result.provider.value}",
+        f"observation_count\t{result.log_fields.observation_count}",
+        f"source_kinds\t{source_kinds}",
+        f"result_row_count\t{result.log_fields.result_row_count}",
+    ]
+    _emit(ctx, payload, lines)
 
 
 work_app = typer.Typer(
@@ -602,7 +722,7 @@ def work_status(
         typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
     ],
 ) -> None:
-    """Show one work unit's metadata."""
+    """View one work unit's metadata."""
 
     try:
         unit = get_work_unit(work_unit_id)
@@ -650,9 +770,9 @@ def work_discard(
         typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
     ],
     actor: Annotated[
-        str,
+        str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ],
+    ] = None,
     reason: Annotated[
         str | None,
         typer.Option("--reason", help=tr("cli.app.modelo.work.reason_help")),
@@ -668,7 +788,7 @@ def work_discard(
     """
 
     try:
-        unit = discard_work_unit(work_unit_id, actor=actor, reason=reason)
+        unit = discard_work_unit(work_unit_id, actor=actor or _resolve_default_actor(), reason=reason)
     except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
         raise typer.BadParameter(str(exc)) from exc
     payload = {
@@ -798,10 +918,28 @@ def work_calculate(
             help=tr("cli.app.modelo.work.override_help"),
         ),
     ] = None,
+    borrador_snapshot_id: Annotated[
+        str | None,
+        typer.Option(
+            "--borrador",
+            help=tr(
+                "cli.app.modelo.work.borrador_help",
+                default=(
+                    "Modelo 100 borrador snapshot id (full or unambiguous "
+                    "prefix). Snapshot binding values flow into the calculation "
+                    "for registry bindings marked aeat_prefilled; caller --binding "
+                    "overrides always take precedence."
+                ),
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Persist a new draft calculation revision for the work unit."""
 
-    from ...application.modelo import CalculationRegistryUnavailableError
+    from ...application.modelo import (
+        CalculationRegistryUnavailableError,
+        Modelo100BorradorBindingError,
+    )
 
     casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
     casilla_inputs: dict[str, Decimal] = {}
@@ -827,11 +965,13 @@ def work_calculate(
             casilla_inputs=casilla_inputs,
             binding_values=binding_values or None,
             enum_binding_values=enum_binding_values or None,
+            borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
         )
     except (
         WorkUnitNotFoundError,
         WorkUnitMutationRefusedError,
         CalculationRegistryUnavailableError,
+        Modelo100BorradorBindingError,
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
@@ -869,6 +1009,75 @@ def work_revisions(
     lines.extend(
         f"{rev.calculation_revision_id}\t{rev.work_unit_id}\t{rev.state.value}\t{rev.created_at.isoformat()}"
         for rev in revisions
+    )
+    _emit(ctx, payload, lines)
+
+
+@work_app.command(
+    "history",
+    help=tr(
+        "cli.app.modelo.work.history_help",
+        default="Show every bucket event scoped to one work unit's full lifecycle.",
+    ),
+)
+def work_history(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.app.modelo.work.history_work_unit_id_help",
+                default="Work unit id whose lifecycle to render.",
+            ),
+        ),
+    ],
+) -> None:
+    """Assemble the chronological event stream for one work unit.
+
+    Read-only aggregate over the bucket-event history catalogue and
+    the four catalogues (work unit, calculation revision, verification
+    report, filing record). Emits no bucket event.
+    """
+
+    from ...application.modelo import assemble_work_unit_history
+
+    history = assemble_work_unit_history(work_unit_id)
+    payload = {
+        "operation": "modelo.work.history",
+        "bucket_id": history.bucket_id,
+        "work_unit_id": history.work_unit_id,
+        "event_count": len(history.events),
+        "events": [
+            {
+                "event_id": event.event_id,
+                "occurred_at": event.occurred_at.isoformat(),
+                "event_type": event.event_type.value,
+                "object_type": event.object_type.value,
+                "object_id": event.object_id,
+                "actor": event.actor,
+                "payload": event.payload,
+            }
+            for event in history.events
+        ],
+    }
+    lines = [
+        "operation\tmodelo.work.history",
+        f"bucket_id\t{history.bucket_id}",
+        f"work_unit_id\t{history.work_unit_id}",
+        f"event_count\t{len(history.events)}",
+        "occurred_at\tevent_type\tobject_type\tobject_id\tactor",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                event.occurred_at.isoformat(),
+                event.event_type.value,
+                event.object_type.value,
+                event.object_id,
+                event.actor,
+            ),
+        )
+        for event in history.events
     )
     _emit(ctx, payload, lines)
 
@@ -937,9 +1146,9 @@ def work_verify(
         typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
     ],
     actor: Annotated[
-        str,
+        str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ],
+    ] = None,
 ) -> None:
     """Verify a draft calculation revision against the verified-complete contract.
 
@@ -950,7 +1159,7 @@ def work_verify(
     """
 
     try:
-        report = verify_modelo_revision(calculation_revision_id, actor=actor)
+        report = verify_modelo_revision(calculation_revision_id, actor=actor or _resolve_default_actor())
     except (
         CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
@@ -977,9 +1186,9 @@ def work_file(
         typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
     ],
     actor: Annotated[
-        str,
+        str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ],
+    ] = None,
     notes: Annotated[
         str | None,
         typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
@@ -990,7 +1199,7 @@ def work_file(
     try:
         record = file_modelo_revision(
             calculation_revision_id,
-            actor=actor,
+            actor=actor or _resolve_default_actor(),
             notes=notes,
         )
     except (
@@ -1006,6 +1215,66 @@ def work_file(
     }
     lines = ["operation\tmodelo.work.file", *_filing_record_lines(record)]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
+    _emit(ctx, payload, lines)
+
+
+@work_app.command(
+    "resume",
+    help=tr(
+        "cli.app.modelo.work.resume_help",
+        default=(
+            "Validate that an aborted workflow run may be retried. Emits the "
+            "(modelo, period, obligation) context the engine would consume to "
+            "drive a fresh attempt. Local-only: never contacts AEAT."
+        ),
+    ),
+)
+def work_resume(
+    ctx: typer.Context,
+    workflow_run_id: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.app.modelo.work.resume_workflow_run_id_help",
+                default="16-character workflow run id (see aeat config workflow runs list).",
+            ),
+        ),
+    ],
+) -> None:
+    """Surface the workflow-resume preconditions and resumable context."""
+
+    from ...application.workflow import (
+        WorkflowError,
+        WorkflowResumeCommand,
+        WorkflowResumeRefusedError,
+        resume_modelo_workflow,
+    )
+
+    try:
+        result = resume_modelo_workflow(
+            WorkflowResumeCommand(workflow_run_id=workflow_run_id),
+        )
+    except (WorkflowResumeRefusedError, WorkflowError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.work.resume",
+        "prior_workflow_run_id": result.prior_workflow_run_id,
+        "modelo": result.modelo,
+        "period": result.period,
+        "aborted_reason": result.aborted_reason.value,
+        "obligation": result.obligation.model_dump(mode="json"),
+    }
+    lines = [
+        "operation\tmodelo.work.resume",
+        f"prior_workflow_run_id\t{result.prior_workflow_run_id}",
+        f"modelo\t{result.modelo}",
+        f"period\t{result.period}",
+        f"aborted_reason\t{result.aborted_reason.value}",
+        f"opens_on\t{result.obligation.opens_on.isoformat()}",
+        f"closes_on\t{result.obligation.closes_on.isoformat()}",
+        f"obligation_status\t{result.obligation.status.value}",
+    ]
     _emit(ctx, payload, lines)
 
 
@@ -1050,9 +1319,9 @@ def work_amend(
         ),
     ],
     actor: Annotated[
-        str,
+        str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ],
+    ] = None,
     set_overrides: Annotated[
         list[str] | None,
         typer.Option("--set", help=tr("cli.app.modelo.work.set_override_help")),
@@ -1080,7 +1349,7 @@ def work_amend(
             overrides=overrides,
             amendment_kind=amendment_kind,
             reason=reason,
-            actor=actor,
+            actor=actor or _resolve_default_actor(),
         )
     except (
         FilingRecordNotFoundError,
@@ -1209,7 +1478,7 @@ def verification_report_list(
     _emit(ctx, payload, lines)
 
 
-@verification_report_app.command("show", help=tr("cli.app.modelo.verification_report.show_help"))
+@verification_report_app.command("view", help=tr("cli.app.modelo.verification_report.view_help"))
 def verification_report_show(
     ctx: typer.Context,
     verification_report_id: Annotated[
@@ -1217,7 +1486,7 @@ def verification_report_show(
         typer.Argument(help=tr("cli.app.modelo.verification_report.verification_report_id_help")),
     ],
 ) -> None:
-    """Show one verification report by id."""
+    """View one verification report by id."""
 
     try:
         report = get_verification_report(verification_report_id)
@@ -1232,7 +1501,7 @@ def verification_report_show(
     _emit(ctx, payload, lines)
 
 
-@filing_record_app.command("show", help=tr("cli.app.modelo.filing_record.show_help"))
+@filing_record_app.command("view", help=tr("cli.app.modelo.filing_record.view_help"))
 def filing_record_show(
     ctx: typer.Context,
     filing_record_id: Annotated[
@@ -1240,7 +1509,7 @@ def filing_record_show(
         typer.Argument(help=tr("cli.app.modelo.filing_record.filing_record_id_help")),
     ],
 ) -> None:
-    """Show one filing record by id."""
+    """View one filing record by id."""
 
     try:
         record = get_filing_record(filing_record_id)
@@ -1296,16 +1565,11 @@ def filing_record_import(
     )
     from ...domain.modelos._filing_record import ExternalEvidenceKind
 
-    raw_evidence_kind = evidence_kind.strip().replace("-", "_")
     try:
-        kind = ExternalEvidenceKind(raw_evidence_kind)
+        kind = ExternalEvidenceKind(evidence_kind)
     except ValueError as exc:
         canonical = ", ".join(repr(k.value) for k in ExternalEvidenceKind)
-        hyphenated = ", ".join(repr(k.value.replace("_", "-")) for k in ExternalEvidenceKind)
-        raise typer.BadParameter(
-            f"--evidence-kind must be one of {canonical} "
-            f"(hyphenated aliases also accepted: {hyphenated}); got {evidence_kind!r}"
-        ) from exc
+        raise typer.BadParameter(f"--evidence-kind must be one of {canonical}; got {evidence_kind!r}") from exc
 
     casilla_values: dict[str, Decimal] = {}
     for spec in set_overrides or ():
@@ -1320,7 +1584,7 @@ def filing_record_import(
             casilla_values=casilla_values,
             evidence_kind=kind,
             evidence_reference_id=evidence_reference_id,
-            actor=actor,
+            actor=actor or _resolve_default_actor(),
         )
     except (
         WorkUnitNotFoundError,
@@ -1354,6 +1618,264 @@ def _as_of(raw: str | None) -> date | None:
     if raw is None:
         return None
     return _parse_iso_date(raw, label="--as-of")
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Evidence bundle audit
+# ─────────────────────────────────────────────────────────────────────────
+
+
+audit_app = typer.Typer(
+    name="audit",
+    help=tr(
+        "cli.app.modelo.audit.group_help",
+        default="Evidence bundle audit verbs (view/check/export/replay).",
+    ),
+    no_args_is_help=True,
+)
+app.add_typer(audit_app, name="audit")
+
+
+def _evidence_bundle_service():
+    from ...application.evidence import EvidenceBundleService
+
+    return EvidenceBundleService()
+
+
+def _audit_bucket_id() -> str:
+    from ...application.workflow._models import active_bucket_id_or_raise
+    from ...application.workflow._persistence import workflow_state_repository
+
+    try:
+        return active_bucket_id_or_raise(workflow_state_repository().load())
+    except Exception as exc:
+        raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
+
+
+@audit_app.command(
+    "view",
+    help=tr(
+        "cli.app.modelo.audit.view_help",
+        default="Render an evidence bundle's manifest and referenced records.",
+    ),
+)
+def audit_show(
+    ctx: typer.Context,
+    bundle_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
+    ],
+) -> None:
+    bucket_id = _audit_bucket_id()
+    bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
+    payload = bundle.model_dump(mode="json")
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"bundle_id\t{bundle.bundle_id}",
+        f"work_unit_id\t{bundle.work_unit_id}",
+        f"manifest_hash\t{bundle.manifest_hash}",
+        f"verification_state\t{bundle.verification_state.value}",
+        f"records\t{len(bundle.records)}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@audit_app.command(
+    "check",
+    help=tr(
+        "cli.app.modelo.audit.check_help",
+        default="Re-verify the evidence bundle's integrity (report-only).",
+    ),
+)
+def audit_check(
+    ctx: typer.Context,
+    bundle_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
+    ],
+) -> None:
+    bucket_id = _audit_bucket_id()
+    report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"bundle_id\t{report.bundle_id}",
+        f"verification_state\t{report.verification_state.value}",
+        f"manifest_hash_matches\t{report.manifest_hash_matches}",
+        f"records_verified\t{report.records_verified}",
+        f"records_failed\t{report.records_failed}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@audit_app.command(
+    "export",
+    help=tr(
+        "cli.app.modelo.audit.export_help",
+        default="Write a ZIP archive of the bundle (manifest emitted last).",
+    ),
+)
+def audit_export(
+    ctx: typer.Context,
+    bundle_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            help=tr("cli.app.modelo.audit.output_help", default="Output ZIP path."),
+        ),
+    ],
+    force_incomplete: Annotated[
+        bool,
+        typer.Option(
+            "--force-incomplete",
+            help=tr(
+                "cli.app.modelo.audit.force_incomplete_help",
+                default="Allow export when verification is incomplete.",
+            ),
+        ),
+    ] = False,
+) -> None:
+    bucket_id = _audit_bucket_id()
+    bundle = _evidence_bundle_service().export(
+        bucket_id=bucket_id,
+        bundle_id=bundle_id,
+        output_path=output,
+        force_incomplete=force_incomplete,
+    )
+    payload = bundle.model_dump(mode="json")
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"bundle_id\t{bundle.bundle_id}",
+        f"output\t{output}",
+        f"verification_state\t{bundle.verification_state.value}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@audit_app.command(
+    "replay",
+    help=tr(
+        "cli.app.modelo.audit.replay_help",
+        default="Replay the bundle's evidence case (never contacts AEAT).",
+    ),
+)
+def audit_replay(
+    ctx: typer.Context,
+    bundle_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
+    ],
+) -> None:
+    bucket_id = _audit_bucket_id()
+    report = _evidence_bundle_service().replay(bucket_id=bucket_id, bundle_id=bundle_id)
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"bundle_id\t{report.bundle_id}",
+        f"verification_state\t{report.verification_state.value}",
+        f"records_replayed\t{report.records_verified}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# History verb (W72 modelo-grammar-reconcile, apex §4.3)
+# ─────────────────────────────────────────────────────────────────────────
+
+
+@app.command(
+    "history",
+    help=tr(
+        "cli.app.modelo.history_help",
+        default="Chronological modelo lifecycle audit (calculate/verify/file/amend/...) for one modelo.",
+    ),
+)
+def modelo_history(
+    ctx: typer.Context,
+    modelo: Annotated[
+        str,
+        typer.Option(
+            "--modelo",
+            help=tr("cli.app.modelo.history.modelo_help", default="Modelo code (e.g. 100, 303)."),
+        ),
+    ],
+    year: Annotated[
+        int | None,
+        typer.Option(
+            "--year",
+            help=tr("cli.app.modelo.history.year_help", default="Optional filing year filter."),
+        ),
+    ] = None,
+    period: Annotated[
+        str | None,
+        typer.Option(
+            "--period",
+            help=tr(
+                "cli.app.modelo.history.period_help",
+                default="Optional period filter (e.g. Q1, annual).",
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Stream the bucket-event history for one modelo across all lifecycle stages."""
+
+    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    repo = BucketEventHistoryRepository()
+    catalogue = repo.load()
+    modelo_event_types = {
+        BucketEventType.MODELO_CALCULATION_CREATED,
+        BucketEventType.MODELO_VERIFICATION_PASSED,
+        BucketEventType.MODELO_VERIFICATION_REFUSED,
+        BucketEventType.MODELO_FILED,
+        BucketEventType.MODELO_FILED_SUPERSEDED,
+        BucketEventType.MODELO_AMENDED,
+        BucketEventType.MODELO_FILING_IMPORTED,
+        BucketEventType.MODELO_WORK_UNIT_DISCARDED,
+        BucketEventType.MODELO_AUDIT_VERIFIED,
+        BucketEventType.MODELO_AUDIT_EXPORTED,
+    }
+    matches: list = []
+    for event in catalogue.events.values():
+        if event.event_type not in modelo_event_types:
+            continue
+        payload_map = dict(event.payload)
+        if payload_map.get("modelo", "") != modelo:
+            continue
+        if year is not None and payload_map.get("year", "").strip() != str(year):
+            continue
+        if period is not None and payload_map.get("period", "") != period:
+            continue
+        matches.append(event)
+    matches.sort(key=lambda e: e.occurred_at)
+    payload = {
+        "modelo": modelo,
+        "year": year,
+        "period": period,
+        "count": len(matches),
+        "events": [
+            {
+                "event_id": e.event_id,
+                "event_type": e.event_type.value,
+                "occurred_at": e.occurred_at.isoformat(),
+                "actor": e.actor,
+                "object_type": e.object_type.value,
+                "object_id": e.object_id,
+                "payload": dict(e.payload),
+            }
+            for e in matches
+        ],
+    }
+    lines = [f"modelo\t{modelo}", f"count\t{len(matches)}"]
+    for e in matches:
+        lines.append(
+            f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_id}\t{e.actor}"
+        )
+    _emit(ctx, payload, lines)
 
 
 __all__ = ["app"]

@@ -25,6 +25,11 @@ from ._modelo_bindings import (
     resolve_modelo_ledger_binding_values_from_repositories,
 )
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind, Quarter
+from ._service import (
+    PerModeloAggregationCommand,
+    PerModeloAggregationResult,
+    aggregate_per_modelo,
+)
 from ._oss_ioss import (
     OssIossLedgerCandidate,
     aggregate_oss_ioss_bindings,
@@ -61,6 +66,8 @@ __all__ = [
     "IvaLedgerAggregationIssueReason",
     "ModeloLedgerBindingAggregation",
     "OssIossLedgerCandidate",
+    "PerModeloAggregationCommand",
+    "PerModeloAggregationResult",
     "Period",
     "PeriodKind",
     "ProrrataAggregation",
@@ -75,6 +82,7 @@ __all__ = [
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
     "aggregate_oss_ioss_bindings",
+    "aggregate_per_modelo",
     "aggregate_prorrata_inputs",
     "aggregate_provisional_prorrata",
     "aggregate_renta_ledger_expenses",

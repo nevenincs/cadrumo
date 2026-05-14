@@ -17,7 +17,6 @@ Composition order:
 2. Read settings via `load_settings()`.
 3. Dispatch on `ProviderKind`:
    - `LOCAL_FILESYSTEM` → `LocalFileSystemProvider(root=settings.aeat_local_storage_root / profile)`
-   - `IN_MEMORY` → `InMemoryDriveProvider()` (no profile scoping; tests own the lifetime)
    - `GOOGLE_DRIVE` → loads `oauth-client` + `oauth-token` for profile, builds `Credentials`,
      instantiates `GoogleDriveProvider(credentials=..., root_folder_id=settings.aeat_google_drive_root_folder_id)`.
 4. Refuse unknown kinds with `StorageValidationError`.
@@ -33,7 +32,6 @@ from ._google_drive import GoogleDriveProvider
 from ._local import LocalFileSystemProvider
 from ._protocol import StorageProvider
 from ._records import ProviderKind
-from ._testing import InMemoryDriveProvider
 
 
 def _parse_kind(raw: str) -> ProviderKind:
@@ -105,6 +103,28 @@ def _resolve_profile(profile_override: str | None) -> str:
     return resolve_active_profile(profile_override)
 
 
+def _resolve_drive_root_folder_id(*, profile: str, settings: Settings) -> str:
+    """Resolve the Drive root folder id with the canonical precedence.
+
+    1. `AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID` env var / `.env` value
+       (Settings.aeat_google_drive_root_folder_id; overrides for
+       one-off / CI / debugging without persisting state)
+    2. Per-profile persisted `DriveConfig` record (canonical operator
+       enrolment via `aeat config google folder set <id>`)
+
+    Returns the empty string when neither source is configured.
+    """
+
+    from ..google._session_store import load_drive_config
+
+    if settings.aeat_google_drive_root_folder_id:
+        return str(settings.aeat_google_drive_root_folder_id).strip()
+    config = load_drive_config(profile)
+    if config is not None:
+        return config.root_folder_id.strip()
+    return ""
+
+
 def get_storage_provider(
     *,
     profile_override: str | None = None,
@@ -131,12 +151,6 @@ def get_storage_provider(
 
     settings_resolved = settings if settings is not None else load_settings()
     kind = _parse_kind(settings_resolved.aeat_storage_provider_kind)
-
-    if kind is ProviderKind.IN_MEMORY:
-        # In-memory backend ignores profile and credentials; tests own
-        # the instance lifetime directly.
-        return InMemoryDriveProvider()
-
     profile = _resolve_profile(profile_override)
 
     if kind is ProviderKind.LOCAL_FILESYSTEM:
@@ -144,16 +158,16 @@ def get_storage_provider(
         return LocalFileSystemProvider(root)
 
     if kind is ProviderKind.GOOGLE_DRIVE:
-        if not settings_resolved.aeat_google_drive_root_folder_id:
+        root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings_resolved)
+        if not root_folder_id:
             raise StorageValidationError(
-                "aeat_google_drive_root_folder_id must be set when aeat_storage_provider_kind=google_drive",
+                "no Drive root folder id is configured for this profile; "
+                "set it via `aeat config google folder set <id>` "
+                "(or the AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID env var for one-off runs)",
                 context={"profile": profile},
             )
         credentials = _build_google_credentials(profile=profile)
-        return GoogleDriveProvider(
-            credentials=credentials,
-            root_folder_id=str(settings_resolved.aeat_google_drive_root_folder_id),
-        )
+        return GoogleDriveProvider(credentials=credentials, root_folder_id=root_folder_id)
 
     # Should never be reached — _parse_kind already refused unknown kinds.
     raise StorageValidationError(

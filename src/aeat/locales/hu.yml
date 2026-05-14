@@ -1,7 +1,14 @@
+access_gate:
+  errors:
+    default_translatable: az élő AEAT küldés véglegesen tiltott; használd a produce
+      -> verify -> export folyamatot, és töltsd fel a fájlt magad az AEAT portálon
 aggregation:
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért aggregációs buckettel.
+  modelo_bindings:
+    errors:
+      unsupported_period: Nem támogatott modelo időszak a főkönyvi aggregációhoz.
   models:
     errors:
       annual_period_mixed: Az időszak nem keverhet éves és szévén belüli (negyedév/hónap)
@@ -12,15 +19,20 @@ aggregation:
       quarter_required: A negyedéves időszaktípushoz negyedévérték szükséges.
     t_944805: Érvénytelen időszak formátum. Használja a YYYY, YYYY-Qn vagy YYYY-MM
       formátumot.
+  per_modelo:
+    errors:
+      unsupported_modelo: aggregation.per_modelo.errors.unsupported_modelo
+    registry:
+      errors:
+        invalid_accrued_on: aggregation.per_modelo.registry.errors.invalid_accrued_on
+        unsupported_provider: aggregation.per_modelo.registry.errors.unsupported_provider
   renta_ledger:
     errors:
       annual_period_required: Éves időszak szükséges a Renta nyilvántartás összesítéséhez.
-      bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért Renta főkönyvi buckettel.
+      bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért Renta főkönyvi
+        buckettel.
       modelo_mismatch: Az adómodell nem egyezik a Renta nyilvántartás várt modeljével.
       period_mismatch: Az időszak nem egyezik a Renta nyilvántartás várt időszakával.
-  modelo_bindings:
-    errors:
-      unsupported_period: Nem támogatott modelo időszak a főkönyvi aggregációhoz.
 application:
   auth:
     provider_impact:
@@ -57,9 +69,98 @@ categories:
     display_label_851219: Megjelenítési címke 851219
 cli:
   app:
+    ledger:
+      collectible_invoice:
+        add_help: cli.app.ledger.collectible_invoice.add_help
+        group_help: cli.app.ledger.collectible_invoice.group_help
+        invoice_date_help: cli.app.ledger.collectible_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.collectible_invoice.invoice_id_help
+        list_help: cli.app.ledger.collectible_invoice.list_help
+        remove_help: cli.app.ledger.collectible_invoice.remove_help
+        update_help: cli.app.ledger.collectible_invoice.update_help
+        view_help: cli.app.ledger.collectible_invoice.view_help
+        yes_help: cli.app.ledger.collectible_invoice.yes_help
+        yes_required: cli.app.ledger.collectible_invoice.yes_required
+      evidence:
+        add_help: cli.app.ledger.evidence.add_help
+        evidence_id_help: cli.app.ledger.evidence.evidence_id_help
+        group_help: cli.app.ledger.evidence.group_help
+        invoice_date_help: cli.app.ledger.evidence.invoice_date_help
+        invoice_number_help: cli.app.ledger.evidence.invoice_number_help
+        iva_amount_help: cli.app.ledger.evidence.iva_amount_help
+        iva_rate_help: cli.app.ledger.evidence.iva_rate_help
+        list_help: cli.app.ledger.evidence.list_help
+        notes_help: cli.app.ledger.evidence.notes_help
+        remove_help: cli.app.ledger.evidence.remove_help
+        source_path_help: cli.app.ledger.evidence.source_path_help
+        supplier_help: cli.app.ledger.evidence.supplier_help
+        taxable_base_help: cli.app.ledger.evidence.taxable_base_help
+        update_help: cli.app.ledger.evidence.update_help
+        view_help: cli.app.ledger.evidence.view_help
+        yes_help: cli.app.ledger.evidence.yes_help
+        yes_required: cli.app.ledger.evidence.yes_required
+      inventory:
+        actividad_id_help: cli.app.ledger.inventory.actividad_id_help
+        create_help: cli.app.ledger.inventory.create_help
+        group_help: cli.app.ledger.inventory.group_help
+        list_help: cli.app.ledger.inventory.list_help
+        movement_add_help: cli.app.ledger.inventory.movement_add_help
+        movement_date_help: cli.app.ledger.inventory.movement_date_help
+        movement_group_help: cli.app.ledger.inventory.movement_group_help
+        movement_id_help: cli.app.ledger.inventory.movement_id_help
+        movement_kind_help: cli.app.ledger.inventory.movement_kind_help
+        opening_stock_help: cli.app.ledger.inventory.opening_stock_help
+        quantity_help: cli.app.ledger.inventory.quantity_help
+        taxable_base_help: cli.app.ledger.inventory.taxable_base_help
+        unit_cost_help: cli.app.ledger.inventory.unit_cost_help
+        unknown_movement_kind: cli.app.ledger.inventory.unknown_movement_kind
+        valuation_group_help: cli.app.ledger.inventory.valuation_group_help
+        valuation_method_help: cli.app.ledger.inventory.valuation_method_help
+        valuation_preview_help: cli.app.ledger.inventory.valuation_preview_help
+        vat_rate_help: cli.app.ledger.inventory.vat_rate_help
+        year_help: cli.app.ledger.inventory.year_help
+      payable_invoice:
+        add_help: cli.app.ledger.payable_invoice.add_help
+        group_help: cli.app.ledger.payable_invoice.group_help
+        invoice_date_help: cli.app.ledger.payable_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.payable_invoice.invoice_id_help
+        list_help: cli.app.ledger.payable_invoice.list_help
+        remove_help: cli.app.ledger.payable_invoice.remove_help
+        update_help: cli.app.ledger.payable_invoice.update_help
+        view_help: cli.app.ledger.payable_invoice.view_help
+        yes_help: cli.app.ledger.payable_invoice.yes_help
+        yes_required: cli.app.ledger.payable_invoice.yes_required
+      ratios:
+        category_help: cli.app.ledger.ratios.category_help
+        eligible_help: cli.app.ledger.ratios.eligible_help
+        group_help: cli.app.ledger.ratios.group_help
+        list_help: cli.app.ledger.ratios.list_help
+        no_override_error: cli.app.ledger.ratios.no_override_error
+        ratio_help: cli.app.ledger.ratios.ratio_help
+        set_help: cli.app.ledger.ratios.set_help
+        unknown_category: cli.app.ledger.ratios.unknown_category
+        unset_category_help: cli.app.ledger.ratios.unset_category_help
+        unset_help: cli.app.ledger.ratios.unset_help
+        validate_help: cli.app.ledger.ratios.validate_help
     live:
       app_help: Csak olvasható élő AEAT megfigyelési parancsok
+      borrador:
+        app_help: Modelo 100 borrador snapshotok
+        filing_year_help: Adóév (pl. 2024)
+        latest_help: A legutóbbi aktív snapshot megjelenítése egy adóévre
+        list_help: Rögzített Modelo 100 borrador snapshotok listázása
+        modelo_100_help: Modelo 100 borrador snapshot parancsok
+        snapshot_id_help: Snapshot azonosító (vagy egyértelmű prefix)
+        state_help: 'Snapshot állapotszűrő: active, superseded, discarded vagy all'
+        view_help: Egy Modelo 100 borrador snapshot megjelenítése
       expediente_help: AEAT expediente azonosító
+      expedientes:
+        app_help: cli.app.live.expedientes.app_help
+        capture_help: cli.app.live.expedientes.capture_help
+        latest_help: cli.app.live.expedientes.latest_help
+        list_help: cli.app.live.expedientes.list_help
+        snapshot_id_help: cli.app.live.expedientes.snapshot_id_help
+        view_help: cli.app.live.expedientes.view_help
       filed:
         capture_help: Benyújtott bevallási adatok rögzítése az AEAT-ból
         capture_sources_help: Célbevalláshoz szükséges benyújtott megfigyelések rögzítése
@@ -68,14 +169,58 @@ cli:
       from_year_help: Első benyújtási év
       limit_help: Rögzítendő sorok maximális száma
       modelo_help: Modelo kód
+      notifications:
+        app_help: cli.app.live.notifications.app_help
+        capture_help: cli.app.live.notifications.capture_help
+        list_help: cli.app.live.notifications.list_help
+        snapshot_id_help: cli.app.live.notifications.snapshot_id_help
+        view_help: cli.app.live.notifications.view_help
       output_root_help: Könyvtár a rögzített benyújtott-bevallási megfigyelésekhez
       period_help: Benyújtási időszak
+      portals:
+        app_help: cli.app.live.portals.app_help
+        category_help: cli.app.live.portals.category_help
+        list_help: cli.app.live.portals.list_help
+        modelo_help: cli.app.live.portals.modelo_help
+        portal_id_help: cli.app.live.portals.portal_id_help
+        view_help: cli.app.live.portals.view_help
       registry_root_help: Regiszter gyökérkönyvtára
       source_root_help: Projekt gyökérkönyvtára
       to_year_help: Utolsó benyújtási év
+      verify:
+        app_help: cli.app.live.verify.app_help
+        expected_help: cli.app.live.verify.expected_help
+        latest_help: cli.app.live.verify.latest_help
+        latest_nif_help: cli.app.live.verify.latest_nif_help
+        latest_surface_help: cli.app.live.verify.latest_surface_help
+        list_help: cli.app.live.verify.list_help
+        nif_help: cli.app.live.verify.nif_help
+        nif_iva_arg_help: cli.app.live.verify.nif_iva_arg_help
+        nif_iva_help: cli.app.live.verify.nif_iva_help
+        observation_id_help: cli.app.live.verify.observation_id_help
+        surface_help: cli.app.live.verify.surface_help
+        tgvi_arg_help: cli.app.live.verify.tgvi_arg_help
+        tgvi_help: cli.app.live.verify.tgvi_help
+        view_help: cli.app.live.verify.view_help
       year_help: Benyújtási év
     modelo:
+      aggregate:
+        counterpart_observation_help: cli.app.modelo.aggregate.counterpart_observation_help
+        foreign_asset_observation_help: cli.app.modelo.aggregate.foreign_asset_observation_help
+        modelo_help: cli.app.modelo.aggregate.modelo_help
+        period_help: cli.app.modelo.aggregate.period_help
+        retencion_observation_help: cli.app.modelo.aggregate.retencion_observation_help
+      aggregate_help: cli.app.modelo.aggregate_help
       app_help: AEAT adóbevallás-modellek (modelos) regisztrációs katalógusának áttekintése
+      audit:
+        bundle_id_help: cli.app.modelo.audit.bundle_id_help
+        check_help: cli.app.modelo.audit.check_help
+        export_help: cli.app.modelo.audit.export_help
+        force_incomplete_help: cli.app.modelo.audit.force_incomplete_help
+        group_help: cli.app.modelo.audit.group_help
+        output_help: cli.app.modelo.audit.output_help
+        replay_help: cli.app.modelo.audit.replay_help
+        view_help: cli.app.modelo.audit.view_help
       bindings:
         app_help: Egy AEAT adóbevallás bindingjeinek vizsgálata és előnézete
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
@@ -85,7 +230,8 @@ cli:
         missing_required_options: 'Hiányzó kötelező opciók: %{options}'
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
-        period_help: Adóidőszak a bindingek szűkítéséhez (pl. 2026Q1, 2026-01)
+        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
+          periodikus peldak: 2026Q1 es 2026-01'
         preview_help: Bindingek előnézete ideiglenes felülírásokkal, állapotmutáció
           nélkül
         year_help: A modell adóéve (pl. 2026)
@@ -94,12 +240,14 @@ cli:
         input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound, computed,
           informational)
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: Adóidőszak a cellák szűkítéséhez (pl. 2026Q1, 2026-01)
+        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
+          periodikus peldak: 2026Q1 es 2026-01'
         required_help: Csak a kötelezőként megjelölt cellák megjelenítése
       describe:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: Adóidőszak a modellrevízió feloldásához (pl. 2026Q1, 2026-01)
+        period_help: 'Idoszak token a modellrevizio feloldasahoz; Modelo 036 eseten
+          alta, modificacion vagy baja; periodikus peldak: 2026Q1 es 2026-01'
       filing_record:
         app_help: Belső bejelentési rekordok (filing records) vizsgálata
         bucket_id_help: Szűrés bucket szerint
@@ -115,20 +263,26 @@ cli:
         include_superseded_help: A felülírt filing recordokat is mutassa (alapértelmezetten
           kihagyva)
         list_help: Regisztrált filing recordok listázása
-        show_help: Egy filing record megjelenítése azonosító alapján
+        view_help: Egy filing record megjelenítése azonosító alapján
       formulas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: Adóidőszak a képletek szűkítéséhez (pl. 2026Q1, 2026-01)
+        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
+          periodikus peldak: 2026Q1 es 2026-01'
+      history:
+        modelo_help: cli.app.modelo.history.modelo_help
+        period_help: cli.app.modelo.history.period_help
+        year_help: cli.app.modelo.history.year_help
+      history_help: cli.app.modelo.history_help
       list:
         year_help: Modellkatalógus szűrése egyetlen adóévre
       verification_report:
         app_help: Rögzített verifikációs jelentések megtekintése
         list_help: Verifikációs jelentések listázása, opcionálisan egy kalkulációs
           revízió szerint szűrve
-        show_help: Egy verifikációs jelentés megjelenítése azonosító alapján
         verification_report_id_help: Egy verifikációs jelentés stabil 64-karakteres
           SHA-256 azonosítója
+        view_help: Egy verifikációs jelentés megjelenítése azonosító alapján
       work:
         actor_help: A művelet felelőse (legfeljebb 64 karakteres szabadszöveges címke)
         amend_help: Helyesbítő (complementaria) bevallás építése egy külsőleg leadott
@@ -137,6 +291,9 @@ cli:
         amendment_kind_help: Helyesbítés jogi típusa (complementaria vagy sustitutiva)
         amendment_reason_help: Helyesbítés szabadszöveges oka (kezelői auditnyom)
         app_help: Modell-munkaegységek életciklusának kezelése
+        borrador_help: Modelo 100 borrador snapshot azonosító (teljes vagy egyértelmű
+          prefix). A snapshot binding értékei csak aeat_prefilled jelölésű bindingokhoz
+          használhatók; a kezelő --binding felülírásai mindig elsőbbséget élveznek.
         bucket_id_help: A munkaegységet tartalmazó bucket azonosítója
         calculate_help: Új draft kalkulációs revízió rögzítése a munkaegységhez
         calculation_revision_id_help: Egy kalkulációs revízió 64-karakteres SHA-256
@@ -149,6 +306,8 @@ cli:
           el az AEAT-nak
         from_filing_record_help: A helyesbítendő alap filing record stabil azonosítója.
           Külső importált evidenciát kell hordoznia (justificante / CSV / élő rögzítés)
+        history_help: cli.app.modelo.work.history_help
+        history_work_unit_id_help: cli.app.modelo.work.history_work_unit_id_help
         include_discarded_help: A megszakított munkaegységeket is mutassa a listában
           (alapértelmezetten kihagyva)
         list_help: Regisztrált munkaegységek listázása, opcionálisan bucket szerint
@@ -157,10 +316,13 @@ cli:
         name_help: A munkaegység opcionális megjelenítési neve
         notes_help: A filing recordhoz fűzött opcionális megjegyzések
         override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
-        period_help: A munkaegység adózási időszaka (pl. Q1, 4T, 0A, 01)
+        period_help: 'Munkaegyseg idoszak token; Modelo 036 eseten alta, modificacion
+          vagy baja; periodikus peldak: Q1, 4T, 0A es 01'
         reason_help: A megszakítás opcionális szabadszöveges indoklása (legfeljebb
           500 karakter)
         rename_help: Munkaegység megjelenítési nevének módosítása
+        resume_help: cli.app.modelo.work.resume_help
+        resume_workflow_run_id_help: cli.app.modelo.work.resume_workflow_run_id_help
         revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
         revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
           szűrve
@@ -181,6 +343,29 @@ cli:
   config:
     app_help: Helyi konfiguráció és diagnosztika kezelése
     auth:
+      apoderado:
+        check_help: Read-only live verification
+        clear_help: Retire the apoderado configuration
+        configure:
+          represented_nif_help: NIF of the represented party
+          scope_help: Scope tokens (can be repeated)
+        configure_help: Set active apoderado configuration
+        help: Manage apoderado configuration
+        scope:
+          censo: Nyilvántartási adatok (bejelentkezés, módosítás, kijelentkezés) (modelo
+            036)
+          exped: Ügyiratok és eljárások
+          generalnt: Általános adóügyi eljárások
+          inform: Informatív bevallások (modelo 347, 349, 720)
+          iva: ÁFA időszaki és éves bevallások (modelo 303, 390)
+          notific: Értesítések és kommunikációk
+          pagosf: Negyedéves egyéni vállalkozói részletek (modelo 130, 131)
+          rent: Személyi jövedelemadó és vagyonnyilatkozat (modelo 100, 714)
+          reten: Forrásadó bevallások (modelo 111, 115, 123, 180, 190, 193)
+        scopes:
+          help: Manage apoderado scope vocabulary
+          list_help: List accepted apoderado scopes
+        status_help: Show active apoderado configuration
       clear_all_help: Minden konfigurált hitelesítési szolgáltató törlése
       clear_help: Helyi hitelesítési metaadatok törlése
       clear_locks_help: Hitelesítési beszerzési zárolások törlése
@@ -197,14 +382,18 @@ cli:
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd
         az ''aeat config auth --help'' parancsot az érvényes azonosítókért.'
     bucket:
-      actor_help: A történet szűrése egy adott aktor által rögzített eseményekre (pontos egyezés)
+      actor_help: A történet szűrése egy adott aktor által rögzített eseményekre (pontos
+        egyezés)
       bucket_id_help: A bucket azonosítója, amelynek eseménytörténetét megjelenítjük
       event_type_help: A történet szűrése egy vagy több eseménytípusra (ismételhető)
       help: Bucket-szintű tároló és eseménytörténet vizsgálata
       history_help: Egy bucket csak-hozzáfűz eseménytörténetének megjelenítése
-      object_id_help: A történet szűrése egy adott object_id-t célzó eseményekre (pontos egyezés)
-      since_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy utána) történt eseményekre (pl. 2026-04-01T00:00:00+00:00)
-      until_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy előtte) történt eseményekre (pl. 2026-04-30T23:59:59+00:00)
+      object_id_help: A történet szűrése egy adott object_id-t célzó eseményekre (pontos
+        egyezés)
+      since_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy utána) történt
+        eseményekre (pl. 2026-04-01T00:00:00+00:00)
+      until_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy előtte) történt
+        eseményekre (pl. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Érvénytelen érték a %{name} kulcshoz: %{value}'
       no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config init
@@ -216,26 +405,109 @@ cli:
       key_help: A kiolvasandó kulcs (pl. tax.id, iva.regime)
     google:
       client_json_help: A Cloud Console Desktop OAuth kliens JSON fájl útvonala
+      folder:
+        folder_id_help: cli.config.google.folder.folder_id_help
+        get_help: cli.config.google.folder.get_help
+        help: cli.config.google.folder.help
+        set_help: cli.config.google.folder.set_help
       help: A Google OAuth Desktop integráció kezelése Drive és Sheets eléréshez
       login_help: OAuth hozzájárulási folyamat futtatása (vagy meglévő hitelesítő
         adat frissítése)
       logout_help: A frissítő token és metaadatok törlése; a regisztrált kliens megőrzése
-      profile_help: AEAT profil neve (alapértelmezett = a munkafolyam állapotában aktív
-        profil)
+      profile_help: AEAT profil neve (alapértelmezett = a munkafolyam állapotában
+        aktív profil)
       refresh_only_help: A hozzájárulás kihagyása; csak meglévő hitelesítő adat frissítése
       register_help: Cloud Console Desktop OAuth kliens JSON regisztrálása az aktív
         profilhoz
       status_help: A Google OAuth munkamenet aktuális állapotának megjelenítése az
         aktív profilhoz
+      sync:
+        calc:
+          export:
+            modelo_help: Az exportálandó modelo azonosítója (pl. 130, 303, 100)
+            period_help: Időszak kódja (pl. 1T, 2T, 0A)
+            root_folder_required: Nincs Drive gyökérmappa konfigurálva; futtassa először
+              az `aeat config google folder set <id>` parancsot
+            unknown_modelo: 'Ismeretlen modelo {modelo!r}; elérhető modelók: {available}'
+            year_help: Bevallási év (pl. 2025)
+          export_help: Exportálja a regiszter számítási felületét egy modelo+időszakhoz
+            a Google Sheets munkafüzetbe az `aeat-vault/` alá
+          help: Séma-táblázat számítási felület (exportálás és visszaolvasás)
+        help: cli.config.google.sync.help
+        probe_help: cli.config.google.sync.probe_help
+        probe_read_only_help: cli.config.google.sync.probe_read_only_help
+        push_dry_run_help: cli.config.google.sync.push_dry_run_help
+        push_help: cli.config.google.sync.push_help
+        push_limit_help: cli.config.google.sync.push_limit_help
+        push_namespace_help: cli.config.google.sync.push_namespace_help
+        root_folder_id_unset: cli.config.google.sync.root_folder_id_unset
+    init:
+      activity_help: Economic activity description (e.g. 761.1, programador)
+      auth_provider_help: Authentication provider ID to use for the profile
+      certificate_password_env_help: Environment variable name containing the certificate
+        password
+      certificate_path_help: Path to the .p12 or .pfx certificate file
+      drafts_dir_help: Directory to store local filing drafts
+      dry_run_help: Report changes without modifying the configuration
+      from_help: Source profile ID to import settings from
+      help: Initialize a new active profile and config bucket.
+      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
+      manuals_root_help: Root directory for AEAT technical manuals
+      non_interactive_help: Run without prompting for user input
+      output_language_help: Primary language for CLI output (en, es, ca)
+      profile_name_help: Unique identifier for this configuration profile
+      quiet_help: cli.config.init.quiet_help
+      submissions_dir_help: Directory to store submitted filing receipts
+      success:
+        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
+      tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
+      tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Az összes konfigurációs kulcs és aktuális értékének listázása
     profile:
+      already_exists: A(z) %{name} profil már létezik. Válassz másik cél-azonosítót.
+      duplicate_display_name_help: Megjelenített név az új profilhoz (alapértelmezetten
+        a cél-azonosító)
+      duplicate_help: Profil másolása új azonosítóval és megjelenített névvel
+      duplicate_source_help: A duplikálandó forrásprofil azonosítója
+      duplicate_target_help: A duplikátum cél-azonosítója
       help: Az aktív profil konfigurációs értékeinek kezelése
+      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
+        first.
+      preflight_help: Report whether the active profile is ready for one modelo /
+        year / period.
+      preflight_modelo_help: Modelo code (e.g. 303).
+      preflight_period_help: Period token (e.g. Q1, annual).
+      preflight_revision_help: Registry revision id.
+      preflight_year_help: Filing year.
+      remove_help: Profil sírkövezése (a megváltoztathatatlan jelentés-pillanatképek
+        megmaradnak)
+      remove_name_help: A sírkövezendő profil azonosítója
+      remove_requires_yes: A törlés destruktív művelet. Futtasd újra 'aeat config
+        profile remove %{name} --yes' megerősítéshez.
+      remove_yes_help: A sírkövezés művelet kifejezett megerősítése
+      show_name_help: A megjelenítendő profil azonosítója (alapértelmezetten az aktív
+        profil)
+      unknown_profile: 'Ismeretlen profil: %{name}. Futtasd: ''aeat config profile
+        list'' a regisztrált profilok megtekintéséhez.'
+      use_help: Meglévő profil kiválasztása aktív profilként
+      use_name_help: Az aktiválandó profil azonosítója
+      validate_help: Validate the active profile against the schema.
+      view_help: Egy profil tényeinek megjelenítése (alapértelmezetten az aktív profil)
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolat ellenőrzése
       connectivity_target_help: Ellenőrizendő kapcsolati cél
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
         és javítása
+      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
+        all).
+      integrity_namespace_help: Restrict the integrity probe to one namespace.
+      list_all_help: Return every key, including unreadable.
+      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
+        or neither.
+      list_help: List secure-object keys stored under one namespace.
+      list_namespace_help: Namespace to inventory.
+      list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
       logs_lines_help: Megjelenítendő friss naplósorok száma
       quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;
@@ -243,15 +515,12 @@ cli:
       quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
         a megerősítéshez.
       quarantine_yes_help: A karantén művelet kifejezett megerősítése
-      reset_state_help: Az olvashatatlan munkafolyamat-állapot boríték eldobása
-        (romboló; --yes szükséges)
-      reset_state_requires_yes: Ez a művelet romboló. Futtasd újra a --yes
-        kapcsolóval a megerősítéshez, vagy adj --dry-run paramétert az
-        ujjlenyomat megtekintéséhez.
-      reset_state_yes_help: A munkafolyamat-állapot visszaállítás kifejezett
-        megerősítése
-      reset_state_dry_run_help: A boríték ujjlenyomatának közlése a sor törlése
-        nélkül
+      reset_state_dry_run_help: A boríték ujjlenyomatának közlése a sor törlése nélkül
+      reset_state_help: Az olvashatatlan munkafolyamat-állapot boríték eldobása (romboló;
+        --yes szükséges)
+      reset_state_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
+        a megerősítéshez, vagy adj --dry-run paramétert az ujjlenyomat megtekintéséhez.
+      reset_state_yes_help: A munkafolyamat-állapot visszaállítás kifejezett megerősítése
     reset:
       help: Operátor által megadott konfigurációs hatókörök visszaállítása
       invalid_scope: 'Érvénytelen hatókör: %{scope}. Az érvényes hatókörök: %{valid}.'
@@ -286,30 +555,29 @@ cli:
       key_help: A törlendő kulcs
     workflow_help: Konfigurációs munkafolyamat súgójának megjelenítése
   ledger:
-    app_help: Könyvelési naplók és ÁFA-nyilvántartások kezelése
-    create:
-      actor_help: A bucket eseményen rögzített kezelő neve
-      amount_help: Előjeles tranzakciós összeg; a kimenő értékek negatívak
-      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször is megadható
-      business_pct_help: Üzleti használati arány MIXED besoroláshoz, 0 és 1 között
-      category_help: Kiadási vagy bevételi kategória azonosítója
-      classification_help: A tranzakció üzleti besorolási állapota
-      counterparty_help: A naplóban megjelenő partner neve
-      currency_help: ISO 4217 pénznemkód
-      date_help: Könyvelési dátum (YYYY-MM-DD)
-      description_help: Naplótranzakció leírása
-      direction_help: Tranzakció iránya
-      help: Kézi naplótranzakció létrehozása az aktív profil bucketjében
-      idempotency_key_help: Stabil kulcs az ismételt kézi rögzítés idempotenssé tételéhez
-      irpf_category_help: IRPF kategória modell-számításokhoz
-      iva_amount_help: IVA összeg
-      iva_rate_help: IVA kulcs tizedesként, például 0.21
-      notes_help: A naplótranzakcióval tárolt kezelői jegyzetek
-      prorrata_reference_help: IVA prorrata hivatkozás ÁFA munkafolyamatokhoz
-      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat azonosítója
-      taxable_base_help: Adóalap összege
-      usage_ratio_help: Használati arány azonosítója arányos üzleti használathoz
-      value_date_help: Értéknap (YYYY-MM-DD)
+    add:
+      actor_help: cli.ledger.add.actor_help
+      amount_help: cli.ledger.add.amount_help
+      attachment_help: cli.ledger.add.attachment_help
+      business_pct_help: cli.ledger.add.business_pct_help
+      category_help: cli.ledger.add.category_help
+      classification_help: cli.ledger.add.classification_help
+      counterparty_help: cli.ledger.add.counterparty_help
+      currency_help: cli.ledger.add.currency_help
+      date_help: cli.ledger.add.date_help
+      description_help: cli.ledger.add.description_help
+      direction_help: cli.ledger.add.direction_help
+      help: cli.ledger.add.help
+      idempotency_key_help: cli.ledger.add.idempotency_key_help
+      irpf_category_help: cli.ledger.add.irpf_category_help
+      iva_amount_help: cli.ledger.add.iva_amount_help
+      iva_rate_help: cli.ledger.add.iva_rate_help
+      notes_help: cli.ledger.add.notes_help
+      prorrata_reference_help: cli.ledger.add.prorrata_reference_help
+      purchase_invoice_evidence_help: cli.ledger.add.purchase_invoice_evidence_help
+      taxable_base_help: cli.ledger.add.taxable_base_help
+      usage_ratio_help: cli.ledger.add.usage_ratio_help
+      value_date_help: cli.ledger.add.value_date_help
     allocate:
       actor_help: A bucket eseményen rögzített kezelő neve
       business_pct_help: Üzleti használati arány 0 és 1 között
@@ -318,17 +586,21 @@ cli:
       id_help: Kiosztandó főkönyvi tranzakcióazonosító
       prorrata_reference_help: IVA prorrata hivatkozás ÁFA munkafolyamatokhoz
       usage_ratio_help: Használati arány azonosítója arányos üzleti használathoz
+    app_help: Könyvelési naplók és ÁFA-nyilvántartások kezelése
     archive:
       actor_help: A bucket eseményen rögzített kezelő neve
       help: Egy főkönyvi tranzakció archiválása az aktív profil bucketjében
       id_help: Archiválandó főkönyvi tranzakcióazonosító
       reason_help: Az életciklus-előzményben rögzített ok
+      yes_help: cli.ledger.archive.yes_help
     attach:
       actor_help: A bucket eseményen rögzített kezelő neve
-      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször is megadható
+      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször
+        is megadható
       help: Biztonságos bizonyítékobjektumok csatolása egy főkönyvi tranzakcióhoz
       id_help: Főkönyvi tranzakcióazonosító, amelyhez bizonyítékot kell csatolni
-      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat azonosítója
+      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat
+        azonosítója
     classify:
       actor_help: A bucket eseményen rögzített kezelő neve
       category_help: Kiadási vagy bevételi kategória azonosítója
@@ -339,35 +611,31 @@ cli:
       iva_amount_help: IVA összeg
       iva_rate_help: IVA kulcs tizedesként, például 0.21
       taxable_base_help: Adóalap összege
-    edit:
-      actor_help: A bucket eseményen rögzített kezelő neve
-      amount_help: Előjeles tranzakciós összeg; a kimenő értékek negatívak
-      counterparty_help: A naplóban megjelenő partner neve
-      currency_help: ISO 4217 pénznemkód
-      date_help: Könyvelési dátum (YYYY-MM-DD)
-      description_help: Naplótranzakció leírása
-      direction_help: Tranzakció iránya
-      help: Szerkeszthető főkönyvi tranzakciós tények javítása az aktív profil bucketjében
-      id_help: Szerkesztendő főkönyvi tranzakcióazonosító
-      irpf_category_help: IRPF kategória modell-számításokhoz
-      iva_amount_help: IVA összeg
-      iva_rate_help: IVA kulcs tizedesként, például 0.21
-      notes_help: A naplótranzakcióval tárolt kezelői jegyzetek
-      taxable_base_help: Adóalap összege
-      value_date_help: Értéknap (YYYY-MM-DD)
+    errors:
+      confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez,
+        vagy használd előbb a --dry-run kapcsolót
+      filter_parse_error: A naplószűrő elemzése sikertelen
+      id_prefix_collision: 'A %{prefix!r} tranzakció-azonosító előtag több tranzakcióra
+        is illeszkedik: %{candidates}. Egyértelműsíts az előtag bővítésével.'
+      id_prefix_empty: A tranzakció-azonosító előtag üres; adj meg legalább egy hex
+        karaktert.
+      id_prefix_not_found: Nincs olyan tranzakció, amely a %{prefix!r} azonosító-előtagra
+        illeszkedik.
+      id_prefix_not_hex: 'A %{prefix!r} tranzakció-azonosító előtag nem-hex karaktert
+        tartalmaz (megengedett: 0-9, a-f).'
+      id_prefix_too_long: A %{prefix!r} tranzakció-azonosító előtag hosszabb 64 karakternél
+        (egy teljes SHA-256 digest).
+      invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
     export:
       actor_help: A bucket eseményen rögzített kezelő neve
       format_help: Exportálási szerializációs formátum
       help: Kanonikus főkönyvi sorok exportálása az aktív profil bucketjéből
       include_inactive_help: Archivált és félretett főkönyvi tranzakciók belefoglalása
       output_help: Az exportált főkönyvi fájl írási útvonala
-    list:
-      header: FŐKÖNYVI TRANZAKCIÓK
-      help: Főkönyvi tranzakciók listázása az aktív profil bucketjében
-    errors:
-      confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez, vagy használd előbb a --dry-run kapcsolót
-      filter_parse_error: A naplószűrő elemzése sikertelen
-      invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
+    history:
+      help: cli.ledger.history.help
+      id_help: cli.ledger.history.id_help
+      include_split_siblings_help: cli.ledger.history.include_split_siblings_help
     import:
       dry_run_help: Az importálás futtatása próba üzemmódban (mentés nélkül)
       help: Bankkivonatok vagy bejegyzések importálása a könyvelési naplóba
@@ -378,22 +646,27 @@ cli:
       verbose_help: Részletes információk megjelenítése az importálás során
       verify_help: Bejegyzések ellenőrzése az importálás után
     labels:
+      active: Aktív
       amount: Összeg
+      archived: Archivált
+      bucket: Bucket
+      checked: Ellenőrzött tranzakciók
+      children: cli.ledger.labels.children
+      created_event_id: Létrehozási bucket esemény
       date: Dátum
       description: Leírás
       dialect: Felismert formátum
       dry_run: PRÓBA ÜZEMMÓD (DRY RUN)
+      event_count: cli.ledger.labels.event_count
+      event_id: cli.ledger.labels.event_id
+      export_id: Exportazonosító
       id: Azonosító
       imported: Bejegyzések importálva
-      active: Aktív
-      archived: Archivált
-      bucket: Bucket
-      checked: Ellenőrzött tranzakciók
-      created_event_id: Létrehozási bucket esemény
-      export_id: Exportazonosító
       lifecycle_state: Életciklus állapot
+      merged_id: cli.ledger.labels.merged_id
       'no': Nem
       output: Kimenet
+      parent_id: cli.ledger.labels.parent_id
       pending: Felülvizsgálatra vár
       period: Időszak
       readiness_issues: Készenléti problémák
@@ -406,20 +679,22 @@ cli:
       sha256: SHA-256
       skipped: Kihagyva
       source: Forrás
+      split_group_id: cli.ledger.labels.split_group_id
       stashed: Félretéve
       valid: Érvényes
       warnings: Figyelmeztetések
       'yes': Igen
-    review:
-      filter_help: Sorok szűrése status, period, issue vagy import szerint
-      header: KÖNYVELÉSI NAPLÓ FELÜLVIZSGÁLATI ÜLÉS
-      help: Naplóbejegyzések interaktív felülvizsgálata és ellenőrzése
-      id_help: A felülvizsgálandó adott bejegyzés azonosítója
-      no_rows: Nincsenek felülvizsgálatra váró naplóbejegyzések
-      verbose_help: Részletes információk megjelenítése a felülvizsgálat során
-    read:
-      help: Egy főkönyvi tranzakció olvasása az aktív profil bucketjéből
-      transaction_id_help: Olvasandó főkönyvi tranzakcióazonosító
+    list:
+      header: FŐKÖNYVI TRANZAKCIÓK
+      help: Főkönyvi tranzakciók listázása az aktív profil bucketjében
+    merge:
+      actor_help: cli.ledger.merge.actor_help
+      child_id_help: cli.ledger.merge.child_id_help
+      errors:
+        min_two_children: cli.ledger.merge.errors.min_two_children
+      help: cli.ledger.merge.help
+      reason_help: cli.ledger.merge.reason_help
+      yes_help: cli.ledger.merge.yes_help
     remove:
       actor_help: A bucket eseményen rögzített kezelő neve
       dry_run_help: Eltávolítási hatások jelentése a tranzakció törlése nélkül
@@ -429,21 +704,61 @@ cli:
       yes_help: A főkönyvi tranzakció törlésének megerősítése
     reset:
       actor_help: A bucket eseményen rögzített kezelő neve
-      dry_run_help: Visszaállítási hatások jelentése a főkönyvi katalógus ürítése nélkül
+      dry_run_help: Visszaállítási hatások jelentése a főkönyvi katalógus ürítése
+        nélkül
       help: Az aktív profil bucket főkönyvi katalógusának visszaállítása
       reason_help: A visszaállítási előzményben rögzített ok
       yes_help: Az aktív főkönyvi katalógus ürítésének megerősítése
+    review:
+      filter_help: Sorok szűrése status, period, issue vagy import szerint
+      header: KÖNYVELÉSI NAPLÓ FELÜLVIZSGÁLATI ÜLÉS
+      help: Naplóbejegyzések interaktív felülvizsgálata és ellenőrzése
+      id_help: A felülvizsgálandó adott bejegyzés azonosítója
+      no_rows: Nincsenek felülvizsgálatra váró naplóbejegyzések
+      verbose_help: Részletes információk megjelenítése a felülvizsgálat során
+    split:
+      actor_help: cli.ledger.split.actor_help
+      child_amount_help: cli.ledger.split.child_amount_help
+      child_description_help: cli.ledger.split.child_description_help
+      errors:
+        child_args_mismatch: cli.ledger.split.errors.child_args_mismatch
+        min_two_children: cli.ledger.split.errors.min_two_children
+      help: cli.ledger.split.help
+      id_help: cli.ledger.split.id_help
+      reason_help: cli.ledger.split.reason_help
+      yes_help: cli.ledger.split.yes_help
     stash:
       actor_help: A bucket eseményen rögzített kezelő neve
       help: Egy főkönyvi tranzakció félretétele az aktív profil bucketjében
       id_help: Félreteendő főkönyvi tranzakcióazonosító
       reason_help: Az életciklus-előzményben rögzített ok
+      yes_help: cli.ledger.stash.yes_help
     status:
-      help: A főkönyvi állapot és számítási készenlét összefoglalása az aktív profil bucketjében
+      help: A főkönyvi állapot és számítási készenlét összefoglalása az aktív profil
+        bucketjében
       period_help: Preflight adóidőszak (YYYY-MM vagy modelo időszak)
     track:
       help: Egy főkönyvi tranzakció eseményláncának megjelenítése
       transaction_id_help: Vizsgálandó főkönyvi tranzakcióazonosító
+    update:
+      actor_help: cli.ledger.update.actor_help
+      amount_help: cli.ledger.update.amount_help
+      counterparty_help: cli.ledger.update.counterparty_help
+      currency_help: cli.ledger.update.currency_help
+      date_help: cli.ledger.update.date_help
+      description_help: cli.ledger.update.description_help
+      direction_help: cli.ledger.update.direction_help
+      help: cli.ledger.update.help
+      id_help: cli.ledger.update.id_help
+      irpf_category_help: cli.ledger.update.irpf_category_help
+      iva_amount_help: cli.ledger.update.iva_amount_help
+      iva_rate_help: cli.ledger.update.iva_rate_help
+      notes_help: cli.ledger.update.notes_help
+      taxable_base_help: cli.ledger.update.taxable_base_help
+      value_date_help: cli.ledger.update.value_date_help
+    view:
+      help: cli.ledger.view.help
+      transaction_id_help: cli.ledger.view.transaction_id_help
   locales:
     app_help: Fordítási katalógusok auditálása és generálása
     scaffold_check_help: Eltérések jelentése locale fájlok írása nélkül
@@ -502,9 +817,9 @@ cli:
       articulo_help: Megjelenítendő konkrét cikk (pl. 91.Uno.2.1º)
       list_help: A jogi korpuszban rögzített jogszabályok listázása
       normative_id_help: Stabil jogszabály-azonosító (pl. ley-37-1992)
-      show_help: Egy jogszabály és opcionálisan az egyik cikke megjelenítése
       tag_help: Szűrés adónemtag szerint (pl. 'irpf', 'iva')
       verify_help: Jogi korpusz integritásának ellenőrzése
+      view_help: Egy jogszabály és opcionálisan az egyik cikke megjelenítése
     inspect_help: A nyilvántartás állapotának és hivatkozásainak ellenőrzése
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának útvonala
     manuals:
@@ -515,8 +830,8 @@ cli:
       part_help: Kézikönyvkötet (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: Egy kézikönyvben kódolt szabályok listázása
       section_help: Opcionális szakasz-azonosító megjelenítéshez
-      show_help: Kézikönyv struktúrájának és opcionálisan egy szakaszának megjelenítése
       verify_help: Kézikönyv integritásának ellenőrzése a szerződésével szemben
+      view_help: Kézikönyv struktúrájának és opcionálisan egy szakaszának megjelenítése
       year_help: A kézikönyv adóéve (pl. 2024)
     metrics:
       applicability_declaration_count: applicability_declaration_count
@@ -618,20 +933,20 @@ cli:
 
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVITY'
-    app_help_help: cli.root.app_help_help
+    app_help_help: Show app workflow help
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     detail_help: Also show the detailed registry summary
     format_help: A parancseredmények kimeneti formátuma
-    help_help: cli.root.help_help
+    help_help: Show workflow-oriented help
     landing:
       headline: AEAT adoasszisztens
       help_line: 'Tovabbi segitseg: futtasd az `aeat --help`, `aeat config --help`
         vagy `aeat app --help` parancsot.'
-      quick_start_repair: '  5. `aeat config repair` - konfiguracio, tarolo es helyi
-        allapot diagnosztikaja.'
       quick_start_heading: Gyors kezdes
       quick_start_import: '  3. `aeat app ledger import <banki-kivonat.csv> --provider
         csv` - banki tranzakciok hozzaadasa.'
+      quick_start_repair: '  5. `aeat config repair` - konfiguracio, tarolo es helyi
+        allapot diagnosztikaja.'
       quick_start_review: '  4. `aeat app ledger review` - importalt sorok ellenorzese
         es osztalyozasa.'
       quick_start_setup_done: '  1. `aeat config profile status` - aktiv profil ellenorzese
@@ -665,6 +980,8 @@ cli:
         a regisztrált témák listájához.'
     opts:
       slug: Téma azonosító (kebab-case, pl. iva-regime)
+dotted:
+  key: dotted.key
 filing:
   validation:
     deadline_missed: A benyújtási határidő lejárt
@@ -674,7 +991,7 @@ filing:
     schema_mismatch: Eltérés a várt sémától
 profile:
   keys:
-    description: profile.keys.description
+    description: Profile configuration keys and their descriptions
     tax:
       id: Tax identifier (NIF/NIE/CIF)
 topic:
@@ -754,15 +1071,15 @@ transactions:
     message: A 2026-03 hónap hiányzik az importált fájlból.
 wizard:
   choices:
-    general: wizard.choices.general
-    irpf: wizard.choices.irpf
-    iva: wizard.choices.iva
-    simplificado: wizard.choices.simplificado
+    general: General
+    irpf: IRPF
+    iva: IVA
+    simplificado: Simplified
   demo:
-    description: wizard.demo.description
+    description: A demonstration section to test wizard functionality
     section:
-      title: wizard.demo.section.title
-    title: wizard.demo.title
+      title: Demo section
+    title: Demo
   errors:
     blank_integer: Integer value required for %{prompt_key}.
     blank_path: Path required for %{prompt_key}.
@@ -784,17 +1101,17 @@ wizard:
       \ vizsgáld meg:\n  aeat config repair\n\nCsak a helyi profilállapot eldobásához\
       \ és újrakezdéshez:\n  aeat config reset --scope profile --yes"
   other:
-    description: wizard.other.description
+    description: Other configuration options
     section:
-      title: wizard.other.section.title
-    title: wizard.other.title
+      title: Other settings
+    title: Other
   progress:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
     certificate:
       path:
-        prompt: wizard.setup.certificate.path.prompt
+        prompt: Enter the path to your digital certificate (.p12, .pfx)
     codes:
       disability-grade:
         choices:
@@ -985,7 +1302,7 @@ wizard:
             label: Magyar
         prompt: A profil CLI-kimenetének nyelve
       regimes:
-        prompt: wizard.setup.profile.regimes.prompt
+        prompt: Select your applicable tax regimes
       surnames:
         prompt: Vezetéknév vagy cégnév az exportfejlécekhez
       tax-id:
@@ -1079,14 +1396,14 @@ wizard:
       title: Az első adózó
     title: Beállítás varázsló
   test:
-    description: wizard.test.description
+    description: Test your configuration and connectivity
     example:
       choices:
         'yes':
-          description: wizard.test.example.choices.yes.description
-          label: wizard.test.example.choices.yes.label
-      help: wizard.test.example.help
-      prompt: wizard.test.example.prompt
+          description: Select this to confirm
+          label: true
+      help: Example help text for testing
+      prompt: Example test question
     main:
-      title: wizard.test.main.title
-    title: wizard.test.title
+      title: Main test
+    title: Test

@@ -32,6 +32,12 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.config import Settings
 from ...core.errors import AeatError
+from ...domain.buckets import (
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
+    append_bucket_event,
+)
 
 _PDF_EXTENSIONS = frozenset({".pdf"})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
@@ -109,6 +115,15 @@ def _hash_file(source_path: Path) -> str:
     return hasher.hexdigest()
 
 
+class PurchaseInvoiceEvidenceResult(BaseModel):
+    """Return record from a mutating evidence verb — record plus emitted event id."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    record: PurchaseInvoiceEvidence
+    bucket_event_ids: tuple[str, ...] = ()
+
+
 def _now() -> datetime:
     return datetime.now(tz=UTC)
 
@@ -139,11 +154,73 @@ def _save(settings: Settings, bucket_id: str, records: list[PurchaseInvoiceEvide
     path.write_text(body, encoding="utf-8")
 
 
+_EVIDENCE_EVENT_PAYLOAD_VERSION = 1
+
+
+def _build_evidence_event(
+    *,
+    bucket_id: str,
+    event_type: BucketEventType,
+    evidence_id: str,
+    actor: str,
+    occurred_at: datetime,
+    payload: dict[str, str],
+) -> object:
+    from ...domain.buckets._event import BucketEvent, derive_bucket_event_id
+
+    return BucketEvent(
+        event_id=derive_bucket_event_id(
+            bucket_id=bucket_id,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            actor=actor,
+            object_type=BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE,
+            object_id=evidence_id,
+            payload=payload,
+        ),
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE,
+        object_id=evidence_id,
+        payload_version=_EVIDENCE_EVENT_PAYLOAD_VERSION,
+        payload=payload,
+    )
+
+
+def _emit_evidence_event(
+    *,
+    event_repository: BucketEventHistoryRepository,
+    bucket_id: str,
+    event_type: BucketEventType,
+    evidence_id: str,
+    actor: str,
+    occurred_at: datetime,
+    payload: dict[str, str],
+) -> str:
+    event = _build_evidence_event(
+        bucket_id=bucket_id,
+        event_type=event_type,
+        evidence_id=evidence_id,
+        actor=actor,
+        occurred_at=occurred_at,
+        payload=payload,
+    )
+    event_repository.save(append_bucket_event(event_repository.load(), event))  # type: ignore[arg-type]
+    return event.event_id  # type: ignore[attr-defined]
+
+
 class PurchaseInvoiceEvidenceService:
     """Application service for the ``aeat app ledger evidence`` verb group."""
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        bucket_event_repository: BucketEventHistoryRepository | None = None,
+    ) -> None:
         self._settings = settings or Settings()
+        self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
 
     def add(
         self,
@@ -157,7 +234,8 @@ class PurchaseInvoiceEvidenceService:
         iva_rate: Decimal | None = None,
         iva_amount: Decimal | None = None,
         notes: str = "",
-    ) -> PurchaseInvoiceEvidence:
+        actor: str = "cli",
+    ) -> PurchaseInvoiceEvidenceResult:
         resolved = Path(source_path).expanduser().resolve()
         if not resolved.is_file():
             raise PurchaseInvoiceEvidenceInputError(
@@ -186,7 +264,16 @@ class PurchaseInvoiceEvidenceService:
         records = _load(self._settings, bucket_id)
         records.append(record)
         _save(self._settings, bucket_id, records)
-        return record
+        event_id = _emit_evidence_event(
+            event_repository=self._event_repository,
+            bucket_id=bucket_id,
+            event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
+            evidence_id=record.evidence_id,
+            actor=actor,
+            occurred_at=now,
+            payload={"media_kind": record.media_kind, "source_path": record.source_path},
+        )
+        return PurchaseInvoiceEvidenceResult(record=record, bucket_event_ids=(event_id,))
 
     def view(self, *, bucket_id: str, evidence_id: str) -> PurchaseInvoiceEvidence:
         for record in _load(self._settings, bucket_id):
@@ -206,7 +293,8 @@ class PurchaseInvoiceEvidenceService:
         bucket_id: str,
         evidence_id: str,
         patch: PurchaseInvoiceEvidencePatch,
-    ) -> PurchaseInvoiceEvidence:
+        actor: str = "cli",
+    ) -> PurchaseInvoiceEvidenceResult:
         records = _load(self._settings, bucket_id)
         for index, record in enumerate(records):
             if record.evidence_id != evidence_id:
@@ -215,23 +303,49 @@ class PurchaseInvoiceEvidenceService:
             for key, value in patch.model_dump(exclude_unset=True).items():
                 if value is not None:
                     data[key] = value
-            data["updated_at"] = _now()
+            now = _now()
+            data["updated_at"] = now
             updated = PurchaseInvoiceEvidence.model_validate(data)
             records[index] = updated
             _save(self._settings, bucket_id, records)
-            return updated
+            event_id = _emit_evidence_event(
+                event_repository=self._event_repository,
+                bucket_id=bucket_id,
+                event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED,
+                evidence_id=evidence_id,
+                actor=actor,
+                occurred_at=now,
+                payload={"media_kind": updated.media_kind},
+            )
+            return PurchaseInvoiceEvidenceResult(record=updated, bucket_event_ids=(event_id,))
         raise PurchaseInvoiceEvidenceNotFoundError(
             f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
             suggestion="aeat app ledger evidence list",
         )
 
-    def remove(self, *, bucket_id: str, evidence_id: str) -> PurchaseInvoiceEvidence:
+    def remove(
+        self,
+        *,
+        bucket_id: str,
+        evidence_id: str,
+        actor: str = "cli",
+    ) -> PurchaseInvoiceEvidenceResult:
         records = _load(self._settings, bucket_id)
         for index, record in enumerate(records):
             if record.evidence_id == evidence_id:
                 removed = records.pop(index)
                 _save(self._settings, bucket_id, records)
-                return removed
+                now = _now()
+                event_id = _emit_evidence_event(
+                    event_repository=self._event_repository,
+                    bucket_id=bucket_id,
+                    event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
+                    evidence_id=evidence_id,
+                    actor=actor,
+                    occurred_at=now,
+                    payload={"media_kind": removed.media_kind},
+                )
+                return PurchaseInvoiceEvidenceResult(record=removed, bucket_event_ids=(event_id,))
         raise PurchaseInvoiceEvidenceNotFoundError(
             f"no purchase invoice evidence record with id {evidence_id!r} in bucket {bucket_id!r}",
             suggestion="aeat app ledger evidence list",
@@ -243,5 +357,6 @@ __all__ = [
     "PurchaseInvoiceEvidenceInputError",
     "PurchaseInvoiceEvidenceNotFoundError",
     "PurchaseInvoiceEvidencePatch",
+    "PurchaseInvoiceEvidenceResult",
     "PurchaseInvoiceEvidenceService",
 ]
