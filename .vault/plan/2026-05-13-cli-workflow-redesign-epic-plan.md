@@ -2890,7 +2890,7 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-borrador-100-binding-
 
 This Phase delivers backend implementation for modelo 100 borrador binding as required by `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr`.
 
-- [ ] `W48.P236.S1411` - Map the `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr` decision into non-CLI service ownership for modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P236.S1411` - Map the `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr` decision into non-CLI service ownership for modelo 100 borrador binding; `src/aeat/application/modelo`.
 - [ ] `W48.P236.S1412` - Implement Pydantic command and result contracts for modelo 100 borrador binding; `src/aeat/application/modelo`.
 - [ ] `W48.P236.S1413` - Wire application or domain services required by modelo 100 borrador binding; `src/aeat/application/modelo`.
 - [ ] `W48.P236.S1414` - Connect persistence, bucket events, registry data, or provider adapters required by modelo 100 borrador binding; `src/aeat/application/modelo`.
@@ -4183,51 +4183,51 @@ Closes apex §12 ledger row R04. payable_invoice and collectible_invoice are loc
 
 Implement CRUD services and persistence for payable and collectible invoice noun-groups.
 
-- [ ] `W73.P350.S2029` - Read the invoice-domain-decoupling and ledger-transaction-management ADRs and confirm source-kind taxonomy fields; `.vault/adr`.
-- [ ] `W73.P350.S2030` - Implement PayableInvoiceService and CollectibleInvoiceService satisfying the W71 MutatingNounGroupContract; `src/aeat/application/ledger`.
-- [ ] `W73.P350.S2031` - Add Pydantic command and result contracts per the four-source taxonomy; `src/aeat/application/ledger`.
-- [ ] `W73.P350.S2032` - Add payable_invoice and collectible_invoice event enum members and wire emission in each verb; `src/aeat/domain/buckets`.
-- [ ] `W73.P350.S2033` - Wire persistence repositories over the existing bucket-scoped encrypted SQL substrate; `src/aeat/adapters/persistence`.
+- [x] `W73.P350.S2029` - Read the invoice-domain-decoupling and ledger-transaction-management ADRs and confirm source-kind taxonomy fields; `.vault/adr`.
+- [x] `W73.P350.S2030` - Implement PayableInvoiceService and CollectibleInvoiceService satisfying the W71 MutatingNounGroupContract; `src/aeat/application/ledger`.
+- [x] `W73.P350.S2031` - Add Pydantic command and result contracts per the four-source taxonomy; `src/aeat/application/ledger`.
+- [x] `W73.P350.S2032` - Add payable_invoice and collectible_invoice event enum members and wire emission in each verb; `src/aeat/domain/buckets`.
+- [x] `W73.P350.S2033` - Wire persistence repositories over the existing bucket-scoped encrypted SQL substrate; `src/aeat/adapters/persistence`.
 
 ### Phase `W73.P351` - shadow duplicate removal
 
 Audit and retire legacy invoice code paths.
 
-- [ ] `W73.P351.S2034` - Audit application/ledger and domain/transactions for legacy invoice code paths that conflate payable and collectible; `src/aeat/application/ledger`.
-- [ ] `W73.P351.S2035` - Confirm the legacy _invoice.py module is fully retired with no remaining references; `src/aeat/entrypoints/cli`.
-- [ ] `W73.P351.S2036` - Remove bare-invoice source-kind references in CLI copy and event payloads; `src/aeat/core/i18n`.
-- [ ] `W73.P351.S2037` - Remove tests asserting bare-invoice behavior; `tests`.
-- [ ] `W73.P351.S2038` - Update boundary inventory entries for the invoice domain; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W73.P351.S2034` - Audit application/ledger and domain/transactions for legacy invoice code paths that conflate payable and collectible; `src/aeat/application/ledger`.
+- [x] `W73.P351.S2035` - Confirm the legacy _invoice.py module is fully retired with no remaining references; `src/aeat/entrypoints/cli`.
+- [x] `W73.P351.S2036` - Remove bare-invoice source-kind references in CLI copy and event payloads; `src/aeat/core/i18n`.
+- [x] `W73.P351.S2037` - Remove tests asserting bare-invoice behavior; `tests`.
+- [x] `W73.P351.S2038` - Update boundary inventory entries for the invoice domain; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W73.P352` - de-shim and de-stub cleanup
 
 Wire source-kind aliases and remove deprecated enums.
 
-- [ ] `W73.P352.S2039` - Ensure CLI source-kind aliases (pi, ci) resolve to payable_invoice and collectible_invoice at the Typer boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W73.P352.S2040` - Ensure the ledger link verb accepts payable_invoice and collectible_invoice as link targets; `src/aeat/application/ledger`.
-- [ ] `W73.P352.S2041` - Remove deprecated invoice enum values from any reachable source enum; `src/aeat/domain/transactions`.
-- [ ] `W73.P352.S2042` - Update help text and i18n to use the canonical noun names without bare invoice; `src/aeat/core/i18n`.
-- [ ] `W73.P352.S2043` - Record removed surfaces in boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W73.P352.S2039` - Ensure CLI source-kind aliases (pi, ci) resolve to payable_invoice and collectible_invoice at the Typer boundary; `src/aeat/entrypoints/cli`.
+- [x] `W73.P352.S2040` - Ensure the ledger link verb accepts payable_invoice and collectible_invoice as link targets; `src/aeat/application/ledger`.
+- [x] `W73.P352.S2041` - Remove deprecated invoice enum values from any reachable source enum; `src/aeat/domain/transactions`.
+- [x] `W73.P352.S2042` - Update help text and i18n to use the canonical noun names without bare invoice; `src/aeat/core/i18n`.
+- [x] `W73.P352.S2043` - Record removed surfaces in boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W73.P353` - real behavior verification
 
 Add service, persistence, event, and end-to-end tests.
 
-- [ ] `W73.P353.S2044` - Add service-contract tests for PayableInvoiceService and CollectibleInvoiceService covering all five CRUD verbs; `tests/application/ledger`.
-- [ ] `W73.P353.S2045` - Add persistence integration tests over encrypted SQL; `tests/adapters/persistence`.
-- [ ] `W73.P353.S2046` - Add bucket-event-emission tests for every mutation verb; `tests/domain/buckets`.
-- [ ] `W73.P353.S2047` - Add CLI surface tests for both noun-group verb trees; `tests/entrypoints/cli`.
-- [ ] `W73.P353.S2048` - Add an end-to-end test exercising invoice through ledger transaction link through modelo aggregation; `tests`.
+- [x] `W73.P353.S2044` - Add service-contract tests for PayableInvoiceService and CollectibleInvoiceService covering all five CRUD verbs; `tests/application/ledger`.
+- [x] `W73.P353.S2045` - Add persistence integration tests over encrypted SQL; `tests/adapters/persistence`.
+- [x] `W73.P353.S2046` - Add bucket-event-emission tests for every mutation verb; `tests/domain/buckets`.
+- [x] `W73.P353.S2047` - Add CLI surface tests for both noun-group verb trees; `tests/entrypoints/cli`.
+- [x] `W73.P353.S2048` - Add an end-to-end test exercising invoice through ledger transaction link through modelo aggregation; `tests`.
 
 ### Phase `W73.P354` - thin cli exposure
 
 Register Typer subgroups and update apex cross-references.
 
-- [ ] `W73.P354.S2049` - Register payable_invoice_app and collectible_invoice_app Typer subgroups under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W73.P354.S2050` - Apply central command error boundary via decorate_typer_app; `src/aeat/entrypoints/cli`.
-- [ ] `W73.P354.S2051` - Wire help text via i18n and validate vocabulary uses canonical names; `src/aeat/core/i18n`.
-- [ ] `W73.P354.S2052` - Update apex ADR §4.2 to reference the new noun-groups and mark R04 closed by W73; `.vault/adr`.
-- [ ] `W73.P354.S2053` - Run vault check to confirm clean; `.vault`.
+- [x] `W73.P354.S2049` - Register payable_invoice_app and collectible_invoice_app Typer subgroups under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W73.P354.S2050` - Apply central command error boundary via decorate_typer_app; `src/aeat/entrypoints/cli`.
+- [x] `W73.P354.S2051` - Wire help text via i18n and validate vocabulary uses canonical names; `src/aeat/core/i18n`.
+- [x] `W73.P354.S2052` - Update apex ADR §4.2 to reference the new noun-groups and mark R04 closed by W73; `.vault/adr`.
+- [x] `W73.P354.S2053` - Run vault check to confirm clean; `.vault`.
 
 ## Wave `W74` - Reconciliation: profile noun-group CRUD
 
@@ -4779,7 +4779,7 @@ Enforce four-source taxonomy and ship missing aggregators.
 
 - [x] `W84.P405.S2304` - Read the per-modelo-aggregation-pipeline, invoice-domain-decoupling ADRs, apex §2 source-kind taxonomy, and identify every binding declaration that still admits bare invoice; `.vault/adr`.
 - [x] `W84.P405.S2305` - Reject bare invoice source-kind at the registry domain layer and enforce one of the four canonical source kinds; `src/aeat/domain/calculations/registry`.
-- [ ] `W84.P405.S2306` - Implement retenciones aggregators for 111, 115, 123, 180, 190, 193 consuming explicit source kinds; `src/aeat/application/aggregation`.
+- [x] `W84.P405.S2306` - Implement retenciones aggregators for 111, 115, 123, 180, 190, 193 consuming explicit source kinds; `src/aeat/application/aggregation`.
 - [ ] `W84.P405.S2307` - Implement 347 and 349 counterpart aggregators using ledger and business-operation source kinds with GROI and NIF-IVA gating for 349; `src/aeat/application/aggregation`.
 - [ ] `W84.P405.S2308` - Implement 720 assets aggregator using purchase_invoice_evidence and payable_invoice source kinds to 720 casillas; `src/aeat/application/aggregation`.
 
