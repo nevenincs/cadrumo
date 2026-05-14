@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import os
 import re
 import shutil
 import subprocess
@@ -394,9 +393,11 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
     missing dependency instead of silently downgrading evidence quality.
     """
 
-    configured = os.environ.get(_LIBREOFFICE_EXECUTABLE_ENV)
-    if configured:
-        runner = _resolve_libreoffice_runner(configured)
+    from ....core.config import load_settings
+
+    settings_configured = load_settings().aeat_libreoffice_executable
+    if settings_configured is not None:
+        runner = _resolve_libreoffice_runner(str(settings_configured))
         return WorkbookRunnerAvailability(
             status="available",
             engine="libreoffice-headless",
@@ -733,8 +734,12 @@ def _resolve_libreoffice_runner(executable: str | None) -> Path:
     """Locate a LibreOffice executable, raising explicitly when none is available."""
 
     if executable is None:
-        configured = os.environ.get(_LIBREOFFICE_EXECUTABLE_ENV)
-        found = configured or shutil.which("soffice") or shutil.which("libreoffice")
+        from ....core.config import load_settings
+
+        configured = load_settings().aeat_libreoffice_executable
+        found = (
+            str(configured) if configured is not None else (shutil.which("soffice") or shutil.which("libreoffice"))
+        )
         if not found:
             raise RegistryValidationError(
                 "LibreOffice or soffice executable is not available on PATH. "
