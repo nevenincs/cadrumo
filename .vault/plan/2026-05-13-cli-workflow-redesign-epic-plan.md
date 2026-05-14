@@ -3008,34 +3008,34 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-036-037-founda
 
 This Phase delivers backend implementation for census modelo foundation as required by `2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr`.
 
-- [ ] `W50.P246.S1471` - Map the `2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr` decision into non-CLI service ownership for census modelo foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W50.P246.S1472` - Implement Pydantic command and result contracts for census modelo foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W50.P246.S1473` - Wire application or domain services required by census modelo foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W50.P246.S1474` - Connect persistence, bucket events, registry data, or provider adapters required by census modelo foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W50.P246.S1475` - Route existing backend functionality into the canonical service for census modelo foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W50.P246.S1476` - Record service-level error codes and log fields for census modelo foundation; `src/aeat/domain/calculations/registry`.
+- [x] `W50.P246.S1471` - Map the `2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr` decision into non-CLI service ownership for census modelo foundation; `src/aeat/domain/calculations/registry`.
+- [x] `W50.P246.S1472` - Implement Pydantic command and result contracts for census modelo foundation; `src/aeat/domain/calculations/registry`.
+- [x] `W50.P246.S1473` - Wire application or domain services required by census modelo foundation; `src/aeat/domain/calculations/registry`.
+- [x] `W50.P246.S1474` - Connect persistence, bucket events, registry data, or provider adapters required by census modelo foundation; `src/aeat/domain/calculations/registry`.
+- [x] `W50.P246.S1475` - Route existing backend functionality into the canonical service for census modelo foundation; `src/aeat/domain/calculations/registry`.
+- [x] `W50.P246.S1476` - Record service-level error codes and log fields for census modelo foundation; `src/aeat/domain/calculations/registry`.
 
 ### Phase `W50.P247` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for census modelo foundation as required by `2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr`.
 
-- [ ] `W50.P247.S1477` - Audit duplicate implementations that overlap census modelo foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W50.P247.S1478` - Delete duplicate backend branches that compete with census modelo foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W50.P247.S1479` - Remove stale aliases that bypass the canonical service for census modelo foundation; `src/aeat/entrypoints/cli`.
-- [ ] `W50.P247.S1480` - Migrate internal callers to the canonical service for census modelo foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W50.P247.S1481` - Remove stale fixtures and tests that encode duplicate behavior for census modelo foundation; `tests/domain/calculations/registry`.
-- [ ] `W50.P247.S1482` - Update boundary inventory entries that describe duplicate behavior for census modelo foundation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W50.P247.S1477` - Audit duplicate implementations that overlap census modelo foundation; `src/aeat/domain/calculations/registry`.
+- [x] `W50.P247.S1478` - Delete duplicate backend branches that compete with census modelo foundation; `src/aeat/domain/calculations/registry`.
+- [x] `W50.P247.S1479` - Remove stale aliases that bypass the canonical service for census modelo foundation; `src/aeat/entrypoints/cli`.
+- [x] `W50.P247.S1480` - Migrate internal callers to the canonical service for census modelo foundation; `src/aeat/domain/calculations/registry`.
+- [x] `W50.P247.S1481` - Remove stale fixtures and tests that encode duplicate behavior for census modelo foundation (Removed the work-unit-shaped 037 acceptance test, deleted the zero-artifact 037 corpus fixture, removed active 037 dependency and apoderamiento scope entries, and tightened the profile-schedule contract to 036/840 only.); `tests/domain/calculations/registry`.
+- [x] `W50.P247.S1482` - Update boundary inventory entries that describe duplicate behavior for census modelo foundation (Added a boundary guard proving production CLI modules do not import or reimplement census foundation commands, resolvers, active-work-unit policy, or historical-metadata decisions.); `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W50.P248` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for census modelo foundation as required by `2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr`.
 
-- [ ] `W50.P248.S1483` - Delete compatibility shims that preserve rejected behavior for census modelo foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W50.P248.S1484` - Delete placeholder stubs that claim support for census modelo foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W50.P248.S1485` - Replace stubbed paths with real backend service calls for census modelo foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W50.P248.S1486` - Remove deprecated command spelling and help text for census modelo foundation; `src/aeat/entrypoints/cli`.
-- [ ] `W50.P248.S1487` - Remove tests that assert shim or stub behavior for census modelo foundation; `tests/domain/calculations/registry`.
-- [ ] `W50.P248.S1488` - Record the removed shim and stub surfaces for census modelo foundation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W50.P248.S1483` - Delete compatibility shims that preserve rejected behavior for census modelo foundation (Removed padded/trimmed modelo-code acceptance from registry query resolution and tightened modelo history filtering to exact modelo/period matches; `no active 037, synthetic 037, or year-prefixed census period fallback remains.); `src/aeat/domain/calculations/registry`.
+- [x] `W50.P248.S1484` - Delete placeholder stubs that claim support for census modelo foundation (Audit found no census registry placeholder, NotImplemented path, zero-row fake support, active 037 TOML, or empty result claiming support; `the only adjacent wording finding was in user-profile schema owned by a parallel wave and left untouched.); `src/aeat/domain/calculations/registry`.
+- [x] `W50.P248.S1485` - Replace stubbed paths with real backend service calls for census modelo foundation (Active 036 work-unit decisions now validate against committed registry snapshot data; `preexisting 037 records are refused before file and amend flows; no in-code ownership map can return active-looking results without registry data.); `src/aeat/domain/calculations/registry`.
+- [x] `W50.P248.S1486` - Remove deprecated command spelling and help text for census modelo foundation (Removed active-037 wording from censo labels, made modelo period help event-aware for 036, and removed modelo CLI hyphenated evidence-kind alias support/help text.); `src/aeat/entrypoints/cli`.
+- [x] `W50.P248.S1487` - Remove tests that assert shim or stub behavior for census modelo foundation (Audit found no registry test accepting shortened, padded, integer, year-prefixed, active-037, placeholder, or fake support behavior; `current tests assert rejection and historical-only metadata.); `tests/domain/calculations/registry`.
+- [x] `W50.P248.S1488` - Record the removed shim and stub surfaces for census modelo foundation (Added a boundary guard covering removed active-037 wording, year-prefixed census periods, hyphenated evidence-kind aliases, padded-code helpers, in-code census ownership maps, and fake/placeholder census support markers.); `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W50.P249` - real behavior verification
 
@@ -3141,8 +3141,8 @@ This Phase delivers shadow duplicate removal for per modelo aggregation as requi
 - [x] `W52.P257.S1538` - Delete duplicate backend branches that compete with per modelo aggregation; `src/aeat/application/aggregation`.
 - [x] `W52.P257.S1539` - Remove stale aliases that bypass the canonical service for per modelo aggregation; `src/aeat/entrypoints/cli`.
 - [x] `W52.P257.S1540` - Migrate internal callers to the canonical service for per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P257.S1541` - Remove stale fixtures and tests that encode duplicate behavior for per modelo aggregation; `tests/application/aggregation`.
-- [ ] `W52.P257.S1542` - Update boundary inventory entries that describe duplicate behavior for per modelo aggregation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W52.P257.S1541` - Remove stale fixtures and tests that encode duplicate behavior for per modelo aggregation; `tests/application/aggregation`.
+- [x] `W52.P257.S1542` - Update boundary inventory entries that describe duplicate behavior for per modelo aggregation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W52.P258` - de-shim and de-stub cleanup
 
@@ -3160,7 +3160,7 @@ This Phase delivers de-shim and de-stub cleanup for per modelo aggregation as re
 This Phase delivers real behavior verification for per modelo aggregation as required by `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr`.
 
 - [x] `W52.P259.S1549` - Add service contract tests for per modelo aggregation; `tests/application/aggregation`.
-- [ ] `W52.P259.S1550` - Add persistence or registry integration tests for per modelo aggregation; `tests/application/aggregation`.
+- [x] `W52.P259.S1550` - Add persistence or registry integration tests for per modelo aggregation; `tests/application/aggregation`.
 - [x] `W52.P259.S1551` - Add negative tests proving rejected aliases do not reach per modelo aggregation; `tests/entrypoints/cli`.
 - [x] `W52.P259.S1552` - Add command behavior tests that exercise per modelo aggregation through real services; `tests/entrypoints/cli`.
 - [x] `W52.P259.S1553` - Add end-to-end workflow coverage for per modelo aggregation; `tests`.
@@ -3539,56 +3539,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-workflow-resumption-s
 
 This Phase delivers backend implementation for workflow resumption semantics as required by `2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr`.
 
-- [ ] `W59.P291.S1741` - Map the `2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr` decision into non-CLI service ownership for workflow resumption semantics; `src/aeat/application/workflow`.
-- [ ] `W59.P291.S1742` - Implement Pydantic command and result contracts for workflow resumption semantics; `src/aeat/application/workflow`.
-- [ ] `W59.P291.S1743` - Wire application or domain services required by workflow resumption semantics; `src/aeat/application/workflow`.
-- [ ] `W59.P291.S1744` - Connect persistence, bucket events, registry data, or provider adapters required by workflow resumption semantics; `src/aeat/application/workflow`.
-- [ ] `W59.P291.S1745` - Route existing backend functionality into the canonical service for workflow resumption semantics; `src/aeat/application/workflow`.
-- [ ] `W59.P291.S1746` - Record service-level error codes and log fields for workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P291.S1741` - Map the `2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr` decision into non-CLI service ownership for workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P291.S1742` - Implement Pydantic command and result contracts for workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P291.S1743` - Wire application or domain services required by workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P291.S1744` - Connect persistence, bucket events, registry data, or provider adapters required by workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P291.S1745` - Route existing backend functionality into the canonical service for workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P291.S1746` - Record service-level error codes and log fields for workflow resumption semantics; `src/aeat/application/workflow`.
 
 ### Phase `W59.P292` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for workflow resumption semantics as required by `2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr`.
 
-- [ ] `W59.P292.S1747` - Audit duplicate implementations that overlap workflow resumption semantics; `src/aeat/application/workflow`.
-- [ ] `W59.P292.S1748` - Delete duplicate backend branches that compete with workflow resumption semantics; `src/aeat/application/workflow`.
-- [ ] `W59.P292.S1749` - Remove stale aliases that bypass the canonical service for workflow resumption semantics; `src/aeat/entrypoints/cli`.
-- [ ] `W59.P292.S1750` - Migrate internal callers to the canonical service for workflow resumption semantics; `src/aeat/application/workflow`.
-- [ ] `W59.P292.S1751` - Remove stale fixtures and tests that encode duplicate behavior for workflow resumption semantics; `tests/application/workflow`.
-- [ ] `W59.P292.S1752` - Update boundary inventory entries that describe duplicate behavior for workflow resumption semantics; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W59.P292.S1747` - Audit duplicate implementations that overlap workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P292.S1748` - Delete duplicate backend branches that compete with workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P292.S1749` - Remove stale aliases that bypass the canonical service for workflow resumption semantics; `src/aeat/entrypoints/cli`.
+- [x] `W59.P292.S1750` - Migrate internal callers to the canonical service for workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P292.S1751` - Remove stale fixtures and tests that encode duplicate behavior for workflow resumption semantics; `tests/application/workflow`.
+- [x] `W59.P292.S1752` - Update boundary inventory entries that describe duplicate behavior for workflow resumption semantics; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W59.P293` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for workflow resumption semantics as required by `2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr`.
 
-- [ ] `W59.P293.S1753` - Delete compatibility shims that preserve rejected behavior for workflow resumption semantics; `src/aeat/application/workflow`.
-- [ ] `W59.P293.S1754` - Delete placeholder stubs that claim support for workflow resumption semantics; `src/aeat/application/workflow`.
-- [ ] `W59.P293.S1755` - Replace stubbed paths with real backend service calls for workflow resumption semantics; `src/aeat/application/workflow`.
-- [ ] `W59.P293.S1756` - Remove deprecated command spelling and help text for workflow resumption semantics; `src/aeat/entrypoints/cli`.
-- [ ] `W59.P293.S1757` - Remove tests that assert shim or stub behavior for workflow resumption semantics; `tests/application/workflow`.
-- [ ] `W59.P293.S1758` - Record the removed shim and stub surfaces for workflow resumption semantics; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W59.P293.S1753` - Delete compatibility shims that preserve rejected behavior for workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P293.S1754` - Delete placeholder stubs that claim support for workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P293.S1755` - Replace stubbed paths with real backend service calls for workflow resumption semantics; `src/aeat/application/workflow`.
+- [x] `W59.P293.S1756` - Remove deprecated command spelling and help text for workflow resumption semantics; `src/aeat/entrypoints/cli`.
+- [x] `W59.P293.S1757` - Remove tests that assert shim or stub behavior for workflow resumption semantics; `tests/application/workflow`.
+- [x] `W59.P293.S1758` - Record the removed shim and stub surfaces for workflow resumption semantics; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W59.P294` - real behavior verification
 
 This Phase delivers real behavior verification for workflow resumption semantics as required by `2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr`.
 
-- [ ] `W59.P294.S1759` - Add service contract tests for workflow resumption semantics; `tests/application/workflow`.
-- [ ] `W59.P294.S1760` - Add persistence or registry integration tests for workflow resumption semantics; `tests/application/workflow`.
-- [ ] `W59.P294.S1761` - Add negative tests proving rejected aliases do not reach workflow resumption semantics; `tests/entrypoints/cli`.
-- [ ] `W59.P294.S1762` - Add command behavior tests that exercise workflow resumption semantics through real services; `tests/entrypoints/cli`.
-- [ ] `W59.P294.S1763` - Add end-to-end workflow coverage for workflow resumption semantics; `tests`.
-- [ ] `W59.P294.S1764` - Run the targeted test slice for workflow resumption semantics without skips or xfails; `tests/application/workflow`.
+- [x] `W59.P294.S1759` - Add service contract tests for workflow resumption semantics; `tests/application/workflow`.
+- [x] `W59.P294.S1760` - Add persistence or registry integration tests for workflow resumption semantics; `tests/application/workflow`.
+- [x] `W59.P294.S1761` - Add negative tests proving rejected aliases do not reach workflow resumption semantics; `tests/entrypoints/cli`.
+- [x] `W59.P294.S1762` - Add command behavior tests that exercise workflow resumption semantics through real services; `tests/entrypoints/cli`.
+- [x] `W59.P294.S1763` - Add end-to-end workflow coverage for workflow resumption semantics; `tests`.
+- [x] `W59.P294.S1764` - Run the targeted test slice for workflow resumption semantics without skips or xfails; `tests/application/workflow`.
 
 ### Phase `W59.P295` - thin cli exposure
 
 This Phase delivers thin cli exposure for workflow resumption semantics as required by `2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr`.
 
-- [ ] `W59.P295.S1765` - Expose accepted command handlers for workflow resumption semantics under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W59.P295.S1766` - Keep argument parsing for workflow resumption semantics separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W59.P295.S1767` - Delegate workflow resumption semantics execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W59.P295.S1768` - Render workflow resumption semantics results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W59.P295.S1769` - Handle workflow resumption semantics failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W59.P295.S1770` - Validate help text for workflow resumption semantics uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W59.P295.S1765` - Expose accepted command handlers for workflow resumption semantics under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W59.P295.S1766` - Keep argument parsing for workflow resumption semantics separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W59.P295.S1767` - Delegate workflow resumption semantics execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W59.P295.S1768` - Render workflow resumption semantics results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W59.P295.S1769` - Handle workflow resumption semantics failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W59.P295.S1770` - Validate help text for workflow resumption semantics uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W60` - profile output language
 

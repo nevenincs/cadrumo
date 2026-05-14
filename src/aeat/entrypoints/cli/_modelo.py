@@ -285,15 +285,22 @@ def bindings_list(
 
     service = _service()
     targets = tuple(str(m.id) for m in service._authority.modelos) if modelo is None else (modelo,)
-    scoped_period = (
-        f"{year}-{period}" if year is not None and period is not None and not period.startswith(str(year)) else period
-    )
     per_modelo_reports = []
     for target in targets:
         try:
-            report = _run_query(
-                lambda code=target: service.bindings(code, period=scoped_period, as_of=_as_of(as_of))
-            )
+            if year is not None and period is not None:
+                report = _run_query(
+                    lambda code=target: service.bindings_for_scope(
+                        code,
+                        filing_year=year,
+                        period=period,
+                        as_of=_as_of(as_of),
+                    )
+                )
+            else:
+                report = _run_query(
+                    lambda code=target: service.bindings(code, period=period, as_of=_as_of(as_of))
+                )
         except Exception:
             if modelo is not None:
                 raise
@@ -385,8 +392,9 @@ def bindings_preview(
     assert year is not None
     assert period is not None
     overrides = dict(_parse_binding_override(spec) for spec in (binding or ()))
-    scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
-    report = _run_query(lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of)))
+    report = _run_query(
+        lambda: _service().bindings_for_scope(modelo, filing_year=year, period=period, as_of=_as_of(as_of))
+    )
     known_ids = {row.binding_id for row in report.rows}
     unknown_keys = sorted(set(overrides) - known_ids)
     if unknown_keys:
@@ -1210,6 +1218,66 @@ def work_file(
     _emit(ctx, payload, lines)
 
 
+@work_app.command(
+    "resume",
+    help=tr(
+        "cli.app.modelo.work.resume_help",
+        default=(
+            "Validate that an aborted workflow run may be retried. Emits the "
+            "(modelo, period, obligation) context the engine would consume to "
+            "drive a fresh attempt. Local-only: never contacts AEAT."
+        ),
+    ),
+)
+def work_resume(
+    ctx: typer.Context,
+    workflow_run_id: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.app.modelo.work.resume_workflow_run_id_help",
+                default="16-character workflow run id (see aeat config workflow runs list).",
+            ),
+        ),
+    ],
+) -> None:
+    """Surface the workflow-resume preconditions and resumable context."""
+
+    from ...application.workflow import (
+        WorkflowError,
+        WorkflowResumeCommand,
+        WorkflowResumeRefusedError,
+        resume_modelo_workflow,
+    )
+
+    try:
+        result = resume_modelo_workflow(
+            WorkflowResumeCommand(workflow_run_id=workflow_run_id),
+        )
+    except (WorkflowResumeRefusedError, WorkflowError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    payload = {
+        "operation": "modelo.work.resume",
+        "prior_workflow_run_id": result.prior_workflow_run_id,
+        "modelo": result.modelo,
+        "period": result.period,
+        "aborted_reason": result.aborted_reason.value,
+        "obligation": result.obligation.model_dump(mode="json"),
+    }
+    lines = [
+        "operation\tmodelo.work.resume",
+        f"prior_workflow_run_id\t{result.prior_workflow_run_id}",
+        f"modelo\t{result.modelo}",
+        f"period\t{result.period}",
+        f"aborted_reason\t{result.aborted_reason.value}",
+        f"opens_on\t{result.obligation.opens_on.isoformat()}",
+        f"closes_on\t{result.obligation.closes_on.isoformat()}",
+        f"obligation_status\t{result.obligation.status.value}",
+    ]
+    _emit(ctx, payload, lines)
+
+
 def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
     def _to_decimal(value: str) -> Decimal:
         try:
@@ -1497,16 +1565,11 @@ def filing_record_import(
     )
     from ...domain.modelos._filing_record import ExternalEvidenceKind
 
-    raw_evidence_kind = evidence_kind.strip().replace("-", "_")
     try:
-        kind = ExternalEvidenceKind(raw_evidence_kind)
+        kind = ExternalEvidenceKind(evidence_kind)
     except ValueError as exc:
         canonical = ", ".join(repr(k.value) for k in ExternalEvidenceKind)
-        hyphenated = ", ".join(repr(k.value.replace("_", "-")) for k in ExternalEvidenceKind)
-        raise typer.BadParameter(
-            f"--evidence-kind must be one of {canonical} "
-            f"(hyphenated aliases also accepted: {hyphenated}); got {evidence_kind!r}"
-        ) from exc
+        raise typer.BadParameter(f"--evidence-kind must be one of {canonical}; got {evidence_kind!r}") from exc
 
     casilla_values: dict[str, Decimal] = {}
     for spec in set_overrides or ():
@@ -1781,11 +1844,11 @@ def modelo_history(
         if event.event_type not in modelo_event_types:
             continue
         payload_map = dict(event.payload)
-        if payload_map.get("modelo", "").strip() != modelo.strip():
+        if payload_map.get("modelo", "") != modelo:
             continue
         if year is not None and payload_map.get("year", "").strip() != str(year):
             continue
-        if period is not None and payload_map.get("period", "").strip() != period.strip():
+        if period is not None and payload_map.get("period", "") != period:
             continue
         matches.append(event)
     matches.sort(key=lambda e: e.occurred_at)

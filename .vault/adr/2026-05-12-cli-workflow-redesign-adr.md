@@ -1731,7 +1731,7 @@ sweep.
 | R12, R13 | W79 | ✅ closed |
 | R14 | W80 | ⏳ open — `run_for_period`-inside-`file_modelo_revision` wiring is adjudication-bound by the live-AEAT charter (live submit is permanently forbidden). Decision pending |
 | R15 | W80 | ⏳ open — preflight invocation routing is adjudication-bound (direct call vs `WorkflowEngine`-only); awaits the same charter-aware decision as R14 |
-| R16 | W80 | ✅ closed — `resume_modelo_workflow` local action shipped; mounts as `aeat app modelo work resume` are deferred but the action surface is complete |
+| R16 | W80 | ✅ closed — `resume_modelo_workflow` local action shipped; CLI mount `aeat app modelo work resume WORKFLOW_RUN_ID` shipped; W59 plan rows ticked |
 | R17, R18 | W81 | ✅ closed (`shift_deadline` wired into `OverviewCalendarEntry`; calendar adjudication ratified) |
 | R19 | W82 | ✅ closed |
 | R20 | W83 | ✅ closed |
