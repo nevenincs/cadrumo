@@ -4237,51 +4237,51 @@ Closes apex §12 ledger row R05. aeat config profile ships 5 of 13 locked verbs 
 
 Implement dual-axis grammar: record CRUD plus key-value set/get/unset.
 
-- [ ] `W74.P355.S2054` - Read the config-cli-profile-surface, config-profile-use-and-status ADRs and apex §3.2 dual-axis grammar; `.vault/adr`.
-- [ ] `W74.P355.S2055` - Implement ProfileLifecycleService with canonical CRUD methods over profile records (add, remove, update, view, list); `src/aeat/application/profile`.
-- [ ] `W74.P355.S2056` - Ratify set/get/unset as canonical key-value verbs for profile values per the W71 exception; `src/aeat/application/profile`.
-- [ ] `W74.P355.S2057` - Implement use NAME as an alias for set active NAME and emit confirmation event per apex active-profile-safety lock; `src/aeat/application/profile`.
-- [ ] `W74.P355.S2058` - Implement duplicate, export, import, validate, preflight per the config-cli-profile-surface ADR; `src/aeat/application/profile`.
+- [x] `W74.P355.S2054` - Read the config-cli-profile-surface, config-profile-use-and-status ADRs and apex §3.2 dual-axis grammar; `.vault/adr`.
+- [x] `W74.P355.S2055` - Implement ProfileLifecycleService with canonical CRUD methods over profile records (add, remove, update, view, list); `src/aeat/application/profile`.
+- [x] `W74.P355.S2056` - Ratify set/get/unset as canonical key-value verbs for profile values per the W71 exception; `src/aeat/application/profile`.
+- [x] `W74.P355.S2057` - Implement use NAME as an alias for set active NAME and emit confirmation event per apex active-profile-safety lock; `src/aeat/application/profile`.
+- [x] `W74.P355.S2058` - Implement duplicate, export, import, validate, preflight per the config-cli-profile-surface ADR; `src/aeat/application/profile`.
 
 ### Phase `W74.P356` - shadow duplicate removal
 
 Audit legacy profile commands and migrate callers.
 
-- [ ] `W74.P356.S2059` - Audit existing _config profile commands and identify migration vs already-canonical verbs; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W74.P356.S2060` - Remove legacy setup profile references and rejected aliases; `src/aeat/entrypoints/cli`.
-- [ ] `W74.P356.S2061` - Migrate internal callers to the new ProfileLifecycleService; `src/aeat/application`.
-- [ ] `W74.P356.S2062` - Remove stale fixtures and tests; `tests`.
-- [ ] `W74.P356.S2063` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W74.P356.S2059` - Audit existing _config profile commands and identify migration vs already-canonical verbs; `src/aeat/entrypoints/cli/_config`.
+- [x] `W74.P356.S2060` - Remove legacy setup profile references and rejected aliases; `src/aeat/entrypoints/cli`.
+- [x] `W74.P356.S2061` - Migrate internal callers to the new ProfileLifecycleService; `src/aeat/application`.
+- [x] `W74.P356.S2062` - Remove stale fixtures and tests; `tests`.
+- [x] `W74.P356.S2063` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W74.P357` - de-shim and de-stub cleanup
 
 Retire setup-profile path and wire bucket events.
 
-- [ ] `W74.P357.S2064` - Remove aeat setup profile from public help and reroute via mistype-suggestion footer to aeat config profile; `src/aeat/core/i18n`.
-- [ ] `W74.P357.S2065` - Update the no-active-profile error recovery hint to point at aeat config profile use NAME; `src/aeat/entrypoints/cli/_common.py`.
-- [ ] `W74.P357.S2066` - Remove deprecated profile command spellings from help text and i18n; `src/aeat/core/i18n`.
-- [ ] `W74.P357.S2067` - Wire bucket events for every mutating verb (profile.created, profile.removed, profile.updated, profile.duplicated, profile.exported, profile.imported, profile.activated); `src/aeat/domain/buckets`.
-- [ ] `W74.P357.S2068` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W74.P357.S2064` - Remove aeat setup profile from public help and reroute via mistype-suggestion footer to aeat config profile; `src/aeat/core/i18n`.
+- [x] `W74.P357.S2065` - Update the no-active-profile error recovery hint to point at aeat config profile use NAME; `src/aeat/entrypoints/cli/_common.py`.
+- [x] `W74.P357.S2066` - Remove deprecated profile command spellings from help text and i18n; `src/aeat/core/i18n`.
+- [x] `W74.P357.S2067` - Wire bucket events for every mutating verb (profile.created, profile.removed, profile.updated, profile.duplicated, profile.exported, profile.imported, profile.activated); `src/aeat/domain/buckets`.
+- [x] `W74.P357.S2068` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W74.P358` - real behavior verification
 
 Test the full verb tree and the dual-axis contract.
 
-- [ ] `W74.P358.S2069` - Add service-contract tests for ProfileLifecycleService covering all CRUD verbs plus use, duplicate, export, import, validate, preflight; `tests/application/profile`.
-- [ ] `W74.P358.S2070` - Add tests for list with-status showing draft, verified-unfiled, and last-filed counts per profile; `tests/application/profile`.
-- [ ] `W74.P358.S2071` - Add CLI surface tests for the full profile verb tree; `tests/entrypoints/cli`.
-- [ ] `W74.P358.S2072` - Add a regression test asserting aeat setup profile is unknown and aeat config profile use works as alias for set active; `tests/entrypoints/cli`.
-- [ ] `W74.P358.S2073` - Run the W71 contract-conformance harness asserting the config profile noun-group passes with key-value-exception annotation; `tests/entrypoints/cli`.
+- [x] `W74.P358.S2069` - Add service-contract tests for ProfileLifecycleService covering all CRUD verbs plus use, duplicate, export, import, validate, preflight; `tests/application/profile`.
+- [x] `W74.P358.S2070` - Add tests for list with-status showing draft, verified-unfiled, and last-filed counts per profile; `tests/application/profile`.
+- [x] `W74.P358.S2071` - Add CLI surface tests for the full profile verb tree; `tests/entrypoints/cli`.
+- [x] `W74.P358.S2072` - Add a regression test asserting aeat setup profile is unknown and aeat config profile use works as alias for set active; `tests/entrypoints/cli`.
+- [x] `W74.P358.S2073` - Run the W71 contract-conformance harness asserting the config profile noun-group passes with key-value-exception annotation; `tests/entrypoints/cli`.
 
 ### Phase `W74.P359` - thin cli exposure
 
 Register the profile verb tree and update apex cross-references.
 
-- [ ] `W74.P359.S2074` - Register the full profile verb tree under aeat config profile and render every command via _emit; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W74.P359.S2075` - Apply central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W74.P359.S2076` - Wire help text and i18n and validate canonical vocabulary; `src/aeat/core/i18n`.
-- [ ] `W74.P359.S2077` - Update apex ADR §3.2 to reflect dual-axis grammar and mark R05 closed by W74; `.vault/adr`.
-- [ ] `W74.P359.S2078` - Amend config-cli-profile-surface and config-profile-use-and-status child ADRs; `.vault/adr`.
+- [x] `W74.P359.S2074` - Register the full profile verb tree under aeat config profile and render every command via _emit; `src/aeat/entrypoints/cli/_config`.
+- [x] `W74.P359.S2075` - Apply central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W74.P359.S2076` - Wire help text and i18n and validate canonical vocabulary; `src/aeat/core/i18n`.
+- [x] `W74.P359.S2077` - Update apex ADR §3.2 to reflect dual-axis grammar and mark R05 closed by W74; `.vault/adr`.
+- [x] `W74.P359.S2078` - Amend config-cli-profile-surface and config-profile-use-and-status child ADRs; `.vault/adr`.
 
 ## Wave `W75` - Reconciliation: apoderado noun-group + scope vocabulary
 
