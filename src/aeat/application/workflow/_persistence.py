@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 from typing import Self
+
+from pydantic import ValidationError
 
 from ...adapters.persistence.storage.envelope._envelope import Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -14,6 +17,10 @@ from ...core.classification import SensitivityClass
 from ...core.config import Settings
 from ...core.logging import get_logger
 from ._errors import WorkflowError
+from ._events import (
+    WorkflowStateResetFingerprint,
+    emit_workflow_state_reset,
+)
 from ._models import WorkflowResult, WorkflowState, utc_now
 
 _logger = get_logger(__name__)
@@ -47,7 +54,17 @@ class WorkflowStateRepository:
         )
         if record is None:
             return WorkflowState()
-        envelope = Envelope[WorkflowState].model_validate_json(record.payload.decode("utf-8"))
+        raw_payload = record.payload.decode("utf-8")
+        try:
+            envelope = Envelope[WorkflowState].model_validate_json(raw_payload)
+        except ValidationError as exc:
+            migrated = self._migrate_legacy_inline_profiles(raw_payload)
+            if migrated is not None:
+                self.save(migrated)
+                return migrated
+            raise WorkflowError(
+                "Local configuration state could not be read.",
+            ) from exc
         if envelope.classification is not SensitivityClass.FINANCIAL:
             raise ClassificationError(
                 f"workflow state has classification {envelope.classification}; "
@@ -58,6 +75,71 @@ class WorkflowStateRepository:
                 f"workflow state is at version {envelope.schema_version}; consumer supports up to {_STATE_VERSION}",
             )
         return envelope.payload
+
+    def _migrate_legacy_inline_profiles(self, raw_payload: str) -> WorkflowState | None:
+        """Move legacy inline profile values into profile buckets.
+
+        Older workflow-state records stored profile values directly under
+        ``payload.profiles.<name>``. Current state stores only bucket pointers
+        there. This migration preserves recoverable values while preventing a
+        pydantic validation traceback from crossing the CLI boundary.
+        """
+
+        try:
+            envelope = json.loads(raw_payload)
+        except json.JSONDecodeError:
+            return None
+        if not isinstance(envelope, dict):
+            return None
+        if envelope.get("classification") != SensitivityClass.FINANCIAL.value:
+            return None
+        payload = envelope.get("payload")
+        if not isinstance(payload, dict):
+            return None
+        profiles = payload.get("profiles")
+        if not isinstance(profiles, dict):
+            return None
+
+        from ..profile._models import ProfileRecord
+        from ..profile._repository import profile_bucket_id, profile_bucket_repository
+        from ._utils import _normalise_key
+
+        profile_repository = profile_bucket_repository()
+        migrated_profiles: dict[str, dict[str, str]] = {}
+        active_profile_map: dict[str, str] = {}
+        saw_inline_profile = False
+        for raw_name, raw_entry in profiles.items():
+            if not isinstance(raw_name, str) or not isinstance(raw_entry, dict):
+                return None
+            if isinstance(raw_entry.get("bucket_id"), str):
+                bucket_id = raw_entry["bucket_id"].strip()
+                if not bucket_id:
+                    return None
+                migrated_profiles[raw_name] = {"bucket_id": bucket_id}
+                active_profile_map[raw_name] = raw_name
+                continue
+            try:
+                bucket_id = profile_bucket_id(raw_name)
+            except ValueError:
+                return None
+            values = {
+                _normalise_key(str(key)): str(value).strip()
+                for key, value in raw_entry.items()
+                if value is not None and str(value).strip()
+            }
+            profile_repository.save(ProfileRecord(name=bucket_id, values=values))
+            migrated_profiles[bucket_id] = {"bucket_id": bucket_id}
+            active_profile_map[raw_name] = bucket_id
+            saw_inline_profile = True
+
+        if not saw_inline_profile:
+            return None
+        migrated_payload = dict(payload)
+        migrated_payload["profiles"] = migrated_profiles
+        active_profile = migrated_payload.get("active_profile")
+        if isinstance(active_profile, str):
+            migrated_payload["active_profile"] = active_profile_map.get(active_profile, active_profile)
+        return WorkflowState.model_validate_json(json.dumps(migrated_payload))
 
     def save(self, state: WorkflowState) -> None:
         """Persist state in the encrypted database object store."""
@@ -82,6 +164,70 @@ class WorkflowStateRepository:
         )
         _logger.debug("persisted workflow state to secure backend")
 
+    def fingerprint_state(
+        self,
+        *,
+        reason_class: str = "unreadable",
+    ) -> WorkflowStateResetFingerprint:
+        """Return a row-level fingerprint of the persisted state envelope.
+
+        Reads row-level metadata only; never decrypts the payload. When
+        no envelope is persisted the fingerprint records empty metadata
+        and the supplied ``reason_class`` for the emitted event.
+        """
+
+        metadata = self._objects.peek_metadata(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
+        recovered_bucket_id: str | None = None
+        try:
+            state = self.load()
+        except (WorkflowError, ClassificationError, EnvelopeVersionError, ValidationError):
+            # The fingerprint path is the recovery route for an unreadable
+            # envelope; surfacing the envelope failure here would defeat
+            # the purpose. Fall back to row-level metadata only.
+            state = None
+        if state is not None:
+            recovered_bucket_id = state.active_profile_bucket_id()
+        if metadata is None:
+            return WorkflowStateResetFingerprint(
+                schema_version=None,
+                written_at=None,
+                byte_length=None,
+                reason_class=reason_class,
+                recovered_bucket_id=recovered_bucket_id,
+            )
+        return WorkflowStateResetFingerprint(
+            schema_version=metadata.schema_version,
+            written_at=metadata.written_at,
+            byte_length=metadata.byte_length,
+            reason_class=reason_class,
+            recovered_bucket_id=recovered_bucket_id,
+        )
+
+    def reset_workflow_state(
+        self,
+        *,
+        actor: str = "aeat.application.workflow",
+        source: str = "aeat config repair reset-state",
+        reason_class: str = "unreadable",
+    ) -> WorkflowStateResetFingerprint:
+        """Delete the workflow-state envelope and emit a reset event.
+
+        The mutation is scoped to namespace ``aeat.workflow`` / key
+        ``state``; no other namespace or row is touched. The
+        ``workflow_state.reset`` bucket event is appended BEFORE the
+        secure-object row is deleted so the worst-case failure mode
+        leaves an audit entry with the data still present (an
+        idempotent recoverable state) rather than the data discarded
+        without a trail. The fingerprint never carries plaintext
+        envelope content.
+        """
+
+        fingerprint = self.fingerprint_state(reason_class=reason_class)
+        emit_workflow_state_reset(fingerprint=fingerprint, actor=actor, source=source)
+        self._objects.delete(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
+        _logger.info("workflow state envelope reset; recovery route fired by operator")
+        return fingerprint
+
     def update(self, fn: Callable[[WorkflowState], WorkflowState]) -> WorkflowState:
         """Load, transform, save, and return the updated state."""
 
@@ -95,6 +241,27 @@ def workflow_state_repository(settings: Settings | None = None) -> WorkflowState
     """Return the repository bound to the configured run-state directory."""
 
     return WorkflowStateRepository.from_settings(settings)
+
+
+def reset_workflow_state(
+    *,
+    actor: str = "aeat.application.workflow",
+    source: str = "aeat config repair reset-state",
+    reason_class: str = "unreadable",
+) -> WorkflowStateResetFingerprint:
+    """Module-level helper around :meth:`WorkflowStateRepository.reset_workflow_state`."""
+
+    return workflow_state_repository().reset_workflow_state(
+        actor=actor,
+        source=source,
+        reason_class=reason_class,
+    )
+
+
+def fingerprint_workflow_state(*, reason_class: str = "unreadable") -> WorkflowStateResetFingerprint:
+    """Module-level helper around :meth:`WorkflowStateRepository.fingerprint_state`."""
+
+    return workflow_state_repository().fingerprint_state(reason_class=reason_class)
 
 
 def _validate_run_id(run_id: str) -> str:

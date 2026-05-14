@@ -148,7 +148,7 @@ def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -
     assert "aeat config init" in result.stdout
     assert "aeat app overview status" in result.stdout
     assert "aeat app ledger import" in result.stdout
-    assert "aeat config doctor" in result.stdout
+    assert "aeat config repair" in result.stdout
     assert "Traceback" not in combined_output
     assert "ImportError" not in combined_output
     assert "integrity-warning" not in combined_output
@@ -173,8 +173,9 @@ def test_installed_console_config_init_fails_fast_without_prompt_host(tmp_path: 
     combined_output = f"{result.stdout}\n{result.stderr}"
     assert result.returncode != 0, combined_output
     assert "aeat config init" in combined_output
-    assert "aeat config init --quiet --tax-id 12345678Z --activity" in combined_output
-    assert "aeat config init --help" in combined_output
+    assert "aeat config repair" in combined_output
+    assert "aeat config reset --scope profile --yes" in combined_output
+    assert "aeat config init --quiet --tax-id 12345678Z --activity" not in combined_output
     assert "1/9" not in combined_output
     assert "REFUSED" not in combined_output
     assert "Traceback" not in combined_output

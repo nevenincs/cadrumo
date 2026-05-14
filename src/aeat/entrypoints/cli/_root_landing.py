@@ -39,7 +39,7 @@ def _quick_start_lines(*, has_profile: bool) -> list[str]:
         tr("cli.root.landing.quick_start_status"),
         tr("cli.root.landing.quick_start_import"),
         tr("cli.root.landing.quick_start_review"),
-        tr("cli.root.landing.quick_start_doctor"),
+        tr("cli.root.landing.quick_start_repair"),
     ]
 
 

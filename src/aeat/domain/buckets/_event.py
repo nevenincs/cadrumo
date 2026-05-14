@@ -68,10 +68,33 @@ class BucketEventType(StrEnum):
     MODELO_FILED_SUPERSEDED = "modelo.filed_superseded"
     MODELO_AMENDED = "modelo.amended"
     MODELO_FILING_IMPORTED = "modelo.filing.imported"
+
+    # profile lifecycle (Wave W08 + W09)
     PROFILE_BUCKET_CREATED = "profile.bucket.created"
     PROFILE_SELECTED = "profile.selected"
     PROFILE_VALUES_UPDATED = "profile.values.updated"
     PROFILE_VALUES_CLEARED = "profile.values.cleared"
+
+    # ledger transaction lifecycle (Wave W61)
+    LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"
+    LEDGER_TRANSACTION_IMPORTED = "ledger.transaction.imported"
+    LEDGER_TRANSACTION_UPDATED = "ledger.transaction.updated"
+    LEDGER_TRANSACTION_CLASSIFIED = "ledger.transaction.classified"
+    LEDGER_TRANSACTION_ALLOCATED = "ledger.transaction.allocated"
+    LEDGER_TRANSACTION_REMOVED = "ledger.transaction.removed"
+    LEDGER_TRANSACTION_ARCHIVED = "ledger.transaction.archived"
+    LEDGER_TRANSACTION_STASHED = "ledger.transaction.stashed"
+    LEDGER_TRANSACTION_EXPORTED = "ledger.transaction.exported"
+    LEDGER_CATALOGUE_RESET = "ledger.catalogue.reset"
+    LEDGER_SANITIZATION_COMPLETED = "ledger.sanitization.completed"
+    PURCHASE_INVOICE_EVIDENCE_ATTACHED = "purchase_invoice_evidence.attached"
+    PURCHASE_INVOICE_EVIDENCE_REPLACED = "purchase_invoice_evidence.replaced"
+    PURCHASE_INVOICE_EVIDENCE_DETACHED = "purchase_invoice_evidence.detached"
+    ATTACHMENT_LINKED = "attachment.linked"
+    ATTACHMENT_REMOVED = "attachment.removed"
+
+    # workflow-state recovery (config repair shape ADR)
+    WORKFLOW_STATE_RESET = "workflow_state.reset"
 
 
 class BucketEventObjectType(StrEnum):
@@ -82,6 +105,15 @@ class BucketEventObjectType(StrEnum):
     VERIFICATION_REPORT = "verification_report"
     FILING_RECORD = "filing_record"
     PROFILE = "profile"
+    LEDGER_TRANSACTION = "ledger_transaction"
+    LEDGER_IMPORT_BATCH = "ledger_import_batch"
+    LEDGER_CATALOGUE = "ledger_catalogue"
+    LEDGER_EXPORT = "ledger_export"
+    PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
+    PAYABLE_INVOICE = "payable_invoice"
+    COLLECTIBLE_INVOICE = "collectible_invoice"
+    ATTACHMENT = "attachment"
+    WORKFLOW_STATE = "workflow_state"
 
 
 def _canonical_payload(payload: Mapping[str, str]) -> dict[str, str]:

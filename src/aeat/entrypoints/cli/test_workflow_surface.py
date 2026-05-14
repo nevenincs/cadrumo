@@ -10,6 +10,7 @@ import pytest
 from typer.testing import CliRunner
 
 from aeat.application.diagnostics import build_cli_version_report
+from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 from aeat.domain.transactions import TransactionCatalogueRepository
 
 from . import _import_failure_surface, _startup_import_error_text, app
@@ -231,8 +232,10 @@ def test_retired_commands_are_not_registered() -> None:
         ["financial", "--help"],
         ["filing", "--help"],
         ["bootstrap", "--help"],
-        ["doctor", "--help"],
+        ["repair", "--help"],
+        ["config", "doctor", "--help"],
         ["config", "doctor-logs", "--help"],
+        ["config", "repair-logs", "--help"],
         ["auth", "--help"],
         ["app", "declarations", "--help"],
         ["app", "workspaces", "--help"],
@@ -246,16 +249,16 @@ def test_retired_commands_are_not_registered() -> None:
         assert result.exit_code != 0, command
 
 
-def test_config_doctor_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_config_repair_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
 
-    root_doctor = _invoke(["doctor", "--help"])
-    help_result = _invoke(["config", "doctor", "--help"])
-    text_result = _invoke(["config", "doctor"])
-    json_result = _invoke(["--format", "json", "config", "doctor"])
-    logs_result = _invoke(["config", "doctor", "logs", "--lines", "0"])
+    root_repair = _invoke(["repair", "--help"])
+    help_result = _invoke(["config", "repair", "--help"])
+    text_result = _invoke(["config", "repair"])
+    json_result = _invoke(["--format", "json", "config", "repair"])
+    logs_result = _invoke(["config", "repair", "logs", "--lines", "0"])
 
-    assert root_doctor.exit_code != 0
+    assert root_repair.exit_code != 0
     assert help_result.exit_code == 0, help_result.output
     assert text_result.exit_code == 0, text_result.output
     assert "Overall\t" in text_result.output
@@ -267,17 +270,17 @@ def test_config_doctor_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch
     assert "path\t" in logs_result.output
 
 
-def test_startup_import_failure_points_to_config_doctor_without_traceback() -> None:
+def test_startup_import_failure_points_to_config_repair_without_traceback() -> None:
     error = ModuleNotFoundError("No module named 'xlrd'", name="xlrd")
 
     assert _startup_import_error_text(error) == (
-        "Cannot start AEAT command surface: missing dependency 'xlrd'.\nRun: aeat config doctor\n"
+        "Cannot start AEAT command surface: missing dependency 'xlrd'.\nRun: aeat config repair\n"
     )
     result = _RUNNER.invoke(_import_failure_surface("app", error), [])
 
     assert result.exit_code == 1, result.output
     assert "missing dependency 'xlrd'" in result.output
-    assert "aeat config doctor" in result.output
+    assert "aeat config repair" in result.output
     assert "Traceback" not in result.output
 
 
@@ -378,8 +381,8 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
         ["config", "profile", "--help"],
         ["config", "profile", "set", "--help"],
         ["config", "profile", "get", "--help"],
-        ["config", "doctor", "--help"],
-        ["config", "doctor", "connectivity", "--help"],
+        ["config", "repair", "--help"],
+        ["config", "repair", "connectivity", "--help"],
         ["app", "--help"],
         ["app", "overview", "--help"],
         ["app", "overview", "status", "--help"],
@@ -497,6 +500,7 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     assert imported.exit_code == 0, imported.output
     import_payload = json.loads(_json_output(imported))
     assert import_payload["bucket_id"] == "default"
+    assert len(import_payload["bucket_event_ids"]) == 1
     assert import_payload["imported_transaction_refs"][0]["bucket_id"] == "default"
     assert not (tmp_path / "txs" / "transactions.envelope.json").exists()
     _assert_secure_database_payload(tmp_path, canary, transaction_ref)
@@ -504,6 +508,17 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     [stored] = list(catalogue.transactions.values())
     assert stored.raw.counterparty == canary
     assert stored.raw.transaction_id == transaction_ref
+    events = (
+        BucketEventHistoryRepository()
+        .load()
+        .for_bucket(
+            "default",
+            event_types=(BucketEventType.LEDGER_TRANSACTION_IMPORTED,),
+        )
+    )
+    assert [event.event_type for event in events] == [BucketEventType.LEDGER_TRANSACTION_IMPORTED]
+    assert events[0].event_id == import_payload["bucket_event_ids"][0]
+    assert events[0].object_id == stored.transaction_id
 
 
 def test_ledger_import_verify_source_records_original_file_digest(

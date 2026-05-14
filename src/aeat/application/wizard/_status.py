@@ -1,8 +1,8 @@
 """Profile-status projection and the active-profile to ``AutonomoProfile`` bridge.
 
 ``build_wizard_status`` projects the active workflow state into a
-strict :class:`WizardStatusReport` consumed by the config doctor and
-the ``aeat config status`` command. ``load_active_autonomo_profile``
+strict :class:`WizardStatusReport` consumed by the config repair surface
+and the ``aeat config status`` command. ``load_active_autonomo_profile``
 is the typed bridge the deadline engine and the filing runtime call
 to obtain an ``AutonomoProfile`` from the active profile bucket.
 """
@@ -35,9 +35,9 @@ class WizardStatusReport(BaseModel):
 
     Surfaces both the structural readiness (identity-required keys
     present) and the enrolment readiness (IVA regime declared) so the
-    config doctor's profile + auth checks can render a precise
+    config repair's profile + auth checks can render a precise
     ``next_action`` for the operator. The semantic shape is the
-    contract that the doctor renderer reads from.
+    contract that the repair renderer reads from.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")

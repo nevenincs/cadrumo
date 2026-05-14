@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from aeat import __version__
 
@@ -36,7 +36,7 @@ DiagnosticStatus = Literal["ok", "warn", "fail"]
 
 
 class RegistryVersionSummary(BaseModel):
-    """Stable registry summary suitable for version and doctor surfaces."""
+    """Stable registry summary suitable for version and repair surfaces."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -61,7 +61,14 @@ class CliVersionReport(BaseModel):
 
 
 class DiagnosticCheck(BaseModel):
-    """One concrete config doctor check."""
+    """One concrete config repair check.
+
+    A failing or warning row MUST carry exactly one of ``next_action`` (an
+    exact ``aeat ...`` command string the operator can run) or ``dead_end``
+    (a short explanation of why no automated route exists). A row that
+    supplies neither, or both, is a :class:`pydantic.ValidationError` at
+    construction time. ``ok`` rows MUST carry neither.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -70,6 +77,24 @@ class DiagnosticCheck(BaseModel):
     summary: str
     detail: str | None = None
     next_action: str | None = None
+    dead_end: str | None = None
+
+    @model_validator(mode="after")
+    def _enforce_actionable_contract(self) -> DiagnosticCheck:
+        next_action = self.next_action if self.next_action else None
+        dead_end = self.dead_end if self.dead_end else None
+        if next_action is not None and dead_end is not None:
+            raise ValueError("DiagnosticCheck may set at most one of `next_action` or `dead_end`, not both")
+        if self.status in {"fail", "warn"}:
+            if next_action is None and dead_end is None:
+                raise ValueError(
+                    f"DiagnosticCheck(status={self.status!r}) must populate one of "
+                    "`next_action` or `dead_end`; silent failing rows are forbidden"
+                )
+        else:  # status == "ok"
+            if next_action is not None or dead_end is not None:
+                raise ValueError("DiagnosticCheck(status='ok') must not carry `next_action` or `dead_end`")
+        return self
 
 
 class SecureObjectIntegrityReport(BaseModel):
@@ -89,8 +114,8 @@ class SecureObjectIntegrityReport(BaseModel):
     unreadable_total: int = 0
 
 
-class ConfigDoctorReport(BaseModel):
-    """Local environment and configuration diagnostics for ``aeat config doctor``."""
+class ConfigRepairReport(BaseModel):
+    """Local environment and configuration diagnostics for ``aeat config repair``."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -116,8 +141,8 @@ def build_cli_version_report(registry_root: Path | None = None) -> CliVersionRep
     )
 
 
-def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDoctorReport:
-    """Return local diagnostics for the config-facing doctor surface."""
+def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepairReport:
+    """Return local diagnostics for the ``aeat config repair`` surface."""
 
     root = registry_root or PROJECT_ROOT / "registry" / "aeat"
     registry = _build_registry_version_summary(root)
@@ -136,7 +161,7 @@ def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDocto
             name="logging.file",
             status="ok" if default_log_file_path().parent.exists() else "warn",
             summary=str(default_log_file_path()),
-            next_action=None if default_log_file_path().parent.exists() else "aeat --help",
+            next_action=None if default_log_file_path().parent.exists() else "aeat config repair logs",
         ),
         DiagnosticCheck(
             name="registry.load",
@@ -147,6 +172,9 @@ def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDocto
                 else "registry unavailable"
             ),
             detail=registry.error,
+            dead_end=(
+                None if registry.available else "registry is bundled with aeat; reinstall the package to recover."
+            ),
         ),
     ]
 
@@ -164,13 +192,14 @@ def build_config_doctor_report(registry_root: Path | None = None) -> ConfigDocto
                 status="fail",
                 summary="state backend unreadable",
                 detail=f"{type(exc).__name__}: {exc}",
+                next_action="aeat config repair reset-state --yes",
             )
         )
 
     secure_objects = _probe_secure_objects_integrity()
     checks.append(_secure_objects_integrity_check(secure_objects))
 
-    return ConfigDoctorReport(
+    return ConfigRepairReport(
         overall=_overall_status(tuple(checks)),
         package_name="aeat",
         package_version=__version__,
@@ -191,7 +220,7 @@ def probe_browser_connectivity(settings: Settings | None = None) -> SiteHealthSt
 
 
 def render_browser_connectivity_text(status: SiteHealthStatus) -> str:
-    """Render one site-health status as compact doctor output."""
+    """Render one site-health status as compact repair output."""
 
     markers = ", ".join(status.evidence.detected_markers) or "none"
     lines = [
@@ -223,11 +252,11 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
             try:
                 await context.close()
             except Exception:
-                _log.warning("config doctor connectivity context close failed", exc_info=True)
+                _log.warning("config repair connectivity context close failed", exc_info=True)
         try:
             await session.close()
         except Exception:
-            _log.warning("config doctor connectivity browser close failed", exc_info=True)
+            _log.warning("config repair connectivity browser close failed", exc_info=True)
 
 
 def _ok_site_health_status(url: str) -> SiteHealthStatus:
@@ -243,8 +272,8 @@ def _ok_site_health_status(url: str) -> SiteHealthStatus:
     )
 
 
-def render_config_doctor_text(report: ConfigDoctorReport) -> str:
-    """Render a compact human-readable doctor report."""
+def render_config_repair_text(report: ConfigRepairReport) -> str:
+    """Render a compact human-readable repair report."""
 
     lines = [
         f"Overall\t{report.overall}",
@@ -265,13 +294,15 @@ def render_config_doctor_text(report: ConfigDoctorReport) -> str:
             lines.append(f"detail\t{check.detail}")
         if check.next_action:
             lines.append(f"next\t{check.next_action}")
+        if check.dead_end:
+            lines.append(f"note\t{check.dead_end}")
     return "\n".join(lines) + "\n"
 
 
 def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSummary:
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=PROJECT_ROOT)
-    except Exception as exc:  # pragma: no cover - covered by later doctor diagnostics.
+    except Exception as exc:  # pragma: no cover - covered by later repair diagnostics.
         return RegistryVersionSummary(
             available=False,
             registry_root=str(registry_root),
@@ -303,7 +334,7 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
         repo = SecureObjectRepository()
         namespaces = repo.list_namespaces()
     except Exception as exc:  # pragma: no cover - engine resolution depends on local backend.
-        _log.debug("secure objects engine unreachable for doctor probe: %s: %s", type(exc).__name__, exc)
+        _log.debug("secure objects engine unreachable for repair probe: %s: %s", type(exc).__name__, exc)
         return SecureObjectIntegrityReport()
     integrity = tuple(repo.probe_namespace_integrity(ns) for ns in namespaces)
     readable_total = sum(item.readable for item in integrity)
@@ -316,7 +347,7 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
 
 
 def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> DiagnosticCheck:
-    """Render the ``secure_objects.integrity`` doctor row."""
+    """Render the ``secure_objects.integrity`` repair row."""
     if report.unreadable_total == 0:
         if report.readable_total == 0:
             return DiagnosticCheck(
@@ -342,27 +373,27 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
             f"{report.readable_total} row(s) decryptable"
         ),
         detail=affected,
-        next_action="aeat config doctor quarantine --yes",
+        next_action="aeat config repair quarantine --yes",
     )
 
 
 def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
     if report.active_profile is None:
         return DiagnosticCheck(
-            name="profile.active",
+            name="profile.readiness",
             status="warn",
             summary="no active profile",
-            next_action="aeat config init --profile NAME --tax-id NIF",
+            next_action="aeat config init --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
     if not report.profile_ready:
         return DiagnosticCheck(
-            name="profile.required_keys",
+            name="profile.readiness",
             status="warn",
             summary=f"missing required keys: {', '.join(report.missing_required)}",
-            next_action=report.next_action,
+            next_action="aeat config init --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
     return DiagnosticCheck(
-        name="profile.required_keys",
+        name="profile.readiness",
         status="ok",
         summary=f"{report.profile_present_keys}/{report.profile_total_keys} keys set",
     )
@@ -371,19 +402,23 @@ def _profile_check(report: WizardStatusReport) -> DiagnosticCheck:
 def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
     if not report.auth_provider:
         return DiagnosticCheck(
-            name="auth.provider",
+            name="auth.readiness",
             status="warn",
             summary="no authentication provider configured",
-            next_action="aeat config auth configure --provider certificate --file PATH",
+            next_action="aeat config auth setup",
         )
     if not report.login_ready:
         return DiagnosticCheck(
-            name="auth.session",
+            name="auth.readiness",
             status="warn",
             summary=f"{report.auth_provider} configured but no active session",
-            next_action="aeat config auth test --provider certificate",
+            next_action="aeat config auth setup",
         )
-    return DiagnosticCheck(name="auth.session", status="ok", summary=f"{report.auth_provider} session ready")
+    return DiagnosticCheck(
+        name="auth.readiness",
+        status="ok",
+        summary=f"{report.auth_provider} session ready",
+    )
 
 
 def _overall_status(checks: tuple[DiagnosticCheck, ...]) -> DiagnosticStatus:
@@ -416,8 +451,8 @@ def secure_object_unreadable_total() -> int:
     Lightweight wrapper over :func:`_probe_secure_objects_integrity` for
     consumers (notably ``aeat app overview status``) that want to surface
     a concise "N rows unreadable" pointer towards
-    ``aeat config doctor`` without rendering the per-namespace breakdown
-    themselves. The full breakdown remains the authority of doctor.
+    ``aeat config repair`` without rendering the per-namespace breakdown
+    themselves. The full breakdown remains the authority of repair.
     """
     return _probe_secure_objects_integrity().unreadable_total
 
@@ -455,16 +490,16 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
 
 __all__ = [
     "CliVersionReport",
-    "ConfigDoctorReport",
+    "ConfigRepairReport",
     "DiagnosticCheck",
     "RegistryVersionSummary",
     "SecureObjectIntegrityReport",
     "build_cli_version_report",
-    "build_config_doctor_report",
+    "build_config_repair_report",
     "probe_browser_connectivity",
     "quarantine_unreadable_secure_objects",
     "render_browser_connectivity_text",
     "render_cli_version_text",
-    "render_config_doctor_text",
+    "render_config_repair_text",
     "secure_object_unreadable_total",
 ]

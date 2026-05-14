@@ -108,7 +108,7 @@ Live AEAT reads (read-only, never submits)
   aeat app live borrador 100 fetch  AEAT pre-fill snapshot for IRPF
 
 Diagnostics
-  aeat config doctor                Composite health report
+  aeat config repair                Composite health report (diagnose and fix)
   aeat config bucket history        Audit trail for the active bucket
   aeat app overview status          Cross-domain readiness
 

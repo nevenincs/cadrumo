@@ -25,6 +25,7 @@ related:
   - '[[2026-04-21-auth-cli-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-config-doctor-shape-adr]]'
+  - '[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-profile-output-language-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr]]'
@@ -1097,15 +1098,15 @@ This Phase delivers thin cli exposure for authentication configuration surface a
 - [ ] `W17.P085.S0509` - Handle authentication configuration surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
 - [ ] `W17.P085.S0510` - Validate help text for authentication configuration surface uses accepted vocabulary only; `tests/entrypoints/cli`.
 
-## Wave `W18` - config doctor shape
+## Wave `W18` - config repair shape
 
-This Wave implements the `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr` decision for diagnostic and integrity surface. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
+This Wave implements the `2026-05-13-cli-workflow-redesign-config-repair-shape-adr` decision (which supersedes the earlier `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`) for the diagnostic, integrity, and maintenance surface. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
 
 ### Phase `W18.P086` - backend implementation
 
-This Phase delivers backend implementation for diagnostic and integrity surface as required by `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`.
+This Phase delivers backend implementation for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
-- [ ] `W18.P086.S0511` - Map the `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr` decision into non-CLI service ownership for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [ ] `W18.P086.S0511` - Map the `2026-05-13-cli-workflow-redesign-config-repair-shape-adr` decision into non-CLI service ownership for diagnostic, integrity, and maintenance surface; `src/aeat/application/diagnostics`.
 - [ ] `W18.P086.S0512` - Implement Pydantic command and result contracts for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
 - [ ] `W18.P086.S0513` - Wire application or domain services required by diagnostic and integrity surface; `src/aeat/application/diagnostics`.
 - [ ] `W18.P086.S0514` - Connect persistence, bucket events, registry data, or provider adapters required by diagnostic and integrity surface; `src/aeat/application/diagnostics`.
@@ -1114,7 +1115,7 @@ This Phase delivers backend implementation for diagnostic and integrity surface 
 
 ### Phase `W18.P087` - shadow duplicate removal
 
-This Phase delivers shadow duplicate removal for diagnostic and integrity surface as required by `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`.
+This Phase delivers shadow duplicate removal for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
 - [ ] `W18.P087.S0517` - Audit duplicate implementations that overlap diagnostic and integrity surface; `src/aeat/application/diagnostics`.
 - [ ] `W18.P087.S0518` - Delete duplicate backend branches that compete with diagnostic and integrity surface; `src/aeat/application/diagnostics`.
@@ -1125,7 +1126,7 @@ This Phase delivers shadow duplicate removal for diagnostic and integrity surfac
 
 ### Phase `W18.P088` - de-shim and de-stub cleanup
 
-This Phase delivers de-shim and de-stub cleanup for diagnostic and integrity surface as required by `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`.
+This Phase delivers de-shim and de-stub cleanup for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
 - [ ] `W18.P088.S0523` - Delete compatibility shims that preserve rejected behavior for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
 - [ ] `W18.P088.S0524` - Delete placeholder stubs that claim support for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
@@ -1136,7 +1137,7 @@ This Phase delivers de-shim and de-stub cleanup for diagnostic and integrity sur
 
 ### Phase `W18.P089` - real behavior verification
 
-This Phase delivers real behavior verification for diagnostic and integrity surface as required by `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`.
+This Phase delivers real behavior verification for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
 - [ ] `W18.P089.S0529` - Add service contract tests for diagnostic and integrity surface; `tests/entrypoints/cli`.
 - [ ] `W18.P089.S0530` - Add persistence or registry integration tests for diagnostic and integrity surface; `tests/entrypoints/cli`.
@@ -1147,7 +1148,7 @@ This Phase delivers real behavior verification for diagnostic and integrity surf
 
 ### Phase `W18.P090` - thin cli exposure
 
-This Phase delivers thin cli exposure for diagnostic and integrity surface as required by `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr`.
+This Phase delivers thin cli exposure for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
 - [ ] `W18.P090.S0535` - Expose accepted command handlers for diagnostic and integrity surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
 - [ ] `W18.P090.S0536` - Keep argument parsing for diagnostic and integrity surface separate from backend behavior; `src/aeat/entrypoints/cli`.
@@ -3664,42 +3665,42 @@ This Phase audits and fixes the transaction catalogue storage boundary so every 
 This Phase creates backend-owned manual ledger mutation contracts that persist complete aggregation-visible transaction facts instead of workflow review overlays.
 
 - [x] `W61.P302.S1807` - Define manual transaction command and result contracts; `src/aeat/application/ledger`.
-- [ ] `W61.P302.S1808` - Implement create read list and update service operations for manual ledger rows; `src/aeat/application/ledger`.
-- [ ] `W61.P302.S1809` - Persist aggregation-visible base IVA category classification and business percentage fields; `src/aeat/domain/transactions`.
-- [ ] `W61.P302.S1810` - Validate direction zero amount transfer and correction semantics in backend policy; `src/aeat/application/ledger`.
-- [ ] `W61.P302.S1811` - Separate durable ledger mutations from workflow review annotations; `src/aeat/application/review, src/aeat/application/ledger`.
-- [ ] `W61.P302.S1812` - Capture evidence provenance actor and edit lineage for manual transactions; `src/aeat/application/ledger, src/aeat/domain/attachments`.
+- [x] `W61.P302.S1808` - Implement create read list and update service operations for manual ledger rows; `src/aeat/application/ledger`.
+- [x] `W61.P302.S1809` - Persist aggregation-visible base IVA category classification and business percentage fields; `src/aeat/domain/transactions`.
+- [x] `W61.P302.S1810` - Validate direction zero amount transfer and correction semantics in backend policy; `src/aeat/application/ledger`.
+- [x] `W61.P302.S1811` - Separate durable ledger mutations from workflow review annotations; `src/aeat/application/review, src/aeat/application/ledger`.
+- [x] `W61.P302.S1812` - Capture evidence provenance actor and edit lineage for manual transactions; `src/aeat/application/ledger, src/aeat/domain/attachments`.
 
 ### Phase `W61.P303` - iva proportionality and aggregation routing
 
 This Phase wires manual ledger facts into IVA base, IVA amount, business-private proportionality, usage-ratio, prorrata-reference, and modelo aggregation paths without conflating distinct tax substrates.
 
-- [ ] `W61.P303.S1813` - Project bucket-local manual ledger facts into Renta aggregation; `src/aeat/application/aggregation`.
-- [ ] `W61.P303.S1814` - Project taxable base IVA amount and IVA rate facts into IVA ledger observations; `src/aeat/application/aggregation, src/aeat/domain/calculations/registry`.
-- [ ] `W61.P303.S1815` - Attach usage ratio references for mixed private and business usage; `src/aeat/domain/usage_ratios, src/aeat/application/ledger`.
-- [ ] `W61.P303.S1816` - Carry prorrata references without conflating them with usage ratios; `src/aeat/application/aggregation, src/aeat/domain/vat`.
-- [ ] `W61.P303.S1817` - Report missing base IVA proportionality category and classification facts in preflight; `src/aeat/application/ledger, src/aeat/application/aggregation`.
-- [ ] `W61.P303.S1818` - Route modelo aggregation through bucket-local transaction catalogues; `src/aeat/application/modelo, src/aeat/application/aggregation`.
+- [x] `W61.P303.S1813` - Project bucket-local manual ledger facts into Renta aggregation; `src/aeat/application/aggregation`.
+- [x] `W61.P303.S1814` - Project taxable base IVA amount and IVA rate facts into IVA ledger observations; `src/aeat/application/aggregation, src/aeat/domain/calculations/registry`.
+- [x] `W61.P303.S1815` - Attach usage ratio references for mixed private and business usage; `src/aeat/domain/usage_ratios, src/aeat/application/ledger`.
+- [x] `W61.P303.S1816` - Carry prorrata references without conflating them with usage ratios; `src/aeat/application/aggregation, src/aeat/domain/vat`.
+- [x] `W61.P303.S1817` - Report missing base IVA proportionality category and classification facts in preflight; `src/aeat/application/ledger, src/aeat/application/aggregation`.
+- [x] `W61.P303.S1818` - Route modelo aggregation through bucket-local transaction catalogues; `src/aeat/application/modelo, src/aeat/application/aggregation`.
 
 ### Phase `W61.P304` - ledger events removal archive and export
 
 This Phase adds auditable ledger lifecycle semantics for edit, allocation, evidence attachment, removal, reset, archive, stash, and export operations within the active bucket.
 
-- [ ] `W61.P304.S1819` - Extend bucket event types and object types for ledger transaction mutations; `src/aeat/domain/buckets`.
-- [ ] `W61.P304.S1820` - Emit ledger events for create import edit classify allocate attach remove reset archive and export operations; `src/aeat/application/ledger`.
-- [ ] `W61.P304.S1821` - Implement archive and stash semantics with auditable transaction lineage; `src/aeat/application/archive, src/aeat/application/ledger`.
-- [ ] `W61.P304.S1822` - Implement bucket-local removal and reset protections for ledger data; `src/aeat/application/ledger, src/aeat/application/config_reset.py, src/aeat/application/setup_reset.py`.
-- [ ] `W61.P304.S1823` - Export ledger rows from the canonical bucket-scoped catalogue; `src/aeat/application/export, src/aeat/application/ledger`.
-- [ ] `W61.P304.S1824` - Replace stale review queue drill commands with app ledger lifecycle commands; `src/aeat/application/review`.
+- [x] `W61.P304.S1819` - Extend bucket event types and object types for ledger transaction mutations; `src/aeat/domain/buckets`.
+- [x] `W61.P304.S1820` - Emit ledger events for create import edit classify allocate attach remove reset archive and export operations; `src/aeat/application/ledger`.
+- [x] `W61.P304.S1821` - Implement archive and stash semantics with auditable transaction lineage; `src/aeat/application/archive, src/aeat/application/ledger`.
+- [x] `W61.P304.S1822` - Implement bucket-local removal and reset protections for ledger data; `src/aeat/application/ledger, src/aeat/application/config_reset.py, src/aeat/application/setup_reset.py`.
+- [x] `W61.P304.S1823` - Export ledger rows from the canonical bucket-scoped catalogue; `src/aeat/application/export, src/aeat/application/ledger`.
+- [x] `W61.P304.S1824` - Replace stale review queue drill commands with app ledger lifecycle commands; `src/aeat/application/review`.
 
 ### Phase `W61.P305` - manual ledger cli lifecycle
 
 This Phase exposes the manual ledger lifecycle under aeat app ledger as thin commands after backend storage, mutation, audit, and aggregation contracts exist.
 
-- [ ] `W61.P305.S1825` - Expose manual transaction creation under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W61.P305.S1826` - Expose ledger read list status and tracking commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W61.P305.S1827` - Expose edit classify allocate and proportionality commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W61.P305.S1828` - Expose attach remove reset stash archive and export commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W61.P305.S1825` - Expose manual transaction creation under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W61.P305.S1826` - Expose ledger read list status and tracking commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W61.P305.S1827` - Expose edit classify allocate and proportionality commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W61.P305.S1828` - Expose attach remove reset stash archive and export commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W61.P305.S1829` - Delegate every manual ledger command to centralized backend services and schema emitters; `src/aeat/entrypoints/cli, src/aeat/application/ledger`.
 - [ ] `W61.P305.S1830` - Validate command vocabulary help text and boundary inventory for manual ledger lifecycle; `src/aeat/entrypoints/cli, src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
