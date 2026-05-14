@@ -4072,3 +4072,813 @@ This Phase implements the `2026-05-14-cli-workflow-redesign-integrity-warning-st
 - [ ] `W70.P339.S1976` - Confirm or falsify the concurrent-writer hypothesis: run both probes against a fresh install, AND re-run the determinism probe under a controlled multi-process scenario (two or more concurrent integrity scans + writer handles open against the same secure-objects table). Capture findings in a follow-up reference document linked from the ADR's frontmatter; the reference document MUST state explicitly whether the captured PID + timestamp data confirms or falsifies the concurrent-writer hypothesis; `.vault/reference`.
 - [ ] `W70.P339.S1977` - Only after the prior step's reference document records a confirmed or falsified verdict, land the fix that matches the actual root cause: if confirmed, serialise integrity-scan writes against the secure-objects table; if falsified, address whichever root cause the captured data points at (master-key derivation drift, scan-pass classification, schema mutation under normal use). The fix must make the integrity scan a pure function of secure-objects table state and master key, with no wallclock, PID, or ambient input mixed into the computation; `src/aeat/adapters/persistence/storage`.
 - [ ] `W70.P339.S1978` - Smoke: a deterministic-scan test asserts the integrity-warning count is identical across N consecutive runs without mutation; an additional smoke runs two concurrent integrity scans and asserts the count remains stable under the controlled multi-process scenario; `tests/adapters/persistence`.
+
+## Wave `W71` - Reconciliation: CRUD verb contract (cross-cutting lock)
+
+Implements the apex ADR §12.b standardized CRUD verb contract. Locks the canonical five-verb mutating-noun-group shape (add/remove/update/view/list), inventories every current mutating noun-group, and produces per-noun-group migration steps consumed by Waves W72-W77. Closes apex §12 ledger row R01.
+
+### Phase `W71.P340` - backend implementation
+
+Cross-cutting CRUD contract as backend service shape per apex §12.b lock.
+
+- [ ] `W71.P340.S1979` - Read the apex ADR §12.b CRUD verb contract section in full before editing; `.vault/adr`.
+- [ ] `W71.P340.S1980` - Define a MutatingNounGroupContract Pydantic protocol in the application layer specifying canonical add/remove/update/view/list methods; `src/aeat/application`.
+- [ ] `W71.P340.S1981` - Annotate orthogonal-axis and lifecycle-state verb categories on the protocol as discriminated subtypes; `src/aeat/application`.
+- [ ] `W71.P340.S1982` - Document the key-value-as-record exception (set/get/unset mapping) as an explicit protocol annotation; `src/aeat/application`.
+- [ ] `W71.P340.S1983` - Register the canonical bucket event suffixes (created, removed, updated) for cross-cutting consumption; `src/aeat/domain/buckets`.
+
+### Phase `W71.P341` - shadow duplicate removal
+
+Inventory every current mutating noun-group and produce the migration ledger.
+
+- [ ] `W71.P341.S1984` - Inventory aeat app ledger verbs against the canonical CRUD contract and record mapping; `.vault/reference`.
+- [ ] `W71.P341.S1985` - Inventory aeat app modelo verbs and record mapping; `.vault/reference`.
+- [ ] `W71.P341.S1986` - Inventory aeat config noun-groups (profile, auth, bucket, repair) and record mapping with key-value-exception annotations; `.vault/reference`.
+- [ ] `W71.P341.S1987` - Cross-check inventory against the W70.P333 evidence verb-group reference shape; `.vault/reference`.
+- [ ] `W71.P341.S1988` - Identify duplicate or shadow verbs that would collide with the canonical CRUD spine and record the duplicate inventory; `.vault/reference`.
+
+### Phase `W71.P342` - de-shim and de-stub cleanup
+
+Declare the migration policy for non-conforming verbs.
+
+- [ ] `W71.P342.S1989` - Declare migration policy for non-canonical verbs (create maps to add, edit maps to update, redundant aliases retire); `src/aeat/application`.
+- [ ] `W71.P342.S1990` - Declare which lifecycle-state verbs remain explicit (archive, stash, discard, reset) with state-specific events; `src/aeat/application`.
+- [ ] `W71.P342.S1991` - Declare which orthogonal-axis verbs remain at the noun-group level (classify, allocate, attach, link, check, preflight, reconcile); `src/aeat/application`.
+- [ ] `W71.P342.S1992` - Declare key-value-as-record exceptions per noun-group (profile values, usage ratios, configuration keys); `src/aeat/application`.
+- [ ] `W71.P342.S1993` - Prune the inventory document of rows whose migration target is no-change so only non-canonical rows survive into Waves W72-W77; `.vault/reference`.
+
+### Phase `W71.P343` - real behavior verification
+
+Ship the contract assertion harness.
+
+- [ ] `W71.P343.S1994` - Add a contract-conformance test that walks every Typer noun-group app and asserts the registered verb set matches the canonical contract; `tests/entrypoints/cli`.
+- [ ] `W71.P343.S1995` - Add a runtime invariant test asserting every mutating noun-group service implements the MutatingNounGroupContract protocol; `tests/application`.
+- [ ] `W71.P343.S1996` - Add a bucket-event-name regression test asserting every mutating verb emits an event with the canonical suffix; `tests/domain/buckets`.
+- [ ] `W71.P343.S1997` - Add a help-text test asserting every mutating noun-group enumerates the canonical CRUD spine first; `tests/entrypoints/cli`.
+- [ ] `W71.P343.S1998` - Run the contract harness across the current tree and record the violation list as input ledger for Waves W72-W77; `tests/entrypoints/cli`.
+
+### Phase `W71.P344` - thin cli exposure
+
+Lock the contract in help and i18n surfaces.
+
+- [ ] `W71.P344.S1999` - Update root aeat help to document the canonical CRUD shape as the cross-cutting noun-group contract; `src/aeat/core/i18n`.
+- [ ] `W71.P344.S2000` - Update i18n translation tables to carry the canonical verb names across es/en/ca/hu; `src/aeat/core/i18n`.
+- [ ] `W71.P344.S2001` - Wire mistype-suggestion footer to route legacy verb spellings (create, edit, del) to the canonical CRUD verb; `src/aeat/entrypoints/cli`.
+- [ ] `W71.P344.S2002` - Validate help text vocabulary uses canonical verb names only outside of the legacy-suggestion footer; `tests/entrypoints/cli`.
+- [ ] `W71.P344.S2003` - Update apex ADR §12 reconciliation ledger to mark R01 as closed by W71; `.vault/adr`.
+
+## Wave `W72` - Reconciliation: modelo grammar reconcile
+
+Closes apex §12 ledger rows R02 (modelo nested sub-apps vs flat tree) and R03 (ledger verb-soup). Adjudicates each surfaced verb against the W71 CRUD contract, amends affected child ADRs to ratify shipped improvements, and retires regressions.
+
+### Phase `W72.P345` - backend implementation
+
+Adjudicate surfaced verbs and declare backend service signatures for missing locked verbs.
+
+- [ ] `W72.P345.S2004` - Read the app-modelo-shape and ledger-transaction-management ADRs and identify each shipped verb that is not in the locked grammar; `.vault/adr`.
+- [ ] `W72.P345.S2005` - Adjudicate the nested-sub-app grammar against the apex §4.3 flat-tree spec and produce a verdict; `.vault/adr`.
+- [ ] `W72.P345.S2006` - Adjudicate each non-canonical ledger verb (create, edit, archive, stash, reset, track, read) per W71 contract; `.vault/adr`.
+- [ ] `W72.P345.S2007` - Declare backend service signatures for missing locked verbs (link, check, preflight, reconcile, history); `src/aeat/application`.
+- [ ] `W72.P345.S2008` - Draft apex §4.3 amendment and affected child-ADR amendment text for ratify-shipped-shape verdicts; `.vault/adr`.
+
+### Phase `W72.P346` - shadow duplicate removal
+
+Retire legacy verbs and migrate internal callers.
+
+- [ ] `W72.P346.S2009` - Remove retired-verdict legacy verb registrations from the modelo and ledger CLI modules; `src/aeat/entrypoints/cli`.
+- [ ] `W72.P346.S2010` - Migrate internal callers of retired backend functions to the canonical CRUD service; `src/aeat/application`.
+- [ ] `W72.P346.S2011` - Amend affected child ADRs with the ratified grammar in their 2026-05-14 reconciliation amendment section; `.vault/adr`.
+- [ ] `W72.P346.S2012` - Remove stale tests that locked the retired verb behavior; `tests`.
+- [ ] `W72.P346.S2013` - Update boundary inventory to reflect the reconciled verb set; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W72.P347` - de-shim and de-stub cleanup
+
+Ship missing locked verbs and clean help/i18n surfaces.
+
+- [ ] `W72.P347.S2014` - Ship link, check, preflight verbs in aeat app ledger wired to existing backend services; `src/aeat/entrypoints/cli`.
+- [ ] `W72.P347.S2015` - Ship reconcile and history verbs in aeat app modelo wired to existing application services; `src/aeat/entrypoints/cli`.
+- [ ] `W72.P347.S2016` - Remove legacy verb spellings from help text and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
+- [ ] `W72.P347.S2017` - Remove legacy verb references from refusal-message strings; `src/aeat/core/i18n`.
+- [ ] `W72.P347.S2018` - Record the removed shim surfaces in the boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W72.P348` - real behavior verification
+
+Add CLI surface and end-to-end tests for the reconciled grammar.
+
+- [ ] `W72.P348.S2019` - Add CLI surface tests for link, check, preflight, reconcile, history exercising real backend services; `tests/entrypoints/cli`.
+- [ ] `W72.P348.S2020` - Add negative tests proving retired verbs are unknown commands; `tests/entrypoints/cli`.
+- [ ] `W72.P348.S2021` - Add an end-to-end test exercising the full modelo lifecycle through the reconciled verb tree; `tests`.
+- [ ] `W72.P348.S2022` - Add a regression test asserting the reconciled aeat app ledger verb count matches the W71 canonical spine plus ratified axes; `tests/entrypoints/cli`.
+- [ ] `W72.P348.S2023` - Run the W71 contract-conformance harness and assert app modelo and app ledger noun-groups pass; `tests/entrypoints/cli`.
+
+### Phase `W72.P349` - thin cli exposure
+
+Validate help vocabulary and update apex cross-references.
+
+- [ ] `W72.P349.S2024` - Validate aeat app modelo help and aeat app ledger help enumerate canonical CRUD plus ratified axes; `src/aeat/entrypoints/cli`.
+- [ ] `W72.P349.S2025` - Validate i18n translations align across es/en/ca/hu; `src/aeat/core/i18n`.
+- [ ] `W72.P349.S2026` - Update apex ADR §4.3 to ratify the reconciled grammar and mark R02 and R03 closed by W72; `.vault/adr`.
+- [ ] `W72.P349.S2027` - Update plan rows for W23, W46, W58 with cross-references where prior rows are now superseded by W72; `.vault/plan`.
+- [ ] `W72.P349.S2028` - Run vault check to confirm no broken wiki-links from the apex amendment; `.vault`.
+
+## Wave `W73` - Reconciliation: invoice noun-group CRUD mounts
+
+Closes apex §12 ledger row R04. payable_invoice and collectible_invoice are locked source-kind taxonomy citizens with zero CLI mount. Ships both noun-groups with the W71 canonical CRUD spine, wires backend services, and emits matching bucket events.
+
+### Phase `W73.P350` - backend implementation
+
+Implement CRUD services and persistence for payable and collectible invoice noun-groups.
+
+- [ ] `W73.P350.S2029` - Read the invoice-domain-decoupling and ledger-transaction-management ADRs and confirm source-kind taxonomy fields; `.vault/adr`.
+- [ ] `W73.P350.S2030` - Implement PayableInvoiceService and CollectibleInvoiceService satisfying the W71 MutatingNounGroupContract; `src/aeat/application/ledger`.
+- [ ] `W73.P350.S2031` - Add Pydantic command and result contracts per the four-source taxonomy; `src/aeat/application/ledger`.
+- [ ] `W73.P350.S2032` - Add payable_invoice and collectible_invoice event enum members and wire emission in each verb; `src/aeat/domain/buckets`.
+- [ ] `W73.P350.S2033` - Wire persistence repositories over the existing bucket-scoped encrypted SQL substrate; `src/aeat/adapters/persistence`.
+
+### Phase `W73.P351` - shadow duplicate removal
+
+Audit and retire legacy invoice code paths.
+
+- [ ] `W73.P351.S2034` - Audit application/ledger and domain/transactions for legacy invoice code paths that conflate payable and collectible; `src/aeat/application/ledger`.
+- [ ] `W73.P351.S2035` - Confirm the legacy _invoice.py module is fully retired with no remaining references; `src/aeat/entrypoints/cli`.
+- [ ] `W73.P351.S2036` - Remove bare-invoice source-kind references in CLI copy and event payloads; `src/aeat/core/i18n`.
+- [ ] `W73.P351.S2037` - Remove tests asserting bare-invoice behavior; `tests`.
+- [ ] `W73.P351.S2038` - Update boundary inventory entries for the invoice domain; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W73.P352` - de-shim and de-stub cleanup
+
+Wire source-kind aliases and remove deprecated enums.
+
+- [ ] `W73.P352.S2039` - Ensure CLI source-kind aliases (pi, ci) resolve to payable_invoice and collectible_invoice at the Typer boundary; `src/aeat/entrypoints/cli`.
+- [ ] `W73.P352.S2040` - Ensure the ledger link verb accepts payable_invoice and collectible_invoice as link targets; `src/aeat/application/ledger`.
+- [ ] `W73.P352.S2041` - Remove deprecated invoice enum values from any reachable source enum; `src/aeat/domain/transactions`.
+- [ ] `W73.P352.S2042` - Update help text and i18n to use the canonical noun names without bare invoice; `src/aeat/core/i18n`.
+- [ ] `W73.P352.S2043` - Record removed surfaces in boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W73.P353` - real behavior verification
+
+Add service, persistence, event, and end-to-end tests.
+
+- [ ] `W73.P353.S2044` - Add service-contract tests for PayableInvoiceService and CollectibleInvoiceService covering all five CRUD verbs; `tests/application/ledger`.
+- [ ] `W73.P353.S2045` - Add persistence integration tests over encrypted SQL; `tests/adapters/persistence`.
+- [ ] `W73.P353.S2046` - Add bucket-event-emission tests for every mutation verb; `tests/domain/buckets`.
+- [ ] `W73.P353.S2047` - Add CLI surface tests for both noun-group verb trees; `tests/entrypoints/cli`.
+- [ ] `W73.P353.S2048` - Add an end-to-end test exercising invoice through ledger transaction link through modelo aggregation; `tests`.
+
+### Phase `W73.P354` - thin cli exposure
+
+Register Typer subgroups and update apex cross-references.
+
+- [ ] `W73.P354.S2049` - Register payable_invoice_app and collectible_invoice_app Typer subgroups under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W73.P354.S2050` - Apply central command error boundary via decorate_typer_app; `src/aeat/entrypoints/cli`.
+- [ ] `W73.P354.S2051` - Wire help text via i18n and validate vocabulary uses canonical names; `src/aeat/core/i18n`.
+- [ ] `W73.P354.S2052` - Update apex ADR §4.2 to reference the new noun-groups and mark R04 closed by W73; `.vault/adr`.
+- [ ] `W73.P354.S2053` - Run vault check to confirm clean; `.vault`.
+
+## Wave `W74` - Reconciliation: profile noun-group CRUD
+
+Closes apex §12 ledger row R05. aeat config profile ships 5 of 13 locked verbs and lacks the use alias. Adopts the key-value-as-record exception for profile-value editing and ships profile-record lifecycle CRUD plus the use alias.
+
+### Phase `W74.P355` - backend implementation
+
+Implement dual-axis grammar: record CRUD plus key-value set/get/unset.
+
+- [ ] `W74.P355.S2054` - Read the config-cli-profile-surface, config-profile-use-and-status ADRs and apex §3.2 dual-axis grammar; `.vault/adr`.
+- [ ] `W74.P355.S2055` - Implement ProfileLifecycleService with canonical CRUD methods over profile records (add, remove, update, view, list); `src/aeat/application/profile`.
+- [ ] `W74.P355.S2056` - Ratify set/get/unset as canonical key-value verbs for profile values per the W71 exception; `src/aeat/application/profile`.
+- [ ] `W74.P355.S2057` - Implement use NAME as an alias for set active NAME and emit confirmation event per apex active-profile-safety lock; `src/aeat/application/profile`.
+- [ ] `W74.P355.S2058` - Implement duplicate, export, import, validate, preflight per the config-cli-profile-surface ADR; `src/aeat/application/profile`.
+
+### Phase `W74.P356` - shadow duplicate removal
+
+Audit legacy profile commands and migrate callers.
+
+- [ ] `W74.P356.S2059` - Audit existing _config profile commands and identify migration vs already-canonical verbs; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W74.P356.S2060` - Remove legacy setup profile references and rejected aliases; `src/aeat/entrypoints/cli`.
+- [ ] `W74.P356.S2061` - Migrate internal callers to the new ProfileLifecycleService; `src/aeat/application`.
+- [ ] `W74.P356.S2062` - Remove stale fixtures and tests; `tests`.
+- [ ] `W74.P356.S2063` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W74.P357` - de-shim and de-stub cleanup
+
+Retire setup-profile path and wire bucket events.
+
+- [ ] `W74.P357.S2064` - Remove aeat setup profile from public help and reroute via mistype-suggestion footer to aeat config profile; `src/aeat/core/i18n`.
+- [ ] `W74.P357.S2065` - Update the no-active-profile error recovery hint to point at aeat config profile use NAME; `src/aeat/entrypoints/cli/_common.py`.
+- [ ] `W74.P357.S2066` - Remove deprecated profile command spellings from help text and i18n; `src/aeat/core/i18n`.
+- [ ] `W74.P357.S2067` - Wire bucket events for every mutating verb (profile.created, profile.removed, profile.updated, profile.duplicated, profile.exported, profile.imported, profile.activated); `src/aeat/domain/buckets`.
+- [ ] `W74.P357.S2068` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W74.P358` - real behavior verification
+
+Test the full verb tree and the dual-axis contract.
+
+- [ ] `W74.P358.S2069` - Add service-contract tests for ProfileLifecycleService covering all CRUD verbs plus use, duplicate, export, import, validate, preflight; `tests/application/profile`.
+- [ ] `W74.P358.S2070` - Add tests for list with-status showing draft, verified-unfiled, and last-filed counts per profile; `tests/application/profile`.
+- [ ] `W74.P358.S2071` - Add CLI surface tests for the full profile verb tree; `tests/entrypoints/cli`.
+- [ ] `W74.P358.S2072` - Add a regression test asserting aeat setup profile is unknown and aeat config profile use works as alias for set active; `tests/entrypoints/cli`.
+- [ ] `W74.P358.S2073` - Run the W71 contract-conformance harness asserting the config profile noun-group passes with key-value-exception annotation; `tests/entrypoints/cli`.
+
+### Phase `W74.P359` - thin cli exposure
+
+Register the profile verb tree and update apex cross-references.
+
+- [ ] `W74.P359.S2074` - Register the full profile verb tree under aeat config profile and render every command via _emit; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W74.P359.S2075` - Apply central command error boundary; `src/aeat/entrypoints/cli`.
+- [ ] `W74.P359.S2076` - Wire help text and i18n and validate canonical vocabulary; `src/aeat/core/i18n`.
+- [ ] `W74.P359.S2077` - Update apex ADR §3.2 to reflect dual-axis grammar and mark R05 closed by W74; `.vault/adr`.
+- [ ] `W74.P359.S2078` - Amend config-cli-profile-surface and config-profile-use-and-status child ADRs; `.vault/adr`.
+
+## Wave `W75` - Reconciliation: apoderado noun-group + scope vocabulary
+
+Closes apex §12 ledger row R06. The aeat config auth apoderado subgroup is entirely absent. Ships the full subgroup per apoderamientos-surface ADR §3.3 and the apoderado-scope-vocabulary ADR catalogue.
+
+### Phase `W75.P360` - backend implementation
+
+Implement ApoderadoService and ship the scope catalogue.
+
+- [ ] `W75.P360.S2079` - Read the apoderamientos-surface and apoderado-scope-vocabulary ADRs in full; `.vault/adr`.
+- [ ] `W75.P360.S2080` - Implement ApoderadoService with verbs status, configure, clear, check; `src/aeat/application/auth`.
+- [ ] `W75.P360.S2081` - Add Pydantic command and result contracts with represented_nif and scope (uppercase-and-deduplicated); `src/aeat/application/auth`.
+- [ ] `W75.P360.S2082` - Ship registry/aeat/apoderamientos/scopes.toml with the AEAT apoderamiento code catalogue and ALL expansion support; `registry/aeat/apoderamientos`.
+- [ ] `W75.P360.S2083` - Wire auth.apoderado.configured and auth.apoderado.cleared bucket events with granted-scopes payload and catalogue version; `src/aeat/domain/buckets`.
+
+### Phase `W75.P361` - shadow duplicate removal
+
+Audit for legacy representation references and ensure no root mount.
+
+- [ ] `W75.P361.S2084` - Audit application/auth and entrypoints/cli/_config for legacy representation/proxy/apoderado references; `src/aeat/application/auth`.
+- [ ] `W75.P361.S2085` - Ensure apoderado is mounted as a subgroup under config auth and not a separate root; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W75.P361.S2086` - Reject any path that frames apoderado mutation as a live AEAT operation per the charter; `src/aeat/application/auth`.
+- [ ] `W75.P361.S2087` - Remove tests asserting legacy apoderado shapes; `tests/application/auth`.
+- [ ] `W75.P361.S2088` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W75.P362` - de-shim and de-stub cleanup
+
+Enforce scope parser rules and live-AEAT charter.
+
+- [ ] `W75.P362.S2089` - Enforce --scope flag parser rules at the Typer boundary (uppercase, dedupe, reject comma-separated, accept repeated flag, expand ALL at command time); `src/aeat/entrypoints/cli/_config`.
+- [ ] `W75.P362.S2090` - Reject live apoderamiento registration, extension, revocation, confirmation, renunciation, filing-as-representative shortcuts at backend boundary; `src/aeat/application/auth`.
+- [ ] `W75.P362.S2091` - Ensure check invokes require_live_read before remote contact for read-only live verification; `src/aeat/application/auth`.
+- [ ] `W75.P362.S2092` - Wire help text and i18n with Spanish-English glosses (apoderado representative proxy); `src/aeat/core/i18n`.
+- [ ] `W75.P362.S2093` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W75.P363` - real behavior verification
+
+Test service, catalogue, CLI surface, and live-read invocations.
+
+- [ ] `W75.P363.S2094` - Add service-contract tests for ApoderadoService covering status, configure, clear, check; `tests/application/auth`.
+- [ ] `W75.P363.S2095` - Add catalogue-load tests covering TOML parse, scope code resolution, ALL expansion, unknown-code rejection; `tests/application/auth`.
+- [ ] `W75.P363.S2096` - Add CLI surface tests for the apoderado verb tree; `tests/entrypoints/cli`.
+- [ ] `W75.P363.S2097` - Add negative tests covering comma-separated scopes refused, unknown scopes refused, live mutation refused; `tests/entrypoints/cli`.
+- [ ] `W75.P363.S2098` - Add a smoke test exercising check against a mocked AEAT response without live test markers; `tests/application/auth`.
+
+### Phase `W75.P364` - thin cli exposure
+
+Register apoderado_app and update apex cross-references.
+
+- [ ] `W75.P364.S2099` - Register apoderado_app Typer subgroup under auth_app in _config; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W75.P364.S2100` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [ ] `W75.P364.S2101` - Wire help text and i18n with the canonical Spanish-anchored vocabulary; `src/aeat/core/i18n`.
+- [ ] `W75.P364.S2102` - Update apex ADR §3.3 to reflect the shipped subgroup and mark R06 closed by W75; `.vault/adr`.
+- [ ] `W75.P364.S2103` - Amend apoderamientos-surface and apoderado-scope-vocabulary child ADRs; `.vault/adr`.
+
+## Wave `W76` - Reconciliation: inventory noun-group
+
+Closes apex §12 ledger row R07. Inventory domain and persistence exist but the application/inventory layer and aeat app ledger inventory Typer mount are absent.
+
+### Phase `W76.P365` - backend implementation
+
+Implement InventoryService and add bucket events.
+
+- [ ] `W76.P365.S2104` - Read the inventory-management-cli-design and inventory-placement ADRs in full; `.vault/adr`.
+- [ ] `W76.P365.S2105` - Implement InventoryService satisfying the W71 MutatingNounGroupContract over inventory rows; `src/aeat/application/inventory`.
+- [ ] `W76.P365.S2106` - Add Pydantic command and result contracts for create-actividad, movement-add, valuation-preview; `src/aeat/application/inventory`.
+- [ ] `W76.P365.S2107` - Add ledger.inventory.created, ledger.inventory.movement_added, ledger.inventory.valuation_previewed enum members; `src/aeat/domain/buckets`.
+- [ ] `W76.P365.S2108` - Wire persistence over the existing bucket-scoped storage; `src/aeat/adapters/persistence/profile/inventory`.
+
+### Phase `W76.P366` - shadow duplicate removal
+
+Retire aeat data ledgers root and migrate callers.
+
+- [ ] `W76.P366.S2109` - Audit entrypoints/cli/data/ledgers/inventory.py legacy CLI and confirm migration vs deletion; `src/aeat/entrypoints/cli/data`.
+- [ ] `W76.P366.S2110` - Remove aeat data ledgers root and aeat profile inventory references per apex §1 fold-under; `src/aeat/entrypoints/cli`.
+- [ ] `W76.P366.S2111` - Migrate internal callers to the new InventoryService; `src/aeat/application`.
+- [ ] `W76.P366.S2112` - Update CLI suggestion error messages to point at aeat app ledger inventory; `src/aeat/core/i18n`.
+- [ ] `W76.P366.S2113` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W76.P367` - de-shim and de-stub cleanup
+
+Decide canonical verb shape and remove deprecated spellings.
+
+- [ ] `W76.P367.S2114` - Decide whether actividad, movement, valuation are CRUD verbs or orthogonal sub-verbs per W71 contract and document; `.vault/adr`.
+- [ ] `W76.P367.S2115` - Remove deprecated inventory command spellings and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
+- [ ] `W76.P367.S2116` - Remove legacy data ledgers references from help text and i18n; `src/aeat/core/i18n`.
+- [ ] `W76.P367.S2117` - Remove any compatibility shims; `src/aeat/entrypoints/cli`.
+- [ ] `W76.P367.S2118` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W76.P368` - real behavior verification
+
+Test service, persistence, events, and CLI surface.
+
+- [ ] `W76.P368.S2119` - Add service-contract tests for InventoryService; `tests/application/inventory`.
+- [ ] `W76.P368.S2120` - Add persistence integration tests; `tests/adapters/persistence`.
+- [ ] `W76.P368.S2121` - Add bucket-event-emission tests; `tests/domain/buckets`.
+- [ ] `W76.P368.S2122` - Add CLI surface tests for the inventory verb tree; `tests/entrypoints/cli`.
+- [ ] `W76.P368.S2123` - Add negative tests proving aeat data ledgers inventory is unknown; `tests/entrypoints/cli`.
+
+### Phase `W76.P369` - thin cli exposure
+
+Register inventory_app and update apex cross-references.
+
+- [ ] `W76.P369.S2124` - Register inventory_app Typer subgroup under ledger_app; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W76.P369.S2125` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [ ] `W76.P369.S2126` - Wire help text and i18n; `src/aeat/core/i18n`.
+- [ ] `W76.P369.S2127` - Update apex ADR §4.2 to reflect the shipped subgroup and mark R07 closed by W76; `.vault/adr`.
+- [ ] `W76.P369.S2128` - Amend inventory-management-cli-design and inventory-placement child ADRs; `.vault/adr`.
+
+## Wave `W77` - Reconciliation: ratios + bucket noun-groups
+
+Closes apex §12 ledger row R08. Ratifies the ratios key-value shape, ships the missing bucket maintenance verbs, and documents bucket-maintenance verbs as explicit lifecycle operations.
+
+### Phase `W77.P370` - backend implementation
+
+Ratify ratios verbs and implement BucketMaintenanceService.
+
+- [ ] `W77.P370.S2129` - Read the app-ledger-ratios-shape, bucket, and ledger-ratios-eligible-and-validate ADRs; `.vault/adr`.
+- [ ] `W77.P370.S2130` - Ratify aeat app ledger ratios list set unset as canonical key-value-exception verbs per W71 and add eligible and validate per the 2026-05-13 ADR extension; `src/aeat/application/ledger`.
+- [ ] `W77.P370.S2131` - Implement BucketMaintenanceService with verbs browse, search, export, import, rename, delete documented as lifecycle operations; `src/aeat/application`.
+- [ ] `W77.P370.S2132` - Add Pydantic command and result contracts and ensure destructive operations require explicit yes flag; `src/aeat/application`.
+- [ ] `W77.P370.S2133` - Add bucket.exported, bucket.imported, bucket.renamed, bucket.deleted enum members; `src/aeat/domain/buckets`.
+
+### Phase `W77.P371` - shadow duplicate removal
+
+Retire archive root and audit bucket app for gaps.
+
+- [ ] `W77.P371.S2134` - Confirm aeat archive root retirement per apex §1 fold-under; `src/aeat/entrypoints/cli`.
+- [ ] `W77.P371.S2135` - Audit _config bucket app for verb gaps; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W77.P371.S2136` - Migrate any legacy archive or browse callers to BucketMaintenanceService; `src/aeat/application`.
+- [ ] `W77.P371.S2137` - Remove stale tests; `tests/entrypoints/cli`.
+- [ ] `W77.P371.S2138` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W77.P372` - de-shim and de-stub cleanup
+
+Wire events and reject retired roots.
+
+- [ ] `W77.P372.S2139` - Remove aeat financial profile ratios references and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
+- [ ] `W77.P372.S2140` - Wire ledger.ratios.set and ledger.ratios.unset event emission per ADR; `src/aeat/application/ledger`.
+- [ ] `W77.P372.S2141` - Reject aeat archive and aeat data ledgers paths at root; `src/aeat/entrypoints/cli`.
+- [ ] `W77.P372.S2142` - Update help text and i18n; `src/aeat/core/i18n`.
+- [ ] `W77.P372.S2143` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W77.P373` - real behavior verification
+
+Test ratios, bucket maintenance, and destructive-action safeguards.
+
+- [ ] `W77.P373.S2144` - Add service-contract tests for ledger ratios covering list, set, unset, eligible, validate; `tests/application/ledger`.
+- [ ] `W77.P373.S2145` - Add service-contract tests for BucketMaintenanceService; `tests/application`.
+- [ ] `W77.P373.S2146` - Add CLI surface tests for aeat app ledger ratios and aeat config bucket maintenance verbs; `tests/entrypoints/cli`.
+- [ ] `W77.P373.S2147` - Add destructive-action safeguard tests asserting delete refuses without explicit yes; `tests/entrypoints/cli`.
+- [ ] `W77.P373.S2148` - Run the W71 contract-conformance harness with key-value-exception and lifecycle-state-verb annotations; `tests/entrypoints/cli`.
+
+### Phase `W77.P374` - thin cli exposure
+
+Register ratios and bucket maintenance verbs and update apex.
+
+- [ ] `W77.P374.S2149` - Register ratios_app under ledger_app and add eligible and validate verbs; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W77.P374.S2150` - Register browse, search, export, import, rename, delete verbs under bucket_app; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W77.P374.S2151` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [ ] `W77.P374.S2152` - Update apex ADR §3.4 and §4.2 to document the dual annotation and mark R08 closed by W77; `.vault/adr`.
+- [ ] `W77.P374.S2153` - Amend app-ledger-ratios-shape and bucket child ADRs; `.vault/adr`.
+
+## Wave `W78` - Reconciliation: modelo lifecycle drift fixes
+
+Closes apex §12 ledger rows R09 (mandatory --by), R10 (missing discard event), and R11 (borrador-100 binding).
+
+### Phase `W78.P375` - backend implementation
+
+Fix actor-default, discard event emission, and borrador binding.
+
+- [ ] `W78.P375.S2154` - Read the actor-attribution, app-modelo-discard, and borrador-100-binding-integration ADRs; `.vault/adr`.
+- [ ] `W78.P375.S2155` - Change by-actor Typer Option to optional with default_factory pulling active profile display_name across file, verify, discard, amend; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W78.P375.S2156` - Add MODELO_WORK_UNIT_DISCARDED enum member to BucketEventType for modelo.work_unit.discarded; `src/aeat/domain/buckets`.
+- [ ] `W78.P375.S2157` - Emit modelo.work_unit.discarded event from discard_work_unit action with actor and reason payload; `src/aeat/application/modelo`.
+- [ ] `W78.P375.S2158` - Add borrador_snapshot_id field to calculate_modelo_revision and wire borrador-snapshot-id flag on aeat app modelo calculate; `src/aeat/application/modelo`.
+
+### Phase `W78.P376` - shadow duplicate removal
+
+Audit actor and snapshot paths for consolidation.
+
+- [ ] `W78.P376.S2159` - Audit _actions.py for any actor-handling code path that bypasses the default factory and consolidate; `src/aeat/application/modelo`.
+- [ ] `W78.P376.S2160` - Remove tests asserting by-actor is mandatory; `tests/entrypoints/cli`.
+- [ ] `W78.P376.S2161` - Confirm borrador_snapshot_id is sourced only from the app live borrador 100 namespace and reject other sources at validation; `src/aeat/application/modelo`.
+- [ ] `W78.P376.S2162` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [ ] `W78.P376.S2163` - Verify no shadow event-emission paths bypass bucket_event_repository; `src/aeat/application/modelo`.
+
+### Phase `W78.P377` - de-shim and de-stub cleanup
+
+Wire help text and remove placeholder borrador binding.
+
+- [ ] `W78.P377.S2164` - Wire i18n help text to document by-actor default behavior; `src/aeat/core/i18n`.
+- [ ] `W78.P377.S2165` - Ensure aeat app modelo discard help documents the bucket-event emission; `src/aeat/core/i18n`.
+- [ ] `W78.P377.S2166` - Ensure aeat app modelo calculate help documents the borrador binding flag and source-trace semantics; `src/aeat/core/i18n`.
+- [ ] `W78.P377.S2167` - Remove any stub or placeholder for borrador binding in the registry binding providers; `src/aeat/application/modelo`.
+- [ ] `W78.P377.S2168` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W78.P378` - real behavior verification
+
+Test actor defaults, discard event, borrador snapshot consumption.
+
+- [ ] `W78.P378.S2169` - Add tests asserting by-actor defaults to active profile display_name and is overridable; `tests/entrypoints/cli`.
+- [ ] `W78.P378.S2170` - Add tests asserting modelo.work_unit.discarded event is emitted on every discard with actor and reason payload; `tests/application/modelo`.
+- [ ] `W78.P378.S2171` - Add tests asserting calculate borrador-snapshot-id consumes the snapshot, records source trace per casilla, and refuses missing snapshots; `tests/application/modelo`.
+- [ ] `W78.P378.S2172` - Add bucket-event-history surfacing test confirming discarded work units appear in aeat config bucket history filtered output; `tests/entrypoints/cli`.
+- [ ] `W78.P378.S2173` - Run end-to-end app live borrador 100 fetch then modelo calculate then verify then file asserting the source-trace is preserved through the lifecycle; `tests`.
+
+### Phase `W78.P379` - thin cli exposure
+
+Validate emit rendering, help, i18n, and update apex.
+
+- [ ] `W78.P379.S2174` - Validate every affected verb renders correctly via _emit; `src/aeat/entrypoints/cli`.
+- [ ] `W78.P379.S2175` - Validate help text and i18n alignment; `src/aeat/core/i18n`.
+- [ ] `W78.P379.S2176` - Update apex ADR §4.3 to ratify optional by-actor default-factory pattern and mark R09, R10, R11 closed by W78; `.vault/adr`.
+- [ ] `W78.P379.S2177` - Amend actor-attribution, app-modelo-discard, borrador-100-binding-integration child ADRs; `.vault/adr`.
+- [ ] `W78.P379.S2178` - Update plan rows for W44, W45, W48 with superseded-by cross-references to W78 step IDs; `.vault/plan`.
+
+## Wave `W79` - Reconciliation: app live shape completion
+
+Closes apex §12 ledger rows R12 (5 of 7 live subgroups missing) and R13 (portals not mounted).
+
+### Phase `W79.P380` - backend implementation
+
+Implement missing live subgroups and portals wrapper.
+
+- [ ] `W79.P380.S2179` - Read the app-live-shape and domain-portals-harvest ADRs and identify the 6 missing subgroups and their backend services; `.vault/adr`.
+- [ ] `W79.P380.S2180` - Implement application live notifications, expedientes, verify nif-iva tgvi, borrador, and application portals wrappers over existing domain adapters; `src/aeat/application`.
+- [ ] `W79.P380.S2181` - Add Pydantic command and result contracts for each subgroup; `src/aeat/application/live`.
+- [ ] `W79.P380.S2182` - Add the bucket event enum members for snapshot captures and verify reads; `src/aeat/domain/buckets`.
+- [ ] `W79.P380.S2183` - Ensure every persisted capture invokes require_live_read before remote contact while portals list and show remain local-only; `src/aeat/application/live`.
+
+### Phase `W79.P381` - shadow duplicate removal
+
+Confirm domain CLI deletion and consolidate filed reads.
+
+- [ ] `W79.P381.S2184` - Confirm domain/portals/_cli.py is fully deleted per apex §8 architectural violation; `src/aeat/domain/portals`.
+- [ ] `W79.P381.S2185` - Audit registry filed-read registrations and confirm they live under app live filed only per apex §4.5; `src/aeat/application/registry`.
+- [ ] `W79.P381.S2186` - Remove any legacy app registry list-filed-data and capture-filed-data references; `src/aeat/entrypoints/cli`.
+- [ ] `W79.P381.S2187` - Remove operator-facing manual fetch references per apex §4.5; `src/aeat/entrypoints/cli`.
+- [ ] `W79.P381.S2188` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W79.P382` - de-shim and de-stub cleanup
+
+Enforce read-only portals and live-AEAT charter.
+
+- [ ] `W79.P382.S2189` - Remove any portal action verbs (open, submit, present, sign, pay) per apex §8 portals are read-only metadata; `src/aeat/application/portals`.
+- [ ] `W79.P382.S2190` - Confirm no command invokes require_live_write except refusal tests per live-AEAT charter; `src/aeat/application/live`.
+- [ ] `W79.P382.S2191` - Wire i18n help text with Spanish-anchored vocabulary (justificante, expediente, borrador, datos fiscales); `src/aeat/core/i18n`.
+- [ ] `W79.P382.S2192` - Remove deprecated live command spellings and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
+- [ ] `W79.P382.S2193` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W79.P383` - real behavior verification
+
+Test subgroups, events, CLI surface, live-read invocations.
+
+- [ ] `W79.P383.S2194` - Add service-contract tests for every new subgroup; `tests/application`.
+- [ ] `W79.P383.S2195` - Add bucket-event-emission tests for every persisting capture; `tests/domain/buckets`.
+- [ ] `W79.P383.S2196` - Add CLI surface tests for every new verb; `tests/entrypoints/cli`.
+- [ ] `W79.P383.S2197` - Add require_live_read invocation tests for every remote-contact verb and assert portals list and show do not invoke it; `tests/application/live`.
+- [ ] `W79.P383.S2198` - Add a refusal test for require_live_write paths to confirm charter compliance; `tests/application/live`.
+
+### Phase `W79.P384` - thin cli exposure
+
+Register Typer subgroups and update apex cross-references.
+
+- [ ] `W79.P384.S2199` - Register notifications_app, expedientes_app, verify_app, borrador_app, portals_app Typer subgroups under aeat app live; `src/aeat/entrypoints/cli/_app_live.py`.
+- [ ] `W79.P384.S2200` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [ ] `W79.P384.S2201` - Wire help text and i18n and validate canonical vocabulary; `src/aeat/core/i18n`.
+- [ ] `W79.P384.S2202` - Update apex ADR §4.4 to reflect the shipped subgroups and mark R12 and R13 closed by W79; `.vault/adr`.
+- [ ] `W79.P384.S2203` - Amend app-live-shape and domain-portals-harvest child ADRs and close W35.P174 inline; `.vault/adr`.
+
+## Wave `W80` - Reconciliation: workflow + preflight + resume wiring
+
+Closes apex §12 ledger rows R14 (WorkflowEngine.run_for_period not wired), R15 (SubmissionEngine.preflight not invoked), R16 (resume verb absent).
+
+### Phase `W80.P385` - backend implementation
+
+Wire workflow engine, preflight, and resume actions.
+
+- [ ] `W80.P385.S2204` - Read the workflow-engine-harvest and workflow-resumption-semantics ADRs and apex §8 backend exit-cap mandates; `.vault/adr`.
+- [ ] `W80.P385.S2205` - Wire WorkflowEngine.run_for_period invocation inside file_modelo_revision so the modelo file action defers to the workflow engine for stage orchestration; `src/aeat/application/modelo`.
+- [ ] `W80.P385.S2206` - Adjudicate whether SubmissionEngine.preflight is invoked directly from verify and file actions or routed through WorkflowEngine only and record the verdict; `.vault/adr`.
+- [ ] `W80.P385.S2207` - Apply the verdict by wiring preflight invocation per the adjudicated path so auth, deadline, draft-approval, blocker gates run before state transitions; `src/aeat/application/modelo`.
+- [ ] `W80.P385.S2208` - Implement resume_modelo_workflow loading a prior terminal aborted result, starting a new lifecycle attempt, recording resumed_from, refusing mid-stage, idempotent if already filed; `src/aeat/application/modelo`.
+
+### Phase `W80.P386` - shadow duplicate removal
+
+Consolidate preflight and workflow paths.
+
+- [ ] `W80.P386.S2209` - Audit verify_modelo_revision and file_modelo_revision for duplicate preflight logic and consolidate behind the wired path; `src/aeat/application/modelo`.
+- [ ] `W80.P386.S2210` - Audit _modelo.py CLI for any direct workflow-engine invocation that bypasses the application service and consolidate; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W80.P386.S2211` - Confirm no aeat workflow root, no per-stage verbs, no standalone app modelo preflight verb per apex §8 lock; `src/aeat/entrypoints/cli`.
+- [ ] `W80.P386.S2212` - Remove any observability run-id or replay-id rejection logic that conflated argv replay with evidence replay per apex §2; `src/aeat/application/modelo`.
+- [ ] `W80.P386.S2213` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W80.P387` - de-shim and de-stub cleanup
+
+Remove historical argv reconstruction and root workflow references.
+
+- [ ] `W80.P387.S2214` - Remove any historical argv reconstruction code per apex §4.3 rejection; `src/aeat/application/modelo`.
+- [ ] `W80.P387.S2215` - Remove aeat workflow and aeat run root references from help text and reroute via mistype-suggestion footer to aeat app modelo resume; `src/aeat/core/i18n`.
+- [ ] `W80.P387.S2216` - Confirm resume action never contacts AEAT or performs live submission with assertion at backend boundary; `src/aeat/application/modelo`.
+- [ ] `W80.P387.S2217` - Update help text and i18n for the resume verb; `src/aeat/core/i18n`.
+- [ ] `W80.P387.S2218` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W80.P388` - real behavior verification
+
+Test workflow invocation, preflight wiring, resume semantics.
+
+- [ ] `W80.P388.S2219` - Add tests asserting file_modelo_revision invokes WorkflowEngine.run_for_period and refuses to proceed if preflight blocks; `tests/application/modelo`.
+- [ ] `W80.P388.S2220` - Add tests asserting verify_modelo_revision invokes the appropriate preflight path per the adjudicated verdict; `tests/application/modelo`.
+- [ ] `W80.P388.S2221` - Add tests for resume_modelo_workflow covering valid run-id resumes, mid-stage refuses, idempotency, unknown run-id refuses; `tests/application/modelo`.
+- [ ] `W80.P388.S2222` - Add CLI surface tests for aeat app modelo resume workflow_run_id; `tests/entrypoints/cli`.
+- [ ] `W80.P388.S2223` - Add negative tests asserting aeat workflow, aeat run, app modelo preflight are unknown commands; `tests/entrypoints/cli`.
+
+### Phase `W80.P389` - thin cli exposure
+
+Register resume verb and update apex cross-references.
+
+- [ ] `W80.P389.S2224` - Register aeat app modelo resume verb; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W80.P389.S2225` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [ ] `W80.P389.S2226` - Wire help text and i18n; `src/aeat/core/i18n`.
+- [ ] `W80.P389.S2227` - Update apex ADR §4.3 and §8 to ratify the wiring and mark R14, R15, R16 closed by W80; `.vault/adr`.
+- [ ] `W80.P389.S2228` - Amend workflow-engine-harvest and workflow-resumption-semantics child ADRs; `.vault/adr`.
+
+## Wave `W81` - Reconciliation: overview shape completion
+
+Closes apex §12 ledger rows R17 (overview verb shape) and R18 (festivos not wired).
+
+### Phase `W81.P390` - backend implementation
+
+Adjudicate overview shape and wire festivos.
+
+- [ ] `W81.P390.S2229` - Read the app-overview-shape and festivos-deadline-shift ADRs and adjudicate the flag-on-status vs separate-verbs decision; `.vault/adr`.
+- [ ] `W81.P390.S2230` - Implement the per-verdict shape in application overview either expanding the status calendar flag into a discrete calendar verb or ratifying the flag pattern; `src/aeat/application/overview`.
+- [ ] `W81.P390.S2231` - Wire domain deadlines _festivos shift_deadline into OverviewCalendarEntry and add adjusted_closes_on, shift_reason, holiday_refs, jurisdictions fields; `src/aeat/application/overview`.
+- [ ] `W81.P390.S2232` - Add next_due field to agenda payload per apex §4.1; `src/aeat/application/overview`.
+- [ ] `W81.P390.S2233` - Implement backlog and explain verbs per the adjudication; `src/aeat/application/overview`.
+
+### Phase `W81.P391` - shadow duplicate removal
+
+Retire legacy deadlines package and consolidate deadline computation.
+
+- [ ] `W81.P391.S2234` - Retire entrypoints/cli/deadlines legacy package per apex §1 fold-under to app overview; `src/aeat/entrypoints/cli`.
+- [ ] `W81.P391.S2235` - Remove aeat deadlines list, next, explain references and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
+- [ ] `W81.P391.S2236` - Audit for duplicate deadline computation paths and consolidate behind _festivos.shift_deadline; `src/aeat/application/overview`.
+- [ ] `W81.P391.S2237` - Remove any Rich-only deadlines rendering per apex §2 output-rendering lock; `src/aeat/entrypoints/cli`.
+- [ ] `W81.P391.S2238` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W81.P392` - de-shim and de-stub cleanup
+
+Ensure resume semantics and remove deprecated spellings.
+
+- [ ] `W81.P392.S2239` - Remove any legacy aeat deadlines Typer mount or shim; `src/aeat/entrypoints/cli`.
+- [ ] `W81.P392.S2240` - Ensure resume and continue behavior on overview uses workflow-resumption semantics from W80; `src/aeat/application/overview`.
+- [ ] `W81.P392.S2241` - Wire i18n help text for all overview verbs; `src/aeat/core/i18n`.
+- [ ] `W81.P392.S2242` - Remove deprecated overview command spellings; `src/aeat/core/i18n`.
+- [ ] `W81.P392.S2243` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W81.P393` - real behavior verification
+
+Test festivos integration, carve-out, agenda payload, CLI surface.
+
+- [ ] `W81.P393.S2244` - Add tests asserting shift_deadline is invoked when assembling OverviewCalendarEntry and output carries adjusted dates and shift reason; `tests/application/overview`.
+- [ ] `W81.P393.S2245` - Add tests asserting Modelo 369 carve-out MODELOS_WITHOUT_SHIFT is respected; `tests/application/overview`.
+- [ ] `W81.P393.S2246` - Add tests asserting next_due appears in agenda payload; `tests/application/overview`.
+- [ ] `W81.P393.S2247` - Add CLI surface tests for every overview verb per the adjudicated grammar; `tests/entrypoints/cli`.
+- [ ] `W81.P393.S2248` - Add negative tests asserting aeat deadlines verbs are unknown; `tests/entrypoints/cli`.
+
+### Phase `W81.P394` - thin cli exposure
+
+Register overview verb tree and update apex cross-references.
+
+- [ ] `W81.P394.S2249` - Register the reconciled overview verb tree; `src/aeat/entrypoints/cli`.
+- [ ] `W81.P394.S2250` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [ ] `W81.P394.S2251` - Wire help text and i18n; `src/aeat/core/i18n`.
+- [ ] `W81.P394.S2252` - Update apex ADR §4.1 to reflect the reconciled grammar and mark R17, R18 closed by W81; `.vault/adr`.
+- [ ] `W81.P394.S2253` - Amend app-overview-shape and festivos-deadline-shift child ADRs; `.vault/adr`.
+
+## Wave `W82` - Reconciliation: config repair completion
+
+Closes apex §12 ledger row R19. The locked integrity and list subverbs on aeat config repair are missing.
+
+### Phase `W82.P395` - backend implementation
+
+Wire integrity and list subcommands to existing backend.
+
+- [ ] `W82.P395.S2254` - Read the config-repair-shape ADR §3.6 and confirm the AES-256-GCM integrity scan and namespace inventory functions exist; `.vault/adr`.
+- [ ] `W82.P395.S2255` - Wire aeat config repair integrity to the existing scan function and emit DiagnosticCheck rows with next_action or dead_end per the discriminated union; `src/aeat/application/config`.
+- [ ] `W82.P395.S2256` - Wire aeat config repair list to the existing namespace-inventory function and render rows via _emit; `src/aeat/application/config`.
+- [ ] `W82.P395.S2257` - Ensure both new subverbs participate in the bare aeat config repair composite report rollup per apex §3.6; `src/aeat/application/config`.
+- [ ] `W82.P395.S2258` - Confirm the DiagnosticCheck Pydantic validator covers the new subverb output rows; `src/aeat/application/config`.
+
+### Phase `W82.P396` - shadow duplicate removal
+
+Confirm doctor retirement and consolidate scan paths.
+
+- [ ] `W82.P396.S2259` - Confirm aeat config doctor is fully retired per W70.P334 closeout with no doctor references resurrected; `src/aeat/entrypoints/cli`.
+- [ ] `W82.P396.S2260` - Audit _config for any duplicate integrity-scan or inventory paths and consolidate behind the canonical backend; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W82.P396.S2261` - Remove any legacy aeat doctor references; `src/aeat/core/i18n`.
+- [ ] `W82.P396.S2262` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [ ] `W82.P396.S2263` - Remove stale tests; `tests/entrypoints/cli`.
+
+### Phase `W82.P397` - de-shim and de-stub cleanup
+
+Wire help, leaf-target guards, and refusal tone.
+
+- [ ] `W82.P397.S2264` - Wire help text and i18n for integrity and list; `src/aeat/core/i18n`.
+- [ ] `W82.P397.S2265` - Ensure next_action strings in diagnostic rows point at runnable leaves per W70.P335 leaf-target guard; `src/aeat/application/config`.
+- [ ] `W82.P397.S2266` - Remove deprecated repair command spellings; `src/aeat/core/i18n`.
+- [ ] `W82.P397.S2267` - Confirm sentence-case Refused prefix per W70.P337; `src/aeat/core/i18n`.
+- [ ] `W82.P397.S2268` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W82.P398` - real behavior verification
+
+Test new subverbs, false-positive guard, doctor unknown command.
+
+- [ ] `W82.P398.S2269` - Add tests for aeat config repair integrity covering happy path and each diagnostic failure class; `tests/application/config`.
+- [ ] `W82.P398.S2270` - Add tests for aeat config repair list covering all and unreadable filters; `tests/application/config`.
+- [ ] `W82.P398.S2271` - Confirm zero fail and warn rows on clean profile per W70.P334 false-positive guard; `tests/entrypoints/cli`.
+- [ ] `W82.P398.S2272` - Add CLI surface tests; `tests/entrypoints/cli`.
+- [ ] `W82.P398.S2273` - Add negative tests asserting aeat config doctor is unknown; `tests/entrypoints/cli`.
+
+### Phase `W82.P399` - thin cli exposure
+
+Register subcommands and update apex cross-references.
+
+- [ ] `W82.P399.S2274` - Register integrity and list subcommands under repair_app; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W82.P399.S2275` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [ ] `W82.P399.S2276` - Wire help text and i18n; `src/aeat/core/i18n`.
+- [ ] `W82.P399.S2277` - Update apex ADR §3.6 to ratify the shipped subverb set and mark R19 closed by W82; `.vault/adr`.
+- [ ] `W82.P399.S2278` - Amend config-repair-shape child ADR; `.vault/adr`.
+
+## Wave `W83` - Reconciliation: config init backend service
+
+Closes apex §12 ledger row R20. The atomic init service is missing and bucket.created, profile.created, profile.activated events are not emitted.
+
+### Phase `W83.P400` - backend implementation
+
+Build the atomic initialize_workspace service and wire events.
+
+- [ ] `W83.P400.S2279` - Read the config-init-shape and aeat-cli-config-vs-setup-namespace ADRs; `.vault/adr`.
+- [ ] `W83.P400.S2280` - Implement application setup service exposing initialize_workspace that atomically creates first bucket, profile record, active selection, validates readiness, runs internal setup-state migration; `src/aeat/application/setup`.
+- [ ] `W83.P400.S2281` - Wire emission of bucket.created, profile.created, profile.activated, profile.updated, auth.provider.configured, optional config.env.updated, setup.state.migrated events; `src/aeat/application/setup`.
+- [ ] `W83.P400.S2282` - Salvage typed answers, prompter abstraction, verifier checks from SetupWizard per apex §8 - the wizard command surface is retired in favor of the atomic service; `src/aeat/application/setup`.
+- [ ] `W83.P400.S2283` - Close the aeat config auth setup orphan reference W11 P051 blocker by either shipping the verb or removing the diagnostic next-action that points at it; `src/aeat/application/config`.
+
+### Phase `W83.P401` - shadow duplicate removal
+
+Audit wizard registration and consolidate init paths.
+
+- [ ] `W83.P401.S2284` - Audit _register_wizard_commands and confirm the init command is the sole canonical first-run entry; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W83.P401.S2285` - Remove any duplicate workspace-initialization code paths and consolidate behind initialize_workspace; `src/aeat/application`.
+- [ ] `W83.P401.S2286` - Confirm aeat setup init and root aeat setup are fully retired per apex §1 fold-under; `src/aeat/entrypoints/cli`.
+- [ ] `W83.P401.S2287` - Remove stale wizard-flow command registrations per apex §9 mandate; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W83.P401.S2288` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W83.P402` - de-shim and de-stub cleanup
+
+Retire SETUP_FLOW registration and update post-init hint.
+
+- [ ] `W83.P402.S2289` - Remove _register_wizard_commands SETUP_FLOW registration per apex §9 mandate while preserving typed-answers, prompter, verifier primitives consumed by initialize_workspace; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W83.P402.S2290` - Update post-init hint to aeat app overview status leaf-target per W70.P335 guard; `src/aeat/application/config`.
+- [ ] `W83.P402.S2291` - Wire help text and i18n for the full aeat config init flag set per apex §3.1 canonical command; `src/aeat/core/i18n`.
+- [ ] `W83.P402.S2292` - Remove deprecated init command spellings; `src/aeat/core/i18n`.
+- [ ] `W83.P402.S2293` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W83.P403` - real behavior verification
+
+Test atomic init, flag acceptance, hint guard, false-positive guard.
+
+- [ ] `W83.P403.S2294` - Add tests asserting initialize_workspace atomically creates bucket, profile, active selection and emits all required events; `tests/application/setup`.
+- [ ] `W83.P403.S2295` - Add tests asserting all flags from apex §3.1 are accepted; `tests/entrypoints/cli`.
+- [ ] `W83.P403.S2296` - Add tests asserting post-init hint targets aeat app overview status leaf and passes the W70.P335 guard; `tests/entrypoints/cli`.
+- [ ] `W83.P403.S2297` - Add E2E test asserting aeat config init followed by aeat config repair produces zero fail or warn rows per W70.P334 false-positive guard; `tests/entrypoints/cli`.
+- [ ] `W83.P403.S2298` - Add negative tests for aeat setup init and aeat config init wizard retired paths; `tests/entrypoints/cli`.
+
+### Phase `W83.P404` - thin cli exposure
+
+Register canonical init command and update apex cross-references.
+
+- [ ] `W83.P404.S2299` - Register the canonical aeat config init command per apex §3.1 with the full flag set and wire to initialize_workspace; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W83.P404.S2300` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [ ] `W83.P404.S2301` - Wire help text and i18n; `src/aeat/core/i18n`.
+- [ ] `W83.P404.S2302` - Update apex ADR §3.1 to ratify the atomic service shape and mark R20 closed by W83; `.vault/adr`.
+- [ ] `W83.P404.S2303` - Amend config-init-shape and aeat-cli-config-vs-setup-namespace child ADRs; `.vault/adr`.
+
+## Wave `W84` - Reconciliation: aggregation taxonomy enforcement
+
+Closes apex §12 ledger row R21. The registry domain layer still admits bare invoice source bindings for 347/349/720 despite the four-source taxonomy lock. Enforces the lock and ships missing aggregation pipelines.
+
+### Phase `W84.P405` - backend implementation
+
+Enforce four-source taxonomy and ship missing aggregators.
+
+- [ ] `W84.P405.S2304` - Read the per-modelo-aggregation-pipeline, invoice-domain-decoupling ADRs, apex §2 source-kind taxonomy, and identify every binding declaration that still admits bare invoice; `.vault/adr`.
+- [ ] `W84.P405.S2305` - Reject bare invoice source-kind at the registry domain layer and enforce one of the four canonical source kinds; `src/aeat/domain/calculations/registry`.
+- [ ] `W84.P405.S2306` - Implement retenciones aggregators for 111, 115, 123, 180, 190, 193 consuming explicit source kinds; `src/aeat/application/aggregation`.
+- [ ] `W84.P405.S2307` - Implement 347 and 349 counterpart aggregators using ledger and business-operation source kinds with GROI and NIF-IVA gating for 349; `src/aeat/application/aggregation`.
+- [ ] `W84.P405.S2308` - Implement 720 assets aggregator using purchase_invoice_evidence and payable_invoice source kinds to 720 casillas; `src/aeat/application/aggregation`.
+
+### Phase `W84.P406` - shadow duplicate removal
+
+Audit registry TOMLs and fix test collection errors.
+
+- [ ] `W84.P406.S2309` - Audit every modelo registry TOML for bare invoice source declarations and migrate to canonical source kinds; `registry/aeat/modelos`.
+- [ ] `W84.P406.S2310` - Remove any shadow aggregation paths that bypass the four-source taxonomy; `src/aeat/application/aggregation`.
+- [ ] `W84.P406.S2311` - Fix test collection errors in test_renta_ledger files per audit observation; `src/aeat/application/aggregation`.
+- [ ] `W84.P406.S2312` - Confirm _renta_ledger and _iva_ledger aggregators use only canonical source kinds; `src/aeat/application/aggregation`.
+- [ ] `W84.P406.S2313` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W84.P407` - de-shim and de-stub cleanup
+
+Remove aggregation stubs and wire observation models.
+
+- [ ] `W84.P407.S2314` - Remove any aggregation stub that returned empty results for retenciones, 347, 349, or 720; `src/aeat/application/aggregation`.
+- [ ] `W84.P407.S2315` - Wire renta-ledger-style aggregation observation models for retenciones, counterpart, assets pipelines; `src/aeat/application/aggregation`.
+- [ ] `W84.P407.S2316` - Ensure rejection at registry domain layer emits a typed error naming the four canonical source-kind names; `src/aeat/domain/calculations/registry`.
+- [ ] `W84.P407.S2317` - Update help text and i18n where source-kind labels appear; `src/aeat/core/i18n`.
+- [ ] `W84.P407.S2318` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W84.P408` - real behavior verification
+
+Test registry rejection, aggregator pipelines, end-to-end calculation.
+
+- [ ] `W84.P408.S2319` - Add registry-load tests asserting bare invoice source declarations refuse to load with a typed error naming the four canonical source kinds; `tests/domain/calculations/registry`.
+- [ ] `W84.P408.S2320` - Add aggregator tests for retenciones, counterpart, assets pipelines; `tests/application/aggregation`.
+- [ ] `W84.P408.S2321` - Add end-to-end tests feeding canonical source-kind facts through pipeline to calculate revision asserting correct casilla values per workbook parity refs; `tests/application/aggregation`.
+- [ ] `W84.P408.S2322` - Confirm test collection of test_renta_ledger files passes; `tests/application/aggregation`.
+- [ ] `W84.P408.S2323` - Run the W71 contract-conformance harness and assert four-source taxonomy is enforced everywhere; `tests/domain/calculations/registry`.
+
+### Phase `W84.P409` - thin cli exposure
+
+Render aggregation readiness in bindings list and update apex.
+
+- [ ] `W84.P409.S2324` - Confirm aeat app modelo bindings list and preview correctly render new aggregation readiness categories without adding new CLI surface; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W84.P409.S2325` - Validate help text and i18n alignment for source-kind labels; `src/aeat/core/i18n`.
+- [ ] `W84.P409.S2326` - Update apex ADR §2 source-kind taxonomy lock to record registry-layer enforcement and mark R21 closed by W84; `.vault/adr`.
+- [ ] `W84.P409.S2327` - Amend per-modelo-aggregation-pipeline and invoice-domain-decoupling child ADRs; `.vault/adr`.
+- [ ] `W84.P409.S2328` - Run vault check to confirm clean; `.vault`.
+
+## Wave `W85` - Reconciliation: modelo foundations + harvest completions
+
+Closes apex §12 ledger rows R22 (modelo 036/037 + 145 foundations), R23 (evidence bundle), R24 (W32/W34/W64 harvest CLI completions).
+
+### Phase `W85.P410` - backend implementation
+
+Ship registry TOMLs, EvidenceBundle, and harvest wrappers.
+
+- [ ] `W85.P410.S2329` - Read the modelo-036-037-foundation, modelo-145-foundation, evidence-bundle-shape, domain-harvest-vat-classification, domain-harvest-rental ADRs; `.vault/adr`.
+- [ ] `W85.P410.S2330` - Ship registry aeat modelos 036 revision, 037 (historical-inactive metadata only), 145 revision TOMLs with form schema, casillas, binding contracts; `registry/aeat/modelos`.
+- [ ] `W85.P410.S2331` - Implement EvidenceBundle Pydantic model and application evidence service for bundle build, verify, export, replay - bucket-scoped, work-unit-bound, ZIP manifest-last, verification-first export; `src/aeat/application/evidence`.
+- [ ] `W85.P410.S2332` - Implement application ledger classify_ledger_transaction wrapper consuming domain vat classify_vat and implement application rental wrapper with rental_register_aggregation binding consumer; `src/aeat/application`.
+- [ ] `W85.P410.S2333` - Implement event-triggered alta, modificacion, baja lifecycle for Modelo 036 work units 037 is registry-only metadata 145 is non-filing payer communication; `src/aeat/application/modelo`.
+
+### Phase `W85.P411` - shadow duplicate removal
+
+Audit legacy references and confirm canonical paths.
+
+- [ ] `W85.P411.S2334` - Audit for any legacy 036, 037, 145 references and consolidate behind the new registry; `src/aeat`.
+- [ ] `W85.P411.S2335` - Confirm no live AEAT presentation path is wired for 036, 037, 145 per live-AEAT charter; `src/aeat/application/modelo`.
+- [ ] `W85.P411.S2336` - Confirm application ledger classify_ledger_transaction is the only path that persists VAT classification with ledger.classification.set event; `src/aeat/application/ledger`.
+- [ ] `W85.P411.S2337` - Confirm application rental is the only path that produces rental_register_aggregation bindings; `src/aeat/application/rental`.
+- [ ] `W85.P411.S2338` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W85.P412` - de-shim and de-stub cleanup
+
+Wire audit verbs, reconcile, and remove placeholder stubs.
+
+- [ ] `W85.P412.S2339` - Remove any borrador-import refusal stubs replaced by the app live borrador 100 surface per apex §8 lock; `src/aeat/application`.
+- [ ] `W85.P412.S2340` - Remove any rental-stub references and ensure aeat app ledger rental verbs delegate to application rental; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W85.P412.S2341` - Wire aeat app modelo audit show, check, export, replay verbs to application evidence and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W85.P412.S2342` - Wire aeat app modelo reconcile from-justificante PATH CLI verb to existing reconciler closing W64; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W85.P412.S2343` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+
+### Phase `W85.P413` - real behavior verification
+
+Test foundations, evidence bundle, harvest wrappers.
+
+- [ ] `W85.P413.S2344` - Add tests for 036 and 145 registry load, casilla resolution, binding contracts and assert 037 is metadata-only; `tests/domain/calculations/registry`.
+- [ ] `W85.P413.S2345` - Add tests for EvidenceBundle build, verify, export, replay covering ZIP manifest-last invariant and verification-first export; `tests/application/evidence`.
+- [ ] `W85.P413.S2346` - Add tests for classify_ledger_transaction wrapper and VAT-criteria CLI flags on aeat app ledger classify; `tests/application/ledger`.
+- [ ] `W85.P413.S2347` - Add tests for application rental and Modelo 100 rental_register_aggregation binding consumption; `tests/application/rental`.
+- [ ] `W85.P413.S2348` - Add tests for aeat app modelo reconcile from-justificante PATH; `tests/entrypoints/cli`.
+
+### Phase `W85.P414` - thin cli exposure
+
+Register lifecycle and harvest verbs and update apex.
+
+- [ ] `W85.P414.S2349` - Register Modelo 036 lifecycle verbs (alta, modificacion, baja) under aeat app modelo and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W85.P414.S2350` - Register aeat app modelo audit verbs, aeat app ledger rental verbs, aeat app modelo reconcile from-justificante, VAT-criteria flags on aeat app ledger classify; `src/aeat/entrypoints/cli`.
+- [ ] `W85.P414.S2351` - Wire help text and i18n for every new verb and flag; `src/aeat/core/i18n`.
+- [ ] `W85.P414.S2352` - Update apex ADR §5, §7, §8 to reflect closeouts and mark R22, R23, R24 closed by W85; `.vault/adr`.
+- [ ] `W85.P414.S2353` - Amend modelo-036-037-foundation, modelo-145-foundation, evidence-bundle-shape, domain-harvest-vat-classification, domain-harvest-rental child ADRs and run vault check; `.vault`.
