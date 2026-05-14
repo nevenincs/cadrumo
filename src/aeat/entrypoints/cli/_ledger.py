@@ -937,6 +937,148 @@ def ratios_validate(ctx: typer.Context) -> None:
     _emit(ctx, payload, lines)
 
 
+inventory_app = typer.Typer(
+    name="inventory",
+    help="Per-actividad inventory ledgers (stock, movements, valuation).",
+    no_args_is_help=True,
+)
+app.add_typer(inventory_app, name="inventory")
+
+inventory_movement_app = typer.Typer(name="movement", help="Inventory movement subcommands.", no_args_is_help=True)
+inventory_valuation_app = typer.Typer(name="valuation", help="Inventory valuation subcommands.", no_args_is_help=True)
+inventory_app.add_typer(inventory_movement_app, name="movement")
+inventory_app.add_typer(inventory_valuation_app, name="valuation")
+
+
+def _inventory_service():
+    from ...application.inventory import InventoryService
+
+    return InventoryService()
+
+
+@inventory_app.command("list", help="List every per-actividad inventory ledger on the active bucket.")
+def inventory_list(ctx: typer.Context) -> None:
+    bucket_id = _ratios_bucket_id()
+    rows = _inventory_service().list_all(bucket_id=bucket_id)
+    payload = {
+        "bucket_id": bucket_id,
+        "rows": [row.model_dump(mode="json") for row in rows],
+        "count": len(rows),
+    }
+    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    for row in rows:
+        lines.append(
+            f"{row.actividad_id}\t{row.year}\t{row.valuation_method.value}\t"
+            f"opening={row.opening_stock}\tmovements={row.movement_count}"
+        )
+    _emit(ctx, payload, lines)
+
+
+@inventory_app.command("create", help="Create a fresh inventory ledger for one actividad and year.")
+def inventory_create(
+    ctx: typer.Context,
+    actividad_id: str = typer.Argument(..., help="Actividad identifier."),
+    year: int = typer.Option(..., "--year", help="Fiscal year."),
+    valuation_method: str = typer.Option(..., "--valuation-method", help="Valuation method (fifo or pmp)."),
+    opening_stock: str = typer.Option("0", "--opening-stock", help="Opening stock value."),
+) -> None:
+    bucket_id = _ratios_bucket_id()
+    ledger = _inventory_service().create(
+        bucket_id=bucket_id,
+        actividad_id=actividad_id,
+        year=year,
+        valuation_method=valuation_method,
+        opening_stock=_parse_required_decimal(opening_stock, label="opening-stock"),
+    )
+    payload = ledger.model_dump(mode="json")
+    _emit(
+        ctx,
+        payload,
+        (
+            f"bucket\t{bucket_id}",
+            f"actividad_id\t{ledger.actividad_id}",
+            f"year\t{ledger.year}",
+            f"valuation_method\t{ledger.valuation_method.value}",
+            f"opening_stock\t{ledger.opening_stock}",
+        ),
+    )
+
+
+@inventory_movement_app.command("add", help="Append one movement (purchase/sale/adjustment) to an actividad ledger.")
+def inventory_movement_add(
+    ctx: typer.Context,
+    actividad_id: str = typer.Option(..., "--actividad-id", help="Actividad identifier."),
+    year: int = typer.Option(..., "--year", help="Fiscal year."),
+    movement_id: str = typer.Option(..., "--movement-id", help="Movement identifier (unique per ledger)."),
+    movement_date: str = typer.Option(..., "--date", help="Movement date (YYYY-MM-DD)."),
+    kind: str = typer.Option(..., "--kind", help="Movement kind (purchase, sale, adjustment, ...)"),
+    quantity: str = typer.Option(..., "--quantity", help="Movement quantity (positive or negative)."),
+    unit_cost: str | None = typer.Option(None, "--unit-cost", help="Unit cost (purchase movements)."),
+    taxable_base: str | None = typer.Option(None, "--taxable-base", help="Taxable base (for VAT)."),
+    vat_rate: str = typer.Option("21.00", "--vat-rate", help="VAT rate in percent."),
+) -> None:
+    from ...application.inventory import InventoryMovementCommand
+    from ...domain.profile.inventory import MovementKind
+
+    try:
+        kind_enum = MovementKind(kind)
+    except ValueError as exc:
+        raise _bad(f"Unknown movement kind: {kind!r}") from exc
+
+    bucket_id = _ratios_bucket_id()
+    command = InventoryMovementCommand(
+        movement_id=movement_id,
+        movement_date=_parse_iso_date(movement_date, label="--date"),
+        kind=kind_enum,
+        quantity=_parse_required_decimal(quantity, label="quantity"),
+        unit_cost=_parse_decimal(unit_cost, label="unit-cost"),
+        taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
+        vat_rate=_parse_required_decimal(vat_rate, label="vat-rate"),
+    )
+    ledger = _inventory_service().movement_add(
+        bucket_id=bucket_id,
+        actividad_id=actividad_id,
+        year=year,
+        movement=command,
+    )
+    payload = ledger.model_dump(mode="json")
+    _emit(
+        ctx,
+        payload,
+        (
+            f"bucket\t{bucket_id}",
+            f"actividad_id\t{ledger.actividad_id}",
+            f"year\t{ledger.year}",
+            f"movements\t{len(ledger.period_movements)}",
+        ),
+    )
+
+
+@inventory_valuation_app.command("preview", help="Preview closing stock and COGS for one actividad/year ledger.")
+def inventory_valuation_preview(
+    ctx: typer.Context,
+    actividad_id: str = typer.Option(..., "--actividad-id", help="Actividad identifier."),
+    year: int = typer.Option(..., "--year", help="Fiscal year."),
+) -> None:
+    bucket_id = _ratios_bucket_id()
+    preview = _inventory_service().valuation_preview(
+        bucket_id=bucket_id, actividad_id=actividad_id, year=year
+    )
+    payload = preview.model_dump(mode="json")
+    _emit(
+        ctx,
+        payload,
+        (
+            f"bucket\t{bucket_id}",
+            f"actividad_id\t{preview.actividad_id}",
+            f"year\t{preview.year}",
+            f"valuation_method\t{preview.valuation_method.value}",
+            f"closing_stock\t{preview.closing_stock}",
+            f"cogs\t{preview.cogs}",
+        ),
+    )
+
+
 evidence_app = typer.Typer(
     name="evidence",
     help="Purchase invoice evidence records (PDF or image).",
