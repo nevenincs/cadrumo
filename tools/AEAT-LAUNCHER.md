@@ -1,4 +1,4 @@
-# scripts/
+# aeat windows launcher
 
 Operator-facing helper scripts that complement `uv run aeat`.
 
@@ -12,15 +12,15 @@ aeat ...`; these launcher scripts make it the default.
 ### cmd / batch
 
 ```
-scripts\aeat.cmd config status
-scripts\aeat.cmd app overview status
+tools\aeat.cmd config status
+tools\aeat.cmd app overview status
 ```
 
 ### PowerShell
 
 ```
-scripts\aeat.ps1 config status
-scripts\aeat.ps1 app overview status
+tools\aeat.ps1 config status
+tools\aeat.ps1 app overview status
 ```
 
 ### When to run `uv sync` manually

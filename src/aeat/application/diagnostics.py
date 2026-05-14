@@ -432,7 +432,7 @@ def _windows_stale_sync_check() -> DiagnosticCheck | None:
     races the OS handle on ``Scripts/aeat.exe`` and intermittently raises
     ``os error 32``. The canonical workaround documented by the
     ``dev-environment-uv-windows`` ADR is to invoke the CLI via
-    ``uv run --no-sync aeat`` (or the ``scripts/aeat.cmd`` launcher).
+    ``uv run --no-sync aeat`` (or the ``tools/aeat.cmd`` launcher).
     That workaround skips sync, so a stale venv must be detected
     explicitly. This row fires when the host is Windows and
     ``pyproject.toml`` is newer than the venv marker.
