@@ -171,6 +171,112 @@ def test_catalogue_for_bucket_filters_by_event_types() -> None:
     assert tuple(e.event_id for e in rows) == (filed.event_id,)
 
 
+def test_ledger_event_catalogue_uses_approved_transaction_vocabulary() -> None:
+    assert BucketEventType.LEDGER_TRANSACTION_CREATED.value == "ledger.transaction.created"
+    assert BucketEventType.LEDGER_TRANSACTION_IMPORTED.value == "ledger.transaction.imported"
+    assert BucketEventType.LEDGER_IMPORT_DIAGNOSTIC_RECORDED.value == "ledger.import.diagnostic_recorded"
+    assert BucketEventType.LEDGER_TRANSACTION_UPDATED.value == "ledger.transaction.updated"
+    assert BucketEventType.LEDGER_TRANSACTION_CLASSIFIED.value == "ledger.transaction.classified"
+    assert BucketEventType.LEDGER_TRANSACTION_ALLOCATED.value == "ledger.transaction.allocated"
+    assert BucketEventType.LEDGER_TRANSACTION_REMOVED.value == "ledger.transaction.removed"
+    assert BucketEventType.LEDGER_TRANSACTION_ARCHIVED.value == "ledger.transaction.archived"
+    assert BucketEventType.LEDGER_TRANSACTION_STASHED.value == "ledger.transaction.stashed"
+    assert BucketEventType.LEDGER_TRANSACTION_EXPORTED.value == "ledger.transaction.exported"
+    assert BucketEventType.LEDGER_CATALOGUE_RESET.value == "ledger.catalogue.reset"
+    assert BucketEventType.LEDGER_SANITIZATION_COMPLETED.value == "ledger.sanitization.completed"
+    assert BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED.value == "purchase_invoice_evidence.attached"
+    assert BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED.value == "purchase_invoice_evidence.replaced"
+    assert BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED.value == "purchase_invoice_evidence.detached"
+    assert BucketEventType.ATTACHMENT_LINKED.value == "attachment.linked"
+    assert BucketEventType.ATTACHMENT_REMOVED.value == "attachment.removed"
+
+
+def test_reverse_merge_correction_events_match_taxonomy_adr() -> None:
+    """The six correction events match the google-oauth taxonomy ADR §6 schema."""
+
+    assert BucketEventType.LEDGER_TRANSACTION_CORRECTION_APPLIED.value == "ledger.transaction.correction.applied"
+    assert (
+        BucketEventType.LEDGER_PURCHASE_INVOICE_EVIDENCE_CORRECTION_APPLIED.value
+        == "ledger.purchase_invoice_evidence.correction.applied"
+    )
+    assert (
+        BucketEventType.LEDGER_PAYABLE_INVOICE_CORRECTION_APPLIED.value
+        == "ledger.payable_invoice.correction.applied"
+    )
+    assert (
+        BucketEventType.LEDGER_COLLECTIBLE_INVOICE_CORRECTION_APPLIED.value
+        == "ledger.collectible_invoice.correction.applied"
+    )
+    assert BucketEventType.LEDGER_RENTAL_INCOME_CORRECTION_APPLIED.value == "ledger.rental_income.correction.applied"
+    assert BucketEventType.LEDGER_RENTAL_EXPENSE_CORRECTION_APPLIED.value == "ledger.rental_expense.correction.applied"
+
+
+@pytest.mark.parametrize(
+    "legacy_value",
+    (
+        "ledger_transaction.created",
+        "ledger_transaction.imported",
+        "ledger_transaction.updated",
+        "ledger_transaction.classified",
+        "ledger_transaction.allocated",
+        "ledger_transaction.removed",
+        "ledger_transaction.archived",
+        "ledger_transaction.stashed",
+        "ledger_transaction.exported",
+    ),
+)
+def test_ledger_event_catalogue_rejects_legacy_underscore_transaction_events(legacy_value: str) -> None:
+    with pytest.raises(ValueError, match=legacy_value.replace(".", r"\.")):
+        BucketEventType(legacy_value)
+
+
+def test_ledger_event_object_types_cover_mutation_targets() -> None:
+    assert BucketEventObjectType.LEDGER_TRANSACTION.value == "ledger_transaction"
+    assert BucketEventObjectType.LEDGER_IMPORT_BATCH.value == "ledger_import_batch"
+    assert BucketEventObjectType.LEDGER_CATALOGUE.value == "ledger_catalogue"
+    assert BucketEventObjectType.LEDGER_EXPORT.value == "ledger_export"
+    assert BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE.value == "purchase_invoice_evidence"
+    assert BucketEventObjectType.PAYABLE_INVOICE.value == "payable_invoice"
+    assert BucketEventObjectType.COLLECTIBLE_INVOICE.value == "collectible_invoice"
+    assert BucketEventObjectType.ATTACHMENT.value == "attachment"
+
+
+def test_catalogue_filters_ledger_events_by_approved_event_type() -> None:
+    created = _build_event(
+        bucket_id=_BUCKET_A,
+        event_type=BucketEventType.LEDGER_TRANSACTION_CREATED,
+        occurred_at=_T0,
+        object_type=BucketEventObjectType.LEDGER_TRANSACTION,
+        object_id="tx-1",
+    )
+    removed = _build_event(
+        bucket_id=_BUCKET_A,
+        event_type=BucketEventType.LEDGER_TRANSACTION_REMOVED,
+        occurred_at=_T1,
+        object_type=BucketEventObjectType.LEDGER_TRANSACTION,
+        object_id="tx-1",
+        payload={"reason": "wrong import"},
+    )
+    evidence_detached = _build_event(
+        bucket_id=_BUCKET_A,
+        event_type=BucketEventType.PURCHASE_INVOICE_EVIDENCE_DETACHED,
+        occurred_at=_T2,
+        object_type=BucketEventObjectType.PURCHASE_INVOICE_EVIDENCE,
+        object_id="evidence-1",
+        payload={"transaction_id": "tx-1"},
+    )
+    catalogue = BucketEventHistoryCatalogue(
+        events={
+            created.event_id: created,
+            removed.event_id: removed,
+            evidence_detached.event_id: evidence_detached,
+        }
+    )
+
+    rows = catalogue.for_bucket(_BUCKET_A, event_types=(BucketEventType.LEDGER_TRANSACTION_REMOVED,))
+    assert tuple(event.event_id for event in rows) == (removed.event_id,)
+
+
 def test_catalogue_for_object_returns_events_for_one_object() -> None:
     fr_created = _build_event(
         bucket_id=_BUCKET_A,
@@ -232,5 +338,5 @@ def test_catalogue_is_frozen_and_extra_forbid() -> None:
         object_type=BucketEventObjectType.CALCULATION_REVISION,
         object_id="rev-1",
     )
-    with pytest.raises(ValidationError, match="extra_forbidden|Extra inputs"):
-        BucketEventHistoryCatalogue(events={event.event_id: event}, extra="no")  # type: ignore[call-arg]
+    with pytest.raises(ValidationError, match=r"extra_forbidden|Extra inputs"):
+        BucketEventHistoryCatalogue.model_validate({"events": {event.event_id: event}, "extra": "no"})
