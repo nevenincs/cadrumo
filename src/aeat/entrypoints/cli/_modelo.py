@@ -1356,4 +1356,115 @@ def _as_of(raw: str | None) -> date | None:
     return _parse_iso_date(raw, label="--as-of")
 
 
+# ─────────────────────────────────────────────────────────────────────────
+# Evidence bundle audit (W57 evidence-bundle-shape ADR)
+# ─────────────────────────────────────────────────────────────────────────
+
+
+audit_app = typer.Typer(
+    name="audit",
+    help="Evidence bundle audit verbs (show/check/export/replay).",
+    no_args_is_help=True,
+)
+app.add_typer(audit_app, name="audit")
+
+
+def _evidence_bundle_service():
+    from ...application.evidence import EvidenceBundleService
+
+    return EvidenceBundleService()
+
+
+def _audit_bucket_id() -> str:
+    from ...application.workflow._models import active_bucket_id_or_raise
+    from ...application.workflow._persistence import workflow_state_repository
+
+    try:
+        return active_bucket_id_or_raise(workflow_state_repository().load())
+    except Exception as exc:
+        raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
+
+
+@audit_app.command("show", help="Render an evidence bundle's manifest and referenced records.")
+def audit_show(
+    ctx: typer.Context,
+    bundle_id: Annotated[str, typer.Argument(help="Evidence bundle id.")],
+) -> None:
+    bucket_id = _audit_bucket_id()
+    bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
+    payload = bundle.model_dump(mode="json")
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"bundle_id\t{bundle.bundle_id}",
+        f"work_unit_id\t{bundle.work_unit_id}",
+        f"manifest_hash\t{bundle.manifest_hash}",
+        f"verification_state\t{bundle.verification_state.value}",
+        f"records\t{len(bundle.records)}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@audit_app.command("check", help="Re-verify the evidence bundle's integrity (report-only).")
+def audit_check(
+    ctx: typer.Context,
+    bundle_id: Annotated[str, typer.Argument(help="Evidence bundle id.")],
+) -> None:
+    bucket_id = _audit_bucket_id()
+    report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"bundle_id\t{report.bundle_id}",
+        f"verification_state\t{report.verification_state.value}",
+        f"manifest_hash_matches\t{report.manifest_hash_matches}",
+        f"records_verified\t{report.records_verified}",
+        f"records_failed\t{report.records_failed}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@audit_app.command("export", help="Write a ZIP archive of the bundle (manifest emitted last).")
+def audit_export(
+    ctx: typer.Context,
+    bundle_id: Annotated[str, typer.Argument(help="Evidence bundle id.")],
+    output: Annotated[Path, typer.Option("--output", help="Output ZIP path.")],
+    force_incomplete: Annotated[
+        bool,
+        typer.Option("--force-incomplete", help="Allow export when verification is incomplete."),
+    ] = False,
+) -> None:
+    bucket_id = _audit_bucket_id()
+    bundle = _evidence_bundle_service().export(
+        bucket_id=bucket_id,
+        bundle_id=bundle_id,
+        output_path=output,
+        force_incomplete=force_incomplete,
+    )
+    payload = bundle.model_dump(mode="json")
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"bundle_id\t{bundle.bundle_id}",
+        f"output\t{output}",
+        f"verification_state\t{bundle.verification_state.value}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@audit_app.command("replay", help="Replay the bundle's evidence case (never contacts AEAT).")
+def audit_replay(
+    ctx: typer.Context,
+    bundle_id: Annotated[str, typer.Argument(help="Evidence bundle id.")],
+) -> None:
+    bucket_id = _audit_bucket_id()
+    report = _evidence_bundle_service().replay(bucket_id=bucket_id, bundle_id=bundle_id)
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"bundle_id\t{report.bundle_id}",
+        f"verification_state\t{report.verification_state.value}",
+        f"records_replayed\t{report.records_verified}",
+    ]
+    _emit(ctx, payload, lines)
+
+
 __all__ = ["app"]
