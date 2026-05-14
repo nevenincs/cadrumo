@@ -1,0 +1,224 @@
+"""Tests for the storage provider abstraction's foundation surface.
+
+Covers the Protocol contract, the three pydantic records, the
+`ProviderKind` enum, and the typed `StorageError` hierarchy. Concrete
+backend (`_local.py`, `_google_drive.py`, `_testing.py`) tests live in
+their own colocated test modules.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from datetime import UTC, datetime
+
+import pytest
+from pydantic import ValidationError
+
+from aeat.adapters.outbound.storage import (
+    ProviderKind,
+    ProviderObjectMetadata,
+    ProviderProbeReport,
+    StorageConflictError,
+    StorageError,
+    StorageIntegrityError,
+    StorageNetworkError,
+    StorageNotFoundError,
+    StoragePermissionError,
+    StorageProvider,
+    StorageQuotaError,
+    StorageUnavailableError,
+    StorageValidationError,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
+
+def _metadata(**overrides: object) -> ProviderObjectMetadata:
+    base: dict[str, object] = {
+        "namespace": "ledger_transaction",
+        "object_key_hmac": "abc123def456",
+        "provider_object_id": "drive-file-id-xyz",
+        "byte_length": 1024,
+        "content_hash": "sha256-deadbeef",
+        "written_at": datetime(2026, 5, 14, tzinfo=UTC),
+    }
+    base.update(overrides)
+    return ProviderObjectMetadata.model_validate(base)
+
+
+def test_provider_kind_enum_values_are_stable() -> None:
+    assert ProviderKind.LOCAL_FILESYSTEM.value == "local_filesystem"
+    assert ProviderKind.GOOGLE_DRIVE.value == "google_drive"
+    assert ProviderKind.IN_MEMORY.value == "in_memory"
+
+
+def test_provider_object_metadata_round_trip() -> None:
+    payload = _metadata()
+    reloaded = ProviderObjectMetadata.model_validate_json(payload.model_dump_json())
+    assert reloaded == payload
+
+
+def test_provider_object_metadata_is_frozen() -> None:
+    payload = _metadata()
+    with pytest.raises(ValidationError, match="frozen"):
+        payload.namespace = "other"  # type: ignore[misc]
+
+
+def test_provider_object_metadata_rejects_negative_byte_length() -> None:
+    with pytest.raises(ValidationError, match="greater than or equal to 0"):
+        _metadata(byte_length=-1)
+
+
+def test_provider_object_metadata_rejects_extra_fields() -> None:
+    with pytest.raises(ValidationError, match="Extra"):
+        ProviderObjectMetadata.model_validate(
+            {
+                "namespace": "ledger_transaction",
+                "object_key_hmac": "abc",
+                "provider_object_id": "x",
+                "byte_length": 0,
+                "content_hash": "sha256-x",
+                "written_at": datetime(2026, 5, 14, tzinfo=UTC),
+                "unexpected": "value",
+            }
+        )
+
+
+def test_provider_probe_report_defaults_root_folder_to_none() -> None:
+    report = ProviderProbeReport(
+        provider_kind=ProviderKind.LOCAL_FILESYSTEM,
+        reachable=True,
+        writable=True,
+        read_only=False,
+    )
+    assert report.root_folder_present is None
+    assert report.detail == ""
+
+
+def test_provider_probe_report_read_only_mode_round_trip() -> None:
+    report = ProviderProbeReport(
+        provider_kind=ProviderKind.GOOGLE_DRIVE,
+        reachable=True,
+        writable=False,
+        read_only=True,
+        root_folder_present=True,
+        detail="probe ran with read_only=True; sentinel round-trip skipped",
+    )
+    reloaded = ProviderProbeReport.model_validate_json(report.model_dump_json())
+    assert reloaded == report
+    assert reloaded.read_only is True
+    assert reloaded.writable is False
+
+
+def test_storage_error_hierarchy_unified() -> None:
+    for leaf in (
+        StorageConflictError,
+        StorageIntegrityError,
+        StorageNetworkError,
+        StorageNotFoundError,
+        StoragePermissionError,
+        StorageQuotaError,
+        StorageUnavailableError,
+        StorageValidationError,
+    ):
+        assert issubclass(leaf, StorageError), leaf.__name__
+
+
+def test_storage_validation_error_is_value_error_subclass() -> None:
+    assert issubclass(StorageValidationError, ValueError)
+
+
+def test_every_leaf_carries_a_registered_error_code() -> None:
+    leaves = (
+        StorageError,
+        StorageValidationError,
+        StorageNotFoundError,
+        StorageConflictError,
+        StoragePermissionError,
+        StorageQuotaError,
+        StorageNetworkError,
+        StorageIntegrityError,
+        StorageUnavailableError,
+    )
+    codes = {leaf.code.code for leaf in leaves}
+    assert len(codes) == len(leaves), f"duplicate codes: {codes}"
+    allowed_prefixes = (
+        "FAIL_OUTBOUND_STORAGE",
+        "REFUSED_OUTBOUND_STORAGE",
+        "ERROR_OUTBOUND_STORAGE",
+        "AUTH_OUTBOUND_STORAGE",
+        "INTEGRITY_OUTBOUND_STORAGE",
+    )
+    for leaf in leaves:
+        assert leaf.code.code.startswith(allowed_prefixes)
+
+
+class _ConformingStub:
+    """Smallest possible class satisfying the Protocol."""
+
+    def put(
+        self,
+        namespace: str,
+        object_key_hmac: str,
+        payload: bytes,
+        *,
+        content_hash: str,
+        label: str,
+    ) -> ProviderObjectMetadata:
+        del namespace, object_key_hmac, payload, content_hash, label
+        return _metadata()
+
+    def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
+        del namespace, object_key_hmac
+        return (b"", _metadata())
+
+    def delete(self, namespace: str, object_key_hmac: str) -> bool:
+        del namespace, object_key_hmac
+        return False
+
+    def iter_namespaces(self) -> Iterator[str]:
+        return iter(())
+
+    def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
+        del namespace
+        return iter(())
+
+    def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
+        return ProviderProbeReport(
+            provider_kind=ProviderKind.IN_MEMORY,
+            reachable=True,
+            writable=not read_only,
+            read_only=read_only,
+        )
+
+
+class _MissingMethodStub:
+    """Class deliberately missing `iter_namespaces` — must fail runtime check."""
+
+    def put(self, namespace: str, object_key_hmac: str, payload: bytes, *, content_hash: str, label: str) -> ProviderObjectMetadata:  # noqa: E501
+        del namespace, object_key_hmac, payload, content_hash, label
+        return _metadata()
+
+    def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
+        del namespace, object_key_hmac
+        return (b"", _metadata())
+
+    def delete(self, namespace: str, object_key_hmac: str) -> bool:
+        del namespace, object_key_hmac
+        return False
+
+    def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
+        del namespace
+        return iter(())
+
+    def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
+        del read_only
+        return ProviderProbeReport(provider_kind=ProviderKind.IN_MEMORY, reachable=True, writable=True, read_only=False)
+
+
+def test_conforming_class_satisfies_runtime_protocol_check() -> None:
+    assert isinstance(_ConformingStub(), StorageProvider)
+
+
+def test_class_missing_required_method_fails_protocol_check() -> None:
+    assert not isinstance(_MissingMethodStub(), StorageProvider)
