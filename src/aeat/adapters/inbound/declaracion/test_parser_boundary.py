@@ -14,13 +14,13 @@ from aeat.tests import FIXTURES_DIR
 from ....domain.calculations.registry import default_registry_authority
 from . import DeclaracionParseError, parse_declaracion
 
-_REAL_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
-
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.domain_inbound,
     pytest.mark.fixture_tier_l3,
 ]
+
+_REAL_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
 
 
 def test_parser_extracts_registry_profile_targets_from_pdf(tmp_path: Path) -> None:

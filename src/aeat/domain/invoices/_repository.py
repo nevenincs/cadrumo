@@ -15,7 +15,7 @@ from ...core.logging import get_logger
 from ._models import InvoiceCatalogue
 
 if TYPE_CHECKING:
-    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
 
@@ -113,6 +113,27 @@ class InvoiceCatalogueRepository:
             payload=envelope.model_dump_json().encode("utf-8"),
         )
         _log.debug("saved invoice catalogue (%d invoices)", len(catalogue.invoices))
+
+    def to_secure_object_write(self, catalogue: InvoiceCatalogue) -> SecureObjectWrite:
+        """Return the secure-object upsert for ``catalogue`` without committing it."""
+
+        from ...adapters.persistence.storage import Envelope, SensitivityClass
+        from ...adapters.persistence.storage.sql import SecureObjectWrite
+
+        envelope = Envelope[InvoiceCatalogue](
+            schema_version=_INVOICE_CATALOGUE_VERSION,
+            written_at=datetime.now(UTC),
+            classification=SensitivityClass.FINANCIAL,
+            payload=catalogue,
+        )
+        return SecureObjectWrite(
+            namespace=_INVOICE_NAMESPACE,
+            object_key=_INVOICE_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_INVOICE_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
 
 
 __all__ = [

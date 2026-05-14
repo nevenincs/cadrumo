@@ -9,18 +9,14 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.operator_surface import build_help_document
 from aeat.application.profile import set_active_profile
 from aeat.application.workflow import workflow_state_repository
-
-from . import app
+from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-
-_RUNNER = CliRunner()
 
 
 @pytest.fixture(autouse=True)
@@ -32,7 +28,7 @@ def _isolated_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 
 def _invoke(args: list[str]):
-    return _RUNNER.invoke(app, args)
+    return invoke_cached_cli(args)
 
 
 def _console_env(tmp_path: Path) -> dict[str, str]:

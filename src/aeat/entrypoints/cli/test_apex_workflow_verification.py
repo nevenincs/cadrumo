@@ -6,17 +6,15 @@ import json
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.operator_surface import get_operator_surface_contract
 from aeat.application.wizard._catalogue import SETUP_FLOW
+from aeat.tests.cli_runner import invoke_cached_cli
 
-from . import _config, app, app_app
+from . import _config, app_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-
-_RUNNER = CliRunner()
 
 
 @pytest.fixture(autouse=True)
@@ -46,7 +44,7 @@ def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
 
 
 def _invoke(args: list[str]):
-    return _RUNNER.invoke(app, args)
+    return invoke_cached_cli(args)
 
 
 def _json(result) -> dict:
@@ -97,7 +95,6 @@ def test_rejected_aliases_do_not_reach_apex_workflow_services() -> None:
         ["app", "invoice", "--help"],
         ["app", "declaration", "--help"],
         ["app", "archive", "--help"],
-        ["app", "topic", "--help"],
         ["config", "set", "--help"],
         ["config", "status", "--help"],
     ):

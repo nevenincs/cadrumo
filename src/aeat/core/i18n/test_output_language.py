@@ -18,7 +18,6 @@ def isolated_language_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
 
     dispose_engine()
     monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
-    monkeypatch.delenv("AEAT_CLI_LANGUAGE", raising=False)
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'language.db').as_posix()}")
@@ -62,20 +61,19 @@ def test_environment_output_language_override_wins_over_profile(
     assert output_language() == "en"
 
 
-def test_cli_language_override_wins_over_environment_and_profile(
+def test_environment_output_language_override_is_canonical(
     isolated_language_state: None,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _seed_profile_language("ca")
 
     monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "es")
-    monkeypatch.setenv("AEAT_CLI_LANGUAGE", "hu")
 
-    assert output_language() == "hu"
+    assert output_language() == "es"
 
 
-def test_clean_install_defaults_to_english(isolated_language_state: None) -> None:
-    assert output_language() == "en"
+def test_clean_install_defaults_to_spanish(isolated_language_state: None) -> None:
+    assert output_language() == "es"
 
 
 def test_unsupported_profile_output_language_falls_back_to_settings_default(
@@ -83,4 +81,4 @@ def test_unsupported_profile_output_language_falls_back_to_settings_default(
 ) -> None:
     _seed_profile_language("zz")
 
-    assert output_language() == "en"
+    assert output_language() == "es"

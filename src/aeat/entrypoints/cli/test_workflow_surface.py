@@ -12,8 +12,9 @@ from typer.testing import CliRunner
 from aeat.application.diagnostics import build_cli_version_report
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 from aeat.domain.transactions import TransactionCatalogueRepository
+from aeat.tests.cli_runner import invoke_cached_cli
 
-from . import _import_failure_surface, _startup_import_error_text, app
+from . import _import_failure_surface, _startup_import_error_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -21,7 +22,7 @@ _RUNNER = CliRunner()
 
 
 def _invoke(args: list[str]):
-    return _RUNNER.invoke(app, args)
+    return invoke_cached_cli(args)
 
 
 def _json_output(result: Any) -> str:

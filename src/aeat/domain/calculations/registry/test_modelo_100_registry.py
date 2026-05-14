@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping
 from decimal import Decimal
+from functools import cache
 from typing import Any, cast
 
 import pytest
@@ -14,7 +15,14 @@ from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.profile import PROFILE_KEYS, TaxResidenceProfile
 from aeat.domain.profile.family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
-from . import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshotError, RegistryValidationError
+from . import (
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    RegistrySnapshot,
+    RegistrySnapshotError,
+    RegistryValidationError,
+)
 from ._constructs import resolve_construct, resolve_revision_constructs
 from ._export import resolve_export_layout
 from ._export_parse import parse_export_payload
@@ -30,9 +38,22 @@ from ._validate import RegistryValidator
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
+@cache
 def _loaded_registry() -> tuple[dict[str, ModeloDefinition], RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     return {modelo.id: modelo for modelo in modelos}, catalogues
+
+
+@cache
+def _modelo_100_snapshot(filing_year: int = 2025) -> RegistrySnapshot:
+    modelos_by_id, catalogues = _loaded_registry()
+    return build_snapshot(
+        modelos_by_id["100"],
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=filing_year,
+        period="0A",
+    )
 
 
 def test_modelo_100_revisions_match_record_design_manifest() -> None:
@@ -96,9 +117,7 @@ def test_modelo_100_dependency_relations_resolve_against_registered_modelos() ->
 
 
 def test_modelo_100_constructs_include_dependency_and_source_evidence_members() -> None:
-    modelos_by_id, catalogues = _loaded_registry()
-    modelo = modelos_by_id["100"]
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    snapshot = _modelo_100_snapshot()
     source_foundation = snapshot.constructs["renta-source-foundation"]
     personal_family = snapshot.constructs["renta-personal-family"]
     dependencies = snapshot.constructs["renta-dependent-modelos"]
@@ -212,8 +231,7 @@ def test_modelo_100_constructs_include_dependency_and_source_evidence_members() 
 
 
 def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> None:
-    modelos_by_id, catalogues = _loaded_registry()
-    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    snapshot = _modelo_100_snapshot()
     profile_keys = {entry.key for entry in PROFILE_KEYS}
     bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings if binding.source == "profile"}
     casillas_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
@@ -399,8 +417,7 @@ def test_modelo_100_personal_family_profile_bindings_target_profile_schema() -> 
 
 
 def test_modelo_100_application_links_route_current_workflows_through_snapshots() -> None:
-    modelos_by_id, catalogues = _loaded_registry()
-    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    snapshot = _modelo_100_snapshot()
     links_by_surface = {link.surface: link for link in snapshot.revision.application_links}
 
     assert {
@@ -470,8 +487,7 @@ def test_modelo_100_renta_section_constructs_classify_registered_relation_source
 
 
 def test_modelo_100_dependency_classifications_cover_registered_relation_sources() -> None:
-    modelos_by_id, catalogues = _loaded_registry()
-    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    snapshot = _modelo_100_snapshot()
     relations_by_source: dict[str, set[str]] = {}
     for relation in snapshot.revision.relations:
         relations_by_source.setdefault(relation.source_modelo, set()).add(relation.id)
@@ -490,7 +506,7 @@ def test_modelo_100_dependency_classifications_cover_registered_relation_sources
 
 
 def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_only() -> None:
-    modelos_by_id, catalogues = _loaded_registry()
+    _modelos_by_id, catalogues = _loaded_registry()
     source = catalogues.sources["aeat-modelo-100-procedure"]
     source_text = (PROJECT_ROOT / source.corpus_path).read_text(encoding="utf-8")
 
@@ -498,13 +514,7 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
     assert "Datos fiscales" in source_text
 
     for year in range(2020, 2026):
-        snapshot = build_snapshot(
-            modelos_by_id["100"],
-            catalogues,
-            source_root=PROJECT_ROOT,
-            filing_year=year,
-            period="0A",
-        )
+        snapshot = _modelo_100_snapshot(year)
         cross_reference = snapshot.live_cross_references["modelo-100-filed-declarations-read"]
         policy = remote_state_policy_from_cross_reference(cross_reference)
 
@@ -533,8 +543,7 @@ def test_modelo_100_authenticated_filed_data_cross_reference_is_guarded_read_onl
 
 
 def test_modelo_100_live_cross_references_block_declared_forbidden_actions() -> None:
-    modelos_by_id, catalogues = _loaded_registry()
-    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    snapshot = _modelo_100_snapshot()
     expected_by_id = {
         "modelo-100-renta-web-open": {
             "authenticated-renta-web",
@@ -576,8 +585,7 @@ def test_modelo_100_live_cross_references_block_declared_forbidden_actions() -> 
 
 
 def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None:
-    modelos_by_id, catalogues = _loaded_registry()
-    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2023, period="0A")
+    snapshot = _modelo_100_snapshot(2023)
     resolved = resolve_export_layout(snapshot)
     payload = b"""<?xml version="1.0" encoding="UTF-8"?>
 <Renta>
@@ -638,8 +646,7 @@ def test_modelo_100_xml_dictionary_layout_reads_official_casilla_paths() -> None
 
 
 def test_modelo_100_objective_estimation_record_design_paths_roundtrip_from_export_layout() -> None:
-    modelos_by_id, catalogues = _loaded_registry()
-    snapshot = build_snapshot(modelos_by_id["100"], catalogues, source_root=PROJECT_ROOT, filing_year=2025, period="0A")
+    snapshot = _modelo_100_snapshot()
     resolved = resolve_export_layout(snapshot)
     payload = b"""<?xml version="1.0" encoding="UTF-8"?>
 <Renta>

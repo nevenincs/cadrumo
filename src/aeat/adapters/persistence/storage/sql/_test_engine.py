@@ -59,7 +59,6 @@ def test_engine_rejects_empty_url() -> None:
         create_engine_from_settings(settings)
 
 
-@pytest.mark.unit
 def test_engine_anchors_relative_sqlite_urls_to_project_root(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

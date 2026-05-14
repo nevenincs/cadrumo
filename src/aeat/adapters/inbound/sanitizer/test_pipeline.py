@@ -25,6 +25,8 @@ from . import sanitize_pdf
 from ._errors import AlreadySanitizedError, SignaturePresentError
 from ._records import NameReplacement, NifReplacement, TokenMap
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
+
 
 def _decompressed_content_bytes(pdf_bytes: bytes) -> bytes:
     """Returns the concatenated decompressed content streams of every page.
@@ -46,9 +48,6 @@ def _decompressed_content_bytes(pdf_bytes: bytes) -> bytes:
         else:
             chunks.append(bytes(contents.read_bytes()))
     return b"\n".join(chunks)
-
-
-pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 def _build_real_world_like_pdf() -> bytes:

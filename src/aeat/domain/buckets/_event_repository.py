@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 from ...core.logging import get_logger
 from ._errors import BucketsError
 from ._event import BucketEvent, BucketEventHistoryCatalogue
@@ -58,13 +58,18 @@ class BucketEventHistoryRepository:
         return envelope.payload
 
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
+        self._objects.save_many((self.to_secure_object_write(catalogue),))
+
+    def to_secure_object_write(self, catalogue: BucketEventHistoryCatalogue) -> SecureObjectWrite:
+        """Return the secure-object upsert for ``catalogue`` without committing it."""
+
         envelope = Envelope[BucketEventHistoryCatalogue](
             schema_version=_CATALOGUE_VERSION,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )
-        self._objects.save(
+        return SecureObjectWrite(
             namespace=_NAMESPACE,
             object_key=_OBJECT_KEY,
             classification=SensitivityClass.FINANCIAL,

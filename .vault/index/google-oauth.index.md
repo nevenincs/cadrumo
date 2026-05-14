@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#google-oauth'
-date: '2026-05-13'
+date: '2026-05-14'
 related:
   - '[[2026-05-06-google-oauth-audit]]'
   - '[[2026-05-06-google-oauth-research]]'
@@ -11,6 +11,7 @@ related:
   - '[[2026-05-12-google-oauth-adr]]'
   - '[[2026-05-13-google-oauth-W01-P01-S00-exec]]'
   - '[[2026-05-13-google-oauth-W01-P01-S01-exec]]'
+  - '[[2026-05-13-google-oauth-W01-P01-S16-exec]]'
   - '[[2026-05-13-google-oauth-adr]]'
   - '[[2026-05-13-google-oauth-calc-sheets-adr]]'
   - '[[2026-05-13-google-oauth-inbound-adr]]'
@@ -18,6 +19,18 @@ related:
   - '[[2026-05-13-google-oauth-snapshot-adr]]'
   - '[[2026-05-13-google-oauth-taxonomy-adr]]'
   - '[[2026-05-13-google-oauth-twoway-adr]]'
+  - '[[2026-05-14-google-oauth-W01-P01-S05-S13-exec]]'
+  - '[[2026-05-14-google-oauth-W01-P01-S08-S09-S12-exec]]'
+  - '[[2026-05-14-google-oauth-W01-P01-S17-exec]]'
+  - '[[2026-05-14-google-oauth-W01-P01-cli-surface-exec]]'
+  - '[[2026-05-14-google-oauth-W01-P01-closeout-exec]]'
+  - '[[2026-05-14-google-oauth-W01-P01-records-errors-exec]]'
+  - '[[2026-05-14-google-oauth-W01-P02-backends-exec]]'
+  - '[[2026-05-14-google-oauth-W01-P02-closeout-exec]]'
+  - '[[2026-05-14-google-oauth-W01-P02-foundation-exec]]'
+  - '[[2026-05-14-google-oauth-W01-P02-google-drive-exec]]'
+  - '[[2026-05-14-google-oauth-W01-P06-S01-S02-S28-exec]]'
+  - '[[2026-05-14-google-oauth-audit]]'
 ---
 
 # `google-oauth` feature index
@@ -40,11 +53,24 @@ Auto-generated index of all documents tagged with `#google-oauth`.
 ### audit
 
 - `2026-05-06-google-oauth-audit` - `google-oauth` audit: `google-oauth teardown audit: pre-excision baseline`
+- `2026-05-14-google-oauth-audit` - `google-oauth` UX walkthrough audit (2026-05-14)
 
 ### exec
 
 - `2026-05-13-google-oauth-W01-P01-S00-exec` - `google-oauth` `W01.P01.S00`
 - `2026-05-13-google-oauth-W01-P01-S01-exec` - `google-oauth` `W01.P01.S01`
+- `2026-05-13-google-oauth-W01-P01-S16-exec` - `google-oauth` `W01.P01.S16`
+- `2026-05-14-google-oauth-W01-P01-S05-S13-exec` - `google-oauth` `W01.P01.S05+S13`
+- `2026-05-14-google-oauth-W01-P01-S08-S09-S12-exec` - `google-oauth` `W01.P01.S08+S09+S12`
+- `2026-05-14-google-oauth-W01-P01-S17-exec` - `google-oauth` `W01.P01.S17`
+- `2026-05-14-google-oauth-W01-P01-cli-surface-exec` - `google-oauth` `W01.P01` CLI surface (S02+S04+S06+S07+S14 merged)
+- `2026-05-14-google-oauth-W01-P01-closeout-exec` - `google-oauth` `W01.P01` closeout (S15 + S18 + smoke-test re-add)
+- `2026-05-14-google-oauth-W01-P01-records-errors-exec` - `google-oauth` `W01.P01` records + errors + registry (S03 + S10 + S11)
+- `2026-05-14-google-oauth-W01-P02-backends-exec` - `google-oauth` `W01.P02` backends (S06+S08+S10+S11+S12 merged for both backends)
+- `2026-05-14-google-oauth-W01-P02-closeout-exec` - `google-oauth` `W01.P02` closeout (S09+S14+S15+S16+S17 merged)
+- `2026-05-14-google-oauth-W01-P02-foundation-exec` - `google-oauth` `W01.P02` foundation (S01+S02+S03+S04+S05 merged)
+- `2026-05-14-google-oauth-W01-P02-google-drive-exec` - `google-oauth` `W01.P02.S07+S18` — GoogleDriveProvider
+- `2026-05-14-google-oauth-W01-P06-S01-S02-S28-exec` - `google-oauth` `W01.P06.S01+S02+S28` — substrate enumeration + SourceKind drift acknowledgement
 
 ### plan
 

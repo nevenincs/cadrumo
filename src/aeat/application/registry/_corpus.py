@@ -9,7 +9,7 @@ from typing import cast, get_args
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.config import Settings, load_settings
-from ...core.i18n import tr
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, output_language, tr
 from ...core.logging import get_logger
 from ...domain.manuals import (
     ManualId,
@@ -310,11 +310,12 @@ def list_registry_citations(
     command: RegistryCitationsListCommand | None = None,
     *,
     topic_catalogue: TopicCatalogue | None = None,
+    locale: str | None = None,
 ) -> RegistryCitationsListReport:
     """Return topic-backed citation references from the local corpus."""
 
     resolved_command = command or RegistryCitationsListCommand()
-    topics = _topic_projections(topic_catalogue)
+    topics = _topic_projections(topic_catalogue, locale=locale)
     catalogue = load_normative_catalogue()
     references = tuple(catalogue.references.values())
     if resolved_command.tag is not None:
@@ -322,6 +323,15 @@ def list_registry_citations(
         references = tuple(reference for reference in references if needle in {tag.lower() for tag in reference.tags})
     rows = tuple(
         _citation_reference_projection(reference, topics=topics) for reference in sorted(references, key=_ref_id)
+    )
+    _LOGGER.info(
+        "registry.citations.list",
+        extra={
+            "registry_service": "registry.citations.list",
+            "registry_reference_count": len(rows),
+            "registry_topic_count": len(topics),
+            "registry_tag_filter": resolved_command.tag or "",
+        },
     )
     return RegistryCitationsListReport(
         reference_count=len(rows),
@@ -336,13 +346,35 @@ def show_registry_citation(
     command: RegistryCitationShowCommand,
     *,
     topic_catalogue: TopicCatalogue | None = None,
+    locale: str | None = None,
 ) -> RegistryCitationShowReport:
     """Return one topic-backed citation reference from the local corpus."""
 
-    topics = _topic_projections(topic_catalogue)
+    topics = _topic_projections(topic_catalogue, locale=locale)
     catalogue = load_normative_catalogue()
-    reference = find_reference(catalogue, command.normative_id)
-    article = find_articulo(catalogue, reference.id, command.articulo) if command.articulo is not None else None
+    try:
+        reference = find_reference(catalogue, command.normative_id)
+        article = find_articulo(catalogue, reference.id, command.articulo) if command.articulo is not None else None
+    except Exception:
+        _LOGGER.warning(
+            "registry.citations.show failed",
+            extra={
+                "registry_service": "registry.citations.show",
+                "registry_normative_id": command.normative_id,
+                "registry_articulo": command.articulo or "",
+            },
+            exc_info=True,
+        )
+        raise
+    _LOGGER.info(
+        "registry.citations.show",
+        extra={
+            "registry_service": "registry.citations.show",
+            "registry_normative_id": command.normative_id,
+            "registry_articulo": command.articulo or "",
+            "registry_topic_count": len(topics),
+        },
+    )
     return RegistryCitationShowReport(
         reference=_citation_reference_projection(reference, topics=topics),
         articulo=(
@@ -363,10 +395,11 @@ def show_registry_citation(
 def verify_registry_citations(
     *,
     topic_catalogue: TopicCatalogue | None = None,
+    locale: str | None = None,
 ) -> RegistryCitationsVerificationReport:
     """Verify the local citation corpus and return a typed application report."""
 
-    topics = _topic_projections(topic_catalogue)
+    topics = _topic_projections(topic_catalogue, locale=locale)
     report = verify_normative_catalogue()
     reference_count = 0
     try:
@@ -394,17 +427,28 @@ def list_registry_manuals(
     *,
     settings: Settings | None = None,
     topic_catalogue: TopicCatalogue | None = None,
+    locale: str | None = None,
 ) -> RegistryManualsListReport:
     """Return discovered local manual parts as a typed application report."""
 
     resolved_command = command or RegistryManualsListCommand()
-    topics = _topic_projections(topic_catalogue)
+    topics = _topic_projections(topic_catalogue, locale=locale)
     parts = _discover_manual_parts(settings=settings)
     if resolved_command.manual is not None:
         parts = tuple(entry for entry in parts if entry[0] == resolved_command.manual)
     if resolved_command.year is not None:
         parts = tuple(entry for entry in parts if entry[1] == resolved_command.year)
     rows = tuple(_manual_part_projection(*entry) for entry in parts)
+    _LOGGER.info(
+        "registry.manuals.list",
+        extra={
+            "registry_service": "registry.manuals.list",
+            "registry_manual_filter": resolved_command.manual.value if resolved_command.manual is not None else "",
+            "registry_year_filter": resolved_command.year if resolved_command.year is not None else "",
+            "registry_part_count": len(rows),
+            "registry_topic_count": len(topics),
+        },
+    )
     return RegistryManualsListReport(
         manual_filter=resolved_command.manual.value if resolved_command.manual is not None else None,
         year_filter=resolved_command.year,
@@ -420,18 +464,38 @@ def show_registry_manual(
     *,
     settings: Settings | None = None,
     topic_catalogue: TopicCatalogue | None = None,
+    locale: str | None = None,
 ) -> RegistryManualShowReport:
     """Return one local manual part as a typed application report."""
 
-    topics = _topic_projections(topic_catalogue)
+    topics = _topic_projections(topic_catalogue, locale=locale)
     manual_id = _domain_manual_id(command.manual)
     try:
         manual = load_manual(manual_id, command.year, command.part, settings=settings)
     except ManualNotFoundError:
         if command.section is not None:
             manual_key = f"{command.manual.value}/{command.year}/{command.part.value}"
+            _LOGGER.warning(
+                "registry.manuals.show refused section without extracted structure",
+                extra={
+                    "registry_service": "registry.manuals.show",
+                    "registry_manual_id": command.manual.value,
+                    "registry_year": command.year,
+                    "registry_part": command.part.value,
+                    "registry_section": command.section,
+                    "registry_structure_available": False,
+                },
+            )
             raise RegistryApplicationInputError(
-                f"manual section requires extracted structure: {manual_key}"
+                f"manual section requires extracted structure: {manual_key}",
+                context={
+                    "registry_service": "registry.manuals.show",
+                    "manual_id": command.manual.value,
+                    "year": command.year,
+                    "part": command.part.value,
+                    "section": command.section,
+                    "structure_available": False,
+                },
             ) from None
         manifest, _part_root = _load_manual_manifest(
             manual_id=manual_id,
@@ -460,7 +524,28 @@ def show_registry_manual(
             None,
         )
         if matched is None:
-            raise RegistryApplicationInputError(f"manual section not found: {command.section!r}")
+            _LOGGER.warning(
+                "registry.manuals.show refused unknown section",
+                extra={
+                    "registry_service": "registry.manuals.show",
+                    "registry_manual_id": command.manual.value,
+                    "registry_year": command.year,
+                    "registry_part": command.part.value,
+                    "registry_section": command.section,
+                    "registry_structure_available": True,
+                },
+            )
+            raise RegistryApplicationInputError(
+                f"manual section not found: {command.section!r}",
+                context={
+                    "registry_service": "registry.manuals.show",
+                    "manual_id": command.manual.value,
+                    "year": command.year,
+                    "part": command.part.value,
+                    "section": command.section,
+                    "structure_available": True,
+                },
+            )
         section_projection = RegistryManualSectionProjection(
             section_id=matched.section_id,
             title=matched.title,
@@ -487,10 +572,11 @@ def list_registry_manual_rules(
     *,
     settings: Settings | None = None,
     topic_catalogue: TopicCatalogue | None = None,
+    locale: str | None = None,
 ) -> RegistryManualRulesReport:
     """Return manual rules as a typed application report."""
 
-    topics = _topic_projections(topic_catalogue)
+    topics = _topic_projections(topic_catalogue, locale=locale)
     kind = _manual_rule_kind(command.kind)
     manual_id = _domain_manual_id(command.manual)
     try:
@@ -528,10 +614,11 @@ def verify_registry_manual(
     *,
     settings: Settings | None = None,
     topic_catalogue: TopicCatalogue | None = None,
+    locale: str | None = None,
 ) -> RegistryManualVerificationReport:
     """Verify one local manual part and return a typed application report."""
 
-    topics = _topic_projections(topic_catalogue)
+    topics = _topic_projections(topic_catalogue, locale=locale)
     manual_id = _domain_manual_id(command.manual)
     report = verify_manual_dir(
         manual_id=manual_id,
@@ -542,19 +629,48 @@ def verify_registry_manual(
     return _manual_verification_report(report, topics=topics)
 
 
-def _topic_projections(topic_catalogue: TopicCatalogue | None) -> tuple[RegistryTopicProjection, ...]:
+def _topic_projections(
+    topic_catalogue: TopicCatalogue | None,
+    *,
+    locale: str | None,
+) -> tuple[RegistryTopicProjection, ...]:
     catalogue = topic_catalogue or load_topic_catalogue()
-    return tuple(_topic_projection(topic) for topic in catalogue.topics)
+    resolved_locale = _registry_topic_locale(locale)
+    return tuple(_topic_projection(topic, locale=resolved_locale) for topic in catalogue.topics)
 
 
-def _topic_projection(topic: Topic) -> RegistryTopicProjection:
+def _topic_projection(topic: Topic, *, locale: str) -> RegistryTopicProjection:
     return RegistryTopicProjection(
         slug=topic.slug,
-        title=tr(topic.title_key),
-        body=tr(topic.body_key),
+        title=tr(topic.title_key, locale=locale),
+        body=tr(topic.body_key, locale=locale),
         see_also=topic.see_also,
         legal_refs=topic.legal_refs,
     )
+
+
+def _registry_topic_locale(locale: str | None) -> str:
+    if locale is None:
+        return output_language()
+    normalized = locale.lower().strip()
+    if normalized not in SUPPORTED_OUTPUT_LANGUAGES:
+        _LOGGER.warning(
+            "registry.topic locale refused",
+            extra={
+                "registry_service": "registry.topics",
+                "registry_locale": locale,
+                "registry_allowed_locales": SUPPORTED_OUTPUT_LANGUAGES,
+            },
+        )
+        raise RegistryApplicationInputError(
+            f"registry topic locale must be one of {SUPPORTED_OUTPUT_LANGUAGES!r}; got {locale!r}",
+            context={
+                "registry_service": "registry.topics",
+                "locale": locale,
+                "allowed_locales": SUPPORTED_OUTPUT_LANGUAGES,
+            },
+        )
+    return normalized
 
 
 def _citation_reference_projection(
@@ -684,7 +800,22 @@ def registry_manual_id(value: str | RegistryManualId | ManualId) -> RegistryManu
         return RegistryManualId(raw)
     except ValueError as exc:
         allowed = tuple(item.value for item in RegistryManualId)
-        raise RegistryApplicationInputError(f"registry manual must be one of {allowed!r}; got {raw!r}") from exc
+        _LOGGER.warning(
+            "registry.manuals refused unknown manual id",
+            extra={
+                "registry_service": "registry.manuals",
+                "registry_manual_id": raw,
+                "registry_allowed_manual_ids": allowed,
+            },
+        )
+        raise RegistryApplicationInputError(
+            f"registry manual must be one of {allowed!r}; got {raw!r}",
+            context={
+                "registry_service": "registry.manuals",
+                "manual_id": raw,
+                "allowed_manual_ids": allowed,
+            },
+        ) from exc
 
 
 def _domain_manual_id(manual_id: RegistryManualId) -> ManualId:
@@ -696,7 +827,22 @@ def _manual_rule_kind(kind: str | None) -> RuleKind | None:
         return None
     allowed = tuple(str(value) for value in get_args(RuleKind))
     if kind not in allowed:
-        raise RegistryApplicationInputError(f"manual rule kind must be one of {allowed!r}; got {kind!r}")
+        _LOGGER.warning(
+            "registry.manuals.rules refused unknown rule kind",
+            extra={
+                "registry_service": "registry.manuals.rules",
+                "registry_rule_kind": kind,
+                "registry_allowed_rule_kinds": allowed,
+            },
+        )
+        raise RegistryApplicationInputError(
+            f"manual rule kind must be one of {allowed!r}; got {kind!r}",
+            context={
+                "registry_service": "registry.manuals.rules",
+                "rule_kind": kind,
+                "allowed_rule_kinds": allowed,
+            },
+        )
     return cast(RuleKind, kind)
 
 

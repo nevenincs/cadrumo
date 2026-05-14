@@ -11,11 +11,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
+
+from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-
-_RUNNER = CliRunner()
 
 
 def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -57,13 +56,11 @@ def test_config_set_then_config_get_round_trips_iva_regime(
     _isolate(monkeypatch, tmp_path)
     _seed_active_profile()
 
-    from aeat.entrypoints.cli import app
-
-    set_via_config = _RUNNER.invoke(app, ["config", "profile", "set", "iva.regime", "GENERAL"])
+    set_via_config = invoke_cached_cli(["config", "profile", "set", "iva.regime", "GENERAL"])
     assert set_via_config.exit_code == 0, set_via_config.output
     assert "GENERAL" in set_via_config.output
 
-    get_via_config = _RUNNER.invoke(app, ["config", "profile", "get", "iva.regime"])
+    get_via_config = invoke_cached_cli(["config", "profile", "get", "iva.regime"])
     assert get_via_config.exit_code == 0, get_via_config.output
     assert "GENERAL" in get_via_config.output
 
@@ -91,12 +88,10 @@ def test_config_set_then_config_status_surfaces_assigned_value(
     _isolate(monkeypatch, tmp_path)
     _seed_active_profile()
 
-    from aeat.entrypoints.cli import app
-
-    set_via_config = _RUNNER.invoke(app, ["config", "profile", "set", "iva.regime", "SIMPLIFICADO"])
+    set_via_config = invoke_cached_cli(["config", "profile", "set", "iva.regime", "SIMPLIFICADO"])
     assert set_via_config.exit_code == 0, set_via_config.output
 
-    status_result = _RUNNER.invoke(app, ["config", "profile", "status"])
+    status_result = invoke_cached_cli(["config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output
     assert "SIMPLIFICADO" in status_result.output
 
@@ -110,8 +105,6 @@ def test_config_set_refuses_unknown_key_with_typed_error(
     _isolate(monkeypatch, tmp_path)
     _seed_active_profile()
 
-    from aeat.entrypoints.cli import app
-
-    result = _RUNNER.invoke(app, ["config", "profile", "set", "not.a.real.key", "value"])
+    result = invoke_cached_cli(["config", "profile", "set", "not.a.real.key", "value"])
     assert result.exit_code != 0
     assert "not.a.real.key" in result.output

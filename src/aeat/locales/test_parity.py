@@ -28,8 +28,6 @@ def locales_state(manager):
     return codebase_keys, locale_keys_map, files
 
 
-@pytest.mark.unit
-@pytest.mark.domain_application
 def test_locale_integrity(manager):
     """Test 3: No duplicate keys, sections, or unparseable data."""
     files = list(manager.locales_dir.glob("*.yml"))
@@ -59,8 +57,6 @@ def _namespace_covers(key: str, prefix: str) -> bool:
     return f".{prefix}." in f".{key}."
 
 
-@pytest.mark.unit
-@pytest.mark.domain_application
 def test_codebase_to_locale_parity(locales_state, manager):
     """Test 1: Parity between the codebase truth and the localizations.
 
@@ -94,8 +90,6 @@ def test_codebase_to_locale_parity(locales_state, manager):
         pytest.fail("\n".join(errors))
 
 
-@pytest.mark.unit
-@pytest.mark.domain_application
 def test_codebase_namespaces_are_satisfied_by_locale_entries(locales_state, manager):
     """Every dynamic-namespace marker has at least one concrete locale entry."""
     _, locale_keys_map, _ = locales_state
@@ -116,8 +110,6 @@ def test_codebase_namespaces_are_satisfied_by_locale_entries(locales_state, mana
         pytest.fail("\n".join(errors))
 
 
-@pytest.mark.unit
-@pytest.mark.domain_application
 def test_inter_locale_parity(locales_state):
     """Test 2: Parity between localization files themselves."""
     _, locale_keys_map, files = locales_state

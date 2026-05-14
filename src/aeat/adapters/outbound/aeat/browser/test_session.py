@@ -267,7 +267,6 @@ async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Pat
 @pytest.mark.asyncio
 async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     """Certificate propagates into new_context kwargs and thumbprint marker."""
-    import os
     from datetime import UTC, datetime, timedelta
 
     from cryptography import x509
@@ -275,6 +274,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     from cryptography.hazmat.primitives.asymmetric import rsa
     from cryptography.hazmat.primitives.serialization import pkcs12
     from cryptography.x509.oid import NameOID
+    from pydantic import SecretStr
 
     from ..auth import (
         CERTIFICATE_CONTEXT_MARKER,
@@ -303,21 +303,21 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
         .not_valid_after(now + timedelta(days=365))
         .sign(key, hashes.SHA256())
     )
+    secret = SecretStr("pw")
     pfx_bytes = pkcs12.serialize_key_and_certificates(
         name=b"test",
         key=key,
         cert=cert,
         cas=None,
-        encryption_algorithm=serialization.BestAvailableEncryption(b"pw"),
+        encryption_algorithm=serialization.BestAvailableEncryption(secret.get_secret_value().encode("utf-8")),
     )
     bundle_path = tmp_path / "bundle.p12"
     bundle_path.write_bytes(pfx_bytes)
-    from pydantic import SecretStr
 
     loaded = load_certificate(
         CertificateBundle(
             path=bundle_path,
-            password=SecretStr("pw"),
+            password=secret,
             friendly_name=None,
             backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
         )
@@ -344,7 +344,7 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     assert isinstance(cc, list) and len(cc) == 1
     client_certificates = cast(list[dict[str, str]], cc)
     assert client_certificates[0]["pfxPath"] == str(bundle_path)
-    assert client_certificates[0]["passphrase"] == "pw"
+    assert client_certificates[0]["passphrase"] == secret.get_secret_value()
     marker = getattr(context, CERTIFICATE_CONTEXT_MARKER, None)
     assert marker == loaded.sha256_thumbprint
 

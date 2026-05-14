@@ -1,0 +1,161 @@
+"""Tests for manual ledger application contracts."""
+
+from __future__ import annotations
+
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+from pydantic import ValidationError
+
+from ...domain.transactions import (
+    BucketTransactionRef,
+    BusinessClassification,
+    RawProvenance,
+    RawTransaction,
+    SourceFormat,
+    Transaction,
+    TransactionDirection,
+)
+from . import ManualLedgerTransactionCommand, ManualLedgerTransactionResult
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
+    command = ManualLedgerTransactionCommand(
+        bucket_id=" bucket-a ",
+        booked_date=date(2026, 5, 1),
+        amount=Decimal("-121.00"),
+        currency=" eur ",
+        direction=TransactionDirection.OUTGOING,
+        counterparty=" Proveedor SL ",
+        description="  material oficina  ",
+        purchase_invoice_evidence_id=" evidence-1 ",
+        attachment_ids=(" attachment-1 ",),
+        actor=" kent ",
+        source_command=" aeat app ledger create ",
+    )
+
+    assert command.bucket_id == "bucket-a"
+    assert command.currency == "EUR"
+    assert command.counterparty == "Proveedor SL"
+    assert command.description == "material oficina"
+    assert command.purchase_invoice_evidence_id == "evidence-1"
+    assert command.attachment_ids == ("attachment-1",)
+    assert command.actor == "kent"
+    assert command.source_command == "aeat app ledger create"
+
+
+def test_manual_ledger_transaction_command_enforces_mixed_business_percentage() -> None:
+    with pytest.raises(ValidationError, match="business_pct is required"):
+        ManualLedgerTransactionCommand(
+            bucket_id="bucket-a",
+            booked_date=date(2026, 5, 1),
+            amount=Decimal("-121.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="mixed expense",
+            business_classification=BusinessClassification.MIXED,
+        )
+
+
+def test_manual_ledger_transaction_command_rejects_multi_purchase_evidence_value() -> None:
+    with pytest.raises(ValidationError, match="purchase_invoice_evidence_id"):
+        ManualLedgerTransactionCommand.model_validate(
+            {
+                "bucket_id": "bucket-a",
+                "booked_date": date(2026, 5, 1),
+                "amount": Decimal("-121.00"),
+                "direction": TransactionDirection.OUTGOING,
+                "description": "duplicate evidence",
+                "purchase_invoice_evidence_id": ("evidence-1", "evidence-2"),
+            }
+        )
+
+
+def test_manual_ledger_transaction_command_rejects_duplicate_attachment_ids() -> None:
+    with pytest.raises(ValidationError, match="identifier tuple must not contain duplicates"):
+        ManualLedgerTransactionCommand(
+            bucket_id="bucket-a",
+            booked_date=date(2026, 5, 1),
+            amount=Decimal("-121.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="duplicate evidence",
+            attachment_ids=("evidence-1", " evidence-1 "),
+        )
+
+
+def test_manual_ledger_transaction_command_rejects_zero_amount_rows() -> None:
+    with pytest.raises(ValidationError, match="amount must be non-zero"):
+        ManualLedgerTransactionCommand(
+            bucket_id="bucket-a",
+            booked_date=date(2026, 5, 1),
+            amount=Decimal("0"),
+            direction=TransactionDirection.INCOMING,
+            description="zero value evidence belongs on an existing row",
+        )
+
+
+def test_manual_ledger_transaction_command_enforces_direction_sign_policy() -> None:
+    with pytest.raises(ValidationError, match=r"OUTGOING.*negative"):
+        ManualLedgerTransactionCommand(
+            bucket_id="bucket-a",
+            booked_date=date(2026, 5, 1),
+            amount=Decimal("121.00"),
+            direction=TransactionDirection.OUTGOING,
+            description="positive outgoing is invalid",
+        )
+
+    with pytest.raises(ValidationError, match=r"INCOMING.*positive"):
+        ManualLedgerTransactionCommand(
+            bucket_id="bucket-a",
+            booked_date=date(2026, 5, 1),
+            amount=Decimal("-121.00"),
+            direction=TransactionDirection.INCOMING,
+            description="negative incoming is invalid",
+        )
+
+
+def test_manual_ledger_transaction_command_rejects_tax_payload_on_internal_transfer() -> None:
+    with pytest.raises(ValidationError, match=r"INTERNAL_TRANSFER.*tax or evidence fields"):
+        ManualLedgerTransactionCommand(
+            bucket_id="bucket-a",
+            booked_date=date(2026, 5, 1),
+            amount=Decimal("121.00"),
+            direction=TransactionDirection.INTERNAL_TRANSFER,
+            description="move between own accounts",
+            taxable_base=Decimal("100.00"),
+        )
+
+
+def test_manual_ledger_transaction_result_requires_matching_strict_shapes() -> None:
+    raw = RawTransaction(
+        transaction_id="manual-row-1",
+        booked_date=date(2026, 5, 1),
+        value_date=date(2026, 5, 1),
+        amount=Decimal("-121.00"),
+        currency="EUR",
+        counterparty="Proveedor SL",
+        description="manual ledger row",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="e" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=datetime(2026, 5, 1, 12, 0, tzinfo=UTC),
+            provider_name="manual",
+        ),
+        raw_fields={"source": "manual"},
+    )
+    transaction = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
+    result = ManualLedgerTransactionResult(
+        ref=BucketTransactionRef(bucket_id="bucket-a", transaction_id=transaction.transaction_id),
+        transaction=transaction,
+        bucket_event_ids=("event-1",),
+    )
+
+    assert result.ref.bucket_id == "bucket-a"
+    assert result.ref.transaction_id == transaction.transaction_id
+    assert result.transaction.raw.provenance.source_format is SourceFormat.MANUAL
+    assert result.bucket_event_ids == ("event-1",)
