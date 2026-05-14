@@ -248,54 +248,76 @@ def bindings_list(
         typer.Option("--as-of", help=tr("cli.app.modelo.bindings.as_of_help")),
     ] = None,
 ) -> None:
-    """List required and available binding keys for a modelo / year / period.
+    """List bindings across modelos. All filters are optional refinements.
 
-    With ``--missing`` the list is filtered to bindings whose source
-    is not constant-valued (every non-``constant_value`` binding
-    requires runtime data from the bucket / ledger / profile /
-    prior filing / live observation to resolve).
+    With no filter, the full configured-binding set across every modelo
+    in the registry is returned. ``--modelo`` narrows to one modelo;
+    ``--year`` + ``--period`` further narrow to that revision; ``--missing``
+    filters to bindings whose source is not constant-valued.
     """
 
-    _require_binding_scope(modelo=modelo, year=year, period=period)
-    assert modelo is not None
-    assert year is not None
-    assert period is not None
-    scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
-    report = _run_query(lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of)))
-    rows = report.rows
-    if missing:
-        rows = tuple(row for row in rows if row.source != "constant_value")
+    service = _service()
+    targets: tuple[str, ...]
+    if modelo is None:
+        targets = tuple(str(m.id) for m in service._authority.modelos)
+    else:
+        targets = (modelo,)
+    scoped_period = (
+        f"{year}-{period}" if year is not None and period is not None and not period.startswith(str(year)) else period
+    )
+    per_modelo_reports = []
+    for target in targets:
+        try:
+            report = _run_query(
+                lambda code=target: service.bindings(code, period=scoped_period, as_of=_as_of(as_of))
+            )
+        except Exception:
+            if modelo is not None:
+                raise
+            continue
+        per_modelo_reports.append(report)
+    merged_rows: list[dict[str, object]] = []
+    text_rows: list[str] = []
+    for report in per_modelo_reports:
+        rows = report.rows
+        if missing:
+            rows = tuple(row for row in rows if row.source != "constant_value")
+        for row in rows:
+            merged_rows.append(
+                {
+                    "modelo": report.code,
+                    "revision": report.revision,
+                    "filing_year": report.filing_year,
+                    "period": report.period,
+                    "binding_id": row.binding_id,
+                    "source": row.source,
+                    "readiness": _readiness_for_source(row.source),
+                    "typed_enum": row.typed_enum,
+                }
+            )
+            text_rows.append(
+                f"{report.code}\t{report.revision}\t{report.period or '-'}\t"
+                f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}"
+            )
     payload = {
         "operation": "registry.modelo.bindings.list",
-        "modelo": report.code,
-        "revision": report.revision,
-        "filing_year": report.filing_year,
-        "period": report.period,
+        "modelo_filter": modelo,
+        "year_filter": year,
+        "period_filter": period,
         "missing_filter": missing,
-        "binding_count": len(rows),
-        "bindings": [
-            {
-                "binding_id": row.binding_id,
-                "source": row.source,
-                "readiness": _readiness_for_source(row.source),
-                "typed_enum": row.typed_enum,
-            }
-            for row in rows
-        ],
+        "binding_count": len(merged_rows),
+        "bindings": merged_rows,
     }
     lines = [
         "operation\tregistry.modelo.bindings.list",
-        f"modelo\t{report.code}",
-        f"revision\t{report.revision}",
-        f"filing_year\t{report.filing_year}",
-        f"period\t{report.period}",
+        f"modelo_filter\t{modelo or '-'}",
+        f"year_filter\t{year if year is not None else '-'}",
+        f"period_filter\t{period or '-'}",
         f"missing_filter\t{missing}",
-        f"binding_count\t{len(rows)}",
-        "binding_id\tsource\treadiness\ttyped_enum",
+        f"binding_count\t{len(merged_rows)}",
+        "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum",
     ]
-    lines.extend(
-        f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}" for row in rows
-    )
+    lines.extend(text_rows)
     _emit(ctx, payload, lines)
 
 

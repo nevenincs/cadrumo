@@ -19,7 +19,7 @@ Directory shape per part root::
 
 For IVA (``ManualPart.SINGLE``) the ``<part_root>`` is
 ``corpus/manuals/iva/<year>/``; for Renta the part root is nested
-inside a ``parte1`` or ``parte2-deducciones-autonomicas`` directory.
+inside the canonical ``ManualPart`` directory value.
 """
 
 from __future__ import annotations

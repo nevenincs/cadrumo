@@ -3706,7 +3706,7 @@ This Phase exposes the manual ledger lifecycle under aeat app ledger as thin com
 - [x] `W61.P305.S1827` - Expose edit classify allocate and proportionality commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W61.P305.S1828` - Expose attach remove reset stash archive and export commands under aeat app ledger; `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W61.P305.S1829` - Delegate every manual ledger command to centralized backend services and schema emitters; `src/aeat/entrypoints/cli, src/aeat/application/ledger`.
-- [ ] `W61.P305.S1830` - Validate command vocabulary help text and boundary inventory for manual ledger lifecycle; `src/aeat/entrypoints/cli, src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W61.P305.S1830` - Validate command vocabulary help text and boundary inventory for manual ledger lifecycle; `src/aeat/entrypoints/cli, src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ## Wave `W62` - topic corpus registry harvest
 
@@ -3716,8 +3716,8 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-cap
 
 This Phase binds topic catalogue behavior to approved registry services.
 
-- [ ] `W62.P306.S1831` - Read the topic catalogue, registry citations, manuals, and apex ADR requirements before editing; `.vault/adr`.
-- [ ] `W62.P306.S1832` - Implement strict Pydantic application registry contracts that consume `TopicCatalogue` and expose typed citation and manual projections; `src/aeat/application/registry`.
+- [x] `W62.P306.S1831` - Read the topic catalogue, registry citations, manuals, and apex ADR requirements before editing; `.vault/adr`.
+- [x] `W62.P306.S1832` - Implement strict Pydantic application registry contracts that consume `TopicCatalogue` and expose typed citation and manual projections; `src/aeat/application/registry`.
 - [ ] `W62.P306.S1833` - Resolve topic i18n keys through the central locale backend without embedding prose in CLI handlers; `src/aeat/application/registry`.
 - [ ] `W62.P306.S1834` - Record registry service errors and log fields through the central error and logging drivers; `src/aeat/application/registry, src/aeat/core`.
 
