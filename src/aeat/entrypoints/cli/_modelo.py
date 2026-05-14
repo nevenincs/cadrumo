@@ -186,6 +186,32 @@ def _readiness_for_source(source: str) -> str:
     return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
 
 
+def _parse_kv_spec[T](
+    spec: str,
+    *,
+    flag: str,
+    key_label: str = "KEY",
+    value_label: str = "VALUE",
+    transform: Callable[[str], T],
+) -> tuple[str, T]:
+    """Parse a ``KEY=VALUE`` CLI spec into ``(key, transform(value))``.
+
+    Centralises the shape every override flag shares: split on the
+    first ``=``, require a non-empty key, hand the right-hand side to
+    a flag-specific transform. ``flag``/``key_label``/``value_label``
+    feed the :class:`typer.BadParameter` messages so each call site
+    keeps its own operator-facing wording.
+    """
+
+    if "=" not in spec:
+        raise typer.BadParameter(f"{flag} must be {key_label}={value_label}; got {spec!r}")
+    key, _, value = spec.partition("=")
+    key = key.strip()
+    if not key:
+        raise typer.BadParameter(f"{flag} key must be non-empty; got {spec!r}")
+    return key, transform(value)
+
+
 def _parse_binding_override(spec: str) -> tuple[str, str]:
     """Parse a ``--binding KEY=VALUE`` spec into a ``(key, value)`` pair.
 
@@ -194,13 +220,8 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
     the raw value flows through unchanged so the bindings-
     resolution layer downstream can coerce it per source type.
     """
-    if "=" not in spec:
-        raise typer.BadParameter(f"--binding must be KEY=VALUE; got {spec!r}")
-    key, _, value = spec.partition("=")
-    key = key.strip()
-    if not key:
-        raise typer.BadParameter(f"--binding key must be non-empty; got {spec!r}")
-    return key, value
+
+    return _parse_kv_spec(spec, flag="--binding", transform=lambda value: value)
 
 
 @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
@@ -731,13 +752,7 @@ def _filing_record_lines(record: FilingRecord) -> list[str]:
 
 
 def _parse_casilla_override(spec: str) -> tuple[str, str]:
-    if "=" not in spec:
-        raise typer.BadParameter(f"--casilla must be ID=VALUE; got {spec!r}")
-    key, _, value = spec.partition("=")
-    key = key.strip()
-    if not key:
-        raise typer.BadParameter(f"--casilla key must be non-empty; got {spec!r}")
-    return key, value.strip()
+    return _parse_kv_spec(spec, flag="--casilla", key_label="ID", transform=str.strip)
 
 
 @work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
@@ -973,17 +988,19 @@ def work_file(
 
 
 def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
-    if "=" not in spec:
-        raise typer.BadParameter(f"--set must be CASILLA=DECIMAL; got {spec!r}")
-    key, _, value = spec.partition("=")
-    key = key.strip()
-    if not key:
-        raise typer.BadParameter(f"--set key must be non-empty; got {spec!r}")
-    try:
-        decimal_value = Decimal(value.strip())
-    except (InvalidOperation, ValueError) as exc:
-        raise typer.BadParameter(f"--set value must be a decimal; got {value!r}") from exc
-    return key, decimal_value
+    def _to_decimal(value: str) -> Decimal:
+        try:
+            return Decimal(value.strip())
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(f"--set value must be a decimal; got {value!r}") from exc
+
+    return _parse_kv_spec(
+        spec,
+        flag="--set",
+        key_label="CASILLA",
+        value_label="DECIMAL",
+        transform=_to_decimal,
+    )
 
 
 @work_app.command("amend", help=tr("cli.app.modelo.work.amend_help"))
