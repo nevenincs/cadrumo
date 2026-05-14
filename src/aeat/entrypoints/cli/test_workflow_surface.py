@@ -278,7 +278,7 @@ def test_config_repair_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch
     assert "registry.load" in text_result.output
     payload = json.loads(_json_output(json_result))
     assert payload["registry"]["available"] is True
-    assert "registry.load" in {check["identity.name"] for check in payload["checks"]}
+    assert "registry.load" in {check["name"] for check in payload["checks"]}
     assert logs_result.exit_code == 0, logs_result.output
     assert "path\t" in logs_result.output
 

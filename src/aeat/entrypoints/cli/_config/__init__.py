@@ -631,7 +631,12 @@ def config_init(
     tax_id: str = typer.Option(..., "--tax-id", help=tr("cli.config.init.tax_id_help")),
     activity: str = typer.Option(..., "--activity", help=tr("cli.config.init.activity_help")),
     iva_regime: str = typer.Option(..., "--iva-regime", help=tr("cli.config.init.iva_regime_help")),
-    tax_residence_ccaa: str | None = typer.Option(None, "--tax-residence", help=tr("cli.config.init.tax_residence_ccaa_help")),
+    tax_residence_ccaa: str | None = typer.Option(
+        None,
+        "--tax-residence-ccaa",
+        "--tax-residence",
+        help=tr("cli.config.init.tax_residence_ccaa_help"),
+    ),
     auth_provider: str = typer.Option("none", "--auth-provider", help=tr("cli.config.init.auth_provider_help")),
     certificate_path: Path | None = typer.Option(None, "--certificate-path", help=tr("cli.config.init.certificate_path_help")),
     certificate_password_env: str | None = typer.Option(None, "--certificate-password-env", help=tr("cli.config.init.certificate_password_env_help")),
@@ -641,6 +646,11 @@ def config_init(
     manuals_root: Path | None = typer.Option(None, "--manuals-root", help=tr("cli.config.init.manuals_root_help")),
     from_path: Path | None = typer.Option(None, "--from", help=tr("cli.config.init.from_help")),
     non_interactive: bool = typer.Option(False, "--non-interactive", help=tr("cli.config.init.non_interactive_help")),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        help=tr("cli.config.init.quiet_help", default="Skip the success message after init."),
+    ),
     dry_run: bool = typer.Option(False, "--dry-run", help=tr("cli.config.init.dry_run_help")),
 ) -> None:
     """Initialize a new active profile and config bucket."""
@@ -669,12 +679,15 @@ def config_init(
     )
     result = initialize_workspace(command)
     payload = result.model_dump(mode="json")
-    lines = (
+    lines: tuple[str, ...] = (
         f"profile_id\t{result.profile_id}",
         f"bucket_id\t{result.bucket_id}",
         f"auth_configured\t{result.auth_configured}",
-        tr("cli.config.init.success.next_step", default="Próximo paso: ejecuta `aeat app overview status`")
     )
+    if not quiet:
+        lines = lines + (
+            tr("cli.config.init.success.next_step", default="Próximo paso: ejecuta `aeat app overview status`"),
+        )
     _emit(ctx, payload, lines)
 
 
