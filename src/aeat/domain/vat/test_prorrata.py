@@ -29,6 +29,7 @@ from aeat.domain.vat._prorrata import (
     ProrrataInputDeduction,
     ProrrataInputs,
     ProrrataKind,
+    ProrrataReference,
     ProrrataRegime,
     ProrrataResult,
     ProrrataSector,
@@ -38,6 +39,7 @@ from aeat.domain.vat._prorrata import (
     is_especial_mandatory,
     requires_sectoral_separation,
     sum_deductible_amounts,
+    validate_prorrata_reference,
 )
 from aeat.domain.vat.errors import ProrrataInputError, ProrrataSectorError
 
@@ -416,6 +418,49 @@ def test_result_definitiva_rejects_non_annual_period() -> None:
         )
 
 
+def test_validate_prorrata_reference_accepts_canonical_general_reference() -> None:
+    reference = validate_prorrata_reference("prorrata:2026:provisional:general")
+
+    assert isinstance(reference, ProrrataReference)
+    assert reference.reference_id == "prorrata:2026:provisional:general"
+    assert reference.year == 2026
+    assert reference.kind is ProrrataKind.PROVISIONAL
+    assert reference.regime is ProrrataRegime.GENERAL
+    assert reference.sector_id is None
+
+
+def test_validate_prorrata_reference_accepts_sectoral_reference() -> None:
+    reference = validate_prorrata_reference("prorrata:2026:definitiva:especial:sector-retail")
+
+    assert reference.reference_id == "prorrata:2026:definitiva:especial:sector-retail"
+    assert reference.kind is ProrrataKind.DEFINITIVA
+    assert reference.regime is ProrrataRegime.ESPECIAL
+    assert reference.sector_id == "sector-retail"
+
+
+def test_validate_prorrata_reference_rejects_usage_ratio_and_malformed_values() -> None:
+    for reference_id in (
+        "telefonia_movil",
+        "usage_ratio:telefonia_movil",
+        "prorrata:1999:provisional:general",
+        "prorrata:2026:usage_ratio_personal:general",
+        "prorrata:2026:provisional:usage_ratio_personal",
+        "prorrata:2026:provisional:general:sector with spaces",
+    ):
+        with pytest.raises(ProrrataInputError):
+            validate_prorrata_reference(reference_id)
+
+
+def test_prorrata_reference_schema_rejects_noncanonical_payload() -> None:
+    with pytest.raises(ValidationError, match=r"does not match canonical"):
+        ProrrataReference(
+            reference_id="prorrata:2026:definitiva:general",
+            year=2026,
+            kind=ProrrataKind.PROVISIONAL,
+            regime=ProrrataRegime.GENERAL,
+        )
+
+
 def test_compute_general_rejects_year_out_of_range() -> None:
     inputs = ProrrataInputs(
         operaciones_con_derecho_deduccion=Decimal("100"),
@@ -425,6 +470,21 @@ def test_compute_general_rejects_year_out_of_range() -> None:
         compute_prorrata_general(inputs, year=1999, kind=ProrrataKind.DEFINITIVA)
     with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000..2100"):
         compute_prorrata_general(inputs, year=2101, kind=ProrrataKind.DEFINITIVA)
+
+
+def test_compute_general_rejects_invalid_period_with_prorrata_error() -> None:
+    inputs = ProrrataInputs(
+        operaciones_con_derecho_deduccion=Decimal("100"),
+        operaciones_sin_derecho_deduccion=Decimal("0"),
+    )
+
+    with pytest.raises(ProrrataInputError, match=r"invalid prorrata result window"):
+        compute_prorrata_general(
+            inputs,
+            year=2026,
+            kind=ProrrataKind.DEFINITIVA,
+            period="Q1",
+        )
 
 
 def test_classify_input_rejects_negative_vat_amount() -> None:

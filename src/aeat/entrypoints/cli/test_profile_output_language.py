@@ -8,17 +8,14 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from typer.testing import CliRunner
 
-from . import app
+from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_RUNNER = CliRunner()
-
 
 def _invoke(args: list[str]):
-    return _RUNNER.invoke(app, args)
+    return invoke_cached_cli(args)
 
 
 def _json_output(result: Any) -> str:

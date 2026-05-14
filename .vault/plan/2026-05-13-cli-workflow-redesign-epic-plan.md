@@ -3718,23 +3718,23 @@ This Phase binds topic catalogue behavior to approved registry services.
 
 - [x] `W62.P306.S1831` - Read the topic catalogue, registry citations, manuals, and apex ADR requirements before editing; `.vault/adr`.
 - [x] `W62.P306.S1832` - Implement strict Pydantic application registry contracts that consume `TopicCatalogue` and expose typed citation and manual projections; `src/aeat/application/registry`.
-- [ ] `W62.P306.S1833` - Resolve topic i18n keys through the central locale backend without embedding prose in CLI handlers; `src/aeat/application/registry`.
-- [ ] `W62.P306.S1834` - Record registry service errors and log fields through the central error and logging drivers; `src/aeat/application/registry, src/aeat/core`.
+- [x] `W62.P306.S1833` - Resolve topic i18n keys through the central locale backend without embedding prose in CLI handlers; `src/aeat/application/registry`.
+- [x] `W62.P306.S1834` - Record registry service errors and log fields through the central error and logging drivers; `src/aeat/application/registry, src/aeat/core`.
 
 ### Phase `W62.P307` - rejected path removal
 
 This Phase removes command collisions and shadow backend paths that compete with registry-owned topic help.
 
-- [ ] `W62.P307.S1835` - Delete any remaining topic or help command registrations outside `aeat app registry`; `src/aeat/entrypoints/cli`.
-- [ ] `W62.P307.S1836` - Remove tests that assert rejected topic or help-root behavior; `tests/entrypoints/cli`.
-- [ ] `W62.P307.S1837` - Ensure topic catalogue code has no Typer application or command-local rendering path; `src/aeat/application/topics`.
-- [ ] `W62.P307.S1838` - Update backend boundary inventory so topic corpus ownership is registry-only; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W62.P307.S1835` - Delete any remaining topic or help command registrations outside `aeat app registry`; `src/aeat/entrypoints/cli`.
+- [x] `W62.P307.S1836` - Remove tests that assert rejected topic or help-root behavior; `tests/entrypoints/cli`.
+- [x] `W62.P307.S1837` - Ensure topic catalogue code has no Typer application or command-local rendering path; `src/aeat/application/topics`.
+- [x] `W62.P307.S1838` - Update backend boundary inventory so topic corpus ownership is registry-only; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W62.P308` - verification and cli exposure
 
 This Phase proves registry topic behavior through real services and exposes only approved registry commands.
 
-- [ ] `W62.P308.S1839` - Add service tests for topic-backed citation and manual projections; `tests/application/registry`.
+- [x] `W62.P308.S1839` - Add service tests for topic-backed citation and manual projections; `tests/application/registry`.
 - [ ] `W62.P308.S1840` - Add CLI behavior tests for `aeat app registry citations` and `aeat app registry manuals` output through `_emit`; `tests/entrypoints/cli`.
 - [ ] `W62.P308.S1841` - Expose topic-backed registry results without implementing lookup or formatting logic in CLI handlers; `src/aeat/entrypoints/cli/registry.py`.
 - [ ] `W62.P308.S1842` - Validate that rejected topic/help command vocabulary is absent from help text and command discovery; `tests/entrypoints/cli`.

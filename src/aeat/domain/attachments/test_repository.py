@@ -31,7 +31,7 @@ def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> It
         dispose_engine()
 
 
-def _attachment(body: bytes, *, tx_id: str = "tx-001") -> Attachment:
+def _attachment(body: bytes, *, tx_id: str = "tx-001", bucket_id: str = "bucket-a") -> Attachment:
     digest = hashlib.sha256(body).hexdigest()
     return Attachment(
         attachment_id=digest,
@@ -43,6 +43,9 @@ def _attachment(body: bytes, *, tx_id: str = "tx-001") -> Attachment:
         bytes_size=len(body),
         captured_at=datetime(2026, 4, 27, 10, 0, tzinfo=UTC),
         linked_transaction_ids=(tx_id,),
+        bucket_id=bucket_id,
+        captured_by="operator-A",
+        source_command="aeat app ledger attach",
         notes="deductible invoice",
     )
 
@@ -58,7 +61,11 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(tmp_path: Path) ->
     assert store.read_bytes(digest) == body
     with store.open_bytes(digest) as handle:
         assert handle.read() == body
-    assert store.load_manifest(digest) == attachment
+    loaded = store.load_manifest(digest)
+    assert loaded == attachment
+    assert loaded.captured_by == "operator-A"
+    assert loaded.source_command == "aeat app ledger attach"
+    assert loaded.bucket_id == "bucket-a"
     assert tuple(store.iter_manifests()) == (attachment,)
     store.verify_blob(digest)
 

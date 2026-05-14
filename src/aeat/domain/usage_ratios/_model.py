@@ -11,9 +11,11 @@ import time from :data:`aeat.domain.categories.CATEGORY_PROFILES_2025`.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
+from types import MappingProxyType
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ..categories import (
     CATEGORY_PROFILES_2025,
@@ -25,7 +27,9 @@ from ._errors import UsageRatioValidationError
 __all__ = [
     "ELIGIBLE_USAGE_RATIO_CATEGORIES",
     "UsageRatioProfile",
+    "UsageRatioReference",
     "resolve_user_ratio",
+    "validate_usage_ratio_reference",
 ]
 
 
@@ -65,22 +69,21 @@ class UsageRatioProfile(BaseModel):
     to identical bytes — a property relied on when the encrypted envelope is
     git-tracked.
 
-    ``frozen=True`` prevents attribute reassignment but does not freeze the
-    inner mapping. Callers must treat :attr:`ratios` as read-only and use
+    The inner mapping is frozen after validation. Callers use
     :meth:`with_ratio` / :meth:`without_ratio` to derive new profiles.
 
     Attributes:
-        ratios: Mapping from :class:`aeat.domain.categories.SpendingCategory`
+        ratios: Frozen mapping from :class:`aeat.domain.categories.SpendingCategory`
             to a :class:`~decimal.Decimal` in ``[0, 1]``.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    ratios: dict[SpendingCategory, Decimal] = Field(default_factory=dict)
+    ratios: Mapping[SpendingCategory, Decimal] = Field(default_factory=dict)
 
     @field_validator("ratios", mode="after")
     @classmethod
-    def _validate_bounds(cls, value: dict[SpendingCategory, Decimal]) -> dict[SpendingCategory, Decimal]:
+    def _validate_bounds(cls, value: Mapping[SpendingCategory, Decimal]) -> Mapping[SpendingCategory, Decimal]:
         # Pydantic strict-mode Decimal handling rejects NaN / Infinity before this
         # validator runs (both via JSON parse and via Python constructor); the
         # bound check here covers the remaining domain.
@@ -90,7 +93,11 @@ class UsageRatioProfile(BaseModel):
         # Canonicalise key order so two equal profiles serialise to identical bytes.
         # operator's ``var/financial/usage-ratios.json`` is a candidate for git-tracking;
         # stable ordering prevents spurious diffs when ratios are toggled.
-        return {category: value[category] for category in sorted(value, key=lambda c: c.value)}
+        return MappingProxyType({category: value[category] for category in sorted(value, key=lambda c: c.value)})
+
+    @field_serializer("ratios")
+    def _serialize_ratios(self, value: Mapping[SpendingCategory, Decimal]) -> dict[SpendingCategory, Decimal]:
+        return dict(value)
 
     @model_validator(mode="after")
     def _validate_eligibility(self) -> UsageRatioProfile:
@@ -146,3 +153,58 @@ def resolve_user_ratio(profile: UsageRatioProfile, category: SpendingCategory) -
         The user-configured ratio, or ``None`` if the category has no override.
     """
     return profile.ratios.get(category)
+
+
+class UsageRatioReference(BaseModel):
+    """Validated reference from one ledger transaction to a usage-ratio profile entry."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    usage_ratio_id: str = Field(min_length=1, max_length=128)
+    category: SpendingCategory
+    ratio: Decimal
+
+
+def validate_usage_ratio_reference(
+    profile: UsageRatioProfile,
+    *,
+    category_id: str | None,
+    usage_ratio_id: str,
+    business_pct: Decimal | None = None,
+) -> UsageRatioReference:
+    """Validate a ledger transaction's usage-ratio reference against ``profile``.
+
+    Usage-ratio profiles are keyed by :class:`SpendingCategory`; therefore a
+    persisted ledger reference must be the concrete category value, not a CLI
+    alias or a parallel identifier. When a row also carries ``business_pct``,
+    the percentage must match the referenced profile ratio so the stored
+    transaction fact and its proportionality source cannot drift.
+    """
+
+    if category_id is None:
+        raise UsageRatioValidationError("usage_ratio_id requires category_id on the ledger transaction")
+    try:
+        category = SpendingCategory(category_id)
+    except ValueError as exc:
+        raise UsageRatioValidationError(f"category_id {category_id!r} is not a spending category") from exc
+    try:
+        ratio_category = SpendingCategory(usage_ratio_id)
+    except ValueError as exc:
+        raise UsageRatioValidationError(
+            f"usage_ratio_id {usage_ratio_id!r} must be a concrete eligible spending category"
+        ) from exc
+    if ratio_category is not category:
+        raise UsageRatioValidationError(
+            "usage_ratio_id must match the ledger transaction category_id because "
+            "usage-ratio profiles are category-keyed"
+        )
+    if ratio_category not in ELIGIBLE_USAGE_RATIO_CATEGORIES:
+        raise UsageRatioValidationError(f"usage_ratio_id {usage_ratio_id!r} is not eligible for usage ratios")
+    ratio = resolve_user_ratio(profile, ratio_category)
+    if ratio is None:
+        raise UsageRatioValidationError(f"usage_ratio_id {usage_ratio_id!r} is not configured in the active bucket")
+    if business_pct is not None and business_pct != ratio:
+        raise UsageRatioValidationError(
+            f"business_pct {business_pct} does not match usage_ratio_id {usage_ratio_id!r} ratio {ratio}"
+        )
+    return UsageRatioReference(usage_ratio_id=usage_ratio_id, category=ratio_category, ratio=ratio)

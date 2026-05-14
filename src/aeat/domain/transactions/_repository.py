@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...adapters.persistence.storage.envelope._envelope import Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 from ...core.classification import SensitivityClass
 from ...core.logging import get_logger
 from ._errors import LedgerStorageError
@@ -167,13 +167,24 @@ class TransactionCatalogueRepository:
         The on-disk database value is an encrypted BLOB at FINANCIAL
         class. No plaintext transaction row lands on disk.
         """
+        self._objects.save_many((self.to_secure_object_write(catalogue),))
+        _log.info(
+            "saved transaction catalogue bucket_id=%s object_key=%s entries=%d",
+            self._bucket_id,
+            self._object_key,
+            len(catalogue.transactions),
+        )
+
+    def to_secure_object_write(self, catalogue: TransactionCatalogue) -> SecureObjectWrite:
+        """Return the secure-object upsert for ``catalogue`` without committing it."""
+
         envelope = Envelope[TransactionCatalogue](
             schema_version=_TX_CATALOGUE_VERSION,
             written_at=datetime.now(UTC),
             classification=SensitivityClass.FINANCIAL,
             payload=catalogue,
         )
-        self._objects.save(
+        return SecureObjectWrite(
             namespace=TX_BUCKET_NAMESPACE,
             object_key=self._object_key,
             classification=SensitivityClass.FINANCIAL,
@@ -181,11 +192,21 @@ class TransactionCatalogueRepository:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
+
+    def save_with_secure_object_writes(
+        self,
+        catalogue: TransactionCatalogue,
+        extra_writes: tuple[SecureObjectWrite, ...],
+    ) -> None:
+        """Persist ``catalogue`` plus related secure objects in one unit of work."""
+
+        self._objects.save_many((self.to_secure_object_write(catalogue), *extra_writes))
         _log.info(
-            "saved transaction catalogue bucket_id=%s object_key=%s entries=%d",
+            "saved transaction catalogue bucket_id=%s object_key=%s entries=%d extra_writes=%d",
             self._bucket_id,
             self._object_key,
             len(catalogue.transactions),
+            len(extra_writes),
         )
 
     def merge_raw_transactions(

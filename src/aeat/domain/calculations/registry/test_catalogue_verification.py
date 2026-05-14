@@ -116,8 +116,8 @@ def test_renta_manual_sources_match_manifest() -> None:
     _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}
     manual_roots = (
-        PROJECT_ROOT / "corpus" / "manuals" / "renta" / "2025" / "parte1",
-        PROJECT_ROOT / "corpus" / "manuals" / "renta" / "2025" / "parte2-deducciones-autonomicas",
+        PROJECT_ROOT / "corpus" / "manuals" / "renta" / "2025" / "part1",
+        PROJECT_ROOT / "corpus" / "manuals" / "renta" / "2025" / "part2-deducciones-autonomicas",
     )
     checked: list[str] = []
 

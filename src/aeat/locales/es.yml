@@ -375,15 +375,9 @@ cli:
       header: MOVIMIENTOS DEL LIBRO CONTABLE
       help: Listar movimientos del libro en el bucket del perfil activo
     errors:
-      auto_detect_failed: Fallo en la detección automática del formato del libro
       confirm_required: Pasa --yes para confirmar esta operación destructiva del libro, o usa --dry-run primero
       filter_parse_error: Fallo al analizar el filtro del libro
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
-      invalid_source: 'El archivo del libro no se puede importar: {reason}'
-      invalid_source_unknown: origen no válido
-      n26_auto_detect_failed: Fallo en la detección automática del formato de N26
-      source_not_found: 'No se ha encontrado el archivo de origen: {source}'
-      unknown_provider: Proveedor de libro contable desconocido
     import:
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
       help: Importar extractos bancarios o registros al libro contable

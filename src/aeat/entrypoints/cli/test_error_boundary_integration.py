@@ -23,21 +23,17 @@ that lock the test to the authoritative registry record.
 from __future__ import annotations
 
 import pytest
-from typer.testing import CliRunner
+
+from aeat.tests.cli_runner import invoke_cached_cli
 
 from ...core.errors import (
     ErrorCategory,
     get_error_exit_code,
     get_registered_error_code,
 )
-from . import app
 from ._log_levels import LogLevelResolutionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-
-# Typer's CliRunner merges sys.stderr into result.output by default so that
-# write_stderr() calls in _emit_error_and_exit are captured in result.output.
-_RUNNER = CliRunner()
 
 # ---------------------------------------------------------------------------
 # Precondition: confirm the registry record the tests depend on.
@@ -109,7 +105,7 @@ def test_log_level_resolution_error_exits_refused(
     if env_key is not None and env_val is not None:
         monkeypatch.setenv(env_key, env_val)
 
-    result = _RUNNER.invoke(app, args, catch_exceptions=False)
+    result = invoke_cached_cli(args, catch_exceptions=False)
 
     assert result.exit_code == _REFUSED_EXIT, (
         f"CLI boundary did not produce the REFUSED exit for {trigger_description!r}: "

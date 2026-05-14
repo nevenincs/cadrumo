@@ -18,10 +18,9 @@ Concrete models:
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal
-from typing import Annotated, Literal, Self
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core.i18n import Translatable as tr
 from ...domain.invoices import Invoice
@@ -133,51 +132,20 @@ field as the discriminator. Validate via
 """
 
 
-class LedgerSplit(BaseModel):
-    """Review metadata for a mixed-use ledger row."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-    business_share: Decimal
-    personal_share: Decimal
-    reason: str = ""
-    updated_at: datetime = Field(default_factory=utc_now)
-
-    @field_validator("business_share", "personal_share")
-    @classmethod
-    def _share_in_unit_interval(cls, value: Decimal) -> Decimal:
-        if value < Decimal("0") or value > Decimal("1"):
-            raise ValueError("split shares must be within 0..1")
-        return value
-
-    @field_validator("reason")
-    @classmethod
-    def _trim_reason(cls, value: str) -> str:
-        return value.strip()
-
-    @model_validator(mode="after")
-    def _shares_sum_to_one(self) -> Self:
-        if self.business_share + self.personal_share != Decimal("1"):
-            raise ValueError("split shares must sum to 1")
-        return self
-
-
 class LedgerReviewRecord(BaseModel):
-    """Workflow annotations for one persisted transaction."""
+    """Workflow attention annotation for one persisted transaction.
+
+    Durable transaction facts are not stored here. Classification,
+    category, business percentage, tax fields, evidence references,
+    skip/final-disposition state, and corrections live on the
+    bucket-scoped transaction catalogue.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     transaction_id: str = Field(min_length=1)
-    skipped: bool = False
-    split: LedgerSplit | None = None
-    fields: dict[str, str] = Field(default_factory=dict)
     history: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)
-
-    @field_validator("fields")
-    @classmethod
-    def _normalise_fields(cls, value: dict[str, str]) -> dict[str, str]:
-        return {_normalise_key(str(key)): str(raw).strip() for key, raw in value.items()}
 
 
 class InvoiceReviewRecord(BaseModel):

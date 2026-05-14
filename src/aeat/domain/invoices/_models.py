@@ -120,6 +120,9 @@ def _normalise_invoice_enum_fields(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def _normalise_invoice_string_fields(payload: dict[str, Any]) -> dict[str, Any]:
+    if "bucket_id" in payload and isinstance(payload["bucket_id"], str):
+        normalized_bucket = payload["bucket_id"].strip()
+        payload["bucket_id"] = normalized_bucket or None
     if "invoice_number" in payload and isinstance(payload["invoice_number"], str):
         payload["invoice_number"] = payload["invoice_number"].strip().upper()
     if "counterparty_name" in payload and isinstance(payload["counterparty_name"], str):
@@ -303,6 +306,7 @@ class Invoice(BaseModel):
     model_config = _STRICT_FROZEN
 
     invoice_id: str = Field(min_length=_HEX_INVOICE_ID_LENGTH, max_length=_HEX_INVOICE_ID_LENGTH)
+    bucket_id: str | None = Field(default=None, min_length=1, max_length=128)
     kind: InvoiceKind
     invoice_number: str = Field(min_length=1)
     issued_at: date

@@ -20,9 +20,9 @@ from pydantic_settings import SettingsConfigDict
 
 from aeat.core.config import PROJECT_ROOT, CertificateBackendSetting, Settings
 
-ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+
+ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
 
 
 def _parse_env_example_vars() -> set[str]:

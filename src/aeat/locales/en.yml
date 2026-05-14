@@ -344,15 +344,9 @@ cli:
       header: ACCOUNTING LEDGER TRANSACTIONS
       help: List ledger transactions in the active profile bucket
     errors:
-      auto_detect_failed: Auto-detection of ledger format failed
       confirm_required: Pass --yes to confirm this destructive ledger operation, or use --dry-run first
       filter_parse_error: Failed to parse ledger filter
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
-      invalid_source: 'The ledger file cannot be imported: {reason}'
-      invalid_source_unknown: invalid source
-      n26_auto_detect_failed: Auto-detection of N26 format failed
-      source_not_found: 'Source file not found: {source}'
-      unknown_provider: Unknown ledger provider
     import:
       dry_run_help: Run the import in dry-run mode (without saving)
       help: Import bank statements or records into the accounting ledger

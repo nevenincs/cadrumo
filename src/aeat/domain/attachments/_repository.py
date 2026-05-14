@@ -9,7 +9,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
@@ -42,7 +42,12 @@ def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
 class AttachmentStore(BaseModel):
     """Encrypted SQL-backed content-addressed attachment store."""
 
-    model_config = _STRICT_FROZEN
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
+
+    objects: SecureObjectRepository | None = Field(default=None, exclude=True, repr=False)
+
+    def _objects_repo(self) -> SecureObjectRepository:
+        return self.objects or SecureObjectRepository()
 
     @property
     def blobs_dir(self) -> Path:
@@ -75,7 +80,7 @@ class AttachmentStore(BaseModel):
         """Write ``data`` under its SHA-256 digest if not already present."""
 
         digest = hashlib.sha256(data).hexdigest()
-        objects = SecureObjectRepository()
+        objects = self._objects_repo()
         if objects.exists(_ATTACHMENT_BLOB_NAMESPACE, digest):
             _LOGGER.debug("reusing existing attachment object for %s", digest)
             return digest
@@ -108,7 +113,7 @@ class AttachmentStore(BaseModel):
         except OSError as exc:
             raise AttachmentPersistenceError(f"unable to read attachment source: {source}") from exc
         digest = hasher.hexdigest()
-        SecureObjectRepository().save(
+        self._objects_repo().save(
             namespace=_ATTACHMENT_BLOB_NAMESPACE,
             object_key=digest,
             classification=SensitivityClass.FINANCIAL,
@@ -123,7 +128,7 @@ class AttachmentStore(BaseModel):
         """Return the raw bytes for ``sha256``."""
 
         digest = _require_digest(sha256, field_name="sha256")
-        record = SecureObjectRepository().load(
+        record = self._objects_repo().load(
             _ATTACHMENT_BLOB_NAMESPACE,
             digest,
             expected_class=SensitivityClass.FINANCIAL,
@@ -155,7 +160,7 @@ class AttachmentStore(BaseModel):
             classification=SensitivityClass.FINANCIAL,
             payload=attachment,
         )
-        SecureObjectRepository().save(
+        self._objects_repo().save(
             namespace=_ATTACHMENT_MANIFEST_NAMESPACE,
             object_key=attachment.attachment_id,
             classification=SensitivityClass.FINANCIAL,
@@ -169,7 +174,7 @@ class AttachmentStore(BaseModel):
         """Load and validate the manifest for ``attachment_id``."""
 
         digest = _require_digest(attachment_id)
-        record = SecureObjectRepository().load(
+        record = self._objects_repo().load(
             _ATTACHMENT_MANIFEST_NAMESPACE,
             digest,
             expected_class=SensitivityClass.FINANCIAL,
@@ -194,7 +199,7 @@ class AttachmentStore(BaseModel):
         """Iterate over every manifest in sorted attachment-id order."""
 
         manifests: list[Attachment] = []
-        for record in SecureObjectRepository().list_records(
+        for record in self._objects_repo().list_records(
             _ATTACHMENT_MANIFEST_NAMESPACE,
             expected_class=SensitivityClass.FINANCIAL,
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,

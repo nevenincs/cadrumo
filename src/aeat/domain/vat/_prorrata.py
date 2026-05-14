@@ -67,6 +67,8 @@ from pydantic import (
     ConfigDict,
     Field,
     StringConstraints,
+    ValidationError,
+    field_validator,
     model_validator,
 )
 
@@ -218,6 +220,42 @@ class ProrrataResult(_ProrrataStrictFrozen):
         return self
 
 
+class ProrrataReference(_ProrrataStrictFrozen):
+    """Stable identifier for a persisted IVA prorrata percentage.
+
+    References use the canonical shape
+    ``prorrata:{year}:{kind}:{regime}``, with an optional sector suffix
+    ``:{sector_id}`` for sectoral-separation cases. The reference is a
+    pointer to a legal IVA prorrata substrate value; it is not a
+    proportional-use ratio and it is not derived from usage-ratio data.
+    """
+
+    reference_id: str = Field(min_length=1, max_length=128)
+    year: Annotated[int, Field(ge=2000, le=2100)]
+    kind: ProrrataKind
+    regime: ProrrataRegime
+    sector_id: SectorId | None = None
+
+    @field_validator("reference_id")
+    @classmethod
+    def _trim_reference_id(cls, value: str) -> str:
+        return value.strip()
+
+    @model_validator(mode="after")
+    def _reference_id_matches_fields(self) -> ProrrataReference:
+        expected = _canonical_prorrata_reference_id(
+            year=self.year,
+            kind=self.kind,
+            regime=self.regime,
+            sector_id=self.sector_id,
+        )
+        if self.reference_id != expected:
+            raise ProrrataInputError(
+                f"prorrata reference {self.reference_id!r} does not match canonical value {expected!r}"
+            )
+        return self
+
+
 class ProrrataInputDeduction(_ProrrataStrictFrozen):
     """One per-input deductibility decision under prorrata especial.
 
@@ -244,6 +282,60 @@ def _validate_year(year: int) -> int:
     if year < 2000 or year > 2100:
         raise ProrrataInputError(f"year out of supported range 2000..2100: {year}")
     return year
+
+
+def _canonical_prorrata_reference_id(
+    *,
+    year: int,
+    kind: ProrrataKind,
+    regime: ProrrataRegime,
+    sector_id: SectorId | None = None,
+) -> str:
+    base = f"prorrata:{year}:{kind.value}:{regime.value}"
+    return f"{base}:{sector_id}" if sector_id is not None else base
+
+
+def validate_prorrata_reference(reference_id: str) -> ProrrataReference:
+    """Parse and validate a legal IVA prorrata reference id.
+
+    The accepted id shape is ``prorrata:{year}:{kind}:{regime}``, plus
+    an optional ``:{sector_id}`` suffix. Values from the expense
+    proportionality/usage-ratio substrate intentionally fail this
+    parser; callers must keep both concepts separate.
+    """
+
+    normalized = reference_id.strip()
+    parts = normalized.split(":")
+    if len(parts) not in (4, 5) or parts[0] != "prorrata":
+        raise ProrrataInputError(
+            "prorrata_reference must use canonical shape "
+            "'prorrata:{year}:{kind}:{regime}' or "
+            "'prorrata:{year}:{kind}:{regime}:{sector_id}'"
+        )
+    try:
+        year = int(parts[1])
+    except ValueError as exc:
+        raise ProrrataInputError(f"prorrata_reference year must be an integer: {parts[1]!r}") from exc
+    _validate_year(year)
+    try:
+        kind = ProrrataKind(parts[2])
+    except ValueError as exc:
+        raise ProrrataInputError(f"unknown prorrata_reference kind: {parts[2]!r}") from exc
+    try:
+        regime = ProrrataRegime(parts[3])
+    except ValueError as exc:
+        raise ProrrataInputError(f"unknown prorrata_reference regime: {parts[3]!r}") from exc
+    sector_id = parts[4] if len(parts) == 5 else None
+    try:
+        return ProrrataReference(
+            reference_id=normalized,
+            year=year,
+            kind=kind,
+            regime=regime,
+            sector_id=sector_id,
+        )
+    except ValidationError as exc:
+        raise ProrrataInputError(f"invalid prorrata_reference: {normalized!r}") from exc
 
 
 def _compute_percentage_general(inputs: ProrrataInputs) -> Decimal:
@@ -288,15 +380,18 @@ def compute_prorrata_general(
 
     _validate_year(year)
     percentage = _compute_percentage_general(inputs)
-    return ProrrataResult(
-        regime=ProrrataRegime.GENERAL,
-        kind=kind,
-        percentage=percentage,
-        inputs=inputs,
-        sector_id=sector_id,
-        year=year,
-        period=period,
-    )
+    try:
+        return ProrrataResult(
+            regime=ProrrataRegime.GENERAL,
+            kind=kind,
+            percentage=percentage,
+            inputs=inputs,
+            sector_id=sector_id,
+            year=year,
+            period=period,
+        )
+    except ValidationError as exc:
+        raise ProrrataInputError(f"invalid prorrata result window: year={year} period={period!r}") from exc
 
 
 def _deductible_percentage_for(
@@ -459,6 +554,7 @@ __all__ = (
     "ProrrataInputDeduction",
     "ProrrataInputs",
     "ProrrataKind",
+    "ProrrataReference",
     "ProrrataRegime",
     "ProrrataResult",
     "ProrrataSector",
@@ -468,4 +564,5 @@ __all__ = (
     "is_especial_mandatory",
     "requires_sectoral_separation",
     "sum_deductible_amounts",
+    "validate_prorrata_reference",
 )

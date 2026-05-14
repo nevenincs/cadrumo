@@ -368,15 +368,9 @@ cli:
       header: MOVIMENTS DEL LLIBRE COMPTABLE
       help: Llistar moviments del llibre al bucket del perfil actiu
     errors:
-      auto_detect_failed: Fallada en la detecció automàtica del format del llibre
       confirm_required: Passa --yes per confirmar aquesta operació destructiva del llibre, o usa --dry-run primer
       filter_parse_error: Fallada en analitzar el filtre del llibre
       invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}'
-      invalid_source: 'No es pot importar el fitxer del llibre: {reason}'
-      invalid_source_unknown: origen no vàlid
-      n26_auto_detect_failed: Fallada en la detecció automàtica del format de N26
-      source_not_found: 'No s''ha trobat el fitxer d''origen: {source}'
-      unknown_provider: Proveïdor de llibre comptable desconegut
     import:
       dry_run_help: Executar la importació en mode de prova (sense desar)
       help: Importar extractes bancaris o registres al llibre comptable

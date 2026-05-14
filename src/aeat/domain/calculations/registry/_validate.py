@@ -37,6 +37,15 @@ from ._text import normalise_corpus_text
 if TYPE_CHECKING:
     from ...user_profile._schema import ProfileSchemaDefinition
 
+_CatalogueCacheKey = tuple[int, int, str | None]
+_CatalogueCacheValue = tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], tuple[str, ...]]
+_CATALOGUE_FAILURE_CACHE: dict[_CatalogueCacheKey, _CatalogueCacheValue] = {}
+
+
+@lru_cache(maxsize=4096)
+def _normalise_required_text(text: str) -> str:
+    return normalise_corpus_text(text)
+
 
 def _duplicates(values: Iterable[str]) -> set[str]:
     seen: set[str] = set()
@@ -100,6 +109,13 @@ class RegistryValidator:
     def _validate_catalogues(self) -> tuple[str, ...]:
         if self._catalogue_failures is not None:
             return self._catalogue_failures
+        source_root_key = str(self._source_root.expanduser().resolve()) if self._source_root is not None else None
+        cache_key = (id(self._legal), id(self._sources), source_root_key)
+        cached = _CATALOGUE_FAILURE_CACHE.get(cache_key)
+        if cached is not None and cached[0] is self._legal and cached[1] is self._sources:
+            self._catalogue_failures = cached[2]
+            return self._catalogue_failures
+
         failures: list[str] = []
         try:
             verify_legal_catalogue(self._legal, source_root=self._source_root)
@@ -111,6 +127,7 @@ class RegistryValidator:
             except RegistryValidationError as exc:
                 failures.append(str(exc))
         self._catalogue_failures = tuple(failures)
+        _CATALOGUE_FAILURE_CACHE[cache_key] = (self._legal, self._sources, self._catalogue_failures)
         return self._catalogue_failures
 
     def _validate_modelo(self, modelo: ModeloDefinition, *, validate_catalogues: bool) -> list[str]:
@@ -1478,7 +1495,7 @@ class RegistryValidator:
                 failures.append(f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}")
                 continue
             for required in citation.required_text:
-                if normalise_corpus_text(required) not in source_text:
+                if _normalise_required_text(required) not in source_text:
                     failures.append(
                         f"{scope}: {owner} source citation {citation.source_ref!r} missing text {required!r}"
                     )

@@ -6,9 +6,9 @@ Removes one or more pieces of operator-local state behind an explicit
 - ``PROFILE``: clears every operator profile pointer and deletes each
   persisted profile bucket.
 - ``AUTH``: clears the persisted auth session and provider metadata.
-- ``DATA``: quarantines every undecryptable secure-objects row plus
-  every readable one whose namespace belongs to the operator's data
-  (transactions, invoices, drafts) so the operator can start fresh.
+- ``DATA``: quarantines undecryptable secure-object rows only. It
+  does not delete readable ledger data; bucket-local ledger reset is
+  owned by the ledger backend so finalized modelo protections can run.
 - ``ALL``: combines the three scopes above.
 
 Each scope writes one log line through the project's standard

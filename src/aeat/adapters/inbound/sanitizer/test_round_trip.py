@@ -31,8 +31,9 @@ from pathlib import Path
 import pytest
 
 from aeat.tests import FIXTURES_DIR
+from aeat.tests._justificante_parse_cache import parse_committed_justificante_fixture
 
-from ..justificante import Justificante, parse_justificante
+from ..justificante import Justificante
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
@@ -59,7 +60,7 @@ def _parsed_fixture_justificantes() -> dict[Path, Justificante]:
     Both round-trip tests below need the same parse for every fixture;
     a session-scoped cache halves the parse cost on this directory.
     """
-    return {pdf_path: parse_justificante(pdf_path) for pdf_path, _ in _FIXTURE_PAIRS}
+    return {pdf_path: parse_committed_justificante_fixture(pdf_path) for pdf_path, _ in _FIXTURE_PAIRS}
 
 
 @pytest.mark.parametrize(
