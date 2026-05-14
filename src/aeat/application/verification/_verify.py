@@ -17,7 +17,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
 )
-from ...domain.period import parse_canonical_period, period_end_date
+from ...domain.period import PeriodValidationError, parse_canonical_period, period_end_date
 from ._errors import VerificationError
 from ._schema import (
     ClassifiedDiscrepancy,
@@ -201,7 +201,7 @@ def _decimal_extracted_values(declaracion: DeclaracionObservation) -> dict[str, 
 def _registry_period(period: str, ejercicio: str | None) -> tuple[int, str]:
     try:
         return parse_canonical_period(period, ejercicio=ejercicio)
-    except ValueError as exc:
+    except PeriodValidationError as exc:
         raise RegistrySnapshotError(f"cannot map declaracion period {period!r}") from exc
 
 

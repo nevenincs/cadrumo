@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from functools import lru_cache
+from functools import cache, lru_cache
 from pathlib import Path
 
+from ....core.paths import PROJECT_ROOT
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._loader import load_registry_tree
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
@@ -137,3 +138,10 @@ def _load_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority
         _validated_modelos=set(),
         _snapshots={},
     )
+
+
+@cache
+def default_registry_authority() -> ValidatedRegistryAuthority:
+    """Return the process-wide registry authority anchored at PROJECT_ROOT."""
+
+    return ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
