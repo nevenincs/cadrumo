@@ -1383,6 +1383,278 @@ def _build_split_child_transaction(
     )
 
 
+def merge_transactions(
+    *,
+    bucket_id: str,
+    child_transaction_ids: tuple[str, ...],
+    actor: str,
+    source_command: str = "aeat app ledger merge",
+    reason: str = "",
+    transaction_repository: TransactionCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    occurred_at: datetime | None = None,
+) -> MergeTransactionsResult:
+    """Re-merge a complete cohort of split children into a fresh transaction.
+
+    Pre-conditions:
+    - At least two child ids supplied.
+    - All children exist in the catalogue.
+    - All children share the same ``split_group_id``.
+    - All children are currently ACTIVE.
+    - The parent recorded in each child's lineage is in SPLIT state.
+    - The cohort is complete — the children supplied must equal the
+      parent's recorded sibling set (no partial re-merge).
+    - Neither the parent nor any child is referenced by a finalized
+      modelo calculation.
+
+    Effect:
+    - Children transition ACTIVE -> ARCHIVED with a lifecycle lineage
+      entry recording the merge.
+    - Parent transitions SPLIT -> ARCHIVED with its lifecycle lineage
+      extended; the parent's split_lineage role=PARENT is preserved
+      for audit so the chain is reconstructable.
+    - A fresh transaction is persisted with a content-addressed id
+      derived from a synthesized ``merged:{split_group_id}`` provider
+      key plus the parent's amount / narrative / value_date, and
+      ``split_lineage`` role=MERGED carrying the merged child ids.
+    - One ``LEDGER_TRANSACTION_MERGED`` event is emitted, anchored on
+      the parent transaction id so ``for_object(parent_id)`` returns
+      the entire split + merge chain in chronological order.
+    - Catalogue + event are persisted atomically.
+    """
+
+    now = _normalise_timestamp(occurred_at)
+    trimmed_actor = _require_actor(actor, operation="ledger merge")
+    trimmed_source_command = _require_source_command(source_command, operation="ledger merge")
+    if len(child_transaction_ids) < 2:
+        raise TransactionValidationError(
+            "ledger merge requires at least two child transactions",
+            context={"bucket_id": bucket_id, "child_count": len(child_transaction_ids)},
+        )
+    if len(set(child_transaction_ids)) != len(child_transaction_ids):
+        raise TransactionValidationError(
+            "ledger merge child ids must be unique",
+            context={"bucket_id": bucket_id, "child_transaction_ids": tuple(child_transaction_ids)},
+        )
+
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    catalogue = repository.load()
+
+    children = tuple(_require_transaction(catalogue, child_id) for child_id in child_transaction_ids)
+    split_group_ids = {
+        child.split_lineage.split_group_id if child.split_lineage is not None else None for child in children
+    }
+    if None in split_group_ids or len(split_group_ids) != 1:
+        raise TransactionValidationError(
+            "ledger merge children must all share one split_group_id",
+            context={"bucket_id": bucket_id, "child_transaction_ids": tuple(child_transaction_ids)},
+        )
+    split_group_id = next(iter(split_group_ids))
+    for child in children:
+        if child.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            raise TransactionValidationError(
+                "ledger merge children must all be active",
+                context={
+                    "child_transaction_id": child.transaction_id,
+                    "lifecycle_state": child.lifecycle_state.value,
+                },
+            )
+        if child.split_lineage is None or child.split_lineage.role is not SplitRole.CHILD:
+            raise TransactionValidationError(
+                "ledger merge children must carry split_lineage role=CHILD",
+                context={"child_transaction_id": child.transaction_id},
+            )
+
+    # Locate the parent by scanning the catalogue for the unique transaction
+    # that carries split_lineage role=PARENT for this split_group_id.
+    parent_candidates = tuple(
+        transaction
+        for transaction in catalogue.transactions.values()
+        if transaction.split_lineage is not None
+        and transaction.split_lineage.role is SplitRole.PARENT
+        and transaction.split_lineage.split_group_id == split_group_id
+    )
+    if len(parent_candidates) != 1:
+        raise TransactionValidationError(
+            "ledger merge could not resolve a unique parent for the split_group_id",
+            context={
+                "bucket_id": bucket_id,
+                "split_group_id": split_group_id,
+                "candidate_count": len(parent_candidates),
+            },
+        )
+    parent = parent_candidates[0]
+    if parent.lifecycle_state is not TransactionLifecycleState.SPLIT:
+        raise TransactionValidationError(
+            "ledger merge parent must be in SPLIT state",
+            context={"parent_transaction_id": parent_id, "lifecycle_state": parent.lifecycle_state.value},
+        )
+    if parent.split_lineage is None or parent.split_lineage.role is not SplitRole.PARENT:
+        raise TransactionValidationError(
+            "ledger merge parent must carry split_lineage role=PARENT",
+            context={"parent_transaction_id": parent.transaction_id},
+        )
+    expected_children = set(parent.split_lineage.sibling_transaction_ids)
+    if expected_children != set(child_transaction_ids):
+        raise TransactionValidationError(
+            "ledger merge cohort is incomplete; every child of the split_group must be supplied",
+            context={
+                "parent_transaction_id": parent.transaction_id,
+                "expected_children": tuple(sorted(expected_children)),
+                "supplied": tuple(sorted(child_transaction_ids)),
+            },
+        )
+
+    # Finalized-modelo blocker — parent + every child.
+    transaction_ids_under_check = (parent.transaction_id, *child_transaction_ids)
+    blocking_pool: list[str] = []
+    for member_id in transaction_ids_under_check:
+        member = _require_transaction(catalogue, member_id)
+        blocking_pool.extend(_transaction_modelo_source_ids(member))
+    blockers = _blocking_modelo_references(
+        bucket_id=bucket_id,
+        transaction_ids=tuple(blocking_pool),
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+    if blockers:
+        _raise_finalized_modelo_blocked(
+            operation="ledger merge",
+            transaction_ids=tuple(blocking_pool),
+            blockers=blockers,
+        )
+
+    # Build the merged transaction. Its content-addressed id varies from
+    # the parent's because the synthesized provider_id is unique.
+    sorted_child_ids = tuple(sorted(child_transaction_ids))
+    parent_raw = parent.raw
+    merged_provider_id = f"merged:{split_group_id}"
+    merged_raw = RawTransaction(
+        transaction_id=merged_provider_id,
+        booked_date=parent_raw.booked_date,
+        value_date=parent_raw.value_date,
+        amount=parent_raw.amount,
+        currency=parent_raw.currency,
+        counterparty=parent_raw.counterparty,
+        description=parent_raw.description,
+        provenance=RawProvenance(
+            source_path=Path.cwd() / ".aeat-ledger-merge",
+            source_sha256=hashlib.sha256(merged_provider_id.encode("utf-8")).hexdigest(),
+            source_row_index=1,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=now,
+            provider_name="ledger-merge",
+        ),
+        raw_fields={
+            "parent_transaction_id": parent.transaction_id,
+            "split_group_id": split_group_id,
+            "merged_child_count": str(len(sorted_child_ids)),
+        },
+    )
+    merged_transaction = Transaction.model_validate(
+        {
+            "raw": merged_raw,
+            "direction": parent.direction,
+            "business_classification": BusinessClassification.NOT_YET_PROCESSED,
+            "created_by": trimmed_actor,
+            "source_command": trimmed_source_command,
+            "lifecycle_state": TransactionLifecycleState.ACTIVE,
+            "split_lineage": SplitLineage(
+                split_group_id=split_group_id,
+                role=SplitRole.MERGED,
+                sibling_transaction_ids=sorted_child_ids,
+            ),
+            "notes": "",
+        }
+    )
+    if merged_transaction.transaction_id in catalogue.transactions:
+        raise TransactionValidationError(
+            "ledger merge produced an id that already exists in the catalogue",
+            context={"merged_transaction_id": merged_transaction.transaction_id},
+        )
+
+    # Archive every child.
+    archived_children: list[Transaction] = []
+    for child in children:
+        transition = TransactionLifecycleLineageEntry(
+            previous_state=child.lifecycle_state,
+            state=TransactionLifecycleState.ARCHIVED,
+            actor=trimmed_actor,
+            source_command=trimmed_source_command,
+            changed_at=now,
+            reason=(reason.strip() or "merge"),
+        )
+        archived_children.append(
+            child.model_copy(
+                update={
+                    "lifecycle_state": TransactionLifecycleState.ARCHIVED,
+                    "lifecycle_lineage": (*child.lifecycle_lineage, transition),
+                }
+            )
+        )
+
+    # Archive the parent (preserves SplitLineage role=PARENT for audit).
+    parent_transition = TransactionLifecycleLineageEntry(
+        previous_state=parent.lifecycle_state,
+        state=TransactionLifecycleState.ARCHIVED,
+        actor=trimmed_actor,
+        source_command=trimmed_source_command,
+        changed_at=now,
+        reason=(reason.strip() or "merge"),
+    )
+    parent_after = parent.model_copy(
+        update={
+            "lifecycle_state": TransactionLifecycleState.ARCHIVED,
+            "lifecycle_lineage": (*parent.lifecycle_lineage, parent_transition),
+        }
+    )
+
+    event = _build_bucket_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_TRANSACTION_MERGED,
+        occurred_at=now,
+        actor=trimmed_actor,
+        object_id=parent.transaction_id,
+        payload={
+            "source_command": trimmed_source_command,
+            "reason": reason.strip(),
+            "split_group_id": split_group_id,
+            "parent_transaction_id": parent.transaction_id,
+            "merged_transaction_id": merged_transaction.transaction_id,
+            "source_child_ids": ",".join(sorted_child_ids),
+            "child_count": str(len(sorted_child_ids)),
+        },
+    )
+
+    updated_transactions = dict(catalogue.transactions)
+    updated_transactions[parent_after.transaction_id] = parent_after
+    for archived_child in archived_children:
+        updated_transactions[archived_child.transaction_id] = archived_child
+    updated_transactions[merged_transaction.transaction_id] = merged_transaction
+    new_catalogue = TransactionCatalogue.model_validate({"transactions": updated_transactions})
+
+    _save_transaction_catalogue_and_events(
+        transaction_repository=repository,
+        event_repository=event_repository,
+        catalogue=new_catalogue,
+        events=(event,),
+    )
+
+    return MergeTransactionsResult(
+        bucket_id=bucket_id,
+        split_group_id=split_group_id,
+        parent_transaction_id=parent.transaction_id,
+        merged_transaction_id=merged_transaction.transaction_id,
+        source_child_ids=sorted_child_ids,
+        merged_transaction=merged_transaction,
+        parent_transaction=parent_after,
+        bucket_event_id=event.event_id,
+    )
+
+
 def _transaction_repository(
     *,
     bucket_id: str,
