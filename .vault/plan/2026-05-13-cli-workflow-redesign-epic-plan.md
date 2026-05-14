@@ -3131,7 +3131,7 @@ This Phase delivers backend implementation for per modelo aggregation as require
 - [x] `W52.P256.S1533` - Wire application or domain services required by per modelo aggregation; `src/aeat/application/aggregation`.
 - [ ] `W52.P256.S1534` - Connect persistence, bucket events, registry data, or provider adapters required by per modelo aggregation; `src/aeat/application/aggregation`.
 - [x] `W52.P256.S1535` - Route existing backend functionality into the canonical service for per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P256.S1536` - Record service-level error codes and log fields for per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P256.S1536` - Record service-level error codes and log fields for per modelo aggregation; `src/aeat/application/aggregation`.
 
 ### Phase `W52.P257` - shadow duplicate removal
 
@@ -3159,12 +3159,12 @@ This Phase delivers de-shim and de-stub cleanup for per modelo aggregation as re
 
 This Phase delivers real behavior verification for per modelo aggregation as required by `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr`.
 
-- [ ] `W52.P259.S1549` - Add service contract tests for per modelo aggregation; `tests/application/aggregation`.
+- [x] `W52.P259.S1549` - Add service contract tests for per modelo aggregation; `tests/application/aggregation`.
 - [ ] `W52.P259.S1550` - Add persistence or registry integration tests for per modelo aggregation; `tests/application/aggregation`.
 - [ ] `W52.P259.S1551` - Add negative tests proving rejected aliases do not reach per modelo aggregation; `tests/entrypoints/cli`.
 - [ ] `W52.P259.S1552` - Add command behavior tests that exercise per modelo aggregation through real services; `tests/entrypoints/cli`.
 - [ ] `W52.P259.S1553` - Add end-to-end workflow coverage for per modelo aggregation; `tests`.
-- [ ] `W52.P259.S1554` - Run the targeted test slice for per modelo aggregation without skips or xfails; `tests/application/aggregation`.
+- [x] `W52.P259.S1554` - Run the targeted test slice for per modelo aggregation without skips or xfails; `tests/application/aggregation`.
 
 ### Phase `W52.P260` - thin cli exposure
 
@@ -4615,51 +4615,51 @@ Closes apex §12 ledger rows R17 (overview verb shape) and R18 (festivos not wir
 
 Adjudicate overview shape and wire festivos.
 
-- [ ] `W81.P390.S2229` - Read the app-overview-shape and festivos-deadline-shift ADRs and adjudicate the flag-on-status vs separate-verbs decision; `.vault/adr`.
-- [ ] `W81.P390.S2230` - Implement the per-verdict shape in application overview either expanding the status calendar flag into a discrete calendar verb or ratifying the flag pattern; `src/aeat/application/overview`.
-- [ ] `W81.P390.S2231` - Wire domain deadlines _festivos shift_deadline into OverviewCalendarEntry and add adjusted_closes_on, shift_reason, holiday_refs, jurisdictions fields; `src/aeat/application/overview`.
-- [ ] `W81.P390.S2232` - Add next_due field to agenda payload per apex §4.1; `src/aeat/application/overview`.
-- [ ] `W81.P390.S2233` - Implement backlog and explain verbs per the adjudication; `src/aeat/application/overview`.
+- [x] `W81.P390.S2229` - Read the app-overview-shape and festivos-deadline-shift ADRs and adjudicate the flag-on-status vs separate-verbs decision; `.vault/adr`.
+- [x] `W81.P390.S2230` - Implement the per-verdict shape in application overview either expanding the status calendar flag into a discrete calendar verb or ratifying the flag pattern; `src/aeat/application/overview`.
+- [x] `W81.P390.S2231` - Wire domain deadlines _festivos shift_deadline into OverviewCalendarEntry and add adjusted_closes_on, shift_reason, holiday_refs, jurisdictions fields; `src/aeat/application/overview`.
+- [x] `W81.P390.S2232` - Add next_due field to agenda payload per apex §4.1; `src/aeat/application/overview`.
+- [x] `W81.P390.S2233` - Implement backlog and explain verbs per the adjudication; `src/aeat/application/overview`.
 
 ### Phase `W81.P391` - shadow duplicate removal
 
 Retire legacy deadlines package and consolidate deadline computation.
 
-- [ ] `W81.P391.S2234` - Retire entrypoints/cli/deadlines legacy package per apex §1 fold-under to app overview; `src/aeat/entrypoints/cli`.
-- [ ] `W81.P391.S2235` - Remove aeat deadlines list, next, explain references and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
-- [ ] `W81.P391.S2236` - Audit for duplicate deadline computation paths and consolidate behind _festivos.shift_deadline; `src/aeat/application/overview`.
-- [ ] `W81.P391.S2237` - Remove any Rich-only deadlines rendering per apex §2 output-rendering lock; `src/aeat/entrypoints/cli`.
-- [ ] `W81.P391.S2238` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W81.P391.S2234` - Retire entrypoints/cli/deadlines legacy package per apex §1 fold-under to app overview; `src/aeat/entrypoints/cli`.
+- [x] `W81.P391.S2235` - Remove aeat deadlines list, next, explain references and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
+- [x] `W81.P391.S2236` - Audit for duplicate deadline computation paths and consolidate behind _festivos.shift_deadline; `src/aeat/application/overview`.
+- [x] `W81.P391.S2237` - Remove any Rich-only deadlines rendering per apex §2 output-rendering lock; `src/aeat/entrypoints/cli`.
+- [x] `W81.P391.S2238` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W81.P392` - de-shim and de-stub cleanup
 
 Ensure resume semantics and remove deprecated spellings.
 
-- [ ] `W81.P392.S2239` - Remove any legacy aeat deadlines Typer mount or shim; `src/aeat/entrypoints/cli`.
-- [ ] `W81.P392.S2240` - Ensure resume and continue behavior on overview uses workflow-resumption semantics from W80; `src/aeat/application/overview`.
-- [ ] `W81.P392.S2241` - Wire i18n help text for all overview verbs; `src/aeat/core/i18n`.
-- [ ] `W81.P392.S2242` - Remove deprecated overview command spellings; `src/aeat/core/i18n`.
-- [ ] `W81.P392.S2243` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W81.P392.S2239` - Remove any legacy aeat deadlines Typer mount or shim; `src/aeat/entrypoints/cli`.
+- [x] `W81.P392.S2240` - Ensure resume and continue behavior on overview uses workflow-resumption semantics from W80; `src/aeat/application/overview`.
+- [x] `W81.P392.S2241` - Wire i18n help text for all overview verbs; `src/aeat/core/i18n`.
+- [x] `W81.P392.S2242` - Remove deprecated overview command spellings; `src/aeat/core/i18n`.
+- [x] `W81.P392.S2243` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W81.P393` - real behavior verification
 
 Test festivos integration, carve-out, agenda payload, CLI surface.
 
-- [ ] `W81.P393.S2244` - Add tests asserting shift_deadline is invoked when assembling OverviewCalendarEntry and output carries adjusted dates and shift reason; `tests/application/overview`.
-- [ ] `W81.P393.S2245` - Add tests asserting Modelo 369 carve-out MODELOS_WITHOUT_SHIFT is respected; `tests/application/overview`.
-- [ ] `W81.P393.S2246` - Add tests asserting next_due appears in agenda payload; `tests/application/overview`.
-- [ ] `W81.P393.S2247` - Add CLI surface tests for every overview verb per the adjudicated grammar; `tests/entrypoints/cli`.
-- [ ] `W81.P393.S2248` - Add negative tests asserting aeat deadlines verbs are unknown; `tests/entrypoints/cli`.
+- [x] `W81.P393.S2244` - Add tests asserting shift_deadline is invoked when assembling OverviewCalendarEntry and output carries adjusted dates and shift reason; `tests/application/overview`.
+- [x] `W81.P393.S2245` - Add tests asserting Modelo 369 carve-out MODELOS_WITHOUT_SHIFT is respected; `tests/application/overview`.
+- [x] `W81.P393.S2246` - Add tests asserting next_due appears in agenda payload; `tests/application/overview`.
+- [x] `W81.P393.S2247` - Add CLI surface tests for every overview verb per the adjudicated grammar; `tests/entrypoints/cli`.
+- [x] `W81.P393.S2248` - Add negative tests asserting aeat deadlines verbs are unknown; `tests/entrypoints/cli`.
 
 ### Phase `W81.P394` - thin cli exposure
 
 Register overview verb tree and update apex cross-references.
 
-- [ ] `W81.P394.S2249` - Register the reconciled overview verb tree; `src/aeat/entrypoints/cli`.
-- [ ] `W81.P394.S2250` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
-- [ ] `W81.P394.S2251` - Wire help text and i18n; `src/aeat/core/i18n`.
-- [ ] `W81.P394.S2252` - Update apex ADR §4.1 to reflect the reconciled grammar and mark R17, R18 closed by W81; `.vault/adr`.
-- [ ] `W81.P394.S2253` - Amend app-overview-shape and festivos-deadline-shift child ADRs; `.vault/adr`.
+- [x] `W81.P394.S2249` - Register the reconciled overview verb tree; `src/aeat/entrypoints/cli`.
+- [x] `W81.P394.S2250` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [x] `W81.P394.S2251` - Wire help text and i18n; `src/aeat/core/i18n`.
+- [x] `W81.P394.S2252` - Update apex ADR §4.1 to reflect the reconciled grammar and mark R17, R18 closed by W81; `.vault/adr`.
+- [x] `W81.P394.S2253` - Amend app-overview-shape and festivos-deadline-shift child ADRs; `.vault/adr`.
 
 ## Wave `W82` - Reconciliation: config repair completion
 
