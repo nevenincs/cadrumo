@@ -290,7 +290,7 @@ def notifications_list(ctx: typer.Context) -> None:
             {
                 "snapshot_id": r.snapshot_id,
                 "captured_at": r.captured_at.isoformat(),
-                "notification_count": len(r.snapshot.notifications),
+                "row_count": len(r.rows),
             }
             for r in rows
         ],
@@ -298,7 +298,7 @@ def notifications_list(ctx: typer.Context) -> None:
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     for r in rows:
         lines.append(
-            f"{r.snapshot_id}\t{r.captured_at.isoformat()}\tnotifications={len(r.snapshot.notifications)}"
+            f"{r.snapshot_id}\t{r.captured_at.isoformat()}\trows={len(r.rows)}"
         )
     _emit(ctx, payload, lines)
 
@@ -316,17 +316,19 @@ def notifications_show(
         "bucket_id": bucket_id,
         "snapshot_id": record.snapshot_id,
         "captured_at": record.captured_at.isoformat(),
-        "notification_count": len(record.snapshot.notifications),
-        "notifications": [n.model_dump(mode="json") for n in record.snapshot.notifications],
+        "source_url": record.source_url,
+        "row_count": len(record.rows),
+        "rows": [r.model_dump(mode="json") for r in record.rows],
     }
     lines = [
         f"bucket\t{bucket_id}",
         f"snapshot_id\t{record.snapshot_id}",
         f"captured_at\t{record.captured_at.isoformat()}",
-        f"notification_count\t{len(record.snapshot.notifications)}",
+        f"source_url\t{record.source_url}",
+        f"row_count\t{len(record.rows)}",
     ]
-    for n in record.snapshot.notifications:
-        lines.append(f"{getattr(n, 'identifier', '<no-id>')}\t{getattr(n, 'subject', '')}")
+    for r in record.rows:
+        lines.append("\t".join(f"{k}={v}" for k, v in r.model_dump(mode="json").items()))
     _emit(ctx, payload, lines)
 
 
