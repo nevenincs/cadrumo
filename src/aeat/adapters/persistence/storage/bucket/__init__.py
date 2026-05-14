@@ -21,6 +21,7 @@ from ._errors import (
 from ._export_header import ExportArchiveHeader
 from ._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from ._manifest import BucketManifest, KdfParams
+from ._manifest_io import manifest_path, read_manifest, write_manifest
 
 __all__ = [
     "BucketAlreadyPresentError",
@@ -36,5 +37,8 @@ __all__ = [
     "RecoveryUnavailableError",
     "RecoveryVerificationError",
     "bucket_paths",
+    "manifest_path",
     "provision_bucket_directory",
+    "read_manifest",
+    "write_manifest",
 ]
