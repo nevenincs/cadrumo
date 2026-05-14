@@ -754,56 +754,56 @@ This Wave implements the `2026-05-10-eliminate-user-cli-shim` decision for workf
 
 This Phase delivers backend implementation for workflow state shim removal as required by `2026-05-10-eliminate-user-cli-shim`.
 
-- [ ] `W12.P056.S0331` - Map the `2026-05-10-eliminate-user-cli-shim` decision into non-CLI service ownership for workflow state shim removal; `src/aeat/application/workflow`.
-- [ ] `W12.P056.S0332` - Implement Pydantic command and result contracts for workflow state shim removal; `src/aeat/application/workflow`.
-- [ ] `W12.P056.S0333` - Wire application or domain services required by workflow state shim removal; `src/aeat/application/workflow`.
-- [ ] `W12.P056.S0334` - Connect persistence, bucket events, registry data, or provider adapters required by workflow state shim removal; `src/aeat/application/workflow`.
-- [ ] `W12.P056.S0335` - Route existing backend functionality into the canonical service for workflow state shim removal; `src/aeat/application/workflow`.
-- [ ] `W12.P056.S0336` - Record service-level error codes and log fields for workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P056.S0331` - Map the `2026-05-10-eliminate-user-cli-shim` decision into non-CLI service ownership for workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P056.S0332` - Implement Pydantic command and result contracts for workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P056.S0333` - Wire application or domain services required by workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P056.S0334` - Connect persistence, bucket events, registry data, or provider adapters required by workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P056.S0335` - Route existing backend functionality into the canonical service for workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P056.S0336` - Record service-level error codes and log fields for workflow state shim removal; `src/aeat/application/workflow`.
 
 ### Phase `W12.P057` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for workflow state shim removal as required by `2026-05-10-eliminate-user-cli-shim`.
 
-- [ ] `W12.P057.S0337` - Audit duplicate implementations that overlap workflow state shim removal; `src/aeat/application/workflow`.
-- [ ] `W12.P057.S0338` - Delete duplicate backend branches that compete with workflow state shim removal; `src/aeat/application/workflow`.
-- [ ] `W12.P057.S0339` - Remove stale aliases that bypass the canonical service for workflow state shim removal; `src/aeat/entrypoints/cli`.
-- [ ] `W12.P057.S0340` - Migrate internal callers to the canonical service for workflow state shim removal; `src/aeat/application/workflow`.
-- [ ] `W12.P057.S0341` - Remove stale fixtures and tests that encode duplicate behavior for workflow state shim removal; `tests/application/workflow`.
-- [ ] `W12.P057.S0342` - Update boundary inventory entries that describe duplicate behavior for workflow state shim removal; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W12.P057.S0337` - Audit duplicate implementations that overlap workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P057.S0338` - Delete duplicate backend branches that compete with workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P057.S0339` - Remove stale aliases that bypass the canonical service for workflow state shim removal; `src/aeat/entrypoints/cli`.
+- [x] `W12.P057.S0340` - Migrate internal callers to the canonical service for workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P057.S0341` - Remove stale fixtures and tests that encode duplicate behavior for workflow state shim removal; `tests/application/workflow`.
+- [x] `W12.P057.S0342` - Update boundary inventory entries that describe duplicate behavior for workflow state shim removal; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W12.P058` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for workflow state shim removal as required by `2026-05-10-eliminate-user-cli-shim`.
 
-- [ ] `W12.P058.S0343` - Delete compatibility shims that preserve rejected behavior for workflow state shim removal; `src/aeat/application/workflow`.
-- [ ] `W12.P058.S0344` - Delete placeholder stubs that claim support for workflow state shim removal; `src/aeat/application/workflow`.
-- [ ] `W12.P058.S0345` - Replace stubbed paths with real backend service calls for workflow state shim removal; `src/aeat/application/workflow`.
-- [ ] `W12.P058.S0346` - Remove deprecated command spelling and help text for workflow state shim removal; `src/aeat/entrypoints/cli`.
-- [ ] `W12.P058.S0347` - Remove tests that assert shim or stub behavior for workflow state shim removal; `tests/application/workflow`.
-- [ ] `W12.P058.S0348` - Record the removed shim and stub surfaces for workflow state shim removal; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W12.P058.S0343` - Delete compatibility shims that preserve rejected behavior for workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P058.S0344` - Delete placeholder stubs that claim support for workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P058.S0345` - Replace stubbed paths with real backend service calls for workflow state shim removal; `src/aeat/application/workflow`.
+- [x] `W12.P058.S0346` - Remove deprecated command spelling and help text for workflow state shim removal; `src/aeat/entrypoints/cli`.
+- [x] `W12.P058.S0347` - Remove tests that assert shim or stub behavior for workflow state shim removal; `tests/application/workflow`.
+- [x] `W12.P058.S0348` - Record the removed shim and stub surfaces for workflow state shim removal; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W12.P059` - real behavior verification
 
 This Phase delivers real behavior verification for workflow state shim removal as required by `2026-05-10-eliminate-user-cli-shim`.
 
-- [ ] `W12.P059.S0349` - Add service contract tests for workflow state shim removal; `tests/application/workflow`.
-- [ ] `W12.P059.S0350` - Add persistence or registry integration tests for workflow state shim removal; `tests/application/workflow`.
-- [ ] `W12.P059.S0351` - Add negative tests proving rejected aliases do not reach workflow state shim removal; `tests/entrypoints/cli`.
-- [ ] `W12.P059.S0352` - Add command behavior tests that exercise workflow state shim removal through real services; `tests/entrypoints/cli`.
-- [ ] `W12.P059.S0353` - Add end-to-end workflow coverage for workflow state shim removal; `tests`.
-- [ ] `W12.P059.S0354` - Run the targeted test slice for workflow state shim removal without skips or xfails; `tests/application/workflow`.
+- [x] `W12.P059.S0349` - Add service contract tests for workflow state shim removal; `tests/application/workflow`.
+- [x] `W12.P059.S0350` - Add persistence or registry integration tests for workflow state shim removal; `tests/application/workflow`.
+- [x] `W12.P059.S0351` - Add negative tests proving rejected aliases do not reach workflow state shim removal; `tests/entrypoints/cli`.
+- [x] `W12.P059.S0352` - Add command behavior tests that exercise workflow state shim removal through real services; `tests/entrypoints/cli`.
+- [x] `W12.P059.S0353` - Add end-to-end workflow coverage for workflow state shim removal; `tests`.
+- [x] `W12.P059.S0354` - Run the targeted test slice for workflow state shim removal without skips or xfails; `tests/application/workflow`.
 
 ### Phase `W12.P060` - thin cli exposure
 
 This Phase delivers thin cli exposure for workflow state shim removal as required by `2026-05-10-eliminate-user-cli-shim`.
 
-- [ ] `W12.P060.S0355` - Expose accepted command handlers for workflow state shim removal under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W12.P060.S0356` - Keep argument parsing for workflow state shim removal separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W12.P060.S0357` - Delegate workflow state shim removal execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W12.P060.S0358` - Render workflow state shim removal results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W12.P060.S0359` - Handle workflow state shim removal failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W12.P060.S0360` - Validate help text for workflow state shim removal uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W12.P060.S0355` - Expose accepted command handlers for workflow state shim removal under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W12.P060.S0356` - Keep argument parsing for workflow state shim removal separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W12.P060.S0357` - Delegate workflow state shim removal execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W12.P060.S0358` - Render workflow state shim removal results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W12.P060.S0359` - Handle workflow state shim removal failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W12.P060.S0360` - Validate help text for workflow state shim removal uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W13` - bucket storage boundary
 
