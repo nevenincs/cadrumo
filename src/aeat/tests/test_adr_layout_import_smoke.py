@@ -48,6 +48,7 @@ ADR_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.adapters.outbound.aeat.sede",
     "aeat.adapters.outbound.aeat.verify",
     "aeat.adapters.outbound.aeat.export",
+    "aeat.adapters.outbound.google",
     "aeat.adapters.outbound.llm",
     "aeat.adapters.persistence",
     "aeat.adapters.persistence.storage",
@@ -80,6 +81,8 @@ CANONICAL_PUBLIC_SYMBOLS: tuple[tuple[str, str], ...] = (
     ("aeat.core.errors", "AeatError"),
     ("aeat.core.access_gate", "LiveSubmitForbiddenError"),
     ("aeat.adapters.outbound.aeat.auth", "AeatAuthenticator"),
+    ("aeat.adapters.outbound.google", "OAuthClient"),
+    ("aeat.adapters.outbound.google", "GoogleAuthError"),
     ("aeat.application.auth", "select_provider"),
 )
 
