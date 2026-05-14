@@ -1228,56 +1228,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-apoderamientos-surfac
 
 This Phase delivers backend implementation for representation capability surface as required by `2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr`.
 
-- [ ] `W20.P096.S0571` - Map the `2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr` decision into non-CLI service ownership for representation capability surface; `src/aeat/application/auth`.
-- [ ] `W20.P096.S0572` - Implement Pydantic command and result contracts for representation capability surface; `src/aeat/application/auth`.
-- [ ] `W20.P096.S0573` - Wire application or domain services required by representation capability surface; `src/aeat/application/auth`.
-- [ ] `W20.P096.S0574` - Connect persistence, bucket events, registry data, or provider adapters required by representation capability surface; `src/aeat/application/auth`.
-- [ ] `W20.P096.S0575` - Route existing backend functionality into the canonical service for representation capability surface; `src/aeat/application/auth`.
-- [ ] `W20.P096.S0576` - Record service-level error codes and log fields for representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P096.S0571` - Map the `2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr` decision into non-CLI service ownership for representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P096.S0572` - Implement Pydantic command and result contracts for representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P096.S0573` - Wire application or domain services required by representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P096.S0574` - Connect persistence, bucket events, registry data, or provider adapters required by representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P096.S0575` - Route existing backend functionality into the canonical service for representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P096.S0576` - Record service-level error codes and log fields for representation capability surface; `src/aeat/application/auth`.
 
 ### Phase `W20.P097` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for representation capability surface as required by `2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr`.
 
-- [ ] `W20.P097.S0577` - Audit duplicate implementations that overlap representation capability surface; `src/aeat/application/auth`.
-- [ ] `W20.P097.S0578` - Delete duplicate backend branches that compete with representation capability surface; `src/aeat/application/auth`.
-- [ ] `W20.P097.S0579` - Remove stale aliases that bypass the canonical service for representation capability surface; `src/aeat/entrypoints/cli`.
-- [ ] `W20.P097.S0580` - Migrate internal callers to the canonical service for representation capability surface; `src/aeat/application/auth`.
-- [ ] `W20.P097.S0581` - Remove stale fixtures and tests that encode duplicate behavior for representation capability surface; `tests/application/auth`.
-- [ ] `W20.P097.S0582` - Update boundary inventory entries that describe duplicate behavior for representation capability surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W20.P097.S0577` - Audit duplicate implementations that overlap representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P097.S0578` - Delete duplicate backend branches that compete with representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P097.S0579` - Remove stale aliases that bypass the canonical service for representation capability surface; `src/aeat/entrypoints/cli`.
+- [x] `W20.P097.S0580` - Migrate internal callers to the canonical service for representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P097.S0581` - Remove stale fixtures and tests that encode duplicate behavior for representation capability surface; `tests/application/auth`.
+- [x] `W20.P097.S0582` - Update boundary inventory entries that describe duplicate behavior for representation capability surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W20.P098` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for representation capability surface as required by `2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr`.
 
-- [ ] `W20.P098.S0583` - Delete compatibility shims that preserve rejected behavior for representation capability surface; `src/aeat/application/auth`.
-- [ ] `W20.P098.S0584` - Delete placeholder stubs that claim support for representation capability surface; `src/aeat/application/auth`.
-- [ ] `W20.P098.S0585` - Replace stubbed paths with real backend service calls for representation capability surface; `src/aeat/application/auth`.
-- [ ] `W20.P098.S0586` - Remove deprecated command spelling and help text for representation capability surface; `src/aeat/entrypoints/cli`.
-- [ ] `W20.P098.S0587` - Remove tests that assert shim or stub behavior for representation capability surface; `tests/application/auth`.
-- [ ] `W20.P098.S0588` - Record the removed shim and stub surfaces for representation capability surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W20.P098.S0583` - Delete compatibility shims that preserve rejected behavior for representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P098.S0584` - Delete placeholder stubs that claim support for representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P098.S0585` - Replace stubbed paths with real backend service calls for representation capability surface; `src/aeat/application/auth`.
+- [x] `W20.P098.S0586` - Remove deprecated command spelling and help text for representation capability surface; `src/aeat/entrypoints/cli`.
+- [x] `W20.P098.S0587` - Remove tests that assert shim or stub behavior for representation capability surface; `tests/application/auth`.
+- [x] `W20.P098.S0588` - Record the removed shim and stub surfaces for representation capability surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W20.P099` - real behavior verification
 
 This Phase delivers real behavior verification for representation capability surface as required by `2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr`.
 
-- [ ] `W20.P099.S0589` - Add service contract tests for representation capability surface; `tests/application/auth`.
-- [ ] `W20.P099.S0590` - Add persistence or registry integration tests for representation capability surface; `tests/application/auth`.
-- [ ] `W20.P099.S0591` - Add negative tests proving rejected aliases do not reach representation capability surface; `tests/entrypoints/cli`.
-- [ ] `W20.P099.S0592` - Add command behavior tests that exercise representation capability surface through real services; `tests/entrypoints/cli`.
-- [ ] `W20.P099.S0593` - Add end-to-end workflow coverage for representation capability surface; `tests`.
-- [ ] `W20.P099.S0594` - Run the targeted test slice for representation capability surface without skips or xfails; `tests/application/auth`.
+- [x] `W20.P099.S0589` - Add service contract tests for representation capability surface; `tests/application/auth`.
+- [x] `W20.P099.S0590` - Add persistence or registry integration tests for representation capability surface; `tests/application/auth`.
+- [x] `W20.P099.S0591` - Add negative tests proving rejected aliases do not reach representation capability surface; `tests/entrypoints/cli`.
+- [x] `W20.P099.S0592` - Add command behavior tests that exercise representation capability surface through real services; `tests/entrypoints/cli`.
+- [x] `W20.P099.S0593` - Add end-to-end workflow coverage for representation capability surface; `tests`.
+- [x] `W20.P099.S0594` - Run the targeted test slice for representation capability surface without skips or xfails; `tests/application/auth`.
 
 ### Phase `W20.P100` - thin cli exposure
 
 This Phase delivers thin cli exposure for representation capability surface as required by `2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr`.
 
-- [ ] `W20.P100.S0595` - Expose accepted command handlers for representation capability surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W20.P100.S0596` - Keep argument parsing for representation capability surface separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W20.P100.S0597` - Delegate representation capability surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W20.P100.S0598` - Render representation capability surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W20.P100.S0599` - Handle representation capability surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W20.P100.S0600` - Validate help text for representation capability surface uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W20.P100.S0595` - Expose accepted command handlers for representation capability surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W20.P100.S0596` - Keep argument parsing for representation capability surface separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W20.P100.S0597` - Delegate representation capability surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W20.P100.S0598` - Render representation capability surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W20.P100.S0599` - Handle representation capability surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W20.P100.S0600` - Validate help text for representation capability surface uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W21` - apoderado scope vocabulary
 
@@ -1287,56 +1287,56 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-apoderado-scope-vocab
 
 This Phase delivers backend implementation for representation scope vocabulary as required by `2026-05-13-cli-workflow-redesign-apoderado-scope-vocabulary-adr`.
 
-- [ ] `W21.P101.S0601` - Map the `2026-05-13-cli-workflow-redesign-apoderado-scope-vocabulary-adr` decision into non-CLI service ownership for representation scope vocabulary; `src/aeat/domain/auth`.
-- [ ] `W21.P101.S0602` - Implement Pydantic command and result contracts for representation scope vocabulary; `src/aeat/domain/auth`.
-- [ ] `W21.P101.S0603` - Wire application or domain services required by representation scope vocabulary; `src/aeat/domain/auth`.
-- [ ] `W21.P101.S0604` - Connect persistence, bucket events, registry data, or provider adapters required by representation scope vocabulary; `src/aeat/domain/auth`.
-- [ ] `W21.P101.S0605` - Route existing backend functionality into the canonical service for representation scope vocabulary; `src/aeat/domain/auth`.
-- [ ] `W21.P101.S0606` - Record service-level error codes and log fields for representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P101.S0601` - Map the `2026-05-13-cli-workflow-redesign-apoderado-scope-vocabulary-adr` decision into non-CLI service ownership for representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P101.S0602` - Implement Pydantic command and result contracts for representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P101.S0603` - Wire application or domain services required by representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P101.S0604` - Connect persistence, bucket events, registry data, or provider adapters required by representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P101.S0605` - Route existing backend functionality into the canonical service for representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P101.S0606` - Record service-level error codes and log fields for representation scope vocabulary; `src/aeat/domain/auth`.
 
 ### Phase `W21.P102` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for representation scope vocabulary as required by `2026-05-13-cli-workflow-redesign-apoderado-scope-vocabulary-adr`.
 
-- [ ] `W21.P102.S0607` - Audit duplicate implementations that overlap representation scope vocabulary; `src/aeat/domain/auth`.
-- [ ] `W21.P102.S0608` - Delete duplicate backend branches that compete with representation scope vocabulary; `src/aeat/domain/auth`.
-- [ ] `W21.P102.S0609` - Remove stale aliases that bypass the canonical service for representation scope vocabulary; `src/aeat/entrypoints/cli`.
-- [ ] `W21.P102.S0610` - Migrate internal callers to the canonical service for representation scope vocabulary; `src/aeat/domain/auth`.
-- [ ] `W21.P102.S0611` - Remove stale fixtures and tests that encode duplicate behavior for representation scope vocabulary; `tests/domain/auth`.
-- [ ] `W21.P102.S0612` - Update boundary inventory entries that describe duplicate behavior for representation scope vocabulary; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W21.P102.S0607` - Audit duplicate implementations that overlap representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P102.S0608` - Delete duplicate backend branches that compete with representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P102.S0609` - Remove stale aliases that bypass the canonical service for representation scope vocabulary; `src/aeat/entrypoints/cli`.
+- [x] `W21.P102.S0610` - Migrate internal callers to the canonical service for representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P102.S0611` - Remove stale fixtures and tests that encode duplicate behavior for representation scope vocabulary; `tests/domain/auth`.
+- [x] `W21.P102.S0612` - Update boundary inventory entries that describe duplicate behavior for representation scope vocabulary; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W21.P103` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for representation scope vocabulary as required by `2026-05-13-cli-workflow-redesign-apoderado-scope-vocabulary-adr`.
 
-- [ ] `W21.P103.S0613` - Delete compatibility shims that preserve rejected behavior for representation scope vocabulary; `src/aeat/domain/auth`.
-- [ ] `W21.P103.S0614` - Delete placeholder stubs that claim support for representation scope vocabulary; `src/aeat/domain/auth`.
-- [ ] `W21.P103.S0615` - Replace stubbed paths with real backend service calls for representation scope vocabulary; `src/aeat/domain/auth`.
-- [ ] `W21.P103.S0616` - Remove deprecated command spelling and help text for representation scope vocabulary; `src/aeat/entrypoints/cli`.
-- [ ] `W21.P103.S0617` - Remove tests that assert shim or stub behavior for representation scope vocabulary; `tests/domain/auth`.
-- [ ] `W21.P103.S0618` - Record the removed shim and stub surfaces for representation scope vocabulary; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W21.P103.S0613` - Delete compatibility shims that preserve rejected behavior for representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P103.S0614` - Delete placeholder stubs that claim support for representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P103.S0615` - Replace stubbed paths with real backend service calls for representation scope vocabulary; `src/aeat/domain/auth`.
+- [x] `W21.P103.S0616` - Remove deprecated command spelling and help text for representation scope vocabulary; `src/aeat/entrypoints/cli`.
+- [x] `W21.P103.S0617` - Remove tests that assert shim or stub behavior for representation scope vocabulary; `tests/domain/auth`.
+- [x] `W21.P103.S0618` - Record the removed shim and stub surfaces for representation scope vocabulary; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W21.P104` - real behavior verification
 
 This Phase delivers real behavior verification for representation scope vocabulary as required by `2026-05-13-cli-workflow-redesign-apoderado-scope-vocabulary-adr`.
 
-- [ ] `W21.P104.S0619` - Add service contract tests for representation scope vocabulary; `tests/domain/auth`.
-- [ ] `W21.P104.S0620` - Add persistence or registry integration tests for representation scope vocabulary; `tests/domain/auth`.
-- [ ] `W21.P104.S0621` - Add negative tests proving rejected aliases do not reach representation scope vocabulary; `tests/entrypoints/cli`.
-- [ ] `W21.P104.S0622` - Add command behavior tests that exercise representation scope vocabulary through real services; `tests/entrypoints/cli`.
-- [ ] `W21.P104.S0623` - Add end-to-end workflow coverage for representation scope vocabulary; `tests`.
-- [ ] `W21.P104.S0624` - Run the targeted test slice for representation scope vocabulary without skips or xfails; `tests/domain/auth`.
+- [x] `W21.P104.S0619` - Add service contract tests for representation scope vocabulary; `tests/domain/auth`.
+- [x] `W21.P104.S0620` - Add persistence or registry integration tests for representation scope vocabulary; `tests/domain/auth`.
+- [x] `W21.P104.S0621` - Add negative tests proving rejected aliases do not reach representation scope vocabulary; `tests/entrypoints/cli`.
+- [x] `W21.P104.S0622` - Add command behavior tests that exercise representation scope vocabulary through real services; `tests/entrypoints/cli`.
+- [x] `W21.P104.S0623` - Add end-to-end workflow coverage for representation scope vocabulary; `tests`.
+- [x] `W21.P104.S0624` - Run the targeted test slice for representation scope vocabulary without skips or xfails; `tests/domain/auth`.
 
 ### Phase `W21.P105` - thin cli exposure
 
 This Phase delivers thin cli exposure for representation scope vocabulary as required by `2026-05-13-cli-workflow-redesign-apoderado-scope-vocabulary-adr`.
 
-- [ ] `W21.P105.S0625` - Expose accepted command handlers for representation scope vocabulary under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W21.P105.S0626` - Keep argument parsing for representation scope vocabulary separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W21.P105.S0627` - Delegate representation scope vocabulary execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W21.P105.S0628` - Render representation scope vocabulary results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W21.P105.S0629` - Handle representation scope vocabulary failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W21.P105.S0630` - Validate help text for representation scope vocabulary uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W21.P105.S0625` - Expose accepted command handlers for representation scope vocabulary under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W21.P105.S0626` - Keep argument parsing for representation scope vocabulary separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W21.P105.S0627` - Delegate representation scope vocabulary execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W21.P105.S0628` - Render representation scope vocabulary results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W21.P105.S0629` - Handle representation scope vocabulary failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W21.P105.S0630` - Validate help text for representation scope vocabulary uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W22` - invoice domain decoupling
 
@@ -3185,56 +3185,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-app-overview-shape-ad
 
 This Phase delivers backend implementation for app overview surface as required by `2026-05-12-cli-workflow-redesign-app-overview-shape-adr`.
 
-- [ ] `W53.P261.S1561` - Map the `2026-05-12-cli-workflow-redesign-app-overview-shape-adr` decision into non-CLI service ownership for app overview surface; `src/aeat/application/overview`.
-- [ ] `W53.P261.S1562` - Implement Pydantic command and result contracts for app overview surface; `src/aeat/application/overview`.
-- [ ] `W53.P261.S1563` - Wire application or domain services required by app overview surface; `src/aeat/application/overview`.
-- [ ] `W53.P261.S1564` - Connect persistence, bucket events, registry data, or provider adapters required by app overview surface; `src/aeat/application/overview`.
-- [ ] `W53.P261.S1565` - Route existing backend functionality into the canonical service for app overview surface; `src/aeat/application/overview`.
-- [ ] `W53.P261.S1566` - Record service-level error codes and log fields for app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P261.S1561` - Map the `2026-05-12-cli-workflow-redesign-app-overview-shape-adr` decision into non-CLI service ownership for app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P261.S1562` - Implement Pydantic command and result contracts for app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P261.S1563` - Wire application or domain services required by app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P261.S1564` - Connect persistence, bucket events, registry data, or provider adapters required by app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P261.S1565` - Route existing backend functionality into the canonical service for app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P261.S1566` - Record service-level error codes and log fields for app overview surface; `src/aeat/application/overview`.
 
 ### Phase `W53.P262` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for app overview surface as required by `2026-05-12-cli-workflow-redesign-app-overview-shape-adr`.
 
-- [ ] `W53.P262.S1567` - Audit duplicate implementations that overlap app overview surface; `src/aeat/application/overview`.
-- [ ] `W53.P262.S1568` - Delete duplicate backend branches that compete with app overview surface; `src/aeat/application/overview`.
-- [ ] `W53.P262.S1569` - Remove stale aliases that bypass the canonical service for app overview surface; `src/aeat/entrypoints/cli`.
-- [ ] `W53.P262.S1570` - Migrate internal callers to the canonical service for app overview surface; `src/aeat/application/overview`.
-- [ ] `W53.P262.S1571` - Remove stale fixtures and tests that encode duplicate behavior for app overview surface; `tests/application/overview`.
-- [ ] `W53.P262.S1572` - Update boundary inventory entries that describe duplicate behavior for app overview surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W53.P262.S1567` - Audit duplicate implementations that overlap app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P262.S1568` - Delete duplicate backend branches that compete with app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P262.S1569` - Remove stale aliases that bypass the canonical service for app overview surface; `src/aeat/entrypoints/cli`.
+- [x] `W53.P262.S1570` - Migrate internal callers to the canonical service for app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P262.S1571` - Remove stale fixtures and tests that encode duplicate behavior for app overview surface; `tests/application/overview`.
+- [x] `W53.P262.S1572` - Update boundary inventory entries that describe duplicate behavior for app overview surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W53.P263` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for app overview surface as required by `2026-05-12-cli-workflow-redesign-app-overview-shape-adr`.
 
-- [ ] `W53.P263.S1573` - Delete compatibility shims that preserve rejected behavior for app overview surface; `src/aeat/application/overview`.
-- [ ] `W53.P263.S1574` - Delete placeholder stubs that claim support for app overview surface; `src/aeat/application/overview`.
-- [ ] `W53.P263.S1575` - Replace stubbed paths with real backend service calls for app overview surface; `src/aeat/application/overview`.
-- [ ] `W53.P263.S1576` - Remove deprecated command spelling and help text for app overview surface; `src/aeat/entrypoints/cli`.
-- [ ] `W53.P263.S1577` - Remove tests that assert shim or stub behavior for app overview surface; `tests/application/overview`.
-- [ ] `W53.P263.S1578` - Record the removed shim and stub surfaces for app overview surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W53.P263.S1573` - Delete compatibility shims that preserve rejected behavior for app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P263.S1574` - Delete placeholder stubs that claim support for app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P263.S1575` - Replace stubbed paths with real backend service calls for app overview surface; `src/aeat/application/overview`.
+- [x] `W53.P263.S1576` - Remove deprecated command spelling and help text for app overview surface; `src/aeat/entrypoints/cli`.
+- [x] `W53.P263.S1577` - Remove tests that assert shim or stub behavior for app overview surface; `tests/application/overview`.
+- [x] `W53.P263.S1578` - Record the removed shim and stub surfaces for app overview surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W53.P264` - real behavior verification
 
 This Phase delivers real behavior verification for app overview surface as required by `2026-05-12-cli-workflow-redesign-app-overview-shape-adr`.
 
-- [ ] `W53.P264.S1579` - Add service contract tests for app overview surface; `tests/application/overview`.
-- [ ] `W53.P264.S1580` - Add persistence or registry integration tests for app overview surface; `tests/application/overview`.
-- [ ] `W53.P264.S1581` - Add negative tests proving rejected aliases do not reach app overview surface; `tests/entrypoints/cli`.
-- [ ] `W53.P264.S1582` - Add command behavior tests that exercise app overview surface through real services; `tests/entrypoints/cli`.
-- [ ] `W53.P264.S1583` - Add end-to-end workflow coverage for app overview surface; `tests`.
-- [ ] `W53.P264.S1584` - Run the targeted test slice for app overview surface without skips or xfails; `tests/application/overview`.
+- [x] `W53.P264.S1579` - Add service contract tests for app overview surface; `tests/application/overview`.
+- [x] `W53.P264.S1580` - Add persistence or registry integration tests for app overview surface; `tests/application/overview`.
+- [x] `W53.P264.S1581` - Add negative tests proving rejected aliases do not reach app overview surface; `tests/entrypoints/cli`.
+- [x] `W53.P264.S1582` - Add command behavior tests that exercise app overview surface through real services; `tests/entrypoints/cli`.
+- [x] `W53.P264.S1583` - Add end-to-end workflow coverage for app overview surface; `tests`.
+- [x] `W53.P264.S1584` - Run the targeted test slice for app overview surface without skips or xfails; `tests/application/overview`.
 
 ### Phase `W53.P265` - thin cli exposure
 
 This Phase delivers thin cli exposure for app overview surface as required by `2026-05-12-cli-workflow-redesign-app-overview-shape-adr`.
 
-- [ ] `W53.P265.S1585` - Expose accepted command handlers for app overview surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W53.P265.S1586` - Keep argument parsing for app overview surface separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W53.P265.S1587` - Delegate app overview surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W53.P265.S1588` - Render app overview surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W53.P265.S1589` - Handle app overview surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W53.P265.S1590` - Validate help text for app overview surface uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W53.P265.S1585` - Expose accepted command handlers for app overview surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W53.P265.S1586` - Keep argument parsing for app overview surface separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W53.P265.S1587` - Delegate app overview surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W53.P265.S1588` - Render app overview surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W53.P265.S1589` - Handle app overview surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W53.P265.S1590` - Validate help text for app overview surface uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W54` - app live shape
 
@@ -3303,56 +3303,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-app-registry-boundary
 
 This Phase delivers backend implementation for registry and live boundary as required by `2026-05-12-cli-workflow-redesign-app-registry-boundary-adr`.
 
-- [ ] `W55.P271.S1621` - Map the `2026-05-12-cli-workflow-redesign-app-registry-boundary-adr` decision into non-CLI service ownership for registry and live boundary; `src/aeat/application/registry`.
-- [ ] `W55.P271.S1622` - Implement Pydantic command and result contracts for registry and live boundary; `src/aeat/application/registry`.
-- [ ] `W55.P271.S1623` - Wire application or domain services required by registry and live boundary; `src/aeat/application/registry`.
-- [ ] `W55.P271.S1624` - Connect persistence, bucket events, registry data, or provider adapters required by registry and live boundary; `src/aeat/application/registry`.
-- [ ] `W55.P271.S1625` - Route existing backend functionality into the canonical service for registry and live boundary; `src/aeat/application/registry`.
-- [ ] `W55.P271.S1626` - Record service-level error codes and log fields for registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P271.S1621` - Map the `2026-05-12-cli-workflow-redesign-app-registry-boundary-adr` decision into non-CLI service ownership for registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P271.S1622` - Implement Pydantic command and result contracts for registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P271.S1623` - Wire application or domain services required by registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P271.S1624` - Connect persistence, bucket events, registry data, or provider adapters required by registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P271.S1625` - Route existing backend functionality into the canonical service for registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P271.S1626` - Record service-level error codes and log fields for registry and live boundary; `src/aeat/application/registry`.
 
 ### Phase `W55.P272` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for registry and live boundary as required by `2026-05-12-cli-workflow-redesign-app-registry-boundary-adr`.
 
-- [ ] `W55.P272.S1627` - Audit duplicate implementations that overlap registry and live boundary; `src/aeat/application/registry`.
-- [ ] `W55.P272.S1628` - Delete duplicate backend branches that compete with registry and live boundary; `src/aeat/application/registry`.
-- [ ] `W55.P272.S1629` - Remove stale aliases that bypass the canonical service for registry and live boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W55.P272.S1630` - Migrate internal callers to the canonical service for registry and live boundary; `src/aeat/application/registry`.
-- [ ] `W55.P272.S1631` - Remove stale fixtures and tests that encode duplicate behavior for registry and live boundary; `tests/application/registry`.
-- [ ] `W55.P272.S1632` - Update boundary inventory entries that describe duplicate behavior for registry and live boundary; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W55.P272.S1627` - Audit duplicate implementations that overlap registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P272.S1628` - Delete duplicate backend branches that compete with registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P272.S1629` - Remove stale aliases that bypass the canonical service for registry and live boundary; `src/aeat/entrypoints/cli`.
+- [x] `W55.P272.S1630` - Migrate internal callers to the canonical service for registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P272.S1631` - Remove stale fixtures and tests that encode duplicate behavior for registry and live boundary; `tests/application/registry`.
+- [x] `W55.P272.S1632` - Update boundary inventory entries that describe duplicate behavior for registry and live boundary; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W55.P273` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for registry and live boundary as required by `2026-05-12-cli-workflow-redesign-app-registry-boundary-adr`.
 
-- [ ] `W55.P273.S1633` - Delete compatibility shims that preserve rejected behavior for registry and live boundary; `src/aeat/application/registry`.
-- [ ] `W55.P273.S1634` - Delete placeholder stubs that claim support for registry and live boundary; `src/aeat/application/registry`.
-- [ ] `W55.P273.S1635` - Replace stubbed paths with real backend service calls for registry and live boundary; `src/aeat/application/registry`.
-- [ ] `W55.P273.S1636` - Remove deprecated command spelling and help text for registry and live boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W55.P273.S1637` - Remove tests that assert shim or stub behavior for registry and live boundary; `tests/application/registry`.
-- [ ] `W55.P273.S1638` - Record the removed shim and stub surfaces for registry and live boundary; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W55.P273.S1633` - Delete compatibility shims that preserve rejected behavior for registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P273.S1634` - Delete placeholder stubs that claim support for registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P273.S1635` - Replace stubbed paths with real backend service calls for registry and live boundary; `src/aeat/application/registry`.
+- [x] `W55.P273.S1636` - Remove deprecated command spelling and help text for registry and live boundary; `src/aeat/entrypoints/cli`.
+- [x] `W55.P273.S1637` - Remove tests that assert shim or stub behavior for registry and live boundary; `tests/application/registry`.
+- [x] `W55.P273.S1638` - Record the removed shim and stub surfaces for registry and live boundary; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W55.P274` - real behavior verification
 
 This Phase delivers real behavior verification for registry and live boundary as required by `2026-05-12-cli-workflow-redesign-app-registry-boundary-adr`.
 
-- [ ] `W55.P274.S1639` - Add service contract tests for registry and live boundary; `tests/application/registry`.
-- [ ] `W55.P274.S1640` - Add persistence or registry integration tests for registry and live boundary; `tests/application/registry`.
-- [ ] `W55.P274.S1641` - Add negative tests proving rejected aliases do not reach registry and live boundary; `tests/entrypoints/cli`.
-- [ ] `W55.P274.S1642` - Add command behavior tests that exercise registry and live boundary through real services; `tests/entrypoints/cli`.
-- [ ] `W55.P274.S1643` - Add end-to-end workflow coverage for registry and live boundary; `tests`.
-- [ ] `W55.P274.S1644` - Run the targeted test slice for registry and live boundary without skips or xfails; `tests/application/registry`.
+- [x] `W55.P274.S1639` - Add service contract tests for registry and live boundary; `tests/application/registry`.
+- [x] `W55.P274.S1640` - Add persistence or registry integration tests for registry and live boundary; `tests/application/registry`.
+- [x] `W55.P274.S1641` - Add negative tests proving rejected aliases do not reach registry and live boundary; `tests/entrypoints/cli`.
+- [x] `W55.P274.S1642` - Add command behavior tests that exercise registry and live boundary through real services; `tests/entrypoints/cli`.
+- [x] `W55.P274.S1643` - Add end-to-end workflow coverage for registry and live boundary; `tests`.
+- [x] `W55.P274.S1644` - Run the targeted test slice for registry and live boundary without skips or xfails; `tests/application/registry`.
 
 ### Phase `W55.P275` - thin cli exposure
 
 This Phase delivers thin cli exposure for registry and live boundary as required by `2026-05-12-cli-workflow-redesign-app-registry-boundary-adr`.
 
-- [ ] `W55.P275.S1645` - Expose accepted command handlers for registry and live boundary under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W55.P275.S1646` - Keep argument parsing for registry and live boundary separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W55.P275.S1647` - Delegate registry and live boundary execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W55.P275.S1648` - Render registry and live boundary results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W55.P275.S1649` - Handle registry and live boundary failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W55.P275.S1650` - Validate help text for registry and live boundary uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W55.P275.S1645` - Expose accepted command handlers for registry and live boundary under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W55.P275.S1646` - Keep argument parsing for registry and live boundary separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W55.P275.S1647` - Delegate registry and live boundary execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W55.P275.S1648` - Render registry and live boundary results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W55.P275.S1649` - Handle registry and live boundary failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W55.P275.S1650` - Validate help text for registry and live boundary uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W56` - app review queue execution
 
@@ -3362,56 +3362,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-app-review-queue-exec
 
 This Phase delivers backend implementation for operator review queue as required by `2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr`.
 
-- [ ] `W56.P276.S1651` - Map the `2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr` decision into non-CLI service ownership for operator review queue; `src/aeat/application/review`.
-- [ ] `W56.P276.S1652` - Implement Pydantic command and result contracts for operator review queue; `src/aeat/application/review`.
-- [ ] `W56.P276.S1653` - Wire application or domain services required by operator review queue; `src/aeat/application/review`.
-- [ ] `W56.P276.S1654` - Connect persistence, bucket events, registry data, or provider adapters required by operator review queue; `src/aeat/application/review`.
-- [ ] `W56.P276.S1655` - Route existing backend functionality into the canonical service for operator review queue; `src/aeat/application/review`.
-- [ ] `W56.P276.S1656` - Record service-level error codes and log fields for operator review queue; `src/aeat/application/review`.
+- [x] `W56.P276.S1651` - Map the `2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr` decision into non-CLI service ownership for operator review queue; `src/aeat/application/review`.
+- [x] `W56.P276.S1652` - Implement Pydantic command and result contracts for operator review queue; `src/aeat/application/review`.
+- [x] `W56.P276.S1653` - Wire application or domain services required by operator review queue; `src/aeat/application/review`.
+- [x] `W56.P276.S1654` - Connect persistence, bucket events, registry data, or provider adapters required by operator review queue; `src/aeat/application/review`.
+- [x] `W56.P276.S1655` - Route existing backend functionality into the canonical service for operator review queue; `src/aeat/application/review`.
+- [x] `W56.P276.S1656` - Record service-level error codes and log fields for operator review queue; `src/aeat/application/review`.
 
 ### Phase `W56.P277` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for operator review queue as required by `2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr`.
 
-- [ ] `W56.P277.S1657` - Audit duplicate implementations that overlap operator review queue; `src/aeat/application/review`.
-- [ ] `W56.P277.S1658` - Delete duplicate backend branches that compete with operator review queue; `src/aeat/application/review`.
-- [ ] `W56.P277.S1659` - Remove stale aliases that bypass the canonical service for operator review queue; `src/aeat/entrypoints/cli`.
-- [ ] `W56.P277.S1660` - Migrate internal callers to the canonical service for operator review queue; `src/aeat/application/review`.
-- [ ] `W56.P277.S1661` - Remove stale fixtures and tests that encode duplicate behavior for operator review queue; `tests/application/review`.
-- [ ] `W56.P277.S1662` - Update boundary inventory entries that describe duplicate behavior for operator review queue; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W56.P277.S1657` - Audit duplicate implementations that overlap operator review queue; `src/aeat/application/review`.
+- [x] `W56.P277.S1658` - Delete duplicate backend branches that compete with operator review queue; `src/aeat/application/review`.
+- [x] `W56.P277.S1659` - Remove stale aliases that bypass the canonical service for operator review queue; `src/aeat/entrypoints/cli`.
+- [x] `W56.P277.S1660` - Migrate internal callers to the canonical service for operator review queue; `src/aeat/application/review`.
+- [x] `W56.P277.S1661` - Remove stale fixtures and tests that encode duplicate behavior for operator review queue; `tests/application/review`.
+- [x] `W56.P277.S1662` - Update boundary inventory entries that describe duplicate behavior for operator review queue; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W56.P278` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for operator review queue as required by `2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr`.
 
-- [ ] `W56.P278.S1663` - Delete compatibility shims that preserve rejected behavior for operator review queue; `src/aeat/application/review`.
-- [ ] `W56.P278.S1664` - Delete placeholder stubs that claim support for operator review queue; `src/aeat/application/review`.
-- [ ] `W56.P278.S1665` - Replace stubbed paths with real backend service calls for operator review queue; `src/aeat/application/review`.
-- [ ] `W56.P278.S1666` - Remove deprecated command spelling and help text for operator review queue; `src/aeat/entrypoints/cli`.
-- [ ] `W56.P278.S1667` - Remove tests that assert shim or stub behavior for operator review queue; `tests/application/review`.
-- [ ] `W56.P278.S1668` - Record the removed shim and stub surfaces for operator review queue; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W56.P278.S1663` - Delete compatibility shims that preserve rejected behavior for operator review queue; `src/aeat/application/review`.
+- [x] `W56.P278.S1664` - Delete placeholder stubs that claim support for operator review queue; `src/aeat/application/review`.
+- [x] `W56.P278.S1665` - Replace stubbed paths with real backend service calls for operator review queue; `src/aeat/application/review`.
+- [x] `W56.P278.S1666` - Remove deprecated command spelling and help text for operator review queue; `src/aeat/entrypoints/cli`.
+- [x] `W56.P278.S1667` - Remove tests that assert shim or stub behavior for operator review queue; `tests/application/review`.
+- [x] `W56.P278.S1668` - Record the removed shim and stub surfaces for operator review queue; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W56.P279` - real behavior verification
 
 This Phase delivers real behavior verification for operator review queue as required by `2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr`.
 
-- [ ] `W56.P279.S1669` - Add service contract tests for operator review queue; `tests/application/review`.
-- [ ] `W56.P279.S1670` - Add persistence or registry integration tests for operator review queue; `tests/application/review`.
-- [ ] `W56.P279.S1671` - Add negative tests proving rejected aliases do not reach operator review queue; `tests/entrypoints/cli`.
-- [ ] `W56.P279.S1672` - Add command behavior tests that exercise operator review queue through real services; `tests/entrypoints/cli`.
-- [ ] `W56.P279.S1673` - Add end-to-end workflow coverage for operator review queue; `tests`.
-- [ ] `W56.P279.S1674` - Run the targeted test slice for operator review queue without skips or xfails; `tests/application/review`.
+- [x] `W56.P279.S1669` - Add service contract tests for operator review queue; `tests/application/review`.
+- [x] `W56.P279.S1670` - Add persistence or registry integration tests for operator review queue; `tests/application/review`.
+- [x] `W56.P279.S1671` - Add negative tests proving rejected aliases do not reach operator review queue; `tests/entrypoints/cli`.
+- [x] `W56.P279.S1672` - Add command behavior tests that exercise operator review queue through real services; `tests/entrypoints/cli`.
+- [x] `W56.P279.S1673` - Add end-to-end workflow coverage for operator review queue; `tests`.
+- [x] `W56.P279.S1674` - Run the targeted test slice for operator review queue without skips or xfails; `tests/application/review`.
 
 ### Phase `W56.P280` - thin cli exposure
 
 This Phase delivers thin cli exposure for operator review queue as required by `2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr`.
 
-- [ ] `W56.P280.S1675` - Expose accepted command handlers for operator review queue under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W56.P280.S1676` - Keep argument parsing for operator review queue separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W56.P280.S1677` - Delegate operator review queue execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W56.P280.S1678` - Render operator review queue results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W56.P280.S1679` - Handle operator review queue failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W56.P280.S1680` - Validate help text for operator review queue uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W56.P280.S1675` - Expose accepted command handlers for operator review queue under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W56.P280.S1676` - Keep argument parsing for operator review queue separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W56.P280.S1677` - Delegate operator review queue execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W56.P280.S1678` - Render operator review queue results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W56.P280.S1679` - Handle operator review queue failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W56.P280.S1680` - Validate help text for operator review queue uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W57` - evidence bundle shape
 
@@ -3480,56 +3480,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-workflow-engine-harve
 
 This Phase delivers backend implementation for workflow engine backend harvest as required by `2026-05-12-cli-workflow-redesign-workflow-engine-harvest-adr`.
 
-- [ ] `W58.P286.S1711` - Map the `2026-05-12-cli-workflow-redesign-workflow-engine-harvest-adr` decision into non-CLI service ownership for workflow engine backend harvest; `src/aeat/application/workflow`.
-- [ ] `W58.P286.S1712` - Implement Pydantic command and result contracts for workflow engine backend harvest; `src/aeat/application/workflow`.
-- [ ] `W58.P286.S1713` - Wire application or domain services required by workflow engine backend harvest; `src/aeat/application/workflow`.
-- [ ] `W58.P286.S1714` - Connect persistence, bucket events, registry data, or provider adapters required by workflow engine backend harvest; `src/aeat/application/workflow`.
-- [ ] `W58.P286.S1715` - Route existing backend functionality into the canonical service for workflow engine backend harvest; `src/aeat/application/workflow`.
-- [ ] `W58.P286.S1716` - Record service-level error codes and log fields for workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P286.S1711` - Map the `2026-05-12-cli-workflow-redesign-workflow-engine-harvest-adr` decision into non-CLI service ownership for workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P286.S1712` - Implement Pydantic command and result contracts for workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P286.S1713` - Wire application or domain services required by workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P286.S1714` - Connect persistence, bucket events, registry data, or provider adapters required by workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P286.S1715` - Route existing backend functionality into the canonical service for workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P286.S1716` - Record service-level error codes and log fields for workflow engine backend harvest; `src/aeat/application/workflow`.
 
 ### Phase `W58.P287` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for workflow engine backend harvest as required by `2026-05-12-cli-workflow-redesign-workflow-engine-harvest-adr`.
 
-- [ ] `W58.P287.S1717` - Audit duplicate implementations that overlap workflow engine backend harvest; `src/aeat/application/workflow`.
-- [ ] `W58.P287.S1718` - Delete duplicate backend branches that compete with workflow engine backend harvest; `src/aeat/application/workflow`.
-- [ ] `W58.P287.S1719` - Remove stale aliases that bypass the canonical service for workflow engine backend harvest; `src/aeat/entrypoints/cli`.
-- [ ] `W58.P287.S1720` - Migrate internal callers to the canonical service for workflow engine backend harvest; `src/aeat/application/workflow`.
-- [ ] `W58.P287.S1721` - Remove stale fixtures and tests that encode duplicate behavior for workflow engine backend harvest; `tests/application/workflow`.
-- [ ] `W58.P287.S1722` - Update boundary inventory entries that describe duplicate behavior for workflow engine backend harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W58.P287.S1717` - Audit duplicate implementations that overlap workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P287.S1718` - Delete duplicate backend branches that compete with workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P287.S1719` - Remove stale aliases that bypass the canonical service for workflow engine backend harvest; `src/aeat/entrypoints/cli`.
+- [x] `W58.P287.S1720` - Migrate internal callers to the canonical service for workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P287.S1721` - Remove stale fixtures and tests that encode duplicate behavior for workflow engine backend harvest; `tests/application/workflow`.
+- [x] `W58.P287.S1722` - Update boundary inventory entries that describe duplicate behavior for workflow engine backend harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W58.P288` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for workflow engine backend harvest as required by `2026-05-12-cli-workflow-redesign-workflow-engine-harvest-adr`.
 
-- [ ] `W58.P288.S1723` - Delete compatibility shims that preserve rejected behavior for workflow engine backend harvest; `src/aeat/application/workflow`.
-- [ ] `W58.P288.S1724` - Delete placeholder stubs that claim support for workflow engine backend harvest; `src/aeat/application/workflow`.
-- [ ] `W58.P288.S1725` - Replace stubbed paths with real backend service calls for workflow engine backend harvest; `src/aeat/application/workflow`.
-- [ ] `W58.P288.S1726` - Remove deprecated command spelling and help text for workflow engine backend harvest; `src/aeat/entrypoints/cli`.
-- [ ] `W58.P288.S1727` - Remove tests that assert shim or stub behavior for workflow engine backend harvest; `tests/application/workflow`.
-- [ ] `W58.P288.S1728` - Record the removed shim and stub surfaces for workflow engine backend harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W58.P288.S1723` - Delete compatibility shims that preserve rejected behavior for workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P288.S1724` - Delete placeholder stubs that claim support for workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P288.S1725` - Replace stubbed paths with real backend service calls for workflow engine backend harvest; `src/aeat/application/workflow`.
+- [x] `W58.P288.S1726` - Remove deprecated command spelling and help text for workflow engine backend harvest; `src/aeat/entrypoints/cli`.
+- [x] `W58.P288.S1727` - Remove tests that assert shim or stub behavior for workflow engine backend harvest; `tests/application/workflow`.
+- [x] `W58.P288.S1728` - Record the removed shim and stub surfaces for workflow engine backend harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W58.P289` - real behavior verification
 
 This Phase delivers real behavior verification for workflow engine backend harvest as required by `2026-05-12-cli-workflow-redesign-workflow-engine-harvest-adr`.
 
-- [ ] `W58.P289.S1729` - Add service contract tests for workflow engine backend harvest; `tests/application/workflow`.
-- [ ] `W58.P289.S1730` - Add persistence or registry integration tests for workflow engine backend harvest; `tests/application/workflow`.
-- [ ] `W58.P289.S1731` - Add negative tests proving rejected aliases do not reach workflow engine backend harvest; `tests/entrypoints/cli`.
-- [ ] `W58.P289.S1732` - Add command behavior tests that exercise workflow engine backend harvest through real services; `tests/entrypoints/cli`.
-- [ ] `W58.P289.S1733` - Add end-to-end workflow coverage for workflow engine backend harvest; `tests`.
-- [ ] `W58.P289.S1734` - Run the targeted test slice for workflow engine backend harvest without skips or xfails; `tests/application/workflow`.
+- [x] `W58.P289.S1729` - Add service contract tests for workflow engine backend harvest; `tests/application/workflow`.
+- [x] `W58.P289.S1730` - Add persistence or registry integration tests for workflow engine backend harvest; `tests/application/workflow`.
+- [x] `W58.P289.S1731` - Add negative tests proving rejected aliases do not reach workflow engine backend harvest; `tests/entrypoints/cli`.
+- [x] `W58.P289.S1732` - Add command behavior tests that exercise workflow engine backend harvest through real services; `tests/entrypoints/cli`.
+- [x] `W58.P289.S1733` - Add end-to-end workflow coverage for workflow engine backend harvest; `tests`.
+- [x] `W58.P289.S1734` - Run the targeted test slice for workflow engine backend harvest without skips or xfails; `tests/application/workflow`.
 
 ### Phase `W58.P290` - thin cli exposure
 
 This Phase delivers thin cli exposure for workflow engine backend harvest as required by `2026-05-12-cli-workflow-redesign-workflow-engine-harvest-adr`.
 
-- [ ] `W58.P290.S1735` - Expose accepted command handlers for workflow engine backend harvest under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W58.P290.S1736` - Keep argument parsing for workflow engine backend harvest separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W58.P290.S1737` - Delegate workflow engine backend harvest execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W58.P290.S1738` - Render workflow engine backend harvest results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W58.P290.S1739` - Handle workflow engine backend harvest failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W58.P290.S1740` - Validate help text for workflow engine backend harvest uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W58.P290.S1735` - Expose accepted command handlers for workflow engine backend harvest under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W58.P290.S1736` - Keep argument parsing for workflow engine backend harvest separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W58.P290.S1737` - Delegate workflow engine backend harvest execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W58.P290.S1738` - Render workflow engine backend harvest results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W58.P290.S1739` - Handle workflow engine backend harvest failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W58.P290.S1740` - Validate help text for workflow engine backend harvest uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W59` - workflow resumption semantics
 
@@ -3747,28 +3747,28 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-cap
 
 This Phase binds declaration parsing and verification to modelo application services.
 
-- [ ] `W63.P309.S1843` - Read the modelo verify, filing-record, external filing import, and unexposed capability ADRs before editing; `.vault/adr`.
-- [ ] `W63.P309.S1844` - Implement strict Pydantic application service contracts that accept declaration artefacts and return typed `VerificationVerdict` projections; `src/aeat/application/modelo, src/aeat/application/verification`.
-- [ ] `W63.P309.S1845` - Route declaration parser output through validated registry snapshots and modelo calculation services; `src/aeat/application/verification, src/aeat/adapters/inbound/declaracion`.
-- [ ] `W63.P309.S1846` - Persist declaration-derived filing evidence only inside the active profile bucket with bucket events; `src/aeat/application/modelo, src/aeat/domain/buckets`.
+- [x] `W63.P309.S1843` - Read the modelo verify, filing-record, external filing import, and unexposed capability ADRs before editing; `.vault/adr`.
+- [x] `W63.P309.S1844` - Implement strict Pydantic application service contracts that accept declaration artefacts and return typed `VerificationVerdict` projections; `src/aeat/application/modelo, src/aeat/application/verification`.
+- [x] `W63.P309.S1845` - Route declaration parser output through validated registry snapshots and modelo calculation services; `src/aeat/application/verification, src/aeat/adapters/inbound/declaracion`.
+- [x] `W63.P309.S1846` - Persist declaration-derived filing evidence only inside the active profile bucket with bucket events; `src/aeat/application/modelo, src/aeat/domain/buckets`.
 
 ### Phase `W63.P310` - rejected path removal
 
 This Phase removes parser command collisions and shadow paths that bypass modelo-owned verification.
 
-- [ ] `W63.P310.S1847` - Delete any declaration or filing command registration outside approved `aeat app modelo` verbs; `src/aeat/entrypoints/cli`.
-- [ ] `W63.P310.S1848` - Remove parser call sites that write loose files or bypass the active profile bucket; `src/aeat`.
-- [ ] `W63.P310.S1849` - Remove tests that assert declaration verification through command-local behavior; `tests`.
-- [ ] `W63.P310.S1850` - Update boundary inventory so declaration parsing is modelo verification backend only; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W63.P310.S1847` - Delete any declaration or filing command registration outside approved `aeat app modelo` verbs; `src/aeat/entrypoints/cli`.
+- [x] `W63.P310.S1848` - Remove parser call sites that write loose files or bypass the active profile bucket; `src/aeat`.
+- [x] `W63.P310.S1849` - Remove tests that assert declaration verification through command-local behavior; `tests`.
+- [x] `W63.P310.S1850` - Update boundary inventory so declaration parsing is modelo verification backend only; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W63.P311` - verification and cli exposure
 
 This Phase proves declaration verification through real modelo services.
 
-- [ ] `W63.P311.S1851` - Add real service tests for declaration PDF parsing into verification verdicts; `tests/application/verification`.
-- [ ] `W63.P311.S1852` - Add bucket persistence tests for declaration-derived filing evidence and events; `tests/application/modelo`.
-- [ ] `W63.P311.S1853` - Expose declaration verification through `aeat app modelo verify` and `aeat app modelo reconcile` only; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W63.P311.S1854` - Validate CLI handlers delegate entirely to backend services and render through `_emit`; `tests/entrypoints/cli`.
+- [x] `W63.P311.S1851` - Add real service tests for declaration PDF parsing into verification verdicts; `tests/application/verification`.
+- [x] `W63.P311.S1852` - Add bucket persistence tests for declaration-derived filing evidence and events; `tests/application/modelo`.
+- [x] `W63.P311.S1853` - Expose declaration verification through `aeat app modelo verify` and `aeat app modelo reconcile` only; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W63.P311.S1854` - Validate CLI handlers delegate entirely to backend services and render through `_emit`; `tests/entrypoints/cli`.
 
 ## Wave `W64` - justificante filing record harvest
 
@@ -3778,28 +3778,28 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-cap
 
 This Phase binds justificante parsing, records, and repositories to filing-record services.
 
-- [ ] `W64.P312.S1855` - Read the modelo filing-record, complementaria external filing, and unexposed capability ADRs before editing; `.vault/adr`.
-- [ ] `W64.P312.S1856` - Implement strict Pydantic application commands that import justificante artefacts into bucket-scoped filing records; `src/aeat/application/modelo, src/aeat/application/filing`.
-- [ ] `W64.P312.S1857` - Reuse `JustificanteRepository` and parser backend types behind centralized application services; `src/aeat/domain/justificante, src/aeat/adapters/inbound/justificante`.
-- [ ] `W64.P312.S1858` - Emit bucket events for filing-record import, replacement, verification, and reconciliation; `src/aeat/domain/buckets`.
+- [x] `W64.P312.S1855` - Read the modelo filing-record, complementaria external filing, and unexposed capability ADRs before editing; `.vault/adr`.
+- [x] `W64.P312.S1856` - Implement strict Pydantic application commands that import justificante artefacts into bucket-scoped filing records; `src/aeat/application/modelo, src/aeat/application/filing`.
+- [x] `W64.P312.S1857` - Reuse `JustificanteRepository` and parser backend types behind centralized application services; `src/aeat/domain/justificante, src/aeat/adapters/inbound/justificante`.
+- [x] `W64.P312.S1858` - Emit bucket events for filing-record import, replacement, verification, and reconciliation; `src/aeat/domain/buckets`.
 
 ### Phase `W64.P313` - rejected path removal
 
 This Phase removes justificante command collisions and shadow paths that bypass filing-record ownership.
 
-- [ ] `W64.P313.S1859` - Delete any standalone justificante command path or file-loader entrypoint outside `aeat app modelo`; `src/aeat/entrypoints/cli`.
-- [ ] `W64.P313.S1860` - Remove loose-file persistence of parsed justificante records; `src/aeat`.
-- [ ] `W64.P313.S1861` - Remove tests that accept justificante data without bucket storage and event history; `tests`.
-- [ ] `W64.P313.S1862` - Update boundary inventory so justificante parsing is filing-record backend behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W64.P313.S1859` - Delete any standalone justificante command path or file-loader entrypoint outside `aeat app modelo`; `src/aeat/entrypoints/cli`.
+- [x] `W64.P313.S1860` - Remove loose-file persistence of parsed justificante records; `src/aeat`.
+- [x] `W64.P313.S1861` - Remove tests that accept justificante data without bucket storage and event history; `tests`.
+- [x] `W64.P313.S1862` - Update boundary inventory so justificante parsing is filing-record backend behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W64.P314` - verification and cli exposure
 
 This Phase proves justificante import and reconciliation through real services.
 
-- [ ] `W64.P314.S1863` - Add service tests for justificante import into a modelo filing record; `tests/application/modelo`.
-- [ ] `W64.P314.S1864` - Add reconciliation tests that pair imported justificante evidence with calculated revisions; `tests/application/filing`.
-- [ ] `W64.P314.S1865` - Expose justificante import through approved `aeat app modelo filing-record import` and `aeat app modelo reconcile` commands; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W64.P314.S1866` - Validate command help avoids live submission wording and renders all results through `_emit`; `tests/entrypoints/cli`.
+- [x] `W64.P314.S1863` - Add service tests for justificante import into a modelo filing record; `tests/application/modelo`.
+- [x] `W64.P314.S1864` - Add reconciliation tests that pair imported justificante evidence with calculated revisions; `tests/application/filing`.
+- [x] `W64.P314.S1865` - Expose justificante import through approved `aeat app modelo filing-record import` and `aeat app modelo reconcile` commands; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W64.P314.S1866` - Validate command help avoids live submission wording and renders all results through `_emit`; `tests/entrypoints/cli`.
 
 ## Wave `W65` - submission preflight and status harvest
 
@@ -3809,28 +3809,28 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-cap
 
 This Phase binds submission preflight and historical records to modelo backend services.
 
-- [ ] `W65.P315.S1867` - Read the live submit excision, modelo file, filing-record, and unexposed capability ADRs before editing; `.vault/adr`.
-- [ ] `W65.P315.S1868` - Route `SubmissionEngine.preflight` through strict Pydantic `aeat app modelo verify` and `aeat app modelo file` application services; `src/aeat/application/modelo, src/aeat/domain/submission`.
-- [ ] `W65.P315.S1869` - Bind historical submitted-status reads to filing-record status projections without remote writes; `src/aeat/application/filing`.
-- [ ] `W65.P315.S1870` - Store submission-status facts in the active profile bucket and emit bucket events on status changes; `src/aeat/domain/buckets, src/aeat/domain/submission`.
+- [x] `W65.P315.S1867` - Read the live submit excision, modelo file, filing-record, and unexposed capability ADRs before editing; `.vault/adr`.
+- [x] `W65.P315.S1868` - Route `SubmissionEngine.preflight` through strict Pydantic `aeat app modelo verify` and `aeat app modelo file` application services; `src/aeat/application/modelo, src/aeat/domain/submission`.
+- [x] `W65.P315.S1869` - Bind historical submitted-status reads to filing-record status projections without remote writes; `src/aeat/application/filing`.
+- [x] `W65.P315.S1870` - Store submission-status facts in the active profile bucket and emit bucket events on status changes; `src/aeat/domain/buckets, src/aeat/domain/submission`.
 
 ### Phase `W65.P316` - rejected path removal
 
 This Phase removes any path that implies live AEAT submission.
 
-- [ ] `W65.P316.S1871` - Delete command vocabulary that exposes submit, present, sign, pay, or remote write semantics; `src/aeat/entrypoints/cli`.
-- [ ] `W65.P316.S1872` - Remove backend methods or adapters that attempt write-shaped portal transport; `src/aeat/domain/submission, src/aeat/adapters/outbound/aeat`.
-- [ ] `W65.P316.S1873` - Remove tests that expect live-write flows or bypass `LiveSubmitForbiddenError`; `tests`.
-- [ ] `W65.P316.S1874` - Update boundary inventory so submission is preflight and status backend only; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W65.P316.S1871` - Delete command vocabulary that exposes submit, present, sign, pay, or remote write semantics; `src/aeat/entrypoints/cli`.
+- [x] `W65.P316.S1872` - Remove backend methods or adapters that attempt write-shaped portal transport; `src/aeat/domain/submission, src/aeat/adapters/outbound/aeat`.
+- [x] `W65.P316.S1873` - Remove tests that expect live-write flows or bypass `LiveSubmitForbiddenError`; `tests`.
+- [x] `W65.P316.S1874` - Update boundary inventory so submission is preflight and status backend only; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W65.P317` - verification and cli exposure
 
 This Phase proves preflight and status behavior without exposing a submission command.
 
-- [ ] `W65.P317.S1875` - Add service tests for preflight failures, filed status, and submitted status transitions; `tests/domain/submission, tests/application/modelo`.
-- [ ] `W65.P317.S1876` - Add negative CLI tests proving live-submit command vocabulary is absent; `tests/entrypoints/cli`.
-- [ ] `W65.P317.S1877` - Expose preflight results only as part of `aeat app modelo verify`, `aeat app modelo file`, `aeat app modelo status`, and `aeat app modelo history`; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W65.P317.S1878` - Validate central error handling for preflight failures and forbidden live-write attempts; `tests/entrypoints/cli`.
+- [x] `W65.P317.S1875` - Add service tests for preflight failures, filed status, and submitted status transitions; `tests/domain/submission, tests/application/modelo`.
+- [x] `W65.P317.S1876` - Add negative CLI tests proving live-submit command vocabulary is absent; `tests/entrypoints/cli`.
+- [x] `W65.P317.S1877` - Expose preflight results only as part of `aeat app modelo verify`, `aeat app modelo file`, `aeat app modelo status`, and `aeat app modelo history`; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W65.P317.S1878` - Validate central error handling for preflight failures and forbidden live-write attempts; `tests/entrypoints/cli`.
 
 ## Wave `W66` - sanitizer intake service harvest
 
@@ -3840,28 +3840,28 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-cap
 
 This Phase binds sanitizer behavior to approved intake services.
 
-- [ ] `W66.P318.S1879` - Read the receipt evidence, ledger transaction, filing-record, and unexposed capability ADRs before editing; `.vault/adr`.
-- [ ] `W66.P318.S1880` - Implement strict Pydantic application intake services that call `sanitize_pdf` before evidence or filing artefact persistence; `src/aeat/application/ledger, src/aeat/application/modelo`.
-- [ ] `W66.P318.S1881` - Persist sanitizer warnings, token-map provenance, and deterministic flags in bucket-scoped evidence metadata; `src/aeat/domain/attachments, src/aeat/domain/buckets`.
-- [ ] `W66.P318.S1882` - Route sanitizer errors through the central AEAT error hierarchy and logging driver; `src/aeat/core, src/aeat/adapters/inbound/sanitizer`.
+- [x] `W66.P318.S1879` - Read the receipt evidence, ledger transaction, filing-record, and unexposed capability ADRs before editing; `.vault/adr`.
+- [x] `W66.P318.S1880` - Implement strict Pydantic application intake services that call `sanitize_pdf` before evidence or filing artefact persistence; `src/aeat/application/ledger, src/aeat/application/modelo`.
+- [x] `W66.P318.S1881` - Persist sanitizer warnings, token-map provenance, and deterministic flags in bucket-scoped evidence metadata; `src/aeat/domain/attachments, src/aeat/domain/buckets`.
+- [x] `W66.P318.S1882` - Route sanitizer errors through the central AEAT error hierarchy and logging driver; `src/aeat/core, src/aeat/adapters/inbound/sanitizer`.
 
 ### Phase `W66.P319` - rejected path removal
 
 This Phase removes sanitizer command collisions and shadow paths from the operator surface.
 
-- [ ] `W66.P319.S1883` - Delete any sanitize command registration outside ledger or modelo intake flows; `src/aeat/entrypoints/cli`.
-- [ ] `W66.P319.S1884` - Remove call sites that sanitize into loose files without bucket evidence metadata; `src/aeat`.
-- [ ] `W66.P319.S1885` - Remove tests that accept sanitizer behavior without real parser and storage integration; `tests`.
-- [ ] `W66.P319.S1886` - Update boundary inventory so sanitizer ownership is internal intake hygiene; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W66.P319.S1883` - Delete any sanitize command registration outside ledger or modelo intake flows; `src/aeat/entrypoints/cli`.
+- [x] `W66.P319.S1884` - Remove call sites that sanitize into loose files without bucket evidence metadata; `src/aeat`.
+- [x] `W66.P319.S1885` - Remove tests that accept sanitizer behavior without real parser and storage integration; `tests`.
+- [x] `W66.P319.S1886` - Update boundary inventory so sanitizer ownership is internal intake hygiene; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W66.P320` - verification and cli exposure
 
 This Phase proves sanitizer intake through real ledger and modelo services.
 
-- [ ] `W66.P320.S1887` - Add service tests for sanitized ledger attachments and modelo artefact imports; `tests/application/ledger, tests/application/modelo`.
-- [ ] `W66.P320.S1888` - Add persistence tests proving sanitizer metadata and bucket events are durable; `tests/domain/buckets, tests/domain/attachments`.
-- [ ] `W66.P320.S1889` - Expose sanitizer-backed behavior only through `aeat app ledger attach`, `aeat app ledger import`, and `aeat app modelo import`; `src/aeat/entrypoints/cli`.
-- [ ] `W66.P320.S1890` - Validate CLI handlers contain no sanitizer policy or token-map business logic; `tests/entrypoints/cli`.
+- [x] `W66.P320.S1887` - Add service tests for sanitized ledger attachments and modelo artefact imports; `tests/application/ledger, tests/application/modelo`.
+- [x] `W66.P320.S1888` - Add persistence tests proving sanitizer metadata and bucket events are durable; `tests/domain/buckets, tests/domain/attachments`.
+- [x] `W66.P320.S1889` - Expose sanitizer-backed behavior only through `aeat app ledger attach`, `aeat app ledger import`, and `aeat app modelo import`; `src/aeat/entrypoints/cli`.
+- [x] `W66.P320.S1890` - Validate CLI handlers contain no sanitizer policy or token-map business logic; `tests/entrypoints/cli`.
 
 ## Wave `W67` - llm governed evidence harvest
 
@@ -3871,28 +3871,28 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-cap
 
 This Phase binds LLM adapter behavior to approved evidence, OCR, and classification services.
 
-- [ ] `W67.P321.S1891` - Read the receipt OCR, ledger classify, profile bucket, and unexposed capability ADRs before editing; `.vault/adr`.
-- [ ] `W67.P321.S1892` - Define strict Pydantic backend service policies for LLM requests, redaction, confidence, provenance, and usage records; `src/aeat/application/ledger, src/aeat/adapters/outbound/llm`.
-- [ ] `W67.P321.S1893` - Persist prompts, responses, confidence, redaction manifest, and usage metadata inside the active profile bucket; `src/aeat/domain/buckets`.
-- [ ] `W67.P321.S1894` - Route provider failures, rate limits, and validation errors through central AEAT errors and logging; `src/aeat/core, src/aeat/adapters/outbound/llm`.
+- [x] `W67.P321.S1891` - Read the receipt OCR, ledger classify, profile bucket, and unexposed capability ADRs before editing; `.vault/adr`.
+- [x] `W67.P321.S1892` - Define strict Pydantic backend service policies for LLM requests, redaction, confidence, provenance, and usage records; `src/aeat/application/ledger, src/aeat/adapters/outbound/llm`.
+- [x] `W67.P321.S1893` - Persist prompts, responses, confidence, redaction manifest, and usage metadata inside the active profile bucket; `src/aeat/domain/buckets`.
+- [x] `W67.P321.S1894` - Route provider failures, rate limits, and validation errors through central AEAT errors and logging; `src/aeat/core, src/aeat/adapters/outbound/llm`.
 
 ### Phase `W67.P322` - rejected path removal
 
 This Phase removes LLM command collisions and shadow command-local paths.
 
-- [ ] `W67.P322.S1895` - Delete any LLM command registration or command-local provider invocation; `src/aeat/entrypoints/cli`.
-- [ ] `W67.P322.S1896` - Remove application call sites that send profile, ledger, filing, or evidence data to LLM providers without backend policy; `src/aeat`.
-- [ ] `W67.P322.S1897` - Remove tests that use deterministic providers as a substitute for real backend policy checks; `tests`.
-- [ ] `W67.P322.S1898` - Update boundary inventory so LLM is adapter-only behind approved services; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W67.P322.S1895` - Delete any LLM command registration or command-local provider invocation; `src/aeat/entrypoints/cli`.
+- [x] `W67.P322.S1896` - Remove application call sites that send profile, ledger, filing, or evidence data to LLM providers without backend policy; `src/aeat`.
+- [x] `W67.P322.S1897` - Remove tests that use deterministic providers as a substitute for real backend policy checks; `tests`.
+- [x] `W67.P322.S1898` - Update boundary inventory so LLM is adapter-only behind approved services; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W67.P323` - verification and cli exposure
 
 This Phase proves governed LLM use without exposing an LLM command.
 
-- [ ] `W67.P323.S1899` - Add service tests for redaction, provenance, usage recording, and confidence gates; `tests/application/ledger`.
-- [ ] `W67.P323.S1900` - Add storage tests proving LLM-derived evidence remains bucket-scoped; `tests/domain/buckets`.
-- [ ] `W67.P323.S1901` - Expose LLM-backed behavior only through approved `aeat app ledger attach` evidence and `aeat app ledger classify` commands; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W67.P323.S1902` - Validate CLI handlers do not construct prompts, parse LLM responses, or decide classification results; `tests/entrypoints/cli`.
+- [x] `W67.P323.S1899` - Add service tests for redaction, provenance, usage recording, and confidence gates; `tests/application/ledger`.
+- [x] `W67.P323.S1900` - Add storage tests proving LLM-derived evidence remains bucket-scoped; `tests/domain/buckets`.
+- [x] `W67.P323.S1901` - Expose LLM-backed behavior only through approved `aeat app ledger attach` evidence and `aeat app ledger classify` commands; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W67.P323.S1902` - Validate CLI handlers do not construct prompts, parse LLM responses, or decide classification results; `tests/entrypoints/cli`.
 
 ## Wave `W68` - export serializer boundary harvest
 
@@ -3902,28 +3902,28 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-cap
 
 This Phase binds export serializers to approved export services.
 
-- [ ] `W68.P324.S1903` - Read the modelo export, libros BOE, live submit excision, and unexposed capability ADRs before editing; `.vault/adr`.
-- [ ] `W68.P324.S1904` - Implement strict Pydantic application export services that call serializer adapters for modelo revisions and BOE libros; `src/aeat/application/modelo, src/aeat/application/ledger`.
-- [ ] `W68.P324.S1905` - Store export manifests, checksums, source revision ids, and event records in the active profile bucket; `src/aeat/domain/buckets`.
-- [ ] `W68.P324.S1906` - Route serializer validation and format errors through central AEAT errors and logging; `src/aeat/core, src/aeat/adapters/outbound/aeat/export`.
+- [x] `W68.P324.S1903` - Read the modelo export, libros BOE, live submit excision, and unexposed capability ADRs before editing; `.vault/adr`.
+- [x] `W68.P324.S1904` - Implement strict Pydantic application export services that call serializer adapters for modelo revisions and BOE libros; `src/aeat/application/modelo, src/aeat/application/ledger`.
+- [x] `W68.P324.S1905` - Store export manifests, checksums, source revision ids, and event records in the active profile bucket; `src/aeat/domain/buckets`.
+- [x] `W68.P324.S1906` - Route serializer validation and format errors through central AEAT errors and logging; `src/aeat/core, src/aeat/adapters/outbound/aeat/export`.
 
 ### Phase `W68.P325` - rejected path removal
 
 This Phase removes export command collisions and shadow paths that imply a filing root or live submission.
 
-- [ ] `W68.P325.S1907` - Delete any filing-root or submit-shaped export command path; `src/aeat/entrypoints/cli`.
-- [ ] `W68.P325.S1908` - Remove backend branches that combine serialization with remote writes; `src/aeat/adapters/outbound/aeat/export`.
-- [ ] `W68.P325.S1909` - Remove tests that expect export commands outside `aeat app modelo` or `aeat app ledger`; `tests`.
-- [ ] `W68.P325.S1910` - Update boundary inventory so export serialization is backend-only behind approved app domains; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W68.P325.S1907` - Delete any filing-root or submit-shaped export command path; `src/aeat/entrypoints/cli`.
+- [x] `W68.P325.S1908` - Remove backend branches that combine serialization with remote writes; `src/aeat/adapters/outbound/aeat/export`.
+- [x] `W68.P325.S1909` - Remove tests that expect export commands outside `aeat app modelo` or `aeat app ledger`; `tests`.
+- [x] `W68.P325.S1910` - Update boundary inventory so export serialization is backend-only behind approved app domains; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W68.P326` - verification and cli exposure
 
 This Phase proves exports through real serializers and approved app commands.
 
-- [ ] `W68.P326.S1911` - Add service tests for modelo revision export manifests and serializer outputs; `tests/application/modelo`.
-- [ ] `W68.P326.S1912` - Add service tests for ledger BOE libro exporters with real ledger data; `tests/application/ledger`.
-- [ ] `W68.P326.S1913` - Expose exports only through `aeat app modelo export` and `aeat app ledger export`; `src/aeat/entrypoints/cli`.
-- [ ] `W68.P326.S1914` - Validate help text and errors never imply live AEAT submission; `tests/entrypoints/cli`.
+- [x] `W68.P326.S1911` - Add service tests for modelo revision export manifests and serializer outputs; `tests/application/modelo`.
+- [x] `W68.P326.S1912` - Add service tests for ledger BOE libro exporters with real ledger data; `tests/application/ledger`.
+- [x] `W68.P326.S1913` - Expose exports only through `aeat app modelo export` and `aeat app ledger export`; `src/aeat/entrypoints/cli`.
+- [x] `W68.P326.S1914` - Validate help text and errors never imply live AEAT submission; `tests/entrypoints/cli`.
 
 ## Wave `W69` - attachment evidence storage harvest
 
@@ -3933,28 +3933,28 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-unexposed-backend-cap
 
 This Phase binds attachment domain behavior to ledger evidence and evidence bundle services.
 
-- [ ] `W69.P327.S1915` - Read the ledger transaction, receipt OCR, evidence bundle, and unexposed capability ADRs before editing; `.vault/adr`.
-- [ ] `W69.P327.S1916` - Implement strict Pydantic application evidence services over `AttachmentStore`, `AttachmentCatalogue`, and attachment manifests; `src/aeat/application/ledger`.
-- [ ] `W69.P327.S1917` - Link purchase invoice evidence, receipts, references, and supporting files to ledger transactions through bucket-scoped identifiers; `src/aeat/domain/attachments, src/aeat/domain/transactions`.
-- [ ] `W69.P327.S1918` - Emit bucket events for evidence attach, replace, detach, verify, export, and bundle creation; `src/aeat/domain/buckets`.
+- [x] `W69.P327.S1915` - Read the ledger transaction, receipt OCR, evidence bundle, and unexposed capability ADRs before editing; `.vault/adr`.
+- [x] `W69.P327.S1916` - Implement strict Pydantic application evidence services over `AttachmentStore`, `AttachmentCatalogue`, and attachment manifests; `src/aeat/application/ledger`.
+- [x] `W69.P327.S1917` - Link purchase invoice evidence, receipts, references, and supporting files to ledger transactions through bucket-scoped identifiers; `src/aeat/domain/attachments, src/aeat/domain/transactions`.
+- [x] `W69.P327.S1918` - Emit bucket events for evidence attach, replace, detach, verify, export, and bundle creation; `src/aeat/domain/buckets`.
 
 ### Phase `W69.P328` - rejected path removal
 
 This Phase removes attachment command collisions and shadow paths that bypass ledger evidence ownership.
 
-- [ ] `W69.P328.S1919` - Delete any attachment command registration outside approved ledger and modelo evidence flows; `src/aeat/entrypoints/cli`.
-- [ ] `W69.P328.S1920` - Correct plan and code scopes that reference non-existent evidence application packages; `.vault/plan, src/aeat`.
-- [ ] `W69.P328.S1921` - Remove storage paths that persist attachments outside the active profile bucket; `src/aeat/domain/attachments`.
-- [ ] `W69.P328.S1922` - Update boundary inventory so attachment storage is ledger evidence backend behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W69.P328.S1919` - Delete any attachment command registration outside approved ledger and modelo evidence flows; `src/aeat/entrypoints/cli`.
+- [x] `W69.P328.S1920` - Correct plan and code scopes that reference non-existent evidence application packages; `.vault/plan, src/aeat`.
+- [x] `W69.P328.S1921` - Remove storage paths that persist attachments outside the active profile bucket; `src/aeat/domain/attachments`.
+- [x] `W69.P328.S1922` - Update boundary inventory so attachment storage is ledger evidence backend behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W69.P329` - verification and cli exposure
 
 This Phase proves attachment evidence through real storage and approved app commands.
 
-- [ ] `W69.P329.S1923` - Add service tests for ledger attachment evidence lifecycle with real attachment manifests; `tests/application/ledger`.
-- [ ] `W69.P329.S1924` - Add bucket storage tests for attachment lineage, checksums, and event history; `tests/domain/attachments, tests/domain/buckets`.
-- [ ] `W69.P329.S1925` - Expose attachment evidence only through `aeat app ledger attach` and approved evidence bundle commands; `src/aeat/entrypoints/cli`.
-- [ ] `W69.P329.S1926` - Validate CLI handlers delegate attachment behavior to backend services and render through `_emit`; `tests/entrypoints/cli`.
+- [x] `W69.P329.S1923` - Add service tests for ledger attachment evidence lifecycle with real attachment manifests; `tests/application/ledger`.
+- [x] `W69.P329.S1924` - Add bucket storage tests for attachment lineage, checksums, and event history; `tests/domain/attachments, tests/domain/buckets`.
+- [x] `W69.P329.S1925` - Expose attachment evidence only through `aeat app ledger attach` and approved evidence bundle commands; `src/aeat/entrypoints/cli`.
+- [x] `W69.P329.S1926` - Validate CLI handlers delegate attachment behavior to backend services and render through `_emit`; `tests/entrypoints/cli`.
 
 ## Wave `W70` - test-user audit closure
 
