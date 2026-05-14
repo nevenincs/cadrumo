@@ -240,6 +240,43 @@ def _active_bucket_id() -> str:
         raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
 
 
+@notifications_app.command(
+    "capture",
+    help=tr(
+        "cli.app.live.notifications.capture_help",
+        default="Live-fetch DEHú notifications and persist a bucket-scoped snapshot.",
+    ),
+)
+def notifications_capture(ctx: typer.Context) -> None:
+    """Drive the live DEHú fetch + persist flow.
+
+    Refuses unless ``AEAT_LIVE_TESTS_ENABLED=1`` is set in the operator's
+    shell. Will trigger the configured auth provider (e.g. Cl@ve Móvil push
+    or certificate handshake) when no live session is present.
+    """
+
+    from ...application.live import capture_notifications
+
+    bucket_id = _active_bucket_id()
+    persisted = asyncio.run(capture_notifications(bucket_id=bucket_id))
+    payload = {
+        "bucket_id": bucket_id,
+        "snapshot_id": persisted.snapshot_id,
+        "captured_at": persisted.captured_at.isoformat(),
+        "persisted_at": persisted.persisted_at.isoformat(),
+        "row_count": len(persisted.rows),
+        "source_url": persisted.source_url,
+    }
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"snapshot_id\t{persisted.snapshot_id}",
+        f"captured_at\t{persisted.captured_at.isoformat()}",
+        f"row_count\t{len(persisted.rows)}",
+        f"source_url\t{persisted.source_url}",
+    ]
+    _emit(ctx, payload, lines)
+
+
 @notifications_app.command("list", help=tr("cli.app.live.notifications.list_help", default="List persisted DEHú notification snapshots in the active bucket."))
 def notifications_list(ctx: typer.Context) -> None:
     from ...application.live._notifications import NotificationsService
