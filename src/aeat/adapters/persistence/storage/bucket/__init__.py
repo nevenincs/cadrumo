@@ -19,6 +19,7 @@ from ._errors import (
     RecoveryVerificationError,
 )
 from ._export_header import ExportArchiveHeader
+from ._keystore_paths import keystore_path, keystore_root, validate_keystore_separation
 from ._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from ._manifest import BucketManifest, KdfParams
 from ._manifest_io import manifest_path, read_manifest, write_manifest
@@ -37,8 +38,11 @@ __all__ = [
     "RecoveryUnavailableError",
     "RecoveryVerificationError",
     "bucket_paths",
+    "keystore_path",
+    "keystore_root",
     "manifest_path",
     "provision_bucket_directory",
     "read_manifest",
+    "validate_keystore_separation",
     "write_manifest",
 ]
