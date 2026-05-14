@@ -1231,7 +1231,7 @@ def payable_invoice_add(
     notes: str = typer.Option("", "--notes"),
 ) -> None:
     bucket_id = _ratios_bucket_id()
-    record = _payable_invoice_service().add(
+    result = _payable_invoice_service().add(
         bucket_id=bucket_id,
         counterparty_nif=counterparty_nif,
         invoice_number=invoice_number,
@@ -1244,7 +1244,11 @@ def payable_invoice_add(
         total_amount=_parse_required_decimal(total_amount, label="total-amount"),
         notes=notes,
     )
-    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+    payload = _business_invoice_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _business_invoice_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit(ctx, payload, lines)
 
 
 @payable_invoice_app.command("view", help=tr("cli.app.ledger.payable_invoice.view_help", default="Show one payable invoice record."))
@@ -1304,8 +1308,12 @@ def payable_invoice_update(
         total_amount=_parse_decimal(total_amount, label="total-amount"),
         notes=notes,
     )
-    record = _payable_invoice_service().update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
-    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+    result = _payable_invoice_service().update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
+    payload = _business_invoice_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _business_invoice_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit(ctx, payload, lines)
 
 
 @payable_invoice_app.command("remove", help=tr("cli.app.ledger.payable_invoice.remove_help", default="Delete one payable invoice record."))
@@ -1317,8 +1325,12 @@ def payable_invoice_remove(
     if not yes:
         raise _bad(tr("cli.app.ledger.payable_invoice.yes_required", default="--yes is required to remove a payable invoice record"))
     bucket_id = _ratios_bucket_id()
-    record = _payable_invoice_service().remove(bucket_id=bucket_id, invoice_id=invoice_id)
-    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+    result = _payable_invoice_service().remove(bucket_id=bucket_id, invoice_id=invoice_id)
+    payload = _business_invoice_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _business_invoice_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit(ctx, payload, lines)
 
 
 collectible_invoice_app = typer.Typer(
@@ -1347,7 +1359,7 @@ def collectible_invoice_add(
     notes: str = typer.Option("", "--notes"),
 ) -> None:
     bucket_id = _ratios_bucket_id()
-    record = _collectible_invoice_service().add(
+    result = _collectible_invoice_service().add(
         bucket_id=bucket_id,
         counterparty_nif=counterparty_nif,
         invoice_number=invoice_number,
@@ -1360,7 +1372,11 @@ def collectible_invoice_add(
         total_amount=_parse_required_decimal(total_amount, label="total-amount"),
         notes=notes,
     )
-    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+    payload = _business_invoice_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _business_invoice_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit(ctx, payload, lines)
 
 
 @collectible_invoice_app.command("view", help=tr("cli.app.ledger.collectible_invoice.view_help", default="Show one collectible invoice record."))
@@ -1420,8 +1436,12 @@ def collectible_invoice_update(
         total_amount=_parse_decimal(total_amount, label="total-amount"),
         notes=notes,
     )
-    record = _collectible_invoice_service().update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
-    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+    result = _collectible_invoice_service().update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
+    payload = _business_invoice_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _business_invoice_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit(ctx, payload, lines)
 
 
 @collectible_invoice_app.command("remove", help=tr("cli.app.ledger.collectible_invoice.remove_help", default="Delete one collectible invoice record."))
@@ -1433,8 +1453,12 @@ def collectible_invoice_remove(
     if not yes:
         raise _bad(tr("cli.app.ledger.collectible_invoice.yes_required", default="--yes is required to remove a collectible invoice record"))
     bucket_id = _ratios_bucket_id()
-    record = _collectible_invoice_service().remove(bucket_id=bucket_id, invoice_id=invoice_id)
-    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+    result = _collectible_invoice_service().remove(bucket_id=bucket_id, invoice_id=invoice_id)
+    payload = _business_invoice_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _business_invoice_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit(ctx, payload, lines)
 app.add_typer(payable_invoice_app, name="payable-invoice")
 app.add_typer(collectible_invoice_app, name="collectible-invoice")
 
@@ -1485,14 +1509,16 @@ def inventory_create(
     opening_stock: str = typer.Option("0", "--opening-stock", help=tr("cli.app.ledger.inventory.opening_stock_help", default="Opening stock value.")),
 ) -> None:
     bucket_id = _ratios_bucket_id()
-    ledger = _inventory_service().create(
+    result = _inventory_service().create(
         bucket_id=bucket_id,
         actividad_id=actividad_id,
         year=year,
         valuation_method=valuation_method,
         opening_stock=_parse_required_decimal(opening_stock, label="opening-stock"),
     )
+    ledger = result.ledger
     payload = ledger.model_dump(mode="json")
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
     _emit(
         ctx,
         payload,
@@ -1502,6 +1528,7 @@ def inventory_create(
             f"year\t{ledger.year}",
             f"valuation_method\t{ledger.valuation_method.value}",
             f"opening_stock\t{ledger.opening_stock}",
+            f"bucket_event_ids\t{','.join(result.bucket_event_ids)}",
         ),
     )
 
@@ -1537,13 +1564,15 @@ def inventory_movement_add(
         taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
         vat_rate=_parse_required_decimal(vat_rate, label="vat-rate"),
     )
-    ledger = _inventory_service().movement_add(
+    result = _inventory_service().movement_add(
         bucket_id=bucket_id,
         actividad_id=actividad_id,
         year=year,
         movement=command,
     )
+    ledger = result.ledger
     payload = ledger.model_dump(mode="json")
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
     _emit(
         ctx,
         payload,
@@ -1552,6 +1581,7 @@ def inventory_movement_add(
             f"actividad_id\t{ledger.actividad_id}",
             f"year\t{ledger.year}",
             f"movements\t{len(ledger.period_movements)}",
+            f"bucket_event_ids\t{','.join(result.bucket_event_ids)}",
         ),
     )
 
@@ -1563,10 +1593,12 @@ def inventory_valuation_preview(
     year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
 ) -> None:
     bucket_id = _ratios_bucket_id()
-    preview = _inventory_service().valuation_preview(
+    result = _inventory_service().valuation_preview(
         bucket_id=bucket_id, actividad_id=actividad_id, year=year
     )
+    preview = result.preview
     payload = preview.model_dump(mode="json")
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
     _emit(
         ctx,
         payload,
@@ -1577,6 +1609,7 @@ def inventory_valuation_preview(
             f"valuation_method\t{preview.valuation_method.value}",
             f"closing_stock\t{preview.closing_stock}",
             f"cogs\t{preview.cogs}",
+            f"bucket_event_ids\t{','.join(result.bucket_event_ids)}",
         ),
     )
 
@@ -1667,7 +1700,7 @@ def evidence_add(
 ) -> None:
     """Register a purchase invoice evidence record and return its id."""
     transaction_repository = _tx_repo(_state())
-    record = _evidence_service().add(
+    result = _evidence_service().add(
         bucket_id=transaction_repository.bucket_id,
         source_path=source_path,
         supplier=supplier,
@@ -1678,7 +1711,11 @@ def evidence_add(
         iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
         notes=notes,
     )
-    _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
+    payload = _evidence_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _evidence_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit(ctx, payload, lines)
 
 
 @evidence_app.command(
@@ -1758,12 +1795,16 @@ def evidence_update(
         iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
         notes=notes,
     )
-    record = _evidence_service().update(
+    result = _evidence_service().update(
         bucket_id=transaction_repository.bucket_id,
         evidence_id=evidence_id,
         patch=patch,
     )
-    _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
+    payload = _evidence_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _evidence_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit(ctx, payload, lines)
 
 
 @evidence_app.command(
@@ -1785,8 +1826,12 @@ def evidence_remove(
     if not yes:
         raise _bad(tr("cli.app.ledger.evidence.yes_required", default="--yes is required to remove an evidence record"))
     transaction_repository = _tx_repo(_state())
-    record = _evidence_service().remove(
+    result = _evidence_service().remove(
         bucket_id=transaction_repository.bucket_id,
         evidence_id=evidence_id,
     )
-    _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
+    payload = _evidence_payload(result.record)
+    payload["bucket_event_ids"] = list(result.bucket_event_ids)
+    lines = _evidence_text_lines(result.record)
+    lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
+    _emit(ctx, payload, lines)

@@ -26,17 +26,21 @@ from ._errors import (
 )
 from ._service import (
     InventoryActividadSummary,
+    InventoryLedgerResult,
     InventoryMovementCommand,
     InventoryService,
     InventoryValuationPreview,
+    InventoryValuationPreviewResult,
 )
 
 __all__ = [
     "InventoryActividadConflictError",
     "InventoryActividadNotFoundError",
     "InventoryActividadSummary",
+    "InventoryLedgerResult",
     "InventoryMovementCommand",
     "InventoryService",
     "InventoryServiceInputError",
     "InventoryValuationPreview",
+    "InventoryValuationPreviewResult",
 ]
