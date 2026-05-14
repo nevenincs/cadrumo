@@ -12,8 +12,16 @@ directly.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import date
+from datetime import date, datetime
 
+from ...domain.buckets import (
+    BucketEvent,
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
+    append_bucket_event,
+    derive_bucket_event_id,
+)
 from ...domain.user_profile import (
     ProfileAlreadyExistsError,
     ProfileNotFoundError,
@@ -37,6 +45,14 @@ from . import (
 from ._repository import UserProfileLifecycleRepository
 from ._validation import ProfileValidationService
 
+_PROFILE_LIFECYCLE_ACTOR = "aeat.application.user_profile"
+
+
+def _paths_payload(facts: tuple[UserProfileFact, ...]) -> dict[str, str]:
+    """Return a stable comma-joined ``paths`` payload for a bucket event."""
+
+    return {"paths": ",".join(sorted({fact.path for fact in facts}))}
+
 
 class ProfileLifecycleService:
     """Schema-validated, secure-DB-backed user-profile lifecycle service."""
@@ -46,9 +62,11 @@ class ProfileLifecycleService:
         *,
         repository: UserProfileLifecycleRepository,
         validator: ProfileValidationService,
+        events: BucketEventHistoryRepository | None = None,
     ) -> None:
         self._repository = repository
         self._validator = validator
+        self._events = events or BucketEventHistoryRepository()
 
     # ── register / list / read ─────────────────────────────────────
 
@@ -71,6 +89,19 @@ class ProfileLifecycleService:
             updated_at=now,
         )
         self._repository.save(record)
+        self._emit_event(
+            event_type=BucketEventType.PROFILE_BUCKET_CREATED,
+            object_id=record.profile_id,
+            occurred_at=now,
+            payload={"display_name": record.display_name},
+        )
+        if record.facts:
+            self._emit_event(
+                event_type=BucketEventType.PROFILE_VALUES_UPDATED,
+                object_id=record.profile_id,
+                occurred_at=now,
+                payload=_paths_payload(record.facts),
+            )
         return ProfileLifecycleResult(profile=record, applied_at=now)
 
     def read(self, profile_id: str) -> UserProfileRecord:
@@ -110,7 +141,19 @@ class ProfileLifecycleService:
         )
         next_facts = self._merge_facts(record.facts, (new_fact,))
         self._reject_invalid(command.profile_id, next_facts)
-        return self._save_updated(record, next_facts)
+        result = self._save_updated(record, next_facts)
+        event_type = (
+            BucketEventType.PROFILE_VALUES_CLEARED
+            if new_fact.value is None
+            else BucketEventType.PROFILE_VALUES_UPDATED
+        )
+        self._emit_event(
+            event_type=event_type,
+            object_id=record.profile_id,
+            occurred_at=result.applied_at,
+            payload={"path": new_fact.path},
+        )
+        return result
 
     def edit_section(self, command: EditProfileSectionCommand) -> ProfileLifecycleResult:
         """Replace every fact in one schema section with the supplied facts."""
@@ -119,7 +162,14 @@ class ProfileLifecycleService:
         retained = tuple(fact for fact in record.facts if not fact.path.startswith(f"{command.section_key}."))
         merged = self._merge_facts(retained, command.facts)
         self._reject_invalid(command.profile_id, merged)
-        return self._save_updated(record, merged)
+        result = self._save_updated(record, merged)
+        self._emit_event(
+            event_type=BucketEventType.PROFILE_VALUES_UPDATED,
+            object_id=record.profile_id,
+            occurred_at=result.applied_at,
+            payload={"section": command.section_key, "fields": _paths_payload(command.facts)["paths"]},
+        )
+        return result
 
     def remove(self, command: RemoveProfileCommand) -> ProfileLifecycleResult:
         """Tombstone the live root. Immutable filing snapshots are retained."""
@@ -127,6 +177,11 @@ class ProfileLifecycleService:
         record = self._repository.load(command.profile_id)
         tombstoned = record.tombstone()
         self._repository.save(tombstoned)
+        self._emit_event(
+            event_type=BucketEventType.PROFILE_TOMBSTONED,
+            object_id=tombstoned.profile_id,
+            occurred_at=tombstoned.updated_at,
+        )
         return ProfileLifecycleResult(profile=tombstoned, applied_at=tombstoned.updated_at)
 
     def duplicate(self, command: DuplicateProfileCommand) -> ProfileLifecycleResult:
@@ -153,6 +208,12 @@ class ProfileLifecycleService:
             }
         )
         self._repository.save(target)
+        self._emit_event(
+            event_type=BucketEventType.PROFILE_DUPLICATED,
+            object_id=target.profile_id,
+            occurred_at=now,
+            payload={"source_profile_id": source.profile_id},
+        )
         return ProfileLifecycleResult(profile=target, applied_at=now)
 
     # ── helpers ────────────────────────────────────────────────────
@@ -187,6 +248,36 @@ class ProfileLifecycleService:
         for fact in incoming:
             merged[(fact.path, fact.valid_from, fact.valid_to)] = fact
         return tuple(merged.values())
+
+    def _emit_event(
+        self,
+        *,
+        event_type: BucketEventType,
+        object_id: str,
+        occurred_at: datetime,
+        payload: dict[str, str] | None = None,
+    ) -> None:
+        payload_body = dict(payload or {})
+        event = BucketEvent(
+            event_id=derive_bucket_event_id(
+                bucket_id=self._repository.bucket_id,
+                event_type=event_type,
+                occurred_at=occurred_at,
+                actor=_PROFILE_LIFECYCLE_ACTOR,
+                object_type=BucketEventObjectType.PROFILE,
+                object_id=object_id,
+                payload=payload_body,
+            ),
+            bucket_id=self._repository.bucket_id,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            actor=_PROFILE_LIFECYCLE_ACTOR,
+            object_type=BucketEventObjectType.PROFILE,
+            object_id=object_id,
+            payload_version=1,
+            payload=payload_body,
+        )
+        self._events.save(append_bucket_event(self._events.load(), event))
 
     def _iter_profiles(self) -> Iterable[UserProfileRecord]:
         # Listing requires walking the secure-object backend by namespace.
