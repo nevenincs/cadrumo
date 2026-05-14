@@ -509,8 +509,6 @@ cli:
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának útvonala
     manuals:
       app_help: AEAT Manual práctico bejegyzések vizsgálata (Renta, IVA, Sociedades)
-      errors:
-        unknown_section: A(z) {section} szakasz nem található a kézikönyvben
       kind_help: Szűrés kézikönyvi szabálytípus szerint
       list_help: Helyben elérhető kézikönyvrészek listázása
       manual_help: Kézikönyv-azonosító (renta, iva, sociedades)

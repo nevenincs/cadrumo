@@ -349,14 +349,16 @@ def _resolve_active_tax_id(settings: Settings) -> str | None:
     """Return the active profile's tax id, or ``None`` when unknown."""
     del settings
     try:
-        from ..workflow import workflow_state_repository
         from ..wizard._status import build_wizard_status
+        from ..workflow import workflow_state_repository
     except Exception:
+        _LOGGER.debug("review adapters could not import workflow status helpers", exc_info=True)
         return None
     try:
         state = workflow_state_repository().load()
         status = build_wizard_status(state)
     except Exception:
+        _LOGGER.debug("review adapters could not resolve active workflow status", exc_info=True)
         return None
     return status.tax_id or None
 

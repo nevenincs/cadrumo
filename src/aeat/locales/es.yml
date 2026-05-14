@@ -523,8 +523,6 @@ cli:
     inspect_registry_root_help: Ruta al directorio raíz del registro
     manuals:
       app_help: Inspeccionar los Manuales prácticos AEAT (Renta, IVA, Sociedades)
-      errors:
-        unknown_section: La sección {section} no se encontró en el manual
       kind_help: Filtrar por tipo de regla del manual
       list_help: Listar los manuales disponibles localmente
       manual_help: Identificador del manual (renta, iva, sociedades)

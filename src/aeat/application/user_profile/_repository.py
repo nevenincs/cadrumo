@@ -33,6 +33,22 @@ _USER_PROFILE_VALUE_VERSION = 1
 _USER_PROFILE_SNAPSHOT_VERSION = 1
 
 
+def _clear_output_language_cache() -> None:
+    """Invalidate cached i18n output-language resolution after a profile write.
+
+    Every persisted profile fact write may shift the active profile's
+    ``preferences.output_language`` and therefore the resolved CLI render
+    language. Importing lazily so persistence cannot block on the i18n
+    module.
+    """
+
+    try:
+        from ...core.i18n._render import clear_output_language_cache
+    except Exception:  # pragma: no cover - cache invalidation must never block persistence
+        return
+    clear_output_language_cache()
+
+
 def user_profile_value_object_key(bucket_id: str, profile_id: str) -> str:
     """Return the secure-object key for one bucket's profile aggregate."""
 
@@ -113,12 +129,16 @@ class UserProfileLifecycleRepository:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
+        _clear_output_language_cache()
 
     def delete(self, profile_id: str) -> bool:
-        return self._objects.delete(
+        deleted = self._objects.delete(
             USER_PROFILE_VALUE_NAMESPACE,
             user_profile_value_object_key(self._bucket_id, profile_id),
         )
+        if deleted:
+            _clear_output_language_cache()
+        return deleted
 
 
 class UserProfileSnapshotRepository:

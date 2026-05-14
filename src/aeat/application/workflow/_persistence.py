@@ -32,6 +32,15 @@ _RUN_VERSION = 1
 _RUN_NAMESPACE = "aeat.application.workflow.runs"
 
 
+def _clear_output_language_cache() -> None:
+    try:
+        from ...core.i18n._render import clear_output_language_cache
+    except Exception:  # pragma: no cover - cache invalidation must never block persistence
+        _logger.debug("workflow persistence could not import i18n cache invalidator", exc_info=True)
+        return
+    clear_output_language_cache()
+
+
 class WorkflowStateRepository:
     """Encrypted SQL object repository for :class:`WorkflowState`."""
 
@@ -162,6 +171,7 @@ class WorkflowStateRepository:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
+        _clear_output_language_cache()
         _logger.debug("persisted workflow state to secure backend")
 
     def fingerprint_state(
@@ -225,6 +235,7 @@ class WorkflowStateRepository:
         fingerprint = self.fingerprint_state(reason_class=reason_class)
         emit_workflow_state_reset(fingerprint=fingerprint, actor=actor, source=source)
         self._objects.delete(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
+        _clear_output_language_cache()
         _logger.info("workflow state envelope reset; recovery route fired by operator")
         return fingerprint
 

@@ -20,6 +20,15 @@ PROFILE_BUCKET_NAMESPACE = "aeat.application.profile.bucket"
 PROFILE_BUCKET_VERSION = 1
 
 
+def _clear_output_language_cache() -> None:
+    try:
+        from ...core.i18n._render import clear_output_language_cache
+    except Exception:  # pragma: no cover - cache invalidation must never block persistence
+        _LOGGER.debug("profile bucket persistence could not import i18n cache invalidator", exc_info=True)
+        return
+    clear_output_language_cache()
+
+
 class ProfileBucketPersistenceError(AeatError):
     """Raised when a profile bucket cannot be persisted or loaded."""
 
@@ -119,11 +128,15 @@ class ProfileBucketRepository:
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
         )
+        _clear_output_language_cache()
         return stored
 
     def delete(self, profile_name: str) -> bool:
         bucket_id = profile_bucket_id(profile_name)
-        return self._objects.delete(PROFILE_BUCKET_NAMESPACE, profile_bucket_object_key(bucket_id))
+        deleted = self._objects.delete(PROFILE_BUCKET_NAMESPACE, profile_bucket_object_key(bucket_id))
+        if deleted:
+            _clear_output_language_cache()
+        return deleted
 
     def list_profiles(self) -> tuple[ProfileRecord, ...]:
         profiles: list[ProfileRecord] = []

@@ -79,7 +79,7 @@ async def _open_browser_page(
             try:
                 await context.close()
             except Exception as exc:
-                log.debug("sede walker: context.close suppressed: %s", exc)
+                log.debug("sede walker: context.close suppressed: %s", exc, exc_info=True)
     finally:
         await browser_session.close()
 
@@ -166,7 +166,7 @@ async def resolve_justificante_ref(
         try:
             await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
         except Exception as _exc:
-            log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc)
+            log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc, exc_info=True)
         try:
             await page.goto(detail_url, wait_until="domcontentloaded")
         except PlaywrightError as exc:
@@ -216,7 +216,7 @@ async def capture_justificante(
         try:
             await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
         except Exception as _exc:
-            log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc)
+            log.debug("sede walker: warm-up goto %s suppressed: %s", _RESUMEN_URL, _exc, exc_info=True)
         try:
             await page.goto(detail_url, wait_until="domcontentloaded")
         except PlaywrightError as exc:

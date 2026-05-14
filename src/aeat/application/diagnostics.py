@@ -186,6 +186,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         checks.append(_profile_check(setup_report))
         checks.append(_auth_check(setup_report))
     except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
+        _log.debug("config repair secure state probe failed", exc_info=True)
         checks.append(
             DiagnosticCheck(
                 name="secure_state.load",
@@ -307,6 +308,7 @@ def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSumma
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=PROJECT_ROOT)
     except Exception as exc:  # pragma: no cover - covered by later repair diagnostics.
+        _log.debug("registry version summary load failed for %s", registry_root, exc_info=True)
         return RegistryVersionSummary(
             available=False,
             registry_root=str(registry_root),
@@ -338,7 +340,12 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
         repo = SecureObjectRepository()
         namespaces = repo.list_namespaces()
     except Exception as exc:  # pragma: no cover - engine resolution depends on local backend.
-        _log.debug("secure objects engine unreachable for repair probe: %s: %s", type(exc).__name__, exc)
+        _log.debug(
+            "secure objects engine unreachable for repair probe: %s: %s",
+            type(exc).__name__,
+            exc,
+            exc_info=True,
+        )
         return SecureObjectIntegrityReport()
     integrity = tuple(repo.probe_namespace_integrity(ns) for ns in namespaces)
     readable_total = sum(item.readable for item in integrity)

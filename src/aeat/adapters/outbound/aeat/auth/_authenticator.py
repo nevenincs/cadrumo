@@ -536,7 +536,11 @@ class AeatAuthenticator:
                 try:
                     await context.close()
                 except Exception as _exc:  # Playwright context.close() undocumented; log and continue
-                    log.debug("AeatAuthenticator: context.close after marker failure suppressed: %s", _exc)
+                    log.debug(
+                        "AeatAuthenticator: context.close after marker failure suppressed: %s",
+                        _exc,
+                        exc_info=True,
+                    )
                 await self._close_browser_session(session_like)
                 raise
 
@@ -559,7 +563,11 @@ class AeatAuthenticator:
                 try:
                     await context.close()
                 except Exception as _exc:
-                    log.debug("AeatAuthenticator: context.close after failed probe suppressed: %s", _exc)
+                    log.debug(
+                        "AeatAuthenticator: context.close after failed probe suppressed: %s",
+                        _exc,
+                        exc_info=True,
+                    )
                 await self._close_browser_session(session_like)
                 raise AeatLoginAssertionError(
                     "fresh AEAT authentication did not produce a valid login assertion; "
@@ -879,7 +887,7 @@ class AeatAuthenticator:
                 try:
                     await page.close()
                 except Exception as _exc:
-                    log.debug("AeatAuthenticator: probe page.close suppressed: %s", _exc)
+                    log.debug("AeatAuthenticator: probe page.close suppressed: %s", _exc, exc_info=True)
 
         elapsed_ms = int((time.perf_counter() - start) * 1000)
         handshake = session.handshake
@@ -1007,7 +1015,11 @@ class AeatAuthenticator:
                 try:
                     await context.close()
                 except Exception as _exc:
-                    log.debug("AeatAuthenticator: context.close after invalid persisted session suppressed: %s", _exc)
+                    log.debug(
+                        "AeatAuthenticator: context.close after invalid persisted session suppressed: %s",
+                        _exc,
+                        exc_info=True,
+                    )
             if owns_session:
                 await self._close_browser_session(session_like)
             self._invalidate_persisted_state(
@@ -1020,7 +1032,11 @@ class AeatAuthenticator:
                 try:
                     await context.close()
                 except Exception as _exc:
-                    log.debug("AeatAuthenticator: context.close after resume error suppressed: %s", _exc)
+                    log.debug(
+                        "AeatAuthenticator: context.close after resume error suppressed: %s",
+                        _exc,
+                        exc_info=True,
+                    )
             if owns_session:
                 await self._close_browser_session(session_like)
             self._raise_invalid_persisted_state(

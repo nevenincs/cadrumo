@@ -9,6 +9,9 @@ parsing is left to the regex extractor downstream.
 
 from __future__ import annotations
 
+import logging
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pdfplumber
@@ -17,6 +20,18 @@ from .....core.logging import get_logger
 from .....domain.justificante._errors import JustificanteParseError
 
 _logger = get_logger(__name__)
+
+
+@contextmanager
+def _suppress_pdfminer_debug_logging() -> Iterator[None]:
+    logger = logging.getLogger("pdfminer")
+    previous_level = logger.level
+    if previous_level == logging.NOTSET or previous_level < logging.WARNING:
+        logger.setLevel(logging.WARNING)
+    try:
+        yield
+    finally:
+        logger.setLevel(previous_level)
 
 
 def extract_text_pdfplumber(pdf_path: Path) -> str:
@@ -34,7 +49,7 @@ def extract_text_pdfplumber(pdf_path: Path) -> str:
             pdfplumber cannot open the PDF.
     """
     try:
-        with pdfplumber.open(str(pdf_path)) as pdf:
+        with _suppress_pdfminer_debug_logging(), pdfplumber.open(str(pdf_path)) as pdf:
             chunks: list[str] = []
             for page in pdf.pages:
                 text = page.extract_text()
