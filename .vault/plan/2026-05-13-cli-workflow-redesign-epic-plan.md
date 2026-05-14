@@ -3129,7 +3129,7 @@ This Phase delivers backend implementation for per modelo aggregation as require
 - [x] `W52.P256.S1531` - Map the `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr` decision into non-CLI service ownership for per modelo aggregation; `src/aeat/application/aggregation`.
 - [x] `W52.P256.S1532` - Implement Pydantic command and result contracts for per modelo aggregation; `src/aeat/application/aggregation`.
 - [x] `W52.P256.S1533` - Wire application or domain services required by per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P256.S1534` - Connect persistence, bucket events, registry data, or provider adapters required by per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P256.S1534` - Connect persistence, bucket events, registry data, or provider adapters required by per modelo aggregation; `src/aeat/application/aggregation`.
 - [x] `W52.P256.S1535` - Route existing backend functionality into the canonical service for per modelo aggregation; `src/aeat/application/aggregation`.
 - [x] `W52.P256.S1536` - Record service-level error codes and log fields for per modelo aggregation; `src/aeat/application/aggregation`.
 
@@ -3137,45 +3137,45 @@ This Phase delivers backend implementation for per modelo aggregation as require
 
 This Phase delivers shadow duplicate removal for per modelo aggregation as required by `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr`.
 
-- [ ] `W52.P257.S1537` - Audit duplicate implementations that overlap per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P257.S1538` - Delete duplicate backend branches that compete with per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P257.S1539` - Remove stale aliases that bypass the canonical service for per modelo aggregation; `src/aeat/entrypoints/cli`.
-- [ ] `W52.P257.S1540` - Migrate internal callers to the canonical service for per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P257.S1541` - Remove stale fixtures and tests that encode duplicate behavior for per modelo aggregation; `tests/application/aggregation`.
-- [ ] `W52.P257.S1542` - Update boundary inventory entries that describe duplicate behavior for per modelo aggregation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W52.P257.S1537` - Audit duplicate implementations that overlap per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P257.S1538` - Delete duplicate backend branches that compete with per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P257.S1539` - Remove stale aliases that bypass the canonical service for per modelo aggregation; `src/aeat/entrypoints/cli`.
+- [x] `W52.P257.S1540` - Migrate internal callers to the canonical service for per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P257.S1541` - Remove stale fixtures and tests that encode duplicate behavior for per modelo aggregation; `tests/application/aggregation`.
+- [x] `W52.P257.S1542` - Update boundary inventory entries that describe duplicate behavior for per modelo aggregation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W52.P258` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for per modelo aggregation as required by `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr`.
 
-- [ ] `W52.P258.S1543` - Delete compatibility shims that preserve rejected behavior for per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P258.S1544` - Delete placeholder stubs that claim support for per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P258.S1545` - Replace stubbed paths with real backend service calls for per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P258.S1546` - Remove deprecated command spelling and help text for per modelo aggregation; `src/aeat/entrypoints/cli`.
-- [ ] `W52.P258.S1547` - Remove tests that assert shim or stub behavior for per modelo aggregation; `tests/application/aggregation`.
-- [ ] `W52.P258.S1548` - Record the removed shim and stub surfaces for per modelo aggregation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W52.P258.S1543` - Delete compatibility shims that preserve rejected behavior for per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P258.S1544` - Delete placeholder stubs that claim support for per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P258.S1545` - Replace stubbed paths with real backend service calls for per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P258.S1546` - Remove deprecated command spelling and help text for per modelo aggregation; `src/aeat/entrypoints/cli`.
+- [x] `W52.P258.S1547` - Remove tests that assert shim or stub behavior for per modelo aggregation; `tests/application/aggregation`.
+- [x] `W52.P258.S1548` - Record the removed shim and stub surfaces for per modelo aggregation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W52.P259` - real behavior verification
 
 This Phase delivers real behavior verification for per modelo aggregation as required by `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr`.
 
 - [x] `W52.P259.S1549` - Add service contract tests for per modelo aggregation; `tests/application/aggregation`.
-- [ ] `W52.P259.S1550` - Add persistence or registry integration tests for per modelo aggregation; `tests/application/aggregation`.
-- [ ] `W52.P259.S1551` - Add negative tests proving rejected aliases do not reach per modelo aggregation; `tests/entrypoints/cli`.
-- [ ] `W52.P259.S1552` - Add command behavior tests that exercise per modelo aggregation through real services; `tests/entrypoints/cli`.
-- [ ] `W52.P259.S1553` - Add end-to-end workflow coverage for per modelo aggregation; `tests`.
+- [x] `W52.P259.S1550` - Add persistence or registry integration tests for per modelo aggregation; `tests/application/aggregation`.
+- [x] `W52.P259.S1551` - Add negative tests proving rejected aliases do not reach per modelo aggregation; `tests/entrypoints/cli`.
+- [x] `W52.P259.S1552` - Add command behavior tests that exercise per modelo aggregation through real services; `tests/entrypoints/cli`.
+- [x] `W52.P259.S1553` - Add end-to-end workflow coverage for per modelo aggregation; `tests`.
 - [x] `W52.P259.S1554` - Run the targeted test slice for per modelo aggregation without skips or xfails; `tests/application/aggregation`.
 
 ### Phase `W52.P260` - thin cli exposure
 
 This Phase delivers thin cli exposure for per modelo aggregation as required by `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr`.
 
-- [ ] `W52.P260.S1555` - Expose accepted command handlers for per modelo aggregation under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W52.P260.S1556` - Keep argument parsing for per modelo aggregation separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W52.P260.S1557` - Delegate per modelo aggregation execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W52.P260.S1558` - Render per modelo aggregation results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W52.P260.S1559` - Handle per modelo aggregation failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W52.P260.S1560` - Validate help text for per modelo aggregation uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W52.P260.S1555` - Expose accepted command handlers for per modelo aggregation under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W52.P260.S1556` - Keep argument parsing for per modelo aggregation separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W52.P260.S1557` - Delegate per modelo aggregation execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W52.P260.S1558` - Render per modelo aggregation results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W52.P260.S1559` - Handle per modelo aggregation failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W52.P260.S1560` - Validate help text for per modelo aggregation uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W53` - app overview shape
 
