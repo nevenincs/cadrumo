@@ -1230,7 +1230,10 @@ def inventory_valuation_preview(
 
 evidence_app = typer.Typer(
     name="evidence",
-    help="Purchase invoice evidence records (PDF or image).",
+    help=tr(
+        "cli.app.ledger.evidence.group_help",
+        default="Purchase invoice evidence records (PDF or image).",
+    ),
     no_args_is_help=True,
 )
 app.add_typer(evidence_app, name="evidence")
@@ -1264,17 +1267,50 @@ def _evidence_text_lines(record: object) -> list[str]:
     ]
 
 
-@evidence_app.command("add", help="Register a purchase invoice evidence record from a PDF or image file.")
+@evidence_app.command(
+    "add",
+    help=tr(
+        "cli.app.ledger.evidence.add_help",
+        default="Register a purchase invoice evidence record from a PDF or image file.",
+    ),
+)
 def evidence_add(
     ctx: typer.Context,
-    source_path: Path = typer.Argument(..., help="Path to a PDF or image receipt/invoice."),
-    supplier: str | None = typer.Option(None, "--supplier", help="Supplier name."),
-    invoice_number: str | None = typer.Option(None, "--invoice-number", help="Supplier invoice number."),
-    invoice_date: str | None = typer.Option(None, "--invoice-date", help="Invoice date (ISO-8601)."),
-    taxable_base: str | None = typer.Option(None, "--taxable-base", help="Taxable base (Decimal)."),
-    iva_rate: str | None = typer.Option(None, "--iva-rate", help="IVA rate (Decimal)."),
-    iva_amount: str | None = typer.Option(None, "--iva-amount", help="IVA amount (Decimal)."),
-    notes: str = typer.Option("", "--notes", help="Free-text notes."),
+    source_path: Path = typer.Argument(
+        ...,
+        help=tr("cli.app.ledger.evidence.source_path_help", default="Path to a PDF or image receipt/invoice."),
+    ),
+    supplier: str | None = typer.Option(
+        None, "--supplier", help=tr("cli.app.ledger.evidence.supplier_help", default="Supplier name.")
+    ),
+    invoice_number: str | None = typer.Option(
+        None,
+        "--invoice-number",
+        help=tr("cli.app.ledger.evidence.invoice_number_help", default="Supplier invoice number."),
+    ),
+    invoice_date: str | None = typer.Option(
+        None,
+        "--invoice-date",
+        help=tr("cli.app.ledger.evidence.invoice_date_help", default="Invoice date (ISO-8601)."),
+    ),
+    taxable_base: str | None = typer.Option(
+        None,
+        "--taxable-base",
+        help=tr("cli.app.ledger.evidence.taxable_base_help", default="Taxable base (Decimal)."),
+    ),
+    iva_rate: str | None = typer.Option(
+        None,
+        "--iva-rate",
+        help=tr("cli.app.ledger.evidence.iva_rate_help", default="IVA rate (Decimal)."),
+    ),
+    iva_amount: str | None = typer.Option(
+        None,
+        "--iva-amount",
+        help=tr("cli.app.ledger.evidence.iva_amount_help", default="IVA amount (Decimal)."),
+    ),
+    notes: str = typer.Option(
+        "", "--notes", help=tr("cli.app.ledger.evidence.notes_help", default="Free-text notes.")
+    ),
 ) -> None:
     """Register a purchase invoice evidence record and return its id."""
     transaction_repository = _tx_repo(_state())
@@ -1292,10 +1328,18 @@ def evidence_add(
     _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
 
 
-@evidence_app.command("view", help="Show one purchase invoice evidence record.")
+@evidence_app.command(
+    "view",
+    help=tr(
+        "cli.app.ledger.evidence.view_help",
+        default="View one purchase invoice evidence record.",
+    ),
+)
 def evidence_view(
     ctx: typer.Context,
-    evidence_id: str = typer.Argument(..., help="Evidence record id."),
+    evidence_id: str = typer.Argument(
+        ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id.")
+    ),
 ) -> None:
     transaction_repository = _tx_repo(_state())
     record = _evidence_service().view(
@@ -1305,7 +1349,13 @@ def evidence_view(
     _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
 
 
-@evidence_app.command("list", help="List every purchase invoice evidence record in the active bucket.")
+@evidence_app.command(
+    "list",
+    help=tr(
+        "cli.app.ledger.evidence.list_help",
+        default="List every purchase invoice evidence record in the active bucket.",
+    ),
+)
 def evidence_list(ctx: typer.Context) -> None:
     transaction_repository = _tx_repo(_state())
     records = _evidence_service().list_all(bucket_id=transaction_repository.bucket_id)
@@ -1325,10 +1375,18 @@ def evidence_list(ctx: typer.Context) -> None:
     _emit(ctx, payload, lines)
 
 
-@evidence_app.command("update", help="Update mutable fields on a purchase invoice evidence record.")
+@evidence_app.command(
+    "update",
+    help=tr(
+        "cli.app.ledger.evidence.update_help",
+        default="Update mutable fields on a purchase invoice evidence record.",
+    ),
+)
 def evidence_update(
     ctx: typer.Context,
-    evidence_id: str = typer.Argument(..., help="Evidence record id."),
+    evidence_id: str = typer.Argument(
+        ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id.")
+    ),
     supplier: str | None = typer.Option(None, "--supplier"),
     invoice_number: str | None = typer.Option(None, "--invoice-number"),
     invoice_date: str | None = typer.Option(None, "--invoice-date"),
@@ -1355,14 +1413,24 @@ def evidence_update(
     _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
 
 
-@evidence_app.command("remove", help="Delete a purchase invoice evidence record.")
+@evidence_app.command(
+    "remove",
+    help=tr(
+        "cli.app.ledger.evidence.remove_help",
+        default="Delete a purchase invoice evidence record.",
+    ),
+)
 def evidence_remove(
     ctx: typer.Context,
-    evidence_id: str = typer.Argument(..., help="Evidence record id."),
-    yes: bool = typer.Option(False, "--yes", help="Confirm removal."),
+    evidence_id: str = typer.Argument(
+        ..., help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id.")
+    ),
+    yes: bool = typer.Option(
+        False, "--yes", help=tr("cli.app.ledger.evidence.yes_help", default="Confirm removal.")
+    ),
 ) -> None:
     if not yes:
-        raise _bad("--yes is required to remove an evidence record")
+        raise _bad(tr("cli.app.ledger.evidence.yes_required", default="--yes is required to remove an evidence record"))
     transaction_repository = _tx_repo(_state())
     record = _evidence_service().remove(
         bucket_id=transaction_repository.bucket_id,
