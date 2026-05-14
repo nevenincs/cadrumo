@@ -39,7 +39,17 @@ class WorkflowAbortedError(WorkflowError):
     """
 
 
-class WorkflowAbortSignal(WorkflowError):
+class NoActiveProfileError(WorkflowError):
+    """Raised when an operation requires an active profile bucket and none is selected.
+
+    Bucket-scoped repositories (transaction catalogue, manual ledger,
+    bucket-local aggregation) refuse to operate without an active
+    profile. Callers that surface this to the operator should map it
+    to the standard ``cli.common.errors.no_active_profile`` message.
+    """
+
+
+class WorkflowAbortSignal(WorkflowError):  # noqa: N818  # internal control-flow signal, not a public error type
     """Internal control-flow signal raised by stage methods to bail out.
 
     Named ``WorkflowAbortSignal`` deliberately (rather than

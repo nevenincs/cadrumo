@@ -56,6 +56,7 @@ def link_invoice_transaction_catalogues(
 
 def link_invoice_transaction_repositories(
     *,
+    bucket_id: str,
     invoice_id: str,
     transaction_id: str,
     invoice_repository: InvoiceCatalogueRepository | None = None,
@@ -64,7 +65,7 @@ def link_invoice_transaction_repositories(
     """Persist a bidirectional invoice link through the backend repositories."""
 
     invoices_repo = invoice_repository or InvoiceCatalogueRepository()
-    transactions_repo = transaction_repository or TransactionCatalogueRepository()
+    transactions_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     result = link_invoice_transaction_catalogues(
         invoices_repo.load(),
         transactions_repo.load(),

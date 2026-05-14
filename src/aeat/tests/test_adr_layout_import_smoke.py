@@ -48,6 +48,8 @@ ADR_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.adapters.outbound.aeat.sede",
     "aeat.adapters.outbound.aeat.verify",
     "aeat.adapters.outbound.aeat.export",
+    "aeat.adapters.outbound.google",
+    "aeat.adapters.outbound.storage",
     "aeat.adapters.outbound.llm",
     "aeat.adapters.persistence",
     "aeat.adapters.persistence.storage",
@@ -80,6 +82,11 @@ CANONICAL_PUBLIC_SYMBOLS: tuple[tuple[str, str], ...] = (
     ("aeat.core.errors", "AeatError"),
     ("aeat.core.access_gate", "LiveSubmitForbiddenError"),
     ("aeat.adapters.outbound.aeat.auth", "AeatAuthenticator"),
+    ("aeat.adapters.outbound.google", "OAuthClient"),
+    ("aeat.adapters.outbound.google", "GoogleAuthError"),
+    ("aeat.adapters.outbound.storage", "StorageProvider"),
+    ("aeat.adapters.outbound.storage", "StorageError"),
+    ("aeat.adapters.outbound.storage", "get_storage_provider"),
     ("aeat.application.auth", "select_provider"),
 )
 
@@ -91,8 +98,6 @@ REQUIRED_RELOCATED_PATHS: tuple[str, ...] = (
 )
 
 
-@pytest.mark.unit
-@pytest.mark.domain_core
 @pytest.mark.parametrize("module_name", ADR_LAYOUT_PACKAGES)
 def test_adr_layout_package_import_smoke(module_name: str) -> None:
     """Every ADR-listed import surface must be importable."""

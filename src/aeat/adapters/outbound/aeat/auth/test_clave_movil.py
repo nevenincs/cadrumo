@@ -221,7 +221,7 @@ def _settings_for(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, **env: str) -
         monkeypatch.setenv(key, value)
 
     # Pydantic-settings reads env/.env by default; a developer who ran
-    # `aeat setup auth configure` would then leak their real DNI/NIE into
+    # `aeat config auth configure` would then leak their real DNI/NIE into
     # the test suite. Point the test Settings at a non-existent file.
     class _IsolatedSettings(Settings):
         model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8", env_ignore_empty=True)

@@ -186,6 +186,32 @@ def _readiness_for_source(source: str) -> str:
     return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
 
 
+def _parse_kv_spec[T](
+    spec: str,
+    *,
+    flag: str,
+    key_label: str = "KEY",
+    value_label: str = "VALUE",
+    transform: Callable[[str], T],
+) -> tuple[str, T]:
+    """Parse a ``KEY=VALUE`` CLI spec into ``(key, transform(value))``.
+
+    Centralises the shape every override flag shares: split on the
+    first ``=``, require a non-empty key, hand the right-hand side to
+    a flag-specific transform. ``flag``/``key_label``/``value_label``
+    feed the :class:`typer.BadParameter` messages so each call site
+    keeps its own operator-facing wording.
+    """
+
+    if "=" not in spec:
+        raise typer.BadParameter(f"{flag} must be {key_label}={value_label}; got {spec!r}")
+    key, _, value = spec.partition("=")
+    key = key.strip()
+    if not key:
+        raise typer.BadParameter(f"{flag} key must be non-empty; got {spec!r}")
+    return key, transform(value)
+
+
 def _parse_binding_override(spec: str) -> tuple[str, str]:
     """Parse a ``--binding KEY=VALUE`` spec into a ``(key, value)`` pair.
 
@@ -194,30 +220,25 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
     the raw value flows through unchanged so the bindings-
     resolution layer downstream can coerce it per source type.
     """
-    if "=" not in spec:
-        raise typer.BadParameter(f"--binding must be KEY=VALUE; got {spec!r}")
-    key, _, value = spec.partition("=")
-    key = key.strip()
-    if not key:
-        raise typer.BadParameter(f"--binding key must be non-empty; got {spec!r}")
-    return key, value
+
+    return _parse_kv_spec(spec, flag="--binding", transform=lambda value: value)
 
 
 @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
 def bindings_list(
     ctx: typer.Context,
     modelo: Annotated[
-        str,
+        str | None,
         typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
-    ],
+    ] = None,
     year: Annotated[
-        int,
+        int | None,
         typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
-    ],
+    ] = None,
     period: Annotated[
-        str,
+        str | None,
         typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
-    ],
+    ] = None,
     missing: Annotated[
         bool,
         typer.Option("--missing", help=tr("cli.app.modelo.bindings.missing_help")),
@@ -235,6 +256,10 @@ def bindings_list(
     prior filing / live observation to resolve).
     """
 
+    _require_binding_scope(modelo=modelo, year=year, period=period)
+    assert modelo is not None
+    assert year is not None
+    assert period is not None
     scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
     report = _run_query(lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of)))
     rows = report.rows
@@ -278,17 +303,17 @@ def bindings_list(
 def bindings_preview(
     ctx: typer.Context,
     modelo: Annotated[
-        str,
+        str | None,
         typer.Option("--modelo", help=tr("cli.app.modelo.bindings.modelo_help")),
-    ],
+    ] = None,
     year: Annotated[
-        int,
+        int | None,
         typer.Option("--year", help=tr("cli.app.modelo.bindings.year_help")),
-    ],
+    ] = None,
     period: Annotated[
-        str,
+        str | None,
         typer.Option("--period", help=tr("cli.app.modelo.bindings.period_help")),
-    ],
+    ] = None,
     binding: Annotated[
         list[str] | None,
         typer.Option(
@@ -310,6 +335,10 @@ def bindings_preview(
     suggestion list sourced from the same catalogue.
     """
 
+    _require_binding_scope(modelo=modelo, year=year, period=period)
+    assert modelo is not None
+    assert year is not None
+    assert period is not None
     overrides = dict(_parse_binding_override(spec) for spec in (binding or ()))
     scoped_period = f"{year}-{period}" if not period.startswith(str(year)) else period
     report = _run_query(lambda: _service().bindings(modelo, period=scoped_period, as_of=_as_of(as_of)))
@@ -362,6 +391,18 @@ def bindings_preview(
         for row in report.rows
     )
     _emit(ctx, payload, lines)
+
+
+def _require_binding_scope(*, modelo: str | None, year: int | None, period: str | None) -> None:
+    """Report every missing required binding-scope option at once."""
+
+    missing = [
+        option
+        for option, value in (("--modelo", modelo), ("--year", year), ("--period", period))
+        if value is None or (isinstance(value, str) and not value.strip())
+    ]
+    if missing:
+        raise typer.BadParameter(tr("cli.app.modelo.bindings.missing_required_options", options=", ".join(missing)))
 
 
 @app.command("formulas")
@@ -711,13 +752,7 @@ def _filing_record_lines(record: FilingRecord) -> list[str]:
 
 
 def _parse_casilla_override(spec: str) -> tuple[str, str]:
-    if "=" not in spec:
-        raise typer.BadParameter(f"--casilla must be ID=VALUE; got {spec!r}")
-    key, _, value = spec.partition("=")
-    key = key.strip()
-    if not key:
-        raise typer.BadParameter(f"--casilla key must be non-empty; got {spec!r}")
-    return key, value.strip()
+    return _parse_kv_spec(spec, flag="--casilla", key_label="ID", transform=str.strip)
 
 
 @work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
@@ -953,17 +988,19 @@ def work_file(
 
 
 def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
-    if "=" not in spec:
-        raise typer.BadParameter(f"--set must be CASILLA=DECIMAL; got {spec!r}")
-    key, _, value = spec.partition("=")
-    key = key.strip()
-    if not key:
-        raise typer.BadParameter(f"--set key must be non-empty; got {spec!r}")
-    try:
-        decimal_value = Decimal(value.strip())
-    except (InvalidOperation, ValueError) as exc:
-        raise typer.BadParameter(f"--set value must be a decimal; got {value!r}") from exc
-    return key, decimal_value
+    def _to_decimal(value: str) -> Decimal:
+        try:
+            return Decimal(value.strip())
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(f"--set value must be a decimal; got {value!r}") from exc
+
+    return _parse_kv_spec(
+        spec,
+        flag="--set",
+        key_label="CASILLA",
+        value_label="DECIMAL",
+        transform=_to_decimal,
+    )
 
 
 @work_app.command("amend", help=tr("cli.app.modelo.work.amend_help"))
@@ -1005,8 +1042,7 @@ def work_amend(
         amendment_kind = CalculationRevisionAmendmentKind(kind.strip())
     except ValueError as exc:
         raise typer.BadParameter(
-            f"--kind must be one of "
-            f"{', '.join(repr(k.value) for k in CalculationRevisionAmendmentKind)}; got {kind!r}"
+            f"--kind must be one of {', '.join(repr(k.value) for k in CalculationRevisionAmendmentKind)}; got {kind!r}"
         ) from exc
 
     overrides: dict[str, Decimal] = {}
@@ -1238,12 +1274,15 @@ def filing_record_import(
     )
     from ...domain.modelos._filing_record import ExternalEvidenceKind
 
+    raw_evidence_kind = evidence_kind.strip().replace("-", "_")
     try:
-        kind = ExternalEvidenceKind(evidence_kind.strip())
+        kind = ExternalEvidenceKind(raw_evidence_kind)
     except ValueError as exc:
+        canonical = ", ".join(repr(k.value) for k in ExternalEvidenceKind)
+        hyphenated = ", ".join(repr(k.value.replace("_", "-")) for k in ExternalEvidenceKind)
         raise typer.BadParameter(
-            f"--evidence-kind must be one of "
-            f"{', '.join(repr(k.value) for k in ExternalEvidenceKind)}; got {evidence_kind!r}"
+            f"--evidence-kind must be one of {canonical} "
+            f"(hyphenated aliases also accepted: {hyphenated}); got {evidence_kind!r}"
         ) from exc
 
     casilla_values: dict[str, Decimal] = {}

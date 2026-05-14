@@ -19,11 +19,11 @@ from aeat.application.wizard._models import (
     WizardWidget,
 )
 from aeat.application.wizard._prompter import QuestionaryPrompter
-from aeat.core.i18n import Translatable
+from aeat.core.i18n import Translatable as tr  # noqa: N813
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_PROMPT = Translatable("wizard.setup.profile.tax-id.prompt")
+_PROMPT = tr("wizard.setup.profile.tax-id.prompt")
 
 
 def _question(
@@ -76,8 +76,8 @@ def test_confirm_no_round_trip_via_pipe_input() -> None:
 
 def test_select_round_trip_via_pipe_input() -> None:
     choices = (
-        WizardChoice(value="general", label=Translatable("wizard.choices.general")),
-        WizardChoice(value="simplificado", label=Translatable("wizard.choices.simplificado")),
+        WizardChoice(value="general", label=tr("wizard.choices.general")),
+        WizardChoice(value="simplificado", label=tr("wizard.choices.simplificado")),
     )
     question = _question(WizardWidget.SELECT, choices=choices)
     with create_pipe_input() as pipe:
@@ -89,8 +89,8 @@ def test_select_round_trip_via_pipe_input() -> None:
 
 def test_checkbox_round_trip_via_pipe_input() -> None:
     choices = (
-        WizardChoice(value="iva", label=Translatable("wizard.choices.iva")),
-        WizardChoice(value="irpf", label=Translatable("wizard.choices.irpf")),
+        WizardChoice(value="iva", label=tr("wizard.choices.iva")),
+        WizardChoice(value="irpf", label=tr("wizard.choices.irpf")),
     )
     question = _question(WizardWidget.CHECKBOX, choices=choices)
     with create_pipe_input() as pipe:

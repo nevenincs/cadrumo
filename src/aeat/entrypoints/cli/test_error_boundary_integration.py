@@ -65,7 +65,7 @@ _REFUSED_EXIT: int = get_error_exit_code(ErrorCategory.REFUSED)
             # Flag collision: the root-app callback calls resolve_log_level() which
             # raises when --quiet and --verbose are both set.  A real mounted
             # command path is used so Click parses through the root callback.
-            ["--quiet", "--verbose", "config", "doctor"],
+            ["--quiet", "--verbose", "config", "repair"],
             None,
             None,
             "--quiet/--verbose mutual-exclusion flag collision",
@@ -73,7 +73,7 @@ _REFUSED_EXIT: int = get_error_exit_code(ErrorCategory.REFUSED)
         (
             # Env-var path: AEAT_LOG_LEVEL set to a value not in the allowed
             # set; resolve_log_level() raises on the env-var parse branch.
-            ["config", "doctor"],
+            ["config", "repair"],
             "AEAT_LOG_LEVEL",
             "NOT_A_VALID_LEVEL",
             "AEAT_LOG_LEVEL env set to an unrecognised value",
@@ -116,6 +116,7 @@ def test_log_level_resolution_error_exits_refused(
         f"got exit_code={result.exit_code!r}, want {_REFUSED_EXIT!r}. "
         f"Output:\n{result.output}"
     )
-    assert "REFUSED" in result.output, (
-        f"Stderr envelope must contain the REFUSED prefix for {trigger_description!r}. Output:\n{result.output}"
+    assert "Refused." in result.output, (
+        f"Stderr envelope must carry the sentence-case `Refused.` prefix for {trigger_description!r}. "
+        f"Output:\n{result.output}"
     )

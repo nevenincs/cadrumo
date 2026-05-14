@@ -14,7 +14,6 @@ from ...adapters.outbound.aeat.sede import (
     registry_observation_from_filed_declaration,
 )
 from ...adapters.persistence.storage import MasterKeyProvider
-from ...domain.period import period_end_date
 from ...domain.calculations.registry import (
     calculate_registry_snapshot,
     generate_parity_tape_path,
@@ -44,6 +43,7 @@ from ...domain.calculations.registry._live_parity import (
 )
 from ...domain.calculations.registry._loader import load_registry_tree
 from ...domain.calculations.registry._workbook_parity import WorkbookBackendVerificationReport
+from ...domain.period import period_end_date
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
 
 

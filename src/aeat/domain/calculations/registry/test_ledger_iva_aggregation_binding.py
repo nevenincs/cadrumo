@@ -23,8 +23,8 @@ from aeat.domain.calculations.registry import (
     RegistryCalculationResult,
     RegistryFilingObservation,
     RegistryValidationError,
-    ValidatedRegistryAuthority,
     calculate_registry_snapshot,
+    default_registry_authority,
     load_registry_tree,
     resolve_bound_casilla_inputs,
     resolve_ledger_iva_aggregation_binding_values,
@@ -45,11 +45,6 @@ def _modelo_303_revision() -> ModeloRevision:
     modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
     modelo = next(item for item in modelos if item.id == "303")
     return modelo.revisions["2009-y-siguientes"]
-
-
-@lru_cache(maxsize=1)
-def _registry_authority() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
 
 
 def _binding(binding_id: str = "modelo-303-iva-repercutido-general-cuota") -> DataBindingDefinition:
@@ -95,7 +90,7 @@ def _calculate_303_from_observations(
     period: str,
     observations: tuple[IvaLedgerObservation, ...],
 ) -> RegistryCalculationResult:
-    snapshot = _registry_authority().snapshot("303", filing_year=filing_year, period=period)
+    snapshot = default_registry_authority().snapshot("303", filing_year=filing_year, period=period)
     binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
     inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
@@ -112,7 +107,7 @@ def _calculate_390_from_observations_and_303_filings(
     observations: tuple[IvaLedgerObservation, ...],
     quarterly_results: dict[str, RegistryCalculationResult],
 ) -> RegistryCalculationResult:
-    snapshot = _registry_authority().snapshot("390", filing_year=filing_year, period="0A")
+    snapshot = default_registry_authority().snapshot("390", filing_year=filing_year, period="0A")
     ledger_binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
     previous_filing_values = resolve_previous_filing_binding_values(
         snapshot.revision,

@@ -40,11 +40,7 @@ _FORBIDDEN_TEST_PROCESS_LANGUAGE = (
     "xfail",
 )
 
-_LIVE_TEST_FILES = frozenset(
-    {
-        "src/aeat/entrypoints/cli/test_setup_auth_live.py",
-    }
-)
+_LIVE_TEST_FILES = frozenset[str]()
 
 
 @dataclass(frozen=True)
@@ -77,13 +73,6 @@ _KNOWN_FINDINGS: tuple[BoundaryFinding, ...] = (
         symbols=("overview_status",),
         backend_gap="API-008",
         owner="application.overview",
-    ),
-    BoundaryFinding(
-        row_id="CLI-008",
-        source="src/aeat/entrypoints/cli/data/ledgers/inventory.py",
-        symbols=("create_inventory", "add_movement", "_money"),
-        backend_gap="API-007",
-        owner="application.inventory",
     ),
 )
 
@@ -144,6 +133,22 @@ def test_removed_workflow_shim_modules_stay_absent() -> None:
         "src/aeat/entrypoints/cli/_topic.py",
         "src/aeat/entrypoints/cli/auth/__init__.py",
         "src/aeat/entrypoints/cli/auth/_registry.py",
+        "src/aeat/entrypoints/cli/browser/__init__.py",
+        "src/aeat/entrypoints/cli/browser/health.py",
+        "src/aeat/entrypoints/cli/browser/test_health.py",
+        "src/aeat/entrypoints/cli/financial/__init__.py",
+        "src/aeat/entrypoints/cli/financial/_catalogue.py",
+        "src/aeat/entrypoints/cli/financial/_profile_aliases.py",
+        "src/aeat/entrypoints/cli/financial/ingest.py",
+        "src/aeat/entrypoints/cli/financial/invoices.py",
+        "src/aeat/entrypoints/cli/financial/profile.py",
+        "src/aeat/entrypoints/cli/financial/test_cli.py",
+        "src/aeat/entrypoints/cli/financial/test_profile.py",
+        "src/aeat/entrypoints/cli/financial/test_profile_aliases.py",
+        "src/aeat/entrypoints/cli/financial/txs.py",
+        "src/aeat/entrypoints/cli/filing/__init__.py",
+        "src/aeat/entrypoints/cli/filing/conftest.py",
+        "src/aeat/entrypoints/cli/filing/test_filing_cli.py",
     )
     assert [path for path in removed if (PROJECT_ROOT / path).exists()] == []
 

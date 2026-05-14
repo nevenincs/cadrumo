@@ -47,6 +47,38 @@ class SecureObjectRecord(BaseModel):
     payload: bytes
 
 
+class SecureObjectMetadata(BaseModel):
+    """Row-level metadata for one stored secure object, decryption-free.
+
+    Surfaced by :meth:`SecureObjectRepository.peek_metadata` so callers
+    (notably the workflow-state reset recovery path) can fingerprint a
+    row's wire envelope without decrypting it. Carries the columns the
+    database stores alongside the ciphertext payload plus the raw
+    payload byte length.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    namespace: str = Field(min_length=1)
+    classification: str = Field(min_length=1)
+    schema_version: int = Field(ge=1)
+    written_at: datetime
+    byte_length: int = Field(ge=0)
+
+
+class SecureObjectWrite(BaseModel):
+    """One encrypted secure-object upsert prepared for a unit of work."""
+
+    model_config = _STRICT_FROZEN
+
+    namespace: str = Field(min_length=1)
+    object_key: str = Field(min_length=1)
+    classification: SensitivityClass
+    schema_version: int = Field(ge=1)
+    written_at: datetime
+    payload: bytes = Field(min_length=1)
+
+
 class SecureObjectUnreadable(BaseModel):
     """One stored secure object that cannot be decrypted under the current master key.
 
@@ -71,13 +103,35 @@ class SecureObjectUnreadable(BaseModel):
 SecureObjectListItem = SecureObjectRecord | SecureObjectUnreadable
 
 
+class SecureObjectRawRow(BaseModel):
+    """One stored row surfaced without classification / version validation or decryption.
+
+    Used by the outbound sync coordinator (per ADR-3 ciphertext-layer
+    mirror) to walk every persisted object and mirror its on-wire
+    payload to a remote storage provider without ever touching the
+    plaintext domain data. The repository keeps `payload` as the
+    raw on-wire ciphertext bytes; mirroring consumers feed those bytes
+    directly into `StorageProvider.put`.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    row_id: int = Field(ge=0)
+    namespace: str = Field(min_length=1)
+    object_key: bytes
+    classification: str = Field(min_length=1)
+    schema_version: int = Field(ge=1)
+    written_at: datetime
+    payload: bytes
+
+
 class SecureObjectNamespaceIntegrity(BaseModel):
     """Per-namespace decryptability counts for the integrity diagnostic.
 
     Unlike :class:`SecureObjectListItem`, this report answers only the
     crypto-layer question ``can the payload be decrypted under the current
     master key`` -- classification and schema-version contracts are
-    intentionally ignored. Used by ``aeat config doctor`` to surface rows
+    intentionally ignored. Used by ``aeat config repair`` to surface rows
     sealed under a rotated master key.
     """
 
@@ -126,6 +180,51 @@ class SecureObjectRepository:
                 )
             ).scalar_one_or_none()
             return row_id is not None
+
+    def iter_all_records_raw(self, *, batch_size: int = 256) -> Iterator[SecureObjectRawRow]:
+        """Yield every stored row as `SecureObjectRawRow` without decryption.
+
+        Walks every row in `secure_objects` ordered by `(namespace, object_key)`
+        without attempting to decrypt the payload. The query bypasses
+        the encrypted-column type decorators so rows sealed under a
+        rotated master key still surface verbatim — this is what the
+        outbound sync coordinator's ciphertext-layer mirror (per ADR-3)
+        consumes, mirroring on-wire ciphertext to a remote storage
+        provider without ever decrypting domain data.
+
+        Args:
+            batch_size: SQLAlchemy `yield_per` chunk size. The default
+                keeps memory bounded for very large substrates while
+                still amortising session overhead across multiple rows.
+
+        Yields:
+            One `SecureObjectRawRow` per persisted row. The order is
+            `(namespace ASC, object_key ASC)` so consumers can
+            checkpoint progress deterministically.
+        """
+
+        with session_scope(self._engine) as session:
+            stmt = text(
+                "SELECT id, namespace, object_key, classification, schema_version, "
+                "written_at, payload "
+                "FROM secure_objects "
+                "ORDER BY namespace, object_key"
+            ).execution_options(yield_per=batch_size)
+            for raw in session.execute(stmt):
+                written_at_raw = raw.written_at
+                if isinstance(written_at_raw, str):
+                    written_at_value = datetime.fromisoformat(written_at_raw)
+                else:
+                    written_at_value = written_at_raw
+                yield SecureObjectRawRow(
+                    row_id=int(raw.id),
+                    namespace=str(raw.namespace),
+                    object_key=bytes(raw.object_key),
+                    classification=str(raw.classification),
+                    schema_version=int(raw.schema_version),
+                    written_at=written_at_value,
+                    payload=bytes(raw.payload),
+                )
 
     def list_namespaces(self) -> tuple[str, ...]:
         """Return the distinct namespaces present in ``secure_objects`` sorted.
@@ -258,7 +357,7 @@ class SecureObjectRepository:
         ``payload`` ciphertext be unwrapped under the current master key
         -- and intentionally bypasses the classification and
         schema-version contracts that consumer reads enforce. Used by
-        ``aeat config doctor`` to surface namespaces holding rows from a
+        ``aeat config repair`` to surface namespaces holding rows from a
         prior keychain master-key generation.
         """
         readable = 0
@@ -331,7 +430,7 @@ class SecureObjectRepository:
             _log.warning(
                 "secure_objects: skipped %d unreadable row(s) in namespace %s; "
                 "the master key under which they were sealed is no longer available "
-                "(run 'aeat config doctor' for details).",
+                "(run 'aeat config repair' for details).",
                 unreadable,
                 namespace,
             )
@@ -476,6 +575,23 @@ class SecureObjectRepository:
             payload=payload,
         )
 
+    def save_many(self, writes: tuple[SecureObjectWrite, ...]) -> None:
+        """Encrypt and upsert several payloads in one SQL unit of work."""
+
+        if not writes:
+            return
+        with session_scope(self._engine) as session:
+            for write in writes:
+                self._save_internal_in_session(
+                    session,
+                    namespace=write.namespace,
+                    key=write.object_key,
+                    classification=write.classification,
+                    schema_version=write.schema_version,
+                    written_at=write.written_at,
+                    payload=write.payload,
+                )
+
     def save_with_raw_key(
         self,
         *,
@@ -534,39 +650,101 @@ class SecureObjectRepository:
     ) -> None:
         """Shared upsert backing :meth:`save` and :meth:`save_with_raw_key`."""
         with session_scope(self._engine) as session:
-            row_id = session.execute(
-                select(_orm.SecureObjectRow.id).where(
-                    _orm.SecureObjectRow.namespace == namespace,
-                    _orm.SecureObjectRow.object_key == key,
-                )
-            ).scalar_one_or_none()
-            if row_id is None:
-                row = _orm.SecureObjectRow(
-                    namespace=namespace,
-                    object_key=key,
+            self._save_internal_in_session(
+                session,
+                namespace=namespace,
+                key=key,
+                classification=classification,
+                schema_version=schema_version,
+                written_at=written_at,
+                payload=payload,
+            )
+
+    def _save_internal_in_session(
+        self,
+        session: Any,
+        *,
+        namespace: str,
+        key: str | bytes,
+        classification: SensitivityClass,
+        schema_version: int,
+        written_at: datetime,
+        payload: bytes,
+    ) -> None:
+        row_id = session.execute(
+            select(_orm.SecureObjectRow.id).where(
+                _orm.SecureObjectRow.namespace == namespace,
+                _orm.SecureObjectRow.object_key == key,
+            )
+        ).scalar_one_or_none()
+        if row_id is None:
+            row = _orm.SecureObjectRow(
+                namespace=namespace,
+                object_key=key,
+                classification=classification.value,
+                schema_version=schema_version,
+                written_at=written_at,
+                payload=payload,
+            )
+            session.add(row)
+        else:
+            session.execute(
+                update(_orm.SecureObjectRow)
+                .where(_orm.SecureObjectRow.id == row_id)
+                .values(
                     classification=classification.value,
                     schema_version=schema_version,
                     written_at=written_at,
                     payload=payload,
                 )
-                session.add(row)
-            else:
-                session.execute(
-                    update(_orm.SecureObjectRow)
-                    .where(_orm.SecureObjectRow.id == row_id)
-                    .values(
-                        classification=classification.value,
-                        schema_version=schema_version,
-                        written_at=written_at,
-                        payload=payload,
-                    )
+            )
+        try:
+            session.flush()
+        except IntegrityError as exc:
+            raise RepositoryError(
+                f"secure object upsert failed for {namespace}/<key>: {exc.orig}",
+            ) from exc
+
+    def peek_metadata(self, namespace: str, object_key: str) -> SecureObjectMetadata | None:
+        """Return row-level metadata for one object without decrypting it.
+
+        Returns ``None`` when no row matches. Never decrypts the payload
+        column; callers use this to fingerprint an envelope they intend
+        to discard (e.g. the workflow-state reset recovery path).
+        """
+
+        # Resolve the row id through the ORM so the HashedLookup column
+        # binding hashes ``object_key`` consistently with the rest of
+        # the repository, then read the raw row through ``text()`` so
+        # the encrypted payload column is not auto-decrypted.
+        with session_scope(self._engine) as session:
+            row_id = session.execute(
+                select(_orm.SecureObjectRow.id).where(
+                    _orm.SecureObjectRow.namespace == namespace,
+                    _orm.SecureObjectRow.object_key == object_key,
                 )
-            try:
-                session.flush()
-            except IntegrityError as exc:
-                raise RepositoryError(
-                    f"secure object upsert failed for {namespace}/<key>: {exc.orig}",
-                ) from exc
+            ).scalar_one_or_none()
+            if row_id is None:
+                return None
+            stmt = (
+                text(
+                    "SELECT classification, schema_version, written_at, payload FROM secure_objects WHERE id = :row_id"
+                )
+                .bindparams(bindparam("row_id", value=int(row_id)))
+                .columns(
+                    classification=_orm.SecureObjectRow.__table__.c.classification.type,
+                    schema_version=_orm.SecureObjectRow.__table__.c.schema_version.type,
+                    written_at=_orm.SecureObjectRow.__table__.c.written_at.type,
+                )
+            )
+            raw = session.execute(stmt).one()
+        return SecureObjectMetadata(
+            namespace=namespace,
+            classification=str(raw.classification),
+            schema_version=int(raw.schema_version),
+            written_at=raw.written_at,
+            byte_length=len(bytes(raw.payload)),
+        )
 
     def delete(self, namespace: str, object_key: str) -> bool:
         """Delete one object if it exists."""

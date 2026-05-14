@@ -362,6 +362,7 @@ def _boolean_input(input_id: str, value: object) -> bool:
 def validate_draft(
     draft: FilingDraft,
     *,
+    bucket_id: str,
     schema_provider: CasillaSchemaProvider,
     deadline_checker: DeadlineChecker | None = None,
 ) -> FilingDraft:
@@ -388,6 +389,7 @@ def validate_draft(
     refreshed = apply_validation(draft, findings)
     refreshed = refresh_review_status(
         refreshed,
+        bucket_id=bucket_id,
         schema_provider=schema_provider,
     )
     # Defensive sanity check: re-validation must never change identity.

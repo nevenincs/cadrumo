@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ...core.i18n import Translatable as tr
+from ...core.i18n import Translatable
 from ...domain.invoices import (
     Invoice,
     InvoiceKind,
@@ -41,8 +41,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _REVIEW_ITEM_ADAPTER: TypeAdapter[ReviewItem] = TypeAdapter(ReviewItem)
 
 
-def _summary(text: str = "demo") -> tr:
-    return tr("translation")
+def _summary(text: str = "demo") -> Translatable:
+    return Translatable("translation")
 
 
 def _raw() -> RawTransaction:
@@ -123,7 +123,7 @@ def test_transaction_review_item_round_trips_through_json() -> None:
         modelo=None,
         severity=ReviewSeverity.NORMAL,
         summary=_summary("tx"),
-        drill_command="aeat financial txs classify t-1 --as ...",
+        drill_command="aeat app ledger edit --id t-1 --set category=... --reason ...",
         since=datetime(2026, 4, 10, tzinfo=UTC),
         source=_transaction(),
     )
@@ -139,7 +139,7 @@ def test_review_item_discriminator_resolves_each_kind() -> None:
             modelo=None,
             severity=ReviewSeverity.NORMAL,
             summary=_summary("tx"),
-            drill_command="aeat financial txs classify t-1 --as ...",
+            drill_command="aeat app ledger edit --id t-1 --set category=... --reason ...",
             since=datetime(2026, 4, 10, tzinfo=UTC),
             source=_transaction(),
         ),
@@ -148,7 +148,7 @@ def test_review_item_discriminator_resolves_each_kind() -> None:
             modelo=None,
             severity=ReviewSeverity.HIGH,
             summary=_summary("inv"),
-            drill_command="aeat financial invoices show i-1",
+            drill_command="aeat app review show i-1",
             since=datetime(2026, 4, 1, tzinfo=UTC),
             source=_invoice(),
         ),
@@ -157,7 +157,7 @@ def test_review_item_discriminator_resolves_each_kind() -> None:
             modelo="130",
             severity=ReviewSeverity.CRITICAL,
             summary=_summary("finding"),
-            drill_command="aeat filing show /tmp/d.json --findings-only",
+            drill_command="aeat app review show draft-1:casilla-out-of-range:03",
             since=datetime(2026, 4, 14, tzinfo=UTC),
             source=_finding(),
             draft_id="draft-1",
@@ -176,7 +176,7 @@ def test_finding_review_item_allows_none_source_for_placeholder_row() -> None:
         modelo="130",
         severity=ReviewSeverity.NORMAL,
         summary=_summary("draft not ready"),
-        drill_command="aeat filing show /tmp/d.json",
+        drill_command="aeat app review show draft-1:_status:VALIDATED",
         since=datetime(2026, 4, 14, tzinfo=UTC),
         source=None,
         draft_id="draft-1",
@@ -193,7 +193,7 @@ def test_review_item_rejects_naive_since_timestamp() -> None:
             modelo=None,
             severity=ReviewSeverity.NORMAL,
             summary=_summary("tx"),
-            drill_command="aeat financial txs classify t-1 --as ...",
+            drill_command="aeat app ledger edit --id t-1 --set category=... --reason ...",
             since=datetime(2026, 4, 10),
             source=_transaction(),
         )
@@ -206,7 +206,7 @@ def test_review_item_rejects_empty_item_id() -> None:
             modelo=None,
             severity=ReviewSeverity.NORMAL,
             summary=_summary("tx"),
-            drill_command="aeat financial txs classify t-1 --as ...",
+            drill_command="aeat app ledger edit --id t-1 --set category=... --reason ...",
             since=datetime(2026, 4, 10, tzinfo=UTC),
             source=_transaction(),
         )
@@ -220,7 +220,7 @@ def test_review_item_rejects_extra_fields() -> None:
                 "modelo": None,
                 "severity": "normal",
                 "summary": _summary("tx"),
-                "drill_command": "aeat financial txs classify t-1 --as ...",
+                "drill_command": "aeat app ledger edit --id t-1 --set category=... --reason ...",
                 "since": "2026-04-10T00:00:00+00:00",
                 "source": _transaction().model_dump(mode="python"),
                 "stray": "value",

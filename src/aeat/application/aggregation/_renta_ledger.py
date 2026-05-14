@@ -135,6 +135,7 @@ class RentaLedgerExpenseAggregation(BaseModel):
 
 def aggregate_renta_ledger_expenses_from_repositories(
     *,
+    bucket_id: str,
     period: Period | str,
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
@@ -144,7 +145,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses."""
 
-    transactions = (transaction_repository or TransactionCatalogueRepository()).load()
+    transactions = (transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)).load()
     invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
     return aggregate_renta_ledger_expenses(
         transactions,

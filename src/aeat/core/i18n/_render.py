@@ -9,8 +9,13 @@ from __future__ import annotations
 
 import importlib.resources
 import os
+import re
+from collections.abc import Mapping
+from functools import lru_cache
+from typing import Any
 
 import i18n
+import yaml
 
 from ..config import load_settings
 from ..logging import get_logger
@@ -18,6 +23,7 @@ from ..logging import get_logger
 _log = get_logger(__name__)
 _INITIALISED = False
 SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu")
+_PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 
 
 def _ensure_initialised() -> None:
@@ -98,9 +104,55 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     Returns:
         The translated string.
     """
-    _ensure_initialised()
-    kwargs.setdefault("locale", output_language())
-    return i18n.t(translation_key, **kwargs)
+    if "locale" not in kwargs or kwargs["locale"] is None:
+        kwargs["locale"] = output_language()
+    locale = _normalise_supported_language(kwargs["locale"]) or "en"
+    rendered = _lookup_translation(locale, translation_key)
+    interpolation = {key: value for key, value in kwargs.items() if key != "locale"}
+    if interpolation:
+        rendered = _interpolate(rendered, interpolation)
+    return rendered
+
+
+@lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))
+def _locale_map(locale: str) -> dict[str, str]:
+    resource = importlib.resources.files("aeat").joinpath("locales", f"{locale}.yml")
+    with resource.open("r", encoding="utf-8") as handle:
+        loaded = yaml.safe_load(handle) or {}
+    return _flatten_translations(loaded)
+
+
+def _flatten_translations(value: object, prefix: str = "") -> dict[str, str]:
+    if isinstance(value, Mapping):
+        flattened: dict[str, str] = {}
+        for key, child in value.items():
+            child_prefix = f"{prefix}.{key}" if prefix else str(key)
+            flattened.update(_flatten_translations(child, child_prefix))
+        return flattened
+    return {prefix: str(value)}
+
+
+def _lookup_translation(locale: str, translation_key: str) -> str:
+    try:
+        return _locale_map(locale).get(translation_key, translation_key)
+    except (OSError, yaml.YAMLError) as exc:
+        _log.debug("i18n: unable to load locale %s; falling back to python-i18n (%s)", locale, exc)
+        _ensure_initialised()
+        return i18n.t(translation_key, locale=locale)
+
+
+def _interpolate(rendered: str, values: Mapping[str, Any]) -> str:
+    def _replace(match: re.Match[str]) -> str:
+        name = match.group("name")
+        if name not in values:
+            return match.group(0)
+        return str(values[name])
+
+    rendered = _PLACEHOLDER_RE.sub(_replace, rendered)
+    try:
+        return rendered.format(**values)
+    except (KeyError, IndexError, ValueError):
+        return rendered
 
 
 __all__ = ["SUPPORTED_OUTPUT_LANGUAGES", "output_language", "tr"]

@@ -18,7 +18,7 @@ from typing import Union, get_args, get_origin
 import pytest
 from pydantic_settings import SettingsConfigDict
 
-from aeat.core.config import PROJECT_ROOT, Settings
+from aeat.core.config import PROJECT_ROOT, CertificateBackendSetting, Settings
 
 ENV_EXAMPLE_PATH = PROJECT_ROOT / "env" / ".env.example"
 
@@ -115,6 +115,34 @@ class TestAuthProviderEnum:
         for name in Settings.env_var_names():
             monkeypatch.delenv(name, raising=False)
         monkeypatch.setenv("AEAT_AUTH_PROVIDER", "not_a_provider_kind")
+
+        class IsolatedSettings(Settings):
+            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
+
+        with pytest.raises(pydantic.ValidationError):
+            IsolatedSettings()
+
+
+class TestCertificateBackendEnum:
+    """Certificate backend settings accept canonical values only."""
+
+    def test_lowercase_setting_value_is_accepted(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+        monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", "playwright_context")
+
+        class IsolatedSettings(Settings):
+            model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
+
+        settings = IsolatedSettings()
+        assert settings.aeat_certificate_backend is CertificateBackendSetting.PLAYWRIGHT_CONTEXT
+
+    def test_uppercase_enum_name_is_rejected(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        import pydantic
+
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+        monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", "PLAYWRIGHT_CONTEXT")
 
         class IsolatedSettings(Settings):
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")

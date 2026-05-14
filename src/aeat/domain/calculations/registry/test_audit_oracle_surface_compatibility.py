@@ -6,64 +6,48 @@ environment) yet semantically wrong if the cross-reference's
 real-world AEAT services. The audit's compatibility table is the
 single source of truth for which pairs are allowed; these tests
 exercise both the allow-list and a representative set of rejected
-pairs.
+pairs using the concrete oracle adapters registered in production.
 """
 
 from __future__ import annotations
-
-from collections.abc import Mapping
 
 import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
+from ._aeat_nif_iva_oracle import ORACLE_ID as AEAT_NIF_IVA_ORACLE_ID
+from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
+from ._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from ._live_parity import (
     _COMPATIBLE_SURFACE_PAIRS,
     LiveParityCatalogue,
-    OracleSurfaceKind,
-    ParityResult,
     audit_oracle_bindings,
 )
 from ._loader import load_registry_tree
-from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
+from ._renta_web_open_oracle import RentaWebOpenOracle
 from ._schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
 
+# Concrete (oracle_id, surface) inputs paired with the registered
+# production adapter that supplies the surface_kind. Every entry sits
+# inside ``_COMPATIBLE_SURFACE_PAIRS``; the audit must accept all of
+# them. Each adapter is a real production oracle — no stub layer.
+_COMPATIBLE_BEHAVIOURAL_CASES: tuple[tuple[str, str, str], ...] = (
+    (AEAT_NIF_IVA_ORACLE_ID, "public_read_surface", "vat_id_check"),
+    (GROI_ORACLE_ID, "authenticated_simulator", "vat_id_check"),
+    ("modelo-100-renta-web-open", "open_simulator", "open_simulator"),
+)
 
-class _StubOracle:
-    def __init__(self, oracle_id: str, surface_kind: OracleSurfaceKind) -> None:
-        self._oracle_id = oracle_id
-        self._surface_kind = surface_kind
 
-    @property
-    def oracle_id(self) -> str:
-        return self._oracle_id
-
-    @property
-    def surface_kind(self) -> OracleSurfaceKind:
-        return self._surface_kind
-
-    def planned_operations(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]:
-        del payload, expected
-        return ()
-
-    def verify_payload(
-        self,
-        policy: RemoteStateGuardPolicy,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> ParityResult:
-        del policy, payload, expected
-        raise NotImplementedError
+def _build_catalogue() -> LiveParityCatalogue:
+    catalogue = LiveParityCatalogue()
+    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    catalogue.register(GroiOracle(), environment="production")
+    catalogue.register(RentaWebOpenOracle(), environment="production")
+    return catalogue
 
 
 def _modelo_130() -> ModeloDefinition:
@@ -92,21 +76,21 @@ def _bind_first_cross_reference(
 
 
 def test_compatible_pair_passes_audit() -> None:
-    modelo = _bind_first_cross_reference(_modelo_130(), oracle_id="vat-checker", surface="public_read_surface")
-    catalogue = LiveParityCatalogue()
-    catalogue.register(_StubOracle("vat-checker", surface_kind="vat_id_check"), environment="production")
+    modelo = _bind_first_cross_reference(
+        _modelo_130(), oracle_id=AEAT_NIF_IVA_ORACLE_ID, surface="public_read_surface"
+    )
 
-    failures = audit_oracle_bindings(modelo, catalogue, environment="production")
+    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
 
     assert failures == ()
 
 
 def test_static_official_documentation_surface_rejects_every_oracle() -> None:
-    modelo = _bind_first_cross_reference(_modelo_130(), oracle_id="any-oracle", surface="static_official_documentation")
-    catalogue = LiveParityCatalogue()
-    catalogue.register(_StubOracle("any-oracle", surface_kind="vat_id_check"), environment="production")
+    modelo = _bind_first_cross_reference(
+        _modelo_130(), oracle_id=AEAT_NIF_IVA_ORACLE_ID, surface="static_official_documentation"
+    )
 
-    failures = audit_oracle_bindings(modelo, catalogue, environment="production")
+    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
 
     assert len(failures) == 1
     message = failures[0]
@@ -116,11 +100,11 @@ def test_static_official_documentation_surface_rejects_every_oracle() -> None:
 
 
 def test_authenticated_read_surface_rejects_open_simulator_oracle() -> None:
-    modelo = _bind_first_cross_reference(_modelo_130(), oracle_id="sim-oracle", surface="authenticated_read_surface")
-    catalogue = LiveParityCatalogue()
-    catalogue.register(_StubOracle("sim-oracle", surface_kind="open_simulator"), environment="production")
+    modelo = _bind_first_cross_reference(
+        _modelo_130(), oracle_id="modelo-100-renta-web-open", surface="authenticated_read_surface"
+    )
 
-    failures = audit_oracle_bindings(modelo, catalogue, environment="production")
+    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
 
     assert len(failures) == 1
     message = failures[0]
@@ -132,10 +116,8 @@ def test_lookup_failure_does_not_double_report_surface_incompatibility() -> None
     """An unknown oracle is reported once; the surface check is skipped."""
 
     modelo = _bind_first_cross_reference(_modelo_130(), oracle_id="absent", surface="static_official_documentation")
-    catalogue = LiveParityCatalogue()
-    catalogue.register(_StubOracle("present", surface_kind="vat_id_check"), environment="production")
 
-    failures = audit_oracle_bindings(modelo, catalogue, environment="production")
+    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
 
     assert len(failures) == 1
     message = failures[0]
@@ -144,14 +126,34 @@ def test_lookup_failure_does_not_double_report_surface_incompatibility() -> None
 
 
 @pytest.mark.parametrize(
-    ("surface", "surface_kind"),
-    sorted(_COMPATIBLE_SURFACE_PAIRS),
+    ("oracle_id", "surface", "surface_kind"),
+    _COMPATIBLE_BEHAVIOURAL_CASES,
 )
-def test_every_allow_listed_pair_passes_audit(surface: str, surface_kind: OracleSurfaceKind) -> None:
-    modelo = _bind_first_cross_reference(_modelo_130(), oracle_id="probe", surface=surface)
-    catalogue = LiveParityCatalogue()
-    catalogue.register(_StubOracle("probe", surface_kind=surface_kind), environment="production")
+def test_real_oracle_compatible_pair_passes_audit(oracle_id: str, surface: str, surface_kind: str) -> None:
+    """Each registered production oracle's (surface, surface_kind) pair
+    is accepted by the audit when bound to a real cross-reference."""
 
-    failures = audit_oracle_bindings(modelo, catalogue, environment="production")
+    assert (surface, surface_kind) in _COMPATIBLE_SURFACE_PAIRS
+    modelo = _bind_first_cross_reference(_modelo_130(), oracle_id=oracle_id, surface=surface)
+
+    failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
 
     assert failures == ()
+
+
+def test_compatibility_allow_list_matches_documented_pairs() -> None:
+    """The allow-list is the single source of truth for which (surface,
+    surface_kind) pairs an oracle binding may declare. The audit
+    consults this set verbatim — any drift here is a silent change to
+    every binding decision."""
+
+    assert _COMPATIBLE_SURFACE_PAIRS == frozenset(
+        {
+            ("open_simulator", "open_simulator"),
+            ("integration_test_service", "integration_test_service"),
+            ("public_read_surface", "vat_id_check"),
+            ("public_read_surface", "file_validator"),
+            ("authenticated_read_surface", "pre_filing_validator"),
+            ("authenticated_simulator", "vat_id_check"),
+        }
+    )

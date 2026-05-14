@@ -13,6 +13,7 @@ from ._engine import WorkflowEngine
 
 # ---- errors (no application deps) -------------------------------------------
 from ._errors import (
+    NoActiveProfileError,
     WorkflowAbortedError,
     WorkflowComponentError,
     WorkflowError,
@@ -25,6 +26,7 @@ from ._errors import (
 # those names are already present in the partially-initialised module.
 from ._models import (
     DeclarationPointer,
+    ProfileBucketPointer,
     SiteHealthAlert,
     WorkflowAbortReason,
     WorkflowEvent,
@@ -32,6 +34,8 @@ from ._models import (
     WorkflowStage,
     WorkflowState,
     WorkflowStep,
+    active_bucket_id_or_raise,
+    active_transaction_catalogue_repository,
     compute_run_id,
     declaration_key,
     update_declaration_pointer,
@@ -65,6 +69,8 @@ __all__ = [
     "FilingDraftBuilderAdapter",
     "FilingDraftBuilderProtocol",
     "FilingInputsProviderProtocol",
+    "NoActiveProfileError",
+    "ProfileBucketPointer",
     "RegistryFilingDraftProtocol",
     "SiteHealthAlert",
     "SubmissionEngineAdapter",
@@ -80,6 +86,8 @@ __all__ = [
     "WorkflowState",
     "WorkflowStateRepository",
     "WorkflowStep",
+    "active_bucket_id_or_raise",
+    "active_transaction_catalogue_repository",
     "compute_run_id",
     "declaration_key",
     "default_engine",

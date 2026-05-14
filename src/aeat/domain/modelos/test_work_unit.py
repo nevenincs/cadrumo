@@ -6,18 +6,25 @@ These tests cover the deterministic content-addressing of
 application-layer lifecycle actions (``create_work_unit``,
 ``list_work_units``, ``get_work_unit``, ``rename_work_unit``).
 
-The action tests inject a purely in-memory fake repository so the
-service layer is exercised without a SQL backend.
+The action-level tests exercise the real
+:class:`WorkUnitCatalogueRepository` against an ephemeral encrypted
+SQLite backend so the production save / load envelope is on the hot
+path; no in-memory fakes, no subclassed test repositories.
 """
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import pytest
 from pydantic import ValidationError
 
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
+from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.application.modelo import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
@@ -28,6 +35,7 @@ from aeat.application.modelo import (
     list_work_units,
     rename_work_unit,
 )
+from aeat.core.config import Settings
 from aeat.domain.modelos._errors import ModeloValidationError
 from aeat.domain.modelos._repository import (
     WorkUnitCatalogueRepository,
@@ -47,28 +55,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 
-class _InMemoryWorkUnitRepository(WorkUnitCatalogueRepository):
-    """In-memory repository that stores a catalogue in process memory.
+@pytest.fixture
+def repo(tmp_path: Path) -> Iterator[WorkUnitCatalogueRepository]:
+    """Yield a real ``WorkUnitCatalogueRepository`` over an encrypted SQLite db.
 
-    Subclasses :class:`WorkUnitCatalogueRepository` so the nominal
-    type signature of the application services is satisfied without
-    binding to the SQL backend. ``__init__`` skips the parent's
-    SecureObjectRepository wire-up; ``load`` / ``save`` are
-    overridden to keep state in the instance.
+    The backend exercises the production save / load envelope:
+    SecureObjectRepository → SQLAlchemy → SQLite at
+    ``tmp_path / aeat.db``. The master-key provider is overridden
+    to an ephemeral provider so the test does not require an
+    operator-installed keyring.
     """
 
-    def __init__(self, *, initial: WorkUnitCatalogue | None = None) -> None:
-        # Skip the SecureObjectRepository wire-up the parent does;
-        # in-memory state is sufficient for the action-layer tests.
-        self._catalogue = initial or WorkUnitCatalogue()
-        self.save_calls = 0
-
-    def load(self) -> WorkUnitCatalogue:
-        return self._catalogue
-
-    def save(self, catalogue: WorkUnitCatalogue) -> None:
-        self._catalogue = catalogue
-        self.save_calls += 1
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        yield WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=engine))
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
 
 
 # ---------------------------------------------------------------------------
@@ -271,11 +279,10 @@ def test_remove_returns_value_equal_catalogue_when_id_is_absent() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_create_work_unit_is_idempotent_on_the_four_axis_key() -> None:
+def test_create_work_unit_is_idempotent_on_the_four_axis_key(repo: WorkUnitCatalogueRepository) -> None:
     """Two ``create_work_unit`` calls with the same four-axis key
     return the same record without producing duplicates."""
 
-    repo = _InMemoryWorkUnitRepository()
     first = create_work_unit(
         bucket_id="default",
         modelo="303",
@@ -297,11 +304,15 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key() -> None:
     )
     assert first.work_unit_id == second.work_unit_id
     assert second.name == first.name  # rename is the dedicated mutation
-    assert repo.save_calls == 1  # second call is a no-op
+    # Real-backend invariant: only one record under the deterministic
+    # id survives in the catalogue (re-create does not produce a
+    # duplicate row).
+    catalogue = repo.load()
+    assert len(catalogue) == 1
+    assert catalogue.get(first.work_unit_id) is not None
 
 
-def test_create_work_unit_uses_default_name_when_no_name_supplied() -> None:
-    repo = _InMemoryWorkUnitRepository()
+def test_create_work_unit_uses_default_name_when_no_name_supplied(repo: WorkUnitCatalogueRepository) -> None:
     unit = create_work_unit(
         bucket_id="default",
         modelo="303",
@@ -314,8 +325,7 @@ def test_create_work_unit_uses_default_name_when_no_name_supplied() -> None:
     assert unit.name == "303-2026-Q1"
 
 
-def test_create_work_unit_honours_explicit_name() -> None:
-    repo = _InMemoryWorkUnitRepository()
+def test_create_work_unit_honours_explicit_name(repo: WorkUnitCatalogueRepository) -> None:
     unit = create_work_unit(
         bucket_id="default",
         modelo="303",
@@ -334,8 +344,7 @@ def test_create_work_unit_honours_explicit_name() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_list_work_units_sorts_by_bucket_year_modelo_period() -> None:
-    repo = _InMemoryWorkUnitRepository()
+def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalogueRepository) -> None:
     for bucket, modelo, year, period in (
         ("bucket-B", "303", 2026, "Q1"),
         ("bucket-A", "303", 2026, "Q2"),
@@ -359,8 +368,7 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period() -> None:
     )
 
 
-def test_list_work_units_filters_by_bucket_id() -> None:
-    repo = _InMemoryWorkUnitRepository()
+def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository) -> None:
     create_work_unit(
         bucket_id="bucket-A", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
@@ -372,14 +380,12 @@ def test_list_work_units_filters_by_bucket_id() -> None:
     assert only_a[0].bucket_id == "bucket-A"
 
 
-def test_get_work_unit_raises_when_id_is_absent() -> None:
-    repo = _InMemoryWorkUnitRepository()
+def test_get_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepository) -> None:
     with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
         get_work_unit("missing", repository=repo)
 
 
-def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at() -> None:
-    repo = _InMemoryWorkUnitRepository()
+def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: WorkUnitCatalogueRepository) -> None:
     original = create_work_unit(
         bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
@@ -396,8 +402,7 @@ def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at() -> None:
     assert renamed.created_at == original.created_at
 
 
-def test_rename_work_unit_raises_when_id_is_absent() -> None:
-    repo = _InMemoryWorkUnitRepository()
+def test_rename_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepository) -> None:
     with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
         rename_work_unit("missing", "ignored", repository=repo)
 
@@ -407,11 +412,10 @@ def test_rename_work_unit_raises_when_id_is_absent() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_discard_work_unit_transitions_to_discarded_state() -> None:
+def test_discard_work_unit_transitions_to_discarded_state(repo: WorkUnitCatalogueRepository) -> None:
     """A fresh draft work unit is moved to DISCARDED with audit
     metadata captured (actor + reason + timestamp)."""
 
-    repo = _InMemoryWorkUnitRepository()
     original = create_work_unit(
         bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
@@ -431,8 +435,7 @@ def test_discard_work_unit_transitions_to_discarded_state() -> None:
     assert discarded.updated_at == discard_time
 
 
-def test_discard_work_unit_accepts_omitted_reason() -> None:
-    repo = _InMemoryWorkUnitRepository()
+def test_discard_work_unit_accepts_omitted_reason(repo: WorkUnitCatalogueRepository) -> None:
     original = create_work_unit(
         bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
@@ -445,18 +448,16 @@ def test_discard_work_unit_accepts_omitted_reason() -> None:
     assert discarded.discard_reason is None
 
 
-def test_discard_work_unit_raises_on_missing_id() -> None:
-    repo = _InMemoryWorkUnitRepository()
+def test_discard_work_unit_raises_on_missing_id(repo: WorkUnitCatalogueRepository) -> None:
     with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
         discard_work_unit("missing", actor="operator-A", repository=repo)
 
 
-def test_discard_work_unit_raises_when_already_discarded() -> None:
+def test_discard_work_unit_raises_when_already_discarded(repo: WorkUnitCatalogueRepository) -> None:
     """Idempotent retries are not supported — re-discarding would
     corrupt the audit trail. The error names the original actor /
     timestamp so the operator can correlate."""
 
-    repo = _InMemoryWorkUnitRepository()
     unit = create_work_unit(
         bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
@@ -475,12 +476,11 @@ def test_discard_work_unit_raises_when_already_discarded() -> None:
         )
 
 
-def test_rename_refuses_to_mutate_a_discarded_work_unit() -> None:
+def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueRepository) -> None:
     """Once discarded, the work unit's metadata is frozen.
     Attempting to rename it raises WorkUnitMutationRefusedError so
     the operator can correct course (create a fresh work unit)."""
 
-    repo = _InMemoryWorkUnitRepository()
     unit = create_work_unit(
         bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
@@ -494,8 +494,7 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit() -> None:
         rename_work_unit(unit.work_unit_id, "new-name", repository=repo)
 
 
-def test_list_work_units_excludes_discarded_by_default() -> None:
-    repo = _InMemoryWorkUnitRepository()
+def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRepository) -> None:
     unit_draft = create_work_unit(
         bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )
@@ -512,8 +511,7 @@ def test_list_work_units_excludes_discarded_by_default() -> None:
     assert {u.work_unit_id for u in visible} == {unit_draft.work_unit_id}
 
 
-def test_list_work_units_includes_discarded_when_flag_set() -> None:
-    repo = _InMemoryWorkUnitRepository()
+def test_list_work_units_includes_discarded_when_flag_set(repo: WorkUnitCatalogueRepository) -> None:
     unit_draft = create_work_unit(
         bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
     )

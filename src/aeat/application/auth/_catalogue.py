@@ -6,7 +6,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.i18n import Translatable as tr
+from ...core.i18n import Translatable as tr  # noqa: N813
 
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""

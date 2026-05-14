@@ -176,14 +176,17 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
     initial = _transaction("row-linked")
     invoice = _invoice(initial.transaction_id)
     linked = _transaction("row-linked", invoice_id=invoice.invoice_id)
-    tx_repo = TransactionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=SecureObjectRepository(engine=secure_engine))
     invoice_repo = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
     invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
 
     result = aggregate_renta_ledger_expenses_from_repositories(
+        bucket_id="test",
         period="2025",
-        transaction_repository=TransactionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id="test", objects=SecureObjectRepository(engine=secure_engine)
+        ),
         invoice_repository=InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
         profile_year=2025,
     )
@@ -206,14 +209,17 @@ def test_cli_renta_filing_aggregation_resolves_registry_bound_inputs(secure_engi
         amount=Decimal("-121.00"),
         category=SpendingCategory.ASESORIA_FISCAL,
     )
-    tx_repo = TransactionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=SecureObjectRepository(engine=secure_engine))
     invoice_repo = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(InvoiceCatalogue())
 
     inputs = _aggregate_renta_filing_inputs(
+        bucket_id="test",
         filing_year=2025,
-        transaction_repository=TransactionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+        transaction_repository=TransactionCatalogueRepository(
+            bucket_id="test", objects=SecureObjectRepository(engine=secure_engine)
+        ),
         invoice_repository=InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
     )
 

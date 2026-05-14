@@ -168,11 +168,14 @@ def ledger_import(
             lines.extend(_validation_lines(validation, source_verification))
         _emit(ctx, payload, lines)
         return
-    summary = _tx_repo().merge_raw_transactions(raws, direction_resolver=_direction_resolver)
+    summary = _tx_repo(_state()).merge_raw_transactions(raws, direction_resolver=_direction_resolver)
     payload = {
         "rows": len(raws),
         "imported": summary.imported,
         "skipped": summary.skipped,
+        "bucket_id": summary.bucket_id,
+        "imported_transaction_refs": [ref.model_dump(mode="json") for ref in summary.imported_refs],
+        "skipped_transaction_refs": [ref.model_dump(mode="json") for ref in summary.skipped_refs],
         "dry_run": False,
         "verify": verify,
         "period": _canonical_period(period) if period else None,
@@ -247,7 +250,7 @@ def ledger_review(
         spec = LedgerReviewFilterSpec.from_strings(filters)
     except FilterParseError as exc:
         raise _bad(tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.raw_token)) from exc
-    catalogue = _load_transactions()
+    catalogue = _load_transactions(_state())
     state = _state()
     rows: list[Transaction] = list(catalogue.transactions.values())
     if spec.period:
@@ -328,7 +331,7 @@ def ledger_edit(
     reason: str = typer.Option(..., "--reason", help=tr("cli.ledger.edit.reason_help")),
 ) -> None:
     """Apply a typed edit to one ledger row."""
-    catalogue = _load_transactions()
+    catalogue = _load_transactions(_state())
     if record_id not in catalogue.transactions:
         raise _bad(tr("cli.ledger.errors.row_not_found", id=record_id))
     try:

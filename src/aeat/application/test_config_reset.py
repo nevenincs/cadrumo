@@ -98,6 +98,34 @@ def test_reset_auth_only_clears_session(
     assert profile_bucket_repository().load("kent") is not None
 
 
+def test_reset_profile_deletes_bucket_id_when_profile_key_differs(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """PROFILE scope removes the stored bucket id, not just the profile-map key."""
+    from .config_reset import ConfigResetScope, reset_config
+    from .profile._models import ProfileRecord
+    from .profile._repository import profile_bucket_repository
+    from .workflow._models import WorkflowState
+    from .workflow._persistence import workflow_state_repository
+
+    _isolate_workflow(monkeypatch, tmp_path)
+    profile_bucket_repository().save(ProfileRecord(name="actual-bucket", values={"tax.id": "00000000T"}))
+    workflow_state_repository().save(
+        WorkflowState.model_validate(
+            {
+                "active_profile": "alias",
+                "profiles": {"alias": {"bucket_id": "actual-bucket"}},
+            }
+        )
+    )
+
+    report = reset_config(ConfigResetScope.PROFILE, confirmed=True)
+
+    assert "alias" in report.removed_profile_names
+    assert profile_bucket_repository().load("actual-bucket") is None
+
+
 def test_reset_data_invokes_quarantine_pipeline(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,

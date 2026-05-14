@@ -11,7 +11,7 @@ import pytest
 
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...core.config import Settings
-from ...core.i18n import Translatable as tr
+from ...core.i18n import Translatable
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -63,8 +63,8 @@ def _secure_object_backend(tmp_path: Path):
         dispose_engine()
 
 
-def _summary(text: str = "demo") -> tr:
-    return tr("translation")
+def _summary(text: str = "demo") -> Translatable:
+    return Translatable("translation")
 
 
 def _schema_version(modelo: str = "130") -> str:
@@ -106,7 +106,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
     )
     transaction = Transaction.model_validate({"raw": raw, "direction": TransactionDirection.OUTGOING})
     catalogue = TransactionCatalogue.from_transactions((transaction,))
-    TransactionCatalogueRepository().save(catalogue)
+    TransactionCatalogueRepository(bucket_id="test").save(catalogue)
 
     line = InvoiceLine(
         description="Consultoría",
@@ -169,7 +169,7 @@ def _seed_all_sources(tmp_path: Path) -> Settings:
 
 def test_collect_returns_one_item_per_source(tmp_path: Path) -> None:
     settings = _seed_all_sources(tmp_path)
-    items = ReviewQueue.collect(settings)
+    items = ReviewQueue.collect(settings, bucket_id="test")
     kinds = {item.kind for item in items}
     assert kinds == {
         ReviewItemKind.TRANSACTION,
@@ -181,7 +181,7 @@ def test_collect_returns_one_item_per_source(tmp_path: Path) -> None:
 
 def test_collect_sorts_critical_before_normal(tmp_path: Path) -> None:
     settings = _seed_all_sources(tmp_path)
-    items = ReviewQueue.collect(settings)
+    items = ReviewQueue.collect(settings, bucket_id="test")
     severities = [item.severity for item in items]
     # CRITICAL comes first; NORMAL last; the seeded items are CRITICAL x1, HIGH x1, NORMAL x1.
     assert severities[0] is ReviewSeverity.CRITICAL
@@ -192,6 +192,7 @@ def test_collect_filters_by_kind(tmp_path: Path) -> None:
     settings = _seed_all_sources(tmp_path)
     items = ReviewQueue.collect(
         settings,
+        bucket_id="test",
         kinds=frozenset({ReviewItemKind.FINDING}),
     )
     kinds = {item.kind for item in items}
@@ -201,18 +202,18 @@ def test_collect_filters_by_kind(tmp_path: Path) -> None:
 
 def test_collect_filters_by_modelo(tmp_path: Path) -> None:
     settings = _seed_all_sources(tmp_path)
-    items = ReviewQueue.collect(settings, modelo="130")
+    items = ReviewQueue.collect(settings, bucket_id="test", modelo="130")
     # Transaction and invoice carry no modelo so they are excluded.
     assert {item.kind for item in items} == {ReviewItemKind.FINDING}
 
 
 def test_collect_state_all_matches_pending_today(tmp_path: Path) -> None:
     settings = _seed_all_sources(tmp_path)
-    pending = ReviewQueue.collect(settings, state=ReviewState.PENDING)
-    every = ReviewQueue.collect(settings, state=ReviewState.ALL)
+    pending = ReviewQueue.collect(settings, bucket_id="test", state=ReviewState.PENDING)
+    every = ReviewQueue.collect(settings, bucket_id="test", state=ReviewState.ALL)
     assert pending == every
 
 
 def test_collect_returns_empty_tuple_when_no_sources_present(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    assert ReviewQueue.collect(settings) == ()
+    assert ReviewQueue.collect(settings, bucket_id="test") == ()

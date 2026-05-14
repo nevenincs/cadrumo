@@ -1,4 +1,4 @@
-"""Smoke tests for the user-facing ``aeat setup`` surface."""
+"""Smoke tests for the user-facing first-run configuration surface."""
 
 from __future__ import annotations
 

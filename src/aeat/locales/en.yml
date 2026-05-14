@@ -1,4 +1,7 @@
 aggregation:
+  iva_ledger:
+    errors:
+      bucket_mismatch: Transaction repository bucket does not match the requested aggregation bucket.
   models:
     errors:
       annual_period_mixed: Period cannot mix annual and sub-annual (quarter/month)
@@ -10,8 +13,12 @@ aggregation:
   renta_ledger:
     errors:
       annual_period_required: Annual period is required for Renta ledger aggregation.
+      bucket_mismatch: Transaction repository bucket does not match the requested Renta ledger bucket.
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
+  modelo_bindings:
+    errors:
+      unsupported_period: Unsupported modelo period for ledger aggregation.
 application:
   auth:
     provider_impact:
@@ -43,6 +50,23 @@ categories:
     display_label_851219: Display label 851219
 cli:
   app:
+    live:
+      app_help: Read-only AEAT live observation commands
+      expediente_help: AEAT expediente identifier
+      filed:
+        capture_help: Capture filed declaration data from AEAT
+        capture_sources_help: Capture filed observations required by a target filing
+        list_help: List filed declaration rows without downloading artefacts
+      filed_app_help: Read-only filed declaration observations
+      from_year_help: First filing year
+      limit_help: Maximum rows to capture
+      modelo_help: Modelo code
+      output_root_help: Directory for captured filed-declaration observations
+      period_help: Filing period
+      registry_root_help: Registry root
+      source_root_help: Project source root
+      to_year_help: Last filing year
+      year_help: Filing year
     modelo:
       app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
       bindings:
@@ -52,9 +76,10 @@ cli:
           period
         missing_help: Filter to bindings without a resolved value (require bucket
           / ledger / profile data)
+        missing_required_options: 'Missing required options: %{options}'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
-        period_help: Fiscal period to scope the bindings (e.g. Q1, 2026-01)
+        period_help: Fiscal period to scope the bindings (e.g. 2026Q1, 2026-01)
         preview_help: Preview bindings with temporary overrides without mutating state
         year_help: Tax year of the modelo (e.g. 2026)
       casillas:
@@ -136,20 +161,11 @@ cli:
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
         year_help: Tax year of the work unit (e.g. 2026)
-  browser:
-    app_help: Browser automation management (Playwright)
-    health:
-      json_help: Show browser health status in JSON format
-    health_help: Check the health and connectivity of the browser automation
-    labels:
-      http_status: HTTP Status
-      markers: Detected markers
-      none: None
-      retry_after_seconds: Retry after (seconds)
-      state: Operational State
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
+      no_active_profile: No active profile. Run `aeat config init` before using profile-scoped
+        data commands.
       period_empty: Tax period cannot be empty
       period_unrecognised: Unrecognized period
   config:
@@ -170,20 +186,14 @@ cli:
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
     bucket:
+      actor_help: Filter the history to events recorded by a specific actor (exact match)
       bucket_id_help: Bucket identifier whose event history should be inspected
       event_type_help: Filter the history to one or more event types (repeatable)
       help: Inspect bucket-scoped storage and event history
       history_help: Show the append-only event history for one bucket
-    doctor:
-      connectivity_help: Check browser and AEAT Sede connectivity
-      help: Diagnose local configuration, registry, profile, auth, and logs
-      logs_help: Show the log file path and recent lines
-      logs_lines_help: Number of recent log lines to show
-      quarantine_help: Move undecryptable rows into a quarantine table (destructive;
-        requires --yes)
-      quarantine_requires_yes: This operation is destructive. Re-run with --yes to
-        confirm.
-      quarantine_yes_help: Explicitly confirm the quarantine operation
+      object_id_help: Filter the history to events targeting a specific object_id (exact match)
+      since_help: Filter the history to events at or after this ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00)
+      until_help: Filter the history to events at or before this ISO-8601 timestamp (e.g. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config init --tax-id <NIF>'
@@ -193,10 +203,38 @@ cli:
     get:
       help: Show the current value of one configuration key
       key_help: Key to read (e.g. tax.id, iva.regime)
+    google:
+      client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
+      help: Manage the Google OAuth Desktop integration for Drive and Sheets
+      login_help: Run the OAuth consent flow (or refresh an existing credential)
+      logout_help: Clear the refresh token and metadata; preserve the registered client
+      profile_help: AEAT profile name override (default = active profile on workflow state)
+      refresh_only_help: Skip the consent screen and refresh an existing credential only
+      register_help: Register a Cloud Console Desktop OAuth client JSON for the active profile
+      status_help: Show the current Google OAuth session state for the active profile
     list:
       help: List every configuration key with its current value
     profile:
       help: Manage active profile configuration values
+    repair:
+      connectivity_help: Check browser and AEAT Sede connectivity
+      connectivity_target_help: Connectivity target to probe
+      help: Diagnose and repair local configuration, registry, profile, auth,
+        and logs
+      logs_help: Show the log file path and recent lines
+      logs_lines_help: Number of recent log lines to show
+      quarantine_help: Move undecryptable rows into a quarantine table (destructive;
+        requires --yes)
+      quarantine_requires_yes: This operation is destructive. Re-run with --yes to
+        confirm.
+      quarantine_yes_help: Explicitly confirm the quarantine operation
+      reset_state_help: Drop the unreadable workflow-state envelope (destructive;
+        requires --yes)
+      reset_state_requires_yes: This operation is destructive. Re-run with --yes
+        to confirm or pass --dry-run to inspect the fingerprint.
+      reset_state_yes_help: Explicitly confirm the workflow-state reset
+      reset_state_dry_run_help: Report the envelope fingerprint without deleting
+        the row
     reset:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
@@ -216,201 +254,103 @@ cli:
       profile_name_help: Profile name to write the answers into
       quiet_help: Run the flow non-interactively using only the supplied flag values
       success:
-        next_step: 'Next step: run `aeat app overview` to review your next obligation.'
+        next_step: 'Next step: run `aeat app overview status` to review your workspace.'
         saved: Profile '%{profile_name}' saved.
     status:
       empty_profile: No profile configured. Run `aeat config init` to get started.
       help: Show the readiness of the current configuration profile
-      next_step: 'Next step: `aeat app overview`'
+      next_step: 'Next step: `aeat app overview status`'
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
-  data:
-    app_help: Management of tax data and records
-    ledgers:
-      app_help: Management of VAT and IRPF Record Books (Ledgers)
-      inventory_help: List the inventory of available Record Books (Ledgers)
-    ledgers_help: Management of AEAT Record Books (Ledgers)
-  deadlines:
-    app_help: Management of the taxpayer calendar and deadlines
-    explain:
-      modelo_help: Tax form number (e.g. 303, 111)
-    explain_help: Explain the deadlines and obligations for a specific tax form and
-      profile
-    list:
-      closes_on_col: Closes On
-      labels:
-        tax_deadlines: Tax Deadlines
-      modelo_col: Form
-      opens_on_col: Opens On
-      period_col: Period
-      status_col: Status
-      table_title: Tax Deadline Calendar
-      year_help: Fiscal year to query
-    list_help: List tax deadlines for a fiscal year
-    next:
-      labels:
-        closes: Closes
-        no_upcoming: No upcoming deadlines
-      year_help: Fiscal year to query
-    next_help: Show the next relevant tax deadline
-  filing:
-    amendment:
-      delta_table_title: Amendment Delta (Differences)
-      title: Amendment / Supplementary Return
-    app_help: Management and submission of tax filings
-    build:
-      modelo_help: Tax model to build (e.g., 303, 111, 130)
-      period_help: Tax period (e.g., 1T, 2T, 01, 12)
-    complementaria:
-      app_help: Management of supplementary and corrective filings
-      build:
-        delta_json_help: JSON file containing the differences (delta) for the supplementary
-          filing
-    draft:
-      approved_by_you: Approved by you
-      next_steps_label: Next steps
-      title: Filing Draft
-      values_table_title: Filing Box Values
-    errors:
-      amendment_success: Supplementary filing successfully processed
-      casilla_key_not_string: Box (casilla) key must be a string
-      failed_to_load_draft: Failed to load filing draft
-      inputs_not_object: Input data must be an object (JSON)
-      invalid_json: Invalid JSON file
-      invalid_status: Invalid filing status
-      missing_import_source: Missing import source
-      missing_original_submission_id: Missing original submission ID
-      missing_updated_inputs: Missing updated input files
-      modelo_mismatch: Tax model mismatch
-      multiple_import_sources: Multiple import sources found
-      period_mismatch: Tax period mismatch
-      reasons_not_object: Reasons must be an object (JSON)
-      submission_not_found: Submission not found
-      submission_validation_failed: Submission validation failed
-      unsupported_value_type: Unsupported value type
-    field:
-      approved_at: Approved at
-      approved_by: Approved by
-      casilla: Box
-      code: Code
-      created_at: Created at
-      draft_id: Draft ID
-      kind: Kind / Type
-      message: Message
-      modelo: Tax Model
-      new: New
-      old: Old
-      original_csv: Original CSV
-      path: Path
-      period: Period
-      profile_tax_id: Profile Tax ID (NIF)
-      reason: Reason
-      review_checksum: Review Checksum
-      schema_version: Schema Version
-      severity: Severity
-      source: Source
-      stale_reason: Stale Reason
-      status: Status
-      submission_id: Submission ID
-      updated_at: Updated at
-      value: Value
-    import:
-      actual: Actual (Found)
-      año_help: Fiscal year for the import operation (YYYY)
-      borrador_unsupported: Importing from official draft is not supported for this
-        tax model
-      casilla_label: Box
-      cause: Cause / Reason
-      expected: Expected
-      extraction_complete: Extraction successfully completed
-      from_borrador_help: Import data from an official draft (AEAT PDF)
-      from_declaracion_help: Import data from a submitted filing (AEAT PDF)
-      from_justificante_help: Import data from a submission receipt (AEAT PDF)
-      importing_declaration: Importing filing...
-      justificante_success: Receipt successfully imported
-      modelo_help: Tax model of the filing to import
-      scaffold_created: Import scaffold successfully created
-      verification_result: Verification Result
-      warning_label: WARNING
-      warnings_found: Warnings found during the process
-    init:
-      findings_table_title: Initial Detection Findings
-    list:
-      modelo_help: Filter by tax model
-      status_help: Filter by filing status
-      table_title: Filing List
-    show:
-      findings_only_help: Show only filing findings
-    validate:
-      draft_path_help: Path to the draft file to validate
-      success: Validation completed successfully. The filing is valid.
-  inventory:
-    app_help: Management of asset and stock inventory
-    create:
-      actividad_help: Related economic activity code
-      help: Register a new item in the inventory
-      opening_quantity_help: Initial quantity (opening stock) in inventory
-      opening_stock_help: Initial stock value
-      opening_unit_cost_help: Initial unit cost
-      sku_help: SKU code of the item
-      valuation_method_help: Valuation method (e.g., PMP, FIFO, LIFO)
-      year_help: Related fiscal year
-    errors:
-      invalid_valuation: Invalid inventory valuation
-      ledger_not_found: Inventory ledger not found
-      missing_opening_fields: Required opening stock fields are missing
-      valuation_failed: Inventory valuation process failed
-    labels:
-      ledger_created: Inventory ledger successfully created
-      ledger_empty: The inventory ledger is empty
-      movement_added: Inventory movement successfully added
-    list:
-      help: List inventory items
-      opening_label: Opening
-    movement:
-      actividad_help: Economic activity code related to the movement
-      add_help: Add a new inventory movement (purchase, sale, etc.)
-      date_help: Movement date (YYYY-MM-DD)
-      kind_help: Movement type (entry or exit)
-      movement_id_help: Inventory movement identifier
-      quantity_help: Quantity involved in the movement
-      sku_help: SKU code of the item in the movement
-      taxable_base_help: Taxable base of the movement
-      unit_cost_help: Unit cost of the movement
-      vat_rate_help: VAT rate applied
-      year_help: Fiscal year of the movement
-    movement_help: Management of inventory movements
-    valuation:
-      actividad_help: Economic activity code related to the valuation
-      closing_label: Closing
-      cogs_label: COGS (Cost of Goods Sold)
-      preview_help: Preview the valuation report before generating it
-      preview_line: 'Preview: {sku} - {method}'
-      year_help: Fiscal year for the valuation report
-    valuation_help: Stock valuation management (PMP, FIFO, LIFO)
+    workflow_help: Show config workflow help
   ledger:
     app_help: Management of accounting ledgers and VAT records
+    create:
+      actor_help: Operator name recorded on the bucket event
+      amount_help: Signed transaction amount; outgoing values are negative
+      attachment_help: Secure attachment id to link to the transaction; repeat for multiple attachments
+      business_pct_help: Business-use share for MIXED classification, from 0 to 1
+      category_help: Spending or income category id
+      classification_help: Business classification state for the transaction
+      counterparty_help: Counterparty name shown in the ledger
+      currency_help: ISO 4217 currency code
+      date_help: Booking date (YYYY-MM-DD)
+      description_help: Ledger transaction description
+      direction_help: Transaction direction
+      help: Create a manual ledger transaction in the active profile bucket
+      idempotency_key_help: Stable key used to make repeated manual entry idempotent
+      irpf_category_help: IRPF category for modelo calculations
+      iva_amount_help: IVA amount
+      iva_rate_help: IVA rate as a decimal, for example 0.21
+      notes_help: Operator notes stored with the ledger transaction
+      prorrata_reference_help: IVA prorrata reference for VAT workflows
+      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the transaction
+      taxable_base_help: Taxable base amount
+      usage_ratio_help: Usage-ratio id for proportional business use
+      value_date_help: Value date (YYYY-MM-DD)
+    allocate:
+      actor_help: Operator name recorded on the bucket event
+      business_pct_help: Business-use share from 0 to 1
+      category_help: Spending or income category id
+      help: Record business/private proportionality for a ledger transaction
+      id_help: Ledger transaction id to allocate
+      prorrata_reference_help: IVA prorrata reference for VAT workflows
+      usage_ratio_help: Usage-ratio id for proportional business use
+    archive:
+      actor_help: Operator name recorded on the bucket event
+      help: Archive one ledger transaction in the active profile bucket
+      id_help: Ledger transaction id to archive
+      reason_help: Reason recorded in lifecycle history
+    attach:
+      actor_help: Operator name recorded on the bucket event
+      attachment_help: Secure attachment id to link to the transaction; repeat for multiple attachments
+      help: Attach secure evidence objects to one ledger transaction
+      id_help: Ledger transaction id to attach evidence to
+      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the transaction
+    classify:
+      actor_help: Operator name recorded on the bucket event
+      category_help: Spending or income category id
+      classification_help: Business classification state for the transaction
+      help: Classify one ledger transaction in the active profile bucket
+      id_help: Ledger transaction id to classify
+      irpf_category_help: IRPF category for modelo calculations
+      iva_amount_help: IVA amount
+      iva_rate_help: IVA rate as a decimal, for example 0.21
+      taxable_base_help: Taxable base amount
     edit:
-      help: Manually edit an accounting ledger entry
-      id_help: Identifier of the ledger entry to edit
-      reason_help: Reason for the entry edit or correction
-      set_help: Set ledger field values (field=value)
-      skip_help: Mark the row excluded or return it to review
-      split_help: Allocate the row into business and personal-use shares
+      actor_help: Operator name recorded on the bucket event
+      amount_help: Signed transaction amount; outgoing values are negative
+      counterparty_help: Counterparty name shown in the ledger
+      currency_help: ISO 4217 currency code
+      date_help: Booking date (YYYY-MM-DD)
+      description_help: Ledger transaction description
+      direction_help: Transaction direction
+      help: Correct editable ledger transaction facts in the active profile bucket
+      id_help: Ledger transaction id to edit
+      irpf_category_help: IRPF category for modelo calculations
+      iva_amount_help: IVA amount
+      iva_rate_help: IVA rate as a decimal, for example 0.21
+      notes_help: Operator notes stored with the ledger transaction
+      taxable_base_help: Taxable base amount
+      value_date_help: Value date (YYYY-MM-DD)
+    export:
+      actor_help: Operator name recorded on the bucket event
+      format_help: Export serialization format
+      help: Export canonical ledger rows from the active profile bucket
+      include_inactive_help: Include archived and stashed ledger transactions
+      output_help: Path to write the exported ledger file
+    list:
+      header: ACCOUNTING LEDGER TRANSACTIONS
+      help: List ledger transactions in the active profile bucket
     errors:
       auto_detect_failed: Auto-detection of ledger format failed
-      edit_requires_one: At least one field modification is required for editing
+      confirm_required: Pass --yes to confirm this destructive ledger operation, or use --dry-run first
       filter_parse_error: Failed to parse ledger filter
-      invalid_skip: Invalid skip field
+      invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
       invalid_source: 'The ledger file cannot be imported: {reason}'
       invalid_source_unknown: invalid source
-      invalid_split_format: Invalid split format
-      invalid_split_value: Invalid split value
-      match_both_required: Both ledger entry and transaction are required for matching
       n26_auto_detect_failed: Auto-detection of N26 format failed
-      row_not_found: Ledger row not found
-      set_parse_error: Failed to parse field assignment (field=value)
       source_not_found: 'Source file not found: {source}'
       unknown_provider: Unknown ledger provider
     import:
@@ -428,13 +368,30 @@ cli:
       description: Description
       dialect: Detected format
       dry_run: DRY RUN MODE
-      fields: Fields
       id: ID
       imported: Entries imported
+      active: Active
+      archived: Archived
+      bucket: Bucket
+      checked: Checked transactions
+      created_event_id: Created bucket event
+      lifecycle_state: Lifecycle state
       'no': 'No'
+      export_id: Export ID
+      output: Output
+      pending: Pending review
+      period: Period
+      readiness_issues: Readiness issues
+      ready: Ready
+      removed: Removed
+      reset: Reset
+      review_status: Review status
+      reviewed: Reviewed
       rows: Rows
+      sha256: SHA-256
       skipped: Skipped
       source: Source
+      stashed: Stashed
       valid: Valid
       warnings: Warnings
       'yes': 'Yes'
@@ -445,6 +402,36 @@ cli:
       id_help: Identifier of the specific entry to review
       no_rows: No ledger entries pending review
       verbose_help: Show detailed information during review
+    read:
+      help: Read one ledger transaction from the active profile bucket
+      transaction_id_help: Ledger transaction id to read
+    remove:
+      actor_help: Operator name recorded on the bucket event
+      dry_run_help: Report removal effects without deleting the ledger transaction
+      help: Remove one ledger transaction from the active profile bucket
+      id_help: Ledger transaction id to remove
+      reason_help: Reason recorded in removal history
+      yes_help: Confirm deletion of the ledger transaction
+    reset:
+      actor_help: Operator name recorded on the bucket event
+      dry_run_help: Report reset effects without clearing the ledger catalogue
+      help: Reset the active profile bucket ledger catalogue
+      reason_help: Reason recorded in reset history
+      yes_help: Confirm clearing the active ledger catalogue
+    stash:
+      actor_help: Operator name recorded on the bucket event
+      help: Stash one ledger transaction in the active profile bucket
+      id_help: Ledger transaction id to stash
+      reason_help: Reason recorded in lifecycle history
+    status:
+      help: Summarize ledger state and calculation readiness for the active profile bucket
+      period_help: Fiscal period to preflight (YYYY-MM or modelo period)
+    track:
+      help: Show the event lineage for one ledger transaction
+      transaction_id_help: Ledger transaction id to inspect
+  locales:
+    app_help: Audit and scaffold locale catalogues
+    scaffold_check_help: Report drift without writing locale files
   overview:
     allow_incomplete_help: Allow the calendar to be computed under defaults when regime
       keys are unset. Without this flag the calendar is refused when warnings exist.
@@ -464,7 +451,7 @@ cli:
       drafts_present: '%{count} saved declaration draft(s) exist in this local storage.
         A fresh empty workspace normally has 0, so this profile/database already contains
         local draft state.'
-      integrity_next: Run `aeat config doctor` for detail. Do not quarantine rows
+      integrity_next: Run `aeat config repair` for detail. Do not quarantine rows
         unless you intentionally want to archive unreadable old local data.
       invoices_empty: No business-operation records have been imported yet.
       invoices_present: '%{count} business-operation record(s) are available for review.'
@@ -489,6 +476,9 @@ cli:
     verbose_help: Show details and next action when available
   registry:
     app_help: Tax models registry management
+    audit_oracles_environment_help: Live parity catalogue environment to audit against
+      (production, test_environment, or both)
+    audit_oracles_help: Surface live-parity oracle binding mismatches at startup
     casilla_help: Casilla id to compare; repeat to override the default computed casillas
     citations:
       app_help: Inspect the legal-norm corpus (Ley 37/1992, Ley 35/2006, ...)
@@ -621,7 +611,7 @@ cli:
       headline: AEAT Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
         --help`.'
-      quick_start_doctor: '  5. `aeat config doctor` - diagnose configuration, storage,
+      quick_start_repair: '  5. `aeat config repair` - diagnose configuration, storage,
         and local health.'
       quick_start_heading: Quick start
       quick_start_import: '  3. `aeat app ledger import <bank-statement.csv> --provider
@@ -647,6 +637,8 @@ cli:
       welcome_profile: Welcome back. Active profile is `%{profile}`.
     language_help: Output language for this command (overrides the active profile)
     quiet_help: Show only errors on stderr
+    unavailable_app_help: App commands are unavailable because an optional dependency
+      is missing
     verbose_help: Show internal informational logs on stderr
     version_help: Show package version (add --detail for the full registry summary)
   topic:
@@ -668,25 +660,6 @@ profile:
     description: profile.keys.description
     tax:
       id: Tax identifier (NIF/NIE/CIF)
-review:
-  adapters:
-    t_135562: internal transfer
-    t_142007: business
-    t_145612: Official validation result
-    t_167733: overdue
-    t_189155: reason
-    t_298389: payment pending
-    t_352338: failed validation
-    t_352928: partially paid
-    t_551826: unmatched
-    t_607122: skipped by rule
-    t_619063: mixed
-    t_629803: outgoing
-    t_754183: unprocessed
-    t_787894: approval stale — re-review required (status=APPROVAL_STALE)
-    t_791512: processed unclassified
-    t_870243: personal
-    t_968325: incoming
 topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
@@ -787,11 +760,10 @@ wizard:
     select_without_choices: Question %{prompt_key} declares no select options.
     unsupported_console: "The guided setup could not open an interactive prompt in\
       \ this run.\nNothing has been saved yet.\n\nTry the guided setup again from\
-      \ an interactive terminal session:\n  aeat config init\n\nOr start with the\
-      \ two required values:\n  aeat config init --quiet --tax-id 12345678Z --activity\
-      \ \"software development\"\n\nActivity can be a plain description of your work\
-      \ or the IAE heading if you know it.\nRun `aeat config init --help` to see every\
-      \ setup field."
+      \ an interactive terminal session:\n  aeat config init\n\nIf this profile state\
+      \ may be stale or corrupt, inspect it first:\n  aeat config repair\n\nTo discard\
+      \ only local profile state and start over:\n  aeat config reset --scope profile\
+      \ --yes"
   other:
     description: wizard.other.description
     section:

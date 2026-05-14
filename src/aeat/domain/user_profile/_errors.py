@@ -19,3 +19,27 @@ class UserProfileValidationError(UserProfileError, ValueError):
 
 class UserProfileNotFoundError(UserProfileError, KeyError):
     """Raised when a requested user profile section or field is missing."""
+
+
+class ProfileNotFoundError(UserProfileError):
+    """Raised when a profile lookup targets an unknown ``profile_id``."""
+
+
+class ProfileAlreadyExistsError(UserProfileError):
+    """Raised when a register / duplicate command collides with an existing profile."""
+
+
+class ProfileSchemaValidationError(UserProfileError):
+    """Raised when a lifecycle command's facts violate the schema contract."""
+
+
+class ProfilePreflightMissingError(UserProfileError):
+    """Raised when modelo/revision preflight cannot find a required profile selector."""
+
+
+class ProfileSnapshotHashMismatchError(UserProfileError):
+    """Raised when the recorded snapshot hash differs from the current projection."""
+
+
+class ProfileSnapshotNotFoundError(UserProfileError):
+    """Raised when a snapshot id has no persisted record in the secure backend."""

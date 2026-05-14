@@ -246,7 +246,7 @@ def test_modelo_file_rejects_unknown_support_removal_decision(tmp_path: Path) ->
 [[revisions."2019-y-siguientes".support_removal_decisions]]
 id = "modelo-130-invalid-removal-decision"
 subject_type = "filing_path"
-subject_id = "aeat.entrypoints.cli.filing"
+subject_id = "aeat.entrypoints.cli.modelo"
 decision = "not_a_supported_removal_decision"
 reason = "out_of_scope"
 evidence_note = "Invalid support-removal decision value."

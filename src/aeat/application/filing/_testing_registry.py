@@ -46,6 +46,7 @@ def build_registry_filing_draft(
     if status is FilingDraftStatus.APPROVED:
         return approve_draft(
             draft,
+            bucket_id="registry-test",
             approved_by="registry",
             schema_provider=schema_provider,
             transaction_catalogue=TransactionCatalogue(),

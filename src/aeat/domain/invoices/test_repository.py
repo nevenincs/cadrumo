@@ -162,21 +162,21 @@ class TestTransactionCatalogueRoundTrip:
     """Save ÔåÆ fresh repository ÔåÆ load must yield a value-equal catalogue."""
 
     def test_empty_catalogue_loads_when_nothing_persisted(self) -> None:
-        catalogue = TransactionCatalogueRepository().load()
+        catalogue = TransactionCatalogueRepository(bucket_id="test").load()
         assert len(catalogue) == 0
 
     def test_single_transaction_round_trip_preserves_model(self) -> None:
         transaction = _transaction()
         original = TransactionCatalogue.from_transactions([transaction])
-        TransactionCatalogueRepository().save(original)
+        TransactionCatalogueRepository(bucket_id="test").save(original)
 
-        reloaded = TransactionCatalogueRepository().load()
+        reloaded = TransactionCatalogueRepository(bucket_id="test").load()
         assert reloaded == original
 
     def test_multi_transaction_round_trip_preserves_values(self) -> None:
         transactions = [_transaction(provider_id=f"row-{i}") for i in range(3)]
         original = TransactionCatalogue.from_transactions(transactions)
-        TransactionCatalogueRepository().save(original)
+        TransactionCatalogueRepository(bucket_id="test").save(original)
 
-        reloaded = TransactionCatalogueRepository().load()
+        reloaded = TransactionCatalogueRepository(bucket_id="test").load()
         assert reloaded == original

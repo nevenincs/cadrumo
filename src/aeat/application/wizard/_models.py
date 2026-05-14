@@ -18,14 +18,14 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 
 
 class WizardWidget(StrEnum):
     """Closed taxonomy of input primitives the wizard runtime supports."""
 
     TEXT = "text"
-    SECRET = "secret"
+    SECRET = "secret"  # noqa: S105 - widget kind token, not a credential.
     CONFIRM = "confirm"
     SELECT = "select"
     CHECKBOX = "checkbox"
@@ -53,8 +53,8 @@ class WizardChoice(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     value: str = Field(min_length=1)
-    label: Translatable
-    description: Translatable | None = None
+    label: tr
+    description: tr | None = None
 
 
 class WizardQuestion(BaseModel):
@@ -65,8 +65,8 @@ class WizardQuestion(BaseModel):
     id: str = Field(min_length=1)
     profile_key: str | None = None
     widget: WizardWidget
-    prompt: Translatable
-    help: Translatable | None = None
+    prompt: tr
+    help: tr | None = None
     choices: tuple[WizardChoice, ...] = ()
     default: str | None = None
     required: bool = True
@@ -80,7 +80,7 @@ class WizardSection(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     id: str = Field(min_length=1)
-    title: Translatable
+    title: tr
     questions: tuple[WizardQuestion, ...] = Field(min_length=1)
 
 
@@ -90,8 +90,8 @@ class WizardFlow(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     id: str = Field(min_length=1)
-    title: Translatable
-    description: Translatable
+    title: tr
+    description: tr
     sections: tuple[WizardSection, ...] = Field(min_length=1)
     answers_model: type[BaseModel]
 
@@ -155,10 +155,10 @@ class WizardFlow(BaseModel):
         return self
 
 
-def _walk_translatables(flow: WizardFlow) -> list[tuple[Translatable, str]]:
+def _walk_translatables(flow: WizardFlow) -> list[tuple[tr, str]]:
     """Yield every ``Translatable`` in ``flow`` with a dotted-path location."""
 
-    result: list[tuple[Translatable, str]] = []
+    result: list[tuple[tr, str]] = []
     result.append((flow.title, f"{flow.id}.title"))
     result.append((flow.description, f"{flow.id}.description"))
     for section in flow.sections:

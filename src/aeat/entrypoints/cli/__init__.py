@@ -31,21 +31,21 @@ from ._stdio import configure_stdio_for_utf8
 # :mod:`._stdio` for the rationale.
 configure_stdio_for_utf8()
 
-from ...application.diagnostics import build_cli_version_report, render_cli_version_text
-from ...application.operator_surface import (
+from ...application.diagnostics import build_cli_version_report, render_cli_version_text  # noqa: E402
+from ...application.operator_surface import (  # noqa: E402
     build_help_document,
     build_root_landing_report,
     render_help_text,
 )
-from ...application.overview import build_overview_status_report
-from ...application.workflow import workflow_state_repository
-from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from . import _config
-from ._common import _FORMAT_TEXT, _emit
-from ._errors import decorate_typer_app, write_stderr
-from ._i18n import tr
-from ._log_levels import apply_to_root_logger, resolve_log_level
-from ._root_landing import render_cli_root_landing_lines
+from ...application.overview import build_overview_status_report  # noqa: E402
+from ...application.workflow import workflow_state_repository  # noqa: E402
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES  # noqa: E402
+from . import _config  # noqa: E402
+from ._common import _FORMAT_TEXT, _emit  # noqa: E402
+from ._errors import decorate_typer_app, write_stderr  # noqa: E402
+from ._i18n import tr  # noqa: E402
+from ._log_levels import apply_to_root_logger, resolve_log_level  # noqa: E402
+from ._root_landing import render_cli_root_landing_lines  # noqa: E402
 
 _overview_module: Any | None = None
 _ledger_module: Any | None = None
@@ -123,7 +123,7 @@ def _root(
 ) -> None:
     """Capture root-level CLI flags into the Typer context."""
     if language is not None:
-        os.environ["AEAT_CLI_LANGUAGE"] = language
+        os.environ["AEAT_OUTPUT_LANGUAGE"] = language
     apply_to_root_logger(resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
     state = ctx.ensure_object(dict)
     state["format"] = format_.strip().lower() or _FORMAT_TEXT
@@ -154,7 +154,7 @@ def _root(
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
     failed_app = typer.Typer(
         name=name,
-        help=f"Unavailable: missing dependency {_missing_dependency_name(error)!r}",
+        help=tr("cli.root.unavailable_app_help"),
         no_args_is_help=False,
         invoke_without_command=True,
     )
@@ -173,7 +173,7 @@ def _emit_startup_import_error(error: ModuleNotFoundError) -> None:
 
 def _startup_import_error_text(error: ModuleNotFoundError) -> str:
     dependency = _missing_dependency_name(error)
-    return f"Cannot start AEAT command surface: missing dependency {dependency!r}.\nRun: aeat config doctor\n"
+    return f"Cannot start AEAT command surface: missing dependency {dependency!r}.\nRun: aeat config repair\n"
 
 
 def _missing_dependency_name(error: ModuleNotFoundError) -> str:

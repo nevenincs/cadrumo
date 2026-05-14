@@ -21,12 +21,12 @@ from aeat.application.wizard._models import (
     WizardSection,
     WizardWidget,
 )
-from aeat.core.i18n import Translatable
+from aeat.core.i18n import Translatable as tr  # noqa: N813
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_DEFAULT_PROMPT = Translatable("wizard.setup.profile.tax-id.prompt")
-_SECTION_TITLE = Translatable("wizard.setup.profile.title")
+_DEFAULT_PROMPT = tr("wizard.setup.profile.tax-id.prompt")
+_SECTION_TITLE = tr("wizard.setup.profile.title")
 
 
 class _DummyAnswers(BaseModel):
@@ -40,7 +40,7 @@ def _question(
     qid: str = "tax-id",
     profile_key: str | None = "tax.id",
     widget: WizardWidget = WizardWidget.TEXT,
-    prompt: Translatable = _DEFAULT_PROMPT,
+    prompt: tr = _DEFAULT_PROMPT,
     answer_type: type[str] | type[bool] | type[int] | type[Path] = str,
 ) -> WizardQuestion:
     return WizardQuestion(
@@ -93,8 +93,8 @@ def test_flow_rejects_empty_sections_tuple() -> None:
     with pytest.raises(ValidationError, match=r"sections|at least 1"):
         WizardFlow(
             id="setup",
-            title=Translatable("wizard.setup.title"),
-            description=Translatable("wizard.setup.description"),
+            title=tr("wizard.setup.title"),
+            description=tr("wizard.setup.description"),
             sections=(),
             answers_model=_DummyAnswers,
         )
@@ -104,7 +104,7 @@ def test_section_rejects_empty_questions_tuple() -> None:
     with pytest.raises(ValidationError, match=r"questions|at least 1"):
         WizardSection(
             id="profile",
-            title=Translatable("wizard.setup.profile.title"),
+            title=tr("wizard.setup.profile.title"),
             questions=(),
         )
 

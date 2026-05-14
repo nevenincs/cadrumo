@@ -74,7 +74,7 @@ def test_backend_declared_command_families_are_mounted_in_cli() -> None:
 
     config_children = mounted["config"]
     app_children = mounted["app"]
-    assert {"init", "profile", "auth", "doctor"}.issubset(config_children)
+    assert {"init", "profile", "auth", "repair"}.issubset(config_children)
     assert {"overview", "ledger", "modelo", "registry", "review"}.issubset(app_children)
 
 
@@ -173,3 +173,6 @@ def test_config_app_real_workflow_round_trip(_isolated_cli_backend: Path) -> Non
     assert row["affected_object_id"]
     assert row["bucket_id"] == "operator"
     assert row["period"] == "2026-04"
+    assert row["canonical_next_command"].startswith("aeat app ledger review --id ")
+    assert " edit " not in row["canonical_next_command"]
+    assert "--set" not in row["canonical_next_command"]

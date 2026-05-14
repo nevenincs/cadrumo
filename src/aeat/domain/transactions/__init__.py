@@ -11,6 +11,8 @@ from typing import TYPE_CHECKING
 
 from ._enums import CLASSIFIED_STATES, BusinessClassification, TransactionDirection, is_classified
 from ._errors import (
+    LedgerNoActiveBucketError,
+    LedgerStorageError,
     TransactionCatalogueError,
     TransactionError,
     TransactionNotFoundError,
@@ -40,7 +42,13 @@ from ._llm import (
     unregister_classifier,
 )
 from ._model_tier import ModelCapability, catalogue, profiles_for_provider, resolve_profile
-from ._models import ClassificationHistoryEntry, Transaction, TransactionCatalogue, derive_transaction_id
+from ._models import (
+    BucketTransactionRef,
+    ClassificationHistoryEntry,
+    Transaction,
+    TransactionCatalogue,
+    derive_transaction_id,
+)
 from ._raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ._service import (
     find_transaction,
@@ -50,14 +58,29 @@ from ._service import (
 )
 
 if TYPE_CHECKING:
-    from ._repository import ImportSummary, TransactionCatalogueRepository
+    from ._repository import (
+        TX_BUCKET_NAMESPACE,
+        ImportSummary,
+        TransactionCatalogueRepository,
+        transaction_catalogue_object_key,
+    )
+
+
+_LAZY_REPOSITORY_NAMES = frozenset(
+    {
+        "ImportSummary",
+        "TX_BUCKET_NAMESPACE",
+        "TransactionCatalogueRepository",
+        "transaction_catalogue_object_key",
+    }
+)
 
 
 def __getattr__(name: str):
     """Lazy-import the persistence repository so importing this package does
     not eagerly pull in SQLAlchemy + Alembic (whose plugin setup logs to
     stderr and breaks JSON-pipe-safety contracts in CLI test scope)."""
-    if name in ("ImportSummary", "TransactionCatalogueRepository"):
+    if name in _LAZY_REPOSITORY_NAMES:
         from . import _repository
 
         return getattr(_repository, name)
@@ -68,6 +91,8 @@ __all__ = [
     "CLASSIFIED_STATES",
     "MINIMUM_CLASSIFICATION_TIER",
     "PIPELINE_ONLY_CLASSIFICATIONS",
+    "TX_BUCKET_NAMESPACE",
+    "BucketTransactionRef",
     "BusinessClassification",
     "CategoryChoice",
     "ClassificationChoice",
@@ -76,6 +101,8 @@ __all__ = [
     "LLMClassificationResponse",
     "LLMClassifier",
     "LLMClassifierError",
+    "LedgerNoActiveBucketError",
+    "LedgerStorageError",
     "ModelCapability",
     "ModelProfile",
     "ModelTier",
@@ -110,5 +137,6 @@ __all__ = [
     "resolve_profile",
     "set_classification",
     "snapshot_classification_state",
+    "transaction_catalogue_object_key",
     "unregister_classifier",
 ]

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 
 from ._errors import RegistryValidationError
 from ._schema import FilingScheduleDefinition, ModeloRevision, ProfilePredicateDefinition
@@ -69,6 +69,12 @@ def profile_condition_matches(
 
 
 def _resolve_profile_fact(profile_facts: Mapping[str, object] | object, field: str) -> Any:
+    if isinstance(profile_facts, Mapping):
+        mapping = cast("Mapping[str, object]", profile_facts)
+        if field in mapping:
+            return mapping[field]
+    if field == "iva.regime" and hasattr(profile_facts, "iva_regime"):
+        return profile_facts.iva_regime
     current: Any = profile_facts
     for part in field.split("."):
         if isinstance(current, Mapping):

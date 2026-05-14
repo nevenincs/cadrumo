@@ -295,9 +295,10 @@ def test_link_bidirectional_updates_both_catalogues() -> None:
         counterparty="Cliente SL",
     )
     InvoiceCatalogueRepository().save(InvoiceCatalogue.from_invoices([invoice]))
-    TransactionCatalogueRepository().save(TransactionCatalogue.from_transactions([transaction]))
+    TransactionCatalogueRepository(bucket_id="test").save(TransactionCatalogue.from_transactions([transaction]))
 
     result = link_invoice_transaction_repositories(
+        bucket_id="test",
         invoice_id=invoice.invoice_id,
         transaction_id=transaction.transaction_id,
     )
@@ -312,5 +313,5 @@ def test_link_bidirectional_updates_both_catalogues() -> None:
     assert updated_transaction.invoice_id == invoice.invoice_id
 
     # Catalogues persisted in the secure backend agree with the returned values.
-    reloaded = TransactionCatalogueRepository().load()
+    reloaded = TransactionCatalogueRepository(bucket_id="test").load()
     assert reloaded.get(transaction.transaction_id) == updated_transaction

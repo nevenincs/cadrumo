@@ -64,7 +64,6 @@ from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
@@ -83,9 +82,7 @@ def repos(tmp_path):
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     db_path = tmp_path / "modelo_import_flow.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-    )
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
     Base.metadata.create_all(engine)
     try:
         objects = SecureObjectRepository(engine=engine)
@@ -152,9 +149,7 @@ def test_import_persists_filing_with_external_evidence(repos) -> None:
     assert filing.amends_filing_record_id is None
     assert filing.filed_at == _T1
 
-    revision = get_calculation_revision(
-        filing.calculation_revision_id, calculation_repository=cr_repo
-    )
+    revision = get_calculation_revision(filing.calculation_revision_id, calculation_repository=cr_repo)
     assert revision.state is CalculationRevisionState.FILED
     assert revision.casilla_values["01"] == Decimal("1500")
     assert revision.casilla_values["02"] == Decimal("300")
@@ -216,9 +211,7 @@ def test_import_supersedes_prior_current_filing(repos) -> None:
     assert refreshed_first.status is FilingRecordStatus.SUPERSEDED
     assert refreshed_first.superseded_by_filing_record_id == second.filing_record_id
 
-    refreshed_first_revision = get_calculation_revision(
-        first.calculation_revision_id, calculation_repository=cr_repo
-    )
+    refreshed_first_revision = get_calculation_revision(first.calculation_revision_id, calculation_repository=cr_repo)
     assert refreshed_first_revision.state is CalculationRevisionState.FILED_SUPERSEDED
 
     assert second.status is FilingRecordStatus.CURRENT
@@ -271,9 +264,7 @@ def test_import_then_amend_unlocks_amendment_path(repos) -> None:
     )
 
     assert amended.amends_filing_record_id == imported.filing_record_id
-    refreshed_baseline = get_filing_record(
-        imported.filing_record_id, filing_repository=fr_repo
-    )
+    refreshed_baseline = get_filing_record(imported.filing_record_id, filing_repository=fr_repo)
     assert refreshed_baseline.status is FilingRecordStatus.SUPERSEDED
     assert refreshed_baseline.superseded_by_filing_record_id == amended.filing_record_id
 
@@ -284,6 +275,29 @@ def test_import_then_amend_unlocks_amendment_path(repos) -> None:
         BucketEventType.MODELO_FILING_IMPORTED,
         BucketEventType.MODELO_AMENDED,
     )
+
+
+def test_import_refuses_casilla_ids_not_in_registry(repos) -> None:
+    """The import path refuses casilla ids the registry does not
+    declare for the work unit's modelo / filing_year / period.
+    Imported baselines are the legal source of truth for amend
+    paths — fabricated casilla ids cannot be silently accepted."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+
+    with pytest.raises(ExternalFilingImportError, match=r"9999|not declared"):
+        import_external_filing_evidence(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_values={"9999": Decimal("100")},
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id="JUST-FABRICATED",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )
 
 
 def test_import_refuses_empty_casilla_values(repos) -> None:

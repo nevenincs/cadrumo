@@ -26,6 +26,8 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from ...domain.calculations.registry import ModeloRevision
+from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -38,7 +40,6 @@ from ...domain.modelos._calculation_revision import (
 )
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._errors import ModeloError
-from ...domain.period import period_end_date
 from ...domain.modelos._filing_record import (
     ExternalEvidence,
     ExternalEvidenceKind,
@@ -72,6 +73,8 @@ from ...domain.modelos._work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
+from ...domain.period import period_end_date
+from ...domain.transactions import TransactionCatalogueRepository
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 
@@ -171,6 +174,25 @@ class ExternalFilingImportError(ModeloError):
     """Raised when the external-filing import path cannot persist an
     imported baseline (e.g., empty casilla values, missing evidence
     reference)."""
+
+
+class AmendmentOverrideCasillaError(ModeloError):
+    """Raised when an amendment override targets a casilla id the
+    registry does not declare for the baseline's modelo / filing
+    year / period. The corrected revision is the legal basis of the
+    complementaria filing — fabricated casilla ids cannot be silently
+    accepted."""
+
+
+class AmendmentVerificationRefusedError(ModeloError):
+    """Raised when the corrected casilla map fails verification.
+
+    Mirrors the standard ``verify_modelo_revision`` contract: every
+    required-manual-input casilla declared by the registry for the
+    baseline's modelo / filing year / period must be present in the
+    corrected map. Amend refuses rather than persisting an
+    incomplete complementaria because the corrected revision is the
+    legal basis of the filing."""
 
 
 def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
@@ -409,6 +431,10 @@ class CalculationRegistryUnavailableError(ModeloError):
     """
 
 
+class ModeloAggregationBindingError(ModeloError):
+    """Raised when bucket-derived aggregation bindings conflict with caller input."""
+
+
 def calculate_modelo_revision(
     work_unit_id: str,
     *,
@@ -417,6 +443,7 @@ def calculate_modelo_revision(
     binding_values: Mapping[str, Decimal] | None = None,
     enum_binding_values: Mapping[str, str] | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
+    source_transaction_ids: tuple[str, ...] = (),
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -436,7 +463,7 @@ def calculate_modelo_revision(
        with the operator-supplied manual casilla inputs, binding
        values, enum-binding values, and relation values. The
        engine evaluates every declared formula in dependency order
-       and returns the full ``casilla_values`` map (inputs ∪
+       and returns the full ``casilla_values`` map (inputs plus
        formula outputs).
     4. Build canonical-string ``inputs_snapshot`` and
        ``binding_overrides`` from the engine inputs (so the
@@ -523,6 +550,7 @@ def calculate_modelo_revision(
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
+        source_transaction_ids=source_transaction_ids,
     )
     revisions = cr_repo.load()
     existing = revisions.get(revision_id)
@@ -536,6 +564,7 @@ def calculate_modelo_revision(
         state=CalculationRevisionState.DRAFT,
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
+        source_transaction_ids=source_transaction_ids,
         casilla_values=casilla_values,
         created_at=now,
         updated_at=now,
@@ -568,9 +597,160 @@ def calculate_modelo_revision(
             "input_casilla_count": str(len(inputs_snapshot)),
             "casilla_count": str(len(casilla_values)),
             "formula_count": str(len(engine_result.entries)),
+            "source_transaction_count": str(len(source_transaction_ids)),
         },
     )
     return revision
+
+
+def calculate_modelo_revision_from_bucket_aggregation(
+    work_unit_id: str,
+    *,
+    actor: str = "system",
+    casilla_inputs: Mapping[str, Decimal] | None = None,
+    binding_values: Mapping[str, Decimal] | None = None,
+    enum_binding_values: Mapping[str, str] | None = None,
+    relation_values: Mapping[str, Decimal] | None = None,
+    filing_period_date: date | None = None,
+    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    transaction_repository: TransactionCatalogueRepository | None = None,
+    invoice_repository: InvoiceCatalogueRepository | None = None,
+    clock: datetime | None = None,
+) -> CalculationRevision:
+    """Calculate a modelo revision using bucket-local ledger aggregation."""
+
+    from ...core.config import PROJECT_ROOT
+    from ...domain.calculations.registry import RegistrySnapshotError, ValidatedRegistryAuthority
+    from ..aggregation import resolve_modelo_ledger_binding_values_from_repositories
+
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    work_units = wu_repo.load()
+    work_unit = work_units.get(work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+    if work_unit.state is WorkUnitState.DISCARDED:
+        raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
+
+    try:
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
+        snapshot = authority.snapshot(
+            str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+        )
+    except FileNotFoundError as exc:
+        raise CalculationRegistryUnavailableError(
+            f"registry root {_registry_root()} is missing; cannot calculate from bucket aggregation"
+        ) from exc
+    except RegistrySnapshotError as exc:
+        raise CalculationRegistryUnavailableError(
+            f"registry snapshot for modelo={work_unit.modelo!r} "
+            f"year={work_unit.filing_year} period={work_unit.period!r} "
+            f"could not be resolved: {exc}"
+        ) from exc
+
+    ledger_bindings = resolve_modelo_ledger_binding_values_from_repositories(
+        bucket_id=work_unit.bucket_id,
+        modelo=str(work_unit.modelo),
+        revision=snapshot.revision,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        transaction_repository=transaction_repository,
+        invoice_repository=invoice_repository,
+    )
+    resolved_binding_values = _merge_bucket_binding_values(
+        revision=snapshot.revision,
+        bucket_values=ledger_bindings.binding_values,
+        caller_values=binding_values or {},
+    )
+    resolved_inputs = _merge_bucket_bound_inputs(
+        revision=snapshot.revision,
+        casilla_inputs=casilla_inputs or {},
+        bound_inputs=_resolve_bound_casilla_inputs_for_available_bindings(
+            snapshot.revision,
+            resolved_binding_values,
+        ),
+    )
+    return calculate_modelo_revision(
+        work_unit_id,
+        actor=actor,
+        casilla_inputs=resolved_inputs,
+        binding_values=resolved_binding_values,
+        enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
+        source_transaction_ids=tuple(ledger_bindings.source_transaction_ids),
+        filing_period_date=filing_period_date,
+        work_unit_repository=wu_repo,
+        calculation_repository=calculation_repository,
+        bucket_event_repository=bucket_event_repository,
+        clock=clock,
+    )
+
+
+def _merge_bucket_binding_values(
+    *,
+    revision: ModeloRevision,
+    bucket_values: Mapping[str, Decimal],
+    caller_values: Mapping[str, Decimal],
+) -> dict[str, Decimal]:
+    ledger_binding_ids = _ledger_binding_ids(revision)
+    rejected = sorted(set(caller_values).intersection(ledger_binding_ids))
+    if rejected:
+        raise ModeloAggregationBindingError(
+            f"caller binding values cannot override bucket-derived ledger bindings: {rejected!r}"
+        )
+    return dict(sorted({**caller_values, **bucket_values}.items()))
+
+
+def _resolve_bound_casilla_inputs_for_available_bindings(
+    revision: ModeloRevision,
+    binding_values: Mapping[str, Decimal],
+) -> dict[str, Decimal]:
+    resolved: dict[str, Decimal] = {}
+    for casilla in revision.casillas:
+        if casilla.input_kind != "bound" or casilla.binding is None:
+            continue
+        value = binding_values.get(casilla.binding)
+        if value is not None:
+            resolved[casilla.id] = value
+    return resolved
+
+
+def _merge_bucket_bound_inputs(
+    *,
+    revision: ModeloRevision,
+    casilla_inputs: Mapping[str, Decimal],
+    bound_inputs: Mapping[str, Decimal],
+) -> dict[str, Decimal]:
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    ledger_bound_casillas = {
+        casilla.id
+        for casilla in revision.casillas
+        if casilla.input_kind == "bound" and casilla.binding in _ledger_binding_ids(revision)
+    }
+    rejected = sorted(set(casilla_inputs).intersection(ledger_bound_casillas))
+    if rejected:
+        raise ModeloAggregationBindingError(
+            f"caller casilla inputs cannot override bucket-derived ledger bound casillas: {rejected!r}"
+        )
+    computed = sorted(
+        casilla_id
+        for casilla_id in bound_inputs
+        if casilla_id in casillas and casillas[casilla_id].input_kind == "computed"
+    )
+    if computed:
+        raise ModeloAggregationBindingError(f"bucket-derived inputs target computed casillas: {computed!r}")
+    return dict(sorted({**casilla_inputs, **bound_inputs}.items()))
+
+
+def _ledger_binding_ids(revision: ModeloRevision) -> frozenset[str]:
+    return frozenset(
+        binding.id
+        for binding in revision.bindings
+        if binding.source in {"ledger_iva_aggregation", "ledger_renta_expense_aggregation"}
+    )
 
 
 def list_calculation_revisions(
@@ -668,6 +848,125 @@ def _registry_root() -> Path:
     return PROJECT_ROOT / "registry" / "aeat"
 
 
+def _reject_incomplete_amendment_casillas(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    casilla_values: Mapping[str, Decimal],
+) -> None:
+    """Mirror the verify-modelo-revision required-manual gate on amend.
+
+    Refuses to file a complementaria whose corrected casilla map is
+    missing one or more registry-declared required-manual casillas.
+    The check is identity-equivalent to the verify path's
+    ``MISSING_REQUIRED_CASILLA`` finding: the corrected revision is
+    the legal basis of the complementaria filing and must satisfy
+    the same required-input contract that a fresh calculate → verify
+    → file path satisfies.
+    """
+
+    required_optional = _required_input_casillas_for_revision(
+        modelo=modelo, filing_year=filing_year, period=period
+    )
+    if required_optional is None:
+        raise AmendmentVerificationRefusedError(
+            f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
+            f"period={period!r}; cannot verify amendment completeness"
+        )
+    required, _ = required_optional
+    missing = sorted(casilla_id for casilla_id in required if casilla_id not in casilla_values)
+    if missing:
+        raise AmendmentVerificationRefusedError(
+            f"amendment is incomplete: required casilla id(s) {missing!r} are not present "
+            f"in the corrected map for modelo={modelo!r} filing_year={filing_year} period={period!r}"
+        )
+
+
+def _reject_unknown_override_casillas(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    overrides: Mapping[str, Decimal],
+) -> None:
+    """Refuse override casilla ids the registry does not declare for the modelo / year / period."""
+
+    if not overrides:
+        return
+
+    from ...core.config import PROJECT_ROOT
+    from ...domain.calculations.registry import (
+        RegistrySnapshotError,
+        ValidatedRegistryAuthority,
+    )
+
+    try:
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
+    except FileNotFoundError as exc:
+        raise AmendmentOverrideCasillaError(
+            f"registry root {_registry_root()} is missing; cannot validate amendment overrides"
+        ) from exc
+
+    try:
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+    except RegistrySnapshotError as exc:
+        raise AmendmentOverrideCasillaError(
+            f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
+            f"period={period!r}; cannot validate amendment overrides"
+        ) from exc
+
+    known = {str(casilla.id) for casilla in snapshot.revision.casillas}
+    unknown = sorted(casilla_id for casilla_id in overrides if casilla_id not in known)
+    if unknown:
+        raise AmendmentOverrideCasillaError(
+            f"amendment overrides target casilla ids that are not declared in registry "
+            f"modelo={modelo!r} filing_year={filing_year} period={period!r}: {unknown!r}"
+        )
+
+
+def _reject_unknown_import_casillas(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    casilla_values: Mapping[str, Decimal],
+) -> None:
+    """Refuse imported casilla ids the registry does not declare for the modelo / year / period."""
+
+    if not casilla_values:
+        return
+
+    from ...core.config import PROJECT_ROOT
+    from ...domain.calculations.registry import (
+        RegistrySnapshotError,
+        ValidatedRegistryAuthority,
+    )
+
+    try:
+        authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
+    except FileNotFoundError as exc:
+        raise ExternalFilingImportError(
+            f"registry root {_registry_root()} is missing; cannot validate imported casilla ids"
+        ) from exc
+
+    try:
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+    except RegistrySnapshotError as exc:
+        raise ExternalFilingImportError(
+            f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
+            f"period={period!r}; cannot validate imported casilla ids"
+        ) from exc
+
+    known = {str(casilla.id) for casilla in snapshot.revision.casillas}
+    unknown = sorted(casilla_id for casilla_id in casilla_values if casilla_id not in known)
+    if unknown:
+        raise ExternalFilingImportError(
+            f"external-filing import carries casilla ids that are not declared in registry "
+            f"modelo={modelo!r} filing_year={filing_year} period={period!r}: {unknown!r}"
+        )
+
+
 def _required_input_casillas_for_revision(
     *,
     modelo: str,
@@ -691,14 +990,12 @@ def _required_input_casillas_for_revision(
     bindings layer is responsible for them.
     """
 
-    from pathlib import Path
 
+    from ...core.config import PROJECT_ROOT
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
         ValidatedRegistryAuthority,
     )
-
-    from ...core.config import PROJECT_ROOT
 
     try:
         authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
@@ -1258,6 +1555,13 @@ def amend_modelo_revision(
             f"baseline calculation revision {baseline.calculation_revision_id!r} is missing from the catalogue"
         )
 
+    _reject_unknown_override_casillas(
+        modelo=baseline.modelo,
+        filing_year=baseline.filing_year,
+        period=baseline.period,
+        overrides=overrides,
+    )
+
     now = clock or datetime.now(UTC)
     corrected_values: dict[str, Decimal] = dict(baseline_revision.casilla_values)
     corrected_values.update(overrides)
@@ -1267,6 +1571,7 @@ def amend_modelo_revision(
         inputs_snapshot=baseline_revision.inputs_snapshot,
         binding_overrides=baseline_revision.binding_overrides,
         casilla_values=corrected_values,
+        source_transaction_ids=baseline_revision.source_transaction_ids,
     )
     if new_revision_id in revisions:
         raise CalculationRevisionStateError(
@@ -1280,6 +1585,7 @@ def amend_modelo_revision(
         state=CalculationRevisionState.DRAFT,
         inputs_snapshot=baseline_revision.inputs_snapshot,
         binding_overrides=baseline_revision.binding_overrides,
+        source_transaction_ids=baseline_revision.source_transaction_ids,
         casilla_values=corrected_values,
         created_at=now,
         updated_at=now,
@@ -1288,6 +1594,17 @@ def amend_modelo_revision(
         amendment_reason=reason.strip(),
     )
     revisions = upsert_calculation_revision(revisions, amendment_draft)
+
+    # Verify the corrected casilla map against the registry's
+    # required-manual-input contract before transitioning. The amend
+    # path mirrors the standard verify gate so a complementaria
+    # cannot be filed with a missing required casilla.
+    _reject_incomplete_amendment_casillas(
+        modelo=baseline.modelo,
+        filing_year=baseline.filing_year,
+        period=baseline.period,
+        casilla_values=corrected_values,
+    )
 
     # Transition draft → verified-complete (operator opts in by calling amend).
     verified_amendment = amendment_draft.model_copy(
@@ -1433,14 +1750,11 @@ def import_external_filing_evidence(
 
     if not casilla_values:
         raise ExternalFilingImportError(
-            "external-filing import requires at least one casilla value; "
-            "got an empty mapping"
+            "external-filing import requires at least one casilla value; got an empty mapping"
         )
     cleaned_reference = evidence_reference_id.strip()
     if not cleaned_reference:
-        raise ExternalFilingImportError(
-            "external-filing import requires a non-empty evidence_reference_id"
-        )
+        raise ExternalFilingImportError("external-filing import requires a non-empty evidence_reference_id")
 
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
@@ -1448,6 +1762,13 @@ def import_external_filing_evidence(
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
     if work_unit.state is WorkUnitState.DISCARDED:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot import")
+
+    _reject_unknown_import_casillas(
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        casilla_values=casilla_values,
+    )
 
     inputs_snapshot: dict[str, str] = {}
     binding_overrides: dict[str, str] = {}
@@ -1573,9 +1894,7 @@ def import_external_filing_evidence(
             "period": work_unit.period,
             "evidence_kind": evidence_kind.value,
             "evidence_reference_id": cleaned_reference,
-            "supersedes_filing_record_id": (
-                prior_current.filing_record_id if prior_current is not None else ""
-            ),
+            "supersedes_filing_record_id": (prior_current.filing_record_id if prior_current is not None else ""),
             "casilla_count": str(len(outputs)),
         },
     )
@@ -1585,19 +1904,22 @@ def import_external_filing_evidence(
 
 __all__ = [
     "AmendmentEvidenceMissingError",
+    "AmendmentOverrideCasillaError",
     "AmendmentTargetStateError",
+    "AmendmentVerificationRefusedError",
     "CalculationRegistryUnavailableError",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
     "ExternalFilingImportError",
     "FilingRecordNotFoundError",
+    "ModeloAggregationBindingError",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",
     "WorkUnitNotFoundError",
     "amend_modelo_revision",
     "calculate_modelo_revision",
-    "import_external_filing_evidence",
+    "calculate_modelo_revision_from_bucket_aggregation",
     "create_work_unit",
     "discard_work_unit",
     "file_modelo_revision",
@@ -1605,6 +1927,7 @@ __all__ = [
     "get_filing_record",
     "get_verification_report",
     "get_work_unit",
+    "import_external_filing_evidence",
     "list_calculation_revisions",
     "list_filing_records",
     "list_verification_reports",

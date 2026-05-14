@@ -75,12 +75,12 @@ def list_unmatched_invoice_repository_rows(
     return list_unmatched_invoice_rows(InvoiceCatalogueRepository().load(), kind=kind)
 
 
-def verify_invoice_repository_links() -> tuple[LinkInconsistency, ...]:
+def verify_invoice_repository_links(*, bucket_id: str) -> tuple[LinkInconsistency, ...]:
     """Load both catalogues and return one-sided invoice/transaction links."""
 
     return verify_link_consistency(
         InvoiceCatalogueRepository().load(),
-        TransactionCatalogueRepository().load(),
+        TransactionCatalogueRepository(bucket_id=bucket_id).load(),
     )
 
 

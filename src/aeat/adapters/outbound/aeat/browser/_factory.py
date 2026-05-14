@@ -2,7 +2,7 @@
 
 Auth providers accept a ``BrowserSessionFactory`` — an async callable
 that returns a ``BrowserSessionLike``. The default factory wires
-``aeat setup auth login`` end-to-end by supplying a Playwright-backed
+the auth workflow end-to-end by supplying a Playwright-backed
 session, while
 :func:`aeat.adapters.outbound.aeat.auth.select_provider` continues to
 accept ``browser_session_factory=None`` so tests can inject their own
@@ -18,7 +18,7 @@ This module provides:
   ``DefaultBrowserSession`` on demand.
 
 The CLI wires this factory into ``select_provider`` so
-``aeat setup auth login`` just works in production, while tests keep
+the auth workflow works in production, while tests keep
 injecting their own in-process implementations.
 """
 

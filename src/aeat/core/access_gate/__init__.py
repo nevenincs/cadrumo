@@ -3,7 +3,7 @@
 The gate consolidates the env-var preconditions that guard live AEAT
 read call-sites. Live AEAT writes are permanently forbidden, so the
 write-side helper always raises a typed refusal. The gate is consumed
-by the doctor CLI for surfacing a "Live access gate" row and by every
+by the repair CLI for surfacing a "Live access gate" row and by every
 live-read module (filing history, missing-filing detection, AEAT
 messages, VAT balance tracking) that needs a typed precondition
 rather than per-call-site ``if os.environ[...] != "1"`` boilerplate.

@@ -30,7 +30,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         purpose="profile lifecycle, bucket lifecycle, first-run state, auth, diagnostics, and durable configuration",
         owns_storage_maintenance=True,
         owns_operational_workflow=False,
-        required_children=("init", "profile", "auth", "doctor"),
+        required_children=("init", "profile", "auth", "repair"),
     ),
     RootSurface(
         name=RootSurfaceName.APP,
@@ -173,10 +173,10 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
         domain=MountedCommandDomain.DIAGNOSTICS,
         root=RootSurfaceName.CONFIG,
-        child="doctor",
+        child="repair",
         operator_question="diagnose local configuration, logs, connectivity, and secure-object integrity",
         service_owner="aeat.application.diagnostics",
-        commands=("doctor", "logs", "quarantine", "connectivity"),
+        commands=("connectivity", "integrity", "list", "quarantine", "reset-state", "logs"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(

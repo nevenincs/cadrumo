@@ -137,7 +137,7 @@ class _ClaveMovilSessionMetadata(BaseModel):
         description=(
             "Concrete URL Playwright observed after AEAT dispatched the "
             "successful login (e.g. www6.agenciatributaria.gob.es/wlpl/...). "
-            "Used as the probe target by `aeat setup auth whoami` because AEAT's "
+            "Used as the probe target by auth-session readiness checks because AEAT's "
             "SelectorAccesos.html is a static dispatch page that always "
             "returns 200 regardless of auth state."
         ),
@@ -290,7 +290,7 @@ class ClaveMovilAuthProvider:
 
         Unlike :meth:`authenticate`, this method NEVER falls back to a
         fresh login and NEVER deletes the persisted session —
-        even when the probe fails. Callers (``aeat setup auth whoami``) can
+        even when the probe fails. Callers can
         therefore use it as a pure diagnostic without accidentally
         triggering a phone-approval push.
         """
@@ -301,7 +301,7 @@ class ClaveMovilAuthProvider:
                 )
             storage_state_path = self._storage_state_path()
             if not _session_store.exists(storage_state_path):
-                raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat setup auth login` first")
+                raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat config auth status` first")
 
             persisted = self._load_persisted(storage_state_path)
             metadata = self._load_metadata(storage_state_path, persisted)
@@ -521,7 +521,7 @@ class ClaveMovilAuthProvider:
         if not raw:
             raise ClaveMovilConfigurationError(
                 "AEAT_CLAVE_MOVIL_DNI_NIE is not set; set it to your DNI or NIE "
-                "before running `aeat setup auth configure --provider clave_movil` and `aeat setup auth login`."
+                "before running `aeat config auth configure --provider clave_movil`."
             )
         _classify_identity(raw)
         return raw.strip().upper()
@@ -600,7 +600,7 @@ class ClaveMovilAuthProvider:
     def _load_persisted(self, storage_state_path: Path) -> _session_store.PersistedBrowserSession:
         persisted = _session_store.load(storage_state_path)
         if persisted is None:
-            raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat setup auth login` first")
+            raise AeatLoginAssertionError("no persisted Cl@ve Móvil session; run `aeat config auth status` first")
         return persisted
 
     @staticmethod
@@ -664,7 +664,7 @@ class ClaveMovilAuthProvider:
                 raise ClaveMovilApprovalTimeoutError(
                     f"Cl@ve Móvil login timed out after {timeout_ms // 1000} seconds. "
                     "Open the Cl@ve app on your phone and approve the login request, "
-                    "then run `aeat setup auth login` again.",
+                    "then run `aeat config auth test` again.",
                     failure_mode=ClaveMovilFailureMode.APPROVAL_TIMEOUT,
                     context={
                         "timeout_ms": timeout_ms,
@@ -929,7 +929,7 @@ class ClaveMovilAuthProvider:
                 "AEAT refused to issue a new Cl@ve Móvil push: a prior "
                 "authentication request is still pending server-side. Open the "
                 "Cl@ve app on your phone and REJECT every pending request, then "
-                "retry `aeat setup auth login` (or wait up to 5 minutes for AEAT "
+                "retry `aeat config auth test` (or wait up to 5 minutes for AEAT "
                 "to time them out automatically).",
                 failure_mode=ClaveMovilFailureMode.PENDING_PETITION_BLOCKED,
                 context={
@@ -937,7 +937,7 @@ class ClaveMovilAuthProvider:
                     "url": getattr(page, "url", "") or "",
                     "detected_markers": tuple(marker for marker in pending_markers if marker in normalized),
                 },
-                suggestion="Open the Cl@ve app, reject the pending request, then run `aeat setup auth login`.",
+                suggestion="Open the Cl@ve app, reject the pending request, then run `aeat config auth test`.",
             )
 
     @staticmethod

@@ -50,7 +50,7 @@ from ...domain.deadlines import (
 )
 from ...domain.filing import FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogueRepository
-from ...domain.transactions import TransactionCatalogueRepository
+from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` for overview records."""
@@ -441,7 +441,15 @@ def build_overview_status_report(
     """Build the typed readiness report used by root and overview status."""
 
     current = workflow_state_repository().load() if state is None else state
-    transactions = (transaction_repository or TransactionCatalogueRepository()).load()
+    bucket_id = current.active_profile_bucket_id()
+    if transaction_repository is None:
+        transactions = (
+            TransactionCatalogueRepository(bucket_id=bucket_id).load()
+            if bucket_id is not None
+            else TransactionCatalogue()
+        )
+    else:
+        transactions = transaction_repository.load()
     invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
     drafts = tuple((draft_repository or FilingDraftRepository()).iter_drafts())
     unreadable_total = secure_object_unreadable_total() if unreadable_rows is None else unreadable_rows

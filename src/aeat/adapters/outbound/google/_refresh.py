@@ -1,0 +1,200 @@
+"""Google OAuth credential refresh lifecycle.
+
+Refreshes an `OAuthToken` against Google's token endpoint when the
+in-memory access token is missing, expired, or about to expire (5-minute
+clock-skew buffer). Re-persists the refresh token after every
+successful refresh because Google rotates it. Detects three special
+cases at refresh time:
+
+1. `invalid_grant` from Google → flips `OAuthMetadata.reauth_required=True`
+   so the next CLI invocation surfaces the re-consent path. Never auto-
+   retries; the operator must re-run `aeat config google login`.
+2. Testing-project refresh tokens that have aged past Google's 7-day
+   cap on the consent screen → emits a one-time warning the first time
+   the elapsed window crosses six days, so the operator can re-consent
+   before the credential expires.
+3. Network failures → typed `GoogleAuthNetworkError` with retry hint.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
+from typing import Protocol
+
+from ._errors import (
+    GoogleAuthError,
+    GoogleAuthExpiredError,
+    GoogleAuthNetworkError,
+    GoogleAuthRevokedError,
+)
+from ._records import OAuthClient, OAuthMetadata, OAuthToken
+
+# Window before nominal expiry inside which we treat the access token
+# as already expired. Mirrors `google.auth.credentials._helpers`'s
+# default. Picking the same buffer keeps our retry semantics aligned
+# with the upstream library's own internal refresh trigger.
+ACCESS_TOKEN_REFRESH_BUFFER: timedelta = timedelta(minutes=5)
+
+# Google's Testing-project consent screens cap refresh tokens at 7 days.
+# We surface a one-time warning when the elapsed window crosses 6 days
+# so the operator has 24h of lead-time to re-consent.
+TESTING_PROJECT_TOKEN_LIFETIME: timedelta = timedelta(days=7)
+TESTING_PROJECT_WARN_AFTER: timedelta = timedelta(days=6)
+
+
+class RefreshOutcome(Protocol):
+    """Shape of the result returned by `refresh_credentials`.
+
+    The orchestrator returns a tuple of (rotated_token, updated_metadata,
+    new_access_token, warning_message). A warning is `None` when the
+    refresh did not trip any operator-actionable advisory.
+    """
+
+
+def is_token_expired(
+    *,
+    access_token_expiry: datetime | None,
+    now: datetime,
+    buffer: timedelta = ACCESS_TOKEN_REFRESH_BUFFER,
+) -> bool:
+    """Return ``True`` when the access token must be refreshed before use.
+
+    A `None` expiry is treated as "no valid token in memory" (cold
+    start), which always returns True so the caller acquires a fresh
+    access token from the refresh-token grant.
+    """
+
+    if access_token_expiry is None:
+        return True
+    return now + buffer >= access_token_expiry
+
+
+def detect_testing_project_warning(
+    *,
+    issued_at: datetime,
+    now: datetime,
+    last_refresh_at: datetime,
+) -> str | None:
+    """Surface the 7-day Testing-project warning at the right moment.
+
+    Returns a warning string when the issued credential has aged past
+    `TESTING_PROJECT_WARN_AFTER` (6 days) but the previous successful
+    refresh predated that crossing. Returns `None` when:
+
+    - The issued credential is still inside the warning window, OR
+    - A previous refresh already crossed the warning threshold (so we
+      don't spam the operator on every refresh once the window opens).
+    """
+
+    elapsed = now - issued_at
+    if elapsed < TESTING_PROJECT_WARN_AFTER:
+        return None
+    if last_refresh_at - issued_at >= TESTING_PROJECT_WARN_AFTER:
+        return None
+    remaining = TESTING_PROJECT_TOKEN_LIFETIME - elapsed
+    if remaining <= timedelta(0):
+        return None
+    return (
+        "google OAuth refresh token is approaching the 7-day Testing-project cap "
+        f"(approx. {int(remaining.total_seconds() // 3600)}h remaining); "
+        "re-run `aeat config google login` to extend the credential lifetime"
+    )
+
+
+def mark_reauth_required(metadata: OAuthMetadata) -> OAuthMetadata:
+    """Return a copy of ``metadata`` with `reauth_required=True`.
+
+    Used after `invalid_grant` so subsequent commands can surface the
+    re-consent advisory without re-running the failed refresh.
+    """
+
+    return metadata.model_copy(update={"reauth_required": True})
+
+
+def refresh_credentials(
+    *,
+    client: OAuthClient,
+    token: OAuthToken,
+    metadata: OAuthMetadata,
+    now: datetime,
+    refresher: Callable[[OAuthClient, OAuthToken], tuple[str, str, datetime]],
+) -> tuple[OAuthToken, OAuthMetadata, str, str | None]:
+    """Run one refresh cycle and return rotated artefacts plus advisories.
+
+    Args:
+        client: The operator's OAuth client metadata.
+        token: The current refresh credential (may rotate after this call).
+        metadata: The current audit metadata. The output metadata
+            updates `last_refresh_at` and may flip `reauth_required`.
+        now: The current UTC timestamp.
+        refresher: Test seam. Real call is
+            `google.oauth2.credentials.Credentials.refresh(...)`. The
+            seam returns `(new_refresh_token, new_access_token, new_expiry_utc)`
+            on success or raises `GoogleAuthRevokedError` on `invalid_grant`
+            and `GoogleAuthNetworkError` on transport failure.
+
+    Returns:
+        `(new_token, new_metadata, new_access_token, warning)`. The
+        `warning` field is non-None when the operator should be nudged
+        toward re-consent before the Testing-project cap fires.
+
+    Raises:
+        GoogleAuthRevokedError: When the refresh endpoint returns
+            `invalid_grant`. The metadata returned via `mark_reauth_required`
+            on the exception's `context["metadata"]` field captures the
+            state callers must persist before raising onward.
+        GoogleAuthExpiredError: When `metadata.reauth_required` was
+            already True at call entry — the refresh path is closed
+            and only `aeat config google login` can recover.
+        GoogleAuthNetworkError: When the token endpoint is unreachable.
+    """
+
+    if metadata.reauth_required:
+        raise GoogleAuthExpiredError(
+            "google OAuth credential is marked reauth_required; refresh path is closed",
+            context={"account_email": metadata.account_email},
+            suggestion="aeat config google login",
+        )
+
+    try:
+        new_refresh_token, new_access_token, new_expiry = refresher(client, token)
+    except GoogleAuthRevokedError as exc:
+        # Capture the marked-for-reauth metadata on the exception so the
+        # caller can persist it before re-raising onward.
+        flipped = mark_reauth_required(metadata)
+        exc.context = {**(exc.context or {}), "metadata": flipped.model_dump(mode="json")}
+        raise
+    except GoogleAuthError:
+        raise
+    except OSError as exc:
+        raise GoogleAuthNetworkError(
+            f"google OAuth token endpoint unreachable: {exc}",
+            suggestion="check network connectivity and retry",
+        ) from exc
+
+    rotated_token = OAuthToken(refresh_token=new_refresh_token, token_uri=token.token_uri)
+    updated_metadata = metadata.model_copy(update={"last_refresh_at": now})
+    warning = detect_testing_project_warning(
+        issued_at=metadata.issued_at,
+        now=now,
+        last_refresh_at=metadata.last_refresh_at,
+    )
+    del new_expiry  # The orchestrator returns the access token; expiry stays in caller scope.
+    return rotated_token, updated_metadata, new_access_token, warning
+
+
+def utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
+__all__ = [
+    "ACCESS_TOKEN_REFRESH_BUFFER",
+    "TESTING_PROJECT_TOKEN_LIFETIME",
+    "TESTING_PROJECT_WARN_AFTER",
+    "detect_testing_project_warning",
+    "is_token_expired",
+    "mark_reauth_required",
+    "refresh_credentials",
+    "utc_now",
+]

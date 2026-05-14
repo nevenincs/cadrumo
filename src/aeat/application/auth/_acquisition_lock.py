@@ -179,7 +179,7 @@ def acquire_auth_acquisition_lock(
                 "Do not start a second Cl@ve request; wait for the running process to finish "
                 "or let the lock expire if that process crashed.",
                 context=_status_context(status),
-                suggestion="Run `aeat setup auth status --format json` to inspect the active auth lock.",
+                suggestion="Run `aeat config auth status --format json` to inspect the active auth lock.",
             ) from None
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as file:

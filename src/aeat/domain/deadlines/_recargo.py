@@ -116,7 +116,7 @@ def build_recovery_for_overdue(
         days_late,
         bands if bands is not None else load_recargo_bands(),
     )
-    next_command = f"aeat app declaration calculate --modelo {modelo} --period {period}"
+    next_command = "aeat app modelo work --help"
     return Recovery(
         still_filable=True,
         recargo_band=resolved,

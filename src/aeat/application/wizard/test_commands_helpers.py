@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr  # noqa: N813
 from ._commands import (
     _canonical_from_flag_value,
     _flag_name,
@@ -51,7 +51,7 @@ def _question(
     return WizardQuestion(
         id=qid,
         widget=widget,
-        prompt=Translatable("wizard.test.example.prompt"),
+        prompt=tr("wizard.test.example.prompt"),
         choices=(),
         default=default,
         required=required,
@@ -63,12 +63,12 @@ def _question(
 def _flow(*questions: WizardQuestion) -> WizardFlow:
     return WizardFlow(
         id="test",
-        title=Translatable("wizard.test.title"),
-        description=Translatable("wizard.test.description"),
+        title=tr("wizard.test.title"),
+        description=tr("wizard.test.description"),
         sections=(
             WizardSection(
                 id="main",
-                title=Translatable("wizard.test.main.title"),
+                title=tr("wizard.test.main.title"),
                 questions=questions,
             ),
         ),

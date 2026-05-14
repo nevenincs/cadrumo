@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+from pydantic import ValidationError
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
@@ -18,16 +19,83 @@ from aeat.core.classification import SensitivityClass
 from aeat.core.config import Settings
 
 from .diagnostics import (
-    build_config_doctor_report,
+    DiagnosticCheck,
+    build_config_repair_report,
     quarantine_unreadable_secure_objects,
-    render_config_doctor_text,
+    render_config_repair_text,
     secure_object_unreadable_total,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def test_config_doctor_report_contains_registry_and_setup_checks(
+def test_diagnostic_check_fail_without_recovery_field_raises_validation_error() -> None:
+    """A ``fail`` row with neither ``next_action`` nor ``dead_end`` is forbidden."""
+
+    with pytest.raises(ValidationError):
+        DiagnosticCheck(name="x", status="fail", summary="y")
+
+
+def test_diagnostic_check_warn_without_recovery_field_raises_validation_error() -> None:
+    """A ``warn`` row with neither ``next_action`` nor ``dead_end`` is forbidden."""
+
+    with pytest.raises(ValidationError):
+        DiagnosticCheck(name="x", status="warn", summary="y")
+
+
+def test_diagnostic_check_rejects_both_next_action_and_dead_end_simultaneously() -> None:
+    """A row may pick at most one of the two recovery roads."""
+
+    with pytest.raises(ValidationError):
+        DiagnosticCheck(
+            name="x",
+            status="fail",
+            summary="y",
+            next_action="aeat config repair",
+            dead_end="terminal",
+        )
+
+
+def test_diagnostic_check_ok_row_with_both_recovery_fields_none_constructs() -> None:
+    """An ``ok`` row carries neither recovery field — happy path constructs."""
+
+    check = DiagnosticCheck(name="x", status="ok", summary="y")
+    assert check.next_action is None
+    assert check.dead_end is None
+
+
+def test_diagnostic_check_ok_row_with_next_action_raises_validation_error() -> None:
+    """``ok`` rows must not advertise recovery; that surface is reserved for fail/warn."""
+
+    with pytest.raises(ValidationError):
+        DiagnosticCheck(name="x", status="ok", summary="y", next_action="aeat config repair")
+
+
+def test_diagnostic_check_fail_row_with_dead_end_only_constructs() -> None:
+    """A ``fail`` row populated with ``dead_end`` alone satisfies the contract."""
+
+    check = DiagnosticCheck(name="x", status="fail", summary="y", dead_end="terminal")
+    assert check.next_action is None
+    assert check.dead_end == "terminal"
+
+
+def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
+    """JSON rendering surfaces ``next_action`` and ``dead_end`` keys explicitly."""
+
+    populated = DiagnosticCheck(
+        name="x",
+        status="fail",
+        summary="y",
+        next_action="aeat config repair reset-state --yes",
+    )
+    dumped = populated.model_dump(mode="json")
+    assert "next_action" in dumped
+    assert "dead_end" in dumped
+    assert dumped["next_action"] == "aeat config repair reset-state --yes"
+    assert dumped["dead_end"] is None
+
+
+def test_config_repair_report_contains_registry_and_setup_checks(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
@@ -38,7 +106,7 @@ def test_config_doctor_report_contains_registry_and_setup_checks(
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
 
-    report = build_config_doctor_report()
+    report = build_config_repair_report()
 
     assert report.package_name == "aeat"
     assert report.registry.available is True
@@ -47,13 +115,13 @@ def test_config_doctor_report_contains_registry_and_setup_checks(
         "environment.python",
         "registry.load",
         "secure_state.load",
-        "profile.active",
-        "auth.provider",
+        "profile.readiness",
+        "auth.readiness",
     }
     assert report.overall in {"ok", "warn"}
 
 
-def test_render_config_doctor_text_is_operator_readable(
+def test_render_config_repair_text_is_operator_readable(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
@@ -62,7 +130,7 @@ def test_render_config_doctor_text_is_operator_readable(
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
 
-    rendered = render_config_doctor_text(build_config_doctor_report())
+    rendered = render_config_repair_text(build_config_repair_report())
 
     assert "Overall\t" in rendered
     assert "registry.load" in rendered
@@ -86,7 +154,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
 
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
-    namespace = "aeat.test.doctor.rotation"
+    namespace = "aeat.test.repair.rotation"
 
     # Seed three rows under the OLD master key.
     override_master_key_provider(key_old)
@@ -95,9 +163,9 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
     try:
         repo_old = SecureObjectRepository(engine=engine_old)
         for natural_key, payload in (
-            ("doctor-row-1", b"old-1"),
-            ("doctor-row-2", b"old-2"),
-            ("doctor-row-3", b"old-3"),
+            ("repair-row-1", b"old-1"),
+            ("repair-row-2", b"old-2"),
+            ("repair-row-3", b"old-3"),
         ):
             repo_old.save(
                 namespace=namespace,
@@ -117,7 +185,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
     try:
         SecureObjectRepository(engine=engine_new).save(
             namespace=namespace,
-            object_key="doctor-row-4",
+            object_key="repair-row-4",
             classification=SensitivityClass.FINANCIAL,
             schema_version=1,
             written_at=datetime.now(UTC),
@@ -126,7 +194,7 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
     finally:
         engine_new.dispose()
 
-    # The default doctor pipeline picks up the master key from the keyring;
+    # The default repair pipeline picks up the master key from the keyring;
     # we want it to use the same NEW key we just wrote under, so keep the
     # process-wide override in place but redirect the engine resolution to
     # the same database file.
@@ -134,11 +202,11 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     dispose_engine()
     try:
-        report = build_config_doctor_report()
+        report = build_config_repair_report()
         integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
         assert integrity_check.status == "warn"
         assert "unreadable row" in integrity_check.summary
-        assert integrity_check.next_action == "aeat config doctor quarantine --yes"
+        assert integrity_check.next_action == "aeat config repair quarantine --yes"
 
         ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)
         # Three rows sealed under the OLD ephemeral key should be unreadable
@@ -163,7 +231,7 @@ def test_secure_objects_integrity_check_reports_ok_on_clean_database(
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     dispose_engine()
 
-    report = build_config_doctor_report()
+    report = build_config_repair_report()
     integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
     assert integrity_check.status == "ok"
     assert report.secure_objects.unreadable_total == 0
@@ -178,7 +246,7 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
     Seeds rows under master key K1, rotates to K2, and asserts the
     aggregate matches the per-namespace probe. Used by
     ``aeat app overview status`` to render an inline warning footer
-    pointing the operator at ``aeat config doctor``.
+    pointing the operator at ``aeat config repair``.
     """
     db_path = tmp_path / "agg.db"
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
@@ -234,13 +302,13 @@ def test_secure_object_unreadable_total_is_zero_on_clean_database(
     assert secure_object_unreadable_total() == 0
 
 
-def test_doctor_auth_session_predicate_agrees_with_wizard_status(
+def test_repair_auth_session_predicate_agrees_with_wizard_status(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
-    """``aeat config doctor`` and ``aeat config status`` must read auth readiness from one source.
+    """``aeat config repair`` and ``aeat config status`` must read auth readiness from one source.
 
-    Doctor and the wizard status surface share one projection: both
+    Repair and the wizard status surface share one projection: both
     build a :class:`WizardStatusReport` and read its ``login_ready`` /
     ``auth_provider`` fields. This test pins that contract by walking
     three workflow states (no provider, provider only, fully
@@ -272,7 +340,7 @@ def test_doctor_auth_session_predicate_agrees_with_wizard_status(
 
     for state in (no_provider, provider_only, fully_authenticated):
         setup_report = build_wizard_status(state)
-        # The doctor renderer reads the same login_ready field; this
+        # The repair renderer reads the same login_ready field; this
         # assertion pins both surfaces against the shared projection.
         if state is no_provider:
             assert setup_report.login_ready is False

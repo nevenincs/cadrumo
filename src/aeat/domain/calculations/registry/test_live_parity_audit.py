@@ -14,70 +14,40 @@ consumes to surface oracle-binding drift across modelos:
 Both helpers are pure (no profile-fact evaluation, no I/O). A
 regression in the orphan-set difference, the predicate filter, or the
 lexicographic sort would silently mask the drift CI is supposed to
-catch, which is why this module exercises each at unit level.
+catch, which is why this module exercises each at unit level. Every
+registered oracle is a real production adapter; no stub layer sits
+between the test and the catalogue.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 
 import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
+from ._aeat_nif_iva_oracle import ORACLE_ID as AEAT_NIF_IVA_ORACLE_ID
+from ._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
+from ._groi_oracle import GROI_ORACLE_ID, GroiOracle
 from ._live_parity import (
     CrossReferenceApplicabilityDeclaration,
     LiveParityCatalogue,
-    OracleSurfaceKind,
-    ParityResult,
     collect_applicability_declarations,
     collect_orphan_oracle_ids,
 )
 from ._loader import load_registry_tree
-from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
+from ._renta_web_open_oracle import RentaWebOpenOracle
 from ._schema import ModeloDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-class _MinimalOracle:
-    """Project-pattern test oracle exposing only ``oracle_id``.
-
-    Mirrors the ``_FakeOracle`` pattern already established in
-    ``test_live_parity.py``: a minimal LiveParityOracle implementation
-    sufficient to populate :class:`LiveParityCatalogue` for collection-
-    style tests. ``planned_operations`` and ``verify_payload`` are
-    structurally required by the Protocol but are not exercised by the
-    audit helpers under test.
-    """
-
-    def __init__(self, oracle_id: str) -> None:
-        self._oracle_id = oracle_id
-
-    @property
-    def oracle_id(self) -> str:
-        return self._oracle_id
-
-    @property
-    def surface_kind(self) -> OracleSurfaceKind:
-        return "open_simulator"
-
-    def planned_operations(
-        self,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> tuple[RemoteOperation, ...]:
-        return ()
-
-    def verify_payload(
-        self,
-        policy: RemoteStateGuardPolicy,
-        payload: bytes,
-        *,
-        expected: Mapping[str, object],
-    ) -> ParityResult:
-        raise NotImplementedError("audit-helper tests never invoke verify_payload")
+# The committed registry binds these oracle ids; RentaWebOpenOracle's
+# id is registered but no cross-reference binds it today, making it the
+# canonical "unbound" real adapter used to exercise the orphan-set
+# difference logic.
+RENTA_WEB_OPEN_ORACLE_ID = "modelo-100-renta-web-open"
 
 
 def _committed_modelos() -> tuple[ModeloDefinition, ...]:
@@ -85,10 +55,13 @@ def _committed_modelos() -> tuple[ModeloDefinition, ...]:
     return tuple(modelos)
 
 
-def _registry_with(ids: tuple[str, ...]) -> LiveParityCatalogue:
+def _full_production_catalogue() -> LiveParityCatalogue:
+    """Register every production-grade oracle adapter shipped with the project."""
+
     catalogue = LiveParityCatalogue()
-    for oracle_id in ids:
-        catalogue.register(_MinimalOracle(oracle_id), environment="production")
+    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    catalogue.register(GroiOracle(), environment="production")
+    catalogue.register(RentaWebOpenOracle(), environment="production")
     return catalogue
 
 
@@ -98,17 +71,16 @@ def _registry_with(ids: tuple[str, ...]) -> LiveParityCatalogue:
 
 
 def test_collect_orphan_oracle_ids_returns_every_catalogue_id_when_no_modelos_bind_them() -> None:
-    catalogue = _registry_with(("oracle-alpha", "oracle-beta", "oracle-gamma"))
+    catalogue = _full_production_catalogue()
 
     orphans = collect_orphan_oracle_ids((), catalogue)
 
-    assert orphans == ("oracle-alpha", "oracle-beta", "oracle-gamma")
+    assert orphans == tuple(sorted({AEAT_NIF_IVA_ORACLE_ID, GROI_ORACLE_ID, RENTA_WEB_OPEN_ORACLE_ID}))
 
 
 def test_collect_orphan_oracle_ids_returns_lexicographically_sorted_output() -> None:
-    """Even when registration order is shuffled, the orphan tuple is
-    sorted so audit dashboards see a deterministic diff."""
-    catalogue = _registry_with(("oracle-z", "oracle-a", "oracle-m"))
+    """The orphan tuple is sorted so audit dashboards see a deterministic diff."""
+    catalogue = _full_production_catalogue()
 
     orphans = collect_orphan_oracle_ids((), catalogue)
 
@@ -116,9 +88,9 @@ def test_collect_orphan_oracle_ids_returns_lexicographically_sorted_output() -> 
 
 
 def test_collect_orphan_oracle_ids_omits_ids_bound_by_a_cross_reference() -> None:
-    """Walk the committed registry's actual oracle_ids — the catalogue
-    registers two oracle ids and one of them is a real cross-reference
-    binding. The bound id must disappear from the orphan set."""
+    """The committed registry binds AeatNifIvaCheckerOracle and GroiOracle;
+    RentaWebOpenOracle is registered but currently unbound. Bound ids must
+    disappear from the orphan set, the unbound one must remain."""
     modelos = _committed_modelos()
     bound_ids = {
         cross_reference.oracle_id
@@ -127,32 +99,24 @@ def test_collect_orphan_oracle_ids_omits_ids_bound_by_a_cross_reference() -> Non
         for cross_reference in revision.live_cross_references
         if cross_reference.oracle_id is not None
     }
-    assert bound_ids, "committed registry must expose at least one bound oracle_id"
-    bound_id = next(iter(bound_ids))
+    assert {AEAT_NIF_IVA_ORACLE_ID, GROI_ORACLE_ID} <= bound_ids
+    assert RENTA_WEB_OPEN_ORACLE_ID not in bound_ids
 
-    catalogue = _registry_with((bound_id, "oracle-not-bound"))
+    catalogue = _full_production_catalogue()
     orphans = collect_orphan_oracle_ids(modelos, catalogue)
 
-    assert bound_id not in orphans
-    assert "oracle-not-bound" in orphans
+    assert AEAT_NIF_IVA_ORACLE_ID not in orphans
+    assert GROI_ORACLE_ID not in orphans
+    assert RENTA_WEB_OPEN_ORACLE_ID in orphans
 
 
 def test_collect_orphan_oracle_ids_returns_empty_when_every_catalogue_id_is_bound() -> None:
+    """Catalogue limited to the two oracles bound by the committed registry."""
     modelos = _committed_modelos()
-    bound_ids = tuple(
-        sorted(
-            {
-                cross_reference.oracle_id
-                for modelo in modelos
-                for revision in modelo.revisions.values()
-                for cross_reference in revision.live_cross_references
-                if cross_reference.oracle_id is not None
-            }
-        )
-    )
-    assert bound_ids, "committed registry must expose at least one bound oracle_id"
+    catalogue = LiveParityCatalogue()
+    catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
+    catalogue.register(GroiOracle(), environment="production")
 
-    catalogue = _registry_with(bound_ids)
     orphans = collect_orphan_oracle_ids(modelos, catalogue)
 
     assert orphans == ()
@@ -160,7 +124,7 @@ def test_collect_orphan_oracle_ids_returns_empty_when_every_catalogue_id_is_boun
 
 def test_collect_orphan_oracle_ids_treats_cross_reference_without_oracle_id_as_no_binding() -> None:
     """A cross-reference with ``oracle_id=None`` does NOT contribute to
-    the bound set; the matching catalogue id (if any) stays orphan."""
+    the bound set; an otherwise-unbound registered oracle stays orphan."""
     modelos = _committed_modelos()
     has_none_binding = any(
         cross_reference.oracle_id is None
@@ -170,17 +134,19 @@ def test_collect_orphan_oracle_ids_treats_cross_reference_without_oracle_id_as_n
     )
     assert has_none_binding, "committed registry must expose at least one None-bound cross-reference"
 
-    catalogue = _registry_with(("none-bindings-do-not-shadow-this-id",))
+    catalogue = LiveParityCatalogue()
+    catalogue.register(RentaWebOpenOracle(), environment="production")
     orphans = collect_orphan_oracle_ids(modelos, catalogue)
 
-    assert "none-bindings-do-not-shadow-this-id" in orphans
+    assert RENTA_WEB_OPEN_ORACLE_ID in orphans
 
 
 def test_collect_orphan_oracle_ids_consumes_iterable_once() -> None:
     """The helper must not consume the modelo iterator twice; otherwise
     callers passing a generator would silently see an empty bound set
     on subsequent walks."""
-    catalogue = _registry_with(("alpha",))
+    catalogue = LiveParityCatalogue()
+    catalogue.register(RentaWebOpenOracle(), environment="production")
 
     def _modelos_once() -> Iterator[ModeloDefinition]:
         yielded = False
@@ -191,7 +157,7 @@ def test_collect_orphan_oracle_ids_consumes_iterable_once() -> None:
 
     orphans = collect_orphan_oracle_ids(_modelos_once(), catalogue)
 
-    assert orphans == ("alpha",)
+    assert orphans == (RENTA_WEB_OPEN_ORACLE_ID,)
 
 
 # ---------------------------------------------------------------------------

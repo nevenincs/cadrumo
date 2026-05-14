@@ -121,3 +121,44 @@ class TestPersistenceRoundTrip:
         result = _result("c" * 16, datetime(2026, 4, 13, tzinfo=UTC))
         save_run(result, runs_dir=runs_dir)
         assert list(runs_dir.iterdir()) == []
+
+
+class _EmitError(RuntimeError):
+    """Real exception injected to simulate a downstream emit failure."""
+
+
+def test_reset_workflow_state_emit_failure_leaves_row_intact(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When event emit fails, the secure-object row must remain present.
+
+    The reset routine emits the ``workflow_state.reset`` event before
+    discarding the secure-object row. If the emit raises, the delete
+    must not execute -- the row stays, the next reset attempt picks
+    up where this one left off, and no plaintext is leaked. The
+    failure path is exercised by patching the module-level
+    ``emit_workflow_state_reset`` symbol with a real function that
+    raises; no test double or Mock is used.
+    """
+
+    from . import _persistence as persistence_module
+    from ._persistence import WorkflowStateRepository
+
+    repository = WorkflowStateRepository()
+    from ._models import WorkflowState
+
+    repository.save(WorkflowState())
+    assert repository._objects.exists("aeat.workflow", "state")
+
+    def _raise(**_: object) -> None:
+        raise _EmitError("simulated downstream emit failure")
+
+    monkeypatch.setattr(persistence_module, "emit_workflow_state_reset", _raise)
+
+    with pytest.raises(_EmitError):
+        repository.reset_workflow_state()
+
+    assert repository._objects.exists("aeat.workflow", "state"), (
+        "emit-first contract violated: secure-object row was deleted before the "
+        "audit event landed; the recovery route lost its trail."
+    )

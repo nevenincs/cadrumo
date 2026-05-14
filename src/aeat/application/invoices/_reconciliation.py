@@ -108,6 +108,7 @@ def reconcile_invoice_catalogues(
 
 def reconcile_invoice_repositories(
     *,
+    bucket_id: str,
     apply: bool = False,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
@@ -120,7 +121,7 @@ def reconcile_invoice_repositories(
     """
 
     invoices_repo = invoice_repository or InvoiceCatalogueRepository()
-    transactions_repo = transaction_repository or TransactionCatalogueRepository()
+    transactions_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
     result = reconcile_invoice_catalogues(
         invoices_repo.load(),
         transactions_repo.load(),

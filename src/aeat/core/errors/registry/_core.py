@@ -229,7 +229,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="LOCKED_ACCESS_GATE_LIVE_SUBMIT_FORBIDDEN",
             category=ErrorCategory.LOCKED,
             message_key="errors.locked.locked_access_gate_live_submit_forbidden",
-            default_suggestion="aeat app declaration export --id DRAFT_ID --output PATH",
+            default_suggestion="aeat app modelo --help",
             retryable=False,
             runbook_id=None,
         ),

@@ -139,7 +139,7 @@ class Settings(BaseSettings):
 
     # ── Multilingual i18n ───────────────────────────────────────────────────
     aeat_output_language: str = Field(
-        default="en",
+        default="es",
         description="Target ISO 639-1 language code for user-facing content.",
     )
     aeat_authoritative_language_aeat_terms: str = Field(
@@ -202,6 +202,34 @@ class Settings(BaseSettings):
     aeat_audit_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "audit",
         description="Directory for the governed audit sink (redacted, classification-aware)",
+    )
+
+    # ── Outbound storage provider ───────────────────────────────────────────
+    aeat_storage_provider_kind: str = Field(
+        default="local_filesystem",
+        description=(
+            "Backend for `aeat.adapters.outbound.storage`. "
+            "Accepted values: local_filesystem (default), google_drive, in_memory. "
+            "google_drive additionally requires aeat_google_drive_root_folder_id "
+            "and a per-profile registered OAuth client + token via `aeat config google`."
+        ),
+    )
+    aeat_local_storage_root: Path = Field(
+        default=PROJECT_ROOT / "var" / "storage",
+        description=(
+            "Root directory for the LocalFileSystemProvider backend. Each namespace "
+            "becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` file "
+            "paired with a `.meta.json` sidecar."
+        ),
+    )
+    aeat_google_drive_root_folder_id: str | None = Field(
+        default=None,
+        description=(
+            "Drive folder ID under which `aeat-vault/` is created and used. "
+            "Required when aeat_storage_provider_kind=google_drive. Operator obtains "
+            "this from the Cloud Console / Drive web UI; the app creates `aeat-vault/` "
+            "lazily on first probe."
+        ),
     )
 
     # ── Live tests ──────────────────────────────────────────────────────────
@@ -295,7 +323,7 @@ class Settings(BaseSettings):
     )
     aeat_certificate_backend: CertificateBackendSetting = Field(
         default=CertificateBackendSetting.PLAYWRIGHT_CONTEXT,
-        description="Which cert backend to use (PLAYWRIGHT_CONTEXT by default)",
+        description="Which certificate backend to use: playwright_context or httpx_fallback",
     )
     aeat_certificate_verify_url: str = Field(
         default="https://sede.agenciatributaria.gob.es/",
@@ -332,7 +360,7 @@ class Settings(BaseSettings):
     aeat_auth_provider: AuthProviderKindSetting | None = Field(
         default=None,
         description=(
-            "Default auth provider for `aeat setup auth login` / `status` when "
+            "Default auth provider for `aeat config auth status` / `test` when "
             "--provider is omitted. When None, the CLI auto-selects the "
             "first configured provider from the canonical registry order."
         ),
@@ -342,7 +370,7 @@ class Settings(BaseSettings):
     aeat_clave_movil_dni_nie: str | None = Field(
         default=None,
         description=(
-            "Taxpayer DNI/NIE for `aeat setup auth login` using Clave Movil. "
+            "Taxpayer DNI/NIE for `aeat config auth configure --provider clave_movil`. "
             "Used to stamp the persisted session with the operator's "
             "identity and to pre-fill the non-QR fallback form. Not a "
             "secret on its own — the Cl@ve app on the operator's phone is "
@@ -578,16 +606,6 @@ class Settings(BaseSettings):
         """Treat blank env vars for optional secret fields as unset."""
         if isinstance(value, str) and value.strip() == "":
             return None
-        return value
-
-    @field_validator("aeat_certificate_backend", mode="before")
-    @classmethod
-    def _certificate_backend_accepts_adapter_enum_values(cls, value: object) -> object:
-        """Accept legacy adapter enum names while storing settings-shape values."""
-        if isinstance(value, str):
-            normalized = value.strip().lower()
-            if normalized in {"playwright_context", "httpx_fallback"}:
-                return normalized
         return value
 
     @field_validator("aeat_status_detail_url_template")

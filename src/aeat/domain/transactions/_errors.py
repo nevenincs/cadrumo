@@ -17,6 +17,14 @@ class TransactionPersistenceError(TransactionCatalogueError):
     """Raised when catalogue persistence cannot be completed."""
 
 
+class LedgerStorageError(TransactionPersistenceError):
+    """Raised when bucket-scoped ledger storage cannot be resolved or used."""
+
+
+class LedgerNoActiveBucketError(LedgerStorageError):
+    """Raised when a ledger operation requires an active profile bucket."""
+
+
 class TransactionNotFoundError(TransactionCatalogueError):
     """Raised when a catalogue lookup targets a missing transaction."""
 

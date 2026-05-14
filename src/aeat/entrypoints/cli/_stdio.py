@@ -68,15 +68,23 @@ def _reconfigure_stream(stream: TextIO | None) -> None:
         return
 
 
-def configure_stdio_for_utf8() -> None:
-    """Force ``sys.stdout`` and ``sys.stderr`` onto UTF-8 with replace.
+def configure_stdio_for_utf8(
+    *,
+    stdout: TextIO | None = None,
+    stderr: TextIO | None = None,
+) -> None:
+    """Force ``stdout`` and ``stderr`` onto UTF-8 with replace.
 
     Idempotent — calling more than once is a no-op for already-
-    UTF-8 streams.
+    UTF-8 streams. Both arguments default to ``sys.stdout`` /
+    ``sys.stderr`` so production startup keeps its zero-argument
+    contract; tests that want to exercise the reconfiguration logic
+    against a synthetic stream pass it in directly instead of
+    monkeypatching ``sys``.
     """
 
-    _reconfigure_stream(sys.stdout)
-    _reconfigure_stream(sys.stderr)
+    _reconfigure_stream(sys.stdout if stdout is None else stdout)
+    _reconfigure_stream(sys.stderr if stderr is None else stderr)
 
 
 __all__ = ["configure_stdio_for_utf8"]

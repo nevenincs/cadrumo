@@ -107,11 +107,11 @@ def reset_config(scope: ConfigResetScope, *, confirmed: bool) -> ConfigResetRepo
         from .profile._repository import profile_bucket_repository
 
         profile_repository = profile_bucket_repository()
-        removed_profile_names = tuple(
-            sorted({*current.profiles.keys(), *(item.name for item in profile_repository.list_profiles())})
-        )
-        for profile_name in removed_profile_names:
-            profile_repository.delete(profile_name)
+        profile_bucket_ids = {pointer.bucket_id for pointer in current.profiles.values()}
+        existing_profile_names = {item.name for item in profile_repository.list_profiles()}
+        removed_profile_names = tuple(sorted({*current.profiles.keys(), *existing_profile_names}))
+        for bucket_id in sorted({*profile_bucket_ids, *existing_profile_names}):
+            profile_repository.delete(bucket_id)
         new_state = new_state.model_copy(
             update={
                 "profiles": {},

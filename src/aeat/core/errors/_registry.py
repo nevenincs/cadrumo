@@ -41,6 +41,23 @@ class ErrorCategory(StrEnum):
     LOCKED = "LOCKED"
 
 
+_TEXT_PREFIX: dict[ErrorCategory, str] = {
+    ErrorCategory.ERROR: "Error.",
+    ErrorCategory.REFUSED: "Refused.",
+    ErrorCategory.AUTH: "Auth.",
+    ErrorCategory.INTEGRITY: "Integrity.",
+    ErrorCategory.FAIL: "Failed.",
+    ErrorCategory.INTERNAL: "Internal.",
+    ErrorCategory.LOCKED: "Locked.",
+}
+
+
+def _category_text_prefix(category: ErrorCategory) -> str:
+    """Return the sentence-case stderr prefix for ``category``."""
+
+    return _TEXT_PREFIX[category]
+
+
 class ErrorCode(BaseModel):
     """Stable metadata attached to an :class:`aeat.core.errors.AeatError` type."""
 
@@ -104,7 +121,7 @@ def register(code: ErrorCode) -> ErrorCode:
     return code
 
 
-from aeat.core.errors.registry import _ALL_DECLARED_ERROR_CODES
+from aeat.core.errors.registry import _ALL_DECLARED_ERROR_CODES  # noqa: E402
 
 _DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = MappingProxyType(
     {qualname: register(code) for qualname, code in _ALL_DECLARED_ERROR_CODES}
@@ -154,7 +171,7 @@ def resolve_output_language() -> str:
         from ..i18n import output_language
 
         return output_language()
-    except (ValueError, OSError, AttributeError) as exc:
+    except Exception as exc:
         import logging as _logging
 
         _logging.getLogger(__name__).debug(
@@ -208,9 +225,9 @@ def render_error_text(
     """Render the human-readable stderr payload for ``error``."""
 
     code = get_registered_error_code(error)
-    prefix = code.category.value
+    prefix = _category_text_prefix(code.category)
     message = resolve_error_message(error, code)
-    first_line = f"{prefix} {message}" if prefix.startswith("[") else f"{prefix}: {message}"
+    first_line = f"{prefix} {message}"
     suggestion = get_error_suggestion(error, code)
     lines = [first_line]
     if suggestion is not None:
@@ -292,7 +309,7 @@ def _merge_error_context(
     if isinstance(error_context, Mapping):
         merged.update(error_context)
     for key, value in vars(error).items():
-        if key.startswith("_") or key in {"code", "context", "translated_message", "suggestion"}:
+        if key.startswith("_") or key in {"code", "context", "translated_message", "suggestion", "original_exception"}:
             continue
         merged[key] = value
     if context:

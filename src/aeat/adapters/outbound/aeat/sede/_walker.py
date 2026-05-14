@@ -63,12 +63,12 @@ async def _open_browser_page(
 
     Raises:
         SedeNavigationError: When the session has no persisted auth
-            state (the operator has not run ``aeat setup auth login``).
+            state (the operator has not configured authentication under ``aeat config auth``).
     """
 
     storage_state = storage_state_for_session(session)
     if session.storage_state_path is None:
-        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat setup auth login` first")
+        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat config auth status` first")
     browser_session = await default_browser_session_factory(settings)
     try:
         context = await browser_session.create_context(storage_state=storage_state)

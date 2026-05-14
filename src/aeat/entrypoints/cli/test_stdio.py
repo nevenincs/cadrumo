@@ -144,3 +144,31 @@ def test_configure_stdio_for_utf8_is_idempotent(monkeypatch: pytest.MonkeyPatch)
         {"encoding": "utf-8", "errors": "replace"},
         {"encoding": "utf-8", "errors": "replace"},
     ]
+
+
+def test_configure_stdio_for_utf8_accepts_explicit_streams() -> None:
+    """Tests can pass stdout/stderr directly instead of mutating sys.
+
+    The helper's primary contract — reconfigure each stream to UTF-8
+    + replace — is exercised without any module-level state mutation
+    when the caller provides explicit streams.
+    """
+
+    out = _ReconfigurableStream()
+    err = _ReconfigurableStream()
+
+    configure_stdio_for_utf8(stdout=out, stderr=err)
+
+    assert out.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
+    assert err.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
+
+
+def test_configure_stdio_for_utf8_tolerates_non_reconfigurable_explicit_streams() -> None:
+    """Explicit streams without ``reconfigure`` are skipped silently,
+    matching the default-streams behavior."""
+
+    out = _NonReconfigurableStream()
+    err = _NonReconfigurableStream()
+
+    # Must not raise.
+    configure_stdio_for_utf8(stdout=out, stderr=err)

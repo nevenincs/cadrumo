@@ -20,7 +20,7 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -28,6 +28,10 @@ from ..auth._models import AuthState
 from ._utils import utc_now
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+if TYPE_CHECKING:
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
+    from ...domain.transactions import TransactionCatalogueRepository
 
 
 class WorkflowEvent(BaseModel):
@@ -97,6 +101,22 @@ class DeclarationPointer(BaseModel):
     updated_at: datetime = Field(default_factory=utc_now)
 
 
+class ProfileBucketPointer(BaseModel):
+    """Pointer from workflow state to a secure profile bucket."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    bucket_id: str = Field(min_length=1, max_length=128)
+
+    @field_validator("bucket_id")
+    @classmethod
+    def _trim_bucket_id(cls, value: str) -> str:
+        trimmed = value.strip()
+        if not trimmed:
+            raise ValueError("bucket_id must not be blank")
+        return trimmed
+
+
 def declaration_key(modelo: str, period: str) -> str:
     """Return the canonical state-store key for a ``(modelo, period)`` pair."""
     return f"{modelo.strip()}:{period.strip()}"
@@ -123,7 +143,7 @@ class WorkflowState(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     auth: AuthState = Field(default_factory=AuthState)
-    profiles: dict[str, Any] = Field(default_factory=dict)
+    profiles: dict[str, ProfileBucketPointer] = Field(default_factory=dict)
     active_profile: str | None = None
     declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
     invoice_reviews: dict[str, Any] = Field(default_factory=dict)
@@ -135,9 +155,57 @@ class WorkflowState(BaseModel):
         """Return the active profile record from the profile's secure bucket."""
         if self.active_profile is None:
             return None
+        pointer = self.profiles.get(self.active_profile)
+        if pointer is None:
+            return None
         from ..profile._repository import profile_bucket_repository
 
-        return profile_bucket_repository().load(self.active_profile)
+        return profile_bucket_repository().load(pointer.bucket_id)
+
+    def active_profile_bucket_id(self) -> str | None:
+        """Return the active profile's secure bucket id."""
+        if self.active_profile is None:
+            return None
+        pointer = self.profiles.get(self.active_profile)
+        if pointer is None:
+            return None
+        return pointer.bucket_id
+
+
+def active_bucket_id_or_raise(state: WorkflowState) -> str:
+    """Return the active profile's bucket id or raise :class:`NoActiveProfileError`.
+
+    Bucket-scoped repositories use this helper at construction time so
+    application services refuse to operate when no profile is selected.
+    """
+
+    bucket_id = state.active_profile_bucket_id()
+    if bucket_id is None:
+        from ._errors import NoActiveProfileError
+
+        raise NoActiveProfileError("no active profile bucket")
+    return bucket_id
+
+
+def active_transaction_catalogue_repository(
+    state: WorkflowState,
+    *,
+    objects: SecureObjectRepository | None = None,
+) -> TransactionCatalogueRepository:
+    """Return the transaction catalogue repository for the active profile bucket."""
+
+    from ...domain.transactions import LedgerNoActiveBucketError, TransactionCatalogueRepository
+    from ._errors import NoActiveProfileError
+
+    try:
+        bucket_id = active_bucket_id_or_raise(state)
+    except NoActiveProfileError as exc:
+        raise LedgerNoActiveBucketError(
+            "no active profile bucket",
+            context={"repository": "transaction_catalogue", "operation": "resolve_active_bucket"},
+            suggestion="aeat config init --profile NAME",
+        ) from exc
+    return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
 
 
 def update_declaration_pointer(
@@ -183,8 +251,8 @@ def update_declaration_pointer(
 # already present in sys.modules['aeat.application.workflow._models'].
 # ---------------------------------------------------------------------------
 
-from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
-from ...domain.deadlines import FilingObligation
+from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus  # noqa: E402
+from ...domain.deadlines import FilingObligation  # noqa: E402
 
 
 class SiteHealthAlert(BaseModel):

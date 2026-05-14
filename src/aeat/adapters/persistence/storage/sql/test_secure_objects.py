@@ -275,3 +275,109 @@ def test_list_records_only_emits_warning_when_unreadable_rows_exist(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path) -> None:
+    """The raw iterator returns on-wire ciphertext + metadata across namespaces."""
+
+    from .secure_objects import SecureObjectRawRow
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "raw.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine)
+    try:
+        repo = SecureObjectRepository(engine=engine)
+        now = datetime.now(UTC)
+        repo.save(
+            namespace="aeat.alpha",
+            object_key="key-a-1",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=now,
+            payload=b"payload-a-1",
+        )
+        repo.save(
+            namespace="aeat.beta",
+            object_key="key-b-1",
+            classification=SensitivityClass.SESSION,
+            schema_version=1,
+            written_at=now,
+            payload=b"payload-b-1",
+        )
+        repo.save(
+            namespace="aeat.alpha",
+            object_key="key-a-2",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=now,
+            payload=b"payload-a-2",
+        )
+
+        rows = list(repo.iter_all_records_raw())
+
+        assert len(rows) == 3
+        assert all(isinstance(row, SecureObjectRawRow) for row in rows)
+        namespaces = [row.namespace for row in rows]
+        # Ordered by (namespace ASC, object_key ASC); the three rows
+        # yield as aeat.alpha (x2) then aeat.beta (x1).
+        assert namespaces == ["aeat.alpha", "aeat.alpha", "aeat.beta"]
+        for row in rows:
+            assert len(row.payload) > 0
+            assert row.payload not in (b"payload-a-1", b"payload-a-2", b"payload-b-1"), (
+                "iter_all_records_raw must return on-wire ciphertext, not plaintext"
+            )
+            assert row.classification in {"financial", "session"}
+            assert row.schema_version == 1
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
+
+
+def test_iter_all_records_raw_returns_empty_iterator_for_empty_table(tmp_path: Path) -> None:
+    """No rows persisted → iterator yields nothing without raising."""
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "empty.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine)
+    try:
+        repo = SecureObjectRepository(engine=engine)
+        rows = list(repo.iter_all_records_raw())
+        assert rows == []
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
+
+
+def test_iter_all_records_raw_does_not_attempt_decryption_under_rotated_master_key(tmp_path: Path) -> None:
+    """Rows sealed under a different master key still yield via raw iterator.
+
+    The raw iterator is the outbound sync coordinator's path; mirroring
+    must work even when the in-process master key cannot decrypt the
+    payload (e.g., during a rotation window or on a freshly-bootstrapped
+    machine before key recovery completes).
+    """
+
+    seed_provider = EphemeralMasterKeyProvider()
+    db_path = tmp_path / "rotated.db"
+    _seed_under_key(
+        db_path=db_path,
+        provider=seed_provider,
+        namespace="aeat.rotated",
+        natural_key="rotated-key",
+        payload=b"rotated-payload",
+    )
+    # Switch to a fresh master key the seeded payload was NOT encrypted under.
+    override_master_key_provider(EphemeralMasterKeyProvider())
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    try:
+        rows = list(SecureObjectRepository(engine=engine).iter_all_records_raw())
+        assert len(rows) == 1
+        # The ciphertext bytes are returned verbatim; no DecryptionError.
+        assert rows[0].namespace == "aeat.rotated"
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)

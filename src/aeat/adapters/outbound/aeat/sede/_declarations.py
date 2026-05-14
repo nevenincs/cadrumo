@@ -327,7 +327,7 @@ async def _open_register_page(
     storage_state = storage_state_for_session(session)
     storage_state_path = session.storage_state_path
     if storage_state_path is None:
-        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat setup auth login` first")
+        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat config auth status` first")
     profile = Profile(
         name=settings.aeat_default_profile_name,
         storage_state_path=storage_state_path,
@@ -443,7 +443,7 @@ async def _drive_search(
         )
         raise SedeNavigationError(
             f"declaraciones register did not load (final URL: {final_url!r}); "
-            "session likely expired — run `aeat setup auth login` and retry",
+            "session likely expired — run `aeat config auth test` and retry",
         )
     # Defensive: even when the URL matches, AEAT sometimes serves a
     # blank shell with no Modelo label until the JS finishes booting.
@@ -807,7 +807,7 @@ async def capture_declaration(
             raise SedeNavigationError(
                 f"Ver button for {declaration.expediente_id!r} did not land on a "
                 f"cotejo URL (final URL: {cotejo_url!r}); "
-                "session likely expired mid-walk — run `aeat setup auth login` and retry",
+                "session likely expired mid-walk — run `aeat config auth test` and retry",
             )
 
         csv = _extract_csv_from_url(cotejo_url)

@@ -22,7 +22,7 @@ from .repository import (
     PortalRepository,
     Repository,
 )
-from .secure_objects import SecureObjectRecord, SecureObjectRepository
+from .secure_objects import SecureObjectMetadata, SecureObjectRecord, SecureObjectRepository, SecureObjectWrite
 from .session import get_sessionmaker, session_scope
 
 __all__ = [
@@ -34,8 +34,10 @@ __all__ = [
     "PortalRecord",
     "PortalRepository",
     "Repository",
+    "SecureObjectMetadata",
     "SecureObjectRecord",
     "SecureObjectRepository",
+    "SecureObjectWrite",
     "create_engine_from_settings",
     "dispose_engine",
     "get_engine",

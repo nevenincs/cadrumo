@@ -7,8 +7,8 @@ flags. Representative invocations:
 - ``aeat app ledger review --filter issue=gap --filter period=2026-Q1``
 - ``aeat app ledger review --filter issue=duplicate --filter period=2026-Q1``
 - ``aeat app ledger review --filter import=import_003 --filter period=2026-Q1``
-- ``aeat app invoice review --filter status=pending --filter kind=received``
-- ``aeat app declaration status --filter status=pending --period {period} --modelo {modelo}``
+- invoice evidence and modelo work-unit queue filters
+- modelo status filters by period and modelo code
 
 The CLI parses the raw argv strings; this module provides the typed
 substrate that turns them into :class:`FilterClause` records and binds
@@ -163,7 +163,7 @@ class LedgerReviewIssue(StrEnum):
 
 
 class InvoiceReviewFilterKey(StrEnum):
-    """Closed catalogue of ``aeat app invoice review --filter`` keys.
+    """Closed catalogue of invoice-evidence review filter keys.
 
     Attributes:
         STATUS: Lifecycle state of the invoice (``pending`` /
@@ -186,7 +186,7 @@ class InvoiceReviewStatus(StrEnum):
 
 
 class DeclarationReviewFilterKey(StrEnum):
-    """Closed catalogue of ``aeat app declaration status --filter`` keys.
+    """Closed catalogue of modelo status filter keys.
 
     Attributes:
         STATUS: Lifecycle state of the draft (``pending`` /
@@ -362,7 +362,7 @@ class LedgerReviewFilterSpec(BaseModel):
 
 
 class InvoiceReviewFilterSpec(BaseModel):
-    """Typed ``aeat app invoice review --filter`` spec.
+    """Typed invoice-evidence review filter spec.
 
     Attributes:
         clauses: Raw clauses in input order.
@@ -413,7 +413,7 @@ class InvoiceReviewFilterSpec(BaseModel):
 
 
 class DeclarationReviewFilterSpec(BaseModel):
-    """Typed ``aeat app declaration status --filter`` spec.
+    """Typed modelo status filter spec.
 
     Attributes:
         clauses: Raw clauses in input order.

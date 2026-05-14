@@ -24,6 +24,8 @@ from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.application.modelo import (
     AmendmentEvidenceMissingError,
+    AmendmentOverrideCasillaError,
+    AmendmentVerificationRefusedError,
     AmendmentTargetStateError,
     CalculationRevisionStateError,
     amend_modelo_revision,
@@ -83,9 +85,7 @@ def repos(tmp_path):
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     db_path = tmp_path / "modelo_amend_flow.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-    )
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
     Base.metadata.create_all(engine)
     try:
         objects = SecureObjectRepository(engine=engine)
@@ -232,9 +232,7 @@ def test_amend_refuses_when_baseline_already_superseded(repos) -> None:
     """A SUPERSEDED filing record cannot be amended."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    _, _, baseline = _seed_external_baseline(
-        repos, casilla_values={"01": Decimal("1000")}
-    )
+    _, _, baseline = _seed_external_baseline(repos, casilla_values={"01": Decimal("1000")})
     fake_successor = "f" * 64
     fr_repo.save(
         upsert_filing_record(
@@ -294,15 +292,11 @@ def test_amend_creates_complementaria_filing_supersedes_baseline(repos) -> None:
     assert new_filing.filed_at == _T4
     assert new_filing.filed_by == "operator-A"
 
-    refreshed_baseline = get_filing_record(
-        baseline.filing_record_id, filing_repository=fr_repo
-    )
+    refreshed_baseline = get_filing_record(baseline.filing_record_id, filing_repository=fr_repo)
     assert refreshed_baseline.status is FilingRecordStatus.SUPERSEDED
     assert refreshed_baseline.superseded_by_filing_record_id == new_filing.filing_record_id
 
-    new_revision = get_calculation_revision(
-        new_filing.calculation_revision_id, calculation_repository=cr_repo
-    )
+    new_revision = get_calculation_revision(new_filing.calculation_revision_id, calculation_repository=cr_repo)
     assert new_revision.state is CalculationRevisionState.FILED
     assert new_revision.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
     assert new_revision.amends_filing_record_id == baseline.filing_record_id
@@ -333,9 +327,7 @@ def test_amend_refuses_no_op_overrides(repos) -> None:
     a no-op amendment."""
 
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
-    _, _, baseline = _seed_external_baseline(
-        repos, casilla_values={"01": Decimal("1000")}
-    )
+    _, _, baseline = _seed_external_baseline(repos, casilla_values={"01": Decimal("1000")})
 
     with pytest.raises(CalculationRevisionStateError, match=r"already exists|no-op"):
         amend_modelo_revision(
@@ -343,6 +335,30 @@ def test_amend_refuses_no_op_overrides(repos) -> None:
             overrides={"01": Decimal("1000")},
             amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
             reason="duplicate filing attempt",
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T4,
+        )
+
+
+def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos) -> None:
+    """An override targeting a casilla id the registry does not declare
+    for the baseline modelo / filing_year / period is refused. The
+    corrected revision is the legal basis of the complementaria filing;
+    fabricated casillas cannot be silently accepted."""
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _, _, baseline = _seed_external_baseline(repos, casilla_values={"01": Decimal("1000")})
+
+    with pytest.raises(AmendmentOverrideCasillaError, match=r"9999|not declared"):
+        amend_modelo_revision(
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={"9999": Decimal("100")},
+            amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+            reason="fabricated casilla rejected",
             actor="operator-A",
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,

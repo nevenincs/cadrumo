@@ -1,4 +1,7 @@
 aggregation:
+  iva_ledger:
+    errors:
+      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el bucket de agregación solicitado.
   models:
     errors:
       annual_period_mixed: El periodo no puede mezclar valores anuales y subaños (trimestre/mes).
@@ -11,10 +14,14 @@ aggregation:
     errors:
       annual_period_required: Se requiere un periodo anual para la agregación del
         libro de Renta.
+      bucket_mismatch: El bucket del repositorio de movimientos no coincide con el bucket solicitado del libro de Renta.
       modelo_mismatch: El modelo tributario no coincide con el modelo esperado del
         libro de Renta.
       period_mismatch: El periodo no coincide con el periodo esperado del libro de
         Renta.
+  modelo_bindings:
+    errors:
+      unsupported_period: Periodo de modelo no soportado para la agregación del libro.
 application:
   auth:
     provider_impact:
@@ -50,6 +57,25 @@ categories:
     display_label_851219: Etiqueta de visualización 851219
 cli:
   app:
+    live:
+      app_help: Comandos de observación AEAT en vivo de solo lectura
+      expediente_help: Identificador de expediente AEAT
+      filed:
+        capture_help: Capturar datos de declaraciones presentadas desde AEAT
+        capture_sources_help: Capturar observaciones presentadas requeridas por una
+          declaración objetivo
+        list_help: Listar declaraciones presentadas sin descargar artefactos
+      filed_app_help: Observaciones de declaraciones presentadas de solo lectura
+      from_year_help: Primer ejercicio de presentación
+      limit_help: Número máximo de filas a capturar
+      modelo_help: Código de modelo
+      output_root_help: Directorio para observaciones capturadas de declaraciones
+        presentadas
+      period_help: Periodo de presentación
+      registry_root_help: Raíz del registro
+      source_root_help: Raíz del proyecto
+      to_year_help: Último ejercicio de presentación
+      year_help: Ejercicio de presentación
     modelo:
       app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el registro
       bindings:
@@ -60,9 +86,10 @@ cli:
           / periodo
         missing_help: Filtrar a los bindings sin valor resuelto (requieren datos del
           bucket / libro / perfil)
+        missing_required_options: 'Faltan opciones obligatorias: %{options}'
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
-        period_help: Periodo fiscal para acotar los bindings (p. ej. Q1, 2026-01)
+        period_help: Periodo fiscal para acotar los bindings (p. ej. 2026Q1, 2026-01)
         preview_help: Previsualizar bindings con sobrescrituras temporales sin mutar
           el estado
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
@@ -155,20 +182,11 @@ cli:
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
-  browser:
-    app_help: Gestión de la automatización del navegador (Playwright)
-    health:
-      json_help: Mostrar el estado de salud del navegador en formato JSON
-    health_help: Comprobar el estado de salud y conectividad del navegador
-    labels:
-      http_status: Estado HTTP
-      markers: Marcadores detectados
-      none: Ninguno
-      retry_after_seconds: Reintentar después (segundos)
-      state: Estado operativo
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
+      no_active_profile: No hay perfil activo. Ejecuta `aeat config init` antes de
+        usar comandos de datos del perfil.
       period_empty: El periodo fiscal no puede estar vacío
       period_unrecognised: Periodo no reconocido
   config:
@@ -190,20 +208,14 @@ cli:
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''aeat config auth --help'' para ver los identificadores válidos.'
     bucket:
+      actor_help: Filtrar el historial a eventos registrados por un actor concreto (coincidencia exacta)
       bucket_id_help: Identificador del bucket cuyo historial de eventos se inspecciona
       event_type_help: Filtrar el historial por uno o varios tipos de evento (repetible)
       help: Inspeccionar el almacenamiento por bucket y su historial de eventos
       history_help: Mostrar el historial de eventos solo-append de un bucket
-    doctor:
-      connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
-      help: Diagnosticar configuración local, registro, perfil, autenticación y logs
-      logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
-      logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
-      quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción
-        destructiva, requiere --yes)
-      quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
-        --yes para confirmar.
-      quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
+      object_id_help: Filtrar el historial a eventos sobre un object_id concreto (coincidencia exacta)
+      since_help: Filtrar el historial a eventos en o tras esta marca ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00)
+      until_help: Filtrar el historial a eventos en o antes de esta marca ISO-8601 (p. ej. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
       no_active_profile: No hay un perfil activo. Ejecuta 'aeat config init --tax-id
@@ -213,10 +225,45 @@ cli:
     get:
       help: Mostrar el valor actual de una clave de configuración
       key_help: Clave a leer (ej. tax.id, iva.regime)
+    google:
+      client_json_help: Ruta al archivo JSON del cliente OAuth Desktop de Cloud Console
+      help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
+      login_help: Ejecutar el flujo de consentimiento OAuth (o refrescar una credencial
+        existente)
+      logout_help: Limpiar el token de refresco y los metadatos; conservar el cliente
+        registrado
+      profile_help: Perfil AEAT a usar (por defecto = perfil activo del estado de
+        flujo)
+      refresh_only_help: Omitir el consentimiento y refrescar solo una credencial
+        existente
+      register_help: Registrar un JSON de cliente OAuth Desktop de Cloud Console para
+        el perfil activo
+      status_help: Mostrar el estado actual de la sesión OAuth de Google para el perfil
+        activo
     list:
       help: Listar todas las claves de configuración y sus valores actuales
     profile:
       help: Gestionar valores de configuración del perfil activo
+    repair:
+      connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
+      connectivity_target_help: Objetivo de conectividad que se debe comprobar
+      help: Diagnosticar y reparar configuración local, registro, perfil, autenticación
+        y logs
+      logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
+      logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
+      quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción
+        destructiva, requiere --yes)
+      quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
+        --yes para confirmar.
+      quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
+      reset_state_help: Descartar el envoltorio ilegible del estado del flujo de
+        trabajo (destructivo; requiere --yes)
+      reset_state_requires_yes: Esta operación es destructiva. Vuelve a ejecutar
+        con --yes para confirmar o pasa --dry-run para inspeccionar la huella.
+      reset_state_yes_help: Confirmar explícitamente el reinicio del estado del
+        flujo de trabajo
+      reset_state_dry_run_help: Informar la huella del envoltorio sin eliminar la
+        fila
     reset:
       help: Reiniciar ámbitos de configuración introducidos por el operador
       invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
@@ -237,205 +284,104 @@ cli:
       quiet_help: Ejecutar el flujo sin interacción usando solo los valores de las
         banderas
       success:
-        next_step: 'Próximo paso: ejecuta `aeat app overview` para revisar tu próxima
-          obligación.'
+        next_step: 'Próximo paso: ejecuta `aeat app overview status` para revisar
+          tu espacio de trabajo.'
         saved: Perfil '%{profile_name}' guardado.
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config init` para empezar.
       help: Mostrar el estado del perfil de configuración activo
-      next_step: 'Próximo paso: `aeat app overview`'
+      next_step: 'Próximo paso: `aeat app overview status`'
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
-  data:
-    app_help: Gestión de datos y registros fiscales
-    ledgers:
-      app_help: Gestión de Libros Registro de IVA e IRPF
-      inventory_help: Listar el inventario de Libros Registro disponibles
-    ledgers_help: Gestión de Libros Registro de la AEAT
-  deadlines:
-    app_help: Gestión del calendario y plazos del contribuyente
-    explain:
-      modelo_help: Número del modelo tributario (ej. 303, 111)
-    explain_help: Explicar los plazos y obligaciones para un modelo y perfil específicos
-    list:
-      closes_on_col: Cierre el
-      labels:
-        tax_deadlines: Plazos Tributarios
-      modelo_col: Modelo
-      opens_on_col: Apertura el
-      period_col: Periodo
-      status_col: Estado
-      table_title: Calendario de Plazos Tributarios
-      year_help: Ejercicio fiscal a consultar
-    list_help: Listar los plazos tributarios para un ejercicio fiscal
-    next:
-      labels:
-        closes: Cierra
-        no_upcoming: No hay plazos próximos
-      year_help: Ejercicio fiscal a consultar
-    next_help: Mostrar el próximo plazo tributario relevante
-  filing:
-    amendment:
-      delta_table_title: Diferencias de la declaración complementaria
-      title: Declaración Complementaria / Rectificativa
-    app_help: Gestión y presentación de declaraciones tributarias
-    build:
-      modelo_help: Modelo tributario a construir (p. ej., 303, 111, 130)
-      period_help: Periodo fiscal (p. ej., 1T, 2T, 01, 12)
-    complementaria:
-      app_help: Gestión de declaraciones complementarias y rectificativas
-      build:
-        delta_json_help: Archivo JSON con las diferencias (delta) para la declaración
-          complementaria
-    draft:
-      approved_by_you: Aprobado por usted
-      next_steps_label: Próximos pasos
-      title: Borrador de la declaración
-      values_table_title: Valores de las casillas de la declaración
-    errors:
-      amendment_success: Declaración complementaria procesada correctamente
-      casilla_key_not_string: La clave de la casilla debe ser una cadena de texto
-        (string)
-      failed_to_load_draft: Fallo al cargar el borrador de la declaración
-      inputs_not_object: Los datos de entrada deben ser un objeto (JSON)
-      invalid_json: Archivo JSON no válido
-      invalid_status: Estado de la declaración no válido
-      missing_import_source: Falta la fuente de importación
-      missing_original_submission_id: Falta el ID de la presentación original
-      missing_updated_inputs: Faltan los archivos de entrada actualizados
-      modelo_mismatch: El modelo tributario no coincide
-      multiple_import_sources: Se encontraron múltiples fuentes de importación
-      period_mismatch: El periodo fiscal no coincide
-      reasons_not_object: Los motivos deben ser un objeto (JSON)
-      submission_not_found: Presentación no encontrada
-      submission_validation_failed: Fallo en la validación de la presentación
-      unsupported_value_type: Tipo de valor no soportado
-    field:
-      approved_at: Aprobado el
-      approved_by: Aprobado por
-      casilla: Casilla
-      code: Código
-      created_at: Creado el
-      draft_id: ID del borrador
-      kind: Tipo / Clase
-      message: Mensaje
-      modelo: Modelo
-      new: Nuevo
-      old: Anterior
-      original_csv: CSV Original
-      path: Ruta
-      period: Periodo
-      profile_tax_id: NIF del Perfil
-      reason: Motivo
-      review_checksum: Suma de comprobación de la revisión
-      schema_version: Versión del esquema
-      severity: Gravedad
-      source: Origen / Fuente
-      stale_reason: Motivo de obsolescencia
-      status: Estado
-      submission_id: ID de la presentación
-      updated_at: Actualizado el
-      value: Valor
-    import:
-      actual: Actual (Encontrado)
-      año_help: Año fiscal para la operación de importación (AAAA)
-      borrador_unsupported: La importación desde borrador oficial no está soportada
-        para este modelo
-      casilla_label: Casilla
-      cause: Causa / Motivo
-      expected: Esperado
-      extraction_complete: Extracción completada correctamente
-      from_borrador_help: Importar datos desde un borrador oficial (PDF de la AEAT)
-      from_declaracion_help: Importar datos desde una declaración presentada (PDF
-        de la AEAT)
-      from_justificante_help: Importar datos desde un justificante de presentación
-        (PDF de la AEAT)
-      importing_declaration: Importando declaración...
-      justificante_success: Justificante importado correctamente
-      modelo_help: Modelo tributario de la declaración a importar
-      scaffold_created: Andamiaje (scaffold) de importación creado correctamente
-      verification_result: Resultado de la verificación
-      warning_label: ADVERTENCIA
-      warnings_found: Se encontraron advertencias durante el proceso
-    init:
-      findings_table_title: Resultados de la detección inicial
-    list:
-      modelo_help: Filtrar por modelo tributario
-      status_help: Filtrar por estado de la declaración
-      table_title: Listado de declaraciones
-    show:
-      findings_only_help: Mostrar solo los hallazgos (findings) de la declaración
-    validate:
-      draft_path_help: Ruta al archivo de borrador a validar
-      success: Validación completada correctamente. La declaración es válida.
-  inventory:
-    app_help: Gestión de inventario de activos y existencias
-    create:
-      actividad_help: Código de la actividad económica relacionada
-      help: Registrar un nuevo elemento en el inventario
-      opening_quantity_help: Cantidad inicial (apertura) en inventario
-      opening_stock_help: Valor de las existencias iniciales
-      opening_unit_cost_help: Coste unitario inicial
-      sku_help: Código SKU del elemento
-      valuation_method_help: Método de valoración (p. ej., PMP, FIFO, LIFO)
-      year_help: Año fiscal relacionado
-    errors:
-      invalid_valuation: Valoración de inventario no válida
-      ledger_not_found: Libro de inventario no encontrado
-      missing_opening_fields: Faltan campos obligatorios para las existencias iniciales
-      valuation_failed: Fallo en el proceso de valoración del inventario
-    labels:
-      ledger_created: Libro de inventario creado correctamente
-      ledger_empty: El libro de inventario está vacío
-      movement_added: Movimiento de inventario añadido correctamente
-    list:
-      help: Listar elementos del inventario
-      opening_label: Apertura
-    movement:
-      actividad_help: Código de la actividad económica relacionada con el movimiento
-      add_help: Añadir un nuevo movimiento de inventario (compra, venta, etc.)
-      date_help: Fecha del movimiento (AAAA-MM-DD)
-      kind_help: Tipo de movimiento (entrada o salida)
-      movement_id_help: Identificador del movimiento de inventario
-      quantity_help: Cantidad involucrada en el movimiento
-      sku_help: Código SKU del elemento del movimiento
-      taxable_base_help: Base imponible del movimiento
-      unit_cost_help: Coste unitario del movimiento
-      vat_rate_help: Tipo de IVA aplicado
-      year_help: Año fiscal del movimiento
-    movement_help: Gestión de movimientos de inventario
-    valuation:
-      actividad_help: Código de la actividad económica relacionada con la valoración
-      closing_label: Cierre
-      cogs_label: Coste de Ventas
-      preview_help: Previsualizar el informe de valoración antes de generarlo
-      preview_line: 'Previsualización: {sku} - {method}'
-      year_help: Año fiscal para el informe de valoración
-    valuation_help: Gestión de valoración de existencias (PMP, FIFO, LIFO)
+    workflow_help: Mostrar ayuda del flujo de configuración
   ledger:
     app_help: Gestión de libros contables y registros de IVA
+    create:
+      actor_help: Nombre del operador registrado en el evento del bucket
+      amount_help: Importe firmado del movimiento; las salidas son negativas
+      attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para varios adjuntos
+      business_pct_help: Proporción de uso profesional para clasificación MIXED, de 0 a 1
+      category_help: Id de categoría de gasto o ingreso
+      classification_help: Estado de clasificación profesional del movimiento
+      counterparty_help: Nombre de la contraparte mostrado en el libro
+      currency_help: Código de moneda ISO 4217
+      date_help: Fecha contable (AAAA-MM-DD)
+      description_help: Descripción del movimiento del libro
+      direction_help: Dirección del movimiento
+      help: Crear un movimiento manual del libro en el bucket del perfil activo
+      idempotency_key_help: Clave estable para hacer idempotente la entrada manual repetida
+      irpf_category_help: Categoría de IRPF para cálculos de modelos
+      iva_amount_help: Importe de IVA
+      iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
+      notes_help: Notas del operador guardadas con el movimiento del libro
+      prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
+      purchase_invoice_evidence_help: Id de justificante de factura de compra que soporta el movimiento
+      taxable_base_help: Importe de base imponible
+      usage_ratio_help: Id de proporción de uso para uso profesional proporcional
+      value_date_help: Fecha valor (AAAA-MM-DD)
+    allocate:
+      actor_help: Nombre del operador registrado en el evento del bucket
+      business_pct_help: Proporción de uso profesional de 0 a 1
+      category_help: Id de categoría de gasto o ingreso
+      help: Registrar proporcionalidad profesional/personal para un movimiento del libro
+      id_help: Id del movimiento del libro a asignar
+      prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
+      usage_ratio_help: Id de proporción de uso para uso profesional proporcional
+    archive:
+      actor_help: Nombre del operador registrado en el evento del bucket
+      help: Archivar un movimiento del libro en el bucket del perfil activo
+      id_help: Id del movimiento del libro a archivar
+      reason_help: Motivo registrado en el historial de ciclo de vida
+    attach:
+      actor_help: Nombre del operador registrado en el evento del bucket
+      attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para varios adjuntos
+      help: Adjuntar objetos de evidencia segura a un movimiento del libro
+      id_help: Id del movimiento del libro al que adjuntar evidencia
+      purchase_invoice_evidence_help: Id de justificante de factura de compra que soporta el movimiento
+    classify:
+      actor_help: Nombre del operador registrado en el evento del bucket
+      category_help: Id de categoría de gasto o ingreso
+      classification_help: Estado de clasificación profesional del movimiento
+      help: Clasificar un movimiento del libro en el bucket del perfil activo
+      id_help: Id del movimiento del libro a clasificar
+      irpf_category_help: Categoría de IRPF para cálculos de modelos
+      iva_amount_help: Importe de IVA
+      iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
+      taxable_base_help: Importe de base imponible
     edit:
-      help: Editar manualmente una entrada del libro contable
-      id_help: Identificador de la entrada del libro a editar
-      reason_help: Motivo de la edición o corrección de la entrada
-      set_help: Establecer valores de campos del libro (campo=valor)
-      skip_help: Marcar la fila como excluida o volver a incluirla en la revisión
-      split_help: Asignar la fila entre porcentajes de uso profesional y personal
+      actor_help: Nombre del operador registrado en el evento del bucket
+      amount_help: Importe firmado del movimiento; las salidas son negativas
+      counterparty_help: Nombre de la contraparte mostrado en el libro
+      currency_help: Código de moneda ISO 4217
+      date_help: Fecha contable (AAAA-MM-DD)
+      description_help: Descripción del movimiento del libro
+      direction_help: Dirección del movimiento
+      help: Corregir datos editables de un movimiento del libro en el bucket del perfil activo
+      id_help: Id del movimiento del libro a editar
+      irpf_category_help: Categoría de IRPF para cálculos de modelos
+      iva_amount_help: Importe de IVA
+      iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
+      notes_help: Notas del operador guardadas con el movimiento del libro
+      taxable_base_help: Importe de base imponible
+      value_date_help: Fecha valor (AAAA-MM-DD)
+    export:
+      actor_help: Nombre del operador registrado en el evento del bucket
+      format_help: Formato de serialización de exportación
+      help: Exportar movimientos canónicos del libro desde el bucket del perfil activo
+      include_inactive_help: Incluir movimientos archivados y apartados
+      output_help: Ruta donde escribir el archivo exportado del libro
+    list:
+      header: MOVIMIENTOS DEL LIBRO CONTABLE
+      help: Listar movimientos del libro en el bucket del perfil activo
     errors:
       auto_detect_failed: Fallo en la detección automática del formato del libro
-      edit_requires_one: Se requiere al menos una modificación de campo para editar
+      confirm_required: Pasa --yes para confirmar esta operación destructiva del libro, o usa --dry-run primero
       filter_parse_error: Fallo al analizar el filtro del libro
-      invalid_skip: Campo de omisión no válido
+      invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
       invalid_source: 'El archivo del libro no se puede importar: {reason}'
       invalid_source_unknown: origen no válido
-      invalid_split_format: Formato de división no válido
-      invalid_split_value: Valor de división no válido
-      match_both_required: Se requiere tanto la entrada del libro como la transacción
-        para realizar el emparejamiento
       n26_auto_detect_failed: Fallo en la detección automática del formato de N26
-      row_not_found: Fila del libro no encontrada
-      set_parse_error: Fallo al analizar la asignación del campo (campo=valor)
       source_not_found: 'No se ha encontrado el archivo de origen: {source}'
       unknown_provider: Proveedor de libro contable desconocido
     import:
@@ -453,13 +399,30 @@ cli:
       description: Descripción
       dialect: Formato detectado
       dry_run: MODO DE PRUEBA (DRY RUN)
-      fields: Campos
       id: ID
       imported: Entradas importadas
+      active: Activas
+      archived: Archivadas
+      bucket: Bucket
+      checked: Movimientos comprobados
+      created_event_id: Evento bucket de creación
+      lifecycle_state: Estado de ciclo de vida
       'no': 'No'
+      export_id: ID de exportación
+      output: Salida
+      pending: Pendientes de revisión
+      period: Periodo
+      readiness_issues: Incidencias de preparación
+      ready: Preparado
+      removed: Eliminado
+      reset: Reiniciado
+      review_status: Estado de revisión
+      reviewed: Revisadas
       rows: Filas
+      sha256: SHA-256
       skipped: Omitidos
       source: Origen
+      stashed: Apartadas
       valid: Válido
       warnings: Avisos
       'yes': Sí
@@ -470,6 +433,36 @@ cli:
       id_help: Identificador de la entrada específica a revisar
       no_rows: No hay entradas del libro pendientes de revisión
       verbose_help: Mostrar información detallada durante la revisión
+    read:
+      help: Leer un movimiento del libro desde el bucket del perfil activo
+      transaction_id_help: Id del movimiento del libro a leer
+    remove:
+      actor_help: Nombre del operador registrado en el evento del bucket
+      dry_run_help: Informar los efectos sin eliminar el movimiento del libro
+      help: Eliminar un movimiento del libro del bucket del perfil activo
+      id_help: Id del movimiento del libro a eliminar
+      reason_help: Motivo registrado en el historial de eliminación
+      yes_help: Confirmar la eliminación del movimiento del libro
+    reset:
+      actor_help: Nombre del operador registrado en el evento del bucket
+      dry_run_help: Informar los efectos sin vaciar el catálogo del libro
+      help: Reiniciar el catálogo del libro del bucket del perfil activo
+      reason_help: Motivo registrado en el historial de reinicio
+      yes_help: Confirmar el vaciado del catálogo activo del libro
+    stash:
+      actor_help: Nombre del operador registrado en el evento del bucket
+      help: Apartar un movimiento del libro en el bucket del perfil activo
+      id_help: Id del movimiento del libro a apartar
+      reason_help: Motivo registrado en el historial de ciclo de vida
+    status:
+      help: Resumir el estado del libro y la preparación de cálculo del bucket del perfil activo
+      period_help: Periodo fiscal para preflight (AAAA-MM o periodo de modelo)
+    track:
+      help: Mostrar el linaje de eventos de un movimiento del libro
+      transaction_id_help: Id del movimiento del libro a inspeccionar
+  locales:
+    app_help: Auditar y generar catálogos de traducción
+    scaffold_check_help: Informar de diferencias sin escribir archivos de locale
   overview:
     allow_incomplete_help: Permitir el calendario con valores por defecto cuando faltan
       claves de regimen en el perfil. Sin esta opcion, el calendario se rechaza si
@@ -490,7 +483,7 @@ cli:
       drafts_present: '%{count} borrador(es) de declaraciones guardados existen en
         este almacenamiento local. Un espacio vacio recien creado normalmente tiene
         0, asi que este perfil/base de datos ya contiene estado local de borradores.'
-      integrity_next: Ejecuta `aeat config doctor` para ver el detalle. No pongas
+      integrity_next: Ejecuta `aeat config repair` para ver el detalle. No pongas
         filas en cuarentena salvo que quieras archivar deliberadamente datos locales
         antiguos ilegibles.
       invoices_empty: Aun no se han importado operaciones de negocio.
@@ -519,6 +512,9 @@ cli:
     verbose_help: Mostrar detalles y siguiente acción cuando existan
   registry:
     app_help: Gestión del registro de modelos fiscales
+    audit_oracles_environment_help: Entorno del catálogo de paridad en vivo a auditar
+      (production, test_environment o both)
+    audit_oracles_help: Mostrar discrepancias de oráculos de paridad en vivo al arrancar
     casilla_help: Id de casilla a comparar; repetir para sustituir las casillas calculadas
       por defecto
     citations:
@@ -656,7 +652,7 @@ cli:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
         --help`.'
-      quick_start_doctor: '  5. `aeat config doctor` - diagnosticar configuración,
+      quick_start_repair: '  5. `aeat config repair` - diagnosticar configuración,
         almacenamiento y salud local.'
       quick_start_heading: Inicio rápido
       quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider
@@ -682,6 +678,8 @@ cli:
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
     language_help: Idioma de salida para este comando (sustituye al perfil activo)
     quiet_help: Mostrar solo errores en stderr
+    unavailable_app_help: Los comandos de app no están disponibles porque falta una
+      dependencia opcional
     verbose_help: Mostrar logs internos informativos en stderr
     version_help: Mostrar la versión del paquete (añade --detail para el resumen completo
       del registro)
@@ -704,25 +702,6 @@ profile:
     description: profile.keys.description
     tax:
       id: Identificador fiscal (NIF/NIE/CIF)
-review:
-  adapters:
-    t_135562: traspaso interno
-    t_142007: negocio
-    t_145612: Resultado de la validación oficial
-    t_167733: vencida
-    t_189155: motivo
-    t_298389: pago pendiente
-    t_352338: validación fallida
-    t_352928: parcialmente pagada
-    t_551826: sin emparejar
-    t_607122: omitida por regla
-    t_619063: mixto
-    t_629803: gasto
-    t_754183: sin procesar
-    t_787894: aprobación caducada — requiere nueva revisión (estado=APPROVAL_STALE)
-    t_791512: procesada sin clasificar
-    t_870243: personal
-    t_968325: ingreso
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
@@ -825,11 +804,10 @@ wizard:
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
     unsupported_console: "No pude abrir el asistente guiado en esta ejecución.\nTodavía\
       \ no se ha guardado nada.\n\nPrueba otra vez el asistente desde una sesión de\
-      \ terminal interactiva:\n  aeat config init\n\nO empieza con los dos datos obligatorios:\n\
-      \  aeat config init --quiet --tax-id 12345678Z --activity \"desarrollo de software\"\
-      \n\nLa actividad puede ser una descripción normal de tu trabajo o el epígrafe\
-      \ IAE si lo conoces.\nEjecuta `aeat config init --help` para ver todos los campos\
-      \ de configuración."
+      \ terminal interactiva:\n  aeat config init\n\nSi el estado del perfil puede\
+      \ estar obsoleto o corrupto, revísalo primero:\n  aeat config repair\n\nPara\
+      \ descartar solo el estado local del perfil y empezar de nuevo:\n  aeat config\
+      \ reset --scope profile --yes"
   other:
     description: wizard.other.description
     section:

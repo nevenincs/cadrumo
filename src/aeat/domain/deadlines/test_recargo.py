@@ -77,9 +77,9 @@ def test_resolve_recargo_band_rejects_zero_days_late() -> None:
 
 
 def test_build_recovery_carries_runnable_next_command() -> None:
-    """Recovery's next_command must be a copy-paste calculate invocation."""
+    """Recovery's next_command must point at the accepted modelo work surface."""
     recovery = build_recovery_for_overdue(days_late=18, modelo="130", period="2026Q1")
     assert recovery.still_filable is True
     assert recovery.recargo_band.id == "within_30_days"
     assert "ley-58-2003" in recovery.legal_ref
-    assert recovery.next_command == "aeat app declaration calculate --modelo 130 --period 2026Q1"
+    assert recovery.next_command == "aeat app modelo work --help"

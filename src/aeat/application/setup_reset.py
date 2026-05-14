@@ -1,4 +1,4 @@
-"""Scoped setup reset backend retained for config reset internals.
+"""Scoped config reset backend.
 
 Removes one or more pieces of operator-local state behind an explicit
 ``--yes`` confirmation gate. Four scopes are supported:
@@ -79,7 +79,7 @@ def reset_setup(scope: SetupResetScope, *, confirmed: bool) -> SetupResetReport:
     """
 
     if not confirmed:
-        raise SetupResetUnconfirmedError("setup reset refused: confirmed must be True (run with --yes from the CLI)")
+        raise SetupResetUnconfirmedError("config reset refused: confirmed must be True (run with --yes from the CLI)")
 
     from .diagnostics import quarantine_unreadable_secure_objects
     from .workflow._models import AuthState
@@ -97,11 +97,11 @@ def reset_setup(scope: SetupResetScope, *, confirmed: bool) -> SetupResetReport:
         from .profile._repository import profile_bucket_repository
 
         profile_repository = profile_bucket_repository()
-        removed_profile_names = tuple(
-            sorted({*current.profiles.keys(), *(item.name for item in profile_repository.list_profiles())})
-        )
-        for profile_name in removed_profile_names:
-            profile_repository.delete(profile_name)
+        profile_bucket_ids = {pointer.bucket_id for pointer in current.profiles.values()}
+        existing_profile_names = {item.name for item in profile_repository.list_profiles()}
+        removed_profile_names = tuple(sorted({*current.profiles.keys(), *existing_profile_names}))
+        for bucket_id in sorted({*profile_bucket_ids, *existing_profile_names}):
+            profile_repository.delete(bucket_id)
         new_state = new_state.model_copy(
             update={
                 "profiles": {},
@@ -112,12 +112,12 @@ def reset_setup(scope: SetupResetScope, *, confirmed: bool) -> SetupResetReport:
                 "updated_at": utc_now(),
             }
         )
-        _log.info("setup reset PROFILE scope cleared %d profile(s)", len(removed_profile_names))
+        _log.info("config reset PROFILE scope cleared %d profile(s)", len(removed_profile_names))
 
     if scope in {SetupResetScope.AUTH, SetupResetScope.ALL}:
         new_state = new_state.model_copy(update={"auth": AuthState(), "updated_at": utc_now()})
         removed_auth_session = True
-        _log.info("setup reset AUTH scope cleared session state")
+        _log.info("config reset AUTH scope cleared session state")
 
     repository.update(lambda _state: new_state)
 
@@ -125,7 +125,7 @@ def reset_setup(scope: SetupResetScope, *, confirmed: bool) -> SetupResetReport:
         report = quarantine_unreadable_secure_objects()
         quarantined_namespace_count = sum(1 for ns in report.namespaces if ns.unreadable > 0)
         _log.info(
-            "setup reset DATA scope quarantined %d unreadable rows across %d namespace(s)",
+            "config reset DATA scope quarantined %d unreadable rows across %d namespace(s)",
             report.unreadable_total,
             quarantined_namespace_count,
         )

@@ -202,17 +202,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.invoices._errors.InvoiceLinkInconsistencyError",
-        ErrorCode(
-            code="ERROR_FINANCIAL_INVOICES_INVOICE_LINK_INCONSISTENCY",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_invoices_invoice_link_inconsistency",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.domain.invoices._errors.InvoiceNotFoundError",
         ErrorCode(
             code="ERROR_FINANCIAL_INVOICES_INVOICE_NOT_FOUND",
@@ -235,17 +224,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.transactions._errors.TransactionCatalogueError",
-        ErrorCode(
-            code="ERROR_FINANCIAL_TRANSACTIONS_TRANSACTION_CATALOGUE",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_transactions_transaction_catalogue",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.domain.transactions._errors.TransactionError",
         ErrorCode(
             code="ERROR_FINANCIAL_TRANSACTIONS_TRANSACTION",
@@ -257,35 +235,24 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.transactions._errors.TransactionNotFoundError",
+        "aeat.domain.transactions._errors.LedgerStorageError",
         ErrorCode(
-            code="ERROR_FINANCIAL_TRANSACTIONS_TRANSACTION_NOT_FOUND",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_transactions_transaction_not_found",
-            default_suggestion="aeat app ledger review",
+            code="FAIL_FINANCIAL_LEDGER_STORAGE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_financial_ledger_storage",
+            default_suggestion="aeat config repair",
             retryable=False,
             runbook_id=None,
         ),
     ),
     (
-        "aeat.domain.transactions._errors.TransactionPersistenceError",
+        "aeat.domain.transactions._errors.LedgerNoActiveBucketError",
         ErrorCode(
-            code="FAIL_FINANCIAL_TRANSACTIONS_TRANSACTION_PERSISTENCE",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_financial_transactions_transaction_persistence",
-            default_suggestion=None,
+            code="REFUSED_FINANCIAL_LEDGER_NO_ACTIVE_BUCKET",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_financial_ledger_no_active_bucket",
+            default_suggestion="aeat config init",
             retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.transactions._errors.LLMClassifierError",
-        ErrorCode(
-            code="FAIL_TRANSACTION_LLM_CLASSIFIER",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_transaction_llm_classifier",
-            default_suggestion=None,
-            retryable=True,
             runbook_id=None,
         ),
     ),
@@ -587,28 +554,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.profile.errors.LIFOForbiddenError",
-        ErrorCode(
-            code="REFUSED_PROFILE_INVENTORY_LIFO",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_profile_inventory_lifo",
-            default_suggestion="aeat app ledger review",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "aeat.domain.profile.errors.BasisCapExceededError",
-        ErrorCode(
-            code="INTEGRITY_PROFILE_AMORTIZATION_BASIS_CAP",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_profile_amortization_basis_cap",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.domain.profile._errors.TaxResidenceProfileError",
         ErrorCode(
             code="ERROR_PROFILE_TAX_RESIDENCE",
@@ -886,6 +831,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._actions.ModeloAggregationBindingError",
+        ErrorCode(
+            code="ERROR_MODELO_AGGREGATION_BINDING",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_modelo_aggregation_binding",
+            default_suggestion="aeat app ledger preflight --mode modelo",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._actions.FilingRecordNotFoundError",
         ErrorCode(
             code="ERROR_MODELO_FILING_RECORD_NOT_FOUND",
@@ -914,6 +870,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_amendment_target_state",
             default_suggestion="aeat app modelo filing-record list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.AmendmentOverrideCasillaError",
+        ErrorCode(
+            code="REFUSED_MODELO_AMENDMENT_OVERRIDE_CASILLA",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_amendment_override_casilla",
+            default_suggestion="aeat app modelo casillas MODELO --year YEAR --period PERIOD",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.AmendmentVerificationRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_AMENDMENT_VERIFICATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_amendment_verification",
+            default_suggestion="aeat app modelo casillas MODELO --year YEAR --period PERIOD --required",
             retryable=False,
             runbook_id=None,
         ),
@@ -1271,17 +1249,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.domain.user_profile._errors.UserProfileValidationError",
-        ErrorCode(
-            code="ERROR_USER_PROFILE_VALIDATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_user_profile_validation",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.domain.categories._errors.CategoryError",
         ErrorCode(
             code="ERROR_CATEGORIES",
@@ -1529,6 +1496,72 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_USER_PROFILE_NOT_FOUND",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_user_profile_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileNotFoundError",
+        ErrorCode(
+            code="REFUSED_PROFILE_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileAlreadyExistsError",
+        ErrorCode(
+            code="REFUSED_PROFILE_ALREADY_EXISTS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_already_exists",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileSchemaValidationError",
+        ErrorCode(
+            code="REFUSED_PROFILE_SCHEMA_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_schema_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfilePreflightMissingError",
+        ErrorCode(
+            code="REFUSED_PROFILE_PREFLIGHT_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_preflight_missing",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileSnapshotHashMismatchError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_SNAPSHOT_HASH_MISMATCH",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_profile_snapshot_hash_mismatch",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileSnapshotNotFoundError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_profile_snapshot_not_found",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

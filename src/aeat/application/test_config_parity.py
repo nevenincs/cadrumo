@@ -71,7 +71,7 @@ def test_config_set_then_config_get_round_trips_iva_regime(
     from aeat.application.workflow._persistence import workflow_state_repository
 
     workflow_state = workflow_state_repository().load()
-    assert workflow_state.profiles["default"] == {"bucket_id": "default"}
+    assert workflow_state.profiles["default"].bucket_id == "default"
     bucket = profile_bucket_repository().load("default")
     assert bucket is not None
     assert bucket.values["iva.regime"] == "GENERAL"

@@ -13,6 +13,8 @@ from . import (
     ErrorCategory,
     ErrorCode,
     register,
+    render_error_json,
+    render_error_text,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
@@ -96,9 +98,15 @@ def test_messages_do_not_contain_known_broken_fragments() -> None:
 
 
 def test_core_error_prefixes_are_grep_stable() -> None:
-    for error_factory, expected_prefix in (
-        (LiveSubmitForbiddenError, "LOCKED"),
-        (RunContextMissingError, "INTERNAL"),
+    """Stable upper-case category identifiers survive in JSON; rendered text uses sentence case."""
+
+    for error_factory, expected_category, expected_text_prefix in (
+        (LiveSubmitForbiddenError, "LOCKED", "Locked."),
+        (RunContextMissingError, "INTERNAL", "Internal."),
     ):
-        first_line = error_factory().code.category.value
-        assert first_line == expected_prefix
+        error = error_factory()
+        assert error.code.category.value == expected_category
+        rendered_json = render_error_json(error)
+        assert f'"category":"{expected_category}"' in rendered_json
+        rendered_text = render_error_text(error)
+        assert rendered_text.startswith(f"{expected_text_prefix} ")
