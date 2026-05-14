@@ -177,6 +177,7 @@ def resolve_output_language() -> str:
         _logging.getLogger(__name__).debug(
             "resolve_output_language: i18n resolution failed; falling back to 'es' (%s)",
             exc,
+            exc_info=True,
         )
         return "es"
 

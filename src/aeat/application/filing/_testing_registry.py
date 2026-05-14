@@ -32,7 +32,7 @@ def build_registry_filing_draft(
     """Build a filing draft through the validated registry runtime path."""
 
     runtime_period = _runtime_period(period, filing_year=filing_year)
-    schema_provider = build_runtime_schema_provider()
+    schema_provider = build_runtime_schema_provider(modelos=(modelo,), filing_year=filing_year, period=runtime_period)
     draft = build_draft(
         modelo=modelo,
         period=runtime_period,

@@ -10,6 +10,14 @@ from ._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ._temporal import select_revision
 from ._validate import RegistryValidator
 
+_SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None]
+_SnapshotCacheValue = tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]
+_ValidationCacheKey = tuple[int, int, str]
+_ValidationCacheValue = tuple[ModeloDefinition, RegistryCatalogues]
+
+_SNAPSHOT_CACHE: dict[_SnapshotCacheKey, _SnapshotCacheValue] = {}
+_VALIDATION_CACHE: dict[_ValidationCacheKey, _ValidationCacheValue] = {}
+
 
 def build_snapshot(
     modelo: ModeloDefinition,
@@ -23,8 +31,14 @@ def build_snapshot(
 ) -> RegistrySnapshot:
     """Validate ``modelo`` and return the selected immutable snapshot."""
 
-    RegistryValidator(catalogues, source_root=source_root).validate_modelo(modelo)
-    return _build_validated_snapshot(
+    source_root_key = str(source_root.expanduser().resolve())
+    key = (id(modelo), id(catalogues), source_root_key, filing_year, period, on, revision_id)
+    cached = _SNAPSHOT_CACHE.get(key)
+    if cached is not None and cached[0] is modelo and cached[1] is catalogues:
+        return cached[2]
+
+    _validate_modelo_once(modelo, catalogues, source_root_key)
+    snapshot = _build_validated_snapshot(
         modelo,
         catalogues,
         filing_year=filing_year,
@@ -32,6 +46,19 @@ def build_snapshot(
         on=on,
         revision_id=revision_id,
     )
+    _SNAPSHOT_CACHE[key] = (modelo, catalogues, snapshot)
+    return snapshot
+
+
+def _validate_modelo_once(modelo: ModeloDefinition, catalogues: RegistryCatalogues, source_root_key: str) -> None:
+    """Validate one immutable modelo/catalogue pair once per process."""
+
+    key = (id(modelo), id(catalogues), source_root_key)
+    cached = _VALIDATION_CACHE.get(key)
+    if cached is not None and cached[0] is modelo and cached[1] is catalogues:
+        return
+    RegistryValidator(catalogues, source_root=Path(source_root_key)).validate_modelo(modelo)
+    _VALIDATION_CACHE[key] = (modelo, catalogues)
 
 
 def _build_validated_snapshot(

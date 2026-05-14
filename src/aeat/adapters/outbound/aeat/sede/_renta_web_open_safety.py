@@ -144,6 +144,7 @@ async def assert_click_target_safe(
             stage,
             description,
             exc,
+            exc_info=True,
         )
         text = ""
     normalised_text = _normalise(text)
@@ -174,6 +175,7 @@ async def assert_click_target_safe(
                 stage,
                 description,
                 exc,
+                exc_info=True,
             )
             attr_value = None
         if attr_value:
@@ -206,6 +208,7 @@ async def install_page_safety_net(page: Any) -> None:
             kind = dialog.type
             message = dialog.message
         except Exception:
+            logger.debug("renta web open safety: dialog metadata lookup failed", exc_info=True)
             kind = "(unknown)"
             message = "(unknown)"
         logger.warning(

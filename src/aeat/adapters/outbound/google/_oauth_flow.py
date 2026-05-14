@@ -22,8 +22,9 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 
 from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
-from ....application.profile._repository import profile_bucket_repository
+from ....application.user_profile._orchestration import build_lifecycle_service, fact_value
 from ....application.workflow._persistence import workflow_state_repository
+from ....domain.user_profile import ProfileNotFoundError
 from ....core.config import SecretStoreBackend, load_settings
 from ._errors import (
     GoogleAuthBrowserOpenError,
@@ -73,10 +74,12 @@ def resolve_active_tax_id(profile: str) -> str:
     pointer = state.profiles.get(profile)
     if pointer is None:
         return ""
-    record = profile_bucket_repository().load(pointer.bucket_id)
-    if record is None:
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+    try:
+        record = service.read(profile)
+    except ProfileNotFoundError:
         return ""
-    return str(record.values.get("tax.id", ""))
+    return fact_value(record, "identity.tax_id") or ""
 
 
 def credentials_to_records(

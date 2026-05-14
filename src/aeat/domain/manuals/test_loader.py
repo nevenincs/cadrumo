@@ -138,7 +138,7 @@ class TestLoader:
         )
         assert path == tmp_path / "iva" / "2025"
 
-    def test_resolve_part_root_parte1(self, tmp_path: Path) -> None:
+    def test_resolve_part_root_part1(self, tmp_path: Path) -> None:
         """Split parts nest a subdirectory under the year."""
         settings = _settings_with_root(tmp_path)
         path = resolve_part_root(

@@ -231,7 +231,7 @@ async def _navigate_to_casilla(page: Any, casilla_number: str, *, timeout_ms: in
     try:
         await mostrar.wait_for(state="visible", timeout=10_000)
     except Exception as exc:
-        logger.debug("mostrar opciones already expanded or unavailable: %s", exc)
+        logger.debug("mostrar opciones already expanded or unavailable: %s", exc, exc_info=True)
     else:
         await _click_expected(
             mostrar,
@@ -300,7 +300,7 @@ async def _locate_casilla_input(page: Any, casilla_number: str, *, timeout_ms: i
         await focused_input.wait_for(state="visible", timeout=2_000)
         return focused_input
     except Exception as exc:
-        logger.debug("focused-input fast path unavailable for %s: %s", casilla_number, exc)
+        logger.debug("focused-input fast path unavailable for %s: %s", casilla_number, exc, exc_info=True)
     # Fallback: locate an input adjacent to a label containing the casilla number.
     return page.locator(f"xpath=//*[normalize-space(text())='{casilla_number}']/following::input[1]").first
 

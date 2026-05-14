@@ -41,15 +41,9 @@ def test_verify_handshake_live_against_aeat() -> None:
     if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
         pytest.skip("AEAT certificate env vars are not fully configured")
 
-    # The password env var name is the canonical one used by Settings.
-    os.environ.setdefault(
-        "AEAT_CERTIFICATE_PASSWORD_SECRET",
-        settings.aeat_certificate_password_secret.get_secret_value(),
-    )
-
     bundle = CertificateBundle(
         path=settings.aeat_certificate_path,
-        password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",
+        password=settings.aeat_certificate_password_secret,
         friendly_name=settings.aeat_certificate_friendly_name,
         backend=CertificateBackend(settings.aeat_certificate_backend.name),
     )

@@ -23,7 +23,13 @@ from ...domain.renta import (
     evaluate_renta_deductibility,
     normalize_spending_category,
 )
-from ...domain.transactions import BusinessClassification, TransactionCatalogue, TransactionCatalogueRepository
+from ...domain.transactions import (
+    BusinessClassification,
+    Transaction,
+    TransactionCatalogue,
+    TransactionCatalogueRepository,
+    TransactionLifecycleState,
+)
 from ...domain.transactions import TransactionDirection as LedgerTransactionDirection
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
@@ -45,10 +51,13 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     CATEGORY_OUTSIDE_FIRST_SLICE = "category_outside_first_slice"
     MISSING_CATEGORY_PROFILE = "missing_category_profile"
     OUTSIDE_PERIOD = "outside_period"
-    MISSING_LINKED_INVOICE = "missing_linked_invoice"
-    UNSUPPORTED_INVOICE_KIND = "unsupported_invoice_kind"
-    INVOICE_LINK_MISMATCH = "invoice_link_mismatch"
-    PARTIAL_OR_MULTI_TRANSACTION_INVOICE = "partial_or_multi_transaction_invoice"
+    MISSING_PURCHASE_INVOICE_EVIDENCE = "missing_purchase_invoice_evidence"
+    UNSUPPORTED_PURCHASE_INVOICE_EVIDENCE_KIND = "unsupported_purchase_invoice_evidence_kind"
+    PURCHASE_INVOICE_EVIDENCE_BUCKET_MISMATCH = "purchase_invoice_evidence_bucket_mismatch"
+    PURCHASE_INVOICE_EVIDENCE_LINK_MISMATCH = "purchase_invoice_evidence_link_mismatch"
+    PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE = (
+        "partial_or_multi_transaction_purchase_invoice_evidence"
+    )
     AMOUNT_MISMATCH = "amount_mismatch"
     INVALID_LEDGER_FACT = "invalid_ledger_fact"
     INELIGIBLE_DEDUCTIBILITY = "ineligible_deductibility"
@@ -60,13 +69,13 @@ class RentaLedgerAggregationIssue(BaseModel):
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1, max_length=128)
-    invoice_id: str | None = Field(default=None, min_length=1, max_length=128)
+    purchase_invoice_evidence_id: str | None = Field(default=None, min_length=1, max_length=128)
     category_id: str | None = Field(default=None, min_length=1, max_length=128)
     reason: RentaLedgerAggregationIssueReason
     detail: str = Field(min_length=1, max_length=512)
 
 
-class _LinkedInvoicePayload(BaseModel):
+class _PurchaseInvoiceEvidencePayload(BaseModel):
     """Typed enrichment fields copied from a reconciled linked invoice."""
 
     model_config = _STRICT_FROZEN
@@ -145,11 +154,18 @@ def aggregate_renta_ledger_expenses_from_repositories(
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses."""
 
-    transactions = (transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)).load()
+    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    if repository.bucket_id != bucket_id:
+        raise AggregationValidationError(
+            t("aggregation.renta_ledger.errors.bucket_mismatch"),
+            context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
+        )
+    transactions = repository.load()
     invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
     return aggregate_renta_ledger_expenses(
         transactions,
         invoices,
+        bucket_id=bucket_id,
         period=period,
         profile_year=profile_year,
         usage_ratios=usage_ratios,
@@ -161,6 +177,7 @@ def aggregate_renta_ledger_expenses(
     transactions: TransactionCatalogue,
     invoices: InvoiceCatalogue,
     *,
+    bucket_id: str,
     period: Period | str,
     profile_year: int | None = None,
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
@@ -179,12 +196,14 @@ def aggregate_renta_ledger_expenses(
     issues: list[RentaLedgerAggregationIssue] = []
 
     for transaction in transactions.values():
+        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
         issue_common: dict[str, Any] = {
             "transaction_id": transaction.transaction_id,
-            "invoice_id": transaction.invoice_id,
+            "purchase_invoice_evidence_id": transaction.purchase_invoice_evidence_id,
             "category_id": transaction.category_id,
         }
-        direction = _renta_direction_for(transaction.direction, transaction.invoice_id)
+        direction = _renta_direction_for(transaction.direction, transaction.purchase_invoice_evidence_id)
         if direction is None:
             issues.append(
                 RentaLedgerAggregationIssue(
@@ -267,28 +286,29 @@ def aggregate_renta_ledger_expenses(
             )
             continue
 
-        invoice_payload = _linked_invoice_payload(
+        evidence_payload = _purchase_invoice_evidence_payload(
             invoices=invoices,
+            bucket_id=bucket_id,
             transaction_id=transaction.transaction_id,
-            invoice_id=transaction.invoice_id,
+            purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
             category_id=transaction.category_id,
             signed_transaction_amount=transaction.raw.amount,
         )
-        if isinstance(invoice_payload, RentaLedgerAggregationIssue):
-            issues.append(invoice_payload)
+        if isinstance(evidence_payload, RentaLedgerAggregationIssue):
+            issues.append(evidence_payload)
             continue
 
         try:
             fact = RentaDeductibleExpenseFact(
                 transaction_id=transaction.transaction_id,
-                invoice_id=transaction.invoice_id,
+                invoice_id=transaction.purchase_invoice_evidence_id,
                 catalogue_id=_LEDGER_CATALOGUE_ID,
                 operation_date=transaction.raw.value_date or transaction.raw.booked_date,
-                invoice_issue_date=invoice_payload.invoice_issue_date,
+                invoice_issue_date=evidence_payload.invoice_issue_date,
                 posting_date=transaction.raw.booked_date,
                 gross_amount=business_amount,
-                taxable_base=invoice_payload.taxable_base,
-                iva_amount=invoice_payload.iva_amount,
+                taxable_base=_taxable_base_for(transaction, evidence_payload),
+                iva_amount=_iva_amount_for(transaction, evidence_payload),
                 direction=direction,
                 category=category,
                 activity_key=activity_key,
@@ -360,11 +380,11 @@ def _resolve_annual_period(period: Period | str) -> Period:
 
 def _renta_direction_for(
     direction: LedgerTransactionDirection,
-    invoice_id: str | None,
+    purchase_invoice_evidence_id: str | None,
 ) -> RentaExpenseDirection | None:
     if direction is LedgerTransactionDirection.OUTGOING:
         return RentaExpenseDirection.OUTGOING_EXPENSE
-    if direction is LedgerTransactionDirection.INCOMING and invoice_id is not None:
+    if direction is LedgerTransactionDirection.INCOMING and purchase_invoice_evidence_id is not None:
         return RentaExpenseDirection.REFUND
     return None
 
@@ -383,41 +403,52 @@ def _business_amount(
     return None
 
 
-def _linked_invoice_payload(
+def _purchase_invoice_evidence_payload(
     *,
     invoices: InvoiceCatalogue,
+    bucket_id: str,
     transaction_id: str,
-    invoice_id: str | None,
+    purchase_invoice_evidence_id: str | None,
     category_id: str | None,
     signed_transaction_amount: Decimal,
-) -> _LinkedInvoicePayload | RentaLedgerAggregationIssue:
-    if invoice_id is None:
-        return _LinkedInvoicePayload()
-    issue_common = {"transaction_id": transaction_id, "invoice_id": invoice_id, "category_id": category_id}
-    invoice = invoices.get(invoice_id)
+) -> _PurchaseInvoiceEvidencePayload | RentaLedgerAggregationIssue:
+    if purchase_invoice_evidence_id is None:
+        return _PurchaseInvoiceEvidencePayload()
+    issue_common = {
+        "transaction_id": transaction_id,
+        "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
+        "category_id": category_id,
+    }
+    invoice = invoices.get(purchase_invoice_evidence_id)
     if invoice is None:
         return RentaLedgerAggregationIssue(
             **issue_common,
-            reason=RentaLedgerAggregationIssueReason.MISSING_LINKED_INVOICE,
-            detail="transaction references an invoice that is absent from the invoice catalogue",
+            reason=RentaLedgerAggregationIssueReason.MISSING_PURCHASE_INVOICE_EVIDENCE,
+            detail="transaction references purchase invoice evidence that is absent from the invoice catalogue",
+        )
+    if invoice.bucket_id != bucket_id:
+        return RentaLedgerAggregationIssue(
+            **issue_common,
+            reason=RentaLedgerAggregationIssueReason.PURCHASE_INVOICE_EVIDENCE_BUCKET_MISMATCH,
+            detail="transaction references purchase invoice evidence outside the active bucket",
         )
     if invoice.kind is not InvoiceKind.RECEIVED:
         return RentaLedgerAggregationIssue(
             **issue_common,
-            reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_INVOICE_KIND,
-            detail=f"expense transaction linked invoice kind {invoice.kind.value!r} is not RECEIVED",
+            reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_PURCHASE_INVOICE_EVIDENCE_KIND,
+            detail=f"purchase invoice evidence kind {invoice.kind.value!r} is not RECEIVED",
         )
     if transaction_id not in invoice.linked_transaction_ids:
         return RentaLedgerAggregationIssue(
             **issue_common,
-            reason=RentaLedgerAggregationIssueReason.INVOICE_LINK_MISMATCH,
-            detail="transaction and invoice links are not reciprocal",
+            reason=RentaLedgerAggregationIssueReason.PURCHASE_INVOICE_EVIDENCE_LINK_MISMATCH,
+            detail="transaction and purchase invoice evidence links are not reciprocal",
         )
     if len(invoice.linked_transaction_ids) != 1:
         return RentaLedgerAggregationIssue(
             **issue_common,
-            reason=RentaLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_INVOICE,
-            detail="first-slice aggregation only accepts one transaction per linked invoice",
+            reason=RentaLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE,
+            detail="first-slice aggregation only accepts one transaction per purchase invoice evidence record",
         )
     if abs(signed_transaction_amount) != invoice.grand_total:
         return RentaLedgerAggregationIssue(
@@ -425,11 +456,23 @@ def _linked_invoice_payload(
             reason=RentaLedgerAggregationIssueReason.AMOUNT_MISMATCH,
             detail="linked transaction amount does not match invoice grand total",
         )
-    return _LinkedInvoicePayload(
+    return _PurchaseInvoiceEvidencePayload(
         invoice_issue_date=invoice.issued_at,
         taxable_base=invoice.base_total,
         iva_amount=invoice.iva_total,
     )
+
+
+def _taxable_base_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
+    if evidence_payload.taxable_base is not None:
+        return evidence_payload.taxable_base
+    return transaction.taxable_base
+
+
+def _iva_amount_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
+    if evidence_payload.iva_amount is not None:
+        return evidence_payload.iva_amount
+    return transaction.iva_amount
 
 
 def _casilla_aggregation(

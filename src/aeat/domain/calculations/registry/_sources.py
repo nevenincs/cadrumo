@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Mapping
+from functools import lru_cache
 from pathlib import Path
 
 from ._errors import RegistryValidationError
@@ -19,16 +20,24 @@ def verify_source_file(root: Path, source: SourceReference) -> None:
         raise RegistryValidationError(f"source {source.id!r} escapes repository root")
     if not path.is_file():
         raise RegistryValidationError(f"source {source.id!r} missing corpus file {source.corpus_path!r}")
+    stat = path.stat()
+    length, actual_sha256 = _source_file_fingerprint(str(path), stat.st_size, stat.st_mtime_ns)
+    if length != source.bytes:
+        raise RegistryValidationError(f"source {source.id!r} byte count mismatch")
+    if actual_sha256 != source.sha256:
+        raise RegistryValidationError(f"source {source.id!r} sha256 mismatch")
+
+
+@lru_cache(maxsize=2048)
+def _source_file_fingerprint(path: str, byte_count: int, modified_ns: int) -> tuple[int, str]:
+    del byte_count, modified_ns
     digest = hashlib.sha256()
     length = 0
-    with path.open("rb") as handle:
+    with Path(path).open("rb") as handle:
         while chunk := handle.read(65_536):
             digest.update(chunk)
             length += len(chunk)
-    if length != source.bytes:
-        raise RegistryValidationError(f"source {source.id!r} byte count mismatch")
-    if digest.hexdigest() != source.sha256:
-        raise RegistryValidationError(f"source {source.id!r} sha256 mismatch")
+    return length, digest.hexdigest()
 
 
 def verify_source_catalogue(root: Path, sources: Mapping[str, SourceReference]) -> None:

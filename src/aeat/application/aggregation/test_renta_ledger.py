@@ -39,9 +39,11 @@ from ...domain.transactions import (
     TransactionCatalogue,
     TransactionCatalogueRepository,
     TransactionDirection,
+    TransactionLifecycleState,
 )
 from ...entrypoints.cli._common import _aggregate_renta_filing_inputs
 from . import (
+    AggregationValidationError,
     RentaLedgerAggregationIssueReason,
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
@@ -106,13 +108,17 @@ def _transaction(
     *,
     amount: Decimal = Decimal("-121.00"),
     category: SpendingCategory = SpendingCategory.ASESORIA_FISCAL,
-    invoice_id: str | None = None,
+    purchase_invoice_evidence_id: str | None = None,
     direction: TransactionDirection = TransactionDirection.OUTGOING,
     business_classification: BusinessClassification = BusinessClassification.BUSINESS,
     business_pct: Decimal | None = None,
     booked_date: date = date(2025, 4, 5),
     value_date: date | None = date(2025, 4, 5),
     currency: str = "EUR",
+    taxable_base: Decimal | None = None,
+    iva_rate: Decimal | None = None,
+    iva_amount: Decimal | None = None,
+    lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
 ) -> Transaction:
     return Transaction.model_validate(
         {
@@ -126,8 +132,12 @@ def _transaction(
             "direction": direction,
             "business_classification": business_classification,
             "business_pct": business_pct,
-            "invoice_id": invoice_id,
+            "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
             "category_id": category.value,
+            "taxable_base": taxable_base,
+            "iva_rate": iva_rate,
+            "iva_amount": iva_amount,
+            "lifecycle_state": lifecycle_state,
             "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         }
@@ -137,6 +147,7 @@ def _transaction(
 def _invoice(
     tx_id: str,
     *,
+    bucket_id: str = "test",
     kind: InvoiceKind = InvoiceKind.RECEIVED,
     issued_at: date = date(2025, 4, 1),
     grand_total: Decimal = Decimal("121.00"),
@@ -153,6 +164,7 @@ def _invoice(
     )
     return Invoice.model_validate(
         {
+            "bucket_id": bucket_id,
             "kind": kind,
             "invoice_number": f"INV-{tx_id[:8]}",
             "issued_at": issued_at,
@@ -175,7 +187,7 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
 ) -> None:
     initial = _transaction("row-linked")
     invoice = _invoice(initial.transaction_id)
-    linked = _transaction("row-linked", invoice_id=invoice.invoice_id)
+    linked = _transaction("row-linked", purchase_invoice_evidence_id=invoice.invoice_id)
     tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=SecureObjectRepository(engine=secure_engine))
     invoice_repo = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
@@ -229,6 +241,21 @@ def test_cli_renta_filing_aggregation_resolves_registry_bound_inputs(secure_engi
     assert inputs["0203"] == Decimal("0")
 
 
+def test_repository_backed_aggregation_rejects_transaction_repository_bucket_mismatch(
+    secure_engine: Engine,
+) -> None:
+    repo = TransactionCatalogueRepository(bucket_id="other", objects=SecureObjectRepository(engine=secure_engine))
+
+    with pytest.raises(AggregationValidationError, match="bucket"):
+        aggregate_renta_ledger_expenses_from_repositories(
+            bucket_id="test",
+            period="2025",
+            transaction_repository=repo,
+            invoice_repository=InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+            profile_year=2025,
+        )
+
+
 def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
     mixed = _transaction(
         "row-mixed",
@@ -236,12 +263,13 @@ def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
         category=SpendingCategory.GASTOS_BANCARIOS,
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.25"),
-        invoice_id=None,
+        purchase_invoice_evidence_id=None,
     )
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((mixed,)),
         InvoiceCatalogue(),
+        bucket_id="test",
         period="2025",
         profile_year=2025,
     )
@@ -252,14 +280,70 @@ def test_mixed_business_percentage_scales_transaction_only_expenses() -> None:
     assert result.observations[0].deductible_amount == Decimal("50.0000")
 
 
+def test_archived_and_stashed_transactions_do_not_feed_renta_expense_aggregation() -> None:
+    active = _transaction(
+        "row-active",
+        amount=Decimal("-100.00"),
+        category=SpendingCategory.GASTOS_BANCARIOS,
+    )
+    archived = _transaction(
+        "row-archived",
+        amount=Decimal("-500.00"),
+        category=SpendingCategory.GASTOS_BANCARIOS,
+        lifecycle_state=TransactionLifecycleState.ARCHIVED,
+    )
+    stashed = _transaction(
+        "row-stashed",
+        amount=Decimal("-700.00"),
+        category=SpendingCategory.GASTOS_BANCARIOS,
+        lifecycle_state=TransactionLifecycleState.STASHED,
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((active, archived, stashed)),
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period="2025",
+        profile_year=2025,
+    )
+
+    assert result.issues == ()
+    assert [observation.transaction_id for observation in result.observations] == [active.transaction_id]
+    assert result.casilla_values == {"0203": Decimal("100.00")}
+
+
+def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_catalogue() -> None:
+    manual = _transaction(
+        "manual-tax-fields",
+        amount=Decimal("-121.00"),
+        category=SpendingCategory.ASESORIA_FISCAL,
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("21.00"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((manual,)),
+        InvoiceCatalogue(),
+        bucket_id="test",
+        period="2025",
+        profile_year=2025,
+    )
+
+    assert result.issues == ()
+    assert result.observations[0].taxable_base == Decimal("100.00")
+    assert result.observations[0].iva_amount == Decimal("21.00")
+
+
 def test_linked_invoice_issue_date_controls_period_filtering() -> None:
     initial = _transaction("row-outside")
     invoice = _invoice(initial.transaction_id, issued_at=date(2024, 12, 31))
-    linked = _transaction("row-outside", invoice_id=invoice.invoice_id)
+    linked = _transaction("row-outside", purchase_invoice_evidence_id=invoice.invoice_id)
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
         InvoiceCatalogue.from_invoices((invoice,)),
+        bucket_id="test",
         period="2025",
         profile_year=2025,
     )
@@ -273,17 +357,39 @@ def test_multi_transaction_invoice_link_is_excluded_from_first_slice() -> None:
     first = _transaction("row-partial-a")
     second = _transaction("row-partial-b", amount=Decimal("-60.50"))
     invoice = _invoice(first.transaction_id, linked_transaction_ids=(first.transaction_id, second.transaction_id))
-    linked = _transaction("row-partial-a", invoice_id=invoice.invoice_id)
+    linked = _transaction("row-partial-a", purchase_invoice_evidence_id=invoice.invoice_id)
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((linked,)),
         InvoiceCatalogue.from_invoices((invoice,)),
+        bucket_id="test",
         period="2025",
         profile_year=2025,
     )
 
     assert result.observations == ()
-    assert result.issues[0].reason is RentaLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_INVOICE
+    assert (
+        result.issues[0].reason
+        is RentaLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE
+    )
+
+
+def test_purchase_invoice_evidence_from_other_bucket_is_reported_as_issue() -> None:
+    initial = _transaction("row-cross-bucket")
+    invoice = _invoice(initial.transaction_id, bucket_id="other")
+    linked = _transaction("row-cross-bucket", purchase_invoice_evidence_id=invoice.invoice_id)
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((linked,)),
+        InvoiceCatalogue.from_invoices((invoice,)),
+        bucket_id="test",
+        period="2025",
+        profile_year=2025,
+    )
+
+    assert result.observations == ()
+    assert result.issues[0].reason is RentaLedgerAggregationIssueReason.PURCHASE_INVOICE_EVIDENCE_BUCKET_MISMATCH
+    assert result.issues[0].purchase_invoice_evidence_id == invoice.invoice_id
 
 
 def test_linked_incoming_refund_becomes_negative_binding_value() -> None:
@@ -296,13 +402,14 @@ def test_linked_incoming_refund_becomes_negative_binding_value() -> None:
     refund = _transaction(
         "row-refund",
         amount=Decimal("121.00"),
-        invoice_id=invoice.invoice_id,
+        purchase_invoice_evidence_id=invoice.invoice_id,
         direction=TransactionDirection.INCOMING,
     )
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((refund,)),
         InvoiceCatalogue.from_invoices((invoice,)),
+        bucket_id="test",
         period="2025",
         profile_year=2025,
     )
@@ -316,13 +423,14 @@ def test_non_eur_transaction_is_reported_as_issue_before_fact_creation() -> None
     usd_expense = _transaction(
         "row-usd",
         category=SpendingCategory.GASTOS_BANCARIOS,
-        invoice_id=None,
+        purchase_invoice_evidence_id=None,
         currency="USD",
     )
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((usd_expense,)),
         InvoiceCatalogue(),
+        bucket_id="test",
         period="2025",
         profile_year=2025,
     )
@@ -338,12 +446,13 @@ def test_zero_business_amount_is_reported_as_invalid_fact_issue() -> None:
         category=SpendingCategory.GASTOS_BANCARIOS,
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0"),
-        invoice_id=None,
+        purchase_invoice_evidence_id=None,
     )
 
     result = aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions((zero_business,)),
         InvoiceCatalogue(),
+        bucket_id="test",
         period="2025",
         profile_year=2025,
     )

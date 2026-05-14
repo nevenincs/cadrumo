@@ -17,13 +17,14 @@ from typing import Any
 import i18n
 import yaml
 
-from ..config import load_settings
+from ..config import PROJECT_ROOT, _settings_override, load_settings
 from ..logging import get_logger
 
 _log = get_logger(__name__)
 _INITIALISED = False
 SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu")
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
+_OUTPUT_LANGUAGE_CACHE_VERSION = 0
 
 
 def _ensure_initialised() -> None:
@@ -48,44 +49,78 @@ def _normalise_supported_language(value: object) -> str | None:
 def output_language() -> str:
     """Resolve the operator-facing output language.
 
-    Explicit ``AEAT_CLI_LANGUAGE`` and ``AEAT_OUTPUT_LANGUAGE`` win for
+    An explicit ``aeat_output_language`` value on the active Settings
+    (env var, ``override_settings`` block, or ``.env`` file) wins for
     one-off sessions and automation. Otherwise the active profile's
     ``output.language`` key is used. The settings default remains the
-    final fallback and defaults to English for a clean install.
+    final fallback and defaults to Spanish for a clean install.
 
     Returns:
         The resolved ISO 639-1 language code.
     """
-    for env_name in ("AEAT_CLI_LANGUAGE", "AEAT_OUTPUT_LANGUAGE"):
-        override = os.environ.get(env_name)
-        if override and override.strip():
-            explicit = _normalise_supported_language(override)
-            if explicit is not None:
-                return explicit
+    return _cached_output_language(_output_language_cache_key())
+
+
+def clear_output_language_cache() -> None:
+    """Invalidate cached language resolution after profile/config writes."""
+
+    global _OUTPUT_LANGUAGE_CACHE_VERSION
+    _OUTPUT_LANGUAGE_CACHE_VERSION += 1
+    _cached_output_language.cache_clear()
+
+
+def _output_language_cache_key() -> tuple[object, ...]:
+    override = _settings_override.get()
+    if override is not None:
+        return ("override", id(override), _OUTPUT_LANGUAGE_CACHE_VERSION)
+    env_file = PROJECT_ROOT / "env" / ".env"
+    try:
+        env_mtime_ns = env_file.stat().st_mtime_ns
+    except OSError:
+        env_mtime_ns = None
+    return (
+        "env",
+        os.environ.get("AEAT_OUTPUT_LANGUAGE"),
+        os.environ.get("AEAT_DATABASE_URL"),
+        os.environ.get("AEAT_SECRET_STORE_BACKEND"),
+        os.environ.get("AEAT_ALLOW_UNENCRYPTED"),
+        env_mtime_ns,
+        _OUTPUT_LANGUAGE_CACHE_VERSION,
+    )
+
+
+@lru_cache(maxsize=128)
+def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
+    try:
+        settings = load_settings()
+    except (KeyError, ValueError, AttributeError):
+        return "es"
+    if "aeat_output_language" in settings.model_fields_set:
+        explicit = _normalise_supported_language(settings.aeat_output_language)
+        if explicit is not None:
+            return explicit
     profile_language = _active_profile_output_language()
     if profile_language is not None:
         return profile_language
-    try:
-        lang = load_settings().aeat_output_language
-        return _normalise_supported_language(lang) or "en"
-    except (KeyError, ValueError, AttributeError):
-        return "en"
+    return _normalise_supported_language(settings.aeat_output_language) or "es"
 
 
 def _active_profile_output_language() -> str | None:
     """Return active profile language without mutating workflow state."""
 
     try:
+        from ...application.user_profile._orchestration import fact_value
         from ...application.workflow._persistence import workflow_state_repository
 
         record = workflow_state_repository().load().active_profile_record()
         if record is None:
             return None
-        raw = _normalise_supported_language(record.values.get("output.language", ""))
-    except (OSError, ValueError, KeyError, AttributeError, ImportError) as exc:
+        raw = _normalise_supported_language(fact_value(record, "preferences.output_language") or "")
+    except Exception as exc:
         _log.debug(
             "i18n: unable to resolve active-profile output language; falling back to settings (%s)",
             exc,
+            exc_info=True,
         )
         return None
     return raw

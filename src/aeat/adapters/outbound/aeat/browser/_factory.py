@@ -139,7 +139,11 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
         try:
             await playwright.stop()
         except Exception as stop_exc:
-            logger.debug("browser factory: playwright.stop() during error teardown failed (%s)", stop_exc)
+            logger.debug(
+                "browser factory: playwright.stop() during error teardown failed (%s)",
+                stop_exc,
+                exc_info=True,
+            )
         raise
 
 
@@ -154,7 +158,11 @@ async def shared_playwright_runtime() -> AsyncIterator[Playwright]:
         try:
             await playwright.stop()
         except Exception as stop_exc:
-            logger.debug("browser factory: playwright.stop() during runtime teardown failed (%s)", stop_exc)
+            logger.debug(
+                "browser factory: playwright.stop() during runtime teardown failed (%s)",
+                stop_exc,
+                exc_info=True,
+            )
 
 
 @asynccontextmanager
@@ -182,7 +190,11 @@ async def opened_browser_page(
         try:
             await context.close()
         except Exception as close_exc:
-            logger.debug("browser factory: context.close() during teardown failed (%s)", close_exc)
+            logger.debug(
+                "browser factory: context.close() during teardown failed (%s)",
+                close_exc,
+                exc_info=True,
+            )
         await browser_session.close()
 
 

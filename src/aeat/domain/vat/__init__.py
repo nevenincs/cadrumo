@@ -60,6 +60,7 @@ from ._prorrata import (
     ProrrataInputDeduction,
     ProrrataInputs,
     ProrrataKind,
+    ProrrataReference,
     ProrrataRegime,
     ProrrataResult,
     ProrrataSector,
@@ -69,6 +70,7 @@ from ._prorrata import (
     is_especial_mandatory,
     requires_sectoral_separation,
     sum_deductible_amounts,
+    validate_prorrata_reference,
 )
 from ._rates import VAT_RATE_TABLE
 from ._recargo_equivalencia import (
@@ -125,6 +127,7 @@ __all__ = [
     "ProrrataInputError",
     "ProrrataInputs",
     "ProrrataKind",
+    "ProrrataReference",
     "ProrrataRegime",
     "ProrrataResult",
     "ProrrataSector",
@@ -165,5 +168,6 @@ __all__ = [
     "resolve_catalogue",
     "settlement_sides_for_flow",
     "sum_deductible_amounts",
+    "validate_prorrata_reference",
     "verify_catalogue",
 ]

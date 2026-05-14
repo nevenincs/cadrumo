@@ -377,7 +377,11 @@ class ClaveMovilAuthProvider:
                     try:
                         await context.close()
                     except Exception as _exc:
-                        log.debug("ClaveMovilAuthProvider: context.close in verify cleanup suppressed: %s", _exc)
+                        log.debug(
+                            "ClaveMovilAuthProvider: context.close in verify cleanup suppressed: %s",
+                            _exc,
+                            exc_info=True,
+                        )
                 if owns_session:
                     await self._close_browser_session(session_like)
                 self._browser_session = None
@@ -454,7 +458,7 @@ class ClaveMovilAuthProvider:
                 try:
                     await page.close()
                 except Exception as _exc:
-                    log.debug("ClaveMovilAuthProvider.verify: page.close suppressed: %s", _exc)
+                    log.debug("ClaveMovilAuthProvider.verify: page.close suppressed: %s", _exc, exc_info=True)
 
         elapsed_ms = int((time.perf_counter() - start) * 1000)
         is_valid = session_cookie_present and bool(session.identity_nif)
@@ -561,7 +565,7 @@ class ClaveMovilAuthProvider:
         try:
             await context.close()
         except Exception as _exc:
-            log.debug("ClaveMovilAuthProvider: context.close in _drop_context suppressed: %s", _exc)
+            log.debug("ClaveMovilAuthProvider: context.close in _drop_context suppressed: %s", _exc, exc_info=True)
 
     @staticmethod
     async def _close_browser_session(session: BrowserSessionLike | None) -> None:
@@ -681,12 +685,16 @@ class ClaveMovilAuthProvider:
                 try:
                     await self._dump_diagnostic(page, reason=f"fresh-login-exception:{type(exc).__name__}")
                 except Exception as _exc:
-                    log.debug("ClaveMovilAuthProvider: diagnostic dump suppressed: %s", _exc)
+                    log.debug("ClaveMovilAuthProvider: diagnostic dump suppressed: %s", _exc, exc_info=True)
             if context is not None:
                 try:
                     await context.close()
                 except Exception as _exc:
-                    log.debug("ClaveMovilAuthProvider: context.close in fresh-login cleanup suppressed: %s", _exc)
+                    log.debug(
+                        "ClaveMovilAuthProvider: context.close in fresh-login cleanup suppressed: %s",
+                        _exc,
+                        exc_info=True,
+                    )
             if owns_session:
                 await self._close_browser_session(session_like)
             raise
@@ -811,7 +819,11 @@ class ClaveMovilAuthProvider:
                 try:
                     await context.close()
                 except Exception as _exc:
-                    log.debug("ClaveMovilAuthProvider: context.close in resume cleanup suppressed: %s", _exc)
+                    log.debug(
+                        "ClaveMovilAuthProvider: context.close in resume cleanup suppressed: %s",
+                        _exc,
+                        exc_info=True,
+                    )
             self._browser_session = None
             self._context = None
             self._active_session = None

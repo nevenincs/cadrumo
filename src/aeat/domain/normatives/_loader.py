@@ -7,6 +7,7 @@ sorted alphabetically by filename for deterministic loading order.
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -49,9 +50,26 @@ def load_catalogue(*, settings: Settings | None = None) -> NormativeCatalogue:
         raise NormativeNotFoundError(f"normatives root does not exist: {root}")
     if not root.is_dir():
         raise NormativeParseError(f"normatives root is not a directory: {root}")
+    resolved = root.resolve()
+    paths = tuple(sorted(resolved.glob("*.json")))
+    fingerprint = tuple(_file_fingerprint(path) for path in paths)
+    return _load_catalogue_cached(str(resolved), fingerprint)
 
+
+def _file_fingerprint(path: Path) -> tuple[str, int, int]:
+    stat = path.stat()
+    return (path.name, stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=16)
+def _load_catalogue_cached(
+    root: str,
+    fingerprint: tuple[tuple[str, int, int], ...],
+) -> NormativeCatalogue:
+    root_path = Path(root)
     references: dict[str, NormativeReference] = {}
-    for path in sorted(root.glob("*.json")):
+    for filename, _byte_count, _modified_ns in fingerprint:
+        path = root_path / filename
         _logger.debug("loading normative %s", path)
         try:
             raw = path.read_text(encoding="utf-8")
@@ -74,5 +92,5 @@ def load_catalogue(*, settings: Settings | None = None) -> NormativeCatalogue:
             )
         references[reference.id] = reference
 
-    _logger.debug("loaded %d normative(s) from %s", len(references), root)
+    _logger.debug("loaded %d normative(s) from %s", len(references), root_path)
     return NormativeCatalogue(references=references)

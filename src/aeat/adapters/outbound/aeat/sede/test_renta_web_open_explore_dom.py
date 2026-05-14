@@ -17,6 +17,7 @@ Buscar casilla dialog opens as a virtual widget that doesn't appear in
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any, cast
 
 import pytest
@@ -34,6 +35,7 @@ _BUTTONS_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-bu
 _A11Y_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-a11y-tree.txt"
 _BUSCAR_DIALOG_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-buscar-dialog.txt"
 _APARTADOS_DIALOG_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-apartados-dialog.txt"
+_log = logging.getLogger(__name__)
 
 
 async def _snapshot_zk_layer(page: Any, label: str) -> str:
@@ -49,18 +51,21 @@ async def _snapshot_zk_layer(page: Any, label: str) -> str:
         try:
             elements = await page.locator(selector).all()
         except Exception as exc:
+            _log.debug("explore DOM selector lookup failed selector=%s", selector, exc_info=True)
             lines.append(f"  selector {selector!r} error: {type(exc).__name__}: {exc}")
             continue
         for idx, el in enumerate(elements[:6]):
             try:
                 visible = await el.is_visible()
             except Exception:
+                _log.debug("explore DOM visibility lookup failed selector=%s index=%d", selector, idx, exc_info=True)
                 visible = False
             if not visible:
                 continue
             try:
                 html = await el.inner_html(timeout=2_000)
             except Exception:
+                _log.debug("explore DOM inner_html lookup failed selector=%s index=%d", selector, idx, exc_info=True)
                 html = "(unreadable)"
             lines.append(f"-- {selector}[{idx}] visible inner_html (first 8K chars):")
             lines.append(html[:8_000])
@@ -69,6 +74,7 @@ async def _snapshot_zk_layer(page: Any, label: str) -> str:
     try:
         inputs = await page.locator("input:visible").all()
     except Exception:
+        _log.debug("explore DOM input locator lookup failed", exc_info=True)
         inputs = []
     for idx, inp in enumerate(inputs[:60]):
         try:
@@ -78,6 +84,7 @@ async def _snapshot_zk_layer(page: Any, label: str) -> str:
             name = await inp.get_attribute("name")
             value = await inp.input_value(timeout=500)
         except Exception:
+            _log.debug("explore DOM input metadata lookup failed index=%d", idx, exc_info=True)
             title = placeholder = input_type = name = value = "?"
         lines.append(
             f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}"
@@ -87,6 +94,7 @@ async def _snapshot_zk_layer(page: Any, label: str) -> str:
         for frame in page.frames:
             lines.append(f"  url={frame.url!r}")
     except Exception as exc:
+        _log.debug("explore DOM frame enumeration failed", exc_info=True)
         lines.append(f"  (frame enumeration failed: {type(exc).__name__}: {exc})")
     return "\n".join(lines)
 
@@ -187,6 +195,7 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             await mostrar_btn.click(timeout=10_000)
             await page.wait_for_timeout(1_500)
         except Exception as exc:
+            _log.debug("explore DOM Mostrar opciones unreachable", exc_info=True)
             print(f"explore: Mostrar opciones unreachable: {type(exc).__name__}: {exc}")
 
         buscar_btn = page.locator("button").filter(has_text="Buscar casilla").first
@@ -206,6 +215,7 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             buscar_dialog_snapshot = await _snapshot_zk_layer(page, "buscar-casilla")
         except Exception as exc:
             # Soft-fail — DOM will still capture without dialog.
+            _log.debug("explore DOM buscar casilla unreachable", exc_info=True)
             print(f"explore: buscar casilla unreachable: {type(exc).__name__}: {exc}")
             buscar_dialog_snapshot = (
                 f"=== ZK layer snapshot: buscar-casilla ===\n(unreachable: {type(exc).__name__}: {exc})"
@@ -240,6 +250,7 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             await page.wait_for_timeout(2_500)
             apartados_dialog_snapshot = await _snapshot_zk_layer(page, "apartados")
         except Exception as exc:
+            _log.debug("explore DOM apartados unreachable", exc_info=True)
             print(f"explore: apartados unreachable: {type(exc).__name__}: {exc}")
             apartados_dialog_snapshot = (
                 f"=== ZK layer snapshot: apartados ===\n(unreachable: {type(exc).__name__}: {exc})"
@@ -254,10 +265,12 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             try:
                 text = (await btn.inner_text(timeout=1_000)).strip()
             except Exception:
+                _log.debug("explore DOM button text unreadable index=%d", idx, exc_info=True)
                 text = "(unreadable)"
             try:
                 disabled = await btn.get_attribute("disabled")
             except Exception:
+                _log.debug("explore DOM button disabled attribute unreadable index=%d", idx, exc_info=True)
                 disabled = None
             button_inventory_lines.append(f"  [{idx}] text={text!r} disabled={disabled!r}")
         button_inventory_lines.append("")
@@ -267,10 +280,12 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
             try:
                 text = (await anchor.inner_text(timeout=1_000)).strip()
             except Exception:
+                _log.debug("explore DOM anchor text unreadable index=%d", idx, exc_info=True)
                 text = "(unreadable)"
             try:
                 href = await anchor.get_attribute("href")
             except Exception:
+                _log.debug("explore DOM anchor href unreadable index=%d", idx, exc_info=True)
                 href = None
             button_inventory_lines.append(f"  [{idx}] text={text!r} href={href!r}")
         button_inventory_lines.append("")
@@ -283,6 +298,7 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
                 try:
                     text = (await el.inner_text(timeout=1_000)).strip()
                 except Exception:
+                    _log.debug("explore DOM ZK element text unreadable class=%s index=%d", cls, idx, exc_info=True)
                     text = "(unreadable)"
                 button_inventory_lines.append(f"    [{idx}] text={text!r}")
         button_inventory_lines.append("\n=== input elements (dialog textboxes etc.) ===")
@@ -295,6 +311,7 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
                 name = await inp.get_attribute("name")
                 value = await inp.input_value(timeout=500)
             except Exception:
+                _log.debug("explore DOM input inventory metadata unreadable index=%d", idx, exc_info=True)
                 title = placeholder = input_type = name = value = "?"
             button_inventory_lines.append(
                 f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}"  # noqa: E501
@@ -307,6 +324,12 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
                     visible = await el.is_visible()
                     text = (await el.inner_text(timeout=1_000))[:200]
                 except Exception:
+                    _log.debug(
+                        "explore DOM visible dialog metadata unreadable selector=%s index=%d",
+                        cls,
+                        idx,
+                        exc_info=True,
+                    )
                     visible = False
                     text = "(unreadable)"
                 if visible:
@@ -362,6 +385,7 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
                     f"text={entry['text']!r}"
                 )
         except Exception as exc:
+            _log.debug("explore DOM page.evaluate walk failed", exc_info=True)
             a11y_lines = [f"(page.evaluate walk failed: {type(exc).__name__}: {exc})"]
         return (
             html_content,

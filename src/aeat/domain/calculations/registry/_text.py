@@ -6,6 +6,10 @@ import html
 import re
 import unicodedata
 
+_HTML_TAG_RE = re.compile(r"<[a-zA-Z!/?][^<>\s]{0,200}>")
+_COMBINING_MARK_RE = re.compile(r"[\u0300-\u036f]+")
+_WHITESPACE_RE = re.compile(r"\s+")
+
 
 def normalise_corpus_text(text: str) -> str:
     """Normalise corpus text for citation-presence checks.
@@ -19,8 +23,6 @@ def normalise_corpus_text(text: str) -> str:
     """
 
     decoded = html.unescape(text).replace("\xa0", " ")
-    without_tags = re.sub(r"<[a-zA-Z!/?][^<>\s]{0,200}>", " ", decoded)
-    without_marks = "".join(
-        char for char in unicodedata.normalize("NFKD", without_tags) if not unicodedata.combining(char)
-    )
-    return re.sub(r"\s+", " ", without_marks).strip().lower()
+    without_tags = _HTML_TAG_RE.sub(" ", decoded)
+    without_marks = _COMBINING_MARK_RE.sub("", unicodedata.normalize("NFKD", without_tags))
+    return _WHITESPACE_RE.sub(" ", without_marks).strip().lower()

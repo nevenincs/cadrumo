@@ -17,7 +17,8 @@ from ...domain.deadlines._models import (
     FilingIVAProfile,
     IVARegime,
 )
-from ..profile import list_profile_key_records, validate_profile
+from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
+from ..user_profile._projections import record_to_path_values
 from ..workflow._models import WorkflowState
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardError
@@ -77,12 +78,13 @@ def build_wizard_status(state: WorkflowState) -> WizardStatusReport:
     enrolment_ready = False
     missing_enrolment: tuple[str, ...] = ()
     if record is not None:
-        validation = validate_profile(record.values)
+        values = record_to_path_values(record)
+        validation = validate_profile_values(values)
         identity_ready = validation.valid
         missing_required = validation.missing_required
         profile_present_keys = validation.present_keys
         profile_total_keys = validation.total_keys
-        enrolment_value = (record.values.get(_ENROLMENT_KEY) or "").strip()
+        enrolment_value = (values.get(_ENROLMENT_KEY) or "").strip()
         enrolment_ready = bool(enrolment_value)
         if not enrolment_ready:
             missing_enrolment = (_ENROLMENT_KEY,)
@@ -152,7 +154,7 @@ def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
             "no active profile configured",
             context={"workflow_state": "no_active_profile"},
         )
-    values: dict[str, str] = dict(record.values)
+    values: dict[str, str] = dict(record_to_path_values(record))
     try:
         typed = project_answers(SETUP_FLOW, values)
     except ValidationError as exc:
@@ -172,7 +174,7 @@ def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
         )
     return AutonomoProfile(
         tax_id=typed.tax_id,
-        iva_regime=IVARegime(values.get("iva.regime", IVARegime.GENERAL.value)),
+        iva_regime=IVARegime(values.get("iva.regime", IVARegime.GENERAL.value)),  # iva.regime path unchanged in canonical schema
         has_employees=typed.has_employees,
         pays_professionals_with_retencion=typed.pays_professionals_with_retencion,
         professional_income_withholding_ge_70pct=typed.professional_income_withholding_ge_70pct,

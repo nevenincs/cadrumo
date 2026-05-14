@@ -16,7 +16,6 @@ application functions and pydantic records.
 
 from __future__ import annotations
 
-import os
 from typing import Any
 
 import click
@@ -123,7 +122,9 @@ def _root(
 ) -> None:
     """Capture root-level CLI flags into the Typer context."""
     if language is not None:
-        os.environ["AEAT_OUTPUT_LANGUAGE"] = language
+        from ...core.config import override_settings
+
+        ctx.with_resource(override_settings(aeat_output_language=language))
     apply_to_root_logger(resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
     state = ctx.ensure_object(dict)
     state["format"] = format_.strip().lower() or _FORMAT_TEXT

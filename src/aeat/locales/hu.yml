@@ -365,15 +365,9 @@ cli:
       header: FŐKÖNYVI TRANZAKCIÓK
       help: Főkönyvi tranzakciók listázása az aktív profil bucketjében
     errors:
-      auto_detect_failed: A naplóformátum automatikus felismerése sikertelen
       confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez, vagy használd előbb a --dry-run kapcsolót
       filter_parse_error: A naplószűrő elemzése sikertelen
       invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
-      invalid_source: 'A naplófájl nem importálható: {reason}'
-      invalid_source_unknown: érvénytelen forrás
-      n26_auto_detect_failed: Az N26 formátum automatikus felismerése sikertelen
-      source_not_found: 'A forrásfájl nem található: {source}'
-      unknown_provider: Ismeretlen naplószolgáltató
     import:
       dry_run_help: Az importálás futtatása próba üzemmódban (mentés nélkül)
       help: Bankkivonatok vagy bejegyzések importálása a könyvelési naplóba
@@ -515,8 +509,6 @@ cli:
     inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának útvonala
     manuals:
       app_help: AEAT Manual práctico bejegyzések vizsgálata (Renta, IVA, Sociedades)
-      errors:
-        unknown_section: A(z) {section} szakasz nem található a kézikönyvben
       kind_help: Szűrés kézikönyvi szabálytípus szerint
       list_help: Helyben elérhető kézikönyvrészek listázása
       manual_help: Kézikönyv-azonosító (renta, iva, sociedades)

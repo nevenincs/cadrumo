@@ -75,9 +75,11 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
         raise RegistryValidationError(f"legal reference {reference.id!r} escapes repository root")
     if not path.is_file():
         raise RegistryValidationError(f"legal reference {reference.id!r} missing corpus file {path_text!r}")
-    return _read_normalised_legal_corpus(path)
+    stat = path.stat()
+    return _read_normalised_legal_corpus(str(path), stat.st_size, stat.st_mtime_ns)
 
 
 @lru_cache(maxsize=512)
-def _read_normalised_legal_corpus(path: Path) -> str:
-    return normalise_corpus_text(path.read_text(encoding="utf-8", errors="replace"))
+def _read_normalised_legal_corpus(path: str, byte_count: int, modified_ns: int) -> str:
+    del byte_count, modified_ns
+    return normalise_corpus_text(Path(path).read_text(encoding="utf-8", errors="replace"))

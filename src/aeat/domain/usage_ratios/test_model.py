@@ -9,6 +9,7 @@ that keeps the persisted envelope diff-free across re-saves.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
@@ -17,7 +18,10 @@ from ..categories import CATEGORY_PROFILES_2025, ProportionalityKind, SpendingCa
 from . import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
+    UsageRatioReference,
+    UsageRatioValidationError,
     resolve_user_ratio,
+    validate_usage_ratio_reference,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -84,6 +88,13 @@ def test_frozen_attribute_reassignment_rejected() -> None:
     profile = UsageRatioProfile()
     with pytest.raises(ValidationError, match=r"frozen"):
         profile.ratios = {SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.5")}  # type: ignore[misc]
+
+
+def test_ratios_mapping_item_assignment_rejected() -> None:
+    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
+    ratios = cast(Any, profile.ratios)
+    with pytest.raises(TypeError):
+        ratios[SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ] = Decimal("0.50")
 
 
 def test_with_ratio_returns_new_profile() -> None:
@@ -184,3 +195,68 @@ def test_saved_profile_has_canonical_key_order() -> None:
     # And the canonical order is lexicographic by category value:
     keys_in_payload = list(forward.ratios)
     assert keys_in_payload == sorted(keys_in_payload, key=lambda c: c.value)
+
+
+def test_validate_usage_ratio_reference_accepts_configured_category_key() -> None:
+    profile = UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")})
+
+    reference = validate_usage_ratio_reference(
+        profile,
+        category_id=SpendingCategory.TELEFONIA_MOVIL.value,
+        usage_ratio_id=SpendingCategory.TELEFONIA_MOVIL.value,
+        business_pct=Decimal("0.60"),
+    )
+
+    assert isinstance(reference, UsageRatioReference)
+    assert reference.category is SpendingCategory.TELEFONIA_MOVIL
+    assert reference.ratio == Decimal("0.60")
+
+
+def test_validate_usage_ratio_reference_rejects_alias_or_unknown_key() -> None:
+    profile = UsageRatioProfile()
+
+    with pytest.raises(UsageRatioValidationError, match="concrete eligible spending category"):
+        validate_usage_ratio_reference(
+            profile,
+            category_id=SpendingCategory.TELEFONIA_MOVIL.value,
+            usage_ratio_id="home_office_area",
+        )
+
+
+def test_validate_usage_ratio_reference_rejects_category_mismatch() -> None:
+    profile = UsageRatioProfile(
+        ratios={
+            SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60"),
+            SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.30"),
+        }
+    )
+
+    with pytest.raises(UsageRatioValidationError, match="must match"):
+        validate_usage_ratio_reference(
+            profile,
+            category_id=SpendingCategory.TELEFONIA_MOVIL.value,
+            usage_ratio_id=SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ.value,
+        )
+
+
+def test_validate_usage_ratio_reference_rejects_unconfigured_active_bucket_entry() -> None:
+    profile = UsageRatioProfile()
+
+    with pytest.raises(UsageRatioValidationError, match="not configured"):
+        validate_usage_ratio_reference(
+            profile,
+            category_id=SpendingCategory.TELEFONIA_MOVIL.value,
+            usage_ratio_id=SpendingCategory.TELEFONIA_MOVIL.value,
+        )
+
+
+def test_validate_usage_ratio_reference_rejects_business_pct_drift() -> None:
+    profile = UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.60")})
+
+    with pytest.raises(UsageRatioValidationError, match="does not match"):
+        validate_usage_ratio_reference(
+            profile,
+            category_id=SpendingCategory.TELEFONIA_MOVIL.value,
+            usage_ratio_id=SpendingCategory.TELEFONIA_MOVIL.value,
+            business_pct=Decimal("0.50"),
+        )

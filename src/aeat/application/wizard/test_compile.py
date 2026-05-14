@@ -231,4 +231,4 @@ def test_compile_is_pure_on_the_real_catalogue() -> None:
 def test_real_catalogue_exposes_profile_owned_output_language_key() -> None:
     keys = {entry.key for entry in compile_profile_keys(WIZARD_FLOWS)}
 
-    assert "output.language" in keys
+    assert "preferences.output_language" in keys

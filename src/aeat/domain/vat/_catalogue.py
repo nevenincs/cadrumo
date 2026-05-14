@@ -5,6 +5,7 @@ from __future__ import annotations
 import tomllib
 from collections.abc import Mapping
 from datetime import date
+from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, cast
@@ -22,48 +23,75 @@ _DEFAULT_CATALOGUE_ROOT = PROJECT_ROOT / "registry" / "aeat" / "vat" / "catalogu
 def load_vat_catalogue(path: Path) -> VATCatalogue:
     """Load one VAT catalogue TOML file."""
 
+    resolved = path.resolve()
+    stat = resolved.stat()
+    return _load_vat_catalogue_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=32)
+def _load_vat_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> VATCatalogue:
+    del byte_count, modified_ns
+    target = Path(path)
     try:
-        with path.open("rb") as fh:
+        with target.open("rb") as fh:
             payload = tomllib.load(fh)
     except tomllib.TOMLDecodeError as exc:
-        raise VatCatalogueError(f"{path}: invalid VAT catalogue TOML: {exc}") from exc
+        raise VatCatalogueError(f"{target}: invalid VAT catalogue TOML: {exc}") from exc
     except OSError as exc:
-        raise VatCatalogueError(f"{path}: cannot read VAT catalogue: {exc}") from exc
+        raise VatCatalogueError(f"{target}: cannot read VAT catalogue: {exc}") from exc
 
     raw_regulations = payload.get("regulations")
     if not isinstance(raw_regulations, list) or not raw_regulations:
-        raise VatCatalogueError(f"{path}: missing [[regulations]] entries")
+        raise VatCatalogueError(f"{target}: missing [[regulations]] entries")
 
     regulations: dict[VATCategory, VATRegulation] = {}
     for index, raw_regulation in enumerate(raw_regulations, start=1):
         if not isinstance(raw_regulation, dict):
-            raise VatCatalogueError(f"{path}: regulations[{index}] must be a table")
+            raise VatCatalogueError(f"{target}: regulations[{index}] must be a table")
         try:
             regulation = _parse_regulation(cast("Mapping[str, Any]", raw_regulation))
         except (ValidationError, ValueError) as exc:
-            raise VatCatalogueError(f"{path}: invalid regulations[{index}]: {exc}") from exc
+            raise VatCatalogueError(f"{target}: invalid regulations[{index}]: {exc}") from exc
         if regulation.category in regulations:
-            raise VatCatalogueError(f"{path}: duplicate VAT category {regulation.category.value!r}")
+            raise VatCatalogueError(f"{target}: duplicate VAT category {regulation.category.value!r}")
         regulations[regulation.category] = regulation
 
     missing = sorted(category.value for category in set(VATCategory) - set(regulations))
     if missing:
-        raise VatCatalogueError(f"{path}: VAT catalogue missing categories: {missing}")
+        raise VatCatalogueError(f"{target}: VAT catalogue missing categories: {missing}")
     return VATCatalogue(regulations=regulations)
 
 
 def load_vat_catalogues(root: Path = _DEFAULT_CATALOGUE_ROOT) -> Mapping[int, VATCatalogue]:
     """Load every year-keyed VAT catalogue under ``root``."""
 
+    resolved = root.resolve()
+    paths = tuple(sorted(resolved.glob("*.toml")))
+    fingerprint = tuple(_file_fingerprint(path) for path in paths)
+    return _load_vat_catalogues_cached(str(resolved), fingerprint)
+
+
+def _file_fingerprint(path: Path) -> tuple[str, int, int]:
+    stat = path.stat()
+    return (path.name, stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=8)
+def _load_vat_catalogues_cached(
+    root: str,
+    fingerprint: tuple[tuple[str, int, int], ...],
+) -> Mapping[int, VATCatalogue]:
+    root_path = Path(root)
     catalogues: dict[int, VATCatalogue] = {}
-    for path in sorted(root.glob("*.toml")):
+    for filename, _byte_count, _modified_ns in fingerprint:
+        path = root_path / filename
         try:
             year = int(path.stem)
         except ValueError as exc:
             raise VatCatalogueError(f"{path}: VAT catalogue filename must be a year") from exc
         catalogues[year] = load_vat_catalogue(path)
     if not catalogues:
-        raise VatCatalogueError(f"{root}: no VAT catalogue TOML files found")
+        raise VatCatalogueError(f"{root_path}: no VAT catalogue TOML files found")
     return MappingProxyType(catalogues)
 
 

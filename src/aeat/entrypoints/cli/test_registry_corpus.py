@@ -8,29 +8,25 @@ production runtime uses (``aeat.domain.normatives.load_catalogue``,
 ``aeat.domain.manuals.load_manual``, etc.).
 
 The CLI exposure lives under ``aeat app registry``, not under a new
-root verb. The two boundary regression guards at the bottom of the
-file enforce that no ``aeat normatives`` or ``aeat manual`` top-
-level verb is registered, and that no module re-implements the
-registry-corpus surface outside the canonical
-``_registry_corpus.py`` module.
+root verb. The boundary regression guard at the bottom of the file
+enforces that no ``aeat normatives`` or ``aeat manual`` top-level verb
+is registered.
 """
 
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
+from click import Group
 from click.testing import Result
-from typer.testing import CliRunner
 
 from aeat.core.paths import PROJECT_ROOT
-from aeat.entrypoints.cli import app
+from aeat.tests.cli_runner import aeat_click_command, invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-
-
-_RUNNER = CliRunner()
 
 
 def _invoke(*args: str, fmt: str | None = None) -> Result:
@@ -38,7 +34,49 @@ def _invoke(*args: str, fmt: str | None = None) -> Result:
     if fmt is not None:
         cmd.extend(["--format", fmt])
     cmd.extend(["app", "registry", *args])
-    return _RUNNER.invoke(app, cmd)
+    return invoke_cached_cli(cmd)
+
+
+def _invoke_with_env(*args: str, env: dict[str, str], fmt: str | None = None) -> Result:
+    cmd: list[str] = []
+    if fmt is not None:
+        cmd.extend(["--format", fmt])
+    cmd.extend(["app", "registry", *args])
+    return invoke_cached_cli(cmd, env=env)
+
+
+def _env_with_normatives_root(root: Path) -> dict[str, str]:
+    env = dict(os.environ)
+    env["AEAT_NORMATIVES_ROOT"] = str(root)
+    return env
+
+
+def _write_valid_normative(root: Path) -> None:
+    (root / "ley-35-2006.json").write_text(
+        json.dumps(
+            {
+                "id": "ley-35-2006",
+                "kind": "ley",
+                "number": "35/2006",
+                "title": "Ley 35/2006",
+                "published_at": "2006-11-29",
+                "boe_url": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+                "boe_id": "BOE-A-2006-20764",
+                "articulos": [
+                    {
+                        "numero": "32",
+                        "titulo": "Reducciones",
+                        "summary": "Resumen.",
+                        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a32",
+                    }
+                ],
+                "tags": ["irpf"],
+                "last_reviewed_at": "2026-04-12",
+                "reviewed_by": "wgergely",
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -87,6 +125,48 @@ def test_citations_list_propagates_corpus_load_failures_through_error_boundary()
     # non-zero exit. The exact code depends on the
     # NormativeParseError → ErrorCategory mapping.
     assert result.exit_code != 0
+
+
+def test_citations_list_emits_json_payload_through_root_format(tmp_path: Path) -> None:
+    _write_valid_normative(tmp_path)
+
+    result = _invoke_with_env("citations", "list", "--tag", "irpf", env=_env_with_normatives_root(tmp_path), fmt="json")
+
+    assert result.exit_code == 0, result.stdout
+    payload = json.loads(result.stdout)
+    assert payload["operation"] == "registry.citations.list"
+    assert payload["reference_count"] == 1
+    assert payload["tag_filter"] == "irpf"
+    assert payload["references"][0]["id"] == "ley-35-2006"
+    assert payload["references"][0]["topic_slugs"] == []
+    assert "topics" in payload
+
+
+def test_citations_show_emits_text_and_json_payloads_through_root_format(tmp_path: Path) -> None:
+    _write_valid_normative(tmp_path)
+    env = _env_with_normatives_root(tmp_path)
+
+    text = _invoke_with_env("citations", "show", "ley-35-2006", "--articulo", "32", env=env)
+    json_result = _invoke_with_env(
+        "citations",
+        "show",
+        "ley-35-2006",
+        "--articulo",
+        "32",
+        env=env,
+        fmt="json",
+    )
+
+    assert text.exit_code == 0, text.stdout
+    assert "operation\tregistry.citations.show" in text.stdout
+    assert "cite\tLey 35/2006, art. 32 (BOE-A-2006-20764)" in text.stdout
+    payload = json.loads(json_result.stdout)
+    assert payload["operation"] == "registry.citations.show"
+    assert payload["reference"]["id"] == "ley-35-2006"
+    assert payload["articulo"]["numero"] == "32"
+    assert payload["articulo"]["cite"] == "Ley 35/2006, art. 32 (BOE-A-2006-20764)"
+    assert "related_topics" in payload
+    assert "cite" not in payload
 
 
 def test_citations_list_help_text_renders() -> None:
@@ -178,38 +258,54 @@ def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
     )
 
 
-def test_no_parallel_registry_corpus_surface_exists() -> None:
-    """The canonical surface for citations + manuals CLI lives in
-    ``_registry_corpus.py``. Any other module that re-implements
-    the ``citations`` / ``manuals`` Typer apps would compete with
-    the wave's deliverable and must be removed.
+def test_rejected_topic_and_help_commands_are_absent_from_discovery() -> None:
+    """Command discovery exposes registry corpus commands, not topic/help commands."""
 
-    The boundary check searches for the structural pattern: a
-    ``typer.Typer`` instance whose ``name=`` argument equals
-    ``citations`` or ``manuals``, occurring outside the canonical
-    module."""
+    root = aeat_click_command()
+    assert isinstance(root, Group)
+    app_group = root.commands["app"]
+    assert isinstance(app_group, Group)
+    registry_group = app_group.commands["registry"]
+    assert isinstance(registry_group, Group)
+    citations_group = registry_group.commands["citations"]
+    manuals_group = registry_group.commands["manuals"]
+    assert isinstance(citations_group, Group)
+    assert isinstance(manuals_group, Group)
 
-    cli_root = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
-    canonical = cli_root / "_registry_corpus.py"
-    forbidden_patterns = (
-        'typer.Typer(\n    name="citations"',
-        'typer.Typer(name="citations"',
-        'typer.Typer(\n    name="manuals"',
-        'typer.Typer(name="manuals"',
+    assert set(root.commands) == {"config", "app"}
+    assert {"citations", "manuals"} <= set(registry_group.commands)
+    for commands in (
+        set(root.commands),
+        set(app_group.commands),
+        set(registry_group.commands),
+        set(citations_group.commands),
+        set(manuals_group.commands),
+    ):
+        assert commands.isdisjoint({"topic", "topics", "help"})
+
+
+def test_rejected_topic_and_help_command_vocabulary_is_absent_from_help_text() -> None:
+    """Accepted help surfaces must not advertise rejected topic/help commands."""
+
+    forbidden_phrases = (
+        "aeat help",
+        "aeat topic",
+        "aeat topics",
+        "aeat app help",
+        "aeat app topic",
+        "aeat app topics",
     )
-    offenders: list[Path] = []
-    for py_file in cli_root.rglob("*.py"):
-        if py_file == canonical:
-            continue
-        if py_file.name.startswith("test_"):
-            continue
-        text = py_file.read_text(encoding="utf-8")
-        if any(needle in text for needle in forbidden_patterns):
-            offenders.append(py_file)
-    assert offenders == [], (
-        "Parallel citations/manuals Typer surface detected outside the "
-        f"canonical `_registry_corpus.py`: {[str(p) for p in offenders]}"
-    )
+    for args in (
+        ["--help"],
+        ["app", "--help"],
+        ["app", "registry", "--help"],
+        ["app", "registry", "citations", "--help"],
+        ["app", "registry", "manuals", "--help"],
+    ):
+        result = invoke_cached_cli(args)
+        assert result.exit_code == 0, result.output
+        lowered = result.output.lower()
+        assert [phrase for phrase in forbidden_phrases if phrase in lowered] == []
 
 
 def test_no_aeat_normatives_or_manual_fetch_verb_under_app_registry() -> None:

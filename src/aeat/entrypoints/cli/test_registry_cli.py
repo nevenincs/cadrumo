@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl
-from typer.testing import CliRunner
 
 from aeat.adapters.outbound.aeat.sede import (
     Declaration,
@@ -32,12 +31,10 @@ from aeat.application.registry import (
 from aeat.core.access_gate import AeatLiveReadNotEnabledError
 from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.calculations.registry import build_snapshot, calculate_registry_snapshot, load_registry_tree
-
-from . import app
+from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_RUNNER = CliRunner()
 _REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
 _WORKBOOK_ROOT = PROJECT_ROOT / "corpus" / "aeat_official" / "disenos_registro"
 
@@ -62,8 +59,7 @@ def _first_registry_modelo() -> str:
 
 
 def test_registry_inspect_cli_reports_tree_inventory() -> None:
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -117,8 +113,7 @@ def test_registry_inspect_cli_reports_tree_inventory() -> None:
 
 
 def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -148,8 +143,7 @@ def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
 
 
 def test_registry_verify_cli_fails_fast_on_missing_corpus_source(tmp_path) -> None:
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "registry",
@@ -166,8 +160,7 @@ def test_registry_verify_cli_fails_fast_on_missing_corpus_source(tmp_path) -> No
 
 
 def test_registry_workbook_verify_cli_reports_json_from_official_corpus() -> None:
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -192,8 +185,7 @@ def test_registry_workbook_verify_cli_reports_json_from_official_corpus() -> Non
 
 
 def test_registry_workbook_verify_cli_reports_text_from_official_corpus() -> None:
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "registry",
@@ -214,8 +206,7 @@ def test_registry_workbook_verify_cli_reports_text_from_official_corpus() -> Non
 def test_registry_workbook_verify_cli_writes_json_report_from_official_corpus(tmp_path) -> None:
     output = tmp_path / "reports" / "workbooks.json"
 
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -242,8 +233,7 @@ def test_registry_workbook_verify_cli_writes_json_report_from_official_corpus(tm
 
 def test_registry_workbook_verify_cli_resumes_from_json_report_from_official_corpus(tmp_path) -> None:
     output = tmp_path / "reports" / "workbooks.json"
-    first = _RUNNER.invoke(
-        app,
+    first = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -261,8 +251,7 @@ def test_registry_workbook_verify_cli_resumes_from_json_report_from_official_cor
     )
     assert first.exit_code == 0
 
-    second = _RUNNER.invoke(
-        app,
+    second = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -286,8 +275,7 @@ def test_registry_workbook_verify_cli_resumes_from_json_report_from_official_cor
 
 
 def test_registry_retained_commands_reject_command_local_json_flag() -> None:
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "registry",
@@ -303,8 +291,7 @@ def test_registry_retained_commands_reject_command_local_json_flag() -> None:
 
 
 def test_registry_commands_refuse_unsupported_root_output_format() -> None:
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "--format",
             "xml",
@@ -407,8 +394,7 @@ def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: P
 
 
 def test_verify_filed_state_cli_help_resolves_locale_keys() -> None:
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "registry", "verify-filed-state", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
@@ -422,8 +408,7 @@ def test_verify_filed_state_cli_help_resolves_locale_keys() -> None:
 
 
 def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -> None:
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "live", "filed", "capture-sources", "--help"],
         env={"AEAT_OUTPUT_LANGUAGE": "en"},
     )
@@ -431,12 +416,12 @@ def test_live_filed_capture_sources_cli_help_resolves_without_registry_alias() -
     assert result.exit_code == 0
     assert "--source-root" in result.output
 
-    old = _RUNNER.invoke(app, ["app", "registry", "capture-source-filed-data", "--help"])
+    old = invoke_cached_cli(["app", "registry", "capture-source-filed-data", "--help"])
     assert old.exit_code != 0
     assert "No such command" in old.output
 
-    old_list = _RUNNER.invoke(app, ["app", "registry", "list-filed-data", "--help"])
-    old_capture = _RUNNER.invoke(app, ["app", "registry", "capture-filed-data", "--help"])
+    old_list = invoke_cached_cli(["app", "registry", "list-filed-data", "--help"])
+    old_capture = invoke_cached_cli(["app", "registry", "capture-filed-data", "--help"])
     assert old_list.exit_code != 0
     assert old_capture.exit_code != 0
     assert "No such command" in old_list.output
@@ -452,8 +437,7 @@ def test_list_filed_data_cli_requires_live_gate_before_remote_read(tmp_path: Pat
         idle_deadline=now - timedelta(minutes=1),
     )
 
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "live",
@@ -487,8 +471,7 @@ def test_capture_filed_data_cli_requires_live_gate_before_local_writes(tmp_path:
     )
     output_root = tmp_path / "captured"
 
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "live",

@@ -1,9 +1,7 @@
 """Closed enumerations for the transaction catalogue.
 
-Defines :class:`TransactionDirection` and :class:`BusinessClassification`,
-the only sanctioned discriminators on
-:class:`aeat.domain.transactions.Transaction` and
-:class:`aeat.domain.transactions.ClassificationHistoryEntry`.
+Defines the closed discriminators on
+:class:`aeat.domain.transactions.Transaction` and related history records.
 """
 
 from __future__ import annotations
@@ -55,6 +53,14 @@ class BusinessClassification(StrEnum):
     PROCESSED_UNCLASSIFIED = "PROCESSED_UNCLASSIFIED"
     SKIPPED_BY_RULE = "SKIPPED_BY_RULE"
     FAILED_VALIDATION = "FAILED_VALIDATION"
+
+
+class TransactionLifecycleState(StrEnum):
+    """Supported lifecycle states for one ledger transaction row."""
+
+    ACTIVE = "ACTIVE"
+    ARCHIVED = "ARCHIVED"
+    STASHED = "STASHED"
 
 
 CLASSIFIED_STATES: frozenset[BusinessClassification] = frozenset(

@@ -23,6 +23,7 @@ substrate namespaces.
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 
 import pytest
@@ -38,6 +39,7 @@ pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
 _PROBE_HMAC = "00000000live-storage-probe"
 _PROBE_NAMESPACE = "_probe"
+_log = logging.getLogger(__name__)
 
 
 def _live_profile() -> str:
@@ -64,6 +66,7 @@ def _provider_or_skip() -> StorageProvider:
     try:
         return get_storage_provider(profile_override=_live_profile())
     except Exception as exc:
+        _log.debug("cannot build live storage provider", exc_info=True)
         pytest.skip(f"cannot build live storage provider: {exc}")
 
 

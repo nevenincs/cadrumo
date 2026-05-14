@@ -7,14 +7,13 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.workflow._models import WorkflowState
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
-from aeat.entrypoints.cli import app
+from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -49,9 +48,8 @@ def _row_exists() -> bool:
 
 def test_reset_state_dry_run_returns_fingerprint_without_deleting_row() -> None:
     _seed_workflow_state()
-    runner = CliRunner()
 
-    result = runner.invoke(app, ["--format", "json", "config", "repair", "reset-state", "--dry-run"])
+    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-state", "--dry-run"])
 
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
@@ -65,9 +63,8 @@ def test_reset_state_dry_run_returns_fingerprint_without_deleting_row() -> None:
 
 def test_reset_state_without_yes_or_dry_run_raises_refusal_and_keeps_row() -> None:
     _seed_workflow_state()
-    runner = CliRunner()
 
-    result = runner.invoke(app, ["config", "repair", "reset-state"])
+    result = invoke_cached_cli(["config", "repair", "reset-state"])
 
     assert result.exit_code != 0
     assert _row_exists()
@@ -76,9 +73,8 @@ def test_reset_state_without_yes_or_dry_run_raises_refusal_and_keeps_row() -> No
 def test_reset_state_with_yes_deletes_row_emits_event_and_reload_is_empty() -> None:
     _seed_workflow_state()
     history_before = len(BucketEventHistoryRepository().load().events)
-    runner = CliRunner()
 
-    result = runner.invoke(app, ["--format", "json", "config", "repair", "reset-state", "--yes"])
+    result = invoke_cached_cli(["--format", "json", "config", "repair", "reset-state", "--yes"])
 
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)

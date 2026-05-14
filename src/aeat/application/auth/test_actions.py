@@ -70,17 +70,17 @@ def test_update_auth_provider_stamps_configured_at() -> None:
 def test_update_auth_certificate_path_sets_value() -> None:
     state = WorkflowState()
 
-    updated = update_auth(state, certificate_path="data/certs/kent.pem")
+    updated = update_auth(state, certificate_path="data/certs/operator.pem")
 
-    assert updated.auth.certificate_path == "data/certs/kent.pem"
+    assert updated.auth.certificate_path == "data/certs/operator.pem"
 
 
 def test_update_auth_certificate_path_strips_surrounding_whitespace() -> None:
     state = WorkflowState()
 
-    updated = update_auth(state, certificate_path="  data/certs/kent.pem  ")
+    updated = update_auth(state, certificate_path="  data/certs/operator.pem  ")
 
-    assert updated.auth.certificate_path == "data/certs/kent.pem"
+    assert updated.auth.certificate_path == "data/certs/operator.pem"
 
 
 def test_update_auth_certificate_path_empty_becomes_none() -> None:
@@ -88,7 +88,7 @@ def test_update_auth_certificate_path_empty_becomes_none() -> None:
     field" so callers can explicitly unset a previously-configured
     certificate path."""
     initial = WorkflowState()
-    seeded = update_auth(initial, certificate_path="data/certs/kent.pem")
+    seeded = update_auth(initial, certificate_path="data/certs/operator.pem")
 
     updated = update_auth(seeded, certificate_path="")
 
@@ -99,7 +99,7 @@ def test_update_auth_certificate_path_stamps_configured_at() -> None:
     state = WorkflowState()
     assert state.auth.configured_at is None
 
-    updated = update_auth(state, certificate_path="data/certs/kent.pem")
+    updated = update_auth(state, certificate_path="data/certs/operator.pem")
 
     assert updated.auth.configured_at is not None
     assert updated.auth.configured_at.tzinfo is not None, "stamp must be tz-aware"
@@ -140,23 +140,23 @@ def test_update_auth_authenticated_false_clears_authenticated_at() -> None:
 def test_update_auth_subject_sets_value() -> None:
     state = WorkflowState()
 
-    updated = update_auth(state, subject="CN=Kent")
+    updated = update_auth(state, subject="CN=Operator")
 
-    assert updated.auth.subject == "CN=Kent"
+    assert updated.auth.subject == "CN=Operator"
 
 
 def test_update_auth_subject_strips_surrounding_whitespace() -> None:
     state = WorkflowState()
 
-    updated = update_auth(state, subject="  CN=Kent  ")
+    updated = update_auth(state, subject="  CN=Operator  ")
 
-    assert updated.auth.subject == "CN=Kent"
+    assert updated.auth.subject == "CN=Operator"
 
 
 def test_update_auth_subject_empty_becomes_none() -> None:
     """Empty string → None, same semantics as certificate_path."""
     initial = WorkflowState()
-    seeded = update_auth(initial, subject="CN=Kent")
+    seeded = update_auth(initial, subject="CN=Operator")
 
     updated = update_auth(seeded, subject="")
 
@@ -186,15 +186,15 @@ def test_update_auth_multiple_kwargs_combined_in_one_call() -> None:
     updated = update_auth(
         state,
         provider="certificate",
-        certificate_path="data/certs/kent.pem",
+        certificate_path="data/certs/operator.pem",
         authenticated=True,
-        subject="CN=Kent",
+        subject="CN=Operator",
     )
 
     assert updated.auth.provider == "certificate"
-    assert updated.auth.certificate_path == "data/certs/kent.pem"
+    assert updated.auth.certificate_path == "data/certs/operator.pem"
     assert updated.auth.authenticated_at is not None
-    assert updated.auth.subject == "CN=Kent"
+    assert updated.auth.subject == "CN=Operator"
     assert updated.auth.configured_at is not None
 
 
@@ -205,14 +205,14 @@ def test_update_auth_preserves_unrelated_auth_fields_when_only_one_kwarg_supplie
     seeded = update_auth(
         initial,
         provider="certificate",
-        certificate_path="data/certs/kent.pem",
-        subject="CN=Kent",
+        certificate_path="data/certs/operator.pem",
+        subject="CN=Operator",
         authenticated=True,
     )
 
     only_provider_changed = update_auth(seeded, provider="clave-movil")
 
     assert only_provider_changed.auth.provider == "clave-movil"
-    assert only_provider_changed.auth.certificate_path == "data/certs/kent.pem"
-    assert only_provider_changed.auth.subject == "CN=Kent"
+    assert only_provider_changed.auth.certificate_path == "data/certs/operator.pem"
+    assert only_provider_changed.auth.subject == "CN=Operator"
     assert only_provider_changed.auth.authenticated_at == seeded.auth.authenticated_at

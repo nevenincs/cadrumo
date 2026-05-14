@@ -8,20 +8,27 @@ a time without losing the backend API that owns the behavior.
 from __future__ import annotations
 
 import ast
+import json
 import re
+from contextlib import redirect_stdout
 from dataclasses import dataclass
+from io import StringIO
 from pathlib import Path
 
+import click
 import pytest
+import typer
 
+from aeat.application.review import LedgerReviewFilterKey
 from aeat.core.paths import PROJECT_ROOT
+from aeat.entrypoints.cli import _ledger
+from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
 _PLAN_PATH = PROJECT_ROOT / ".vault" / "plan" / "2026-05-08-cli-backend-boundary-plan.md"
 _REFERENCE_PATH = PROJECT_ROOT / ".vault" / "reference" / "2026-05-08-cli-backend-boundary-reference.md"
 _CLI_ROOT = PROJECT_ROOT / "src" / "aeat" / "entrypoints" / "cli"
-
 _FORBIDDEN_TEST_PROCESS_LANGUAGE = (
     "aspirational",
     "backwards-compat",
@@ -61,13 +68,6 @@ _KNOWN_FINDINGS: tuple[BoundaryFinding, ...] = (
         owner="application.filing",
     ),
     BoundaryFinding(
-        row_id="CLI-002",
-        source="src/aeat/entrypoints/cli/_ledger.py",
-        symbols=("ledger_import", "_direction_resolver"),
-        backend_gap="API-001",
-        owner="application.transactions",
-    ),
-    BoundaryFinding(
         row_id="CLI-007",
         source="src/aeat/entrypoints/cli/_overview.py",
         symbols=("overview_status",),
@@ -92,6 +92,34 @@ def _defined_symbols(tree: ast.Module) -> set[str]:
 
 def _iter_cli_test_files() -> tuple[Path, ...]:
     return tuple(sorted(_CLI_ROOT.rglob("test_*.py")))
+
+
+def _invoke_help(*args: str) -> str:
+    result = invoke_cached_cli([*args, "--help"])
+    assert result.exit_code == 0, result.output
+    return result.output
+
+
+def _registered_ledger_command_names() -> set[str]:
+    return {command.name for command in _ledger.app.registered_commands if command.name is not None}
+
+
+def _ledger_help_by_command() -> dict[str, str]:
+    group = typer.main.get_command(_ledger.app)
+    assert isinstance(group, click.Group)
+    parent = group.make_context("ledger", [], resilient_parsing=True)
+    help_by_command = {"ledger": _render_click_help(group, parent)}
+    for name, command in group.commands.items():
+        ctx = command.make_context(name, ["--help"], parent=parent, resilient_parsing=True)
+        help_by_command[name] = _render_click_help(command, ctx)
+    return help_by_command
+
+
+def _render_click_help(command: click.Command, ctx: click.Context) -> str:
+    buffer = StringIO()
+    with redirect_stdout(buffer):
+        rendered = command.get_help(ctx)
+    return rendered or buffer.getvalue()
 
 
 def test_boundary_inventory_rows_have_live_source_anchors() -> None:
@@ -124,13 +152,118 @@ def test_boundary_plan_tracks_every_known_cli_finding_and_backend_gap() -> None:
     assert offences == [], "boundary docs missing tracked rows:\n  " + "\n  ".join(offences)
 
 
+def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None:
+    """Manual ledger import and review logic must not move back into the CLI."""
+
+    ledger_cli = (PROJECT_ROOT / "src/aeat/entrypoints/cli/_ledger.py").read_text(encoding="utf-8")
+    ledger_backend = (PROJECT_ROOT / "src/aeat/application/ledger/_actions.py").read_text(encoding="utf-8")
+    forbidden_cli_tokens = (
+        "CsvProvider",
+        "OfxProvider",
+        "XlsxProvider",
+        "PdfN26Provider",
+        "FinancialProvider",
+        "detect_provider",
+        "sha256_file",
+        "_direction_resolver",
+        "_ledger_row_status",
+    )
+
+    assert [token for token in forbidden_cli_tokens if token in ledger_cli] == []
+    for token in (
+        "import_ledger_source",
+        "_direction_from_amount",
+        "query_ledger_review_rows",
+        "LedgerReviewQuery",
+    ):
+        assert token in ledger_backend
+
+
+def test_manual_ledger_registry_uses_accepted_command_vocabulary() -> None:
+    """The retained ledger Typer registry must expose current lifecycle names only."""
+
+    accepted_commands = {
+        "create",
+        "edit",
+        "classify",
+        "allocate",
+        "attach",
+        "archive",
+        "stash",
+        "remove",
+        "reset",
+        "export",
+        "list",
+        "read",
+        "status",
+        "track",
+        "import",
+        "review",
+    }
+    rejected_commands = {"set-ratio", "unset-ratio", "split", "sanitize", "financial"}
+
+    command_names = _registered_ledger_command_names()
+    assert accepted_commands <= command_names
+    assert command_names & rejected_commands == set()
+
+
+def test_manual_ledger_help_rejects_legacy_vocabulary_across_subcommands() -> None:
+    """Legacy command names and retired domain words must not leak into ledger help."""
+
+    rejected_terms = ("set-ratio", "unset-ratio", "split", "sanitize", "financial")
+    offences: list[str] = []
+    for command_name, help_text in _ledger_help_by_command().items():
+        lowered = help_text.lower()
+        offences.extend(
+            f"{command_name}: {term}"
+            for term in rejected_terms
+            if re.search(rf"(?<![a-z0-9_-]){re.escape(term)}(?![a-z0-9_-])", lowered)
+        )
+    assert offences == []
+
+
+def test_manual_ledger_export_help_keeps_serialization_format_named_as_export_format() -> None:
+    """Ledger export serialization must not reintroduce command-local output format."""
+
+    export_help = _ledger_help_by_command()["export"]
+    assert "--export-format" in export_help
+    assert "--format" not in export_help
+
+
+def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path: Path) -> None:
+    """The root ``--format`` flag must remain the rendering switch used by ``_emit``."""
+
+    statement = tmp_path / "statement.csv"
+    statement.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
+        encoding="utf-8",
+    )
+
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run"],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["dry_run"] is True
+    assert payload["rows"] == 1
+
+
+def test_manual_ledger_review_help_exposes_backend_filter_vocabulary() -> None:
+    """Review filter help must name every backend-owned filter key."""
+
+    review_help = _ledger_help_by_command()["review"]
+    for key in LedgerReviewFilterKey:
+        assert key.value in review_help
+
+
 def test_removed_workflow_shim_modules_stay_absent() -> None:
     """Rejected operator surfaces must not keep importable Typer shims."""
 
     removed = (
         "src/aeat/entrypoints/cli/_declaration.py",
         "src/aeat/entrypoints/cli/_invoice.py",
-        "src/aeat/entrypoints/cli/_topic.py",
         "src/aeat/entrypoints/cli/auth/__init__.py",
         "src/aeat/entrypoints/cli/auth/_registry.py",
         "src/aeat/entrypoints/cli/browser/__init__.py",
@@ -151,6 +284,26 @@ def test_removed_workflow_shim_modules_stay_absent() -> None:
         "src/aeat/entrypoints/cli/filing/test_filing_cli.py",
     )
     assert [path for path in removed if (PROJECT_ROOT / path).exists()] == []
+
+
+def test_registry_corpus_cli_ownership_is_registry_only() -> None:
+    """Citation and manual corpus commands must live only under the registry app."""
+
+    canonical = _CLI_ROOT / "_registry_corpus.py"
+    forbidden_patterns = (
+        'typer.Typer(\n    name="citations"',
+        'typer.Typer(name="citations"',
+        'typer.Typer(\n    name="manuals"',
+        'typer.Typer(name="manuals"',
+    )
+    offenders: list[str] = []
+    for path in sorted(_CLI_ROOT.rglob("*.py")):
+        if path == canonical or path.name.startswith("test_"):
+            continue
+        text = path.read_text(encoding="utf-8")
+        if any(pattern in text for pattern in forbidden_patterns):
+            offenders.append(path.relative_to(PROJECT_ROOT).as_posix())
+    assert offenders == []
 
 
 def test_cli_observability_wrapper_module_is_absent_from_command_tree() -> None:

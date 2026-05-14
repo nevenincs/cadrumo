@@ -92,6 +92,9 @@ class Attachment(BaseModel):
         captured_at: Timezone-aware capture timestamp.
         linked_transaction_ids: Transaction identifiers this attachment supports.
         linked_invoice_ids: Invoice identifiers this attachment supports.
+        bucket_id: Owning profile bucket for secure evidence attachment.
+        captured_by: Actor that captured or imported the evidence when known.
+        source_command: Backend/CLI command source that captured it when known.
         metadata: Frozen string-to-string mapping for channel-specific metadata.
         notes: Free-form trimmed notes; the empty string is allowed.
     """
@@ -108,6 +111,9 @@ class Attachment(BaseModel):
     captured_at: datetime
     linked_transaction_ids: tuple[str, ...] = ()
     linked_invoice_ids: tuple[str, ...] = ()
+    bucket_id: str | None = None
+    captured_by: str | None = None
+    source_command: str | None = None
     metadata: Mapping[str, str] = Field(default_factory=dict)
     notes: str = ""
 
@@ -127,6 +133,16 @@ class Attachment(BaseModel):
     @classmethod
     def _normalize_required_text(cls, value: str) -> str:
         """Trim required text fields, rejecting whitespace-only values."""
+        trimmed = value.strip()
+        if not trimmed:
+            raise AttachmentValidationError("value must not be blank")
+        return trimmed
+
+    @field_validator("bucket_id", "captured_by", "source_command")
+    @classmethod
+    def _normalize_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
         trimmed = value.strip()
         if not trimmed:
             raise AttachmentValidationError("value must not be blank")

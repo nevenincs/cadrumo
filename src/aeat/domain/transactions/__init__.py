@@ -9,14 +9,22 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._enums import CLASSIFIED_STATES, BusinessClassification, TransactionDirection, is_classified
+from ._enums import (
+    CLASSIFIED_STATES,
+    BusinessClassification,
+    TransactionDirection,
+    TransactionLifecycleState,
+    is_classified,
+)
 from ._errors import (
     LedgerNoActiveBucketError,
     LedgerStorageError,
     TransactionCatalogueError,
     TransactionError,
+    TransactionIdPrefixError,
     TransactionNotFoundError,
     TransactionPersistenceError,
+    TransactionValidationError,
 )
 from ._llm import (
     MINIMUM_CLASSIFICATION_TIER,
@@ -47,6 +55,9 @@ from ._models import (
     ClassificationHistoryEntry,
     Transaction,
     TransactionCatalogue,
+    TransactionEditLineageEntry,
+    TransactionEvidenceProvenanceEntry,
+    TransactionLifecycleLineageEntry,
     derive_transaction_id,
 )
 from ._raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -116,9 +127,15 @@ __all__ = [
     "TransactionCatalogueError",
     "TransactionCatalogueRepository",
     "TransactionDirection",
+    "TransactionEditLineageEntry",
     "TransactionError",
+    "TransactionEvidenceProvenanceEntry",
+    "TransactionLifecycleLineageEntry",
+    "TransactionLifecycleState",
+    "TransactionIdPrefixError",
     "TransactionNotFoundError",
     "TransactionPersistenceError",
+    "TransactionValidationError",
     "build_claude_classifier",
     "build_codex_classifier",
     "build_gemini_classifier",

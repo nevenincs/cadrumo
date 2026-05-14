@@ -6,6 +6,7 @@ import tomllib
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, cast
@@ -22,31 +23,44 @@ _DEFAULT_RATE_REGISTRY = PROJECT_ROOT / "registry" / "aeat" / "vat" / "rates.tom
 def load_vat_rate_table(path: Path = _DEFAULT_RATE_REGISTRY) -> Mapping[EUMemberState, tuple[VATRate, ...]]:
     """Load VAT rates from the committed registry file."""
 
+    resolved = path.resolve()
+    stat = resolved.stat()
+    return _load_vat_rate_table_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=16)
+def _load_vat_rate_table_cached(
+    path: str,
+    byte_count: int,
+    modified_ns: int,
+) -> Mapping[EUMemberState, tuple[VATRate, ...]]:
+    del byte_count, modified_ns
+    target = Path(path)
     try:
-        with path.open("rb") as fh:
+        with target.open("rb") as fh:
             payload = tomllib.load(fh)
     except tomllib.TOMLDecodeError as exc:
-        raise VatCatalogueError(f"{path}: invalid VAT rate TOML: {exc}") from exc
+        raise VatCatalogueError(f"{target}: invalid VAT rate TOML: {exc}") from exc
     except OSError as exc:
-        raise VatCatalogueError(f"{path}: cannot read VAT rate registry: {exc}") from exc
+        raise VatCatalogueError(f"{target}: cannot read VAT rate registry: {exc}") from exc
 
     raw_rates = payload.get("rates")
     if not isinstance(raw_rates, list) or not raw_rates:
-        raise VatCatalogueError(f"{path}: missing [[rates]] entries")
+        raise VatCatalogueError(f"{target}: missing [[rates]] entries")
 
     by_member_state: dict[EUMemberState, list[VATRate]] = {}
     for index, raw_rate in enumerate(raw_rates, start=1):
         if not isinstance(raw_rate, dict):
-            raise VatCatalogueError(f"{path}: rates[{index}] must be a table")
+            raise VatCatalogueError(f"{target}: rates[{index}] must be a table")
         try:
             rate = _parse_rate(cast("Mapping[str, Any]", raw_rate))
         except (ValidationError, VatValidationError, ValueError) as exc:
-            raise VatCatalogueError(f"{path}: invalid rates[{index}]: {exc}") from exc
+            raise VatCatalogueError(f"{target}: invalid rates[{index}]: {exc}") from exc
         by_member_state.setdefault(rate.member_state, []).append(rate)
 
     missing = sorted(member_state.value for member_state in set(EUMemberState) - set(by_member_state))
     if missing:
-        raise VatCatalogueError(f"{path}: VAT rate registry missing member states: {missing}")
+        raise VatCatalogueError(f"{target}: VAT rate registry missing member states: {missing}")
 
     immutable: dict[EUMemberState, tuple[VATRate, ...]] = {}
     for member_state, rates in by_member_state.items():

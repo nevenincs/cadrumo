@@ -38,13 +38,13 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from ._errors import ModeloValidationError
 
@@ -113,6 +113,7 @@ def derive_calculation_revision_id(
     inputs_snapshot: Mapping[str, str],
     binding_overrides: Mapping[str, str],
     casilla_values: Mapping[str, Decimal],
+    source_transaction_ids: Sequence[str] = (),
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt.
 
@@ -130,6 +131,7 @@ def derive_calculation_revision_id(
         "inputs": dict(sorted((k.strip(), v.strip()) for k, v in inputs_snapshot.items())),
         "overrides": dict(sorted((k.strip(), v.strip()) for k, v in binding_overrides.items())),
         "outputs": dict(sorted((k.strip(), _canonical_decimal(v)) for k, v in casilla_values.items())),
+        "source_transaction_ids": tuple(sorted(item.strip() for item in source_transaction_ids)),
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
@@ -153,6 +155,10 @@ class CalculationRevision(BaseModel):
         binding_overrides: Mapping of operator-supplied binding
             overrides applied during this calculation. Empty when
             no overrides were used.
+        source_transaction_ids: Stable ledger transaction ids that
+            contributed to this revision through bucket-local
+            aggregation. Empty for calculations that did not consume
+            ledger transactions.
         casilla_values: Mapping of computed casilla values (decimal
             output). The values that would be exported to AEAT if
             this revision were filed.
@@ -182,6 +188,7 @@ class CalculationRevision(BaseModel):
     state: CalculationRevisionState
     inputs_snapshot: Mapping[str, str] = Field(default_factory=dict)
     binding_overrides: Mapping[str, str] = Field(default_factory=dict)
+    source_transaction_ids: tuple[_CalculationRevisionId, ...] = Field(default_factory=tuple)
     casilla_values: Mapping[str, Decimal] = Field(default_factory=dict)
     created_at: datetime
     updated_at: datetime
@@ -204,6 +211,7 @@ class CalculationRevision(BaseModel):
             inputs_snapshot=self.inputs_snapshot,
             binding_overrides=self.binding_overrides,
             casilla_values=self.casilla_values,
+            source_transaction_ids=self.source_transaction_ids,
         )
         if derived != self.calculation_revision_id:
             raise ModeloValidationError(
@@ -254,6 +262,26 @@ class CalculationRevision(BaseModel):
                 "amendment_kind, amends_filing_record_id, and amendment_reason must all be set together or all be None"
             )
         return self
+
+    @field_validator("source_transaction_ids", mode="before")
+    @classmethod
+    def _freeze_source_transaction_ids(cls, value: object) -> tuple[str, ...]:
+        if not isinstance(value, Sequence) or isinstance(value, str | bytes):
+            raise ModeloValidationError("source_transaction_ids must be a sequence")
+        normalized: list[str] = []
+        for item in value:
+            if not isinstance(item, str):
+                raise ModeloValidationError("source_transaction_ids must contain strings")
+            normalized.append(item)
+        return tuple(normalized)
+
+    @field_validator("source_transaction_ids")
+    @classmethod
+    def _normalise_source_transaction_ids(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        normalized = tuple(sorted(item.strip().lower() for item in value))
+        if len(set(normalized)) != len(normalized):
+            raise ModeloValidationError("source_transaction_ids must not contain duplicates")
+        return normalized
 
     def _require_set(self, *names: str) -> None:
         for name in names:

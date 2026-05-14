@@ -34,21 +34,52 @@ def _metric_line(key: str, value: object) -> str:
 @filed_app.command("list", help=tr("cli.app.live.filed.list_help"))
 def filed_list_cmd(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.live.modelo_help"))],
-    year_from: Annotated[int, typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help"))],
-    year_to: Annotated[int, typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help"))],
+    modelo: Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.live.modelo_help"))] = None,
+    year_from: Annotated[
+        int | None,
+        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
+    ] = None,
+    year_to: Annotated[
+        int | None,
+        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
+    ] = None,
 ) -> None:
-    """List filed-declaration rows without downloading justificantes or submitted files."""
+    """List filed-declaration rows without downloading justificantes or submitted files.
 
-    report = asyncio.run(
-        list_filed_data(
-            modelo=modelo,
-            year_from=year_from,
-            year_to=year_to,
+    All filters are optional refinements. When ``--modelo`` is omitted the
+    listing iterates every modelo configured in the registry. When
+    ``--from-year`` / ``--to-year`` are omitted they default to the current
+    calendar year.
+    """
+
+    from datetime import date as _date
+
+    from ...core.config import PROJECT_ROOT
+    from ...domain.calculations.registry import ValidatedRegistryAuthority
+
+    resolved_from = year_from if year_from is not None else _date.today().year
+    resolved_to = year_to if year_to is not None else _date.today().year
+    if modelo is None:
+        authority = ValidatedRegistryAuthority.load(
+            PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT
         )
-    )
-    lines = [_metric_line("row_count", report.row_count)]
-    for row in report.rows:
+        modelos = tuple(str(m.id) for m in authority.modelos)
+    else:
+        modelos = (modelo,)
+    all_rows: list[object] = []
+    total_count = 0
+    for code in modelos:
+        report = asyncio.run(
+            list_filed_data(
+                modelo=code,
+                year_from=resolved_from,
+                year_to=resolved_to,
+            )
+        )
+        total_count += report.row_count
+        all_rows.extend(report.rows)
+    lines = [_metric_line("row_count", total_count)]
+    for row in all_rows:
         lines.append(
             _metric_line(
                 "row",
@@ -67,7 +98,14 @@ def filed_list_cmd(
                 ),
             )
         )
-    _emit(ctx, report, lines)
+    payload = {
+        "modelo_filter": modelo,
+        "year_from": resolved_from,
+        "year_to": resolved_to,
+        "row_count": total_count,
+        "rows": [row.model_dump(mode="json") for row in all_rows],
+    }
+    _emit(ctx, payload, lines)
 
 
 @filed_app.command("capture", help=tr("cli.app.live.filed.capture_help"))

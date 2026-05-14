@@ -74,10 +74,13 @@ class BucketEventType(StrEnum):
     PROFILE_SELECTED = "profile.selected"
     PROFILE_VALUES_UPDATED = "profile.values.updated"
     PROFILE_VALUES_CLEARED = "profile.values.cleared"
+    PROFILE_TOMBSTONED = "profile.tombstoned"
+    PROFILE_DUPLICATED = "profile.duplicated"
 
     # ledger transaction lifecycle (Wave W61)
     LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"
     LEDGER_TRANSACTION_IMPORTED = "ledger.transaction.imported"
+    LEDGER_IMPORT_DIAGNOSTIC_RECORDED = "ledger.import.diagnostic_recorded"
     LEDGER_TRANSACTION_UPDATED = "ledger.transaction.updated"
     LEDGER_TRANSACTION_CLASSIFIED = "ledger.transaction.classified"
     LEDGER_TRANSACTION_ALLOCATED = "ledger.transaction.allocated"
@@ -90,11 +93,29 @@ class BucketEventType(StrEnum):
     PURCHASE_INVOICE_EVIDENCE_ATTACHED = "purchase_invoice_evidence.attached"
     PURCHASE_INVOICE_EVIDENCE_REPLACED = "purchase_invoice_evidence.replaced"
     PURCHASE_INVOICE_EVIDENCE_DETACHED = "purchase_invoice_evidence.detached"
+    # business-operation invoice noun-groups (W73A invoice-domain-decoupling
+    # CRUD mounts per apex ADR §12.b)
+    PAYABLE_INVOICE_CREATED = "payable_invoice.created"
+    PAYABLE_INVOICE_UPDATED = "payable_invoice.updated"
+    PAYABLE_INVOICE_REMOVED = "payable_invoice.removed"
+    COLLECTIBLE_INVOICE_CREATED = "collectible_invoice.created"
+    COLLECTIBLE_INVOICE_UPDATED = "collectible_invoice.updated"
+    COLLECTIBLE_INVOICE_REMOVED = "collectible_invoice.removed"
     ATTACHMENT_LINKED = "attachment.linked"
     ATTACHMENT_REMOVED = "attachment.removed"
 
     # workflow-state recovery (config repair shape ADR)
     WORKFLOW_STATE_RESET = "workflow_state.reset"
+
+    # reverse-merge corrections (google-oauth taxonomy ADR + two-way deferral ADR)
+    LEDGER_TRANSACTION_CORRECTION_APPLIED = "ledger.transaction.correction.applied"
+    LEDGER_PURCHASE_INVOICE_EVIDENCE_CORRECTION_APPLIED = (
+        "ledger.purchase_invoice_evidence.correction.applied"
+    )
+    LEDGER_PAYABLE_INVOICE_CORRECTION_APPLIED = "ledger.payable_invoice.correction.applied"
+    LEDGER_COLLECTIBLE_INVOICE_CORRECTION_APPLIED = "ledger.collectible_invoice.correction.applied"
+    LEDGER_RENTAL_INCOME_CORRECTION_APPLIED = "ledger.rental_income.correction.applied"
+    LEDGER_RENTAL_EXPENSE_CORRECTION_APPLIED = "ledger.rental_expense.correction.applied"
 
 
 class BucketEventObjectType(StrEnum):

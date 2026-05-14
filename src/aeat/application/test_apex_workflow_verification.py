@@ -10,7 +10,7 @@ from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.auth import clear_operator_auth, configure_operator_auth
 from aeat.application.operator_surface import require_accepted_root, retired_surface_suggestion
 from aeat.application.operator_surface._errors import OperatorSurfaceContractError
-from aeat.application.profile._actions import set_active_profile
+from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow import workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -49,7 +49,7 @@ def test_root_contract_service_rejects_retired_surfaces_with_canonical_suggestio
 
 def test_auth_bucket_events_survive_workflow_repository_reload() -> None:
     repository = workflow_state_repository()
-    repository.update(lambda state: set_active_profile(state, "operator"))
+    repository.update(lambda state: register_minimal_profile(state, profile_id="operator"))
 
     configured = configure_operator_auth("certificate")
     cleared = clear_operator_auth(provider="certificate")

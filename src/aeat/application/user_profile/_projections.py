@@ -3,15 +3,11 @@
 The schema-driven user-profile backend is the canonical authority. Every
 existing consumer (deadlines, filing runtime, overview calendar,
 wizard, workflow adapters) reads through one of these projection
-helpers — never directly from the legacy ``ProfileRecord.values`` map
-or the legacy ``aeat.application.profile`` package.
+helpers rather than keeping its own profile fact decoding branch.
 
 The projections compose against a *fact map* (``path -> str(value)``)
-derived from the record. The legacy ``autonomo_profile_from_mapping``
-helper accepts the same flat shape, so the deadline-engine projection
-simply pipes through it. This keeps the field-level coercion logic in
-one place while the legacy mapping callers migrate to the canonical
-boundary.
+derived from the record. Deadline-engine projection uses the domain
+coercer so field-level coercion logic stays in one place.
 """
 
 from __future__ import annotations
@@ -97,6 +93,21 @@ def snapshot_to_values(
     return facts_to_values(snapshot.facts, schema=schema)
 
 
+def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None) -> dict[str, str]:
+    """Project facts into a schema-path-keyed string mapping.
+
+    Unlike :func:`record_to_values` (which projects via the schema's
+    ``model_selectors`` aliases), this keeps the canonical schema
+    path as the key. The mapping is what the wizard catalogue,
+    :func:`validate_profile_values`, and CLI status surfaces consume
+    after the W09 canonical migration.
+    """
+
+    if record is None:
+        return {}
+    return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+
+
 def projection_for_autonomo(
     facts: Mapping[str, object] | UserProfileRecord | UserProfileSnapshot,
     *,
@@ -124,6 +135,7 @@ def projection_for_autonomo(
 __all__ = [
     "facts_to_values",
     "projection_for_autonomo",
+    "record_to_path_values",
     "record_to_values",
     "snapshot_to_values",
 ]

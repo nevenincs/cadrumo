@@ -14,6 +14,7 @@ from __future__ import annotations
 import io
 import logging
 import sys
+from pathlib import Path
 from typing import Any, cast
 
 import pytest
@@ -50,7 +51,15 @@ def test_default_logging_routes_warnings_to_file_not_stderr(capsys: pytest.Captu
 
     captured = capsys.readouterr()
     assert marker not in captured.err
-    assert marker in default_log_file_path().read_text(encoding="utf-8")
+    assert marker in _read_log_tail(default_log_file_path())
+
+
+def _read_log_tail(path: Path, *, max_bytes: int = 64 * 1024) -> str:
+    with path.open("rb") as handle:
+        handle.seek(0, 2)
+        size = handle.tell()
+        handle.seek(max(0, size - max_bytes))
+        return handle.read().decode("utf-8", errors="replace")
 
 
 def test_secret_scrubbing_redacts_sensitive_fields_in_rendered_output() -> None:

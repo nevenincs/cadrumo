@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import logging
 import logging.config
-import os
 import re
 from collections.abc import Mapping
 from pathlib import Path
@@ -237,8 +236,10 @@ class _DropRunEventFilter(logging.Filter):
 def default_log_file_path() -> Path:
     """Return the file path for non-interactive project logs."""
 
-    raw_dir = os.environ.get("AEAT_LOG_DIR")
-    log_dir = Path(raw_dir).expanduser() if raw_dir else _DEFAULT_LOG_DIR
+    from .config import load_settings
+
+    configured = load_settings().aeat_log_dir
+    log_dir = configured.expanduser() if configured is not None else _DEFAULT_LOG_DIR
     return log_dir / _DEFAULT_LOG_FILE_NAME
 
 

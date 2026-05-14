@@ -9,7 +9,11 @@ tuple. Errors from the underlying library and pathological inputs
 
 from __future__ import annotations
 
+import re
+from functools import lru_cache
 from pathlib import Path
+
+from aeat.core.logging import get_logger
 
 from ...pdf._pdfplumber import (
     extract_pages_text_from_bytes as _extract_pages_text_from_bytes_impl,
@@ -18,6 +22,16 @@ from ...pdf._pdfplumber import (
     extract_pages_text_from_path as _extract_pages_text_from_path_impl,
 )
 from .._errors import DeclaracionParseError
+
+_logger = get_logger(__name__)
+_TAX_ID_CANARY_RE = re.compile(
+    r"\bNIF\s*[:\-]?\s*[A-Z0-9][A-Z0-9 .\-]{3,31}?(?=\s+(?:CSV|Fecha)\b|\s*$)",
+    re.IGNORECASE,
+)
+_DECLARANT_ROW_CANARY_RE = re.compile(
+    r"\b[XYZ]?[0-9]{7,8}[A-Z]\s+20[0-9]{2}\s+(?:[1-4]T|0A|[0-1][0-9])\b",
+    re.IGNORECASE,
+)
 
 
 def extract_pages_text(pdf_path: Path) -> tuple[str, ...]:
@@ -36,12 +50,56 @@ def extract_pages_text(pdf_path: Path) -> tuple[str, ...]:
             the file, or when every page is empty (suggesting a
             scan-only / XFA PDF without an embedded text layer).
     """
+    fast_pages = _extract_pages_text_with_pdfium(pdf_path)
+    if fast_pages is not None:
+        return fast_pages
     return _extract_pages_text_from_path_impl(
         pdf_path,
         error_class=DeclaracionParseError,
         not_found_label="declaración PDF not found",
         pdf_label="the PDF",
     )
+
+
+def _extract_pages_text_with_pdfium(pdf_path: Path) -> tuple[str, ...] | None:
+    if not pdf_path.is_file():
+        return None
+    resolved = pdf_path.resolve()
+    stat = resolved.stat()
+    return _extract_pages_text_with_pdfium_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=256)
+def _extract_pages_text_with_pdfium_cached(
+    path: str,
+    byte_count: int,
+    modified_ns: int,
+) -> tuple[str, ...] | None:
+    del byte_count, modified_ns
+    try:
+        import pypdfium2 as pdfium
+
+        document = pdfium.PdfDocument(path)
+        try:
+            pages: list[str] = []
+            for page in document:
+                text_page = page.get_textpage()
+                try:
+                    pages.append((text_page.get_text_range() or "").strip())
+                finally:
+                    text_page.close()
+                    page.close()
+        finally:
+            document.close()
+    except Exception:
+        _logger.debug("pypdfium2 failed to extract declaración PDF text from %s", path, exc_info=True)
+        return None
+    if not any(pages):
+        return None
+    text = "\n".join(pages)
+    if not (_TAX_ID_CANARY_RE.search(text) or _DECLARANT_ROW_CANARY_RE.search(text)):
+        return None
+    return tuple(pages)
 
 
 def extract_pages_text_from_bytes(pdf_bytes: bytes, *, source_label: str = "in-memory PDF") -> tuple[str, ...]:

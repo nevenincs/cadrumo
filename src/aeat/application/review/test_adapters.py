@@ -157,6 +157,19 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
     assert item.source.business_classification is BusinessClassification.NOT_YET_PROCESSED
 
 
+def test_transactions_pending_drills_into_ledger_owned_review_command(tmp_path: Path) -> None:
+    settings = _build_settings(tmp_path)
+    catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1),))
+    TransactionCatalogueRepository(bucket_id="test").save(catalogue)
+
+    items = transactions_pending(settings, bucket_id="test")
+
+    assert len(items) == 1
+    assert items[0].drill_command == f"aeat app ledger review --id {items[0].source.transaction_id}"
+    assert " edit " not in items[0].drill_command
+    assert "--set" not in items[0].drill_command
+
+
 def test_transactions_pending_reads_only_requested_bucket(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     other_bucket_catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1),))

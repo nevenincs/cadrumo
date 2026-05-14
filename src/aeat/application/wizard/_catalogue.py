@@ -148,7 +148,7 @@ _PROFILE_SECTION = WizardSection(
     questions=(
         WizardQuestion(
             id="tax-id",
-            profile_key="tax.id",
+            profile_key="identity.tax_id",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.profile.tax-id.prompt"),
             required=True,
@@ -156,7 +156,7 @@ _PROFILE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="name",
-            profile_key="name",
+            profile_key="identity.name",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.profile.name.prompt"),
             required=False,
@@ -164,7 +164,7 @@ _PROFILE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="surnames",
-            profile_key="surnames",
+            profile_key="identity.surnames",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.profile.surnames.prompt"),
             required=False,
@@ -172,7 +172,7 @@ _PROFILE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="activity",
-            profile_key="activity",
+            profile_key="activities.description",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.profile.activity.prompt"),
             required=True,
@@ -180,7 +180,7 @@ _PROFILE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="address-postcode",
-            profile_key="address.postcode",
+            profile_key="contact.postcode",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.profile.address-postcode.prompt"),
             required=False,
@@ -188,7 +188,7 @@ _PROFILE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="taxation-type",
-            profile_key="declaration.type",
+            profile_key="filing_export.declaration_type",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.profile.taxation-type.prompt"),
             choices=_DECLARATION_TYPE_CHOICES,
@@ -197,7 +197,7 @@ _PROFILE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="output-language",
-            profile_key="output.language",
+            profile_key="preferences.output_language",
             widget=WizardWidget.SELECT,
             prompt=tr("wizard.setup.profile.output-language.prompt"),
             choices=_OUTPUT_LANGUAGE_CHOICES,
@@ -215,7 +215,7 @@ _TAXPAYER_SECTION = WizardSection(
     questions=(
         WizardQuestion(
             id="taxpayer-sex",
-            profile_key="taxpayer.sex",
+            profile_key="renta_taxpayer.sex",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.taxpayer.taxpayer-sex.prompt"),
             choices=_SEX_CHOICES,
@@ -224,7 +224,7 @@ _TAXPAYER_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="taxpayer-marital-status",
-            profile_key="taxpayer.marital_status",
+            profile_key="renta_taxpayer.marital_status",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.taxpayer.taxpayer-marital-status.prompt"),
             choices=_MARITAL_STATUS_CHOICES,
@@ -233,7 +233,7 @@ _TAXPAYER_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="taxpayer-birth-date",
-            profile_key="taxpayer.birth_date",
+            profile_key="renta_taxpayer.birth_date",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.taxpayer.taxpayer-birth-date.prompt"),
             required=False,
@@ -241,7 +241,7 @@ _TAXPAYER_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="taxpayer-disability-grade",
-            profile_key="taxpayer.disability_grade",
+            profile_key="renta_taxpayer.disability_grade",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.taxpayer.taxpayer-disability-grade.prompt"),
             choices=_DISABILITY_GRADE_CHOICES,
@@ -250,7 +250,7 @@ _TAXPAYER_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="taxpayer-death-date",
-            profile_key="taxpayer.death_date",
+            profile_key="renta_taxpayer.death_date",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.taxpayer.taxpayer-death-date.prompt"),
             required=False,
@@ -266,7 +266,7 @@ _SPOUSE_SECTION = WizardSection(
     questions=(
         WizardQuestion(
             id="spouse-tax-id",
-            profile_key="spouse.tax.id",
+            profile_key="renta_spouse.tax_id",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.spouse.spouse-tax-id.prompt"),
             required=False,
@@ -275,7 +275,7 @@ _SPOUSE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="spouse-name",
-            profile_key="spouse.name",
+            profile_key="renta_spouse.name",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.spouse.spouse-name.prompt"),
             required=False,
@@ -284,7 +284,7 @@ _SPOUSE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="spouse-surnames",
-            profile_key="spouse.surnames",
+            profile_key="renta_spouse.surnames",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.spouse.spouse-surnames.prompt"),
             required=False,
@@ -293,7 +293,7 @@ _SPOUSE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="spouse-birth-date",
-            profile_key="spouse.birth_date",
+            profile_key="renta_spouse.birth_date",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.spouse.spouse-birth-date.prompt"),
             required=False,
@@ -302,7 +302,7 @@ _SPOUSE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="spouse-sex",
-            profile_key="spouse.sex",
+            profile_key="renta_spouse.sex",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.spouse.spouse-sex.prompt"),
             choices=_SEX_CHOICES,
@@ -312,7 +312,7 @@ _SPOUSE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="spouse-disability-grade",
-            profile_key="spouse.disability_grade",
+            profile_key="renta_spouse.disability_grade",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.spouse.spouse-disability-grade.prompt"),
             choices=_DISABILITY_GRADE_CHOICES,
@@ -321,7 +321,7 @@ _SPOUSE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="spouse-non-resident-irpf",
-            profile_key="spouse.non_resident_irpf",
+            profile_key="renta_spouse.non_resident_irpf",
             widget=WizardWidget.CONFIRM,
             prompt=tr("wizard.setup.spouse.spouse-non-resident-irpf.prompt"),
             required=False,
@@ -330,7 +330,7 @@ _SPOUSE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="spouse-eu-eea-resident",
-            profile_key="spouse.eu_eea_resident",
+            profile_key="renta_spouse.eu_eea_resident",
             widget=WizardWidget.CONFIRM,
             prompt=tr("wizard.setup.spouse.spouse-eu-eea-resident.prompt"),
             required=False,
@@ -340,7 +340,7 @@ _SPOUSE_SECTION = WizardSection(
         ),
         WizardQuestion(
             id="spouse-eu-eea-country",
-            profile_key="spouse.eu_eea_country",
+            profile_key="renta_spouse.eu_eea_country",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.spouse.spouse-eu-eea-country.prompt"),
             required=False,
@@ -355,8 +355,8 @@ _FAMILY_SECTION = WizardSection(
     id="family",
     title=tr("wizard.setup.family.title"),
     questions=(
-        _confirm("family-descendants-eu-eea-deduction", "family.descendants_eu_eea_deduction", suffix="family"),
-        _confirm("family-minor-children-in-unit", "family.minor_children_in_unit", suffix="family"),
+        _confirm("family-descendants-eu-eea-deduction", "renta_family.descendants_eu_eea_deduction", suffix="family"),
+        _confirm("family-minor-children-in-unit", "renta_family.minor_children_in_unit", suffix="family"),
     ),
 )
 
@@ -390,10 +390,10 @@ _ENROLLMENT_SECTION = WizardSection(
     id="enrollment",
     title=tr("wizard.setup.enrollment.title"),
     questions=(
-        _confirm("enrollment-large-company", "enrollment.large_company", suffix="enrollment"),
+        _confirm("enrollment-large-company", "census.large_company", suffix="enrollment"),
         _confirm(
             "enrollment-public-administration-budget-gt-6000000",
-            "enrollment.public_administration_budget_gt_6000000",
+            "census.public_administration_budget_gt_6000000",
             suffix="enrollment",
         ),
     ),
@@ -404,37 +404,37 @@ _OBLIGATIONS_SECTION = WizardSection(
     id="obligations",
     title=tr("wizard.setup.obligations.title"),
     questions=(
-        _confirm("has-employees", "has_employees", suffix="obligations"),
+        _confirm("has-employees", "withholding.has_employees", suffix="obligations"),
         _confirm(
             "pays-professionals-with-retencion",
-            "pays_professionals_with_retencion",
+            "withholding.pays_professionals_with_retencion",
             suffix="obligations",
         ),
         _confirm(
             "professional-income-withholding-ge-70pct",
-            "professional_income_withholding_ge_70pct",
+            "irpf.professional_income_withholding_ge_70pct",
             suffix="obligations",
         ),
-        _confirm("pays-rent-with-retencion", "pays_rent_with_retencion", suffix="obligations"),
+        _confirm("pays-rent-with-retencion", "withholding.pays_rent_with_retencion", suffix="obligations"),
         _confirm(
             "pays-capital-income-with-retencion",
-            "pays_capital_income_with_retencion",
+            "withholding.pays_capital_income_with_retencion",
             suffix="obligations",
         ),
         _confirm(
             "uses-objective-estimation-irpf",
-            "uses_objective_estimation_irpf",
+            "irpf.uses_objective_estimation",
             suffix="obligations",
         ),
-        _confirm("does-intracomunitario", "does_intracomunitario", suffix="obligations"),
+        _confirm("does-intracomunitario", "iva.does_intracomunitario", suffix="obligations"),
         _confirm(
             "third-party-transactions-above-347-threshold",
-            "third_party_transactions_above_347_threshold",
+            "obligations.third_party_transactions_above_347_threshold",
             suffix="obligations",
         ),
         _confirm(
             "bienes-extranjero-above-threshold",
-            "bienes_extranjero_above_threshold",
+            "obligations.bienes_extranjero_above_threshold",
             suffix="obligations",
         ),
     ),
@@ -447,7 +447,7 @@ _RESIDENCE_SECTION = WizardSection(
     questions=(
         WizardQuestion(
             id="tax-residence-ccaa",
-            profile_key="tax.residence.ccaa",
+            profile_key="tax_residence.ccaa",
             widget=WizardWidget.SELECT,
             prompt=tr("wizard.setup.residence.tax-residence-ccaa.prompt"),
             choices=_CCAA_CHOICES,
@@ -465,7 +465,7 @@ _NOTES_SECTION = WizardSection(
     questions=(
         WizardQuestion(
             id="notes",
-            profile_key="notes",
+            profile_key="identity.notes",
             widget=WizardWidget.TEXT,
             prompt=tr("wizard.setup.notes.notes.prompt"),
             required=False,

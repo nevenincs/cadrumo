@@ -4,25 +4,36 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.i18n import Translatable as tr
+from ...core.i18n import Translatable
 from . import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderListing,
     get_auth_provider,
+    implemented_auth_provider_ids,
+    known_auth_provider_ids,
     list_auth_providers,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+tr = Translatable
 
 
 def test_catalogue_carries_supported_entries() -> None:
     ids = {entry.id for entry in AUTH_PROVIDER_CATALOGUE}
-    assert ids == {"certificate", "clave_movil"}
+    assert ids == {"certificate", "clave_movil", "clave_pin", "clave_permanente", "dnie_pkcs"}
 
 
-def test_catalogue_lists_only_configurable_providers() -> None:
-    ids = {entry.id for entry in AUTH_PROVIDER_CATALOGUE}
-    assert "clave_permanente" not in ids
+def test_catalogue_distinguishes_implemented_and_reserved_slots() -> None:
+    assert implemented_auth_provider_ids() == ("certificate", "clave_movil")
+    assert known_auth_provider_ids() == (
+        "certificate",
+        "clave_movil",
+        "clave_pin",
+        "clave_permanente",
+        "dnie_pkcs",
+    )
+    reserved = {entry.id for entry in AUTH_PROVIDER_CATALOGUE if not entry.implemented}
+    assert reserved == {"clave_pin", "clave_permanente", "dnie_pkcs"}
 
 
 def test_list_auth_providers_returns_a_non_empty_immutable_catalogue() -> None:
@@ -41,7 +52,7 @@ def test_get_auth_provider_returns_canonical_entry() -> None:
     assert entry.description
 
 
-@pytest.mark.parametrize("provider_id", ["not.a.provider", "clave-permanente", "clave_permanente", "clave-movil"])
+@pytest.mark.parametrize("provider_id", ["not.a.provider", "clave-permanente", "clave-movil"])
 def test_get_auth_provider_raises_keyerror_for_unsupported_provider_id(provider_id: str) -> None:
     with pytest.raises(KeyError, match=r"provider|unknown|not.a.provider|clave"):
         get_auth_provider(provider_id)

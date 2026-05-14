@@ -170,7 +170,7 @@ async def verify_csv(
             try:
                 await session.close()
             except Exception as exc:  # pragma: no cover - defensive
-                _logger.debug("browser session close failed: %s", exc)
+                _logger.debug("browser session close failed: %s", exc, exc_info=True)
 
 
 def _assert_verify_http(method: str, url: str) -> None:

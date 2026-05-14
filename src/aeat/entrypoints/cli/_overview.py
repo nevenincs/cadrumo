@@ -59,8 +59,10 @@ def overview_status(
             from_date=_parse_iso_date(from_date, label="--from"),
             to_date=_parse_iso_date(to_date, label="--to"),
         )
+        from ...application.user_profile._projections import record_to_values
+
         record = current.active_profile_record()
-        raw_values = record.values if record is not None else None
+        raw_values = record_to_values(record) if record is not None else None
         cal: OverviewCalendar = build_overview_calendar(
             _profile_to_autonomo(current),
             rng,

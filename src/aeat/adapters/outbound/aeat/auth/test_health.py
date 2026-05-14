@@ -89,10 +89,11 @@ def _loaded_cert_for_window(
         not_valid_before=not_valid_before,
         not_valid_after=not_valid_after,
     )
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", _SECRET)
+    from pydantic import SecretStr
+
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(_SECRET),
         friendly_name=None,
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
@@ -170,10 +171,11 @@ def test_health_expired(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None
         not_valid_before=now - timedelta(days=10),
         not_valid_after=now - timedelta(days=1),
     )
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", _SECRET)
+    from pydantic import SecretStr
+
     result = health(
         p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(_SECRET),
         warn_days=_WARN_DAYS,
         critical_days=_CRITICAL_DAYS,
         now=now,
@@ -192,10 +194,11 @@ def test_health_disk_path_ok(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) ->
         not_valid_before=now - timedelta(days=1),
         not_valid_after=now + timedelta(days=365),
     )
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", _SECRET)
+    from pydantic import SecretStr
+
     result = health(
         p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(_SECRET),
         warn_days=_WARN_DAYS,
         critical_days=_CRITICAL_DAYS,
         now=now,

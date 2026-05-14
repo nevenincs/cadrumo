@@ -29,6 +29,10 @@ class TransactionNotFoundError(TransactionCatalogueError):
     """Raised when a catalogue lookup targets a missing transaction."""
 
 
+class TransactionIdPrefixError(TransactionCatalogueError):
+    """Raised when a transaction-id prefix matches zero or multiple transactions."""
+
+
 class LLMClassifierError(TransactionError):
     """Raised when an LLM classification attempt fails."""
 

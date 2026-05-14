@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from ..workflow._models import WorkflowEvent, WorkflowState
 from ..workflow._utils import _normalise_key, utc_now
-from ._models import InvoiceReviewRecord, LedgerReviewRecord, LedgerSplit
+from ._errors import ReviewError
+from ._models import InvoiceReviewRecord, LedgerReviewRecord
 
 
 def update_ledger_review(
@@ -15,29 +14,27 @@ def update_ledger_review(
     *,
     fields: dict[str, str] | None = None,
     skipped: bool | None = None,
-    split: LedgerSplit | None | object = None,
+    split: object = None,
     clear_split: bool = False,
     action: str,
     reason: str = "",
 ) -> WorkflowState:
-    """Return state with review metadata updated for one transaction."""
+    """Return state with workflow attention history for one transaction."""
+
+    if fields:
+        raise ReviewError("ledger review annotations must not store durable ledger fields")
+    if skipped is not None:
+        raise ReviewError("ledger skip state must be written through transaction classification")
+    if split is not None or clear_split:
+        raise ReviewError("ledger allocation must be written through transaction business_pct")
 
     reviews = dict(state.ledger_reviews)
     current = reviews.get(transaction_id, LedgerReviewRecord(transaction_id=transaction_id))
     if isinstance(current, dict):
         current = LedgerReviewRecord.model_validate(current)
 
-    update: dict[str, Any] = {"updated_at": utc_now()}
-    if fields:
-        update["fields"] = {**current.fields, **{_normalise_key(key): raw for key, raw in fields.items()}}
-    if skipped is not None:
-        update["skipped"] = skipped
-    if clear_split:
-        update["split"] = None
-    elif isinstance(split, LedgerSplit):
-        update["split"] = split
     event = WorkflowEvent(action=action, reason=reason)
-    update["history"] = (*current.history, event)
+    update = {"updated_at": utc_now(), "history": (*current.history, event)}
     reviews[transaction_id] = current.model_copy(update=update)
     return state.model_copy(update={"ledger_reviews": reviews, "updated_at": utc_now()})
 

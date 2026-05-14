@@ -15,6 +15,7 @@ contract.
 from __future__ import annotations
 
 import ast
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -25,6 +26,19 @@ _SRC_AEAT = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _SRC_AEAT.parents[1]
 _FIXTURES_DIR = _SRC_AEAT / "tests" / "fixtures"
 _ACCESS_MARKERS = frozenset({"unit", "live_read", "live_write"})
+_DOMAIN_MARKERS = frozenset(
+    {
+        "domain_application",
+        "domain_core",
+        "domain_export",
+        "domain_inbound",
+        "domain_model",
+        "domain_outbound",
+        "domain_persistence",
+    }
+)
+_AUXILIARY_MARKERS = frozenset({"flaky", "fixture_tier_l3"})
+_EXPECTED_CONFIGURED_MARKERS = _ACCESS_MARKERS | _DOMAIN_MARKERS | _AUXILIARY_MARKERS
 
 
 def _discover_test_modules() -> list[Path]:
@@ -103,6 +117,59 @@ def _extract_pytestmark_names(path: Path) -> tuple[set[str], str | None]:
     return names, None
 
 
+def _pytest_mark_name(node: ast.AST) -> str | None:
+    """Return the marker name for ``pytest.mark.<name>`` decorators."""
+    attr_chain = node.func if isinstance(node, ast.Call) else node
+    if not isinstance(attr_chain, ast.Attribute):
+        return None
+    mark_attr = attr_chain.value
+    if not isinstance(mark_attr, ast.Attribute) or mark_attr.attr != "mark":
+        return None
+    mark_root = mark_attr.value
+    if not isinstance(mark_root, ast.Name) or mark_root.id != "pytest":
+        return None
+    return attr_chain.attr
+
+
+def _placement_error(path: Path) -> str | None:
+    """Validate that module-level ``pytestmark`` is the first test statement."""
+    source = path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(path))
+    for node in tree.body:
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+            continue
+        if isinstance(node, ast.Import | ast.ImportFrom):
+            continue
+        if isinstance(node, ast.Assign) and any(
+            isinstance(target, ast.Name) and target.id == "pytestmark" for target in node.targets
+        ):
+            return None
+        return f"`pytestmark` must appear before {type(node).__name__} at line {node.lineno}"
+    return "missing top-level `pytestmark = [...]` assignment"
+
+
+def _function_level_marker_violations(path: Path) -> list[str]:
+    """Return function/class decorators that misuse access or domain markers."""
+    source = path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(path))
+    violations: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+            continue
+        for decorator in node.decorator_list:
+            name = _pytest_mark_name(decorator)
+            if name in _ACCESS_MARKERS or (name is not None and name.startswith("domain_")):
+                violations.append(f"{path.relative_to(_REPO_ROOT)}:{decorator.lineno}: @{name}")
+    return violations
+
+
+def _configured_marker_names() -> list[str]:
+    """Return marker names declared in ``pyproject.toml``."""
+    data = tomllib.loads((_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    marker_rows = data["tool"]["pytest"]["ini_options"]["markers"]
+    return [row.split(":", 1)[0] for row in marker_rows]
+
+
 _MODULES = _discover_test_modules()
 
 
@@ -122,6 +189,34 @@ def test_module_carries_valid_pytestmark(module_path: Path) -> None:
 
     domains = {name for name in names if name.startswith("domain_")}
     assert len(domains) >= 1, f"{relative}: must carry at least one `domain_*` marker; found {sorted(names)}"
+    assert domains <= _DOMAIN_MARKERS, f"{relative}: unknown domain marker(s) {sorted(domains - _DOMAIN_MARKERS)}"
+
+
+@pytest.mark.parametrize(
+    "module_path",
+    _MODULES,
+    ids=[str(p.relative_to(_REPO_ROOT)).replace("\\", "/") for p in _MODULES],
+)
+def test_module_pytestmark_is_first_test_statement(module_path: Path) -> None:
+    """The module marker declaration must precede constants, fixtures, and tests."""
+    error = _placement_error(module_path)
+    assert error is None, f"{module_path.relative_to(_REPO_ROOT)}: {error}"
+
+
+def test_no_function_level_access_or_domain_markers() -> None:
+    """Access and domain markers are module-level only."""
+    violations: list[str] = []
+    for module_path in _MODULES:
+        violations.extend(_function_level_marker_violations(module_path))
+    assert not violations, "function-level access/domain markers are forbidden:\n" + "\n".join(violations)
+
+
+def test_pyproject_marker_registry_is_pruned_and_unique() -> None:
+    """Configured markers must be unique and match the active taxonomy."""
+    configured = _configured_marker_names()
+    duplicates = sorted({name for name in configured if configured.count(name) > 1})
+    assert not duplicates, f"duplicate pytest marker declarations: {duplicates}"
+    assert set(configured) == _EXPECTED_CONFIGURED_MARKERS
 
 
 def test_discovery_found_modules() -> None:

@@ -23,12 +23,12 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator, model_validator
 
 from .._identifiers import canonical_decimal_string
-from ._enums import BusinessClassification, TransactionDirection
+from ._enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._raw_transaction import RawTransaction
 
@@ -132,6 +132,35 @@ def _validate_business_pct_coupling(
         return
     if pct is not None:
         raise TransactionValidationError("business_pct must be None unless classification is MIXED")
+
+
+def _coerce_identifier_tuple(raw: Any) -> tuple[str, ...]:
+    """Freeze inbound identifier sequences while rejecting scalar strings."""
+
+    if isinstance(raw, tuple):
+        return raw
+    if isinstance(raw, Sequence) and not isinstance(raw, str | bytes):
+        return tuple(raw)
+    raise TransactionValidationError("identifier fields must be a sequence")
+
+
+def _normalize_identifier_tuple(value: tuple[str, ...]) -> tuple[str, ...]:
+    """Trim identifier tuples and reject blanks or duplicates."""
+
+    normalized = tuple(item.strip() for item in value if item.strip())
+    if len(normalized) != len(value):
+        raise TransactionValidationError("identifier fields must not contain blank values")
+    if len(set(normalized)) != len(normalized):
+        raise TransactionValidationError("identifier fields must not contain duplicates")
+    return normalized
+
+
+def _validate_non_negative_decimal(value: Decimal | None, *, field_name: str) -> Decimal | None:
+    """Reject negative monetary or percentage values when supplied."""
+
+    if value is not None and value < Decimal("0"):
+        raise TransactionValidationError(f"{field_name} must be non-negative")
+    return value
 
 
 class ClassificationHistoryEntry(BaseModel):
@@ -244,6 +273,124 @@ class ClassificationHistoryEntry(BaseModel):
         return self
 
 
+class TransactionEvidenceProvenanceEntry(BaseModel):
+    """Actor/source lineage for evidence linked to one transaction."""
+
+    model_config = _STRICT_FROZEN
+
+    evidence_id: str = Field(min_length=1, max_length=128)
+    evidence_kind: Literal["purchase_invoice_evidence", "attachment"]
+    actor: str = Field(min_length=1, max_length=64)
+    source_command: str = Field(min_length=1, max_length=128)
+    linked_at: datetime
+    bucket_event_id: str | None = Field(default=None, min_length=64, max_length=64)
+
+    @field_validator("evidence_id", "actor", "source_command", "bucket_event_id")
+    @classmethod
+    def _trim_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        if not trimmed:
+            raise TransactionValidationError("lineage text fields must not be blank")
+        return trimmed
+
+    @field_validator("linked_at", mode="before")
+    @classmethod
+    def _parse_linked_at(cls, value: Any) -> datetime:
+        if isinstance(value, str):
+            value = _parse_datetime(value)
+        if not isinstance(value, datetime):
+            raise TransactionValidationError("linked_at must be a datetime")
+        return _require_aware_datetime(value)
+
+
+class TransactionEditLineageEntry(BaseModel):
+    """One durable manual correction applied to a transaction row."""
+
+    model_config = _STRICT_FROZEN
+
+    previous_transaction_id: str = Field(min_length=64, max_length=64)
+    actor: str = Field(min_length=1, max_length=64)
+    source_command: str = Field(min_length=1, max_length=128)
+    edited_at: datetime
+    bucket_event_id: str | None = Field(default=None, min_length=64, max_length=64)
+
+    @field_validator("previous_transaction_id", "actor", "source_command", "bucket_event_id")
+    @classmethod
+    def _trim_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        if not trimmed:
+            raise TransactionValidationError("lineage text fields must not be blank")
+        return trimmed
+
+    @field_validator("edited_at", mode="before")
+    @classmethod
+    def _parse_edited_at(cls, value: Any) -> datetime:
+        if isinstance(value, str):
+            value = _parse_datetime(value)
+        if not isinstance(value, datetime):
+            raise TransactionValidationError("edited_at must be a datetime")
+        return _require_aware_datetime(value)
+
+
+class TransactionLifecycleLineageEntry(BaseModel):
+    """One durable lifecycle transition applied to a transaction row."""
+
+    model_config = _STRICT_FROZEN
+
+    previous_state: TransactionLifecycleState
+    state: TransactionLifecycleState
+    actor: str = Field(min_length=1, max_length=64)
+    source_command: str = Field(min_length=1, max_length=128)
+    changed_at: datetime
+    reason: str = ""
+    bucket_event_id: str | None = Field(default=None, min_length=64, max_length=64)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_lifecycle_states(cls, data: Any) -> Any:
+        if not isinstance(data, Mapping):
+            return data
+        payload = dict(data)
+        for key in ("previous_state", "state"):
+            if isinstance(payload.get(key), str):
+                payload[key] = TransactionLifecycleState(payload[key])
+        return payload
+
+    @field_validator("actor", "source_command", "bucket_event_id")
+    @classmethod
+    def _trim_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        if not trimmed:
+            raise TransactionValidationError("lineage text fields must not be blank")
+        return trimmed
+
+    @field_validator("reason")
+    @classmethod
+    def _trim_reason(cls, value: str) -> str:
+        return value.strip()
+
+    @field_validator("changed_at", mode="before")
+    @classmethod
+    def _parse_changed_at(cls, value: Any) -> datetime:
+        if isinstance(value, str):
+            value = _parse_datetime(value)
+        if not isinstance(value, datetime):
+            raise TransactionValidationError("changed_at must be a datetime")
+        return _require_aware_datetime(value)
+
+    @model_validator(mode="after")
+    def _reject_noop_transition(self) -> Self:
+        if self.previous_state is self.state:
+            raise TransactionValidationError("lifecycle transition must change state")
+        return self
+
+
 class Transaction(BaseModel):
     """Immutable transaction wrapper that preserves raw provenance verbatim.
 
@@ -262,6 +409,22 @@ class Transaction(BaseModel):
         invoice_id: Optional invoice foreign key.
         category_id: Optional :class:`aeat.domain.categories.SpendingCategory`
             foreign key.
+        taxable_base: Optional VAT-exclusive base amount.
+        iva_rate: Optional IVA rate expressed as a decimal fraction.
+        iva_amount: Optional IVA amount on the row.
+        irpf_category: Optional IRPF-specific category key.
+        usage_ratio_id: Optional proportionality reference.
+        prorrata_reference: Optional IVA prorrata substrate reference.
+        purchase_invoice_evidence_id: Canonical purchase-invoice evidence
+            reference attached to the row.
+        attachment_ids: Supplementary attachment references.
+        created_by: Actor that first created the manual row when known.
+        source_command: Backend/CLI command source that created the row.
+        created_event_id: Bucket event id for the create event when available.
+        evidence_provenance: Actor/source lineage for attached evidence.
+        edit_lineage: Durable edit chain for manual corrections.
+        lifecycle_state: Current active/archive/stash state.
+        lifecycle_lineage: Durable lifecycle transition chain.
         notes: Free-text notes.
         classified_at: Timezone-aware timestamp of the active decision
             (``None`` when never classified).
@@ -282,6 +445,21 @@ class Transaction(BaseModel):
     business_pct: Decimal | None = None
     invoice_id: str | None = None
     category_id: str | None = None
+    taxable_base: Decimal | None = None
+    iva_rate: Decimal | None = None
+    iva_amount: Decimal | None = None
+    irpf_category: str | None = None
+    usage_ratio_id: str | None = None
+    prorrata_reference: str | None = None
+    purchase_invoice_evidence_id: str | None = None
+    attachment_ids: tuple[str, ...] = ()
+    created_by: str | None = None
+    source_command: str | None = None
+    created_event_id: str | None = None
+    evidence_provenance: tuple[TransactionEvidenceProvenanceEntry, ...] = ()
+    edit_lineage: tuple[TransactionEditLineageEntry, ...] = ()
+    lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE
+    lifecycle_lineage: tuple[TransactionLifecycleLineageEntry, ...] = ()
     notes: str = ""
     source_import_id: str | None = None
     classified_at: datetime | None = None
@@ -319,8 +497,14 @@ class Transaction(BaseModel):
         raw_state = payload.get("business_classification")
         if isinstance(raw_state, str):
             payload["business_classification"] = BusinessClassification(raw_state)
+        lifecycle_state = payload.get("lifecycle_state")
+        if isinstance(lifecycle_state, str):
+            payload["lifecycle_state"] = TransactionLifecycleState(lifecycle_state)
         if isinstance(payload.get("business_pct"), str):
             payload["business_pct"] = Decimal(payload["business_pct"])
+        for key in ("taxable_base", "iva_rate", "iva_amount"):
+            if isinstance(payload.get(key), str):
+                payload[key] = Decimal(payload[key])
         if isinstance(payload.get("classified_at"), str):
             payload["classified_at"] = _parse_datetime(payload["classified_at"])
         if isinstance(payload.get("classification_confidence"), str):
@@ -331,10 +515,28 @@ class Transaction(BaseModel):
         if "source_import_id" in payload and isinstance(payload["source_import_id"], str):
             normalized_import_id = payload["source_import_id"].strip()
             payload["source_import_id"] = normalized_import_id if normalized_import_id else None
+        if "purchase_invoice_evidence_id" in payload and isinstance(payload["purchase_invoice_evidence_id"], str):
+            normalized_evidence_id = payload["purchase_invoice_evidence_id"].strip()
+            payload["purchase_invoice_evidence_id"] = normalized_evidence_id if normalized_evidence_id else None
+        if "attachment_ids" in payload:
+            payload["attachment_ids"] = _coerce_identifier_tuple(payload["attachment_ids"])
+        for key in ("evidence_provenance", "edit_lineage", "lifecycle_lineage"):
+            if key in payload:
+                payload[key] = _coerce_history(payload[key])
         payload["transaction_id"] = derived
         return payload
 
-    @field_validator("invoice_id", "category_id")
+    @field_validator(
+        "invoice_id",
+        "category_id",
+        "irpf_category",
+        "usage_ratio_id",
+        "prorrata_reference",
+        "purchase_invoice_evidence_id",
+        "created_by",
+        "source_command",
+        "created_event_id",
+    )
     @classmethod
     def _validate_optional_ids(cls, value: str | None) -> str | None:
         """Trim optional foreign keys while rejecting blank strings."""
@@ -344,6 +546,20 @@ class Transaction(BaseModel):
         if not trimmed:
             raise TransactionValidationError("foreign-key identifiers must not be blank")
         return trimmed
+
+    @field_validator("attachment_ids")
+    @classmethod
+    def _validate_identifier_tuple(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        """Trim and freeze attachment identifiers."""
+
+        return _normalize_identifier_tuple(value)
+
+    @field_validator("taxable_base", "iva_rate", "iva_amount")
+    @classmethod
+    def _validate_tax_amounts(cls, value: Decimal | None, info: Any) -> Decimal | None:
+        """Reject negative tax substrate values."""
+
+        return _validate_non_negative_decimal(value, field_name=info.field_name)
 
     @field_validator("notes", "classification_reason")
     @classmethod

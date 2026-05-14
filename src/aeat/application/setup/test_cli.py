@@ -6,13 +6,10 @@ import json
 from pathlib import Path
 
 import pytest
-from typer.testing import CliRunner
 
-from aeat.entrypoints.cli import app
+from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-
-_runner = CliRunner()
 
 
 def _env(tmp_path: Path) -> dict[str, str]:
@@ -27,7 +24,7 @@ def _env(tmp_path: Path) -> dict[str, str]:
 
 
 def test_setup_help_is_user_scaffold() -> None:
-    result = _runner.invoke(app, ["config", "--help"])
+    result = invoke_cached_cli(["config", "--help"])
 
     assert result.exit_code == 0
     assert "init" in result.output
@@ -38,7 +35,7 @@ def test_setup_help_is_user_scaffold() -> None:
 
 
 def test_setup_profile_help_exposes_review_and_validation() -> None:
-    result = _runner.invoke(app, ["config", "profile", "--help"])
+    result = invoke_cached_cli(["config", "profile", "--help"])
 
     assert result.exit_code == 0
     for command in ("set", "get", "unset", "status", "list"):
@@ -46,7 +43,7 @@ def test_setup_profile_help_exposes_review_and_validation() -> None:
 
 
 def test_setup_auth_help_exposes_access_lifecycle() -> None:
-    result = _runner.invoke(app, ["config", "auth", "--help"])
+    result = invoke_cached_cli(["config", "auth", "--help"])
 
     assert result.exit_code == 0
     for command in ("providers", "configure", "status", "test", "clear"):
@@ -55,8 +52,7 @@ def test_setup_auth_help_exposes_access_lifecycle() -> None:
 
 def test_setup_profile_roundtrip(tmp_path: Path) -> None:
     env = _env(tmp_path)
-    init = _runner.invoke(
-        app,
+    init = invoke_cached_cli(
         [
             "--format",
             "json",
@@ -72,7 +68,7 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
         ],
         env=env,
     )
-    show = _runner.invoke(app, ["--format", "json", "config", "profile", "list"], env=env)
+    show = invoke_cached_cli(["--format", "json", "config", "profile", "list"], env=env)
 
     assert init.exit_code == 0, init.output
     assert show.exit_code == 0, show.output
@@ -84,34 +80,30 @@ def test_setup_profile_roundtrip(tmp_path: Path) -> None:
 
 def test_setup_status_reports_missing_and_ready_steps(tmp_path: Path) -> None:
     env = _env(tmp_path)
-    missing = _runner.invoke(app, ["--format", "json", "config", "profile", "status"], env=env)
+    missing = invoke_cached_cli(["--format", "json", "config", "profile", "status"], env=env)
     assert missing.exit_code == 0, missing.output
 
-    _runner.invoke(
-        app,
+    invoke_cached_cli(
         ["config", "init", "--quiet", "--name", "operator", "--activity", "design", "--tax-id", "12345678Z"],
         env=env,
     )
-    _runner.invoke(
-        app,
+    invoke_cached_cli(
         ["config", "profile", "set", "iva.regime", "general"],
         env=env,
     )
     certificate = tmp_path / "cert.p12"
     certificate.write_bytes(b"fixture")
-    _runner.invoke(
-        app,
+    invoke_cached_cli(
         ["config", "auth", "configure", "--provider", "certificate", "--file", str(certificate)],
         env=env,
     )
-    ready = _runner.invoke(app, ["--format", "json", "app", "overview", "status"], env=env)
+    ready = invoke_cached_cli(["--format", "json", "app", "overview", "status"], env=env)
 
     assert ready.exit_code == 0, ready.output
 
 
 def test_setup_auth_rejects_unsupported_provider(tmp_path: Path) -> None:
-    result = _runner.invoke(
-        app,
+    result = invoke_cached_cli(
         ["config", "auth", "configure", "--provider", "clave_permanente"],
         env=_env(tmp_path),
     )

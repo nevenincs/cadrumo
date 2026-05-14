@@ -810,6 +810,7 @@ class WorkflowEngine:
         provider = build_runtime_schema_provider(
             filing_year=filing_year,
             period=registry_period,
+            modelos=(obligation.modelo,),
         )
         return provider.get_subview(obligation.modelo).schema_version
 
@@ -1036,6 +1037,11 @@ class WorkflowEngine:
         Centralises the wrap-and-record ritual so every stage method
         surfaces an unexpected exception identically.
         """
+        _logger.warning(
+            "workflow stage raised an unhandled exception stage=%s",
+            stage.value,
+            exc_info=(type(exc), exc, exc.__traceback__),
+        )
         unhandled_summary = _summary_text(f"Unhandled {type(exc).__name__} at stage={stage.value}: {exc}")
         steps.append(
             WorkflowStep(

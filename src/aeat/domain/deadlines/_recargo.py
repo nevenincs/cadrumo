@@ -21,6 +21,7 @@ from __future__ import annotations
 import tomllib
 from collections.abc import Sequence
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 
 from ...core.paths import PROJECT_ROOT
@@ -47,6 +48,15 @@ def load_recargo_bands(path: Path | None = None) -> tuple[RecargoBand, ...]:
     """
 
     target = path if path is not None else _DEFAULT_BRACKET_PATH
+    resolved = target.resolve()
+    stat = resolved.stat()
+    return _load_recargo_bands_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=16)
+def _load_recargo_bands_cached(path: str, byte_count: int, modified_ns: int) -> tuple[RecargoBand, ...]:
+    del byte_count, modified_ns
+    target = Path(path)
     raw = tomllib.loads(target.read_text(encoding="utf-8"))
     rows = raw.get("band", [])
     if not rows:

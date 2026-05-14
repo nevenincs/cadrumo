@@ -24,6 +24,7 @@ from aeat.domain.justificante import (
     JustificanteParserBackend,
 )
 from aeat.tests import FIXTURES_DIR as _FIXTURES_ROOT
+from aeat.tests._justificante_parse_cache import parse_committed_justificante_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -150,7 +151,7 @@ class TestRealCorpusParses:
         ids=lambda p: f"{p.parent.name}/{p.stem}",
     )
     def test_corpus_pdf_parses(self, fixture: Path) -> None:
-        record = parse_justificante(fixture)
+        record = parse_committed_justificante_fixture(fixture)
         assert isinstance(record, Justificante)
         # Filesystem layout identifies the fixture. Annual receipt PDFs in this
         # corpus name the filing period as 0A, but several bodies print only

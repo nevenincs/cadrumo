@@ -37,6 +37,34 @@ from ._text import normalise_corpus_text
 if TYPE_CHECKING:
     from ...user_profile._schema import ProfileSchemaDefinition
 
+_CatalogueCacheKey = tuple[int, int, str | None]
+_CatalogueCacheValue = tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], tuple[str, ...]]
+_ModeloValidationCacheKey = tuple[int, int, int, str | None]
+_ModeloValidationCacheValue = tuple[
+    ModeloDefinition,
+    Mapping[str, LegalReference],
+    Mapping[str, SourceReference],
+    tuple[str, ...],
+]
+_RegistryValidationCacheKey = tuple[tuple[int, ...], int, int, str | None]
+_RegistryValidationCacheValue = tuple[
+    tuple[ModeloDefinition, ...],
+    Mapping[str, LegalReference],
+    Mapping[str, SourceReference],
+    tuple[str, ...],
+]
+_SourceTextCacheKey = tuple[str, str, int, int]
+_SourceTextCacheValue = tuple[Path, str]
+_CATALOGUE_FAILURE_CACHE: dict[_CatalogueCacheKey, _CatalogueCacheValue] = {}
+_MODELO_VALIDATION_CACHE: dict[_ModeloValidationCacheKey, _ModeloValidationCacheValue] = {}
+_REGISTRY_VALIDATION_CACHE: dict[_RegistryValidationCacheKey, _RegistryValidationCacheValue] = {}
+_NORMALISED_SOURCE_TEXT_CACHE: dict[_SourceTextCacheKey, _SourceTextCacheValue] = {}
+
+
+@lru_cache(maxsize=4096)
+def _normalise_required_text(text: str) -> str:
+    return normalise_corpus_text(text)
+
 
 def _duplicates(values: Iterable[str]) -> set[str]:
     seen: set[str] = set()
@@ -52,8 +80,14 @@ def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     return {"record", "offset", "length", "data_type"}.issubset(binding.selector)
 
 
-@lru_cache(maxsize=16)
 def _extract_pdf_text(path: Path) -> str:
+    stat = path.stat()
+    return _extract_pdf_text_cached(str(path.expanduser().resolve()), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=256)
+def _extract_pdf_text_cached(path: str, byte_count: int, modified_ns: int) -> str:
+    del byte_count, modified_ns
     try:
         import pypdfium2 as pdfium
     except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
@@ -65,7 +99,11 @@ def _extract_pdf_text(path: Path) -> str:
             for index in range(len(pdf)):
                 page = pdf[index]
                 try:
-                    pages.append(page.get_textpage().get_text_range())
+                    text_page = page.get_textpage()
+                    try:
+                        pages.append(text_page.get_text_range())
+                    finally:
+                        text_page.close()
                 finally:
                     page.close()
         finally:
@@ -93,13 +131,32 @@ class RegistryValidator:
         self._catalogue_failures: tuple[str, ...] | None = None
 
     def validate_modelo(self, modelo: ModeloDefinition) -> None:
-        failures = self._validate_modelo(modelo, validate_catalogues=True)
+        failures = self._cached_modelo_failures(modelo)
         if failures:
             raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
+
+    def _source_root_key(self) -> str | None:
+        return str(self._source_root.expanduser().resolve()) if self._source_root is not None else None
+
+    def _cached_modelo_failures(self, modelo: ModeloDefinition) -> tuple[str, ...]:
+        cache_key = (id(modelo), id(self._legal), id(self._sources), self._source_root_key())
+        cached = _MODELO_VALIDATION_CACHE.get(cache_key)
+        if cached is not None and cached[0] is modelo and cached[1] is self._legal and cached[2] is self._sources:
+            return cached[3]
+        failures = tuple(self._validate_modelo(modelo, validate_catalogues=True))
+        _MODELO_VALIDATION_CACHE[cache_key] = (modelo, self._legal, self._sources, failures)
+        return failures
 
     def _validate_catalogues(self) -> tuple[str, ...]:
         if self._catalogue_failures is not None:
             return self._catalogue_failures
+        source_root_key = self._source_root_key()
+        cache_key = (id(self._legal), id(self._sources), source_root_key)
+        cached = _CATALOGUE_FAILURE_CACHE.get(cache_key)
+        if cached is not None and cached[0] is self._legal and cached[1] is self._sources:
+            self._catalogue_failures = cached[2]
+            return self._catalogue_failures
+
         failures: list[str] = []
         try:
             verify_legal_catalogue(self._legal, source_root=self._source_root)
@@ -111,6 +168,7 @@ class RegistryValidator:
             except RegistryValidationError as exc:
                 failures.append(str(exc))
         self._catalogue_failures = tuple(failures)
+        _CATALOGUE_FAILURE_CACHE[cache_key] = (self._legal, self._sources, self._catalogue_failures)
         return self._catalogue_failures
 
     def _validate_modelo(self, modelo: ModeloDefinition, *, validate_catalogues: bool) -> list[str]:
@@ -129,6 +187,25 @@ class RegistryValidator:
         """Validate every modelo and the cross-model relation graph."""
 
         modelo_tuple = tuple(modelos)
+        cache_key = (
+            tuple(id(modelo) for modelo in modelo_tuple),
+            id(self._legal),
+            id(self._sources),
+            self._source_root_key(),
+        )
+        cached = _REGISTRY_VALIDATION_CACHE.get(cache_key)
+        if (
+            cached is not None
+            and cached[0] == modelo_tuple
+            and cached[1] is self._legal
+            and cached[2] is self._sources
+        ):
+            if cached[3]:
+                raise RegistryValidationError(
+                    "registry validation failed:\n" + "\n".join(f" - {f}" for f in cached[3])
+                )
+            return
+
         failures: list[str] = list(self._validate_catalogues())
         modelo_ids = [modelo.id for modelo in modelo_tuple]
         for duplicate in sorted(_duplicates(modelo_ids)):
@@ -143,7 +220,9 @@ class RegistryValidator:
             failures.extend(self._validate_previous_filing_binding_closure(modelo_tuple, modelos_by_id))
 
         if failures:
+            _REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, tuple(failures))
             raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
+        _REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, ())
 
     def _validate_user_profile_contract(self, modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
         from ...user_profile._loader import load_user_profile_schema
@@ -1478,7 +1557,7 @@ class RegistryValidator:
                 failures.append(f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}")
                 continue
             for required in citation.required_text:
-                if normalise_corpus_text(required) not in source_text:
+                if _normalise_required_text(required) not in source_text:
                     failures.append(
                         f"{scope}: {owner} source citation {citation.source_ref!r} missing text {required!r}"
                     )
@@ -1532,11 +1611,18 @@ class RegistryValidator:
         if self._source_root is None:
             return ""
         source_path = self._source_root / source.corpus_path
+        stat = source_path.stat()
+        source_key = (source.kind, str(source_path.expanduser().resolve()), stat.st_size, stat.st_mtime_ns)
+        global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
+        if global_cached is not None and global_cached[0] == source_path:
+            self._source_text_cache[source.id] = global_cached[1]
+            return global_cached[1]
         if source.kind == "manual_pdf":
             text = _extract_pdf_text(source_path)
         else:
             text = source_path.read_text(encoding="utf-8", errors="replace")
         normalised = normalise_corpus_text(text)
+        _NORMALISED_SOURCE_TEXT_CACHE[source_key] = (source_path, normalised)
         self._source_text_cache[source.id] = normalised
         return normalised
 

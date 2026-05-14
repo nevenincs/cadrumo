@@ -8,13 +8,10 @@ error (malformed period, unknown modelo) must surface as a
 from __future__ import annotations
 
 import pytest
-from typer.testing import CliRunner
 
-from . import app
+from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-
-_RUNNER = CliRunner()
 
 
 @pytest.mark.parametrize(
@@ -27,7 +24,7 @@ _RUNNER = CliRunner()
     ],
 )
 def test_malformed_period_surfaces_as_bad_parameter(command: list[str]) -> None:
-    result = _RUNNER.invoke(app, command)
+    result = invoke_cached_cli(command)
     assert result.exit_code != 0
     assert "Traceback" not in result.output
     output_lower = result.output.lower()
@@ -35,7 +32,7 @@ def test_malformed_period_surfaces_as_bad_parameter(command: list[str]) -> None:
 
 
 def test_unknown_modelo_surfaces_as_bad_parameter() -> None:
-    result = _RUNNER.invoke(app, ["app", "modelo", "describe", "999"])
+    result = invoke_cached_cli(["app", "modelo", "describe", "999"])
     assert result.exit_code != 0
     assert "Traceback" not in result.output
     output_lower = result.output.lower()
@@ -53,8 +50,7 @@ def test_bindings_list_emits_readiness_category_for_every_row() -> None:
     prior filed revision / live observation / bucket / waiver /
     blocking finding / casilla)."""
 
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1"],
     )
     assert result.exit_code == 0, result.output
@@ -71,8 +67,7 @@ def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None
     resolution. Constant-valued bindings are inherently always
     available so they drop out of the missing-bindings view."""
 
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1", "--missing"],
     )
     assert result.exit_code == 0, result.output
@@ -83,8 +78,7 @@ def test_bindings_preview_echoes_override_for_known_key() -> None:
     """An override targeting a known binding id surfaces in the
     payload's ``override`` column."""
 
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "modelo",
@@ -111,8 +105,7 @@ def test_bindings_preview_rejects_unknown_binding_with_suggestion_list() -> None
     from the registry's binding catalogue for the active modelo /
     year / period."""
 
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "modelo",
@@ -139,8 +132,7 @@ def test_bindings_preview_rejects_malformed_override_syntax() -> None:
     """``--binding`` without an ``=`` separator fails at the CLI
     boundary with a typer.BadParameter."""
 
-    result = _RUNNER.invoke(
-        app,
+    result = invoke_cached_cli(
         [
             "app",
             "modelo",

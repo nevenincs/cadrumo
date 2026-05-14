@@ -89,7 +89,7 @@ def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
 
 
 def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: str) -> bytes:
-    provider = build_runtime_schema_provider(filing_year=filing_year, period=period)
+    provider = build_runtime_schema_provider(filing_year=filing_year, period=period, modelos=("123",))
     if filing_year >= 2024:
         inputs = {
             "01": Decimal("2"),

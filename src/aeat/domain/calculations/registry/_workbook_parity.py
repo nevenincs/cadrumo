@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import os
 import re
 import shutil
 import subprocess
@@ -53,6 +52,7 @@ _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)
 _CELL_REF_PATTERN = re.compile(r"(?<![A-Z0-9_])(?:'[^']+'!)?\$?[A-Z]{1,3}\$?\d+(?![A-Z0-9_])")
 _CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
 _LIBREOFFICE_EXECUTABLE_ENV = "AEAT_LIBREOFFICE_EXECUTABLE"
+_BINARY_XLS_CONVERSION_BYTES_CACHE: dict[tuple[str, int, str], bytes] = {}
 
 
 class _BinaryXlsConversionError(Exception):
@@ -394,9 +394,11 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
     missing dependency instead of silently downgrading evidence quality.
     """
 
-    configured = os.environ.get(_LIBREOFFICE_EXECUTABLE_ENV)
-    if configured:
-        runner = _resolve_libreoffice_runner(configured)
+    from ....core.config import load_settings
+
+    settings_configured = load_settings().aeat_libreoffice_executable
+    if settings_configured is not None:
+        runner = _resolve_libreoffice_runner(str(settings_configured))
         return WorkbookRunnerAvailability(
             status="available",
             engine="libreoffice-headless",
@@ -599,6 +601,13 @@ def _converted_binary_xls_path(
         tmp_path = Path(tmp)
         output_dir = tmp_path / "output"
         output_dir.mkdir()
+        cache_key = (context.digest, context.byte_count, str(runner))
+        cached_bytes = _BINARY_XLS_CONVERSION_BYTES_CACHE.get(cache_key)
+        if cached_bytes is not None:
+            cached_path = output_dir / f"{context.resolved_path.stem}.xlsx"
+            cached_path.write_bytes(cached_bytes)
+            yield cached_path
+            return
         user_installation = (tmp_path / "lo-profile").resolve().as_uri()
         try:
             completed = subprocess.run(
@@ -629,7 +638,9 @@ def _converted_binary_xls_path(
         if len(outputs) != 1:
             detail = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
             raise _BinaryXlsConversionError(f"LibreOffice did not produce exactly one XLSX workbook: {detail}")
-        yield outputs[0]
+        converted_path = outputs[0]
+        _BINARY_XLS_CONVERSION_BYTES_CACHE[cache_key] = converted_path.read_bytes()
+        yield converted_path
 
 
 def run_registry_workbook_parity(
@@ -733,8 +744,12 @@ def _resolve_libreoffice_runner(executable: str | None) -> Path:
     """Locate a LibreOffice executable, raising explicitly when none is available."""
 
     if executable is None:
-        configured = os.environ.get(_LIBREOFFICE_EXECUTABLE_ENV)
-        found = configured or shutil.which("soffice") or shutil.which("libreoffice")
+        from ....core.config import load_settings
+
+        configured = load_settings().aeat_libreoffice_executable
+        found = (
+            str(configured) if configured is not None else (shutil.which("soffice") or shutil.which("libreoffice"))
+        )
         if not found:
             raise RegistryValidationError(
                 "LibreOffice or soffice executable is not available on PATH. "
@@ -1016,6 +1031,7 @@ def _formula_references(sheet: str, formula: str, remaining: int) -> tuple[Workb
             "workbook parity: openpyxl Tokenizer failed on formula %r; falling back to regex (%s)",
             formula[:80],
             exc,
+            exc_info=True,
         )
         token_values = (match.group(0) for match in _CELL_REF_PATTERN.finditer(formula))
     for value in token_values:

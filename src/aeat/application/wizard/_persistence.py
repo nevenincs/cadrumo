@@ -1,10 +1,9 @@
 """Persistence adapter for wizard answers.
 
-Serialises a typed answers model back to canonical-token strings, calls
-``set_profile_values`` to persist the profile values in the active
-profile bucket. The reverse projection
-(``project_answers``) builds the typed answers model from a raw
-canonical-token dict.
+Serialises a typed answers model back to canonical-token strings, then
+persists profile facts through canonical user-profile orchestration.
+The reverse projection (``project_answers``) builds the typed answers
+model from a raw canonical-token dict.
 """
 
 from __future__ import annotations
@@ -14,7 +13,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from ..profile._actions import set_profile_values
+from ..user_profile._orchestration import register_active_profile, set_active_fields
 from ..workflow._models import WorkflowState
 from ._models import WizardFlow, WizardQuestion
 
@@ -82,8 +81,31 @@ def persist_answers(
     the active profile bucket.
     """
 
+    from ...domain.user_profile import ProfileNotFoundError, UserProfileFact
+
     canonical = serialise_answers(flow, answers)
-    return set_profile_values(state, profile_name, canonical)
+    facts = tuple(
+        UserProfileFact(path=path, value=value)
+        for path, value in canonical.items()
+        if value
+    )
+    pointer = state.profiles.get(profile_name)
+    if pointer is None or state.active_profile != profile_name:
+        return register_active_profile(
+            state,
+            profile_id=profile_name,
+            display_name=profile_name,
+            facts=facts,
+        )
+    try:
+        return set_active_fields(state, facts)
+    except ProfileNotFoundError:
+        return register_active_profile(
+            state,
+            profile_id=profile_name,
+            display_name=profile_name,
+            facts=facts,
+        )
 
 
 def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
