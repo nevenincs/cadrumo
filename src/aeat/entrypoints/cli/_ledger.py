@@ -961,116 +961,6 @@ def _business_invoice_text_lines(record) -> list[str]:
     ]
 
 
-def _build_business_invoice_app(name: str, help_text: str, service_factory):
-    sub_app = typer.Typer(name=name, help=help_text, no_args_is_help=True)
-
-    @sub_app.command("add", help=tr(f"cli.app.ledger.{name}.add_help", default=f"Register a new {name} record."))
-    def add(
-        ctx: typer.Context,
-        counterparty_nif: str = typer.Option(..., "--counterparty-nif"),
-        invoice_number: str = typer.Option(..., "--invoice-number"),
-        invoice_date: str = typer.Option(
-            ...,
-            "--invoice-date",
-            help=tr(f"cli.app.ledger.{name}.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
-        ),
-        counterparty_name: str = typer.Option("", "--counterparty-name"),
-        currency: str = typer.Option("EUR", "--currency"),
-        taxable_base: str = typer.Option("0", "--taxable-base"),
-        iva_rate: str | None = typer.Option(None, "--iva-rate"),
-        iva_amount: str = typer.Option("0", "--iva-amount"),
-        total_amount: str = typer.Option("0", "--total-amount"),
-        notes: str = typer.Option("", "--notes"),
-    ) -> None:
-        bucket_id = _ratios_bucket_id()
-        record = service_factory().add(
-            bucket_id=bucket_id,
-            counterparty_nif=counterparty_nif,
-            invoice_number=invoice_number,
-            invoice_date=invoice_date,
-            counterparty_name=counterparty_name,
-            currency=currency,
-            taxable_base=_parse_required_decimal(taxable_base, label="taxable-base"),
-            iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
-            iva_amount=_parse_required_decimal(iva_amount, label="iva-amount"),
-            total_amount=_parse_required_decimal(total_amount, label="total-amount"),
-            notes=notes,
-        )
-        _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
-
-    @sub_app.command("view", help=tr(f"cli.app.ledger.{name}.view_help", default=f"Show one {name} record."))
-    def view(
-        ctx: typer.Context,
-        invoice_id: str = typer.Argument(..., help=tr(f"cli.app.ledger.{name}.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
-    ) -> None:
-        bucket_id = _ratios_bucket_id()
-        record = service_factory().view(bucket_id=bucket_id, invoice_id=invoice_id)
-        _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
-
-    @sub_app.command("list", help=tr(f"cli.app.ledger.{name}.list_help", default=f"List every {name} record on the active bucket."))
-    def list_(ctx: typer.Context) -> None:
-        bucket_id = _ratios_bucket_id()
-        rows = service_factory().list_all(bucket_id=bucket_id)
-        payload = {
-            "bucket_id": bucket_id,
-            "rows": [r.model_dump(mode="json") for r in rows],
-            "count": len(rows),
-        }
-        lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-        for r in rows:
-            lines.append(
-                f"{r.invoice_id}\t{r.counterparty_nif}\t{r.invoice_number}\t{r.invoice_date}\t{r.total_amount}"
-            )
-        _emit(ctx, payload, lines)
-
-    @sub_app.command("update", help=tr(f"cli.app.ledger.{name}.update_help", default=f"Update mutable fields on one {name} record."))
-    def update(
-        ctx: typer.Context,
-        invoice_id: str = typer.Argument(..., help=tr(f"cli.app.ledger.{name}.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
-        counterparty_nif: str | None = typer.Option(None, "--counterparty-nif"),
-        counterparty_name: str | None = typer.Option(None, "--counterparty-name"),
-        invoice_number: str | None = typer.Option(None, "--invoice-number"),
-        invoice_date: str | None = typer.Option(None, "--invoice-date"),
-        currency: str | None = typer.Option(None, "--currency"),
-        taxable_base: str | None = typer.Option(None, "--taxable-base"),
-        iva_rate: str | None = typer.Option(None, "--iva-rate"),
-        iva_amount: str | None = typer.Option(None, "--iva-amount"),
-        total_amount: str | None = typer.Option(None, "--total-amount"),
-        notes: str | None = typer.Option(None, "--notes"),
-    ) -> None:
-        from ...application.ledger._business_operation_invoice import BusinessOperationInvoicePatch
-
-        bucket_id = _ratios_bucket_id()
-        patch = BusinessOperationInvoicePatch(
-            counterparty_nif=counterparty_nif,
-            counterparty_name=counterparty_name,
-            invoice_number=invoice_number,
-            invoice_date=invoice_date,
-            currency=currency,
-            taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
-            iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
-            iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
-            total_amount=_parse_decimal(total_amount, label="total-amount"),
-            notes=notes,
-        )
-        record = service_factory().update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
-        _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
-
-    @sub_app.command("remove", help=tr(f"cli.app.ledger.{name}.remove_help", default=f"Delete one {name} record."))
-    def remove(
-        ctx: typer.Context,
-        invoice_id: str = typer.Argument(..., help=tr(f"cli.app.ledger.{name}.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
-        yes: bool = typer.Option(False, "--yes", help=tr(f"cli.app.ledger.{name}.yes_help", default="Confirm removal.")),
-    ) -> None:
-        if not yes:
-            raise _bad(tr(f"cli.app.ledger.{name}.yes_required", default=f"--yes is required to remove a {name} record"))
-        bucket_id = _ratios_bucket_id()
-        record = service_factory().remove(bucket_id=bucket_id, invoice_id=invoice_id)
-        _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
-
-    return sub_app
-
-
 def _payable_invoice_service():
     from ...application.ledger._business_operation_invoice import PayableInvoiceService
 
@@ -1083,16 +973,236 @@ def _collectible_invoice_service():
     return CollectibleInvoiceService()
 
 
-payable_invoice_app = _build_business_invoice_app(
-    "payable-invoice",
-    tr("cli.app.ledger.payable_invoice.group_help", default="Payable invoice records (we owe a vendor)."),
-    _payable_invoice_service,
+payable_invoice_app = typer.Typer(
+    name="payable-invoice",
+    help=tr("cli.app.ledger.payable_invoice.group_help", default="Payable invoice records (we owe a vendor)."),
+    no_args_is_help=True,
 )
-collectible_invoice_app = _build_business_invoice_app(
-    "collectible-invoice",
-    tr("cli.app.ledger.collectible_invoice.group_help", default="Collectible invoice records (a customer owes us)."),
-    _collectible_invoice_service,
+
+
+@payable_invoice_app.command("add", help=tr("cli.app.ledger.payable_invoice.add_help", default="Register a new payable invoice record."))
+def payable_invoice_add(
+    ctx: typer.Context,
+    counterparty_nif: str = typer.Option(..., "--counterparty-nif"),
+    invoice_number: str = typer.Option(..., "--invoice-number"),
+    invoice_date: str = typer.Option(
+        ...,
+        "--invoice-date",
+        help=tr("cli.app.ledger.payable_invoice.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
+    ),
+    counterparty_name: str = typer.Option("", "--counterparty-name"),
+    currency: str = typer.Option("EUR", "--currency"),
+    taxable_base: str = typer.Option("0", "--taxable-base"),
+    iva_rate: str | None = typer.Option(None, "--iva-rate"),
+    iva_amount: str = typer.Option("0", "--iva-amount"),
+    total_amount: str = typer.Option("0", "--total-amount"),
+    notes: str = typer.Option("", "--notes"),
+) -> None:
+    bucket_id = _ratios_bucket_id()
+    record = _payable_invoice_service().add(
+        bucket_id=bucket_id,
+        counterparty_nif=counterparty_nif,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        counterparty_name=counterparty_name,
+        currency=currency,
+        taxable_base=_parse_required_decimal(taxable_base, label="taxable-base"),
+        iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
+        iva_amount=_parse_required_decimal(iva_amount, label="iva-amount"),
+        total_amount=_parse_required_decimal(total_amount, label="total-amount"),
+        notes=notes,
+    )
+    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+
+
+@payable_invoice_app.command("view", help=tr("cli.app.ledger.payable_invoice.view_help", default="Show one payable invoice record."))
+def payable_invoice_view(
+    ctx: typer.Context,
+    invoice_id: str = typer.Argument(..., help=tr("cli.app.ledger.payable_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
+) -> None:
+    bucket_id = _ratios_bucket_id()
+    record = _payable_invoice_service().view(bucket_id=bucket_id, invoice_id=invoice_id)
+    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+
+
+@payable_invoice_app.command("list", help=tr("cli.app.ledger.payable_invoice.list_help", default="List every payable invoice record on the active bucket."))
+def payable_invoice_list(ctx: typer.Context) -> None:
+    bucket_id = _ratios_bucket_id()
+    rows = _payable_invoice_service().list_all(bucket_id=bucket_id)
+    payload = {
+        "bucket_id": bucket_id,
+        "rows": [r.model_dump(mode="json") for r in rows],
+        "count": len(rows),
+    }
+    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    for r in rows:
+        lines.append(
+            f"{r.invoice_id}\t{r.counterparty_nif}\t{r.invoice_number}\t{r.invoice_date}\t{r.total_amount}"
+        )
+    _emit(ctx, payload, lines)
+
+
+@payable_invoice_app.command("update", help=tr("cli.app.ledger.payable_invoice.update_help", default="Update mutable fields on one payable invoice record."))
+def payable_invoice_update(
+    ctx: typer.Context,
+    invoice_id: str = typer.Argument(..., help=tr("cli.app.ledger.payable_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
+    counterparty_nif: str | None = typer.Option(None, "--counterparty-nif"),
+    counterparty_name: str | None = typer.Option(None, "--counterparty-name"),
+    invoice_number: str | None = typer.Option(None, "--invoice-number"),
+    invoice_date: str | None = typer.Option(None, "--invoice-date"),
+    currency: str | None = typer.Option(None, "--currency"),
+    taxable_base: str | None = typer.Option(None, "--taxable-base"),
+    iva_rate: str | None = typer.Option(None, "--iva-rate"),
+    iva_amount: str | None = typer.Option(None, "--iva-amount"),
+    total_amount: str | None = typer.Option(None, "--total-amount"),
+    notes: str | None = typer.Option(None, "--notes"),
+) -> None:
+    from ...application.ledger._business_operation_invoice import BusinessOperationInvoicePatch
+
+    bucket_id = _ratios_bucket_id()
+    patch = BusinessOperationInvoicePatch(
+        counterparty_nif=counterparty_nif,
+        counterparty_name=counterparty_name,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        currency=currency,
+        taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
+        iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
+        iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+        total_amount=_parse_decimal(total_amount, label="total-amount"),
+        notes=notes,
+    )
+    record = _payable_invoice_service().update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
+    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+
+
+@payable_invoice_app.command("remove", help=tr("cli.app.ledger.payable_invoice.remove_help", default="Delete one payable invoice record."))
+def payable_invoice_remove(
+    ctx: typer.Context,
+    invoice_id: str = typer.Argument(..., help=tr("cli.app.ledger.payable_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.app.ledger.payable_invoice.yes_help", default="Confirm removal.")),
+) -> None:
+    if not yes:
+        raise _bad(tr("cli.app.ledger.payable_invoice.yes_required", default="--yes is required to remove a payable invoice record"))
+    bucket_id = _ratios_bucket_id()
+    record = _payable_invoice_service().remove(bucket_id=bucket_id, invoice_id=invoice_id)
+    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+
+
+collectible_invoice_app = typer.Typer(
+    name="collectible-invoice",
+    help=tr("cli.app.ledger.collectible_invoice.group_help", default="Collectible invoice records (a customer owes us)."),
+    no_args_is_help=True,
 )
+
+
+@collectible_invoice_app.command("add", help=tr("cli.app.ledger.collectible_invoice.add_help", default="Register a new collectible invoice record."))
+def collectible_invoice_add(
+    ctx: typer.Context,
+    counterparty_nif: str = typer.Option(..., "--counterparty-nif"),
+    invoice_number: str = typer.Option(..., "--invoice-number"),
+    invoice_date: str = typer.Option(
+        ...,
+        "--invoice-date",
+        help=tr("cli.app.ledger.collectible_invoice.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
+    ),
+    counterparty_name: str = typer.Option("", "--counterparty-name"),
+    currency: str = typer.Option("EUR", "--currency"),
+    taxable_base: str = typer.Option("0", "--taxable-base"),
+    iva_rate: str | None = typer.Option(None, "--iva-rate"),
+    iva_amount: str = typer.Option("0", "--iva-amount"),
+    total_amount: str = typer.Option("0", "--total-amount"),
+    notes: str = typer.Option("", "--notes"),
+) -> None:
+    bucket_id = _ratios_bucket_id()
+    record = _collectible_invoice_service().add(
+        bucket_id=bucket_id,
+        counterparty_nif=counterparty_nif,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        counterparty_name=counterparty_name,
+        currency=currency,
+        taxable_base=_parse_required_decimal(taxable_base, label="taxable-base"),
+        iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
+        iva_amount=_parse_required_decimal(iva_amount, label="iva-amount"),
+        total_amount=_parse_required_decimal(total_amount, label="total-amount"),
+        notes=notes,
+    )
+    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+
+
+@collectible_invoice_app.command("view", help=tr("cli.app.ledger.collectible_invoice.view_help", default="Show one collectible invoice record."))
+def collectible_invoice_view(
+    ctx: typer.Context,
+    invoice_id: str = typer.Argument(..., help=tr("cli.app.ledger.collectible_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
+) -> None:
+    bucket_id = _ratios_bucket_id()
+    record = _collectible_invoice_service().view(bucket_id=bucket_id, invoice_id=invoice_id)
+    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+
+
+@collectible_invoice_app.command("list", help=tr("cli.app.ledger.collectible_invoice.list_help", default="List every collectible invoice record on the active bucket."))
+def collectible_invoice_list(ctx: typer.Context) -> None:
+    bucket_id = _ratios_bucket_id()
+    rows = _collectible_invoice_service().list_all(bucket_id=bucket_id)
+    payload = {
+        "bucket_id": bucket_id,
+        "rows": [r.model_dump(mode="json") for r in rows],
+        "count": len(rows),
+    }
+    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    for r in rows:
+        lines.append(
+            f"{r.invoice_id}\t{r.counterparty_nif}\t{r.invoice_number}\t{r.invoice_date}\t{r.total_amount}"
+        )
+    _emit(ctx, payload, lines)
+
+
+@collectible_invoice_app.command("update", help=tr("cli.app.ledger.collectible_invoice.update_help", default="Update mutable fields on one collectible invoice record."))
+def collectible_invoice_update(
+    ctx: typer.Context,
+    invoice_id: str = typer.Argument(..., help=tr("cli.app.ledger.collectible_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
+    counterparty_nif: str | None = typer.Option(None, "--counterparty-nif"),
+    counterparty_name: str | None = typer.Option(None, "--counterparty-name"),
+    invoice_number: str | None = typer.Option(None, "--invoice-number"),
+    invoice_date: str | None = typer.Option(None, "--invoice-date"),
+    currency: str | None = typer.Option(None, "--currency"),
+    taxable_base: str | None = typer.Option(None, "--taxable-base"),
+    iva_rate: str | None = typer.Option(None, "--iva-rate"),
+    iva_amount: str | None = typer.Option(None, "--iva-amount"),
+    total_amount: str | None = typer.Option(None, "--total-amount"),
+    notes: str | None = typer.Option(None, "--notes"),
+) -> None:
+    from ...application.ledger._business_operation_invoice import BusinessOperationInvoicePatch
+
+    bucket_id = _ratios_bucket_id()
+    patch = BusinessOperationInvoicePatch(
+        counterparty_nif=counterparty_nif,
+        counterparty_name=counterparty_name,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        currency=currency,
+        taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
+        iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
+        iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+        total_amount=_parse_decimal(total_amount, label="total-amount"),
+        notes=notes,
+    )
+    record = _collectible_invoice_service().update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
+    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+
+
+@collectible_invoice_app.command("remove", help=tr("cli.app.ledger.collectible_invoice.remove_help", default="Delete one collectible invoice record."))
+def collectible_invoice_remove(
+    ctx: typer.Context,
+    invoice_id: str = typer.Argument(..., help=tr("cli.app.ledger.collectible_invoice.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.app.ledger.collectible_invoice.yes_help", default="Confirm removal.")),
+) -> None:
+    if not yes:
+        raise _bad(tr("cli.app.ledger.collectible_invoice.yes_required", default="--yes is required to remove a collectible invoice record"))
+    bucket_id = _ratios_bucket_id()
+    record = _collectible_invoice_service().remove(bucket_id=bucket_id, invoice_id=invoice_id)
+    _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
 app.add_typer(payable_invoice_app, name="payable-invoice")
 app.add_typer(collectible_invoice_app, name="collectible-invoice")
 
