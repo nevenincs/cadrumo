@@ -618,6 +618,7 @@ def test_calculate_refused_on_discarded_work_unit(repos) -> None:
         work_unit.work_unit_id,
         actor="operator-A",
         repository=wu_repo,
+        bucket_event_repository=bv_repo,
         clock=_T1,
     )
     with pytest.raises(WorkUnitMutationRefusedError, match=r"discard|state|DISCARDED|work_unit"):
@@ -630,6 +631,36 @@ def test_calculate_refused_on_discarded_work_unit(repos) -> None:
             bucket_event_repository=bv_repo,
             clock=_T2,
         )
+
+
+def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
+    """``discard_work_unit`` emits a ``modelo.work_unit.discarded``
+    bucket event with actor + reason payload, per apex §12 R10."""
+
+    from aeat.application.modelo import discard_work_unit
+    from aeat.domain.buckets._event import BucketEventObjectType, BucketEventType
+
+    wu_repo, _, _, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+    discarded = discard_work_unit(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        reason="superseded by new work unit",
+        repository=wu_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    history = bv_repo.load().for_bucket(discarded.bucket_id)
+    discard_events = [
+        event for event in history
+        if event.event_type is BucketEventType.MODELO_WORK_UNIT_DISCARDED
+    ]
+    assert len(discard_events) == 1
+    event = discard_events[0]
+    assert event.object_type is BucketEventObjectType.WORK_UNIT
+    assert event.object_id == discarded.work_unit_id
+    assert event.actor == "operator-A"
+    assert event.payload["reason"] == "superseded by new work unit"
 
 
 def test_get_filing_record_raises_on_missing_id(repos) -> None:

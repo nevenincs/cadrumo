@@ -364,6 +364,7 @@ def discard_work_unit(
     actor: str,
     reason: str | None = None,
     repository: WorkUnitCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
     """Transition a work unit to ``DISCARDED`` state.
@@ -372,7 +373,9 @@ def discard_work_unit(
     ``discard_reason``) is captured in the same write. Once
     discarded, the work unit cannot be renamed or re-activated;
     the operator must create a fresh work unit on the same modelo
-    / year / period.
+    / year / period. A ``modelo.work_unit.discarded`` bucket event
+    is emitted alongside the state transition per apex §12 R10
+    (app-modelo-discard ADR).
 
     Raises:
         WorkUnitNotFoundError: When ``work_unit_id`` is absent.
@@ -382,6 +385,7 @@ def discard_work_unit(
     """
 
     repo = repository or WorkUnitCatalogueRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue: WorkUnitCatalogue = repo.load()
     existing = catalogue.get(work_unit_id)
     if existing is None:
@@ -403,6 +407,21 @@ def discard_work_unit(
     )
     updated_catalogue = upsert_work_unit(catalogue, discarded)
     repo.save(updated_catalogue)
+    _emit_bucket_event(
+        repository=bv_repo,
+        bucket_id=discarded.bucket_id,
+        event_type=BucketEventType.MODELO_WORK_UNIT_DISCARDED,
+        occurred_at=now,
+        actor=discarded.discarded_by,
+        object_type=BucketEventObjectType.WORK_UNIT,
+        object_id=discarded.work_unit_id,
+        payload={
+            "modelo": str(discarded.modelo),
+            "filing_year": str(discarded.filing_year),
+            "period": discarded.period,
+            "reason": discarded.discard_reason or "",
+        },
+    )
     return discarded
 
 
