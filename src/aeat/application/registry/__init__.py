@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import NamedTuple, cast
@@ -44,6 +43,37 @@ from ...domain.calculations.registry._live_parity import (
 from ...domain.calculations.registry._loader import load_registry_tree
 from ...domain.calculations.registry._workbook_parity import WorkbookBackendVerificationReport
 from ...domain.period import period_end_date
+from ._corpus import (
+    RegistryCitationArticleProjection,
+    RegistryCitationReferenceProjection,
+    RegistryCitationShowCommand,
+    RegistryCitationShowReport,
+    RegistryCitationsListCommand,
+    RegistryCitationsListReport,
+    RegistryCitationsVerificationReport,
+    RegistryCorpusIssueProjection,
+    RegistryManualId,
+    RegistryManualPartProjection,
+    RegistryManualRuleProjection,
+    RegistryManualRulesCommand,
+    RegistryManualRulesReport,
+    RegistryManualSectionProjection,
+    RegistryManualShowCommand,
+    RegistryManualShowReport,
+    RegistryManualsListCommand,
+    RegistryManualsListReport,
+    RegistryManualVerificationReport,
+    RegistryManualVerifyCommand,
+    RegistryTopicProjection,
+    list_registry_citations,
+    list_registry_manual_rules,
+    list_registry_manuals,
+    registry_manual_id,
+    show_registry_citation,
+    show_registry_manual,
+    verify_registry_citations,
+    verify_registry_manual,
+)
 from ._errors import RegistryApplicationError, RegistryApplicationInputError
 
 
@@ -444,13 +474,42 @@ __all__ = [
     "FiledStateVerificationReport",
     "RegistryApplicationError",
     "RegistryApplicationInputError",
+    "RegistryCitationArticleProjection",
+    "RegistryCitationReferenceProjection",
+    "RegistryCitationShowCommand",
+    "RegistryCitationShowReport",
+    "RegistryCitationsListCommand",
+    "RegistryCitationsListReport",
+    "RegistryCitationsVerificationReport",
+    "RegistryCorpusIssueProjection",
+    "RegistryManualId",
+    "RegistryManualPartProjection",
+    "RegistryManualRuleProjection",
+    "RegistryManualRulesCommand",
+    "RegistryManualRulesReport",
+    "RegistryManualSectionProjection",
+    "RegistryManualShowCommand",
+    "RegistryManualShowReport",
+    "RegistryManualVerificationReport",
+    "RegistryManualVerifyCommand",
+    "RegistryManualsListCommand",
+    "RegistryManualsListReport",
     "RegistryOracleAuditReport",
+    "RegistryTopicProjection",
     "RegistryTreeReport",
     "audit_registry_oracles",
     "inspect_registry_tree",
+    "list_registry_citations",
+    "list_registry_manual_rules",
+    "list_registry_manuals",
+    "registry_manual_id",
     "replay_registry_parity",
     "run_registry_parity",
+    "show_registry_citation",
+    "show_registry_manual",
     "verify_filed_state",
+    "verify_registry_citations",
+    "verify_registry_manual",
     "verify_registry_tree",
     "verify_registry_workbooks",
 ]
