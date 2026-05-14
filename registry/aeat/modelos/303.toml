@@ -430,6 +430,14 @@ profile_condition_mode = "all"
 legal_refs = ["orden-eha-3786-2008:art-7"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
+[[revisions."2009-y-siguientes".filing_schedules.profile_conditions]]
+field = "iva.regime"
+op = "not_equals"
+value = "EXENTO"
+explanation = "Autonomos not in an exempt IVA regime file Modelo 303 quarterly VAT self-assessments."
+legal_refs = ["orden-eha-3786-2008:art-7"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
 [[revisions."2009-y-siguientes".deadline_windows]]
 id = "modelo-303-2025-1t"
 filing_year = 2025
