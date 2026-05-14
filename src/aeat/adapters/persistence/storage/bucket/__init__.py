@@ -21,6 +21,7 @@ from ._errors import (
 from ._export_header import ExportArchiveHeader
 from ._keystore_paths import keystore_path, keystore_root, validate_keystore_separation
 from ._layout import BucketPaths, bucket_paths, provision_bucket_directory
+from ._lockfile import acquire_lock, lock_path, release_lock
 from ._manifest import BucketManifest, KdfParams
 from ._manifest_io import manifest_path, read_manifest, write_manifest
 
@@ -37,12 +38,15 @@ __all__ = [
     "NoActiveBucketError",
     "RecoveryUnavailableError",
     "RecoveryVerificationError",
+    "acquire_lock",
     "bucket_paths",
     "keystore_path",
     "keystore_root",
+    "lock_path",
     "manifest_path",
     "provision_bucket_directory",
     "read_manifest",
+    "release_lock",
     "validate_keystore_separation",
     "write_manifest",
 ]
