@@ -12,6 +12,10 @@ from aeat.application.aggregation._retenciones import (
     RetencionScheme,
     aggregate_retenciones_111,
     aggregate_retenciones_115,
+    aggregate_retenciones_123,
+    aggregate_retenciones_180,
+    aggregate_retenciones_190,
+    aggregate_retenciones_193,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -154,8 +158,63 @@ class TestAggregate111:
     def test_unimplemented_modelo_raises(self) -> None:
         from aeat.application.aggregation._retenciones import _filter_observations_for_modelo
 
-        with pytest.raises(NotImplementedError, match="modelo '123'"):
-            _filter_observations_for_modelo((), modelo="123")
+        with pytest.raises(NotImplementedError, match="modelo '347'"):
+            _filter_observations_for_modelo((), modelo="347")
+
+
+class TestAggregate123:
+    def test_123_aggregates_capital_income_schemes(self) -> None:
+        observations = (
+            _obs(nif="B1", scheme=RetencionScheme.CAPITAL_INTEREST, base="500", retencion="95", source_id="c1"),
+            _obs(nif="B1", scheme=RetencionScheme.CAPITAL_DIVIDEND, base="1000", retencion="190", source_id="c2"),
+            _obs(nif="B1", scheme=RetencionScheme.WORK_INCOME, base="999", retencion="150", source_id="c3"),
+        )
+        result = aggregate_retenciones_123(observations, period="2025-Q1")
+        assert result.modelo == "123"
+        # WORK_INCOME observation is filtered out (not in 123 catalogue)
+        assert len(result.rollups) == 2
+        schemes = {row.scheme for row in result.rollups}
+        assert schemes == {RetencionScheme.CAPITAL_INTEREST, RetencionScheme.CAPITAL_DIVIDEND}
+
+    def test_123_other_scheme_included(self) -> None:
+        observations = (
+            _obs(nif="B1", scheme=RetencionScheme.CAPITAL_OTHER, base="300", retencion="57", source_id="c1"),
+        )
+        result = aggregate_retenciones_123(observations, period="2025-Q1")
+        assert len(result.rollups) == 1
+        assert result.rollups[0].scheme is RetencionScheme.CAPITAL_OTHER
+
+
+class TestAggregate180_190_193:
+    def test_180_widens_115_observations_to_annual_period(self) -> None:
+        observations = (
+            _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="2000", retencion="380", source_id="r1"),
+            _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="2000", retencion="380", source_id="r2"),
+        )
+        result = aggregate_retenciones_180(observations, period="2025")
+        assert result.modelo == "180"
+        assert result.period == "2025"
+        assert result.total_taxable_base == Decimal("4000")
+        assert result.total_retencion == Decimal("760")
+
+    def test_190_widens_111_observations_to_annual_period(self) -> None:
+        observations = (
+            _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="1000", retencion="150", source_id="t1"),
+            _obs(nif="A2", scheme=RetencionScheme.PROFESSIONAL, base="500", retencion="75", source_id="t2"),
+        )
+        result = aggregate_retenciones_190(observations, period="2025")
+        assert result.modelo == "190"
+        assert result.total_perceptors == 2
+
+    def test_193_widens_123_observations_to_annual_period(self) -> None:
+        observations = (
+            _obs(nif="B1", scheme=RetencionScheme.CAPITAL_DIVIDEND, base="800", retencion="152", source_id="c1"),
+            _obs(nif="B2", scheme=RetencionScheme.CAPITAL_INTEREST, base="200", retencion="38", source_id="c2"),
+        )
+        result = aggregate_retenciones_193(observations, period="2025")
+        assert result.modelo == "193"
+        assert result.total_perceptors == 2
+        assert result.total_retencion == Decimal("190")
 
 
 class TestAggregate115:
