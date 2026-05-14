@@ -68,6 +68,8 @@ class BucketEventType(StrEnum):
     MODELO_FILED_SUPERSEDED = "modelo.filed_superseded"
     MODELO_AMENDED = "modelo.amended"
     MODELO_FILING_IMPORTED = "modelo.filing.imported"
+    # Work-unit lifecycle (W78A R10 per apex ADR §12)
+    MODELO_WORK_UNIT_DISCARDED = "modelo.work_unit.discarded"
 
     # profile lifecycle (Wave W08 + W09)
     PROFILE_BUCKET_CREATED = "profile.bucket.created"
