@@ -4075,51 +4075,51 @@ Implements the apex ADR §12.b standardized CRUD verb contract. Locks the canoni
 
 Cross-cutting CRUD contract as backend service shape per apex §12.b lock.
 
-- [ ] `W71.P340.S1979` - Read the apex ADR §12.b CRUD verb contract section in full before editing; `.vault/adr`.
-- [ ] `W71.P340.S1980` - Define a MutatingNounGroupContract Pydantic protocol in the application layer specifying canonical add/remove/update/view/list methods; `src/aeat/application`.
-- [ ] `W71.P340.S1981` - Annotate orthogonal-axis and lifecycle-state verb categories on the protocol as discriminated subtypes; `src/aeat/application`.
-- [ ] `W71.P340.S1982` - Document the key-value-as-record exception (set/get/unset mapping) as an explicit protocol annotation; `src/aeat/application`.
-- [ ] `W71.P340.S1983` - Register the canonical bucket event suffixes (created, removed, updated) for cross-cutting consumption; `src/aeat/domain/buckets`.
+- [x] `W71.P340.S1979` - Read the apex ADR §12.b CRUD verb contract section in full before editing; `.vault/adr`.
+- [x] `W71.P340.S1980` - Define a MutatingNounGroupContract Pydantic protocol in the application layer specifying canonical add/remove/update/view/list methods; `src/aeat/application`.
+- [x] `W71.P340.S1981` - Annotate orthogonal-axis and lifecycle-state verb categories on the protocol as discriminated subtypes; `src/aeat/application`.
+- [x] `W71.P340.S1982` - Document the key-value-as-record exception (set/get/unset mapping) as an explicit protocol annotation; `src/aeat/application`.
+- [x] `W71.P340.S1983` - Register the canonical bucket event suffixes (created, removed, updated) for cross-cutting consumption; `src/aeat/domain/buckets`.
 
 ### Phase `W71.P341` - shadow duplicate removal
 
 Inventory every current mutating noun-group and produce the migration ledger.
 
-- [ ] `W71.P341.S1984` - Inventory aeat app ledger verbs against the canonical CRUD contract and record mapping; `.vault/reference`.
-- [ ] `W71.P341.S1985` - Inventory aeat app modelo verbs and record mapping; `.vault/reference`.
-- [ ] `W71.P341.S1986` - Inventory aeat config noun-groups (profile, auth, bucket, repair) and record mapping with key-value-exception annotations; `.vault/reference`.
-- [ ] `W71.P341.S1987` - Cross-check inventory against the W70.P333 evidence verb-group reference shape; `.vault/reference`.
-- [ ] `W71.P341.S1988` - Identify duplicate or shadow verbs that would collide with the canonical CRUD spine and record the duplicate inventory; `.vault/reference`.
+- [x] `W71.P341.S1984` - Inventory aeat app ledger verbs against the canonical CRUD contract and record mapping; `.vault/reference`.
+- [x] `W71.P341.S1985` - Inventory aeat app modelo verbs and record mapping; `.vault/reference`.
+- [x] `W71.P341.S1986` - Inventory aeat config noun-groups (profile, auth, bucket, repair) and record mapping with key-value-exception annotations; `.vault/reference`.
+- [x] `W71.P341.S1987` - Cross-check inventory against the W70.P333 evidence verb-group reference shape; `.vault/reference`.
+- [x] `W71.P341.S1988` - Identify duplicate or shadow verbs that would collide with the canonical CRUD spine and record the duplicate inventory; `.vault/reference`.
 
 ### Phase `W71.P342` - de-shim and de-stub cleanup
 
 Declare the migration policy for non-conforming verbs.
 
-- [ ] `W71.P342.S1989` - Declare migration policy for non-canonical verbs (create maps to add, edit maps to update, redundant aliases retire); `src/aeat/application`.
-- [ ] `W71.P342.S1990` - Declare which lifecycle-state verbs remain explicit (archive, stash, discard, reset) with state-specific events; `src/aeat/application`.
-- [ ] `W71.P342.S1991` - Declare which orthogonal-axis verbs remain at the noun-group level (classify, allocate, attach, link, check, preflight, reconcile); `src/aeat/application`.
-- [ ] `W71.P342.S1992` - Declare key-value-as-record exceptions per noun-group (profile values, usage ratios, configuration keys); `src/aeat/application`.
-- [ ] `W71.P342.S1993` - Prune the inventory document of rows whose migration target is no-change so only non-canonical rows survive into Waves W72-W77; `.vault/reference`.
+- [x] `W71.P342.S1989` - Declare migration policy for non-canonical verbs (create maps to add, edit maps to update, redundant aliases retire); `src/aeat/application`.
+- [x] `W71.P342.S1990` - Declare which lifecycle-state verbs remain explicit (archive, stash, discard, reset) with state-specific events; `src/aeat/application`.
+- [x] `W71.P342.S1991` - Declare which orthogonal-axis verbs remain at the noun-group level (classify, allocate, attach, link, check, preflight, reconcile); `src/aeat/application`.
+- [x] `W71.P342.S1992` - Declare key-value-as-record exceptions per noun-group (profile values, usage ratios, configuration keys); `src/aeat/application`.
+- [x] `W71.P342.S1993` - Prune the inventory document of rows whose migration target is no-change so only non-canonical rows survive into Waves W72-W77; `.vault/reference`.
 
 ### Phase `W71.P343` - real behavior verification
 
 Ship the contract assertion harness.
 
-- [ ] `W71.P343.S1994` - Add a contract-conformance test that walks every Typer noun-group app and asserts the registered verb set matches the canonical contract; `tests/entrypoints/cli`.
-- [ ] `W71.P343.S1995` - Add a runtime invariant test asserting every mutating noun-group service implements the MutatingNounGroupContract protocol; `tests/application`.
-- [ ] `W71.P343.S1996` - Add a bucket-event-name regression test asserting every mutating verb emits an event with the canonical suffix; `tests/domain/buckets`.
-- [ ] `W71.P343.S1997` - Add a help-text test asserting every mutating noun-group enumerates the canonical CRUD spine first; `tests/entrypoints/cli`.
-- [ ] `W71.P343.S1998` - Run the contract harness across the current tree and record the violation list as input ledger for Waves W72-W77; `tests/entrypoints/cli`.
+- [x] `W71.P343.S1994` - Add a contract-conformance test that walks every Typer noun-group app and asserts the registered verb set matches the canonical contract; `tests/entrypoints/cli`.
+- [x] `W71.P343.S1995` - Add a runtime invariant test asserting every mutating noun-group service implements the MutatingNounGroupContract protocol; `tests/application`.
+- [x] `W71.P343.S1996` - Add a bucket-event-name regression test asserting every mutating verb emits an event with the canonical suffix; `tests/domain/buckets`.
+- [x] `W71.P343.S1997` - Add a help-text test asserting every mutating noun-group enumerates the canonical CRUD spine first; `tests/entrypoints/cli`.
+- [x] `W71.P343.S1998` - Run the contract harness across the current tree and record the violation list as input ledger for Waves W72-W77; `tests/entrypoints/cli`.
 
 ### Phase `W71.P344` - thin cli exposure
 
 Lock the contract in help and i18n surfaces.
 
-- [ ] `W71.P344.S1999` - Update root aeat help to document the canonical CRUD shape as the cross-cutting noun-group contract; `src/aeat/core/i18n`.
-- [ ] `W71.P344.S2000` - Update i18n translation tables to carry the canonical verb names across es/en/ca/hu; `src/aeat/core/i18n`.
-- [ ] `W71.P344.S2001` - Wire mistype-suggestion footer to route legacy verb spellings (create, edit, del) to the canonical CRUD verb; `src/aeat/entrypoints/cli`.
-- [ ] `W71.P344.S2002` - Validate help text vocabulary uses canonical verb names only outside of the legacy-suggestion footer; `tests/entrypoints/cli`.
-- [ ] `W71.P344.S2003` - Update apex ADR §12 reconciliation ledger to mark R01 as closed by W71; `.vault/adr`.
+- [x] `W71.P344.S1999` - Update root aeat help to document the canonical CRUD shape as the cross-cutting noun-group contract; `src/aeat/core/i18n`.
+- [x] `W71.P344.S2000` - Update i18n translation tables to carry the canonical verb names across es/en/ca/hu; `src/aeat/core/i18n`.
+- [x] `W71.P344.S2001` - Wire mistype-suggestion footer to route legacy verb spellings (create, edit, del) to the canonical CRUD verb; `src/aeat/entrypoints/cli`.
+- [x] `W71.P344.S2002` - Validate help text vocabulary uses canonical verb names only outside of the legacy-suggestion footer; `tests/entrypoints/cli`.
+- [x] `W71.P344.S2003` - Update apex ADR §12 reconciliation ledger to mark R01 as closed by W71; `.vault/adr`.
 
 ## Wave `W72` - Reconciliation: modelo grammar reconcile
 
@@ -4291,51 +4291,51 @@ Closes apex §12 ledger row R06. The aeat config auth apoderado subgroup is enti
 
 Implement ApoderadoService and ship the scope catalogue.
 
-- [ ] `W75.P360.S2079` - Read the apoderamientos-surface and apoderado-scope-vocabulary ADRs in full; `.vault/adr`.
-- [ ] `W75.P360.S2080` - Implement ApoderadoService with verbs status, configure, clear, check; `src/aeat/application/auth`.
-- [ ] `W75.P360.S2081` - Add Pydantic command and result contracts with represented_nif and scope (uppercase-and-deduplicated); `src/aeat/application/auth`.
-- [ ] `W75.P360.S2082` - Ship registry/aeat/apoderamientos/scopes.toml with the AEAT apoderamiento code catalogue and ALL expansion support; `registry/aeat/apoderamientos`.
-- [ ] `W75.P360.S2083` - Wire auth.apoderado.configured and auth.apoderado.cleared bucket events with granted-scopes payload and catalogue version; `src/aeat/domain/buckets`.
+- [x] `W75.P360.S2079` - Read the apoderamientos-surface and apoderado-scope-vocabulary ADRs in full; `.vault/adr`.
+- [x] `W75.P360.S2080` - Implement ApoderadoService with verbs status, configure, clear, check; `src/aeat/application/auth`.
+- [x] `W75.P360.S2081` - Add Pydantic command and result contracts with represented_nif and scope (uppercase-and-deduplicated); `src/aeat/application/auth`.
+- [x] `W75.P360.S2082` - Ship registry/aeat/apoderamientos/scopes.toml with the AEAT apoderamiento code catalogue and ALL expansion support; `registry/aeat/apoderamientos`.
+- [x] `W75.P360.S2083` - Wire auth.apoderado.configured and auth.apoderado.cleared bucket events with granted-scopes payload and catalogue version; `src/aeat/domain/buckets`.
 
 ### Phase `W75.P361` - shadow duplicate removal
 
 Audit for legacy representation references and ensure no root mount.
 
-- [ ] `W75.P361.S2084` - Audit application/auth and entrypoints/cli/_config for legacy representation/proxy/apoderado references; `src/aeat/application/auth`.
-- [ ] `W75.P361.S2085` - Ensure apoderado is mounted as a subgroup under config auth and not a separate root; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W75.P361.S2086` - Reject any path that frames apoderado mutation as a live AEAT operation per the charter; `src/aeat/application/auth`.
-- [ ] `W75.P361.S2087` - Remove tests asserting legacy apoderado shapes; `tests/application/auth`.
-- [ ] `W75.P361.S2088` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W75.P361.S2084` - Audit application/auth and entrypoints/cli/_config for legacy representation/proxy/apoderado references; `src/aeat/application/auth`.
+- [x] `W75.P361.S2085` - Ensure apoderado is mounted as a subgroup under config auth and not a separate root; `src/aeat/entrypoints/cli/_config`.
+- [x] `W75.P361.S2086` - Reject any path that frames apoderado mutation as a live AEAT operation per the charter; `src/aeat/application/auth`.
+- [x] `W75.P361.S2087` - Remove tests asserting legacy apoderado shapes; `tests/application/auth`.
+- [x] `W75.P361.S2088` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W75.P362` - de-shim and de-stub cleanup
 
 Enforce scope parser rules and live-AEAT charter.
 
-- [ ] `W75.P362.S2089` - Enforce --scope flag parser rules at the Typer boundary (uppercase, dedupe, reject comma-separated, accept repeated flag, expand ALL at command time); `src/aeat/entrypoints/cli/_config`.
-- [ ] `W75.P362.S2090` - Reject live apoderamiento registration, extension, revocation, confirmation, renunciation, filing-as-representative shortcuts at backend boundary; `src/aeat/application/auth`.
-- [ ] `W75.P362.S2091` - Ensure check invokes require_live_read before remote contact for read-only live verification; `src/aeat/application/auth`.
-- [ ] `W75.P362.S2092` - Wire help text and i18n with Spanish-English glosses (apoderado representative proxy); `src/aeat/core/i18n`.
-- [ ] `W75.P362.S2093` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W75.P362.S2089` - Enforce --scope flag parser rules at the Typer boundary (uppercase, dedupe, reject comma-separated, accept repeated flag, expand ALL at command time); `src/aeat/entrypoints/cli/_config`.
+- [x] `W75.P362.S2090` - Reject live apoderamiento registration, extension, revocation, confirmation, renunciation, filing-as-representative shortcuts at backend boundary; `src/aeat/application/auth`.
+- [x] `W75.P362.S2091` - Ensure check invokes require_live_read before remote contact for read-only live verification; `src/aeat/application/auth`.
+- [x] `W75.P362.S2092` - Wire help text and i18n with Spanish-English glosses (apoderado representative proxy); `src/aeat/core/i18n`.
+- [x] `W75.P362.S2093` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W75.P363` - real behavior verification
 
 Test service, catalogue, CLI surface, and live-read invocations.
 
-- [ ] `W75.P363.S2094` - Add service-contract tests for ApoderadoService covering status, configure, clear, check; `tests/application/auth`.
-- [ ] `W75.P363.S2095` - Add catalogue-load tests covering TOML parse, scope code resolution, ALL expansion, unknown-code rejection; `tests/application/auth`.
-- [ ] `W75.P363.S2096` - Add CLI surface tests for the apoderado verb tree; `tests/entrypoints/cli`.
-- [ ] `W75.P363.S2097` - Add negative tests covering comma-separated scopes refused, unknown scopes refused, live mutation refused; `tests/entrypoints/cli`.
-- [ ] `W75.P363.S2098` - Add a smoke test exercising check against a mocked AEAT response without live test markers; `tests/application/auth`.
+- [x] `W75.P363.S2094` - Add service-contract tests for ApoderadoService covering status, configure, clear, check; `tests/application/auth`.
+- [x] `W75.P363.S2095` - Add catalogue-load tests covering TOML parse, scope code resolution, ALL expansion, unknown-code rejection; `tests/application/auth`.
+- [x] `W75.P363.S2096` - Add CLI surface tests for the apoderado verb tree; `tests/entrypoints/cli`.
+- [x] `W75.P363.S2097` - Add negative tests covering comma-separated scopes refused, unknown scopes refused, live mutation refused; `tests/entrypoints/cli`.
+- [x] `W75.P363.S2098` - Add a smoke test exercising check against a mocked AEAT response without live test markers; `tests/application/auth`.
 
 ### Phase `W75.P364` - thin cli exposure
 
 Register apoderado_app and update apex cross-references.
 
-- [ ] `W75.P364.S2099` - Register apoderado_app Typer subgroup under auth_app in _config; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W75.P364.S2100` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
-- [ ] `W75.P364.S2101` - Wire help text and i18n with the canonical Spanish-anchored vocabulary; `src/aeat/core/i18n`.
-- [ ] `W75.P364.S2102` - Update apex ADR §3.3 to reflect the shipped subgroup and mark R06 closed by W75; `.vault/adr`.
-- [ ] `W75.P364.S2103` - Amend apoderamientos-surface and apoderado-scope-vocabulary child ADRs; `.vault/adr`.
+- [x] `W75.P364.S2099` - Register apoderado_app Typer subgroup under auth_app in _config; `src/aeat/entrypoints/cli/_config`.
+- [x] `W75.P364.S2100` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [x] `W75.P364.S2101` - Wire help text and i18n with the canonical Spanish-anchored vocabulary; `src/aeat/core/i18n`.
+- [x] `W75.P364.S2102` - Update apex ADR §3.3 to reflect the shipped subgroup and mark R06 closed by W75; `.vault/adr`.
+- [x] `W75.P364.S2103` - Amend apoderamientos-surface and apoderado-scope-vocabulary child ADRs; `.vault/adr`.
 
 ## Wave `W76` - Reconciliation: inventory noun-group
 
