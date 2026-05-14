@@ -10,6 +10,9 @@ and this module stay fully aligned.
 
 from __future__ import annotations
 
+import contextvars
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
@@ -236,6 +239,36 @@ class Settings(BaseSettings):
     aeat_live_tests_enabled: bool = Field(
         default=False,
         description="Opt-in flag to run @pytest.mark.live_read tests against real external services",
+    )
+
+    # ── Diagnostic logging ──────────────────────────────────────────────────
+    aeat_log_dir: Path | None = Field(
+        default=None,
+        description=(
+            "Optional override for the diagnostic-log root directory. "
+            "When None the logging helper computes a project-relative default; "
+            "operators set this to redirect logs to an external store."
+        ),
+    )
+
+    # ── Workbook parity scanner ─────────────────────────────────────────────
+    aeat_libreoffice_executable: Path | None = Field(
+        default=None,
+        description=(
+            "Optional explicit path to the soffice / libreoffice binary used by "
+            "the workbook-parity scanner. When None the scanner resolves it from "
+            "PATH."
+        ),
+    )
+
+    # ── Master-key passphrase (live-write security perimeter) ───────────────
+    aeat_master_key_passphrase: SecretStr | None = Field(
+        default=None,
+        description=(
+            "Passphrase that derives the encrypted-secret-store master key. "
+            "Default None — the master-key loader refuses operation on None or "
+            "empty value to preserve fail-closed behaviour."
+        ),
     )
 
     # ── Manuals corpus (aeat.domain.manuals) ───────────────────────────────────────
@@ -704,6 +737,56 @@ class Settings(BaseSettings):
         return normalize_project_relative_path(value)
 
 
+_settings_override: contextvars.ContextVar[Settings | None] = contextvars.ContextVar(
+    "_settings_override",
+    default=None,
+)
+
+
 def load_settings() -> Settings:
-    """Create a Settings instance from environment variables and ``.env`` file."""
+    """Return the effective :class:`Settings` instance.
+
+    Honours an active :func:`override_settings` block first; otherwise
+    constructs a fresh instance from environment variables and
+    ``.env``. The fresh construction preserves the historical contract
+    that callers see every monkeypatched env var in test contexts.
+    """
+
+    override = _settings_override.get()
+    if override is not None:
+        return override
     return Settings()
+
+
+@contextmanager
+def override_settings(**overrides: object) -> Iterator[Settings]:
+    """Override one or more :class:`Settings` fields for the with-block.
+
+    Resolves the current effective Settings, calls
+    :meth:`Settings.model_copy` with ``update=overrides`` so Pydantic
+    validates the merged dict, and sets a process-local
+    :class:`contextvars.ContextVar` so :func:`load_settings` returns
+    the overridden instance for the duration of the block. The prior
+    ContextVar value is restored on exit, including on exception.
+
+    A malformed override (wrong type, value outside the field's
+    validator) raises :class:`pydantic.ValidationError` at entry,
+    before the ContextVar is set.
+
+    Process-local by design: subprocesses spawned inside the block do
+    not inherit the override, so cross-process channels (replay,
+    OpenSSL passphrase, browser driver) continue to use the real
+    environment.
+    """
+
+    current = load_settings()
+    # ``model_copy(update=)`` skips validators in Pydantic v2; route the
+    # merged dict through ``model_validate`` so a malformed override
+    # fails fast at entry, before the ContextVar is set.
+    merged = {**current.model_dump(), **overrides}
+    new_settings = Settings.model_validate(merged)
+    token = _settings_override.set(new_settings)
+    try:
+        yield new_settings
+    finally:
+        _settings_override.reset(token)
