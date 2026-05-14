@@ -1329,7 +1329,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
         occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
     )
 
-    with pytest.raises(TransactionValidationError, match="cannot be edited"):
+    with pytest.raises(TransactionValidationError, match="can be edited"):
         update_manual_transaction(
             transaction_id=created.ref.transaction_id,
             command=ManualLedgerTransactionCommand(

@@ -377,6 +377,7 @@ class LedgerStatusReport(BaseModel):
     active_count: int = Field(ge=0)
     archived_count: int = Field(ge=0)
     stashed_count: int = Field(ge=0)
+    split_count: int = Field(ge=0, default=0)
     pending_review_count: int = Field(ge=0)
     reviewed_count: int = Field(ge=0)
     skipped_count: int = Field(ge=0)
