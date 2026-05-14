@@ -437,6 +437,15 @@ class SplitLineage(BaseModel):
             raise TransactionValidationError("split_group_id must be lowercase")
         return value
 
+    @field_validator("sibling_transaction_ids", mode="before")
+    @classmethod
+    def _coerce_siblings(cls, value: Any) -> tuple[str, ...]:
+        if isinstance(value, tuple):
+            return value
+        if isinstance(value, Sequence) and not isinstance(value, str | bytes):
+            return tuple(value)
+        raise TransactionValidationError("sibling_transaction_ids must be a sequence")
+
     @field_validator("sibling_transaction_ids")
     @classmethod
     def _normalise_siblings(cls, value: tuple[str, ...]) -> tuple[str, ...]:
