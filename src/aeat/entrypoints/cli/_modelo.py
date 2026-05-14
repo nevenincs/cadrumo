@@ -57,7 +57,7 @@ app = typer.Typer(
 def _resolve_default_actor() -> str:
     """Return the active profile display_name, or a permanent fallback label.
 
-    Per the actor-attribution ADR, ``--by`` defaults to the active profile's
+    Per the actor attribution specification, ``--by`` defaults to the active profile's
     display name. When no active profile exists or the bucket is empty the
     fallback label keeps the audit record populated rather than raising.
     """
@@ -896,6 +896,75 @@ def work_revisions(
     _emit(ctx, payload, lines)
 
 
+@work_app.command(
+    "history",
+    help=tr(
+        "cli.app.modelo.work.history_help",
+        default="Show every bucket event scoped to one work unit's full lifecycle.",
+    ),
+)
+def work_history(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.app.modelo.work.history_work_unit_id_help",
+                default="Work unit id whose lifecycle to render.",
+            ),
+        ),
+    ],
+) -> None:
+    """Assemble the chronological event stream for one work unit.
+
+    Read-only aggregate over the bucket-event history catalogue and
+    the four catalogues (work unit, calculation revision, verification
+    report, filing record). Emits no bucket event.
+    """
+
+    from ...application.modelo import assemble_work_unit_history
+
+    history = assemble_work_unit_history(work_unit_id)
+    payload = {
+        "operation": "modelo.work.history",
+        "bucket_id": history.bucket_id,
+        "work_unit_id": history.work_unit_id,
+        "event_count": len(history.events),
+        "events": [
+            {
+                "event_id": event.event_id,
+                "occurred_at": event.occurred_at.isoformat(),
+                "event_type": event.event_type.value,
+                "object_type": event.object_type.value,
+                "object_id": event.object_id,
+                "actor": event.actor,
+                "payload": event.payload,
+            }
+            for event in history.events
+        ],
+    }
+    lines = [
+        "operation\tmodelo.work.history",
+        f"bucket_id\t{history.bucket_id}",
+        f"work_unit_id\t{history.work_unit_id}",
+        f"event_count\t{len(history.events)}",
+        "occurred_at\tevent_type\tobject_type\tobject_id\tactor",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                event.occurred_at.isoformat(),
+                event.event_type.value,
+                event.object_type.value,
+                event.object_id,
+                event.actor,
+            ),
+        )
+        for event in history.events
+    )
+    _emit(ctx, payload, lines)
+
+
 def _verification_report_payload(report: VerificationReport) -> dict[str, Any]:
     return {
         "verification_report_id": report.verification_report_id,
@@ -1380,7 +1449,7 @@ def _as_of(raw: str | None) -> date | None:
 
 
 # ─────────────────────────────────────────────────────────────────────────
-# Evidence bundle audit (W57 evidence-bundle-shape ADR)
+# Evidence bundle audit
 # ─────────────────────────────────────────────────────────────────────────
 
 
