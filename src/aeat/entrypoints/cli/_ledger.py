@@ -937,6 +937,155 @@ def ratios_validate(ctx: typer.Context) -> None:
     _emit(ctx, payload, lines)
 
 
+def _business_invoice_payload(record) -> dict[str, object]:
+    return record.model_dump(mode="json")
+
+
+def _business_invoice_text_lines(record) -> list[str]:
+    return [
+        f"invoice_id\t{record.invoice_id}",
+        f"source_kind\t{record.source_kind.value}",
+        f"bucket\t{record.bucket_id}",
+        f"counterparty_nif\t{record.counterparty_nif}",
+        f"counterparty_name\t{record.counterparty_name}",
+        f"invoice_number\t{record.invoice_number}",
+        f"invoice_date\t{record.invoice_date}",
+        f"currency\t{record.currency}",
+        f"taxable_base\t{record.taxable_base}",
+        f"iva_rate\t{'' if record.iva_rate is None else record.iva_rate}",
+        f"iva_amount\t{record.iva_amount}",
+        f"total_amount\t{record.total_amount}",
+    ]
+
+
+def _build_business_invoice_app(name: str, help_text: str, service_factory):
+    sub_app = typer.Typer(name=name, help=help_text, no_args_is_help=True)
+
+    @sub_app.command("add", help=f"Register a new {name} record.")
+    def add(
+        ctx: typer.Context,
+        counterparty_nif: str = typer.Option(..., "--counterparty-nif"),
+        invoice_number: str = typer.Option(..., "--invoice-number"),
+        invoice_date: str = typer.Option(..., "--invoice-date", help="Invoice date (YYYY-MM-DD)."),
+        counterparty_name: str = typer.Option("", "--counterparty-name"),
+        currency: str = typer.Option("EUR", "--currency"),
+        taxable_base: str = typer.Option("0", "--taxable-base"),
+        iva_rate: str | None = typer.Option(None, "--iva-rate"),
+        iva_amount: str = typer.Option("0", "--iva-amount"),
+        total_amount: str = typer.Option("0", "--total-amount"),
+        notes: str = typer.Option("", "--notes"),
+    ) -> None:
+        bucket_id = _ratios_bucket_id()
+        record = service_factory().add(
+            bucket_id=bucket_id,
+            counterparty_nif=counterparty_nif,
+            invoice_number=invoice_number,
+            invoice_date=invoice_date,
+            counterparty_name=counterparty_name,
+            currency=currency,
+            taxable_base=_parse_required_decimal(taxable_base, label="taxable-base"),
+            iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
+            iva_amount=_parse_required_decimal(iva_amount, label="iva-amount"),
+            total_amount=_parse_required_decimal(total_amount, label="total-amount"),
+            notes=notes,
+        )
+        _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+
+    @sub_app.command("view", help=f"Show one {name} record.")
+    def view(
+        ctx: typer.Context,
+        invoice_id: str = typer.Argument(..., help="Invoice id (or unambiguous prefix)."),
+    ) -> None:
+        bucket_id = _ratios_bucket_id()
+        record = service_factory().view(bucket_id=bucket_id, invoice_id=invoice_id)
+        _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+
+    @sub_app.command("list", help=f"List every {name} record on the active bucket.")
+    def list_(ctx: typer.Context) -> None:
+        bucket_id = _ratios_bucket_id()
+        rows = service_factory().list_all(bucket_id=bucket_id)
+        payload = {
+            "bucket_id": bucket_id,
+            "rows": [r.model_dump(mode="json") for r in rows],
+            "count": len(rows),
+        }
+        lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+        for r in rows:
+            lines.append(
+                f"{r.invoice_id}\t{r.counterparty_nif}\t{r.invoice_number}\t{r.invoice_date}\t{r.total_amount}"
+            )
+        _emit(ctx, payload, lines)
+
+    @sub_app.command("update", help=f"Update mutable fields on one {name} record.")
+    def update(
+        ctx: typer.Context,
+        invoice_id: str = typer.Argument(..., help="Invoice id (or unambiguous prefix)."),
+        counterparty_nif: str | None = typer.Option(None, "--counterparty-nif"),
+        counterparty_name: str | None = typer.Option(None, "--counterparty-name"),
+        invoice_number: str | None = typer.Option(None, "--invoice-number"),
+        invoice_date: str | None = typer.Option(None, "--invoice-date"),
+        currency: str | None = typer.Option(None, "--currency"),
+        taxable_base: str | None = typer.Option(None, "--taxable-base"),
+        iva_rate: str | None = typer.Option(None, "--iva-rate"),
+        iva_amount: str | None = typer.Option(None, "--iva-amount"),
+        total_amount: str | None = typer.Option(None, "--total-amount"),
+        notes: str | None = typer.Option(None, "--notes"),
+    ) -> None:
+        from ...application.ledger._business_operation_invoice import BusinessOperationInvoicePatch
+
+        bucket_id = _ratios_bucket_id()
+        patch = BusinessOperationInvoicePatch(
+            counterparty_nif=counterparty_nif,
+            counterparty_name=counterparty_name,
+            invoice_number=invoice_number,
+            invoice_date=invoice_date,
+            currency=currency,
+            taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
+            iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
+            iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+            total_amount=_parse_decimal(total_amount, label="total-amount"),
+            notes=notes,
+        )
+        record = service_factory().update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
+        _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+
+    @sub_app.command("remove", help=f"Delete one {name} record.")
+    def remove(
+        ctx: typer.Context,
+        invoice_id: str = typer.Argument(..., help="Invoice id (or unambiguous prefix)."),
+        yes: bool = typer.Option(False, "--yes", help="Confirm removal."),
+    ) -> None:
+        if not yes:
+            raise _bad(f"--yes is required to remove a {name} record")
+        bucket_id = _ratios_bucket_id()
+        record = service_factory().remove(bucket_id=bucket_id, invoice_id=invoice_id)
+        _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
+
+    return sub_app
+
+
+def _payable_invoice_service():
+    from ...application.ledger._business_operation_invoice import PayableInvoiceService
+
+    return PayableInvoiceService()
+
+
+def _collectible_invoice_service():
+    from ...application.ledger._business_operation_invoice import CollectibleInvoiceService
+
+    return CollectibleInvoiceService()
+
+
+payable_invoice_app = _build_business_invoice_app(
+    "payable-invoice", "Payable invoice records (we owe a vendor).", _payable_invoice_service
+)
+collectible_invoice_app = _build_business_invoice_app(
+    "collectible-invoice", "Collectible invoice records (a customer owes us).", _collectible_invoice_service
+)
+app.add_typer(payable_invoice_app, name="payable-invoice")
+app.add_typer(collectible_invoice_app, name="collectible-invoice")
+
+
 inventory_app = typer.Typer(
     name="inventory",
     help="Per-actividad inventory ledgers (stock, movements, valuation).",
