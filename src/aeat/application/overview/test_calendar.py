@@ -134,6 +134,10 @@ def _entry(**overrides: object) -> OverviewCalendarEntry:
         "period": "2026Q1",
         "opens_on": date(2026, 4, 1),
         "closes_on": date(2026, 4, 20),
+        "adjusted_closes_on": date(2026, 4, 20),
+        "shift_reason": "business_day",
+        "holiday_refs": (),
+        "jurisdictions": (),
         "payment_cutoff_on": date(2026, 4, 15),
         "status": ObligationStatus.UPCOMING,
         "user_state": OverviewPeriodState.DUE,
@@ -244,6 +248,56 @@ def test_build_empty_range_when_window_covers_no_obligations() -> None:
         today=date(2026, 4, 1),
     )
     assert isinstance(calendar.entries, tuple)
+
+
+def test_build_threads_shift_metadata_onto_every_entry() -> None:
+    """Every assembled entry carries the festivos-shift outcome.
+
+    The contract: ``adjusted_closes_on`` is populated, ``shift_reason``
+    is one of the closed set returned by
+    :func:`aeat.domain.deadlines.shift_deadline`, and the adjusted date
+    never precedes the original close.
+    """
+    accepted_reasons = {
+        "business_day",
+        "modelo_exception",
+        "weekend",
+        "national_holiday",
+        "ccaa_holiday",
+        "calendar_unavailable",
+    }
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+    cal = build_overview_calendar(_profile(), rng, today=date(2026, 4, 1))
+    assert cal.entries, "expected the test profile to produce at least one obligation"
+    for entry in cal.entries:
+        assert entry.adjusted_closes_on >= entry.closes_on
+        assert entry.shift_reason in accepted_reasons
+
+
+def test_build_marks_modelo_369_as_modelo_exception() -> None:
+    """Modelo 369 obligations bypass the shift; reason must be modelo_exception."""
+    rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))
+    cal = build_overview_calendar(_profile(), rng, today=date(2026, 4, 1))
+    modelo_369 = [entry for entry in cal.entries if entry.modelo == "369"]
+    # Whether 369 appears for the test profile depends on the profile's
+    # OSS enrolment. When it does appear, the shift must be skipped.
+    for entry in modelo_369:
+        assert entry.shift_reason == "modelo_exception"
+        assert entry.adjusted_closes_on == entry.closes_on
+        assert entry.holiday_refs == ()
+
+
+def test_entry_rejects_adjusted_close_that_precedes_original() -> None:
+    """The shift rule is strictly monotone non-decreasing.
+
+    A construction with ``adjusted_closes_on < closes_on`` is a
+    structural violation: the shift can only move a deadline forward.
+    """
+    with pytest.raises(ValueError, match=r"adjusted_closes_on|may only move"):
+        _entry(
+            closes_on=date(2026, 4, 20),
+            adjusted_closes_on=date(2026, 4, 19),
+        )
 
 
 def test_build_is_idempotent_modulo_generated_at() -> None:

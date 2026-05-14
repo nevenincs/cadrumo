@@ -44,10 +44,13 @@ from ...domain.deadlines import (
     AutonomoProfile,
     DeadlineEngine,
     FilingObligation,
+    HolidayJurisdiction,
     ObligationStatus,
     Recovery,
     Schedule,
+    shift_deadline,
 )
+from ...domain.deadlines._festivos import DeadlineValidationError
 from ...domain.filing import FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
@@ -160,6 +163,10 @@ class OverviewCalendarEntry(BaseModel):
     period: str = Field(min_length=1, max_length=16)
     opens_on: date
     closes_on: date
+    adjusted_closes_on: date
+    shift_reason: str = Field(min_length=1, max_length=64)
+    holiday_refs: tuple[str, ...] = Field(default_factory=tuple)
+    jurisdictions: tuple[HolidayJurisdiction, ...] = Field(default_factory=tuple)
     payment_cutoff_on: date | None = None
     status: ObligationStatus
     user_state: OverviewPeriodState
@@ -174,6 +181,12 @@ class OverviewCalendarEntry(BaseModel):
             raise ValueError(
                 f"OverviewCalendarEntry.payment_cutoff_on ({self.payment_cutoff_on}) "
                 f"is after closes_on ({self.closes_on})"
+            )
+        if self.adjusted_closes_on < self.closes_on:
+            raise ValueError(
+                f"OverviewCalendarEntry.adjusted_closes_on ({self.adjusted_closes_on}) "
+                f"precedes closes_on ({self.closes_on}); the shift rule may only move "
+                f"a deadline forward."
             )
         return self
 
@@ -405,12 +418,35 @@ def build_overview_calendar(
         for obligation in schedule.obligations:
             if not _entry_intersects_range(obligation, calendar_range):
                 continue
+            try:
+                shift = shift_deadline(
+                    obligation.closes_on,
+                    modelo=obligation.modelo,
+                    ccaa_code=None,
+                )
+                adjusted = shift.adjusted_close_date
+                reason = shift.shift_reason
+                holiday_refs = shift.holiday_refs
+                jurisdictions = shift.jurisdictions
+            except DeadlineValidationError:
+                # Holiday calendar not registered for this year; degrade
+                # gracefully — surface the original close date and an
+                # explicit reason so renderers can show that no shift
+                # was applied.
+                adjusted = obligation.closes_on
+                reason = "calendar_unavailable"
+                holiday_refs = ()
+                jurisdictions = ()
             entries.append(
                 OverviewCalendarEntry(
                     modelo=obligation.modelo,
                     period=obligation.period,
                     opens_on=obligation.opens_on,
                     closes_on=obligation.closes_on,
+                    adjusted_closes_on=adjusted,
+                    shift_reason=reason,
+                    holiday_refs=holiday_refs,
+                    jurisdictions=jurisdictions,
                     payment_cutoff_on=obligation.payment_cutoff_on,
                     status=obligation.status,
                     user_state=user_state_for(obligation.status),
