@@ -235,6 +235,16 @@ ignore = [
   "E501",
   "T20"
 ]
+# Storage factory tests instantiate fake OAuthClient/OAuthToken records
+# whose synthetic `client_secret` + `token_uri` + `refresh_token`
+# values trip ruff's hardcoded-password heuristic.
+"src/aeat/adapters/outbound/storage/test_factory.py" = [
+  "S101",
+  "S105",
+  "S106",
+  "E501",
+  "T20"
+]
 # Google CLI tests use synthetic OAuth refresh_token + token_uri
 # fixtures and emit long inline kwargs that are easier to read on one
 # line than wrapped.

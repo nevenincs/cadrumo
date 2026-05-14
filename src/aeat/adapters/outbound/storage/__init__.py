@@ -20,6 +20,7 @@ from ._errors import (
     StorageUnavailableError,
     StorageValidationError,
 )
+from ._factory import get_storage_provider
 from ._protocol import StorageProvider
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
@@ -37,4 +38,5 @@ __all__ = [
     "StorageQuotaError",
     "StorageUnavailableError",
     "StorageValidationError",
+    "get_storage_provider",
 ]
