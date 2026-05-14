@@ -2891,7 +2891,7 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-borrador-100-binding-
 This Phase delivers backend implementation for modelo 100 borrador binding as required by `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr`.
 
 - [x] `W48.P236.S1411` - Map the `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr` decision into non-CLI service ownership for modelo 100 borrador binding; `src/aeat/application/modelo`.
-- [ ] `W48.P236.S1412` - Implement Pydantic command and result contracts for modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P236.S1412` - Implement Pydantic command and result contracts for modelo 100 borrador binding; `src/aeat/application/modelo`.
 - [ ] `W48.P236.S1413` - Wire application or domain services required by modelo 100 borrador binding; `src/aeat/application/modelo`.
 - [ ] `W48.P236.S1414` - Connect persistence, bucket events, registry data, or provider adapters required by modelo 100 borrador binding; `src/aeat/application/modelo`.
 - [ ] `W48.P236.S1415` - Route existing backend functionality into the canonical service for modelo 100 borrador binding; `src/aeat/application/modelo`.
@@ -4453,51 +4453,51 @@ Closes apex §12 ledger rows R09 (mandatory --by), R10 (missing discard event), 
 
 Fix actor-default, discard event emission, and borrador binding.
 
-- [ ] `W78.P375.S2154` - Read the actor-attribution, app-modelo-discard, and borrador-100-binding-integration ADRs; `.vault/adr`.
-- [ ] `W78.P375.S2155` - Change by-actor Typer Option to optional with default_factory pulling active profile display_name across file, verify, discard, amend; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W78.P375.S2156` - Add MODELO_WORK_UNIT_DISCARDED enum member to BucketEventType for modelo.work_unit.discarded; `src/aeat/domain/buckets`.
-- [ ] `W78.P375.S2157` - Emit modelo.work_unit.discarded event from discard_work_unit action with actor and reason payload; `src/aeat/application/modelo`.
-- [ ] `W78.P375.S2158` - Add borrador_snapshot_id field to calculate_modelo_revision and wire borrador-snapshot-id flag on aeat app modelo calculate; `src/aeat/application/modelo`.
+- [x] `W78.P375.S2154` - Read the actor-attribution, app-modelo-discard, and borrador-100-binding-integration ADRs; `.vault/adr`.
+- [x] `W78.P375.S2155` - Change by-actor Typer Option to optional with default_factory pulling active profile display_name across file, verify, discard, amend; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W78.P375.S2156` - Add MODELO_WORK_UNIT_DISCARDED enum member to BucketEventType for modelo.work_unit.discarded; `src/aeat/domain/buckets`.
+- [x] `W78.P375.S2157` - Emit modelo.work_unit.discarded event from discard_work_unit action with actor and reason payload; `src/aeat/application/modelo`.
+- [x] `W78.P375.S2158` - Add borrador_snapshot_id field to calculate_modelo_revision and wire borrador-snapshot-id flag on aeat app modelo calculate; `src/aeat/application/modelo`.
 
 ### Phase `W78.P376` - shadow duplicate removal
 
 Audit actor and snapshot paths for consolidation.
 
-- [ ] `W78.P376.S2159` - Audit _actions.py for any actor-handling code path that bypasses the default factory and consolidate; `src/aeat/application/modelo`.
-- [ ] `W78.P376.S2160` - Remove tests asserting by-actor is mandatory; `tests/entrypoints/cli`.
-- [ ] `W78.P376.S2161` - Confirm borrador_snapshot_id is sourced only from the app live borrador 100 namespace and reject other sources at validation; `src/aeat/application/modelo`.
-- [ ] `W78.P376.S2162` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
-- [ ] `W78.P376.S2163` - Verify no shadow event-emission paths bypass bucket_event_repository; `src/aeat/application/modelo`.
+- [x] `W78.P376.S2159` - Audit _actions.py for any actor-handling code path that bypasses the default factory and consolidate; `src/aeat/application/modelo`.
+- [x] `W78.P376.S2160` - Remove tests asserting by-actor is mandatory; `tests/entrypoints/cli`.
+- [x] `W78.P376.S2161` - Confirm borrador_snapshot_id is sourced only from the app live borrador 100 namespace and reject other sources at validation; `src/aeat/application/modelo`.
+- [x] `W78.P376.S2162` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W78.P376.S2163` - Verify no shadow event-emission paths bypass bucket_event_repository; `src/aeat/application/modelo`.
 
 ### Phase `W78.P377` - de-shim and de-stub cleanup
 
 Wire help text and remove placeholder borrador binding.
 
-- [ ] `W78.P377.S2164` - Wire i18n help text to document by-actor default behavior; `src/aeat/core/i18n`.
-- [ ] `W78.P377.S2165` - Ensure aeat app modelo discard help documents the bucket-event emission; `src/aeat/core/i18n`.
-- [ ] `W78.P377.S2166` - Ensure aeat app modelo calculate help documents the borrador binding flag and source-trace semantics; `src/aeat/core/i18n`.
-- [ ] `W78.P377.S2167` - Remove any stub or placeholder for borrador binding in the registry binding providers; `src/aeat/application/modelo`.
-- [ ] `W78.P377.S2168` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W78.P377.S2164` - Wire i18n help text to document by-actor default behavior; `src/aeat/core/i18n`.
+- [x] `W78.P377.S2165` - Ensure aeat app modelo discard help documents the bucket-event emission; `src/aeat/core/i18n`.
+- [x] `W78.P377.S2166` - Ensure aeat app modelo calculate help documents the borrador binding flag and source-trace semantics; `src/aeat/core/i18n`.
+- [x] `W78.P377.S2167` - Remove any stub or placeholder for borrador binding in the registry binding providers; `src/aeat/application/modelo`.
+- [x] `W78.P377.S2168` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W78.P378` - real behavior verification
 
 Test actor defaults, discard event, borrador snapshot consumption.
 
-- [ ] `W78.P378.S2169` - Add tests asserting by-actor defaults to active profile display_name and is overridable; `tests/entrypoints/cli`.
-- [ ] `W78.P378.S2170` - Add tests asserting modelo.work_unit.discarded event is emitted on every discard with actor and reason payload; `tests/application/modelo`.
-- [ ] `W78.P378.S2171` - Add tests asserting calculate borrador-snapshot-id consumes the snapshot, records source trace per casilla, and refuses missing snapshots; `tests/application/modelo`.
-- [ ] `W78.P378.S2172` - Add bucket-event-history surfacing test confirming discarded work units appear in aeat config bucket history filtered output; `tests/entrypoints/cli`.
-- [ ] `W78.P378.S2173` - Run end-to-end app live borrador 100 fetch then modelo calculate then verify then file asserting the source-trace is preserved through the lifecycle; `tests`.
+- [x] `W78.P378.S2169` - Add tests asserting by-actor defaults to active profile display_name and is overridable; `tests/entrypoints/cli`.
+- [x] `W78.P378.S2170` - Add tests asserting modelo.work_unit.discarded event is emitted on every discard with actor and reason payload; `tests/application/modelo`.
+- [x] `W78.P378.S2171` - Add tests asserting calculate borrador-snapshot-id consumes the snapshot, records source trace per casilla, and refuses missing snapshots; `tests/application/modelo`.
+- [x] `W78.P378.S2172` - Add bucket-event-history surfacing test confirming discarded work units appear in aeat config bucket history filtered output; `tests/entrypoints/cli`.
+- [x] `W78.P378.S2173` - Run end-to-end app live borrador 100 fetch then modelo calculate then verify then file asserting the source-trace is preserved through the lifecycle; `tests`.
 
 ### Phase `W78.P379` - thin cli exposure
 
 Validate emit rendering, help, i18n, and update apex.
 
-- [ ] `W78.P379.S2174` - Validate every affected verb renders correctly via _emit; `src/aeat/entrypoints/cli`.
-- [ ] `W78.P379.S2175` - Validate help text and i18n alignment; `src/aeat/core/i18n`.
-- [ ] `W78.P379.S2176` - Update apex ADR §4.3 to ratify optional by-actor default-factory pattern and mark R09, R10, R11 closed by W78; `.vault/adr`.
-- [ ] `W78.P379.S2177` - Amend actor-attribution, app-modelo-discard, borrador-100-binding-integration child ADRs; `.vault/adr`.
-- [ ] `W78.P379.S2178` - Update plan rows for W44, W45, W48 with superseded-by cross-references to W78 step IDs; `.vault/plan`.
+- [x] `W78.P379.S2174` - Validate every affected verb renders correctly via _emit; `src/aeat/entrypoints/cli`.
+- [x] `W78.P379.S2175` - Validate help text and i18n alignment; `src/aeat/core/i18n`.
+- [x] `W78.P379.S2176` - Update apex ADR §4.3 to ratify optional by-actor default-factory pattern and mark R09, R10, R11 closed by W78; `.vault/adr`.
+- [x] `W78.P379.S2177` - Amend actor-attribution, app-modelo-discard, borrador-100-binding-integration child ADRs; `.vault/adr`.
+- [x] `W78.P379.S2178` - Update plan rows for W44, W45, W48 with superseded-by cross-references to W78 step IDs; `.vault/plan`.
 
 ## Wave `W79` - Reconciliation: app live shape completion
 
