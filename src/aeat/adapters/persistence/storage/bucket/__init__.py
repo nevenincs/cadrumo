@@ -8,11 +8,29 @@ on-disk layout.
 
 from __future__ import annotations
 
+from ._errors import (
+    BucketAlreadyPresentError,
+    BucketBusyError,
+    BucketError,
+    BucketLockedError,
+    LegacyLayoutDetectedError,
+    NoActiveBucketError,
+    RecoveryUnavailableError,
+    RecoveryVerificationError,
+)
 from ._export_header import ExportArchiveHeader
 from ._manifest import BucketManifest, KdfParams
 
 __all__ = [
+    "BucketAlreadyPresentError",
+    "BucketBusyError",
+    "BucketError",
+    "BucketLockedError",
     "BucketManifest",
     "ExportArchiveHeader",
     "KdfParams",
+    "LegacyLayoutDetectedError",
+    "NoActiveBucketError",
+    "RecoveryUnavailableError",
+    "RecoveryVerificationError",
 ]
