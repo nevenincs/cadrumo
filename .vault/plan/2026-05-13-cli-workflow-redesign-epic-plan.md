@@ -1346,56 +1346,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-invoice-domain-decoup
 
 This Phase delivers backend implementation for invoice terminology and source kind separation as required by `2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr`.
 
-- [ ] `W22.P106.S0631` - Map the `2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr` decision into non-CLI service ownership for invoice terminology and source kind separation; `src/aeat/domain`.
-- [ ] `W22.P106.S0632` - Implement Pydantic command and result contracts for invoice terminology and source kind separation; `src/aeat/domain`.
-- [ ] `W22.P106.S0633` - Wire application or domain services required by invoice terminology and source kind separation; `src/aeat/domain`.
-- [ ] `W22.P106.S0634` - Connect persistence, bucket events, registry data, or provider adapters required by invoice terminology and source kind separation; `src/aeat/domain`.
-- [ ] `W22.P106.S0635` - Route existing backend functionality into the canonical service for invoice terminology and source kind separation; `src/aeat/domain`.
-- [ ] `W22.P106.S0636` - Record service-level error codes and log fields for invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P106.S0631` - Map the `2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr` decision into non-CLI service ownership for invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P106.S0632` - Implement Pydantic command and result contracts for invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P106.S0633` - Wire application or domain services required by invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P106.S0634` - Connect persistence, bucket events, registry data, or provider adapters required by invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P106.S0635` - Route existing backend functionality into the canonical service for invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P106.S0636` - Record service-level error codes and log fields for invoice terminology and source kind separation; `src/aeat/domain`.
 
 ### Phase `W22.P107` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for invoice terminology and source kind separation as required by `2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr`.
 
-- [ ] `W22.P107.S0637` - Audit duplicate implementations that overlap invoice terminology and source kind separation; `src/aeat/domain`.
-- [ ] `W22.P107.S0638` - Delete duplicate backend branches that compete with invoice terminology and source kind separation; `src/aeat/domain`.
-- [ ] `W22.P107.S0639` - Remove stale aliases that bypass the canonical service for invoice terminology and source kind separation; `src/aeat/entrypoints/cli`.
-- [ ] `W22.P107.S0640` - Migrate internal callers to the canonical service for invoice terminology and source kind separation; `src/aeat/domain`.
-- [ ] `W22.P107.S0641` - Remove stale fixtures and tests that encode duplicate behavior for invoice terminology and source kind separation; `tests/domain`.
-- [ ] `W22.P107.S0642` - Update boundary inventory entries that describe duplicate behavior for invoice terminology and source kind separation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W22.P107.S0637` - Audit duplicate implementations that overlap invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P107.S0638` - Delete duplicate backend branches that compete with invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P107.S0639` - Remove stale aliases that bypass the canonical service for invoice terminology and source kind separation; `src/aeat/entrypoints/cli`.
+- [x] `W22.P107.S0640` - Migrate internal callers to the canonical service for invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P107.S0641` - Remove stale fixtures and tests that encode duplicate behavior for invoice terminology and source kind separation; `tests/domain`.
+- [x] `W22.P107.S0642` - Update boundary inventory entries that describe duplicate behavior for invoice terminology and source kind separation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W22.P108` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for invoice terminology and source kind separation as required by `2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr`.
 
-- [ ] `W22.P108.S0643` - Delete compatibility shims that preserve rejected behavior for invoice terminology and source kind separation; `src/aeat/domain`.
-- [ ] `W22.P108.S0644` - Delete placeholder stubs that claim support for invoice terminology and source kind separation; `src/aeat/domain`.
-- [ ] `W22.P108.S0645` - Replace stubbed paths with real backend service calls for invoice terminology and source kind separation; `src/aeat/domain`.
-- [ ] `W22.P108.S0646` - Remove deprecated command spelling and help text for invoice terminology and source kind separation; `src/aeat/entrypoints/cli`.
-- [ ] `W22.P108.S0647` - Remove tests that assert shim or stub behavior for invoice terminology and source kind separation; `tests/domain`.
-- [ ] `W22.P108.S0648` - Record the removed shim and stub surfaces for invoice terminology and source kind separation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W22.P108.S0643` - Delete compatibility shims that preserve rejected behavior for invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P108.S0644` - Delete placeholder stubs that claim support for invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P108.S0645` - Replace stubbed paths with real backend service calls for invoice terminology and source kind separation; `src/aeat/domain`.
+- [x] `W22.P108.S0646` - Remove deprecated command spelling and help text for invoice terminology and source kind separation; `src/aeat/entrypoints/cli`.
+- [x] `W22.P108.S0647` - Remove tests that assert shim or stub behavior for invoice terminology and source kind separation; `tests/domain`.
+- [x] `W22.P108.S0648` - Record the removed shim and stub surfaces for invoice terminology and source kind separation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W22.P109` - real behavior verification
 
 This Phase delivers real behavior verification for invoice terminology and source kind separation as required by `2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr`.
 
-- [ ] `W22.P109.S0649` - Add service contract tests for invoice terminology and source kind separation; `tests/domain`.
-- [ ] `W22.P109.S0650` - Add persistence or registry integration tests for invoice terminology and source kind separation; `tests/domain`.
-- [ ] `W22.P109.S0651` - Add negative tests proving rejected aliases do not reach invoice terminology and source kind separation; `tests/entrypoints/cli`.
-- [ ] `W22.P109.S0652` - Add command behavior tests that exercise invoice terminology and source kind separation through real services; `tests/entrypoints/cli`.
-- [ ] `W22.P109.S0653` - Add end-to-end workflow coverage for invoice terminology and source kind separation; `tests`.
-- [ ] `W22.P109.S0654` - Run the targeted test slice for invoice terminology and source kind separation without skips or xfails; `tests/domain`.
+- [x] `W22.P109.S0649` - Add service contract tests for invoice terminology and source kind separation; `tests/domain`.
+- [x] `W22.P109.S0650` - Add persistence or registry integration tests for invoice terminology and source kind separation; `tests/domain`.
+- [x] `W22.P109.S0651` - Add negative tests proving rejected aliases do not reach invoice terminology and source kind separation; `tests/entrypoints/cli`.
+- [x] `W22.P109.S0652` - Add command behavior tests that exercise invoice terminology and source kind separation through real services; `tests/entrypoints/cli`.
+- [x] `W22.P109.S0653` - Add end-to-end workflow coverage for invoice terminology and source kind separation; `tests`.
+- [x] `W22.P109.S0654` - Run the targeted test slice for invoice terminology and source kind separation without skips or xfails; `tests/domain`.
 
 ### Phase `W22.P110` - thin cli exposure
 
 This Phase delivers thin cli exposure for invoice terminology and source kind separation as required by `2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr`.
 
-- [ ] `W22.P110.S0655` - Expose accepted command handlers for invoice terminology and source kind separation under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W22.P110.S0656` - Keep argument parsing for invoice terminology and source kind separation separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W22.P110.S0657` - Delegate invoice terminology and source kind separation execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W22.P110.S0658` - Render invoice terminology and source kind separation results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W22.P110.S0659` - Handle invoice terminology and source kind separation failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W22.P110.S0660` - Validate help text for invoice terminology and source kind separation uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W22.P110.S0655` - Expose accepted command handlers for invoice terminology and source kind separation under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W22.P110.S0656` - Keep argument parsing for invoice terminology and source kind separation separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W22.P110.S0657` - Delegate invoice terminology and source kind separation execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W22.P110.S0658` - Render invoice terminology and source kind separation results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W22.P110.S0659` - Handle invoice terminology and source kind separation failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W22.P110.S0660` - Validate help text for invoice terminology and source kind separation uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W23` - ledger transaction management
 
@@ -1405,56 +1405,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-ledger-transaction-ma
 
 This Phase delivers backend implementation for ledger transaction lifecycle as required by `2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr`.
 
-- [ ] `W23.P111.S0661` - Map the `2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr` decision into non-CLI service ownership for ledger transaction lifecycle; `src/aeat/application/ledger`.
-- [ ] `W23.P111.S0662` - Implement Pydantic command and result contracts for ledger transaction lifecycle; `src/aeat/application/ledger`.
-- [ ] `W23.P111.S0663` - Wire application or domain services required by ledger transaction lifecycle; `src/aeat/application/ledger`.
-- [ ] `W23.P111.S0664` - Connect persistence, bucket events, registry data, or provider adapters required by ledger transaction lifecycle; `src/aeat/application/ledger`.
-- [ ] `W23.P111.S0665` - Route existing backend functionality into the canonical service for ledger transaction lifecycle; `src/aeat/application/ledger`.
-- [ ] `W23.P111.S0666` - Record service-level error codes and log fields for ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P111.S0661` - Map the `2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr` decision into non-CLI service ownership for ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P111.S0662` - Implement Pydantic command and result contracts for ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P111.S0663` - Wire application or domain services required by ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P111.S0664` - Connect persistence, bucket events, registry data, or provider adapters required by ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P111.S0665` - Route existing backend functionality into the canonical service for ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P111.S0666` - Record service-level error codes and log fields for ledger transaction lifecycle; `src/aeat/application/ledger`.
 
 ### Phase `W23.P112` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for ledger transaction lifecycle as required by `2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr`.
 
-- [ ] `W23.P112.S0667` - Audit duplicate implementations that overlap ledger transaction lifecycle; `src/aeat/application/ledger`.
-- [ ] `W23.P112.S0668` - Delete duplicate backend branches that compete with ledger transaction lifecycle; `src/aeat/application/ledger`.
-- [ ] `W23.P112.S0669` - Remove stale aliases that bypass the canonical service for ledger transaction lifecycle; `src/aeat/entrypoints/cli`.
-- [ ] `W23.P112.S0670` - Migrate internal callers to the canonical service for ledger transaction lifecycle; `src/aeat/application/ledger`.
-- [ ] `W23.P112.S0671` - Remove stale fixtures and tests that encode duplicate behavior for ledger transaction lifecycle; `tests/application/ledger`.
-- [ ] `W23.P112.S0672` - Update boundary inventory entries that describe duplicate behavior for ledger transaction lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W23.P112.S0667` - Audit duplicate implementations that overlap ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P112.S0668` - Delete duplicate backend branches that compete with ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P112.S0669` - Remove stale aliases that bypass the canonical service for ledger transaction lifecycle; `src/aeat/entrypoints/cli`.
+- [x] `W23.P112.S0670` - Migrate internal callers to the canonical service for ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P112.S0671` - Remove stale fixtures and tests that encode duplicate behavior for ledger transaction lifecycle; `tests/application/ledger`.
+- [x] `W23.P112.S0672` - Update boundary inventory entries that describe duplicate behavior for ledger transaction lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W23.P113` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for ledger transaction lifecycle as required by `2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr`.
 
-- [ ] `W23.P113.S0673` - Delete compatibility shims that preserve rejected behavior for ledger transaction lifecycle; `src/aeat/application/ledger`.
-- [ ] `W23.P113.S0674` - Delete placeholder stubs that claim support for ledger transaction lifecycle; `src/aeat/application/ledger`.
-- [ ] `W23.P113.S0675` - Replace stubbed paths with real backend service calls for ledger transaction lifecycle; `src/aeat/application/ledger`.
-- [ ] `W23.P113.S0676` - Remove deprecated command spelling and help text for ledger transaction lifecycle; `src/aeat/entrypoints/cli`.
-- [ ] `W23.P113.S0677` - Remove tests that assert shim or stub behavior for ledger transaction lifecycle; `tests/application/ledger`.
-- [ ] `W23.P113.S0678` - Record the removed shim and stub surfaces for ledger transaction lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W23.P113.S0673` - Delete compatibility shims that preserve rejected behavior for ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P113.S0674` - Delete placeholder stubs that claim support for ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P113.S0675` - Replace stubbed paths with real backend service calls for ledger transaction lifecycle; `src/aeat/application/ledger`.
+- [x] `W23.P113.S0676` - Remove deprecated command spelling and help text for ledger transaction lifecycle; `src/aeat/entrypoints/cli`.
+- [x] `W23.P113.S0677` - Remove tests that assert shim or stub behavior for ledger transaction lifecycle; `tests/application/ledger`.
+- [x] `W23.P113.S0678` - Record the removed shim and stub surfaces for ledger transaction lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W23.P114` - real behavior verification
 
 This Phase delivers real behavior verification for ledger transaction lifecycle as required by `2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr`.
 
-- [ ] `W23.P114.S0679` - Add service contract tests for ledger transaction lifecycle; `tests/application/ledger`.
-- [ ] `W23.P114.S0680` - Add persistence or registry integration tests for ledger transaction lifecycle; `tests/application/ledger`.
-- [ ] `W23.P114.S0681` - Add negative tests proving rejected aliases do not reach ledger transaction lifecycle; `tests/entrypoints/cli`.
-- [ ] `W23.P114.S0682` - Add command behavior tests that exercise ledger transaction lifecycle through real services; `tests/entrypoints/cli`.
-- [ ] `W23.P114.S0683` - Add end-to-end workflow coverage for ledger transaction lifecycle; `tests`.
-- [ ] `W23.P114.S0684` - Run the targeted test slice for ledger transaction lifecycle without skips or xfails; `tests/application/ledger`.
+- [x] `W23.P114.S0679` - Add service contract tests for ledger transaction lifecycle; `tests/application/ledger`.
+- [x] `W23.P114.S0680` - Add persistence or registry integration tests for ledger transaction lifecycle; `tests/application/ledger`.
+- [x] `W23.P114.S0681` - Add negative tests proving rejected aliases do not reach ledger transaction lifecycle; `tests/entrypoints/cli`.
+- [x] `W23.P114.S0682` - Add command behavior tests that exercise ledger transaction lifecycle through real services; `tests/entrypoints/cli`.
+- [x] `W23.P114.S0683` - Add end-to-end workflow coverage for ledger transaction lifecycle; `tests`.
+- [x] `W23.P114.S0684` - Run the targeted test slice for ledger transaction lifecycle without skips or xfails; `tests/application/ledger`.
 
 ### Phase `W23.P115` - thin cli exposure
 
 This Phase delivers thin cli exposure for ledger transaction lifecycle as required by `2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr`.
 
-- [ ] `W23.P115.S0685` - Expose accepted command handlers for ledger transaction lifecycle under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W23.P115.S0686` - Keep argument parsing for ledger transaction lifecycle separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W23.P115.S0687` - Delegate ledger transaction lifecycle execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W23.P115.S0688` - Render ledger transaction lifecycle results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W23.P115.S0689` - Handle ledger transaction lifecycle failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W23.P115.S0690` - Validate help text for ledger transaction lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W23.P115.S0685` - Expose accepted command handlers for ledger transaction lifecycle under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W23.P115.S0686` - Keep argument parsing for ledger transaction lifecycle separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W23.P115.S0687` - Delegate ledger transaction lifecycle execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W23.P115.S0688` - Render ledger transaction lifecycle results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W23.P115.S0689` - Handle ledger transaction lifecycle failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W23.P115.S0690` - Validate help text for ledger transaction lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W24` - inventory management cli design
 
@@ -4778,7 +4778,7 @@ Closes apex §12 ledger row R21. The registry domain layer still admits bare inv
 Enforce four-source taxonomy and ship missing aggregators.
 
 - [ ] `W84.P405.S2304` - Read the per-modelo-aggregation-pipeline, invoice-domain-decoupling ADRs, apex §2 source-kind taxonomy, and identify every binding declaration that still admits bare invoice; `.vault/adr`.
-- [ ] `W84.P405.S2305` - Reject bare invoice source-kind at the registry domain layer and enforce one of the four canonical source kinds; `src/aeat/domain/calculations/registry`.
+- [x] `W84.P405.S2305` - Reject bare invoice source-kind at the registry domain layer and enforce one of the four canonical source kinds; `src/aeat/domain/calculations/registry`.
 - [ ] `W84.P405.S2306` - Implement retenciones aggregators for 111, 115, 123, 180, 190, 193 consuming explicit source kinds; `src/aeat/application/aggregation`.
 - [ ] `W84.P405.S2307` - Implement 347 and 349 counterpart aggregators using ledger and business-operation source kinds with GROI and NIF-IVA gating for 349; `src/aeat/application/aggregation`.
 - [ ] `W84.P405.S2308` - Implement 720 assets aggregator using purchase_invoice_evidence and payable_invoice source kinds to 720 casillas; `src/aeat/application/aggregation`.
@@ -4810,7 +4810,7 @@ Test registry rejection, aggregator pipelines, end-to-end calculation.
 - [ ] `W84.P408.S2319` - Add registry-load tests asserting bare invoice source declarations refuse to load with a typed error naming the four canonical source kinds; `tests/domain/calculations/registry`.
 - [ ] `W84.P408.S2320` - Add aggregator tests for retenciones, counterpart, assets pipelines; `tests/application/aggregation`.
 - [ ] `W84.P408.S2321` - Add end-to-end tests feeding canonical source-kind facts through pipeline to calculate revision asserting correct casilla values per workbook parity refs; `tests/application/aggregation`.
-- [ ] `W84.P408.S2322` - Confirm test collection of test_renta_ledger files passes; `tests/application/aggregation`.
+- [x] `W84.P408.S2322` - Confirm test collection of test_renta_ledger files passes; `tests/application/aggregation`.
 - [ ] `W84.P408.S2323` - Run the W71 contract-conformance harness and assert four-source taxonomy is enforced everywhere; `tests/domain/calculations/registry`.
 
 ### Phase `W84.P409` - thin cli exposure
