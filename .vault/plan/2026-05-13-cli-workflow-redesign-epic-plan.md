@@ -4561,31 +4561,31 @@ Closes apex §12 ledger rows R14 (WorkflowEngine.run_for_period not wired), R15 
 
 Wire workflow engine, preflight, and resume actions.
 
-- [ ] `W80.P385.S2204` - Read the workflow-engine-harvest and workflow-resumption-semantics ADRs and apex §8 backend exit-cap mandates; `.vault/adr`.
+- [x] `W80.P385.S2204` - Read the workflow-engine-harvest and workflow-resumption-semantics ADRs and apex §8 backend exit-cap mandates; `.vault/adr`.
 - [ ] `W80.P385.S2205` - Wire WorkflowEngine.run_for_period invocation inside file_modelo_revision so the modelo file action defers to the workflow engine for stage orchestration; `src/aeat/application/modelo`.
 - [ ] `W80.P385.S2206` - Adjudicate whether SubmissionEngine.preflight is invoked directly from verify and file actions or routed through WorkflowEngine only and record the verdict; `.vault/adr`.
 - [ ] `W80.P385.S2207` - Apply the verdict by wiring preflight invocation per the adjudicated path so auth, deadline, draft-approval, blocker gates run before state transitions; `src/aeat/application/modelo`.
-- [ ] `W80.P385.S2208` - Implement resume_modelo_workflow loading a prior terminal aborted result, starting a new lifecycle attempt, recording resumed_from, refusing mid-stage, idempotent if already filed; `src/aeat/application/modelo`.
+- [x] `W80.P385.S2208` - Implement resume_modelo_workflow loading a prior terminal aborted result, starting a new lifecycle attempt, recording resumed_from, refusing mid-stage, idempotent if already filed; `src/aeat/application/modelo`.
 
 ### Phase `W80.P386` - shadow duplicate removal
 
 Consolidate preflight and workflow paths.
 
 - [ ] `W80.P386.S2209` - Audit verify_modelo_revision and file_modelo_revision for duplicate preflight logic and consolidate behind the wired path; `src/aeat/application/modelo`.
-- [ ] `W80.P386.S2210` - Audit _modelo.py CLI for any direct workflow-engine invocation that bypasses the application service and consolidate; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W80.P386.S2211` - Confirm no aeat workflow root, no per-stage verbs, no standalone app modelo preflight verb per apex §8 lock; `src/aeat/entrypoints/cli`.
-- [ ] `W80.P386.S2212` - Remove any observability run-id or replay-id rejection logic that conflated argv replay with evidence replay per apex §2; `src/aeat/application/modelo`.
-- [ ] `W80.P386.S2213` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W80.P386.S2210` - Audit _modelo.py CLI for any direct workflow-engine invocation that bypasses the application service and consolidate; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W80.P386.S2211` - Confirm no aeat workflow root, no per-stage verbs, no standalone app modelo preflight verb per apex §8 lock; `src/aeat/entrypoints/cli`.
+- [x] `W80.P386.S2212` - Remove any observability run-id or replay-id rejection logic that conflated argv replay with evidence replay per apex §2; `src/aeat/application/modelo`.
+- [x] `W80.P386.S2213` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W80.P387` - de-shim and de-stub cleanup
 
 Remove historical argv reconstruction and root workflow references.
 
-- [ ] `W80.P387.S2214` - Remove any historical argv reconstruction code per apex §4.3 rejection; `src/aeat/application/modelo`.
-- [ ] `W80.P387.S2215` - Remove aeat workflow and aeat run root references from help text and reroute via mistype-suggestion footer to aeat app modelo resume; `src/aeat/core/i18n`.
-- [ ] `W80.P387.S2216` - Confirm resume action never contacts AEAT or performs live submission with assertion at backend boundary; `src/aeat/application/modelo`.
-- [ ] `W80.P387.S2217` - Update help text and i18n for the resume verb; `src/aeat/core/i18n`.
-- [ ] `W80.P387.S2218` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W80.P387.S2214` - Remove any historical argv reconstruction code per apex §4.3 rejection; `src/aeat/application/modelo`.
+- [x] `W80.P387.S2215` - Remove aeat workflow and aeat run root references from help text and reroute via mistype-suggestion footer to aeat app modelo resume; `src/aeat/core/i18n`.
+- [x] `W80.P387.S2216` - Confirm resume action never contacts AEAT or performs live submission with assertion at backend boundary; `src/aeat/application/modelo`.
+- [x] `W80.P387.S2217` - Update help text and i18n for the resume verb; `src/aeat/core/i18n`.
+- [x] `W80.P387.S2218` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W80.P388` - real behavior verification
 
@@ -4593,17 +4593,17 @@ Test workflow invocation, preflight wiring, resume semantics.
 
 - [ ] `W80.P388.S2219` - Add tests asserting file_modelo_revision invokes WorkflowEngine.run_for_period and refuses to proceed if preflight blocks; `tests/application/modelo`.
 - [ ] `W80.P388.S2220` - Add tests asserting verify_modelo_revision invokes the appropriate preflight path per the adjudicated verdict; `tests/application/modelo`.
-- [ ] `W80.P388.S2221` - Add tests for resume_modelo_workflow covering valid run-id resumes, mid-stage refuses, idempotency, unknown run-id refuses; `tests/application/modelo`.
-- [ ] `W80.P388.S2222` - Add CLI surface tests for aeat app modelo resume workflow_run_id; `tests/entrypoints/cli`.
-- [ ] `W80.P388.S2223` - Add negative tests asserting aeat workflow, aeat run, app modelo preflight are unknown commands; `tests/entrypoints/cli`.
+- [x] `W80.P388.S2221` - Add tests for resume_modelo_workflow covering valid run-id resumes, mid-stage refuses, idempotency, unknown run-id refuses; `tests/application/modelo`.
+- [x] `W80.P388.S2222` - Add CLI surface tests for aeat app modelo resume workflow_run_id; `tests/entrypoints/cli`.
+- [x] `W80.P388.S2223` - Add negative tests asserting aeat workflow, aeat run, app modelo preflight are unknown commands; `tests/entrypoints/cli`.
 
 ### Phase `W80.P389` - thin cli exposure
 
 Register resume verb and update apex cross-references.
 
-- [ ] `W80.P389.S2224` - Register aeat app modelo resume verb; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W80.P389.S2225` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
-- [ ] `W80.P389.S2226` - Wire help text and i18n; `src/aeat/core/i18n`.
+- [x] `W80.P389.S2224` - Register aeat app modelo resume verb; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W80.P389.S2225` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [x] `W80.P389.S2226` - Wire help text and i18n; `src/aeat/core/i18n`.
 - [ ] `W80.P389.S2227` - Update apex ADR §4.3 and §8 to ratify the wiring and mark R14, R15, R16 closed by W80; `.vault/adr`.
 - [ ] `W80.P389.S2228` - Amend workflow-engine-harvest and workflow-resumption-semantics child ADRs; `.vault/adr`.
 
