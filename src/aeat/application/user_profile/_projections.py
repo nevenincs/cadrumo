@@ -3,15 +3,11 @@
 The schema-driven user-profile backend is the canonical authority. Every
 existing consumer (deadlines, filing runtime, overview calendar,
 wizard, workflow adapters) reads through one of these projection
-helpers — never directly from the legacy ``ProfileRecord.values`` map
-or the legacy ``aeat.application.profile`` package.
+helpers rather than keeping its own profile fact decoding branch.
 
 The projections compose against a *fact map* (``path -> str(value)``)
-derived from the record. The legacy ``autonomo_profile_from_mapping``
-helper accepts the same flat shape, so the deadline-engine projection
-simply pipes through it. This keeps the field-level coercion logic in
-one place while the legacy mapping callers migrate to the canonical
-boundary.
+derived from the record. Deadline-engine projection uses the domain
+coercer so field-level coercion logic stays in one place.
 """
 
 from __future__ import annotations

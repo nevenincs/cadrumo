@@ -44,19 +44,25 @@ def autonomo_profile_from_mapping(
     from ...application.wizard._persistence import project_answers
     from ...application.wizard._setup_answers import SetupAnswers
 
-    # SetupAnswers requires tax.id and activity; the deadline engine
-    # supplies a tax_id default so it can render diagnostic schedules
-    # against an empty profile. Pad here so project_answers' strict
-    # validation runs against the same shape.
+    # SetupAnswers requires identity.tax_id and activities.description;
+    # the deadline engine supplies a tax_id default so it can render
+    # diagnostic schedules against an empty profile. Pad here so
+    # project_answers' strict validation runs against the same shape.
     padded = dict(canonical)
-    padded.setdefault("tax.id", tax_id_default)
-    padded.setdefault("activity", "schedule-only")
+    padded.setdefault("identity.tax_id", canonical.get("tax.id") or tax_id_default)
+    padded.setdefault("activities.description", canonical.get("activity") or "schedule-only")
+    # Forward selector-keyed input from external callers to the canonical
+    # schema path the wizard projects against.
+    if "tax.id" in canonical and "identity.tax_id" not in canonical:
+        padded["identity.tax_id"] = canonical["tax.id"]
+    if "activity" in canonical and "activities.description" not in canonical:
+        padded["activities.description"] = canonical["activity"]
 
     typed = project_answers(SETUP_FLOW, padded)
     if not isinstance(typed, SetupAnswers):
         raise ProfileError("setup flow projection did not yield a SetupAnswers instance")
 
-    tax_id = canonical.get("tax.id") or tax_id_default
+    tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
     iva_regime = _resolve_iva_regime(canonical.get("iva.regime"), iva_regime_default)
 
     return AutonomoProfile(

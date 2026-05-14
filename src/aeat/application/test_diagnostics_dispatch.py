@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 def _wizard_status(
     *,
-    active_profile: str | None = "kent",
+    active_profile: str | None = "operator",
     profile_ready: bool = True,
     profile_present_keys: int = 5,
     profile_total_keys: int = 5,
@@ -179,7 +179,7 @@ def test_profile_check_active_profile_set_but_not_ready_does_not_short_circuit_t
     to the consolidated ``profile.readiness`` row; the consolidated
     row name carries every branch."""
     report = _wizard_status(
-        active_profile="kent",
+        active_profile="operator",
         profile_ready=False,
         missing_required=("tax_id",),
         next_action="aeat config set tax.id NIF",

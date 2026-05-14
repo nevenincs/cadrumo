@@ -34,7 +34,7 @@ def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
         description="  material oficina  ",
         purchase_invoice_evidence_id=" evidence-1 ",
         attachment_ids=(" attachment-1 ",),
-        actor=" kent ",
+        actor=" operator ",
         source_command=" aeat app ledger create ",
     )
 
@@ -44,7 +44,7 @@ def test_manual_ledger_transaction_command_normalises_operator_text() -> None:
     assert command.description == "material oficina"
     assert command.purchase_invoice_evidence_id == "evidence-1"
     assert command.attachment_ids == ("attachment-1",)
-    assert command.actor == "kent"
+    assert command.actor == "operator"
     assert command.source_command == "aeat app ledger create"
 
 

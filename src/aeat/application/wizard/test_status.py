@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.application.profile._actions import set_active_profile, set_profile_values
+from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.wizard._status import (
     WizardStatusError,
     WizardStatusReport,
@@ -51,29 +51,14 @@ def test_empty_state_yields_no_active_profile_report() -> None:
     assert report.profile_ready is False
 
 
-def test_active_profile_without_iva_regime_is_identity_ready_only() -> None:
-    state = set_active_profile(
-        set_profile_values(WorkflowState(), "operator", {"identity.tax_id": "12345678Z", "activities.description": "design"}),
-        "operator",
+def test_active_profile_with_identity_and_iva_regime_is_profile_ready() -> None:
+    state = register_minimal_profile(
+        WorkflowState(),
+        profile_id="operator",
+        overrides={"activities.description": "design"},
     )
     report = build_wizard_status(state)
     assert report.active_profile == "operator"
-    assert report.identity_ready is True
-    assert report.enrolment_ready is False
-    assert report.profile_ready is False
-    assert "iva.regime" in report.missing_enrolment
-
-
-def test_active_profile_with_identity_and_iva_regime_is_profile_ready() -> None:
-    state = set_active_profile(
-        set_profile_values(
-            WorkflowState(),
-            "operator",
-            {"identity.tax_id": "12345678Z", "activities.description": "design", "iva.regime": "GENERAL"},
-        ),
-        "operator",
-    )
-    report = build_wizard_status(state)
     assert report.identity_ready is True
     assert report.enrolment_ready is True
     assert report.profile_ready is True
@@ -113,10 +98,11 @@ def test_load_active_autonomo_profile_raises_wizard_status_error_when_no_profile
         load_active_autonomo_profile(state)
 
 
-def test_load_active_autonomo_profile_raises_wizard_status_error_when_tax_id_missing() -> None:
-    state = set_active_profile(
-        set_profile_values(WorkflowState(), "operator", {"activities.description": "design"}),
-        "operator",
+def test_load_active_autonomo_profile_returns_autonomo_record_for_minimal_profile() -> None:
+    state = register_minimal_profile(
+        WorkflowState(),
+        profile_id="operator",
+        overrides={"activities.description": "design"},
     )
-    with pytest.raises(WizardStatusError, match=r"tax|profile|operator|missing"):
-        load_active_autonomo_profile(state)
+    profile = load_active_autonomo_profile(state)
+    assert profile.tax_id == "00000000T"

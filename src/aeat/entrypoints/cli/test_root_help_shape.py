@@ -12,7 +12,7 @@ import pytest
 
 from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.operator_surface import build_help_document
-from aeat.application.profile import set_active_profile
+from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow import workflow_state_repository
 from aeat.tests.cli_runner import invoke_cached_cli
 
@@ -104,7 +104,7 @@ def test_curated_help_command_rows_resolve_in_real_typer_tree() -> None:
 
 def test_bare_invocation_reports_profile_state_without_cli_only_storage() -> None:
     missing = _invoke([])
-    workflow_state_repository().update(lambda current: set_active_profile(current, "operator"))
+    workflow_state_repository().update(lambda current: register_minimal_profile(current, profile_id="operator"))
     active = _invoke([])
     overview = _invoke(["app", "overview", "status"])
 
@@ -185,7 +185,7 @@ def test_root_help_and_bare_invocation_use_root_format_json() -> None:
     assert help_payload["surface"] == "root"
     assert help_payload["heading"].startswith("aeat - local-first")
 
-    workflow_state_repository().update(lambda current: set_active_profile(current, "operator"))
+    workflow_state_repository().update(lambda current: register_minimal_profile(current, profile_id="operator"))
     active = _invoke(["--format", "json"])
 
     assert active.exit_code == 0, active.output

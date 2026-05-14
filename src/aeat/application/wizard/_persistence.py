@@ -1,10 +1,9 @@
 """Persistence adapter for wizard answers.
 
-Serialises a typed answers model back to canonical-token strings, calls
-``set_profile_values`` to persist the profile values in the active
-profile bucket. The reverse projection
-(``project_answers``) builds the typed answers model from a raw
-canonical-token dict.
+Serialises a typed answers model back to canonical-token strings, then
+persists profile facts through canonical user-profile orchestration.
+The reverse projection (``project_answers``) builds the typed answers
+model from a raw canonical-token dict.
 """
 
 from __future__ import annotations

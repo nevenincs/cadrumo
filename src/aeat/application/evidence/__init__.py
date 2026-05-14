@@ -1,0 +1,52 @@
+"""Evidence bundle service per apex ADR §4.3 audit shape.
+
+The evidence bundle is a bucket-scoped, work-unit-bound manifest plus
+referenced records used to package the provenance of a modelo
+calculation, verification, or filing for offline replay and audit
+handoff. Bundles are durable artifacts stored inside the active bucket;
+they are not the source of relational truth.
+
+Verbs supported by the operator surface (`aeat app modelo audit ...`):
+    show     - render the bundle's manifest and referenced records
+    check    - re-verify the bundle's integrity (report-only)
+    export   - write a ZIP archive with the manifest emitted last
+    replay   - evidence-case replay (never contacts AEAT)
+
+Bucket events emitted by mutating operations:
+    modelo.audit.verified  - a fresh verify-pass completed
+    modelo.audit.exported  - a ZIP was successfully written
+    modelo.audit.replayed  - an evidence-case replay completed
+
+Per apex §8 and the live-AEAT charter, replay never contacts AEAT and
+never performs live submission. Export refuses on failed verification
+unless ``--force-incomplete`` is explicitly passed at the operator
+boundary.
+"""
+
+from __future__ import annotations
+
+from ._models import (
+    BundleVerificationState,
+    EvidenceBundle,
+    EvidenceBundleNotFoundError,
+    EvidenceBundleVerificationError,
+    EvidenceRecordRef,
+    VerificationCheck,
+    VerificationFinding,
+)
+from ._service import (
+    EvidenceBundleService,
+    EvidenceBundleVerificationReport,
+)
+
+__all__ = [
+    "BundleVerificationState",
+    "EvidenceBundle",
+    "EvidenceBundleNotFoundError",
+    "EvidenceBundleService",
+    "EvidenceBundleVerificationError",
+    "EvidenceBundleVerificationReport",
+    "EvidenceRecordRef",
+    "VerificationCheck",
+    "VerificationFinding",
+]

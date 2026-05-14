@@ -94,14 +94,14 @@ def reset_setup(scope: SetupResetScope, *, confirmed: bool) -> SetupResetReport:
     quarantined_namespace_count = 0
 
     if scope in {SetupResetScope.PROFILE, SetupResetScope.ALL}:
-        from .profile._repository import profile_bucket_repository
+        from .user_profile import UserProfileLifecycleRepository
 
-        profile_repository = profile_bucket_repository()
-        profile_bucket_ids = {pointer.bucket_id for pointer in current.profiles.values()}
-        existing_profile_names = {item.name for item in profile_repository.list_profiles()}
-        removed_profile_names = tuple(sorted({*current.profiles.keys(), *existing_profile_names}))
-        for bucket_id in sorted({*profile_bucket_ids, *existing_profile_names}):
-            profile_repository.delete(bucket_id)
+        profile_targets = tuple(
+            sorted((profile_id, pointer.bucket_id) for profile_id, pointer in current.profiles.items())
+        )
+        removed_profile_names = tuple(profile_id for profile_id, _bucket_id in profile_targets)
+        for profile_id, bucket_id in profile_targets:
+            UserProfileLifecycleRepository(bucket_id=bucket_id).delete(profile_id)
         new_state = new_state.model_copy(
             update={
                 "profiles": {},
