@@ -548,8 +548,38 @@ def bucket_history(
             help=tr("cli.config.bucket.event_type_help"),
         ),
     ] = None,
+    since: typing.Annotated[
+        str | None,
+        typer.Option(
+            "--since",
+            help=tr("cli.config.bucket.since_help"),
+        ),
+    ] = None,
+    until: typing.Annotated[
+        str | None,
+        typer.Option(
+            "--until",
+            help=tr("cli.config.bucket.until_help"),
+        ),
+    ] = None,
+    object_id: typing.Annotated[
+        str | None,
+        typer.Option(
+            "--object-id",
+            help=tr("cli.config.bucket.object_id_help"),
+        ),
+    ] = None,
+    actor: typing.Annotated[
+        str | None,
+        typer.Option(
+            "--actor",
+            help=tr("cli.config.bucket.actor_help"),
+        ),
+    ] = None,
 ) -> None:
     """Browse the append-only bucket-event history."""
+
+    from datetime import datetime as _datetime
 
     from ....domain.buckets import BucketEventHistoryRepository, BucketEventType
 
@@ -564,11 +594,38 @@ def bucket_history(
     else:
         selected = None
 
-    events = catalogue.for_bucket(bucket_id, event_types=selected)
+    def _parse_filter_instant(raw: str, *, flag: str) -> _datetime:
+        try:
+            return _datetime.fromisoformat(raw.strip())
+        except ValueError as exc:
+            raise typer.BadParameter(
+                f"{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00); got {raw!r}",
+            ) from exc
+
+    since_dt = _parse_filter_instant(since, flag="--since") if since else None
+    until_dt = _parse_filter_instant(until, flag="--until") if until else None
+    if since_dt is not None and until_dt is not None and since_dt > until_dt:
+        raise typer.BadParameter("--since must be before or equal to --until")
+
+    object_id_token = object_id.strip() if object_id else None
+    actor_token = actor.strip() if actor else None
+
+    events = tuple(
+        e
+        for e in catalogue.for_bucket(bucket_id, event_types=selected)
+        if (since_dt is None or e.occurred_at >= since_dt)
+        and (until_dt is None or e.occurred_at <= until_dt)
+        and (object_id_token is None or e.object_id == object_id_token)
+        and (actor_token is None or e.actor == actor_token)
+    )
     payload = {
         "operation": "config.bucket.history",
         "bucket_id": bucket_id,
         "event_types": [t.value for t in selected] if selected else None,
+        "since": since_dt.isoformat() if since_dt else None,
+        "until": until_dt.isoformat() if until_dt else None,
+        "object_id": object_id_token,
+        "actor": actor_token,
         "events": [
             {
                 "event_id": e.event_id,

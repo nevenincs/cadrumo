@@ -1,9 +1,7 @@
-access_gate:
-  errors:
-    default_translatable: L'enviament en viu a l'AEAT està desactivat permanentment.
-      Genereu, verifiqueu, exporteu i pugeu el fitxer manualment al portal de
-      l'AEAT.
 aggregation:
+  iva_ledger:
+    errors:
+      bucket_mismatch: El bucket del repositori de moviments no coincideix amb el bucket d'agregació sol·licitat.
   models:
     errors:
       annual_period_mixed: El període no pot barrejar valors anuals i subannuals (trimestre/mes).
@@ -16,10 +14,14 @@ aggregation:
     errors:
       annual_period_required: Es requereix un període anual per a l'agregació del
         llibre de Renda.
+      bucket_mismatch: El bucket del repositori de moviments no coincideix amb el bucket sol·licitat del llibre de Renda.
       modelo_mismatch: El model tributari no coincideix amb el model esperat del llibre
         de Renda.
       period_mismatch: El període no coincideix amb el període esperat del llibre
         de Renda.
+  modelo_bindings:
+    errors:
+      unsupported_period: Període de model no admès per a l'agregació del llibre.
 application:
   auth:
     provider_impact:
@@ -200,11 +202,15 @@ cli:
       unknown_provider: 'Proveïdor d''autenticació desconegut: %{provider}. Executa
         ''aeat config auth --help'' per veure els identificadors vàlids.'
     bucket:
+      actor_help: Filtrar l'historial a esdeveniments registrats per un actor concret (coincidència exacta)
       bucket_id_help: Identificador del bucket l'historial d'esdeveniments del qual
         s'inspecciona
       event_type_help: Filtrar l'historial per un o més tipus d'esdeveniment (repetible)
       help: Inspeccionar l'emmagatzematge per bucket i el seu historial d'esdeveniments
       history_help: Mostrar l'historial d'esdeveniments només-append d'un bucket
+      object_id_help: Filtrar l'historial a esdeveniments sobre un object_id concret (coincidència exacta)
+      since_help: Filtrar l'historial a esdeveniments en o després d'aquesta marca ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00)
+      until_help: Filtrar l'historial a esdeveniments en o abans d'aquesta marca ISO-8601 (p. ex. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
       no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config init --tax-id
@@ -284,27 +290,91 @@ cli:
     workflow_help: Mostrar ajuda del flux de configuració
   ledger:
     app_help: Gestió de llibres comptables i registres d'IVA
+    create:
+      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      amount_help: Import signat del moviment; les sortides són negatives
+      attachment_help: Id d'adjunt segur per enllaçar amb el moviment; repetiu per a diversos adjunts
+      business_pct_help: Proporció d'ús professional per a classificació MIXED, de 0 a 1
+      category_help: Id de categoria de despesa o ingrés
+      classification_help: Estat de classificació professional del moviment
+      counterparty_help: Nom de la contrapart mostrat al llibre
+      currency_help: Codi de moneda ISO 4217
+      date_help: Data comptable (AAAA-MM-DD)
+      description_help: Descripció del moviment del llibre
+      direction_help: Direcció del moviment
+      help: Crear un moviment manual del llibre al bucket del perfil actiu
+      idempotency_key_help: Clau estable per fer idempotent l'entrada manual repetida
+      irpf_category_help: Categoria d'IRPF per a càlculs de models
+      iva_amount_help: Import d'IVA
+      iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
+      notes_help: Notes de l'operador desades amb el moviment del llibre
+      prorrata_reference_help: Referència de prorrata d'IVA per a fluxos d'IVA
+      purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta el moviment
+      taxable_base_help: Import de base imposable
+      usage_ratio_help: Id de proporció d'ús per a ús professional proporcional
+      value_date_help: Data valor (AAAA-MM-DD)
+    allocate:
+      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      business_pct_help: Proporció d'ús professional de 0 a 1
+      category_help: Id de categoria de despesa o ingrés
+      help: Registrar proporcionalitat professional/personal per a un moviment del llibre
+      id_help: Id del moviment del llibre a assignar
+      prorrata_reference_help: Referència de prorrata d'IVA per a fluxos d'IVA
+      usage_ratio_help: Id de proporció d'ús per a ús professional proporcional
+    archive:
+      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      help: Arxivar un moviment del llibre al bucket del perfil actiu
+      id_help: Id del moviment del llibre a arxivar
+      reason_help: Motiu registrat a l'historial de cicle de vida
+    attach:
+      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a diversos adjunts
+      help: Adjuntar objectes d'evidència segura a un moviment del llibre
+      id_help: Id del moviment del llibre al qual adjuntar evidència
+      purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta el moviment
+    classify:
+      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      category_help: Id de categoria de despesa o ingrés
+      classification_help: Estat de classificació professional del moviment
+      help: Classificar un moviment del llibre al bucket del perfil actiu
+      id_help: Id del moviment del llibre a classificar
+      irpf_category_help: Categoria d'IRPF per a càlculs de models
+      iva_amount_help: Import d'IVA
+      iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
+      taxable_base_help: Import de base imposable
     edit:
-      help: Editar manualment una entrada del llibre comptable
-      id_help: Identificador de l'entrada del llibre a editar
-      reason_help: Motiu de l'edició o correcció de l'entrada
-      set_help: Establir valors de camps del llibre (camp=valor)
-      skip_help: Marcar la fila com a exclosa o tornar-la a la revisió
-      split_help: Assignar la fila entre percentatges d'ús professional i personal
+      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      amount_help: Import signat del moviment; les sortides són negatives
+      counterparty_help: Nom de la contrapart mostrat al llibre
+      currency_help: Codi de moneda ISO 4217
+      date_help: Data comptable (AAAA-MM-DD)
+      description_help: Descripció del moviment del llibre
+      direction_help: Direcció del moviment
+      help: Corregir dades editables d'un moviment del llibre al bucket del perfil actiu
+      id_help: Id del moviment del llibre a editar
+      irpf_category_help: Categoria d'IRPF per a càlculs de models
+      iva_amount_help: Import d'IVA
+      iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
+      notes_help: Notes de l'operador desades amb el moviment del llibre
+      taxable_base_help: Import de base imposable
+      value_date_help: Data valor (AAAA-MM-DD)
+    export:
+      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      format_help: Format de serialització d'exportació
+      help: Exportar moviments canònics del llibre des del bucket del perfil actiu
+      include_inactive_help: Incloure moviments arxivats i apartats
+      output_help: Ruta on escriure el fitxer exportat del llibre
+    list:
+      header: MOVIMENTS DEL LLIBRE COMPTABLE
+      help: Llistar moviments del llibre al bucket del perfil actiu
     errors:
       auto_detect_failed: Fallada en la detecció automàtica del format del llibre
-      edit_requires_one: Es requereix almenys una modificació de camp per editar
+      confirm_required: Passa --yes per confirmar aquesta operació destructiva del llibre, o usa --dry-run primer
       filter_parse_error: Fallada en analitzar el filtre del llibre
-      invalid_skip: Camp d'omissió no vàlid
+      invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}'
       invalid_source: 'No es pot importar el fitxer del llibre: {reason}'
       invalid_source_unknown: origen no vàlid
-      invalid_split_format: Format de divisió no vàlid
-      invalid_split_value: Valor de divisió no vàlid
-      match_both_required: Es requereix tant l'entrada del llibre com la transacció
-        per realitzar l'aparellament
       n26_auto_detect_failed: Fallada en la detecció automàtica del format de N26
-      row_not_found: Fila del llibre no trobada
-      set_parse_error: Fallada en analitzar l'assignació del camp (camp=valor)
       source_not_found: 'No s''ha trobat el fitxer d''origen: {source}'
       unknown_provider: Proveïdor de llibre comptable desconegut
     import:
@@ -322,13 +392,30 @@ cli:
       description: Descripció
       dialect: Format detectat
       dry_run: MODE DE PROVA (DRY RUN)
-      fields: Camps
       id: ID
       imported: Entrades importades
+      active: Actives
+      archived: Arxivades
+      bucket: Bucket
+      checked: Moviments comprovats
+      created_event_id: Esdeveniment bucket de creació
+      export_id: ID d'exportació
+      lifecycle_state: Estat del cicle de vida
       'no': 'No'
+      output: Sortida
+      pending: Pendents de revisió
+      period: Període
+      readiness_issues: Incidències de preparació
+      ready: Preparat
+      removed: Eliminat
+      reset: Reiniciat
+      review_status: Estat de revisió
+      reviewed: Revisades
       rows: Files
+      sha256: SHA-256
       skipped: Omesos
       source: Origen
+      stashed: Apartades
       valid: Vàlid
       warnings: Avisos
       'yes': Sí
@@ -339,6 +426,33 @@ cli:
       id_help: Identificador de l'entrada específica a revisar
       no_rows: No hi ha entrades del llibre pendents de revisió
       verbose_help: Mostrar informació detallada durant la revisió
+    read:
+      help: Llegir un moviment del llibre des del bucket del perfil actiu
+      transaction_id_help: Id del moviment del llibre a llegir
+    remove:
+      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      dry_run_help: Informar els efectes sense eliminar el moviment del llibre
+      help: Eliminar un moviment del llibre del bucket del perfil actiu
+      id_help: Id del moviment del llibre a eliminar
+      reason_help: Motiu registrat a l'historial d'eliminació
+      yes_help: Confirmar l'eliminació del moviment del llibre
+    reset:
+      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      dry_run_help: Informar els efectes sense buidar el catàleg del llibre
+      help: Reiniciar el catàleg del llibre del bucket del perfil actiu
+      reason_help: Motiu registrat a l'historial de reinici
+      yes_help: Confirmar el buidatge del catàleg actiu del llibre
+    stash:
+      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      help: Apartar un moviment del llibre al bucket del perfil actiu
+      id_help: Id del moviment del llibre a apartar
+      reason_help: Motiu registrat a l'historial de cicle de vida
+    status:
+      help: Resumir l'estat del llibre i la preparació de càlcul del bucket del perfil actiu
+      period_help: Període fiscal per al preflight (AAAA-MM o període de model)
+    track:
+      help: Mostrar el llinatge d'esdeveniments d'un moviment del llibre
+      transaction_id_help: Id del moviment del llibre a inspeccionar
   locales:
     app_help: Auditar i generar catàlegs de traducció
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale

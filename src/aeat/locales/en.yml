@@ -1,8 +1,7 @@
-access_gate:
-  errors:
-    default_translatable: Live AEAT submission is permanently disabled. Produce, verify,
-      export, and upload the file yourself in the AEAT portal.
 aggregation:
+  iva_ledger:
+    errors:
+      bucket_mismatch: Transaction repository bucket does not match the requested aggregation bucket.
   models:
     errors:
       annual_period_mixed: Period cannot mix annual and sub-annual (quarter/month)
@@ -14,8 +13,12 @@ aggregation:
   renta_ledger:
     errors:
       annual_period_required: Annual period is required for Renta ledger aggregation.
+      bucket_mismatch: Transaction repository bucket does not match the requested Renta ledger bucket.
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
+  modelo_bindings:
+    errors:
+      unsupported_period: Unsupported modelo period for ledger aggregation.
 application:
   auth:
     provider_impact:
@@ -183,10 +186,14 @@ cli:
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
     bucket:
+      actor_help: Filter the history to events recorded by a specific actor (exact match)
       bucket_id_help: Bucket identifier whose event history should be inspected
       event_type_help: Filter the history to one or more event types (repeatable)
       help: Inspect bucket-scoped storage and event history
       history_help: Show the append-only event history for one bucket
+      object_id_help: Filter the history to events targeting a specific object_id (exact match)
+      since_help: Filter the history to events at or after this ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00)
+      until_help: Filter the history to events at or before this ISO-8601 timestamp (e.g. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config init --tax-id <NIF>'
@@ -259,26 +266,91 @@ cli:
     workflow_help: Show config workflow help
   ledger:
     app_help: Management of accounting ledgers and VAT records
+    create:
+      actor_help: Operator name recorded on the bucket event
+      amount_help: Signed transaction amount; outgoing values are negative
+      attachment_help: Secure attachment id to link to the transaction; repeat for multiple attachments
+      business_pct_help: Business-use share for MIXED classification, from 0 to 1
+      category_help: Spending or income category id
+      classification_help: Business classification state for the transaction
+      counterparty_help: Counterparty name shown in the ledger
+      currency_help: ISO 4217 currency code
+      date_help: Booking date (YYYY-MM-DD)
+      description_help: Ledger transaction description
+      direction_help: Transaction direction
+      help: Create a manual ledger transaction in the active profile bucket
+      idempotency_key_help: Stable key used to make repeated manual entry idempotent
+      irpf_category_help: IRPF category for modelo calculations
+      iva_amount_help: IVA amount
+      iva_rate_help: IVA rate as a decimal, for example 0.21
+      notes_help: Operator notes stored with the ledger transaction
+      prorrata_reference_help: IVA prorrata reference for VAT workflows
+      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the transaction
+      taxable_base_help: Taxable base amount
+      usage_ratio_help: Usage-ratio id for proportional business use
+      value_date_help: Value date (YYYY-MM-DD)
+    allocate:
+      actor_help: Operator name recorded on the bucket event
+      business_pct_help: Business-use share from 0 to 1
+      category_help: Spending or income category id
+      help: Record business/private proportionality for a ledger transaction
+      id_help: Ledger transaction id to allocate
+      prorrata_reference_help: IVA prorrata reference for VAT workflows
+      usage_ratio_help: Usage-ratio id for proportional business use
+    archive:
+      actor_help: Operator name recorded on the bucket event
+      help: Archive one ledger transaction in the active profile bucket
+      id_help: Ledger transaction id to archive
+      reason_help: Reason recorded in lifecycle history
+    attach:
+      actor_help: Operator name recorded on the bucket event
+      attachment_help: Secure attachment id to link to the transaction; repeat for multiple attachments
+      help: Attach secure evidence objects to one ledger transaction
+      id_help: Ledger transaction id to attach evidence to
+      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the transaction
+    classify:
+      actor_help: Operator name recorded on the bucket event
+      category_help: Spending or income category id
+      classification_help: Business classification state for the transaction
+      help: Classify one ledger transaction in the active profile bucket
+      id_help: Ledger transaction id to classify
+      irpf_category_help: IRPF category for modelo calculations
+      iva_amount_help: IVA amount
+      iva_rate_help: IVA rate as a decimal, for example 0.21
+      taxable_base_help: Taxable base amount
     edit:
-      help: Manually edit an accounting ledger entry
-      id_help: Identifier of the ledger entry to edit
-      reason_help: Reason for the entry edit or correction
-      set_help: Set ledger field values (field=value)
-      skip_help: Mark the row excluded or return it to review
-      split_help: Allocate the row into business and personal-use shares
+      actor_help: Operator name recorded on the bucket event
+      amount_help: Signed transaction amount; outgoing values are negative
+      counterparty_help: Counterparty name shown in the ledger
+      currency_help: ISO 4217 currency code
+      date_help: Booking date (YYYY-MM-DD)
+      description_help: Ledger transaction description
+      direction_help: Transaction direction
+      help: Correct editable ledger transaction facts in the active profile bucket
+      id_help: Ledger transaction id to edit
+      irpf_category_help: IRPF category for modelo calculations
+      iva_amount_help: IVA amount
+      iva_rate_help: IVA rate as a decimal, for example 0.21
+      notes_help: Operator notes stored with the ledger transaction
+      taxable_base_help: Taxable base amount
+      value_date_help: Value date (YYYY-MM-DD)
+    export:
+      actor_help: Operator name recorded on the bucket event
+      format_help: Export serialization format
+      help: Export canonical ledger rows from the active profile bucket
+      include_inactive_help: Include archived and stashed ledger transactions
+      output_help: Path to write the exported ledger file
+    list:
+      header: ACCOUNTING LEDGER TRANSACTIONS
+      help: List ledger transactions in the active profile bucket
     errors:
       auto_detect_failed: Auto-detection of ledger format failed
-      edit_requires_one: At least one field modification is required for editing
+      confirm_required: Pass --yes to confirm this destructive ledger operation, or use --dry-run first
       filter_parse_error: Failed to parse ledger filter
-      invalid_skip: Invalid skip field
+      invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
       invalid_source: 'The ledger file cannot be imported: {reason}'
       invalid_source_unknown: invalid source
-      invalid_split_format: Invalid split format
-      invalid_split_value: Invalid split value
-      match_both_required: Both ledger entry and transaction are required for matching
       n26_auto_detect_failed: Auto-detection of N26 format failed
-      row_not_found: Ledger row not found
-      set_parse_error: Failed to parse field assignment (field=value)
       source_not_found: 'Source file not found: {source}'
       unknown_provider: Unknown ledger provider
     import:
@@ -296,13 +368,30 @@ cli:
       description: Description
       dialect: Detected format
       dry_run: DRY RUN MODE
-      fields: Fields
       id: ID
       imported: Entries imported
+      active: Active
+      archived: Archived
+      bucket: Bucket
+      checked: Checked transactions
+      created_event_id: Created bucket event
+      lifecycle_state: Lifecycle state
       'no': 'No'
+      export_id: Export ID
+      output: Output
+      pending: Pending review
+      period: Period
+      readiness_issues: Readiness issues
+      ready: Ready
+      removed: Removed
+      reset: Reset
+      review_status: Review status
+      reviewed: Reviewed
       rows: Rows
+      sha256: SHA-256
       skipped: Skipped
       source: Source
+      stashed: Stashed
       valid: Valid
       warnings: Warnings
       'yes': 'Yes'
@@ -313,6 +402,33 @@ cli:
       id_help: Identifier of the specific entry to review
       no_rows: No ledger entries pending review
       verbose_help: Show detailed information during review
+    read:
+      help: Read one ledger transaction from the active profile bucket
+      transaction_id_help: Ledger transaction id to read
+    remove:
+      actor_help: Operator name recorded on the bucket event
+      dry_run_help: Report removal effects without deleting the ledger transaction
+      help: Remove one ledger transaction from the active profile bucket
+      id_help: Ledger transaction id to remove
+      reason_help: Reason recorded in removal history
+      yes_help: Confirm deletion of the ledger transaction
+    reset:
+      actor_help: Operator name recorded on the bucket event
+      dry_run_help: Report reset effects without clearing the ledger catalogue
+      help: Reset the active profile bucket ledger catalogue
+      reason_help: Reason recorded in reset history
+      yes_help: Confirm clearing the active ledger catalogue
+    stash:
+      actor_help: Operator name recorded on the bucket event
+      help: Stash one ledger transaction in the active profile bucket
+      id_help: Ledger transaction id to stash
+      reason_help: Reason recorded in lifecycle history
+    status:
+      help: Summarize ledger state and calculation readiness for the active profile bucket
+      period_help: Fiscal period to preflight (YYYY-MM or modelo period)
+    track:
+      help: Show the event lineage for one ledger transaction
+      transaction_id_help: Ledger transaction id to inspect
   locales:
     app_help: Audit and scaffold locale catalogues
     scaffold_check_help: Report drift without writing locale files

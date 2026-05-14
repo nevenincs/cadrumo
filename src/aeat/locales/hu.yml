@@ -1,8 +1,7 @@
-access_gate:
-  errors:
-    default_translatable: Az élő AEAT-benyújtás véglegesen le van tiltva. Készítsd
-      el, ellenőrizd, exportáld, majd töltsd fel kézzel a fájlt az AEAT portálon.
 aggregation:
+  iva_ledger:
+    errors:
+      bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért aggregációs buckettel.
   models:
     errors:
       annual_period_mixed: Az időszak nem keverhet éves és szévén belüli (negyedév/hónap)
@@ -16,8 +15,12 @@ aggregation:
   renta_ledger:
     errors:
       annual_period_required: Éves időszak szükséges a Renta nyilvántartás összesítéséhez.
+      bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért Renta főkönyvi buckettel.
       modelo_mismatch: Az adómodell nem egyezik a Renta nyilvántartás várt modeljével.
       period_mismatch: Az időszak nem egyezik a Renta nyilvántartás várt időszakával.
+  modelo_bindings:
+    errors:
+      unsupported_period: Nem támogatott modelo időszak a főkönyvi aggregációhoz.
 application:
   auth:
     provider_impact:
@@ -194,10 +197,14 @@ cli:
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd
         az ''aeat config auth --help'' parancsot az érvényes azonosítókért.'
     bucket:
+      actor_help: A történet szűrése egy adott aktor által rögzített eseményekre (pontos egyezés)
       bucket_id_help: A bucket azonosítója, amelynek eseménytörténetét megjelenítjük
       event_type_help: A történet szűrése egy vagy több eseménytípusra (ismételhető)
       help: Bucket-szintű tároló és eseménytörténet vizsgálata
       history_help: Egy bucket csak-hozzáfűz eseménytörténetének megjelenítése
+      object_id_help: A történet szűrése egy adott object_id-t célzó eseményekre (pontos egyezés)
+      since_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy utána) történt eseményekre (pl. 2026-04-01T00:00:00+00:00)
+      until_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy előtte) történt eseményekre (pl. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Érvénytelen érték a %{name} kulcshoz: %{value}'
       no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config init
@@ -280,27 +287,91 @@ cli:
     workflow_help: Konfigurációs munkafolyamat súgójának megjelenítése
   ledger:
     app_help: Könyvelési naplók és ÁFA-nyilvántartások kezelése
+    create:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      amount_help: Előjeles tranzakciós összeg; a kimenő értékek negatívak
+      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször is megadható
+      business_pct_help: Üzleti használati arány MIXED besoroláshoz, 0 és 1 között
+      category_help: Kiadási vagy bevételi kategória azonosítója
+      classification_help: A tranzakció üzleti besorolási állapota
+      counterparty_help: A naplóban megjelenő partner neve
+      currency_help: ISO 4217 pénznemkód
+      date_help: Könyvelési dátum (YYYY-MM-DD)
+      description_help: Naplótranzakció leírása
+      direction_help: Tranzakció iránya
+      help: Kézi naplótranzakció létrehozása az aktív profil bucketjében
+      idempotency_key_help: Stabil kulcs az ismételt kézi rögzítés idempotenssé tételéhez
+      irpf_category_help: IRPF kategória modell-számításokhoz
+      iva_amount_help: IVA összeg
+      iva_rate_help: IVA kulcs tizedesként, például 0.21
+      notes_help: A naplótranzakcióval tárolt kezelői jegyzetek
+      prorrata_reference_help: IVA prorrata hivatkozás ÁFA munkafolyamatokhoz
+      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat azonosítója
+      taxable_base_help: Adóalap összege
+      usage_ratio_help: Használati arány azonosítója arányos üzleti használathoz
+      value_date_help: Értéknap (YYYY-MM-DD)
+    allocate:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      business_pct_help: Üzleti használati arány 0 és 1 között
+      category_help: Kiadási vagy bevételi kategória azonosítója
+      help: Üzleti/magán proporcionalitás rögzítése egy főkönyvi tranzakcióhoz
+      id_help: Kiosztandó főkönyvi tranzakcióazonosító
+      prorrata_reference_help: IVA prorrata hivatkozás ÁFA munkafolyamatokhoz
+      usage_ratio_help: Használati arány azonosítója arányos üzleti használathoz
+    archive:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      help: Egy főkönyvi tranzakció archiválása az aktív profil bucketjében
+      id_help: Archiválandó főkönyvi tranzakcióazonosító
+      reason_help: Az életciklus-előzményben rögzített ok
+    attach:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször is megadható
+      help: Biztonságos bizonyítékobjektumok csatolása egy főkönyvi tranzakcióhoz
+      id_help: Főkönyvi tranzakcióazonosító, amelyhez bizonyítékot kell csatolni
+      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat azonosítója
+    classify:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      category_help: Kiadási vagy bevételi kategória azonosítója
+      classification_help: A tranzakció üzleti besorolási állapota
+      help: Egy főkönyvi tranzakció besorolása az aktív profil bucketjében
+      id_help: Besorolandó főkönyvi tranzakcióazonosító
+      irpf_category_help: IRPF kategória modell-számításokhoz
+      iva_amount_help: IVA összeg
+      iva_rate_help: IVA kulcs tizedesként, például 0.21
+      taxable_base_help: Adóalap összege
     edit:
-      help: Könyvelési naplóbejegyzés manuális szerkesztése
-      id_help: A szerkesztendő naplóbejegyzés azonosítója
-      reason_help: A bejegyzés szerkesztésének vagy javításának indoka
-      set_help: Naplómező értékek beállítása (mező=érték)
-      skip_help: A sor kizárása vagy visszaküldése felülvizsgálatra
-      split_help: A sor üzleti és személyes használati arányainak hozzárendelése
+      actor_help: A bucket eseményen rögzített kezelő neve
+      amount_help: Előjeles tranzakciós összeg; a kimenő értékek negatívak
+      counterparty_help: A naplóban megjelenő partner neve
+      currency_help: ISO 4217 pénznemkód
+      date_help: Könyvelési dátum (YYYY-MM-DD)
+      description_help: Naplótranzakció leírása
+      direction_help: Tranzakció iránya
+      help: Szerkeszthető főkönyvi tranzakciós tények javítása az aktív profil bucketjében
+      id_help: Szerkesztendő főkönyvi tranzakcióazonosító
+      irpf_category_help: IRPF kategória modell-számításokhoz
+      iva_amount_help: IVA összeg
+      iva_rate_help: IVA kulcs tizedesként, például 0.21
+      notes_help: A naplótranzakcióval tárolt kezelői jegyzetek
+      taxable_base_help: Adóalap összege
+      value_date_help: Értéknap (YYYY-MM-DD)
+    export:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      format_help: Exportálási szerializációs formátum
+      help: Kanonikus főkönyvi sorok exportálása az aktív profil bucketjéből
+      include_inactive_help: Archivált és félretett főkönyvi tranzakciók belefoglalása
+      output_help: Az exportált főkönyvi fájl írási útvonala
+    list:
+      header: FŐKÖNYVI TRANZAKCIÓK
+      help: Főkönyvi tranzakciók listázása az aktív profil bucketjében
     errors:
       auto_detect_failed: A naplóformátum automatikus felismerése sikertelen
-      edit_requires_one: A szerkesztéshez legalább egy mezőmódosítás szükséges
+      confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez, vagy használd előbb a --dry-run kapcsolót
       filter_parse_error: A naplószűrő elemzése sikertelen
-      invalid_skip: Érvénytelen kihagyási mező
+      invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
       invalid_source: 'A naplófájl nem importálható: {reason}'
       invalid_source_unknown: érvénytelen forrás
-      invalid_split_format: Érvénytelen felosztási formátum
-      invalid_split_value: Érvénytelen felosztási érték
-      match_both_required: A párosításhoz mind a naplóbejegyzés, mind a tranzakció
-        szükséges
       n26_auto_detect_failed: Az N26 formátum automatikus felismerése sikertelen
-      row_not_found: A naplósor nem található
-      set_parse_error: A mezőhozzárendelés (mező=érték) elemzése sikertelen
       source_not_found: 'A forrásfájl nem található: {source}'
       unknown_provider: Ismeretlen naplószolgáltató
     import:
@@ -318,13 +389,30 @@ cli:
       description: Leírás
       dialect: Felismert formátum
       dry_run: PRÓBA ÜZEMMÓD (DRY RUN)
-      fields: Mezők
       id: Azonosító
       imported: Bejegyzések importálva
+      active: Aktív
+      archived: Archivált
+      bucket: Bucket
+      checked: Ellenőrzött tranzakciók
+      created_event_id: Létrehozási bucket esemény
+      export_id: Exportazonosító
+      lifecycle_state: Életciklus állapot
       'no': Nem
+      output: Kimenet
+      pending: Felülvizsgálatra vár
+      period: Időszak
+      readiness_issues: Készenléti problémák
+      ready: Kész
+      removed: Eltávolítva
+      reset: Visszaállítva
+      review_status: Felülvizsgálati állapot
+      reviewed: Felülvizsgált
       rows: Sorok
+      sha256: SHA-256
       skipped: Kihagyva
       source: Forrás
+      stashed: Félretéve
       valid: Érvényes
       warnings: Figyelmeztetések
       'yes': Igen
@@ -335,6 +423,33 @@ cli:
       id_help: A felülvizsgálandó adott bejegyzés azonosítója
       no_rows: Nincsenek felülvizsgálatra váró naplóbejegyzések
       verbose_help: Részletes információk megjelenítése a felülvizsgálat során
+    read:
+      help: Egy főkönyvi tranzakció olvasása az aktív profil bucketjéből
+      transaction_id_help: Olvasandó főkönyvi tranzakcióazonosító
+    remove:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      dry_run_help: Eltávolítási hatások jelentése a tranzakció törlése nélkül
+      help: Egy főkönyvi tranzakció eltávolítása az aktív profil bucketjéből
+      id_help: Eltávolítandó főkönyvi tranzakcióazonosító
+      reason_help: Az eltávolítási előzményben rögzített ok
+      yes_help: A főkönyvi tranzakció törlésének megerősítése
+    reset:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      dry_run_help: Visszaállítási hatások jelentése a főkönyvi katalógus ürítése nélkül
+      help: Az aktív profil bucket főkönyvi katalógusának visszaállítása
+      reason_help: A visszaállítási előzményben rögzített ok
+      yes_help: Az aktív főkönyvi katalógus ürítésének megerősítése
+    stash:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      help: Egy főkönyvi tranzakció félretétele az aktív profil bucketjében
+      id_help: Félreteendő főkönyvi tranzakcióazonosító
+      reason_help: Az életciklus-előzményben rögzített ok
+    status:
+      help: A főkönyvi állapot és számítási készenlét összefoglalása az aktív profil bucketjében
+      period_help: Preflight adóidőszak (YYYY-MM vagy modelo időszak)
+    track:
+      help: Egy főkönyvi tranzakció eseményláncának megjelenítése
+      transaction_id_help: Vizsgálandó főkönyvi tranzakcióazonosító
   locales:
     app_help: Fordítási katalógusok auditálása és generálása
     scaffold_check_help: Eltérések jelentése locale fájlok írása nélkül
