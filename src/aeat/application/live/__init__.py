@@ -24,8 +24,10 @@ from ._borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
+    Borrador100SnapshotService,
     Borrador100SnapshotState,
     borrador_100_snapshot_object_key,
+    derive_borrador_100_snapshot_id,
 )
 from ._errors import LiveApplicationError, LiveApplicationInputError
 
@@ -294,6 +296,32 @@ async def capture_source_filed_data(
     )
 
 
+async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
+    """Live-walk the AEAT declaration register and persist a bucket-scoped snapshot.
+
+    Uses ``walk_declarations_register`` (the same register adapter the
+    filed-data list/capture verbs drive), wraps the typed declarations
+    in an :class:`ExpedientesCapture`, and persists through
+    :class:`ExpedientesService` against the active bucket.
+    """
+    from datetime import UTC, datetime
+    from ._expedientes import ExpedientesCapture, ExpedientesService
+
+    session, settings = await _active_verified_session()
+    async with (
+        shared_playwright(session) as playwright,
+        open_declarations_register(session, settings=settings, playwright=playwright) as register,
+    ):
+        declarations = await register.walk(modelo=modelo, ejercicio=year)
+    capture = ExpedientesCapture(
+        declarations=tuple(declarations),
+        captured_at=datetime.now(tz=UTC),
+        source_url=f"declarations:modelo={modelo}:ejercicio={year}",
+    )
+    persisted = ExpedientesService(settings=settings).capture(bucket_id=bucket_id, capture=capture)
+    return persisted
+
+
 async def capture_notifications(*, bucket_id: str):
     """Live-fetch DEHú notifications and persist a bucket-scoped snapshot.
 
@@ -340,6 +368,7 @@ __all__ = [
     "BORRADOR_100_SNAPSHOT_NAMESPACE",
     "Borrador100Snapshot",
     "Borrador100SnapshotRepository",
+    "Borrador100SnapshotService",
     "Borrador100SnapshotState",
     "FiledDataCaptureReport",
     "FiledDataListingReport",
@@ -351,6 +380,8 @@ __all__ = [
     "capture_filed_data",
     "capture_notifications",
     "capture_source_filed_data",
+    "walk_expedientes",
+    "derive_borrador_100_snapshot_id",
     "filed_data_listing_row",
     "list_filed_data",
     "select_declarations_for_capture",
