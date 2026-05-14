@@ -8,7 +8,6 @@ can render translatable keys without reaching into the CLI entrypoints.
 from __future__ import annotations
 
 import importlib.resources
-import os
 import re
 from collections.abc import Mapping
 from functools import lru_cache
@@ -48,28 +47,27 @@ def _normalise_supported_language(value: object) -> str | None:
 def output_language() -> str:
     """Resolve the operator-facing output language.
 
-    Explicit ``AEAT_CLI_LANGUAGE`` and ``AEAT_OUTPUT_LANGUAGE`` win for
+    An explicit ``aeat_output_language`` value on the active Settings
+    (env var, ``override_settings`` block, or ``.env`` file) wins for
     one-off sessions and automation. Otherwise the active profile's
     ``output.language`` key is used. The settings default remains the
-    final fallback and defaults to English for a clean install.
+    final fallback and defaults to Spanish for a clean install.
 
     Returns:
         The resolved ISO 639-1 language code.
     """
-    for env_name in ("AEAT_CLI_LANGUAGE", "AEAT_OUTPUT_LANGUAGE"):
-        override = os.environ.get(env_name)
-        if override and override.strip():
-            explicit = _normalise_supported_language(override)
-            if explicit is not None:
-                return explicit
+    try:
+        settings = load_settings()
+    except (KeyError, ValueError, AttributeError):
+        return "es"
+    if "aeat_output_language" in settings.model_fields_set:
+        explicit = _normalise_supported_language(settings.aeat_output_language)
+        if explicit is not None:
+            return explicit
     profile_language = _active_profile_output_language()
     if profile_language is not None:
         return profile_language
-    try:
-        lang = load_settings().aeat_output_language
-        return _normalise_supported_language(lang) or "en"
-    except (KeyError, ValueError, AttributeError):
-        return "en"
+    return _normalise_supported_language(settings.aeat_output_language) or "es"
 
 
 def _active_profile_output_language() -> str | None:
@@ -82,7 +80,7 @@ def _active_profile_output_language() -> str | None:
         if record is None:
             return None
         raw = _normalise_supported_language(record.values.get("output.language", ""))
-    except (OSError, ValueError, KeyError, AttributeError, ImportError) as exc:
+    except Exception as exc:
         _log.debug(
             "i18n: unable to resolve active-profile output language; falling back to settings (%s)",
             exc,

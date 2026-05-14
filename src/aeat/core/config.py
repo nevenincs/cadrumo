@@ -785,6 +785,13 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     # fails fast at entry, before the ContextVar is set.
     merged = {**current.model_dump(), **overrides}
     new_settings = Settings.model_validate(merged)
+    # ``model_validate`` marks every key in the merged dict as set,
+    # losing the distinction between "operator set this explicitly"
+    # and "default flowed through unchanged". Restore the proper
+    # fields_set: the union of what the source instance already had
+    # explicitly set plus the override keys themselves.
+    explicit_fields = current.model_fields_set | set(overrides.keys())
+    object.__setattr__(new_settings, "__pydantic_fields_set__", explicit_fields)
     token = _settings_override.set(new_settings)
     try:
         yield new_settings
