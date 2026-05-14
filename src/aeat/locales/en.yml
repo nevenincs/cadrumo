@@ -215,7 +215,21 @@ cli:
     list:
       help: List every configuration key with its current value
     profile:
+      already_exists: 'Profile %{name} already exists. Pick a different target id.'
+      duplicate_display_name_help: Display name for the new profile (defaults to the target id)
+      duplicate_help: Copy a profile under a new id and display name
+      duplicate_source_help: Source profile id to duplicate
+      duplicate_target_help: Target profile id for the duplicate
       help: Manage active profile configuration values
+      remove_help: Tombstone a profile (immutable filing snapshots are retained)
+      remove_name_help: Profile id to tombstone
+      remove_requires_yes: 'Removal is destructive. Re-run ''aeat config profile remove %{name} --yes'' to confirm.'
+      remove_yes_help: Explicitly confirm the tombstone operation
+      show_help: Show one profile's facts (defaults to the active profile)
+      show_name_help: Profile id to show (defaults to the active profile)
+      unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list'' to see registered profiles.'
+      use_help: Select an existing profile as the active profile
+      use_name_help: Profile id to make active
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       connectivity_target_help: Connectivity target to probe

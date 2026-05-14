@@ -243,7 +243,21 @@ cli:
     list:
       help: Listar todas las claves de configuración y sus valores actuales
     profile:
+      already_exists: 'El perfil %{name} ya existe. Elige otro identificador de destino.'
+      duplicate_display_name_help: Nombre visible para el nuevo perfil (por defecto el id de destino)
+      duplicate_help: Copiar un perfil bajo un nuevo id y nombre visible
+      duplicate_source_help: Id del perfil de origen a duplicar
+      duplicate_target_help: Id del perfil de destino para el duplicado
       help: Gestionar valores de configuración del perfil activo
+      remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
+      remove_name_help: Id del perfil a retirar
+      remove_requires_yes: 'La retirada es destructiva. Ejecuta de nuevo ''aeat config profile remove %{name} --yes'' para confirmar.'
+      remove_yes_help: Confirma explícitamente la operación de retirada
+      show_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+      show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
+      unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile list'' para ver los perfiles registrados.'
+      use_help: Seleccionar un perfil existente como perfil activo
+      use_name_help: Id del perfil que se activará
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       connectivity_target_help: Objetivo de conectividad que se debe comprobar

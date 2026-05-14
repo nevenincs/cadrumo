@@ -230,7 +230,21 @@ cli:
     list:
       help: Az összes konfigurációs kulcs és aktuális értékének listázása
     profile:
+      already_exists: 'A(z) %{name} profil már létezik. Válassz másik cél-azonosítót.'
+      duplicate_display_name_help: Megjelenített név az új profilhoz (alapértelmezetten a cél-azonosító)
+      duplicate_help: Profil másolása új azonosítóval és megjelenített névvel
+      duplicate_source_help: A duplikálandó forrásprofil azonosítója
+      duplicate_target_help: A duplikátum cél-azonosítója
       help: Az aktív profil konfigurációs értékeinek kezelése
+      remove_help: Profil sírkövezése (a megváltoztathatatlan jelentés-pillanatképek megmaradnak)
+      remove_name_help: A sírkövezendő profil azonosítója
+      remove_requires_yes: 'A törlés destruktív művelet. Futtasd újra ''aeat config profile remove %{name} --yes'' megerősítéshez.'
+      remove_yes_help: A sírkövezés művelet kifejezett megerősítése
+      show_help: Egy profil tényeinek megjelenítése (alapértelmezetten az aktív profil)
+      show_name_help: A megjelenítendő profil azonosítója (alapértelmezetten az aktív profil)
+      unknown_profile: 'Ismeretlen profil: %{name}. Futtasd: ''aeat config profile list'' a regisztrált profilok megtekintéséhez.'
+      use_help: Meglévő profil kiválasztása aktív profilként
+      use_name_help: Az aktiválandó profil azonosítója
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolat ellenőrzése
       connectivity_target_help: Ellenőrizendő kapcsolati cél
