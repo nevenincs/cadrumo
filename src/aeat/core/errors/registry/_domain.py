@@ -4,6 +4,17 @@ from aeat.core.errors._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "aeat.application.live._notifications.NotificationsSnapshotNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_NOTIFICATIONS_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_notifications_snapshot_not_found",
+            default_suggestion="aeat app live notifications list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.justificante._errors.PdfFilingImportError",
         ErrorCode(
             code="ERROR_PDF_IMPORT_PDF_FILING_IMPORT",
@@ -1705,6 +1716,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="INTEGRITY_PROFILE_SNAPSHOT_NOT_FOUND",
             category=ErrorCategory.INTEGRITY,
             message_key="errors.integrity.integrity_profile_snapshot_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.currency._errors.CurrencyError",
+        ErrorCode(
+            code="FAIL_CURRENCY_ERROR",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.currency_error",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.currency._errors.MissingExchangeRateError",
+        ErrorCode(
+            code="FAIL_MISSING_EXCHANGE_RATE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.missing_exchange_rate",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.currency._errors.UnsupportedCurrencyError",
+        ErrorCode(
+            code="REFUSED_UNSUPPORTED_CURRENCY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.unsupported_currency",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
