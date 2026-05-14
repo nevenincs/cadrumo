@@ -99,8 +99,7 @@ def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None
     Unlike :func:`record_to_values` (which projects via the schema's
     ``model_selectors`` aliases), this keeps the canonical schema
     path as the key. The mapping is what the wizard catalogue,
-    :func:`validate_profile_values`, and CLI status surfaces consume
-    after the W09 canonical migration.
+    :func:`validate_profile_values`, and CLI status surfaces consume.
     """
 
     if record is None:
@@ -123,10 +122,8 @@ def projection_for_autonomo(
     stay in lockstep with the wizard descriptor.
     """
 
-    if isinstance(facts, UserProfileRecord):
-        mapping = record_to_values(facts, schema=schema)
-    elif isinstance(facts, UserProfileSnapshot):
-        mapping = snapshot_to_values(facts, schema=schema)
+    if isinstance(facts, UserProfileRecord | UserProfileSnapshot):
+        mapping = record_to_path_values(facts)
     else:
         mapping = {str(key): str(value) for key, value in facts.items() if value is not None}
     return autonomo_profile_from_mapping(mapping, tax_id_default=tax_id_default, iva_regime_default=iva_regime_default)

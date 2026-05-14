@@ -4,11 +4,10 @@ Modelo 720: Declaración informativa sobre bienes y derechos situados en el
 extranjero. Per-asset records grouped by asset class. Each class carries
 a €50,000 valuation threshold; declarability is per-class, not per-asset.
 
-Per apex §12 R21 and the per-modelo-aggregation-pipeline ADR. Bare
-``invoice`` source-kind is rejected at observation construction; the
-four canonical source kinds (ledger_transaction, purchase_invoice_evidence,
-payable_invoice, collectible_invoice) plus the asset-specific source
-kinds (rental_register, foreign_account_statement, etc.) are accepted.
+Bare ``invoice`` source-kind is rejected at observation construction;
+the four canonical source kinds are accepted: ``ledger_transaction``,
+``purchase_invoice_evidence``, ``payable_invoice``, and
+``collectible_invoice``.
 """
 
 from __future__ import annotations
@@ -17,6 +16,30 @@ from decimal import Decimal
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+_CANONICAL_SOURCE_KINDS: frozenset[str] = frozenset(
+    {
+        "ledger_transaction",
+        "purchase_invoice_evidence",
+        "payable_invoice",
+        "collectible_invoice",
+    },
+)
+
+
+def _validate_source_kind(value: str) -> str:
+    if value not in _CANONICAL_SOURCE_KINDS:
+        raise ValueError(
+            "unsupported source_kind; use one of ledger_transaction, "
+            "purchase_invoice_evidence, payable_invoice, collectible_invoice",
+        )
+    return value
+
+
+def _validate_country(value: str) -> str:
+    if len(value) != 2 or any(char < "A" or char > "Z" for char in value):
+        raise ValueError(f"country must be uppercase ISO-3166 alpha-2, got {value!r}")
+    return value
 
 
 class ForeignAssetClass(StrEnum):
@@ -51,35 +74,41 @@ class ForeignAssetObservation(BaseModel):
 
     @field_validator("source_kind")
     @classmethod
-    def _reject_bare_invoice_source(cls, value: str) -> str:
-        if value == "invoice":
-            raise ValueError(
-                "bare 'invoice' source-kind is forbidden; use ledger_transaction, "
-                "purchase_invoice_evidence, payable_invoice, or collectible_invoice",
-            )
-        return value
+    def _source_kind_is_canonical(cls, value: str) -> str:
+        return _validate_source_kind(value)
 
     @field_validator("country")
     @classmethod
     def _country_is_uppercase(cls, value: str) -> str:
-        if value != value.upper():
-            raise ValueError(f"country must be uppercase ISO-3166 alpha-2, got {value!r}")
-        return value
+        return _validate_country(value)
 
 
 class ForeignAssetClassRollup(BaseModel):
-    """Per-asset-class rollup row in the Modelo 720 aggregation."""
+    """Per-source-kind and per-asset-class rollup row."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
+    source_kind: str = Field(min_length=1)
     asset_class: ForeignAssetClass
     assets_count: int = Field(ge=0)
     held_at_year_end_count: int = Field(ge=0)
     total_valuation_eur: Decimal = Field(ge=Decimal("0"))
     countries: tuple[str, ...] = Field(default_factory=tuple)
 
+    @field_validator("countries")
+    @classmethod
+    def _countries_are_uppercase_ascii_alpha2(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        for country in value:
+            _validate_country(country)
+        return value
+
+    @field_validator("source_kind")
+    @classmethod
+    def _source_kind_is_canonical(cls, value: str) -> str:
+        return _validate_source_kind(value)
+
     @model_validator(mode="after")
-    def _held_count_within_total(self) -> "ForeignAssetClassRollup":
+    def _held_count_within_total(self) -> ForeignAssetClassRollup:
         if self.held_at_year_end_count > self.assets_count:
             raise ValueError(
                 f"held_at_year_end_count {self.held_at_year_end_count} > assets_count "
@@ -100,7 +129,7 @@ class ForeignAssetsAggregation(BaseModel):
     total_valuation_eur: Decimal = Field(ge=Decimal("0"))
 
     @model_validator(mode="after")
-    def _totals_match_rollups(self) -> "ForeignAssetsAggregation":
+    def _totals_match_rollups(self) -> ForeignAssetsAggregation:
         computed_assets = sum(row.assets_count for row in self.rollups)
         computed_valuation = sum(
             (row.total_valuation_eur for row in self.rollups), Decimal("0"),
@@ -114,10 +143,9 @@ class ForeignAssetsAggregation(BaseModel):
                 f"total_valuation_eur {self.total_valuation_eur} != sum of rollups "
                 f"{computed_valuation}",
             )
-        # No two rollups may share an asset_class (one row per class).
-        classes = [row.asset_class for row in self.rollups]
-        if len(classes) != len(set(classes)):
-            raise ValueError("each ForeignAssetClass may appear at most once in rollups")
+        cohorts = [(row.source_kind, row.asset_class) for row in self.rollups]
+        if len(cohorts) != len(set(cohorts)):
+            raise ValueError("each source_kind and ForeignAssetClass cohort may appear at most once in rollups")
         return self
 
 
@@ -126,9 +154,17 @@ THRESHOLD_720_EUR_PER_CLASS: Decimal = Decimal("50000.00")
 its total valuation strictly exceeds this amount per AEAT instrucciones."""
 
 
-def declarable_class(rollup: ForeignAssetClassRollup) -> bool:
-    """Return True iff the asset class crosses the 720 declaration floor."""
-    return rollup.total_valuation_eur > THRESHOLD_720_EUR_PER_CLASS
+def declarable_asset_classes_720(aggregation: ForeignAssetsAggregation) -> frozenset[ForeignAssetClass]:
+    """Return asset classes whose full valuation exceeds the 720 declaration floor."""
+    totals: dict[ForeignAssetClass, Decimal] = {}
+    for rollup in aggregation.rollups:
+        totals[rollup.asset_class] = totals.get(rollup.asset_class, Decimal("0")) + rollup.total_valuation_eur
+    return frozenset(asset_class for asset_class, total in totals.items() if total > THRESHOLD_720_EUR_PER_CLASS)
+
+
+def declarable_class(aggregation: ForeignAssetsAggregation, *, asset_class: ForeignAssetClass) -> bool:
+    """Return True iff an asset class crosses the 720 declaration floor across all cohorts."""
+    return asset_class in declarable_asset_classes_720(aggregation)
 
 
 def aggregate_foreign_assets_720(
@@ -146,15 +182,16 @@ def aggregate_foreign_assets_720(
     :func:`declarable_class` to filter rollups before binding to
     Modelo 720 casillas.
     """
-    grouped: dict[ForeignAssetClass, list[ForeignAssetObservation]] = {}
+    grouped: dict[tuple[str, ForeignAssetClass], list[ForeignAssetObservation]] = {}
     for obs in observations:
-        grouped.setdefault(obs.asset_class, []).append(obs)
+        grouped.setdefault((obs.source_kind, obs.asset_class), []).append(obs)
     rollups: list[ForeignAssetClassRollup] = []
-    for asset_class in sorted(grouped, key=lambda c: c.value):
-        group = grouped[asset_class]
+    for source_kind, asset_class in sorted(grouped, key=lambda c: (c[0], c[1].value)):
+        group = grouped[(source_kind, asset_class)]
         countries = tuple(sorted({obs.country for obs in group}))
         rollups.append(
             ForeignAssetClassRollup(
+                source_kind=source_kind,
                 asset_class=asset_class,
                 assets_count=len(group),
                 held_at_year_end_count=sum(1 for o in group if o.held_at_year_end),
@@ -176,11 +213,12 @@ def aggregate_foreign_assets_720(
 
 
 __all__ = [
+    "THRESHOLD_720_EUR_PER_CLASS",
     "ForeignAssetClass",
     "ForeignAssetClassRollup",
     "ForeignAssetObservation",
     "ForeignAssetsAggregation",
-    "THRESHOLD_720_EUR_PER_CLASS",
     "aggregate_foreign_assets_720",
+    "declarable_asset_classes_720",
     "declarable_class",
 ]

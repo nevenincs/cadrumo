@@ -1,26 +1,28 @@
-"""Bucket-scoped notifications snapshot service per apex ADR §4.4.
+"""Bucket-scoped notifications snapshot service.
 
 Wraps the read-only AEAT sede notifications adapter
-(``aeat.adapters.outbound.aeat.sede._notifications``) with bucket-scoped
-persistence and CLI-shaped read operations. The service is structurally
-read-only: it persists snapshots captured by an upstream fetch, exposes
-list/show/latest, and never invokes :func:`require_live_write`.
+(:mod:`aeat.adapters.outbound.aeat.sede._notifications`) with
+bucket-scoped persistence and a read-only verb surface. The service
+persists snapshots captured by an upstream fetch, exposes
+list / show / latest, and never invokes
+:func:`AeatAccessGate.require_live_write`.
 
-Per the live-AEAT charter and apex §4.4, submission is permanently
-forbidden at this boundary; the service has no ``submit`` method, no
-``acknowledge`` method, and no method that calls AEAT to mutate
-notification state. The acuse (read-receipt) lifecycle is handled
-*locally* by tracking which snapshot rows the operator has reviewed.
+Submission is permanently forbidden at this boundary: the service has
+no ``submit`` method, no ``acknowledge`` method, and no method that
+calls AEAT to mutate notification state. The acuse (read-receipt)
+lifecycle is handled *locally* by tracking which snapshot rows the
+operator has reviewed.
 
-Verbs (mapped from ``aeat app live notifications {list,show}``):
+Verbs:
   capture(snapshot)   persist a fresh snapshot, emit bucket event
   latest()            return the most recent stored snapshot
   list_snapshots()    return every snapshot in capture order
   show(snapshot_id)   return one snapshot by id
 
-The fetch path itself (HTML parse, auth-gated walker, require_live_read
-invocation) belongs to the entrypoint that wires the adapter to this
-service; this module does not import anything that drives a browser.
+The fetch path itself (HTML parse, auth-gated walker,
+``require_live_read`` invocation) belongs to the entrypoint that wires
+the adapter to this service; this module does not import anything
+that drives a browser.
 """
 
 from __future__ import annotations

@@ -635,7 +635,7 @@ def test_calculate_refused_on_discarded_work_unit(repos) -> None:
 
 def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
     """``discard_work_unit`` emits a ``modelo.work_unit.discarded``
-    bucket event with actor + reason payload, per apex §12 R10."""
+    bucket event with actor + reason payload."""
 
     from aeat.application.modelo import discard_work_unit
     from aeat.domain.buckets._event import BucketEventObjectType, BucketEventType
@@ -1012,6 +1012,8 @@ def test_calculate_emits_modelo_calculation_created_event(repos) -> None:
     assert event.payload["modelo"] == str(work_unit.modelo)
     assert event.payload["filing_year"] == str(work_unit.filing_year)
     assert event.payload["period"] == work_unit.period
+    assert event.payload["borrador_snapshot_id"] == ""
+    assert event.payload["borrador_binding_count"] == "0"
 
 
 def test_verify_emits_passed_event_on_success(repos) -> None:

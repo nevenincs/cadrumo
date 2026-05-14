@@ -6,8 +6,7 @@ pointers (``profiles``, ``active_profile``) and the workflow-level
 :class:`WorkflowEvent` audit stream around those calls so CLI surfaces
 do not duplicate that wiring.
 
-Bucket identity convention: ``bucket_id == profile_id``. A future
-W74A split into one-bucket-many-profiles will relax this; the
+Bucket identity convention: ``bucket_id == profile_id``. The
 orchestration helpers below are the single place that conflation
 lives.
 """

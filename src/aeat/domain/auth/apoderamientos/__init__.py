@@ -2,7 +2,7 @@
 
 Loads the shipped scopes catalogue from ``registry/aeat/apoderamientos/
 scopes.toml`` and exposes typed parsing for operator-supplied scope
-flags. Per apex ADR §3.3 and the apoderado-scope-vocabulary ADR:
+flags. Contract:
 
   * scope codes are uppercase tokens drawn from the shipped catalogue
   * the literal ``ALL`` expands at command time into every catalogue code

@@ -1,13 +1,10 @@
-"""Bucket-scoped borrador-100 pre-fill snapshot service per apex ADR §4.4.
+"""Bucket-scoped borrador 100 pre-fill snapshot service.
 
-Wraps the read-only AEAT Renta WEB Open ``datos fiscales`` adapter with
-bucket-scoped persistence for ``aeat app live borrador 100
-{fetch, show, list, verify, discard, export}``. Per the W48
-borrador-100-binding-integration ADR, ``aeat app modelo calculate
---borrador SNAPSHOT_ID --modelo 100`` consumes one of these snapshots
-to seed Modelo 100 bindings flagged ``aeat_prefilled=true``.
+Wraps the read-only AEAT Renta WEB Open ``datos fiscales`` adapter
+with bucket-scoped persistence. Snapshots produced here are consumed
+by Modelo 100 binding pre-fill (bindings flagged ``aeat_prefilled=true``).
 
-Structurally read-only per apex §4.4 + the live-AEAT charter:
+Structurally read-only:
 
   * the service has no submit / send / mutate verb;
   * the underlying driver calls

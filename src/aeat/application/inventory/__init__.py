@@ -1,8 +1,8 @@
-"""Inventory noun-group application service per apex ADR §4.2.
+"""Inventory noun-group application service.
 
-Wraps the rich :mod:`aeat.domain.profile.inventory` substrate (FIFO/PMP
-valuation per LIS art. 17.1) with a bucket-scoped persistence layer and
-canonical operator verbs:
+Wraps the rich :mod:`aeat.domain.profile.inventory` substrate (FIFO /
+PMP valuation per LIS art. 17.1) with a bucket-scoped persistence
+layer and canonical operator verbs:
 
     aeat app ledger inventory list
     aeat app ledger inventory create
@@ -11,9 +11,10 @@ canonical operator verbs:
     aeat app ledger inventory show
     aeat app ledger inventory remove
 
-The verb shape adapts the W71 contract to the inventory domain's natural
-sub-noun grammar (actividad + movement + valuation), with a documented
-``LIFECYCLE_OPERATIONS_ONLY`` exception in the W76 mounting wave.
+Adapts the mutating-noun-group CRUD contract to the inventory domain's
+natural sub-noun grammar (actividad + movement + valuation); this
+service carries the documented ``LIFECYCLE_OPERATIONS_ONLY`` exception
+to the canonical add / remove / update / view / list spine.
 """
 
 from __future__ import annotations

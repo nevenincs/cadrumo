@@ -1,16 +1,17 @@
-"""Apoderado application service per apex ADR §3.3.
+"""Apoderado application service.
 
 Operator verbs:
   status     read-only summary of the active apoderado configuration
   configure  set --represented-nif NIF --scope SCOPE [repeated]
   clear      retire the apoderado configuration for the active bucket
-  check      read-only live verification (calls AeatAccessGate.require_live_read)
+  check      read-only live verification (calls
+             :func:`AeatAccessGate.require_live_read`)
 
 Configuration is persisted per-bucket as a single JSON document under
 ``aeat_secret_store_dir/apoderado/<bucket_id>.json``. Live mutation of
 AEAT-side apoderamiento state (registrar, ampliar, revocar, confirmar,
 renunciar, presentar-en-representacion) is permanently refused at this
-boundary per the live-AEAT charter and apex §3.3 constraints.
+boundary; the service has no verb that would write to AEAT.
 """
 
 from __future__ import annotations
@@ -137,10 +138,9 @@ class ApoderadoService:
     def check(self, *, bucket_id: str) -> ApoderadoStatus:
         """Read-only live verification (sealed pending live-read wiring).
 
-        Per apex §3.3 and the live-AEAT charter, ``check`` calls
-        ``AeatAccessGate.require_live_read()`` before remote contact.
-        The current implementation reports the local configuration only;
-        the live verification extension point raises
+        ``check`` calls :func:`AeatAccessGate.require_live_read` before
+        remote contact. The current implementation reports the local
+        configuration only; the live verification extension point raises
         :class:`ApoderadoLiveCheckUnavailableError` until wired.
         """
         return self.status(bucket_id=bucket_id)

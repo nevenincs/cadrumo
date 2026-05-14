@@ -1,15 +1,16 @@
 """Payable and collectible invoice CRUD services.
 
-Implements the W73A invoice noun-group CRUD mounts per apex ADR §12.b. Two
-noun-groups (``payable_invoice``, ``collectible_invoice``) each expose the
-canonical five-verb CRUD spine ``add``/``remove``/``update``/``view``/``list``.
-Records are bucket-scoped and persisted as JSONL files per noun-kind.
+Two noun-groups (``payable_invoice``, ``collectible_invoice``) each
+expose the canonical five-verb CRUD spine
+``add``/``remove``/``update``/``view``/``list``. Records are
+bucket-scoped and persisted as JSONL files per noun-kind.
 
-The records are intentionally slim. Business-detail enrichment
-(line items, IVA breakdown, reconciliation linkages) belongs to the
-domain/invoices module's richer ``Invoice`` aggregate consumed by modelo
-aggregation pipelines. The noun-group records here are the canonical
-operator-edit surface for the source-kind taxonomy locked in apex §2.
+The records are intentionally slim. Business-detail enrichment (line
+items, IVA breakdown, reconciliation linkages) belongs to the
+:mod:`aeat.domain.invoices` richer ``Invoice`` aggregate consumed by
+modelo aggregation pipelines. The noun-group records here are the
+canonical operator-edit surface for the two source-kind variants
+covered.
 
 Bucket events emitted per CRUD verb:
     ``add``     -> ``payable_invoice.created`` / ``collectible_invoice.created``
@@ -37,7 +38,7 @@ from ...core.errors import AeatError
 
 
 class BusinessOperationInvoiceSourceKind(StrEnum):
-    """The two source-kind variants this module covers per apex §2 taxonomy."""
+    """The two source-kind variants this module covers."""
 
     PAYABLE_INVOICE = "payable_invoice"
     COLLECTIBLE_INVOICE = "collectible_invoice"

@@ -244,8 +244,8 @@ class EvidenceBundleService:
 
         Runs verification first. On failed verification, refuses with
         :class:`EvidenceBundleVerificationError` unless ``force_incomplete``
-        is True. Incomplete bundles require ``force_incomplete=True`` per
-        apex §4.3; failed-verification bundles always refuse.
+        is True. Incomplete bundles require ``force_incomplete=True``;
+        failed-verification bundles always refuse.
         """
         bundle = self.show(bucket_id=bucket_id, bundle_id=bundle_id)
         report = self.check(
@@ -267,7 +267,8 @@ class EvidenceBundleService:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         manifest_payload = bundle.model_dump_json(indent=2).encode("utf-8")
 
-        # Write records first; manifest.json LAST per apex §4.3.
+        # Write records first; manifest.json LAST so a partial archive
+        # never carries a manifest claiming records that aren't there.
         with zipfile.ZipFile(output_path, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
             for record in bundle.records:
                 key = (record.object_type.value, record.object_id)

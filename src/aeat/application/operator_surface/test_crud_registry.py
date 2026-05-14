@@ -97,24 +97,20 @@ class TestCatalogueLookup:
 
 
 class TestRequiredAuditClosure:
-    """Apex §12 R-row closure: every noun-group surfaced in the
-    reconciliation ledger has a corresponding catalogue entry."""
+    """Every mutating noun-group exposed by the operator surface has a
+    corresponding catalogue entry."""
 
-    def test_r04_invoice_decoupling_is_represented(self) -> None:
-        # R04: payable_invoice + collectible_invoice CRUD mounts
+    def test_invoice_decoupling_is_represented(self) -> None:
         assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger payable-invoice") is not None
         assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger collectible-invoice") is not None
 
-    def test_r06_apoderado_subgroup_is_represented(self) -> None:
-        # R06: apoderado noun-group + scope vocabulary
+    def test_apoderado_subgroup_is_represented(self) -> None:
         assert BUILTIN_CRUD_CATALOGUE.find("aeat config auth apoderado") is not None
 
-    def test_r07_inventory_noun_group_is_represented(self) -> None:
-        # R07: inventory noun-group
+    def test_inventory_noun_group_is_represented(self) -> None:
         assert BUILTIN_CRUD_CATALOGUE.find("aeat app ledger inventory") is not None
 
-    def test_r08_ratios_key_value_exception_is_represented(self) -> None:
-        # R08: ratios + bucket noun-groups; ratios uses key-value exception
+    def test_ratios_key_value_exception_is_represented(self) -> None:
         entry = BUILTIN_CRUD_CATALOGUE.find("aeat app ledger ratios")
         assert entry is not None
         assert entry.exception is NounGroupExceptionKind.KEY_VALUE_AS_RECORD

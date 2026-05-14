@@ -26,7 +26,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.calculations.registry import ModeloRevision
+from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
@@ -75,6 +75,12 @@ from ...domain.modelos._work_unit import (
 )
 from ...domain.period import period_end_date
 from ...domain.transactions import TransactionCatalogueRepository
+from ..live import Borrador100SnapshotRepository
+from ._borrador_binding import (
+    Modelo100BorradorBindingCommand,
+    Modelo100BorradorBindingResult,
+    resolve_modelo_100_borrador_bindings,
+)
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 
@@ -374,8 +380,7 @@ def discard_work_unit(
     discarded, the work unit cannot be renamed or re-activated;
     the operator must create a fresh work unit on the same modelo
     / year / period. A ``modelo.work_unit.discarded`` bucket event
-    is emitted alongside the state transition per apex §12 R10
-    (app-modelo-discard ADR).
+    is emitted alongside the state transition.
 
     Raises:
         WorkUnitNotFoundError: When ``work_unit_id`` is absent.
@@ -412,7 +417,7 @@ def discard_work_unit(
         bucket_id=discarded.bucket_id,
         event_type=BucketEventType.MODELO_WORK_UNIT_DISCARDED,
         occurred_at=now,
-        actor=discarded.discarded_by,
+        actor=discarded.discarded_by or actor.strip(),
         object_type=BucketEventObjectType.WORK_UNIT,
         object_id=discarded.work_unit_id,
         payload={
@@ -461,12 +466,16 @@ def calculate_modelo_revision(
     casilla_inputs: Mapping[str, Decimal],
     binding_values: Mapping[str, Decimal] | None = None,
     enum_binding_values: Mapping[str, str] | None = None,
+    backend_binding_values: Mapping[str, Decimal] | None = None,
+    backend_casilla_inputs: Mapping[str, Decimal] | None = None,
+    borrador_snapshot_id: str | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     source_transaction_ids: tuple[str, ...] = (),
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
+    borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Run the registry formula engine and persist a draft revision.
@@ -540,13 +549,43 @@ def calculate_modelo_revision(
         filing_year=work_unit.filing_year,
         registry_period=work_unit.period,
     )
-    resolved_bindings = dict(binding_values or {})
-    resolved_enum_bindings = dict(enum_binding_values or {})
+    caller_binding_values = dict(binding_values or {})
+    caller_enum_binding_values = dict(enum_binding_values or {})
+    lower_precedence_binding_values = dict(backend_binding_values or {})
+    borrador_result = _resolve_borrador_bindings_for_calculation(
+        bucket_id=work_unit.bucket_id,
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        borrador_snapshot_id=borrador_snapshot_id,
+        caller_binding_values=caller_binding_values,
+        caller_enum_binding_values=caller_enum_binding_values,
+        registry_snapshot=snapshot,
+        snapshot_repository=borrador_snapshot_repository,
+    )
+    resolved_bindings = dict(
+        sorted({**lower_precedence_binding_values, **borrador_result.binding_values, **caller_binding_values}.items())
+    )
+    resolved_enum_bindings = dict(
+        sorted({**borrador_result.enum_binding_values, **caller_enum_binding_values}.items())
+    )
     resolved_relations = dict(relation_values or {})
+    resolved_inputs = dict(
+        sorted(
+            {
+                **dict(backend_casilla_inputs or {}),
+                **_resolve_bound_casilla_inputs_for_available_bindings(
+                    snapshot.revision,
+                    resolved_bindings,
+                ),
+                **casilla_inputs,
+            }.items()
+        )
+    )
 
     engine_result = calculate_registry_snapshot(
         snapshot,
-        inputs=dict(casilla_inputs),
+        inputs=resolved_inputs,
         date_context={"filing_period": period_date},
         binding_values=resolved_bindings,
         enum_binding_values=resolved_enum_bindings,
@@ -554,7 +593,7 @@ def calculate_modelo_revision(
     )
 
     inputs_snapshot: dict[str, str] = dict(
-        sorted((k.strip(), _canonical_decimal_str(v)) for k, v in casilla_inputs.items())
+        sorted((k.strip(), _canonical_decimal_str(v)) for k, v in resolved_inputs.items())
     )
     binding_overrides: dict[str, str] = dict(
         sorted(
@@ -570,6 +609,8 @@ def calculate_modelo_revision(
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
+        borrador_snapshot_id=borrador_result.borrador_snapshot_id,
+        bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
     )
     revisions = cr_repo.load()
     existing = revisions.get(revision_id)
@@ -584,6 +625,8 @@ def calculate_modelo_revision(
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
         source_transaction_ids=source_transaction_ids,
+        borrador_snapshot_id=borrador_result.borrador_snapshot_id,
+        bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
         casilla_values=casilla_values,
         created_at=now,
         updated_at=now,
@@ -617,6 +660,8 @@ def calculate_modelo_revision(
             "casilla_count": str(len(casilla_values)),
             "formula_count": str(len(engine_result.entries)),
             "source_transaction_count": str(len(source_transaction_ids)),
+            "borrador_snapshot_id": borrador_result.borrador_snapshot_id or "",
+            "borrador_binding_count": str(len(borrador_result.bindings_sourced_from_borrador)),
         },
     )
     return revision
@@ -629,6 +674,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     casilla_inputs: Mapping[str, Decimal] | None = None,
     binding_values: Mapping[str, Decimal] | None = None,
     enum_binding_values: Mapping[str, str] | None = None,
+    borrador_snapshot_id: str | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     filing_period_date: date | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
@@ -636,6 +682,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
+    borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Calculate a modelo revision using bucket-local ledger aggregation."""
@@ -679,48 +726,59 @@ def calculate_modelo_revision_from_bucket_aggregation(
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
     )
-    resolved_binding_values = _merge_bucket_binding_values(
-        revision=snapshot.revision,
-        bucket_values=ledger_bindings.binding_values,
-        caller_values=binding_values or {},
-    )
-    resolved_inputs = _merge_bucket_bound_inputs(
+    backend_inputs = _merge_bucket_bound_inputs(
         revision=snapshot.revision,
         casilla_inputs=casilla_inputs or {},
         bound_inputs=_resolve_bound_casilla_inputs_for_available_bindings(
             snapshot.revision,
-            resolved_binding_values,
+            ledger_bindings.binding_values,
         ),
     )
     return calculate_modelo_revision(
         work_unit_id,
         actor=actor,
-        casilla_inputs=resolved_inputs,
-        binding_values=resolved_binding_values,
+        casilla_inputs=casilla_inputs or {},
+        binding_values=binding_values or {},
+        backend_binding_values=ledger_bindings.binding_values,
+        backend_casilla_inputs=backend_inputs,
         enum_binding_values=enum_binding_values,
+        borrador_snapshot_id=borrador_snapshot_id,
         relation_values=relation_values,
         source_transaction_ids=tuple(ledger_bindings.source_transaction_ids),
         filing_period_date=filing_period_date,
         work_unit_repository=wu_repo,
         calculation_repository=calculation_repository,
         bucket_event_repository=bucket_event_repository,
+        borrador_snapshot_repository=borrador_snapshot_repository,
         clock=clock,
     )
 
 
-def _merge_bucket_binding_values(
+def _resolve_borrador_bindings_for_calculation(
     *,
-    revision: ModeloRevision,
-    bucket_values: Mapping[str, Decimal],
-    caller_values: Mapping[str, Decimal],
-) -> dict[str, Decimal]:
-    ledger_binding_ids = _ledger_binding_ids(revision)
-    rejected = sorted(set(caller_values).intersection(ledger_binding_ids))
-    if rejected:
-        raise ModeloAggregationBindingError(
-            f"caller binding values cannot override bucket-derived ledger bindings: {rejected!r}"
-        )
-    return dict(sorted({**caller_values, **bucket_values}.items()))
+    bucket_id: str,
+    modelo: str,
+    filing_year: int,
+    period: str,
+    borrador_snapshot_id: str | None,
+    caller_binding_values: Mapping[str, Decimal],
+    caller_enum_binding_values: Mapping[str, str],
+    registry_snapshot: RegistrySnapshot,
+    snapshot_repository: Borrador100SnapshotRepository | None,
+) -> Modelo100BorradorBindingResult:
+    return resolve_modelo_100_borrador_bindings(
+        Modelo100BorradorBindingCommand(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            borrador_snapshot_id=borrador_snapshot_id,
+            caller_binding_values=caller_binding_values,
+            caller_enum_binding_values=caller_enum_binding_values,
+        ),
+        registry_snapshot=registry_snapshot,
+        snapshot_repository=snapshot_repository,
+    )
 
 
 def _resolve_bound_casilla_inputs_for_available_bindings(
@@ -744,16 +802,6 @@ def _merge_bucket_bound_inputs(
     bound_inputs: Mapping[str, Decimal],
 ) -> dict[str, Decimal]:
     casillas = {casilla.id: casilla for casilla in revision.casillas}
-    ledger_bound_casillas = {
-        casilla.id
-        for casilla in revision.casillas
-        if casilla.input_kind == "bound" and casilla.binding in _ledger_binding_ids(revision)
-    }
-    rejected = sorted(set(casilla_inputs).intersection(ledger_bound_casillas))
-    if rejected:
-        raise ModeloAggregationBindingError(
-            f"caller casilla inputs cannot override bucket-derived ledger bound casillas: {rejected!r}"
-        )
     computed = sorted(
         casilla_id
         for casilla_id in bound_inputs
@@ -761,7 +809,7 @@ def _merge_bucket_bound_inputs(
     )
     if computed:
         raise ModeloAggregationBindingError(f"bucket-derived inputs target computed casillas: {computed!r}")
-    return dict(sorted({**casilla_inputs, **bound_inputs}.items()))
+    return dict(sorted({**bound_inputs, **casilla_inputs}.items()))
 
 
 def _ledger_binding_ids(revision: ModeloRevision) -> frozenset[str]:
@@ -1591,6 +1639,8 @@ def amend_modelo_revision(
         binding_overrides=baseline_revision.binding_overrides,
         casilla_values=corrected_values,
         source_transaction_ids=baseline_revision.source_transaction_ids,
+        borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
+        bindings_sourced_from_borrador=baseline_revision.bindings_sourced_from_borrador,
     )
     if new_revision_id in revisions:
         raise CalculationRevisionStateError(
@@ -1605,6 +1655,8 @@ def amend_modelo_revision(
         inputs_snapshot=baseline_revision.inputs_snapshot,
         binding_overrides=baseline_revision.binding_overrides,
         source_transaction_ids=baseline_revision.source_transaction_ids,
+        borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
+        bindings_sourced_from_borrador=baseline_revision.bindings_sourced_from_borrador,
         casilla_values=corrected_values,
         created_at=now,
         updated_at=now,

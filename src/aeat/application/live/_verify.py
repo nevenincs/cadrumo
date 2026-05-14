@@ -1,4 +1,4 @@
-"""Bucket-scoped verify service per apex ADR §4.4.
+"""Bucket-scoped verify service.
 
 Wraps the two read-only AEAT verify oracles into a bucket-scoped
 audit log:
@@ -10,15 +10,15 @@ Both surfaces are on-demand single-shot checks. The service records
 each check as a typed observation tied to the active bucket so the
 operator can audit which NIFs were verified, when, and against what
 verdict. Subsequent invocations against the same NIF produce a new
-observation row; we never overwrite history.
+observation row; history is never overwritten.
 
-Per apex §4.4 and the live-AEAT charter:
-  * the service is structurally read-only (no submit / mutate verbs)
+Structurally read-only:
+  * the service has no submit / mutate verb;
   * the underlying drivers call ``AeatAccessGate.require_live_read()``
-    before remote contact; this service consumes their results only
-  * the ``--expected valid|invalid|unknown`` operator hint per the
-    apex's `aeat app live verify` command line is recorded alongside
-    the verdict so an operator's mistaken expectation is auditable
+    before remote contact; this layer consumes their results only;
+  * the operator's ``--expected valid|invalid|unknown`` hint is
+    recorded alongside the verdict so a mistaken expectation is
+    auditable.
 """
 
 from __future__ import annotations
@@ -114,7 +114,7 @@ def _save(settings: Settings, bucket_id: str, observations: list[VerifyObservati
 class VerifyService:
     """Bucket-scoped audit log of NIF verify checks.
 
-    Structurally read-only per apex §4.4. The service has no submit,
+    Structurally read-only. The service has no submit,
     no mutate, and no method that would alter AEAT-side state. Verify
     surfaces themselves are read-only by construction; this layer only
     records observations the drivers produce.

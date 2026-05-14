@@ -1,4 +1,4 @@
-"""Evidence bundle service per apex ADR §4.3 audit shape.
+"""Evidence bundle service for audit shape.
 
 The evidence bundle is a bucket-scoped, work-unit-bound manifest plus
 referenced records used to package the provenance of a modelo
@@ -17,10 +17,9 @@ Bucket events emitted by mutating operations:
     modelo.audit.exported  - a ZIP was successfully written
     modelo.audit.replayed  - an evidence-case replay completed
 
-Per apex §8 and the live-AEAT charter, replay never contacts AEAT and
-never performs live submission. Export refuses on failed verification
-unless ``--force-incomplete`` is explicitly passed at the operator
-boundary.
+Replay never contacts AEAT and never performs live submission. Export
+refuses on failed verification unless ``--force-incomplete`` is
+explicitly passed at the operator boundary.
 """
 
 from __future__ import annotations

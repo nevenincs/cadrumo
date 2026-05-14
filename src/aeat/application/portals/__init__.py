@@ -1,20 +1,19 @@
-"""Local portal-registry discovery service per apex ADR §4.4.
+"""Local portal-registry discovery service.
 
-The portals surface is the only ``aeat app live`` subgroup that is
-**local-only**: it does not contact AEAT, does not call
-:func:`AeatAccessGate.require_live_read`, and emits no bucket events.
-Operators consume it to discover catalogued AEAT portals — their
-canonical URLs, auth methods, stability tiers, and purpose strings —
-without leaving the CLI.
+The portals surface is **local-only**: it does not contact AEAT, does
+not call :func:`AeatAccessGate.require_live_read`, and emits no bucket
+events. Operators consume it to discover catalogued AEAT portals —
+their canonical URLs, auth methods, stability tiers, and purpose
+strings — without leaving the CLI.
 
-Verbs (per apex §4.4):
+Verbs:
   list [--category C] [--modelo M]   filter the registry by category
                                      and/or modelo binding.
-  show PORTAL                         render one portal's full metadata.
+  show PORTAL                        render one portal's full metadata.
 
-Apex §8 lock: portals expose **no action verbs**. ``open``, ``submit``,
-``present``, ``sign``, ``pay`` are intentionally absent from this
-service. The catalogue is metadata-only.
+Portals expose **no action verbs**: ``open``, ``submit``, ``present``,
+``sign``, and ``pay`` are intentionally absent from this service. The
+catalogue is metadata-only.
 """
 
 from __future__ import annotations

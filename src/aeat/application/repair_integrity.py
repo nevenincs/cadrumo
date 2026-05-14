@@ -1,7 +1,6 @@
 """Backend services for ``aeat config repair integrity`` and ``... repair list``.
 
-Implements the locked subverbs from the config-repair-shape ADR §3.6
-that the W82A reconciliation wave closes (apex §12 R19). Each function
+Implements the subverbs for configuration repair and integrity checks. Each function
 returns a strict Pydantic report consumed by the CLI's ``_emit``
 renderer; both functions are read-only and emit no bucket events.
 
@@ -10,8 +9,7 @@ renderer; both functions are read-only and emit no bucket events.
                                      one namespace) plus an aggregate
                                      ``DiagnosticCheck`` row carrying
                                      the required ``next_action`` or
-                                     ``dead_end`` field per the
-                                     2026-05-14 exhaustiveness lock.
+                                     ``dead_end`` field.
 
   ``build_repair_list_report``       namespace inventory: every stored
                                      lookup digest under the supplied
