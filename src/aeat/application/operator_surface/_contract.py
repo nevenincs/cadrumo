@@ -157,7 +157,7 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         root=RootSurfaceName.CONFIG,
         child="profile",
         operator_question="inspect and edit the active profile values used by backend workflows",
-        service_owner="aeat.application.profile",
+        service_owner="aeat.application.user_profile",
         commands=("list", "get", "set", "unset", "status"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
@@ -243,7 +243,7 @@ SERVICE_OWNERS: tuple[ServiceOwner, ...] = (
     ),
     ServiceOwner(
         capability="profile_and_bucket_state",
-        owner="aeat.application.profile",
+        owner="aeat.application.user_profile",
         notes="owns active profile state consumed by app commands",
     ),
     ServiceOwner(

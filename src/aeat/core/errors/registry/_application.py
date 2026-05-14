@@ -81,17 +81,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.profile._repository.ProfileBucketPersistenceError",
-        ErrorCode(
-            code="ERROR_PROFILE_BUCKET_PERSISTENCE",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_profile_bucket_persistence",
-            default_suggestion="aeat config profile status",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "aeat.application.setup_reset.SetupResetUnconfirmedError",
         ErrorCode(
             code="REFUSED_SETUP_RESET_UNCONFIRMED",

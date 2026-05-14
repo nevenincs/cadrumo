@@ -18,6 +18,7 @@ hardcoded multiline strings.
 from __future__ import annotations
 
 import tomllib
+from functools import lru_cache
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -104,8 +105,26 @@ def load_topic_catalogue(root: Path | None = None) -> TopicCatalogue:
     """
 
     target = root if root is not None else _TOPIC_REGISTRY_ROOT
+    resolved = target.resolve()
+    paths = tuple(sorted(resolved.glob("*.toml")))
+    fingerprint = tuple(_file_fingerprint(path) for path in paths)
+    return _load_topic_catalogue_cached(str(resolved), fingerprint)
+
+
+def _file_fingerprint(path: Path) -> tuple[str, int, int]:
+    stat = path.stat()
+    return (path.name, stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=16)
+def _load_topic_catalogue_cached(
+    root: str,
+    fingerprint: tuple[tuple[str, int, int], ...],
+) -> TopicCatalogue:
+    target = Path(root)
     topics: list[Topic] = []
-    for path in sorted(target.glob("*.toml")):
+    for filename, _byte_count, _modified_ns in fingerprint:
+        path = target / filename
         raw = tomllib.loads(path.read_text(encoding="utf-8"))
         slug = str(raw.get("slug") or path.stem)
         topics.append(

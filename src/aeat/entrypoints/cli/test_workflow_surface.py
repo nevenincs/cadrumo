@@ -444,6 +444,8 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
     unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
     unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_permanente"])
+    unsupported_test = _invoke(["config", "auth", "test", "--provider", "dnie_pkcs"])
+    unsupported_clear = _invoke(["config", "auth", "clear", "--provider", "clave_pin"])
 
     assert configure.exit_code == 0, configure.output
     assert "clave_movil" in configure.output
@@ -451,6 +453,10 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     assert "clave-movil" in unsupported_spelling.output
     assert unsupported.exit_code != 0
     assert "clave_permanente" in unsupported.output
+    assert unsupported_test.exit_code != 0
+    assert "dnie_pkcs" in unsupported_test.output
+    assert unsupported_clear.exit_code != 0
+    assert "clave_pin" in unsupported_clear.output
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
