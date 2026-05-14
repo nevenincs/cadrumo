@@ -244,6 +244,11 @@ cli:
       key_help: A kiolvasandó kulcs (pl. tax.id, iva.regime)
     google:
       client_json_help: A Cloud Console Desktop OAuth kliens JSON fájl útvonala
+      folder:
+        folder_id_help: cli.config.google.folder.folder_id_help
+        get_help: cli.config.google.folder.get_help
+        help: cli.config.google.folder.help
+        set_help: cli.config.google.folder.set_help
       help: A Google OAuth Desktop integráció kezelése Drive és Sheets eléréshez
       login_help: OAuth hozzájárulási folyamat futtatása (vagy meglévő hitelesítő
         adat frissítése)
@@ -259,6 +264,10 @@ cli:
         help: cli.config.google.sync.help
         probe_help: cli.config.google.sync.probe_help
         probe_read_only_help: cli.config.google.sync.probe_read_only_help
+        push_dry_run_help: cli.config.google.sync.push_dry_run_help
+        push_help: cli.config.google.sync.push_help
+        push_limit_help: cli.config.google.sync.push_limit_help
+        push_namespace_help: cli.config.google.sync.push_namespace_help
         root_folder_id_unset: cli.config.google.sync.root_folder_id_unset
     init:
       activity_help: Economic activity description (e.g. 761.1, programador)

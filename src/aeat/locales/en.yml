@@ -234,6 +234,11 @@ cli:
       key_help: Key to read (e.g. tax.id, iva.regime)
     google:
       client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
+      folder:
+        folder_id_help: cli.config.google.folder.folder_id_help
+        get_help: cli.config.google.folder.get_help
+        help: cli.config.google.folder.help
+        set_help: cli.config.google.folder.set_help
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow (or refresh an existing credential)
       logout_help: Clear the refresh token and metadata; preserve the registered client
@@ -248,6 +253,10 @@ cli:
         help: cli.config.google.sync.help
         probe_help: cli.config.google.sync.probe_help
         probe_read_only_help: cli.config.google.sync.probe_read_only_help
+        push_dry_run_help: cli.config.google.sync.push_dry_run_help
+        push_help: cli.config.google.sync.push_help
+        push_limit_help: cli.config.google.sync.push_limit_help
+        push_namespace_help: cli.config.google.sync.push_namespace_help
         root_folder_id_unset: cli.config.google.sync.root_folder_id_unset
     init:
       activity_help: Economic activity description (e.g. 761.1, programador)
