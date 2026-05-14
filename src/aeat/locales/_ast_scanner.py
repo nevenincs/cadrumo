@@ -47,10 +47,27 @@ def _is_dotted_literal(value: str) -> bool:
 
 
 def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
-    """Find positional and ``message_key=`` translation keys passed to
-    classes whose name ends with ``Error`` or ``Exception``."""
+    """Find positional and ``message_key=``/``translated_message=`` translation
+    keys passed to classes whose name ends with ``Error``/``Exception``, plus
+    direct ``tr("dotted.key")``/``t("dotted.key")`` calls anywhere in the
+    module, plus dotted-literal defaults for kw-only ``translated_message``/
+    ``message_key`` parameters and module-level ALL_CAPS sentinels."""
 
     findings: set[str] = set()
+    # FunctionDef defaults for kw-only translated_message / message_key.
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        kw_defaults = list(zip(node.args.kwonlyargs, node.args.kw_defaults, strict=False))
+        for arg, default in kw_defaults:
+            if default is None or arg.arg not in {"translated_message", "message_key"}:
+                continue
+            if (
+                isinstance(default, ast.Constant)
+                and isinstance(default.value, str)
+                and _is_dotted_literal(default.value)
+            ):
+                findings.add(default.value)
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
@@ -62,6 +79,12 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
             name = callee.attr
         if name is None:
             continue
+        # Direct tr("dotted.key") / t("dotted.key") calls.
+        if name in {"tr", "t"} and node.args:
+            first = node.args[0]
+            if isinstance(first, ast.Constant) and isinstance(first.value, str) and _is_dotted_literal(first.value):
+                findings.add(first.value)
+            continue
         if not (name.endswith("Error") or name.endswith("Exception")):
             continue
         # Positional first argument as literal dotted string.
@@ -69,9 +92,9 @@ def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
             first = node.args[0]
             if isinstance(first, ast.Constant) and isinstance(first.value, str) and _is_dotted_literal(first.value):
                 findings.add(first.value)
-        # ``message_key=`` keyword.
+        # ``message_key=`` / ``translated_message=`` keyword.
         for kw in node.keywords:
-            if kw.arg != "message_key":
+            if kw.arg not in {"message_key", "translated_message"}:
                 continue
             value = kw.value
             if isinstance(value, ast.Constant) and isinstance(value.value, str) and _is_dotted_literal(value.value):
