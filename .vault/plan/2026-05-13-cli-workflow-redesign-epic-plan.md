@@ -2892,16 +2892,16 @@ This Phase delivers backend implementation for modelo 100 borrador binding as re
 
 - [x] `W48.P236.S1411` - Map the `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr` decision into non-CLI service ownership for modelo 100 borrador binding; `src/aeat/application/modelo`.
 - [x] `W48.P236.S1412` - Implement Pydantic command and result contracts for modelo 100 borrador binding; `src/aeat/application/modelo`.
-- [ ] `W48.P236.S1413` - Wire application or domain services required by modelo 100 borrador binding; `src/aeat/application/modelo`.
-- [ ] `W48.P236.S1414` - Connect persistence, bucket events, registry data, or provider adapters required by modelo 100 borrador binding; `src/aeat/application/modelo`.
-- [ ] `W48.P236.S1415` - Route existing backend functionality into the canonical service for modelo 100 borrador binding; `src/aeat/application/modelo`.
-- [ ] `W48.P236.S1416` - Record service-level error codes and log fields for modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P236.S1413` - Wire application or domain services required by modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P236.S1414` - Connect persistence, bucket events, registry data, or provider adapters required by modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P236.S1415` - Route existing backend functionality into the canonical service for modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P236.S1416` - Record service-level error codes and log fields for modelo 100 borrador binding; `src/aeat/application/modelo`.
 
 ### Phase `W48.P237` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for modelo 100 borrador binding as required by `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr`.
 
-- [ ] `W48.P237.S1417` - Audit duplicate implementations that overlap modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P237.S1417` - Audit duplicate implementations that overlap modelo 100 borrador binding; `src/aeat/application/modelo`.
 - [ ] `W48.P237.S1418` - Delete duplicate backend branches that compete with modelo 100 borrador binding; `src/aeat/application/modelo`.
 - [ ] `W48.P237.S1419` - Remove stale aliases that bypass the canonical service for modelo 100 borrador binding; `src/aeat/entrypoints/cli`.
 - [ ] `W48.P237.S1420` - Migrate internal callers to the canonical service for modelo 100 borrador binding; `src/aeat/application/modelo`.
@@ -3126,11 +3126,11 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-per-modelo-aggregatio
 
 This Phase delivers backend implementation for per modelo aggregation as required by `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr`.
 
-- [ ] `W52.P256.S1531` - Map the `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr` decision into non-CLI service ownership for per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P256.S1532` - Implement Pydantic command and result contracts for per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P256.S1533` - Wire application or domain services required by per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P256.S1531` - Map the `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr` decision into non-CLI service ownership for per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P256.S1532` - Implement Pydantic command and result contracts for per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P256.S1533` - Wire application or domain services required by per modelo aggregation; `src/aeat/application/aggregation`.
 - [ ] `W52.P256.S1534` - Connect persistence, bucket events, registry data, or provider adapters required by per modelo aggregation; `src/aeat/application/aggregation`.
-- [ ] `W52.P256.S1535` - Route existing backend functionality into the canonical service for per modelo aggregation; `src/aeat/application/aggregation`.
+- [x] `W52.P256.S1535` - Route existing backend functionality into the canonical service for per modelo aggregation; `src/aeat/application/aggregation`.
 - [ ] `W52.P256.S1536` - Record service-level error codes and log fields for per modelo aggregation; `src/aeat/application/aggregation`.
 
 ### Phase `W52.P257` - shadow duplicate removal
@@ -3244,56 +3244,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-app-live-shape-adr` d
 
 This Phase delivers backend implementation for read only live aeat signals as required by `2026-05-12-cli-workflow-redesign-app-live-shape-adr`.
 
-- [ ] `W54.P266.S1591` - Map the `2026-05-12-cli-workflow-redesign-app-live-shape-adr` decision into non-CLI service ownership for read only live aeat signals; `src/aeat/application/live`.
-- [ ] `W54.P266.S1592` - Implement Pydantic command and result contracts for read only live aeat signals; `src/aeat/application/live`.
-- [ ] `W54.P266.S1593` - Wire application or domain services required by read only live aeat signals; `src/aeat/application/live`.
-- [ ] `W54.P266.S1594` - Connect persistence, bucket events, registry data, or provider adapters required by read only live aeat signals; `src/aeat/application/live`.
-- [ ] `W54.P266.S1595` - Route existing backend functionality into the canonical service for read only live aeat signals; `src/aeat/application/live`.
-- [ ] `W54.P266.S1596` - Record service-level error codes and log fields for read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P266.S1591` - Map the `2026-05-12-cli-workflow-redesign-app-live-shape-adr` decision into non-CLI service ownership for read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P266.S1592` - Implement Pydantic command and result contracts for read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P266.S1593` - Wire application or domain services required by read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P266.S1594` - Connect persistence, bucket events, registry data, or provider adapters required by read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P266.S1595` - Route existing backend functionality into the canonical service for read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P266.S1596` - Record service-level error codes and log fields for read only live aeat signals; `src/aeat/application/live`.
 
 ### Phase `W54.P267` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for read only live aeat signals as required by `2026-05-12-cli-workflow-redesign-app-live-shape-adr`.
 
-- [ ] `W54.P267.S1597` - Audit duplicate implementations that overlap read only live aeat signals; `src/aeat/application/live`.
-- [ ] `W54.P267.S1598` - Delete duplicate backend branches that compete with read only live aeat signals; `src/aeat/application/live`.
-- [ ] `W54.P267.S1599` - Remove stale aliases that bypass the canonical service for read only live aeat signals; `src/aeat/entrypoints/cli`.
-- [ ] `W54.P267.S1600` - Migrate internal callers to the canonical service for read only live aeat signals; `src/aeat/application/live`.
-- [ ] `W54.P267.S1601` - Remove stale fixtures and tests that encode duplicate behavior for read only live aeat signals; `tests/application/live`.
-- [ ] `W54.P267.S1602` - Update boundary inventory entries that describe duplicate behavior for read only live aeat signals; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W54.P267.S1597` - Audit duplicate implementations that overlap read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P267.S1598` - Delete duplicate backend branches that compete with read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P267.S1599` - Remove stale aliases that bypass the canonical service for read only live aeat signals; `src/aeat/entrypoints/cli`.
+- [x] `W54.P267.S1600` - Migrate internal callers to the canonical service for read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P267.S1601` - Remove stale fixtures and tests that encode duplicate behavior for read only live aeat signals; `tests/application/live`.
+- [x] `W54.P267.S1602` - Update boundary inventory entries that describe duplicate behavior for read only live aeat signals; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W54.P268` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for read only live aeat signals as required by `2026-05-12-cli-workflow-redesign-app-live-shape-adr`.
 
-- [ ] `W54.P268.S1603` - Delete compatibility shims that preserve rejected behavior for read only live aeat signals; `src/aeat/application/live`.
-- [ ] `W54.P268.S1604` - Delete placeholder stubs that claim support for read only live aeat signals; `src/aeat/application/live`.
-- [ ] `W54.P268.S1605` - Replace stubbed paths with real backend service calls for read only live aeat signals; `src/aeat/application/live`.
-- [ ] `W54.P268.S1606` - Remove deprecated command spelling and help text for read only live aeat signals; `src/aeat/entrypoints/cli`.
-- [ ] `W54.P268.S1607` - Remove tests that assert shim or stub behavior for read only live aeat signals; `tests/application/live`.
-- [ ] `W54.P268.S1608` - Record the removed shim and stub surfaces for read only live aeat signals; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W54.P268.S1603` - Delete compatibility shims that preserve rejected behavior for read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P268.S1604` - Delete placeholder stubs that claim support for read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P268.S1605` - Replace stubbed paths with real backend service calls for read only live aeat signals; `src/aeat/application/live`.
+- [x] `W54.P268.S1606` - Remove deprecated command spelling and help text for read only live aeat signals; `src/aeat/entrypoints/cli`.
+- [x] `W54.P268.S1607` - Remove tests that assert shim or stub behavior for read only live aeat signals; `tests/application/live`.
+- [x] `W54.P268.S1608` - Record the removed shim and stub surfaces for read only live aeat signals; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W54.P269` - real behavior verification
 
 This Phase delivers real behavior verification for read only live aeat signals as required by `2026-05-12-cli-workflow-redesign-app-live-shape-adr`.
 
-- [ ] `W54.P269.S1609` - Add service contract tests for read only live aeat signals; `tests/application/live`.
-- [ ] `W54.P269.S1610` - Add persistence or registry integration tests for read only live aeat signals; `tests/application/live`.
-- [ ] `W54.P269.S1611` - Add negative tests proving rejected aliases do not reach read only live aeat signals; `tests/entrypoints/cli`.
-- [ ] `W54.P269.S1612` - Add command behavior tests that exercise read only live aeat signals through real services; `tests/entrypoints/cli`.
-- [ ] `W54.P269.S1613` - Add end-to-end workflow coverage for read only live aeat signals; `tests`.
-- [ ] `W54.P269.S1614` - Run the targeted test slice for read only live aeat signals without skips or xfails; `tests/application/live`.
+- [x] `W54.P269.S1609` - Add service contract tests for read only live aeat signals; `tests/application/live`.
+- [x] `W54.P269.S1610` - Add persistence or registry integration tests for read only live aeat signals; `tests/application/live`.
+- [x] `W54.P269.S1611` - Add negative tests proving rejected aliases do not reach read only live aeat signals; `tests/entrypoints/cli`.
+- [x] `W54.P269.S1612` - Add command behavior tests that exercise read only live aeat signals through real services; `tests/entrypoints/cli`.
+- [x] `W54.P269.S1613` - Add end-to-end workflow coverage for read only live aeat signals; `tests`.
+- [x] `W54.P269.S1614` - Run the targeted test slice for read only live aeat signals without skips or xfails; `tests/application/live`.
 
 ### Phase `W54.P270` - thin cli exposure
 
 This Phase delivers thin cli exposure for read only live aeat signals as required by `2026-05-12-cli-workflow-redesign-app-live-shape-adr`.
 
-- [ ] `W54.P270.S1615` - Expose accepted command handlers for read only live aeat signals under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W54.P270.S1616` - Keep argument parsing for read only live aeat signals separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W54.P270.S1617` - Delegate read only live aeat signals execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W54.P270.S1618` - Render read only live aeat signals results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W54.P270.S1619` - Handle read only live aeat signals failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W54.P270.S1620` - Validate help text for read only live aeat signals uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W54.P270.S1615` - Expose accepted command handlers for read only live aeat signals under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W54.P270.S1616` - Keep argument parsing for read only live aeat signals separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W54.P270.S1617` - Delegate read only live aeat signals execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W54.P270.S1618` - Render read only live aeat signals results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W54.P270.S1619` - Handle read only live aeat signals failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W54.P270.S1620` - Validate help text for read only live aeat signals uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W55` - app registry boundary
 
@@ -4507,51 +4507,51 @@ Closes apex §12 ledger rows R12 (5 of 7 live subgroups missing) and R13 (portal
 
 Implement missing live subgroups and portals wrapper.
 
-- [ ] `W79.P380.S2179` - Read the app-live-shape and domain-portals-harvest ADRs and identify the 6 missing subgroups and their backend services; `.vault/adr`.
-- [ ] `W79.P380.S2180` - Implement application live notifications, expedientes, verify nif-iva tgvi, borrador, and application portals wrappers over existing domain adapters; `src/aeat/application`.
-- [ ] `W79.P380.S2181` - Add Pydantic command and result contracts for each subgroup; `src/aeat/application/live`.
-- [ ] `W79.P380.S2182` - Add the bucket event enum members for snapshot captures and verify reads; `src/aeat/domain/buckets`.
-- [ ] `W79.P380.S2183` - Ensure every persisted capture invokes require_live_read before remote contact while portals list and show remain local-only; `src/aeat/application/live`.
+- [x] `W79.P380.S2179` - Read the app-live-shape and domain-portals-harvest ADRs and identify the 6 missing subgroups and their backend services; `.vault/adr`.
+- [x] `W79.P380.S2180` - Implement application live notifications, expedientes, verify nif-iva tgvi, borrador, and application portals wrappers over existing domain adapters; `src/aeat/application`.
+- [x] `W79.P380.S2181` - Add Pydantic command and result contracts for each subgroup; `src/aeat/application/live`.
+- [x] `W79.P380.S2182` - Add the bucket event enum members for snapshot captures and verify reads; `src/aeat/domain/buckets`.
+- [x] `W79.P380.S2183` - Ensure every persisted capture invokes require_live_read before remote contact while portals list and show remain local-only; `src/aeat/application/live`.
 
 ### Phase `W79.P381` - shadow duplicate removal
 
 Confirm domain CLI deletion and consolidate filed reads.
 
-- [ ] `W79.P381.S2184` - Confirm domain/portals/_cli.py is fully deleted per apex §8 architectural violation; `src/aeat/domain/portals`.
-- [ ] `W79.P381.S2185` - Audit registry filed-read registrations and confirm they live under app live filed only per apex §4.5; `src/aeat/application/registry`.
-- [ ] `W79.P381.S2186` - Remove any legacy app registry list-filed-data and capture-filed-data references; `src/aeat/entrypoints/cli`.
-- [ ] `W79.P381.S2187` - Remove operator-facing manual fetch references per apex §4.5; `src/aeat/entrypoints/cli`.
-- [ ] `W79.P381.S2188` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W79.P381.S2184` - Confirm domain/portals/_cli.py is fully deleted per apex §8 architectural violation; `src/aeat/domain/portals`.
+- [x] `W79.P381.S2185` - Audit registry filed-read registrations and confirm they live under app live filed only per apex §4.5; `src/aeat/application/registry`.
+- [x] `W79.P381.S2186` - Remove any legacy app registry list-filed-data and capture-filed-data references; `src/aeat/entrypoints/cli`.
+- [x] `W79.P381.S2187` - Remove operator-facing manual fetch references per apex §4.5; `src/aeat/entrypoints/cli`.
+- [x] `W79.P381.S2188` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W79.P382` - de-shim and de-stub cleanup
 
 Enforce read-only portals and live-AEAT charter.
 
-- [ ] `W79.P382.S2189` - Remove any portal action verbs (open, submit, present, sign, pay) per apex §8 portals are read-only metadata; `src/aeat/application/portals`.
-- [ ] `W79.P382.S2190` - Confirm no command invokes require_live_write except refusal tests per live-AEAT charter; `src/aeat/application/live`.
-- [ ] `W79.P382.S2191` - Wire i18n help text with Spanish-anchored vocabulary (justificante, expediente, borrador, datos fiscales); `src/aeat/core/i18n`.
-- [ ] `W79.P382.S2192` - Remove deprecated live command spellings and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
-- [ ] `W79.P382.S2193` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W79.P382.S2189` - Remove any portal action verbs (open, submit, present, sign, pay) per apex §8 portals are read-only metadata; `src/aeat/application/portals`.
+- [x] `W79.P382.S2190` - Confirm no command invokes require_live_write except refusal tests per live-AEAT charter; `src/aeat/application/live`.
+- [x] `W79.P382.S2191` - Wire i18n help text with Spanish-anchored vocabulary (justificante, expediente, borrador, datos fiscales); `src/aeat/core/i18n`.
+- [x] `W79.P382.S2192` - Remove deprecated live command spellings and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
+- [x] `W79.P382.S2193` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W79.P383` - real behavior verification
 
 Test subgroups, events, CLI surface, live-read invocations.
 
-- [ ] `W79.P383.S2194` - Add service-contract tests for every new subgroup; `tests/application`.
-- [ ] `W79.P383.S2195` - Add bucket-event-emission tests for every persisting capture; `tests/domain/buckets`.
-- [ ] `W79.P383.S2196` - Add CLI surface tests for every new verb; `tests/entrypoints/cli`.
-- [ ] `W79.P383.S2197` - Add require_live_read invocation tests for every remote-contact verb and assert portals list and show do not invoke it; `tests/application/live`.
-- [ ] `W79.P383.S2198` - Add a refusal test for require_live_write paths to confirm charter compliance; `tests/application/live`.
+- [x] `W79.P383.S2194` - Add service-contract tests for every new subgroup; `tests/application`.
+- [x] `W79.P383.S2195` - Add bucket-event-emission tests for every persisting capture; `tests/domain/buckets`.
+- [x] `W79.P383.S2196` - Add CLI surface tests for every new verb; `tests/entrypoints/cli`.
+- [x] `W79.P383.S2197` - Add require_live_read invocation tests for every remote-contact verb and assert portals list and show do not invoke it; `tests/application/live`.
+- [x] `W79.P383.S2198` - Add a refusal test for require_live_write paths to confirm charter compliance; `tests/application/live`.
 
 ### Phase `W79.P384` - thin cli exposure
 
 Register Typer subgroups and update apex cross-references.
 
-- [ ] `W79.P384.S2199` - Register notifications_app, expedientes_app, verify_app, borrador_app, portals_app Typer subgroups under aeat app live; `src/aeat/entrypoints/cli/_app_live.py`.
-- [ ] `W79.P384.S2200` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
-- [ ] `W79.P384.S2201` - Wire help text and i18n and validate canonical vocabulary; `src/aeat/core/i18n`.
-- [ ] `W79.P384.S2202` - Update apex ADR §4.4 to reflect the shipped subgroups and mark R12 and R13 closed by W79; `.vault/adr`.
-- [ ] `W79.P384.S2203` - Amend app-live-shape and domain-portals-harvest child ADRs and close W35.P174 inline; `.vault/adr`.
+- [x] `W79.P384.S2199` - Register notifications_app, expedientes_app, verify_app, borrador_app, portals_app Typer subgroups under aeat app live; `src/aeat/entrypoints/cli/_app_live.py`.
+- [x] `W79.P384.S2200` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [x] `W79.P384.S2201` - Wire help text and i18n and validate canonical vocabulary; `src/aeat/core/i18n`.
+- [x] `W79.P384.S2202` - Update apex ADR §4.4 to reflect the shipped subgroups and mark R12 and R13 closed by W79; `.vault/adr`.
+- [x] `W79.P384.S2203` - Amend app-live-shape and domain-portals-harvest child ADRs and close W35.P174 inline; `.vault/adr`.
 
 ## Wave `W80` - Reconciliation: workflow + preflight + resume wiring
 
