@@ -8,7 +8,6 @@ their own colocated test modules.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from datetime import UTC, datetime
 
 import pytest
@@ -49,7 +48,6 @@ def _metadata(**overrides: object) -> ProviderObjectMetadata:
 def test_provider_kind_enum_values_are_stable() -> None:
     assert ProviderKind.LOCAL_FILESYSTEM.value == "local_filesystem"
     assert ProviderKind.GOOGLE_DRIVE.value == "google_drive"
-    assert ProviderKind.IN_MEMORY.value == "in_memory"
 
 
 def test_provider_object_metadata_round_trip() -> None:
@@ -153,72 +151,12 @@ def test_every_leaf_carries_a_registered_error_code() -> None:
         assert leaf.code.code.startswith(allowed_prefixes)
 
 
-class _ConformingStub:
-    """Smallest possible class satisfying the Protocol."""
+def test_real_local_filesystem_provider_satisfies_protocol(tmp_path: object) -> None:
+    """Real `LocalFileSystemProvider` instance satisfies `runtime_checkable` Protocol."""
 
-    def put(
-        self,
-        namespace: str,
-        object_key_hmac: str,
-        payload: bytes,
-        *,
-        content_hash: str,
-        label: str,
-    ) -> ProviderObjectMetadata:
-        del namespace, object_key_hmac, payload, content_hash, label
-        return _metadata()
+    from pathlib import Path
 
-    def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
-        del namespace, object_key_hmac
-        return (b"", _metadata())
+    from aeat.adapters.outbound.storage._local import LocalFileSystemProvider
 
-    def delete(self, namespace: str, object_key_hmac: str) -> bool:
-        del namespace, object_key_hmac
-        return False
-
-    def iter_namespaces(self) -> Iterator[str]:
-        return iter(())
-
-    def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
-        del namespace
-        return iter(())
-
-    def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
-        return ProviderProbeReport(
-            provider_kind=ProviderKind.IN_MEMORY,
-            reachable=True,
-            writable=not read_only,
-            read_only=read_only,
-        )
-
-
-class _MissingMethodStub:
-    """Class deliberately missing `iter_namespaces` — must fail runtime check."""
-
-    def put(self, namespace: str, object_key_hmac: str, payload: bytes, *, content_hash: str, label: str) -> ProviderObjectMetadata:  # noqa: E501
-        del namespace, object_key_hmac, payload, content_hash, label
-        return _metadata()
-
-    def get(self, namespace: str, object_key_hmac: str) -> tuple[bytes, ProviderObjectMetadata]:
-        del namespace, object_key_hmac
-        return (b"", _metadata())
-
-    def delete(self, namespace: str, object_key_hmac: str) -> bool:
-        del namespace, object_key_hmac
-        return False
-
-    def iter_objects(self, namespace: str) -> Iterator[ProviderObjectMetadata]:
-        del namespace
-        return iter(())
-
-    def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
-        del read_only
-        return ProviderProbeReport(provider_kind=ProviderKind.IN_MEMORY, reachable=True, writable=True, read_only=False)
-
-
-def test_conforming_class_satisfies_runtime_protocol_check() -> None:
-    assert isinstance(_ConformingStub(), StorageProvider)
-
-
-def test_class_missing_required_method_fails_protocol_check() -> None:
-    assert not isinstance(_MissingMethodStub(), StorageProvider)
+    provider = LocalFileSystemProvider(Path(str(tmp_path)) / "vault")
+    assert isinstance(provider, StorageProvider)

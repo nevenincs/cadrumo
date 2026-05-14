@@ -32,11 +32,8 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_refresh.py",
         "_session_store.py",
         "test_no_legacy_modules.py",
-        "test_oauth_flow.py",
         "test_oauth_live.py",
-        "test_profile_binding.py",
         "test_records.py",
-        "test_refresh.py",
     }
 )
 
