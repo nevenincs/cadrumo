@@ -37,6 +37,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.portals._service.PortalNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_PORTAL_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_portal_not_found",
+            default_suggestion="aeat app live portals list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.justificante._errors.PdfFilingImportError",
         ErrorCode(
             code="ERROR_PDF_IMPORT_PDF_FILING_IMPORT",
