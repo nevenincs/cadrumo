@@ -3,9 +3,6 @@ access_gate:
     default_translatable: live AEAT submission is permanently forbidden; use produce
       -> verify -> export and upload the file yourself in the AEAT portal
 aggregation:
-  counterpart:
-    errors:
-      unsupported_modelo: aggregation.counterpart.errors.unsupported_modelo
   iva_ledger:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
@@ -35,9 +32,6 @@ aggregation:
         Renta ledger bucket.
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
-  retenciones:
-    errors:
-      unsupported_modelo: aggregation.retenciones.errors.unsupported_modelo
 application:
   auth:
     provider_impact:
@@ -555,6 +549,30 @@ cli:
       key_help: Key to clear
     workflow_help: Show config workflow help
   ledger:
+    add:
+      actor_help: Operator name recorded on the bucket event
+      amount_help: Signed transaction amount in the bucket currency
+      attachment_help: Supplementary attachment id (repeatable)
+      business_pct_help: Business-use share from 0 to 1 (only when classification is
+        MIXED)
+      category_help: Spending or income category id
+      classification_help: Business classification (BUSINESS / PERSONAL / MIXED / ...)
+      counterparty_help: Counterparty descriptor
+      currency_help: Three-letter ISO 4217 currency code
+      date_help: Booked date (YYYY-MM-DD)
+      description_help: Non-blank narrative
+      direction_help: Transaction direction (INCOMING / OUTGOING / INTERNAL_TRANSFER)
+      help: Add one manual ledger transaction in the active profile bucket
+      idempotency_key_help: Caller-supplied idempotency key recorded with the row
+      irpf_category_help: IRPF-specific category key
+      iva_amount_help: Optional IVA amount on the row
+      iva_rate_help: Optional IVA rate as a decimal fraction
+      notes_help: Operator notes stored with the transaction
+      prorrata_reference_help: IVA prorrata substrate reference
+      purchase_invoice_evidence_help: Canonical purchase-invoice evidence id
+      taxable_base_help: VAT-exclusive base amount
+      usage_ratio_help: Usage-ratio id for proportional business use
+      value_date_help: Value date (YYYY-MM-DD)
     allocate:
       actor_help: Operator name recorded on the bucket event
       business_pct_help: Business-use share from 0 to 1
@@ -569,6 +587,7 @@ cli:
       help: Archive one ledger transaction in the active profile bucket
       id_help: Ledger transaction id to archive
       reason_help: Reason recorded in lifecycle history
+      yes_help: Confirm archiving the ledger transaction
     attach:
       actor_help: Operator name recorded on the bucket event
       attachment_help: Secure attachment id to link to the transaction; repeat for
@@ -587,59 +606,18 @@ cli:
       iva_amount_help: IVA amount
       iva_rate_help: IVA rate as a decimal, for example 0.21
       taxable_base_help: Taxable base amount
-    create:
-      actor_help: Operator name recorded on the bucket event
-      amount_help: Signed transaction amount; outgoing values are negative
-      attachment_help: Secure attachment id to link to the transaction; repeat for
-        multiple attachments
-      business_pct_help: Business-use share for MIXED classification, from 0 to 1
-      category_help: Spending or income category id
-      classification_help: Business classification state for the transaction
-      counterparty_help: Counterparty name shown in the ledger
-      currency_help: ISO 4217 currency code
-      date_help: Booking date (YYYY-MM-DD)
-      description_help: Ledger transaction description
-      direction_help: Transaction direction
-      help: Create a manual ledger transaction in the active profile bucket
-      idempotency_key_help: Stable key used to make repeated manual entry idempotent
-      irpf_category_help: IRPF category for modelo calculations
-      iva_amount_help: IVA amount
-      iva_rate_help: IVA rate as a decimal, for example 0.21
-      notes_help: Operator notes stored with the ledger transaction
-      prorrata_reference_help: IVA prorrata reference for VAT workflows
-      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
-        transaction
-      taxable_base_help: Taxable base amount
-      usage_ratio_help: Usage-ratio id for proportional business use
-      value_date_help: Value date (YYYY-MM-DD)
-    edit:
-      actor_help: Operator name recorded on the bucket event
-      amount_help: Signed transaction amount; outgoing values are negative
-      counterparty_help: Counterparty name shown in the ledger
-      currency_help: ISO 4217 currency code
-      date_help: Booking date (YYYY-MM-DD)
-      description_help: Ledger transaction description
-      direction_help: Transaction direction
-      help: Correct editable ledger transaction facts in the active profile bucket
-      id_help: Ledger transaction id to edit
-      irpf_category_help: IRPF category for modelo calculations
-      iva_amount_help: IVA amount
-      iva_rate_help: IVA rate as a decimal, for example 0.21
-      notes_help: Operator notes stored with the ledger transaction
-      taxable_base_help: Taxable base amount
-      value_date_help: Value date (YYYY-MM-DD)
     errors:
       confirm_required: Pass --yes to confirm this destructive ledger operation, or
         use --dry-run first
       filter_parse_error: Failed to parse ledger filter
-      id_prefix_collision: "Transaction id prefix %{prefix!r} matches more than one transaction: %{candidates}.
-        Lengthen the prefix to disambiguate."
+      id_prefix_collision: 'Transaction id prefix %{prefix!r} matches more than one
+        transaction: %{candidates}. Lengthen the prefix to disambiguate.'
       id_prefix_empty: Transaction id prefix is empty; pass at least one hex character.
-      id_prefix_not_found: 'No transaction matches id prefix %{prefix!r}.'
+      id_prefix_not_found: No transaction matches id prefix %{prefix!r}.
       id_prefix_not_hex: 'Transaction id prefix %{prefix!r} contains non-hex characters
         (allowed: 0-9, a-f).'
-      id_prefix_too_long: 'Transaction id prefix %{prefix!r} is longer than 64 characters
-        (a full SHA-256 digest).'
+      id_prefix_too_long: Transaction id prefix %{prefix!r} is longer than 64 characters
+        (a full SHA-256 digest).
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
     export:
       actor_help: Operator name recorded on the bucket event
@@ -647,6 +625,11 @@ cli:
       help: Export canonical ledger rows from the active profile bucket
       include_inactive_help: Include archived and stashed ledger transactions
       output_help: Path to write the exported ledger file
+    history:
+      help: Emit the chronological bucket-event chain for one ledger transaction id
+      id_help: Ledger transaction id (or unambiguous hex prefix) to inspect
+      include_split_siblings_help: Expand the chain to include events for every
+        split sibling that shares a split_group_id with this transaction
     import:
       dry_run_help: Run the import in dry-run mode (without saving)
       help: Import bank statements or records into the accounting ledger
@@ -662,17 +645,22 @@ cli:
       archived: Archived
       bucket: Bucket
       checked: Checked transactions
+      children: Children
       created_event_id: Created bucket event
       date: Date
       description: Description
       dialect: Detected format
       dry_run: DRY RUN MODE
+      event_count: Event count
+      event_id: Event id
       export_id: Export ID
       id: ID
       imported: Entries imported
       lifecycle_state: Lifecycle state
+      merged_id: Merged transaction id
       'no': 'No'
       output: Output
+      parent_id: Parent transaction id
       pending: Pending review
       period: Period
       readiness_issues: Readiness issues
@@ -685,6 +673,7 @@ cli:
       sha256: SHA-256
       skipped: Skipped
       source: Source
+      split_group_id: Split group id
       stashed: Stashed
       valid: Valid
       warnings: Warnings
@@ -692,9 +681,16 @@ cli:
     list:
       header: ACCOUNTING LEDGER TRANSACTIONS
       help: List ledger transactions in the active profile bucket
-    read:
-      help: Read one ledger transaction from the active profile bucket
-      transaction_id_help: Ledger transaction id to read
+    merge:
+      actor_help: Operator name recorded on the LEDGER_TRANSACTION_MERGED event
+      child_id_help: One child id (or unambiguous prefix) to merge. Repeat for
+        every sibling in the cohort; partial merges are refused.
+      errors:
+        min_two_children: ledger merge requires at least two --child-id values
+      help: Re-merge a complete cohort of split children into a fresh transaction
+      reason_help: Reason recorded in the bucket-event payload and lifecycle history
+      yes_help: Confirm the merge (archives every child and the parent, persists
+        a fresh content-addressed merged transaction)
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
@@ -715,11 +711,29 @@ cli:
       id_help: Identifier of the specific entry to review
       no_rows: No ledger entries pending review
       verbose_help: Show detailed information during review
+    split:
+      actor_help: Operator name recorded on the LEDGER_TRANSACTION_SPLIT event
+      child_amount_help: One child amount (signed Decimal in the parent's currency).
+        Repeat once per child; the count must match --child-description.
+      child_description_help: One child narrative. Repeat once per child; the count
+        must match --child-amount.
+      errors:
+        child_args_mismatch: ledger split requires the same number of --child-amount
+          and --child-description arguments
+        min_two_children: ledger split requires at least two --child-amount /
+          --child-description pairs
+      help: Redistribute one parent transaction into N child transactions whose
+        amounts sum to the parent amount exactly
+      id_help: Parent transaction id (or unambiguous hex prefix) to split
+      reason_help: Reason recorded in the bucket-event payload and lifecycle history
+      yes_help: Confirm the split (transitions the parent to SPLIT and persists
+        N child transactions)
     stash:
       actor_help: Operator name recorded on the bucket event
       help: Stash one ledger transaction in the active profile bucket
       id_help: Ledger transaction id to stash
       reason_help: Reason recorded in lifecycle history
+      yes_help: Confirm stashing the ledger transaction
     status:
       help: Summarize ledger state and calculation readiness for the active profile
         bucket
@@ -727,6 +741,25 @@ cli:
     track:
       help: Show the event lineage for one ledger transaction
       transaction_id_help: Ledger transaction id to inspect
+    update:
+      actor_help: Operator name recorded on the bucket event
+      amount_help: New signed amount (full replace)
+      counterparty_help: New counterparty descriptor
+      currency_help: New three-letter ISO 4217 currency code
+      date_help: New booked date (YYYY-MM-DD)
+      description_help: New narrative
+      direction_help: New transaction direction
+      help: Update one ledger transaction with full-replace field semantics
+      id_help: Ledger transaction id (or unambiguous hex prefix) to update
+      irpf_category_help: New IRPF-specific category key
+      iva_amount_help: New IVA amount
+      iva_rate_help: New IVA rate as a decimal fraction
+      notes_help: New operator notes
+      taxable_base_help: New VAT-exclusive base amount
+      value_date_help: New value date (YYYY-MM-DD)
+    view:
+      help: View one ledger transaction in the active profile bucket
+      transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
     app_help: Audit and scaffold locale catalogues
     scaffold_check_help: Report drift without writing locale files

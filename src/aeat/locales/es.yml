@@ -4,9 +4,6 @@ access_gate:
       usa produce -> verify -> export y sube el fichero manualmente en el portal de
       la AEAT
 aggregation:
-  counterpart:
-    errors:
-      unsupported_modelo: aggregation.counterpart.errors.unsupported_modelo
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
@@ -39,9 +36,6 @@ aggregation:
         libro de Renta.
       period_mismatch: El periodo no coincide con el periodo esperado del libro de
         Renta.
-  retenciones:
-    errors:
-      unsupported_modelo: aggregation.retenciones.errors.unsupported_modelo
 application:
   auth:
     provider_impact:
@@ -585,6 +579,29 @@ cli:
       key_help: Clave a limpiar
     workflow_help: Mostrar ayuda del flujo de configuración
   ledger:
+    add:
+      actor_help: cli.ledger.add.actor_help
+      amount_help: cli.ledger.add.amount_help
+      attachment_help: cli.ledger.add.attachment_help
+      business_pct_help: cli.ledger.add.business_pct_help
+      category_help: cli.ledger.add.category_help
+      classification_help: cli.ledger.add.classification_help
+      counterparty_help: cli.ledger.add.counterparty_help
+      currency_help: cli.ledger.add.currency_help
+      date_help: cli.ledger.add.date_help
+      description_help: cli.ledger.add.description_help
+      direction_help: cli.ledger.add.direction_help
+      help: cli.ledger.add.help
+      idempotency_key_help: cli.ledger.add.idempotency_key_help
+      irpf_category_help: cli.ledger.add.irpf_category_help
+      iva_amount_help: cli.ledger.add.iva_amount_help
+      iva_rate_help: cli.ledger.add.iva_rate_help
+      notes_help: cli.ledger.add.notes_help
+      prorrata_reference_help: cli.ledger.add.prorrata_reference_help
+      purchase_invoice_evidence_help: cli.ledger.add.purchase_invoice_evidence_help
+      taxable_base_help: cli.ledger.add.taxable_base_help
+      usage_ratio_help: cli.ledger.add.usage_ratio_help
+      value_date_help: cli.ledger.add.value_date_help
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
       business_pct_help: Proporción de uso profesional de 0 a 1
@@ -600,6 +617,7 @@ cli:
       help: Archivar un movimiento del libro en el bucket del perfil activo
       id_help: Id del movimiento del libro a archivar
       reason_help: Motivo registrado en el historial de ciclo de vida
+      yes_help: cli.ledger.archive.yes_help
     attach:
       actor_help: Nombre del operador registrado en el evento del bucket
       attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
@@ -618,54 +636,15 @@ cli:
       iva_amount_help: Importe de IVA
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       taxable_base_help: Importe de base imponible
-    create:
-      actor_help: Nombre del operador registrado en el evento del bucket
-      amount_help: Importe firmado del movimiento; las salidas son negativas
-      attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
-        varios adjuntos
-      business_pct_help: Proporción de uso profesional para clasificación MIXED, de
-        0 a 1
-      category_help: Id de categoría de gasto o ingreso
-      classification_help: Estado de clasificación profesional del movimiento
-      counterparty_help: Nombre de la contraparte mostrado en el libro
-      currency_help: Código de moneda ISO 4217
-      date_help: Fecha contable (AAAA-MM-DD)
-      description_help: Descripción del movimiento del libro
-      direction_help: Dirección del movimiento
-      help: Crear un movimiento manual del libro en el bucket del perfil activo
-      idempotency_key_help: Clave estable para hacer idempotente la entrada manual
-        repetida
-      irpf_category_help: Categoría de IRPF para cálculos de modelos
-      iva_amount_help: Importe de IVA
-      iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
-      notes_help: Notas del operador guardadas con el movimiento del libro
-      prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
-      purchase_invoice_evidence_help: Id de justificante de factura de compra que
-        soporta el movimiento
-      taxable_base_help: Importe de base imponible
-      usage_ratio_help: Id de proporción de uso para uso profesional proporcional
-      value_date_help: Fecha valor (AAAA-MM-DD)
-    edit:
-      actor_help: Nombre del operador registrado en el evento del bucket
-      amount_help: Importe firmado del movimiento; las salidas son negativas
-      counterparty_help: Nombre de la contraparte mostrado en el libro
-      currency_help: Código de moneda ISO 4217
-      date_help: Fecha contable (AAAA-MM-DD)
-      description_help: Descripción del movimiento del libro
-      direction_help: Dirección del movimiento
-      help: Corregir datos editables de un movimiento del libro en el bucket del perfil
-        activo
-      id_help: Id del movimiento del libro a editar
-      irpf_category_help: Categoría de IRPF para cálculos de modelos
-      iva_amount_help: Importe de IVA
-      iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
-      notes_help: Notas del operador guardadas con el movimiento del libro
-      taxable_base_help: Importe de base imponible
-      value_date_help: Fecha valor (AAAA-MM-DD)
     errors:
       confirm_required: Pasa --yes para confirmar esta operación destructiva del libro,
         o usa --dry-run primero
       filter_parse_error: Fallo al analizar el filtro del libro
+      id_prefix_collision: cli.ledger.errors.id_prefix_collision
+      id_prefix_empty: cli.ledger.errors.id_prefix_empty
+      id_prefix_not_found: cli.ledger.errors.id_prefix_not_found
+      id_prefix_not_hex: cli.ledger.errors.id_prefix_not_hex
+      id_prefix_too_long: cli.ledger.errors.id_prefix_too_long
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
     export:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -673,6 +652,10 @@ cli:
       help: Exportar movimientos canónicos del libro desde el bucket del perfil activo
       include_inactive_help: Incluir movimientos archivados y apartados
       output_help: Ruta donde escribir el archivo exportado del libro
+    history:
+      help: cli.ledger.history.help
+      id_help: cli.ledger.history.id_help
+      include_split_siblings_help: cli.ledger.history.include_split_siblings_help
     import:
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
       help: Importar extractos bancarios o registros al libro contable
@@ -688,17 +671,22 @@ cli:
       archived: Archivadas
       bucket: Bucket
       checked: Movimientos comprobados
+      children: cli.ledger.labels.children
       created_event_id: Evento bucket de creación
       date: Fecha
       description: Descripción
       dialect: Formato detectado
       dry_run: MODO DE PRUEBA (DRY RUN)
+      event_count: cli.ledger.labels.event_count
+      event_id: cli.ledger.labels.event_id
       export_id: ID de exportación
       id: ID
       imported: Entradas importadas
       lifecycle_state: Estado de ciclo de vida
+      merged_id: cli.ledger.labels.merged_id
       'no': 'No'
       output: Salida
+      parent_id: cli.ledger.labels.parent_id
       pending: Pendientes de revisión
       period: Periodo
       readiness_issues: Incidencias de preparación
@@ -711,6 +699,7 @@ cli:
       sha256: SHA-256
       skipped: Omitidos
       source: Origen
+      split_group_id: cli.ledger.labels.split_group_id
       stashed: Apartadas
       valid: Válido
       warnings: Avisos
@@ -718,9 +707,14 @@ cli:
     list:
       header: MOVIMIENTOS DEL LIBRO CONTABLE
       help: Listar movimientos del libro en el bucket del perfil activo
-    read:
-      help: Leer un movimiento del libro desde el bucket del perfil activo
-      transaction_id_help: Id del movimiento del libro a leer
+    merge:
+      actor_help: cli.ledger.merge.actor_help
+      child_id_help: cli.ledger.merge.child_id_help
+      errors:
+        min_two_children: cli.ledger.merge.errors.min_two_children
+      help: cli.ledger.merge.help
+      reason_help: cli.ledger.merge.reason_help
+      yes_help: cli.ledger.merge.yes_help
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
       dry_run_help: Informar los efectos sin eliminar el movimiento del libro
@@ -741,11 +735,23 @@ cli:
       id_help: Identificador de la entrada específica a revisar
       no_rows: No hay entradas del libro pendientes de revisión
       verbose_help: Mostrar información detallada durante la revisión
+    split:
+      actor_help: cli.ledger.split.actor_help
+      child_amount_help: cli.ledger.split.child_amount_help
+      child_description_help: cli.ledger.split.child_description_help
+      errors:
+        child_args_mismatch: cli.ledger.split.errors.child_args_mismatch
+        min_two_children: cli.ledger.split.errors.min_two_children
+      help: cli.ledger.split.help
+      id_help: cli.ledger.split.id_help
+      reason_help: cli.ledger.split.reason_help
+      yes_help: cli.ledger.split.yes_help
     stash:
       actor_help: Nombre del operador registrado en el evento del bucket
       help: Apartar un movimiento del libro en el bucket del perfil activo
       id_help: Id del movimiento del libro a apartar
       reason_help: Motivo registrado en el historial de ciclo de vida
+      yes_help: cli.ledger.stash.yes_help
     status:
       help: Resumir el estado del libro y la preparación de cálculo del bucket del
         perfil activo
@@ -753,6 +759,25 @@ cli:
     track:
       help: Mostrar el linaje de eventos de un movimiento del libro
       transaction_id_help: Id del movimiento del libro a inspeccionar
+    update:
+      actor_help: cli.ledger.update.actor_help
+      amount_help: cli.ledger.update.amount_help
+      counterparty_help: cli.ledger.update.counterparty_help
+      currency_help: cli.ledger.update.currency_help
+      date_help: cli.ledger.update.date_help
+      description_help: cli.ledger.update.description_help
+      direction_help: cli.ledger.update.direction_help
+      help: cli.ledger.update.help
+      id_help: cli.ledger.update.id_help
+      irpf_category_help: cli.ledger.update.irpf_category_help
+      iva_amount_help: cli.ledger.update.iva_amount_help
+      iva_rate_help: cli.ledger.update.iva_rate_help
+      notes_help: cli.ledger.update.notes_help
+      taxable_base_help: cli.ledger.update.taxable_base_help
+      value_date_help: cli.ledger.update.value_date_help
+    view:
+      help: cli.ledger.view.help
+      transaction_id_help: cli.ledger.view.transaction_id_help
   locales:
     app_help: Auditar y generar catálogos de traducción
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
