@@ -405,10 +405,10 @@ cli:
     google:
       client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
       folder:
-        folder_id_help: cli.config.google.folder.folder_id_help
-        get_help: cli.config.google.folder.get_help
-        help: cli.config.google.folder.help
-        set_help: cli.config.google.folder.set_help
+        folder_id_help: Google Drive folder id
+        get_help: Show the configured Google Drive root folder
+        help: Manage the Google Drive root folder binding
+        set_help: Bind a Google Drive folder id to the active profile
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow (or refresh an existing credential)
       logout_help: Clear the refresh token and metadata; preserve the registered client
@@ -431,14 +431,14 @@ cli:
           export_help: Export the registry calculation surface for a modelo+period
             to a Google Sheets workbook in the operator's `aeat-vault/`
           help: Schema-to-sheet calc surface (export and pull)
-        help: cli.config.google.sync.help
-        probe_help: cli.config.google.sync.probe_help
-        probe_read_only_help: cli.config.google.sync.probe_read_only_help
-        push_dry_run_help: cli.config.google.sync.push_dry_run_help
-        push_help: cli.config.google.sync.push_help
-        push_limit_help: cli.config.google.sync.push_limit_help
-        push_namespace_help: cli.config.google.sync.push_namespace_help
-        root_folder_id_unset: cli.config.google.sync.root_folder_id_unset
+        help: Push and probe local data against the configured Google Drive folder
+        probe_help: Probe the configured Google Drive folder for read/write access
+        probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
+        push_dry_run_help: Plan the push without uploading any files
+        push_help: Push the local data namespaces to the configured Google Drive folder
+        push_limit_help: Maximum number of files to push (defaults to no limit)
+        push_namespace_help: Namespace to push (repeatable; defaults to every namespace)
+        root_folder_id_unset: 'No Google Drive root folder is configured; run `aeat config google folder set <id>` first'
     init:
       activity_help: Economic activity description (e.g. 761.1, programador)
       auth_provider_help: Authentication provider ID to use for the profile
