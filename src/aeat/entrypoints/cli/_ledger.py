@@ -808,6 +808,135 @@ def ledger_review(
     _emit(ctx, payload, lines)
 
 
+ratios_app = typer.Typer(
+    name="ratios",
+    help="Per-category proportional-deduction overrides.",
+    no_args_is_help=True,
+)
+app.add_typer(ratios_app, name="ratios")
+
+
+def _ratios_bucket_id() -> str:
+    """Return the active workflow bucket id or raise the standard CLI refusal."""
+
+    from ...application.workflow._models import active_bucket_id_or_raise
+    from ...application.workflow._persistence import workflow_state_repository
+
+    try:
+        return active_bucket_id_or_raise(workflow_state_repository().load())
+    except Exception as exc:  # NoActiveProfileError + downstream raises
+        raise _bad(tr("cli.config.errors.no_active_profile")) from exc
+
+
+def _resolve_category(raw: str):
+    from ...domain.categories import SpendingCategory
+
+    try:
+        return SpendingCategory(raw.strip())
+    except ValueError as exc:
+        raise _bad(f"Unknown spending category: {raw!r}") from exc
+
+
+@ratios_app.command("list", help="List every per-category usage-ratio override on the active bucket.")
+def ratios_list(ctx: typer.Context) -> None:
+    from ...domain.usage_ratios import load_usage_ratios
+
+    bucket_id = _ratios_bucket_id()
+    profile = load_usage_ratios(bucket_id=bucket_id)
+    rows = [
+        {"category": category.value, "ratio": str(ratio)}
+        for category, ratio in profile.ratios.items()
+    ]
+    payload = {"bucket_id": bucket_id, "rows": rows, "count": len(rows)}
+    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    lines.extend(f"{row['category']}\t{row['ratio']}" for row in rows)
+    _emit(ctx, payload, lines)
+
+
+@ratios_app.command("set", help="Set or replace one per-category usage-ratio override.")
+def ratios_set(
+    ctx: typer.Context,
+    category: str = typer.Argument(..., help="Spending category id (e.g. USAGE_RATIO_VEHICLE)."),
+    ratio: str = typer.Argument(..., help="Override ratio in the closed interval [0, 1]."),
+) -> None:
+    from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
+
+    category_enum = _resolve_category(category)
+    parsed = _parse_required_decimal(ratio, label="ratio")
+    bucket_id = _ratios_bucket_id()
+    profile = load_usage_ratios(bucket_id=bucket_id)
+    updated = profile.with_ratio(category_enum, parsed)
+    save_usage_ratios(updated, bucket_id=bucket_id)
+    payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": str(parsed)}
+    _emit(
+        ctx,
+        payload,
+        (f"bucket\t{bucket_id}", f"{category_enum.value}\t{parsed}"),
+    )
+
+
+@ratios_app.command("unset", help="Clear one per-category usage-ratio override.")
+def ratios_unset(
+    ctx: typer.Context,
+    category: str = typer.Argument(..., help="Spending category id whose override to clear."),
+) -> None:
+    from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
+
+    category_enum = _resolve_category(category)
+    bucket_id = _ratios_bucket_id()
+    profile = load_usage_ratios(bucket_id=bucket_id)
+    if category_enum not in profile.ratios:
+        raise _bad(
+            f"No persisted override for category {category_enum.value!r} on bucket {bucket_id!r}"
+        )
+    updated = profile.without_ratio(category_enum)
+    save_usage_ratios(updated, bucket_id=bucket_id)
+    payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": ""}
+    _emit(ctx, payload, (f"bucket\t{bucket_id}", f"{category_enum.value}\t<unset>"))
+
+
+@ratios_app.command("eligible", help="List every category that may carry a per-category override.")
+def ratios_eligible(ctx: typer.Context) -> None:
+    from ...application.ledger._ratios import list_eligible_ratios_for_bucket
+
+    bucket_id = _ratios_bucket_id()
+    rows = list_eligible_ratios_for_bucket(bucket_id=bucket_id)
+    payload = {
+        "bucket_id": bucket_id,
+        "rows": [row.model_dump(mode="json") for row in rows],
+        "count": len(rows),
+    }
+    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    for row in rows:
+        default = "" if row.default_ratio is None else str(row.default_ratio)
+        override_marker = "X" if row.override_present else "."
+        lines.append(
+            f"{row.category.value}\t{row.proportionality_kind}\tdefault={default or '-'}\toverride={override_marker}"
+        )
+    _emit(ctx, payload, lines)
+
+
+@ratios_app.command("validate", help="Validate the per-category overrides against eligibility + bound rules.")
+def ratios_validate(ctx: typer.Context) -> None:
+    from ...application.ledger._ratios import validate_ratios_for_bucket
+
+    bucket_id = _ratios_bucket_id()
+    report = validate_ratios_for_bucket(bucket_id=bucket_id)
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"profile_present\t{report.profile_present}",
+        f"eligible\t{report.eligible_count}",
+        f"overrides\t{report.overrides_count}",
+    ]
+    if report.missing_overrides:
+        lines.append("missing\t" + ",".join(c.value for c in report.missing_overrides))
+    for finding in report.findings:
+        detail = f"\t{finding.detail}" if finding.detail else ""
+        lines.append(f"finding\t{finding.category.value}\t{finding.kind}{detail}")
+    _emit(ctx, payload, lines)
+
+
 evidence_app = typer.Typer(
     name="evidence",
     help="Purchase invoice evidence records (PDF or image).",
