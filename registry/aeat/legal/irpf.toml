@@ -93,6 +93,68 @@ required_text = [
     "pagos fraccionados a cuenta del Impuesto sobre la Renta",
 ]
 
+[legal."ley-35-2006:art-68.1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-68-1.html#articulo-68-1"
+document_id = "BOE-A-2006-20764"
+article = "68.1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Deduccion por inversion en empresas de nueva o reciente creacion. 50 per cent of amounts paid in the period for the subscription of shares or holdings in new or recent-creation enterprises, subject to the conditions set out in the sub-paragraphs 2 and 3, plus contribution of business or professional knowledge per the investment agreement. Maximum annual deduction base is 100,000 euros."
+required_text = [
+    "Deducción por inversión en empresas de nueva o reciente creación",
+    "50 por ciento de las cantidades satisfechas",
+    "La base máxima de deducción será de 100.000 euros anuales",
+]
+
+[legal."ley-35-2006:art-68.2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-68-2.html#articulo-68-2"
+document_id = "BOE-A-2006-20764"
+article = "68.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Deducciones en actividades economicas. Cross-references the Impuesto sobre Sociedades incentives and inversion empresarial regime at equal percentages and limits, with carve-outs for the IS article 39 paragraphs 2 and 3. Adds a Modelo-100-specific 5 per cent (or 2.5 per cent) reinversion-of-net-business-income deduction for taxpayers meeting the Impuesto sobre Sociedades art. 101 requirements."
+required_text = [
+    "Deducciones en actividades económicas",
+    "incentivos y estímulos a la inversión empresarial",
+    "El porcentaje de deducción será del 5 por ciento",
+    "2,5 por ciento cuando el contribuyente hubiera practicado la reducción",
+]
+
+[legal."ley-35-2006:art-68.3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-68-3.html#articulo-68-3"
+document_id = "BOE-A-2006-20764"
+article = "68.3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Deducciones por donativos y otras aportaciones. Three concurrent regimes: (a) Ley 49/2002 mecenazgo deductions; (b) 10 per cent of donations to legally recognised foundations and public-utility associations not covered by Ley 49/2002; (c) 20 per cent of party-affiliation fees and political contributions with a 600 euro annual base cap."
+required_text = [
+    "Deducciones por donativos y otras aportaciones",
+    "10 por ciento de las cantidades donadas",
+    "20 por ciento de las cuotas de afiliación",
+    "La base máxima de esta deducción será de 600 euros anuales",
+]
+
 [legal."ley-35-2006:art-68.4"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -111,6 +173,47 @@ required_text = [
     "Deducción por rentas obtenidas en Ceuta o Melilla",
     "ejercicio de actividades económicas",
     "60 por ciento",
+]
+
+[legal."ley-35-2006:art-68.5"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-68-5.html#articulo-68-5"
+document_id = "BOE-A-2006-20764"
+article = "68.5"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a68"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Deduccion por actuaciones para la proteccion y difusion del Patrimonio Historico Espanol y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Historico Espanol assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interes cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
+required_text = [
+    "Deducción por actuaciones para la protección y difusión del Patrimonio Histórico Español",
+    "deducción en la cuota del 15 por ciento",
+    "bienes de interés cultural",
+    "Patrimonio Mundial",
+]
+
+[legal."ley-35-2006:art-69"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-69.html#articulo-69"
+document_id = "BOE-A-2006-20764"
+article = "69"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a69"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Limites de determinadas deducciones. Caps the base of the art. 68.3 (donativos) and art. 68.5 (Patrimonio Historico) deductions at 10 per cent of the contribuyente's base liquidable. The limits on art. 68.2 (actividades economicas) follow the Impuesto sobre Sociedades incentivos regime and are computed after subtracting art. 68.1 (empresas nueva creacion) and art. 68.5 (Patrimonio Historico) from the combined estatal + autonomica cuota integra."
+required_text = [
+    "Límites de determinadas deducciones",
+    "no podrá exceder para cada una de ellas del 10 por ciento de la base liquidable del contribuyente",
+    "los que establezca la normativa del Impuesto sobre Sociedades",
 ]
 
 [legal."orden-hac-1264-2018:art-4"]
