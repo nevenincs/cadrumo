@@ -246,10 +246,12 @@ def _default_passphrase_callback() -> str:
     ``$(cat .secret)``), but interior whitespace is preserved (some
     passphrase policies require it).
     """
-    env_value = os.environ.get(PASSPHRASE_ENV_VAR)
-    if env_value:
+    from .....core.config import load_settings
+
+    configured = load_settings().aeat_secret_passphrase
+    if configured is not None:
         # Strip trailing CRLF only — the shell often appends it.
-        normalized = env_value.rstrip("\r\n")
+        normalized = configured.get_secret_value().rstrip("\r\n")
         if not normalized:
             raise SecretStoreError(
                 f"{PASSPHRASE_ENV_VAR} is set to whitespace-only; supply a non-empty passphrase.",
