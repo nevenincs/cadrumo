@@ -593,40 +593,40 @@ This Phase delivers shadow duplicate removal for profile backend schema as requi
 - [x] `W09.P042.S0249` - Remove stale aliases that bypass the canonical service for profile backend schema; `src/aeat/entrypoints/cli`.
 - [x] `W09.P042.S0250` - Migrate internal callers to the canonical service for profile backend schema; `src/aeat/application/profile`.
 - [x] `W09.P042.S0251` - Remove stale fixtures and tests that encode duplicate behavior for profile backend schema; `tests/application/profile`.
-- [ ] `W09.P042.S0252` - Update boundary inventory entries that describe duplicate behavior for profile backend schema; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W09.P042.S0252` - Update boundary inventory entries that describe duplicate behavior for profile backend schema; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W09.P043` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for profile backend schema as required by `2026-05-07-user-profile-backend-schema-adr`.
 
-- [ ] `W09.P043.S0253` - Delete compatibility shims that preserve rejected behavior for profile backend schema; `src/aeat/application/profile`.
-- [ ] `W09.P043.S0254` - Delete placeholder stubs that claim support for profile backend schema; `src/aeat/application/profile`.
-- [ ] `W09.P043.S0255` - Replace stubbed paths with real backend service calls for profile backend schema; `src/aeat/application/profile`.
-- [ ] `W09.P043.S0256` - Remove deprecated command spelling and help text for profile backend schema; `src/aeat/entrypoints/cli`.
-- [ ] `W09.P043.S0257` - Remove tests that assert shim or stub behavior for profile backend schema; `tests/application/profile`.
-- [ ] `W09.P043.S0258` - Record the removed shim and stub surfaces for profile backend schema; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W09.P043.S0253` - Delete compatibility shims that preserve rejected behavior for profile backend schema; `src/aeat/application/profile`.
+- [x] `W09.P043.S0254` - Delete placeholder stubs that claim support for profile backend schema; `src/aeat/application/profile`.
+- [x] `W09.P043.S0255` - Replace stubbed paths with real backend service calls for profile backend schema; `src/aeat/application/profile`.
+- [x] `W09.P043.S0256` - Remove deprecated command spelling and help text for profile backend schema; `src/aeat/entrypoints/cli`.
+- [x] `W09.P043.S0257` - Remove tests that assert shim or stub behavior for profile backend schema; `tests/application/profile`.
+- [x] `W09.P043.S0258` - Record the removed shim and stub surfaces for profile backend schema; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W09.P044` - real behavior verification
 
 This Phase delivers real behavior verification for profile backend schema as required by `2026-05-07-user-profile-backend-schema-adr`.
 
-- [ ] `W09.P044.S0259` - Add service contract tests for profile backend schema; `tests/application/profile`.
-- [ ] `W09.P044.S0260` - Add persistence or registry integration tests for profile backend schema; `tests/application/profile`.
-- [ ] `W09.P044.S0261` - Add negative tests proving rejected aliases do not reach profile backend schema; `tests/entrypoints/cli`.
-- [ ] `W09.P044.S0262` - Add command behavior tests that exercise profile backend schema through real services; `tests/entrypoints/cli`.
-- [ ] `W09.P044.S0263` - Add end-to-end workflow coverage for profile backend schema; `tests`.
-- [ ] `W09.P044.S0264` - Run the targeted test slice for profile backend schema without skips or xfails; `tests/application/profile`.
+- [x] `W09.P044.S0259` - Add service contract tests for profile backend schema; `tests/application/profile`.
+- [x] `W09.P044.S0260` - Add persistence or registry integration tests for profile backend schema; `tests/application/profile`.
+- [x] `W09.P044.S0261` - Add negative tests proving rejected aliases do not reach profile backend schema; `tests/entrypoints/cli`.
+- [x] `W09.P044.S0262` - Add command behavior tests that exercise profile backend schema through real services; `tests/entrypoints/cli`.
+- [x] `W09.P044.S0263` - Add end-to-end workflow coverage for profile backend schema; `tests`.
+- [x] `W09.P044.S0264` - Run the targeted test slice for profile backend schema without skips or xfails; `tests/application/profile`.
 
 ### Phase `W09.P045` - thin cli exposure
 
 This Phase delivers thin cli exposure for profile backend schema as required by `2026-05-07-user-profile-backend-schema-adr`.
 
-- [ ] `W09.P045.S0265` - Expose accepted command handlers for profile backend schema under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W09.P045.S0266` - Keep argument parsing for profile backend schema separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W09.P045.S0267` - Delegate profile backend schema execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W09.P045.S0268` - Render profile backend schema results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W09.P045.S0269` - Handle profile backend schema failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W09.P045.S0270` - Validate help text for profile backend schema uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W09.P045.S0265` - Expose accepted command handlers for profile backend schema under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W09.P045.S0266` - Keep argument parsing for profile backend schema separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W09.P045.S0267` - Delegate profile backend schema execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W09.P045.S0268` - Render profile backend schema results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W09.P045.S0269` - Handle profile backend schema failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W09.P045.S0270` - Validate help text for profile backend schema uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W10` - config profile surface
 

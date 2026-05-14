@@ -63,7 +63,7 @@ _KNOWN_FINDINGS: tuple[BoundaryFinding, ...] = (
     BoundaryFinding(
         row_id="CLI-001",
         source="src/aeat/entrypoints/cli/_common.py",
-        symbols=("_canonical_period", "_profile_to_autonomo", "_aggregate_filing_inputs"),
+        symbols=("_canonical_period", "_aggregate_filing_inputs"),
         backend_gap="API-005",
         owner="application.filing",
     ),
