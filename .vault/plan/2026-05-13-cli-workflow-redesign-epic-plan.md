@@ -4723,51 +4723,51 @@ Closes apex §12 ledger row R20. The atomic init service is missing and bucket.c
 
 Build the atomic initialize_workspace service and wire events.
 
-- [ ] `W83.P400.S2279` - Read the config-init-shape and aeat-cli-config-vs-setup-namespace ADRs; `.vault/adr`.
-- [ ] `W83.P400.S2280` - Implement application setup service exposing initialize_workspace that atomically creates first bucket, profile record, active selection, validates readiness, runs internal setup-state migration; `src/aeat/application/setup`.
-- [ ] `W83.P400.S2281` - Wire emission of bucket.created, profile.created, profile.activated, profile.updated, auth.provider.configured, optional config.env.updated, setup.state.migrated events; `src/aeat/application/setup`.
-- [ ] `W83.P400.S2282` - Salvage typed answers, prompter abstraction, verifier checks from SetupWizard per apex §8 - the wizard command surface is retired in favor of the atomic service; `src/aeat/application/setup`.
-- [ ] `W83.P400.S2283` - Close the aeat config auth setup orphan reference W11 P051 blocker by either shipping the verb or removing the diagnostic next-action that points at it; `src/aeat/application/config`.
+- [x] `W83.P400.S2279` - Read the config-init-shape and aeat-cli-config-vs-setup-namespace ADRs; `.vault/adr`.
+- [x] `W83.P400.S2280` - Implement application setup service exposing initialize_workspace that atomically creates first bucket, profile record, active selection, validates readiness, runs internal setup-state migration; `src/aeat/application/setup`.
+- [x] `W83.P400.S2281` - Wire emission of bucket.created, profile.created, profile.activated, profile.updated, auth.provider.configured, optional config.env.updated, setup.state.migrated events; `src/aeat/application/setup`.
+- [x] `W83.P400.S2282` - Salvage typed answers, prompter abstraction, verifier checks from SetupWizard per apex §8 - the wizard command surface is retired in favor of the atomic service; `src/aeat/application/setup`.
+- [x] `W83.P400.S2283` - Close the aeat config auth setup orphan reference W11 P051 blocker by either shipping the verb or removing the diagnostic next-action that points at it; `src/aeat/application/config`.
 
 ### Phase `W83.P401` - shadow duplicate removal
 
 Audit wizard registration and consolidate init paths.
 
-- [ ] `W83.P401.S2284` - Audit _register_wizard_commands and confirm the init command is the sole canonical first-run entry; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W83.P401.S2285` - Remove any duplicate workspace-initialization code paths and consolidate behind initialize_workspace; `src/aeat/application`.
-- [ ] `W83.P401.S2286` - Confirm aeat setup init and root aeat setup are fully retired per apex §1 fold-under; `src/aeat/entrypoints/cli`.
-- [ ] `W83.P401.S2287` - Remove stale wizard-flow command registrations per apex §9 mandate; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W83.P401.S2288` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W83.P401.S2284` - Audit _register_wizard_commands and confirm the init command is the sole canonical first-run entry; `src/aeat/entrypoints/cli/_config`.
+- [x] `W83.P401.S2285` - Remove any duplicate workspace-initialization code paths and consolidate behind initialize_workspace; `src/aeat/application`.
+- [x] `W83.P401.S2286` - Confirm aeat setup init and root aeat setup are fully retired per apex §1 fold-under; `src/aeat/entrypoints/cli`.
+- [x] `W83.P401.S2287` - Remove stale wizard-flow command registrations per apex §9 mandate; `src/aeat/entrypoints/cli/_config`.
+- [x] `W83.P401.S2288` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W83.P402` - de-shim and de-stub cleanup
 
 Retire SETUP_FLOW registration and update post-init hint.
 
-- [ ] `W83.P402.S2289` - Remove _register_wizard_commands SETUP_FLOW registration per apex §9 mandate while preserving typed-answers, prompter, verifier primitives consumed by initialize_workspace; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W83.P402.S2290` - Update post-init hint to aeat app overview status leaf-target per W70.P335 guard; `src/aeat/application/config`.
-- [ ] `W83.P402.S2291` - Wire help text and i18n for the full aeat config init flag set per apex §3.1 canonical command; `src/aeat/core/i18n`.
-- [ ] `W83.P402.S2292` - Remove deprecated init command spellings; `src/aeat/core/i18n`.
-- [ ] `W83.P402.S2293` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W83.P402.S2289` - Remove _register_wizard_commands SETUP_FLOW registration per apex §9 mandate while preserving typed-answers, prompter, verifier primitives consumed by initialize_workspace; `src/aeat/entrypoints/cli/_config`.
+- [x] `W83.P402.S2290` - Update post-init hint to aeat app overview status leaf-target per W70.P335 guard; `src/aeat/application/config`.
+- [x] `W83.P402.S2291` - Wire help text and i18n for the full aeat config init flag set per apex §3.1 canonical command; `src/aeat/core/i18n`.
+- [x] `W83.P402.S2292` - Remove deprecated init command spellings; `src/aeat/core/i18n`.
+- [x] `W83.P402.S2293` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W83.P403` - real behavior verification
 
 Test atomic init, flag acceptance, hint guard, false-positive guard.
 
-- [ ] `W83.P403.S2294` - Add tests asserting initialize_workspace atomically creates bucket, profile, active selection and emits all required events; `tests/application/setup`.
-- [ ] `W83.P403.S2295` - Add tests asserting all flags from apex §3.1 are accepted; `tests/entrypoints/cli`.
-- [ ] `W83.P403.S2296` - Add tests asserting post-init hint targets aeat app overview status leaf and passes the W70.P335 guard; `tests/entrypoints/cli`.
-- [ ] `W83.P403.S2297` - Add E2E test asserting aeat config init followed by aeat config repair produces zero fail or warn rows per W70.P334 false-positive guard; `tests/entrypoints/cli`.
-- [ ] `W83.P403.S2298` - Add negative tests for aeat setup init and aeat config init wizard retired paths; `tests/entrypoints/cli`.
+- [x] `W83.P403.S2294` - Add tests asserting initialize_workspace atomically creates bucket, profile, active selection and emits all required events; `tests/application/setup`.
+- [x] `W83.P403.S2295` - Add tests asserting all flags from apex §3.1 are accepted; `tests/entrypoints/cli`.
+- [x] `W83.P403.S2296` - Add tests asserting post-init hint targets aeat app overview status leaf and passes the W70.P335 guard; `tests/entrypoints/cli`.
+- [x] `W83.P403.S2297` - Add E2E test asserting aeat config init followed by aeat config repair produces zero fail or warn rows per W70.P334 false-positive guard; `tests/entrypoints/cli`.
+- [x] `W83.P403.S2298` - Add negative tests for aeat setup init and aeat config init wizard retired paths; `tests/entrypoints/cli`.
 
 ### Phase `W83.P404` - thin cli exposure
 
 Register canonical init command and update apex cross-references.
 
-- [ ] `W83.P404.S2299` - Register the canonical aeat config init command per apex §3.1 with the full flag set and wire to initialize_workspace; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W83.P404.S2300` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
-- [ ] `W83.P404.S2301` - Wire help text and i18n; `src/aeat/core/i18n`.
-- [ ] `W83.P404.S2302` - Update apex ADR §3.1 to ratify the atomic service shape and mark R20 closed by W83; `.vault/adr`.
-- [ ] `W83.P404.S2303` - Amend config-init-shape and aeat-cli-config-vs-setup-namespace child ADRs; `.vault/adr`.
+- [x] `W83.P404.S2299` - Register the canonical aeat config init command per apex §3.1 with the full flag set and wire to initialize_workspace; `src/aeat/entrypoints/cli/_config`.
+- [x] `W83.P404.S2300` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [x] `W83.P404.S2301` - Wire help text and i18n; `src/aeat/core/i18n`.
+- [x] `W83.P404.S2302` - Update apex ADR §3.1 to ratify the atomic service shape and mark R20 closed by W83; `.vault/adr`.
+- [x] `W83.P404.S2303` - Amend config-init-shape and aeat-cli-config-vs-setup-namespace child ADRs; `.vault/adr`.
 
 ## Wave `W84` - Reconciliation: aggregation taxonomy enforcement
 
