@@ -1,0 +1,220 @@
+"""WorkflowState-aware orchestration over :class:`ProfileLifecycleService`.
+
+The lifecycle service handles secure-DB persistence and BucketEvent
+emission per profile. This module threads :class:`WorkflowState`
+pointers (``profiles``, ``active_profile``) and the workflow-level
+:class:`WorkflowEvent` audit stream around those calls so CLI surfaces
+do not duplicate that wiring.
+
+Bucket identity convention: ``bucket_id == profile_id``. A future
+W74A split into one-bucket-many-profiles will relax this; the
+orchestration helpers below are the single place that conflation
+lives.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterable
+
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...domain.user_profile import (
+    DEFAULT_USER_PROFILE_SCHEMA_PATH,
+    ProfileNotFoundError,
+    ProfileSchemaDefinition,
+    UserProfileFact,
+    UserProfileRecord,
+    load_user_profile_schema,
+)
+from ..workflow._models import ProfileBucketPointer, WorkflowEvent, WorkflowState
+from ..workflow._utils import utc_now
+from . import (
+    EditProfileFieldCommand,
+    ProfileValidationService,
+    RegisterProfileCommand,
+    RemoveProfileCommand,
+    UserProfileLifecycleRepository,
+)
+from ._lifecycle import ProfileLifecycleService
+
+_SHARED_SCHEMA: ProfileSchemaDefinition | None = None
+
+
+def _shared_schema() -> ProfileSchemaDefinition:
+    """Return the canonical schema, loaded once per process."""
+
+    global _SHARED_SCHEMA
+    if _SHARED_SCHEMA is None:
+        _SHARED_SCHEMA = load_user_profile_schema(DEFAULT_USER_PROFILE_SCHEMA_PATH)
+    return _SHARED_SCHEMA
+
+
+def build_lifecycle_service(
+    *,
+    bucket_id: str,
+    secure_objects: SecureObjectRepository | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> ProfileLifecycleService:
+    """Construct a :class:`ProfileLifecycleService` for one bucket."""
+
+    schema = schema or _shared_schema()
+    return ProfileLifecycleService(
+        repository=UserProfileLifecycleRepository(bucket_id=bucket_id, objects=secure_objects),
+        validator=ProfileValidationService(schema=schema),
+    )
+
+
+def _append_workflow_event(state: WorkflowState, *, action: str, bucket_id: str, object_id: str) -> WorkflowState:
+    event = WorkflowEvent(action=action, bucket_id=bucket_id, object_id=object_id)
+    return state.model_copy(update={"bucket_events": (*state.bucket_events, event), "updated_at": utc_now()})
+
+
+def register_active_profile(
+    state: WorkflowState,
+    *,
+    profile_id: str,
+    display_name: str,
+    facts: tuple[UserProfileFact, ...] = (),
+    secure_objects: SecureObjectRepository | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> WorkflowState:
+    """Register a new profile and make it the active one.
+
+    Atomically:
+    - Persists the new :class:`UserProfileRecord` via the lifecycle
+      service (which emits ``PROFILE_BUCKET_CREATED`` and, if facts
+      were supplied, ``PROFILE_VALUES_UPDATED``).
+    - Records the active profile pointer in
+      :attr:`WorkflowState.profiles` and selects it.
+    - Appends ``profile.created`` and ``profile.selected``
+      WorkflowEvents.
+    """
+
+    service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
+    service.register(
+        RegisterProfileCommand(profile_id=profile_id, display_name=display_name, facts=facts)
+    )
+    profiles = dict(state.profiles)
+    profiles[profile_id] = ProfileBucketPointer(bucket_id=profile_id)
+    updated = state.model_copy(update={"active_profile": profile_id, "profiles": profiles, "updated_at": utc_now()})
+    updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
+    return _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
+
+
+def select_profile(
+    state: WorkflowState,
+    *,
+    profile_id: str,
+    secure_objects: SecureObjectRepository | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> WorkflowState:
+    """Select an existing profile as active.
+
+    Raises :class:`ProfileNotFoundError` if the profile does not
+    already exist; registration is the explicit path
+    (:func:`register_active_profile`).
+    """
+
+    service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
+    service.read(profile_id)  # raises ProfileNotFoundError if missing
+    profiles = dict(state.profiles)
+    profiles[profile_id] = ProfileBucketPointer(bucket_id=profile_id)
+    updated = state.model_copy(update={"active_profile": profile_id, "profiles": profiles, "updated_at": utc_now()})
+    return _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
+
+
+def set_active_field(
+    state: WorkflowState,
+    fact: UserProfileFact,
+    *,
+    secure_objects: SecureObjectRepository | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> WorkflowState:
+    """Upsert one fact on the active profile and append a WorkflowEvent."""
+
+    profile_id = _require_active(state)
+    service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
+    service.edit_field(
+        EditProfileFieldCommand(
+            profile_id=profile_id,
+            path=fact.path,
+            value=fact.value,
+            valid_from=fact.valid_from,
+            valid_to=fact.valid_to,
+            source=fact.source,
+        )
+    )
+    action = "profile.values.cleared" if fact.value is None else "profile.values.updated"
+    return _append_workflow_event(state, action=action, bucket_id=profile_id, object_id=fact.path)
+
+
+def set_active_fields(
+    state: WorkflowState,
+    facts: Iterable[UserProfileFact],
+    *,
+    secure_objects: SecureObjectRepository | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> WorkflowState:
+    """Upsert several facts on the active profile in sequence."""
+
+    updated = state
+    for fact in facts:
+        updated = set_active_field(updated, fact, secure_objects=secure_objects, schema=schema)
+    return updated
+
+
+def remove_active_profile(
+    state: WorkflowState,
+    *,
+    secure_objects: SecureObjectRepository | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> WorkflowState:
+    """Tombstone the active profile and clear the active pointer.
+
+    The bucket pointer in :attr:`WorkflowState.profiles` is retained so
+    audit and history reads can still resolve the bucket; selecting
+    the tombstoned profile via :func:`select_profile` will raise
+    because the record is no longer live.
+    """
+
+    profile_id = _require_active(state)
+    service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
+    service.remove(RemoveProfileCommand(profile_id=profile_id))
+    updated = state.model_copy(update={"active_profile": None, "updated_at": utc_now()})
+    return _append_workflow_event(updated, action="profile.tombstoned", bucket_id=profile_id, object_id=profile_id)
+
+
+def read_active_profile(
+    state: WorkflowState,
+    *,
+    secure_objects: SecureObjectRepository | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> UserProfileRecord | None:
+    """Return the active :class:`UserProfileRecord`, or ``None`` when none is selected."""
+
+    if state.active_profile is None:
+        return None
+    pointer = state.profiles.get(state.active_profile)
+    if pointer is None:
+        return None
+    service = build_lifecycle_service(bucket_id=pointer.bucket_id, secure_objects=secure_objects, schema=schema)
+    try:
+        return service.read(state.active_profile)
+    except ProfileNotFoundError:
+        return None
+
+
+def _require_active(state: WorkflowState) -> str:
+    if state.active_profile is None:
+        raise ProfileNotFoundError("no active profile selected")
+    return state.active_profile
+
+
+__all__ = [
+    "build_lifecycle_service",
+    "read_active_profile",
+    "register_active_profile",
+    "remove_active_profile",
+    "select_profile",
+    "set_active_field",
+    "set_active_fields",
+]
