@@ -92,11 +92,11 @@ class TestRowProjection:
 
 class TestNoLiveOrWriteSurface:
     def test_service_has_no_action_verbs(self) -> None:
-        # Apex §8: portals exposes NO action verbs. open/submit/present/
-        # sign/pay must not exist on the service.
+        # Portals exposes NO action verbs. open/submit/present/sign/pay
+        # must not exist on the service.
         for forbidden in ("open", "submit", "present", "sign", "pay", "navigate"):
             assert not hasattr(PortalsService, forbidden), (
-                f"PortalsService must not expose {forbidden!r} per apex §8 lock"
+                f"PortalsService must not expose {forbidden!r}"
             )
 
     def test_service_does_not_import_browser_or_require_live_read(self) -> None:

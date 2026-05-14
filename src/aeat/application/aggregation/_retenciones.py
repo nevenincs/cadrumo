@@ -1,10 +1,10 @@
 """Retenciones aggregator for Modelo 111 (withholding on labor + economic activities).
 
-Implements the slim aggregation contract for the retenciones family
-per apex §12 R21 and the per-modelo-aggregation-pipeline ADR. The
-aggregator consumes typed observations carrying the canonical source
-kind (``ledger_transaction``) and produces per-perceptor rollups
-plus a totals payload suitable for Modelo 111 binding consumption.
+Implements the slim aggregation contract for the retenciones family.
+The aggregator consumes typed observations carrying the canonical
+source kind (``ledger_transaction``) and produces per-perceptor
+rollups plus a totals payload suitable for Modelo 111 binding
+consumption.
 
 This module is the contract layer; the bridge from
 :class:`Transaction` records to :class:`RetencionObservation`
@@ -43,14 +43,22 @@ class RetencionScheme(StrEnum):
     CAPITAL_OTHER = "otros_capital_mobiliario"     # clave C (other capital income)
 
 
+_CANONICAL_SOURCE_KINDS = (
+    "ledger_transaction",
+    "purchase_invoice_evidence",
+    "payable_invoice",
+    "collectible_invoice",
+)
+
+
 class RetencionObservation(BaseModel):
     """One typed observation feeding a retenciones aggregator.
 
     The source ledger transaction (``source_object_id``) is referenced
-    by its canonical source kind ``ledger_transaction`` per apex §2.
-    Bare ``invoice`` source bindings are forbidden at the registry
-    domain layer; observations originating from invoice records carry
-    one of ``payable_invoice`` / ``collectible_invoice`` instead.
+    by its canonical source kind ``ledger_transaction``. Bare
+    ``invoice`` source bindings are forbidden at the registry domain
+    layer; observations originating from invoice records carry one of
+    ``payable_invoice`` / ``collectible_invoice`` instead.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -72,6 +80,9 @@ class RetencionObservation(BaseModel):
                 "bare 'invoice' source-kind is forbidden; use ledger_transaction, "
                 "purchase_invoice_evidence, payable_invoice, or collectible_invoice",
             )
+        if value not in _CANONICAL_SOURCE_KINDS:
+            allowed = ", ".join(_CANONICAL_SOURCE_KINDS)
+            raise ValueError(f"retenciones source_kind {value!r} is unsupported; use one of {allowed}")
         return value
 
 
@@ -80,6 +91,7 @@ class RetencionPerceptorRollup(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
+    source_kind: str = Field(min_length=1)
     perceptor_nif: str = Field(min_length=1, max_length=16)
     perceptor_name: str = Field(default="", max_length=200)
     scheme: RetencionScheme
@@ -164,8 +176,9 @@ def _filter_observations_for_modelo(
     """Filter observations to those whose scheme is in-scope for ``modelo``.
 
     Modelo 111 covers WORK_INCOME + ECONOMIC_ACTIVITY + PROFESSIONAL +
-    PRIZE. Modelo 115 covers URBAN_RENTAL. The remaining retenciones
-    modelos (123/180/190/193) extend the catalogue in follow-on commits.
+    PRIZE. Modelo 115 covers URBAN_RENTAL. Modelo 123 covers capital
+    income schemes, and annual summaries 180/190/193 reuse the matching
+    quarterly scheme catalogue over an annual period.
     """
     if modelo not in _MODELO_SCHEME_CATALOGUE:
         msg = f"retenciones aggregator for modelo {modelo!r} is not implemented"
@@ -182,21 +195,23 @@ def _aggregate_for_modelo(
 ) -> RetencionesAggregation:
     """Shared per-modelo aggregation. Filters by scheme catalogue + rolls up."""
     filtered = _filter_observations_for_modelo(observations, modelo=modelo)
-    grouped: dict[tuple[str, RetencionScheme], list[RetencionObservation]] = {}
-    perceptor_names: dict[str, str] = {}
+    grouped: dict[tuple[str, str, RetencionScheme], list[RetencionObservation]] = {}
+    perceptor_names: dict[tuple[str, str], str] = {}
     for obs in filtered:
-        key = (obs.perceptor_nif, obs.scheme)
+        key = (obs.source_kind, obs.perceptor_nif, obs.scheme)
         grouped.setdefault(key, []).append(obs)
-        if obs.perceptor_name and not perceptor_names.get(obs.perceptor_nif):
-            perceptor_names[obs.perceptor_nif] = obs.perceptor_name
+        name_key = (obs.source_kind, obs.perceptor_nif)
+        if obs.perceptor_name and not perceptor_names.get(name_key):
+            perceptor_names[name_key] = obs.perceptor_name
     rollups: list[RetencionPerceptorRollup] = []
-    for (nif, scheme), group in sorted(grouped.items(), key=lambda kv: (kv[0][0], kv[0][1].value)):
+    for (source_kind, nif, scheme), group in sorted(grouped.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2].value)):
         total_base = sum((g.taxable_base for g in group), Decimal("0"))
         total_ret = sum((g.retencion_amount for g in group), Decimal("0"))
         rollups.append(
             RetencionPerceptorRollup(
+                source_kind=source_kind,
                 perceptor_nif=nif,
-                perceptor_name=perceptor_names.get(nif, ""),
+                perceptor_name=perceptor_names.get((source_kind, nif), ""),
                 scheme=scheme,
                 observations_count=len(group),
                 total_taxable_base=total_base,

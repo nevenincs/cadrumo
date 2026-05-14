@@ -1,19 +1,18 @@
-"""Bucket-scoped expedientes snapshot service per apex ADR §4.4.
+"""Bucket-scoped expedientes snapshot service.
 
 Wraps the read-only AEAT sede declarations walker
-(``aeat.adapters.outbound.aeat.sede._declarations``) with bucket-scoped
-persistence for ``aeat app live expedientes {list, show, capture}``.
-Read-only by construction: no method calls AEAT to mutate expediente
-state.
+(:mod:`aeat.adapters.outbound.aeat.sede._declarations`) with
+bucket-scoped persistence. Read-only by construction: no method calls
+AEAT to mutate expediente state.
 
-Verbs (per apex §4.4):
+Verbs:
   capture(snapshot)   persist a fresh expedientes capture, deduplicated
   list_snapshots()    every captured snapshot, in capture order
   show(snapshot_id)   single snapshot by full id or unambiguous prefix
   latest()            most recent snapshot, or None
 
-The fetch path (auth-gated walker, require_live_read invocation) lives
-in the entrypoint that wires the adapter to this service.
+The fetch path (auth-gated walker, ``require_live_read`` invocation)
+lives in the entrypoint that wires the adapter to this service.
 """
 
 from __future__ import annotations
