@@ -1,6 +1,3 @@
-access_gate:
-  errors:
-    default_translatable: "az élő AEAT küldés véglegesen tiltott; használd a produce -> verify -> export folyamatot, és töltsd fel a fájlt magad az AEAT portálon"
 aggregation:
   counterpart:
     errors:
@@ -76,7 +73,16 @@ cli:
   app:
     ledger:
       collectible_invoice:
+        add_help: cli.app.ledger.collectible_invoice.add_help
         group_help: cli.app.ledger.collectible_invoice.group_help
+        invoice_date_help: cli.app.ledger.collectible_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.collectible_invoice.invoice_id_help
+        list_help: cli.app.ledger.collectible_invoice.list_help
+        remove_help: cli.app.ledger.collectible_invoice.remove_help
+        update_help: cli.app.ledger.collectible_invoice.update_help
+        view_help: cli.app.ledger.collectible_invoice.view_help
+        yes_help: cli.app.ledger.collectible_invoice.yes_help
+        yes_required: cli.app.ledger.collectible_invoice.yes_required
       evidence:
         add_help: cli.app.ledger.evidence.add_help
         evidence_id_help: cli.app.ledger.evidence.evidence_id_help
@@ -116,7 +122,16 @@ cli:
         vat_rate_help: cli.app.ledger.inventory.vat_rate_help
         year_help: cli.app.ledger.inventory.year_help
       payable_invoice:
+        add_help: cli.app.ledger.payable_invoice.add_help
         group_help: cli.app.ledger.payable_invoice.group_help
+        invoice_date_help: cli.app.ledger.payable_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.payable_invoice.invoice_id_help
+        list_help: cli.app.ledger.payable_invoice.list_help
+        remove_help: cli.app.ledger.payable_invoice.remove_help
+        update_help: cli.app.ledger.payable_invoice.update_help
+        view_help: cli.app.ledger.payable_invoice.view_help
+        yes_help: cli.app.ledger.payable_invoice.yes_help
+        yes_required: cli.app.ledger.payable_invoice.yes_required
       ratios:
         category_help: cli.app.ledger.ratios.category_help
         eligible_help: cli.app.ledger.ratios.eligible_help
@@ -217,8 +232,8 @@ cli:
         missing_required_options: 'Hiányzó kötelező opciók: %{options}'
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
         override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
-        period_help: Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
-          periodikus peldak: 2026Q1 es 2026-01
+        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
+          periodikus peldak: 2026Q1 es 2026-01'
         preview_help: Bindingek előnézete ideiglenes felülírásokkal, állapotmutáció
           nélkül
         year_help: A modell adóéve (pl. 2026)
@@ -227,14 +242,14 @@ cli:
         input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound, computed,
           informational)
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
-          periodikus peldak: 2026Q1 es 2026-01
+        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
+          periodikus peldak: 2026Q1 es 2026-01'
         required_help: Csak a kötelezőként megjelölt cellák megjelenítése
       describe:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: Idoszak token a modellrevizio feloldasahoz; Modelo 036 eseten
-          alta, modificacion vagy baja; periodikus peldak: 2026Q1 es 2026-01
+        period_help: 'Idoszak token a modellrevizio feloldasahoz; Modelo 036 eseten
+          alta, modificacion vagy baja; periodikus peldak: 2026Q1 es 2026-01'
       filing_record:
         app_help: Belső bejelentési rekordok (filing records) vizsgálata
         bucket_id_help: Szűrés bucket szerint
@@ -254,8 +269,8 @@ cli:
       formulas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
-        period_help: Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
-          periodikus peldak: 2026Q1 es 2026-01
+        period_help: 'Idoszak token; Modelo 036 eseten alta, modificacion vagy baja;
+          periodikus peldak: 2026Q1 es 2026-01'
       history:
         modelo_help: cli.app.modelo.history.modelo_help
         period_help: cli.app.modelo.history.period_help
@@ -303,8 +318,8 @@ cli:
         name_help: A munkaegység opcionális megjelenítési neve
         notes_help: A filing recordhoz fűzött opcionális megjegyzések
         override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
-        period_help: Munkaegyseg idoszak token; Modelo 036 eseten alta, modificacion
-          vagy baja; periodikus peldak: Q1, 4T, 0A es 01
+        period_help: 'Munkaegyseg idoszak token; Modelo 036 eseten alta, modificacion
+          vagy baja; periodikus peldak: Q1, 4T, 0A es 01'
         reason_help: A megszakítás opcionális szabadszöveges indoklása (legfeljebb
           500 karakter)
         rename_help: Munkaegység megjelenítési nevének módosítása
@@ -411,9 +426,9 @@ cli:
           export:
             modelo_help: Az exportálandó modelo azonosítója (pl. 130, 303, 100)
             period_help: Időszak kódja (pl. 1T, 2T, 0A)
-            root_folder_required: Nincs Drive gyökérmappa konfigurálva; futtassa
-              először az `aeat config google folder set <id>` parancsot
-            unknown_modelo: "Ismeretlen modelo {modelo!r}; elérhető modelók: {available}"
+            root_folder_required: Nincs Drive gyökérmappa konfigurálva; futtassa először
+              az `aeat config google folder set <id>` parancsot
+            unknown_modelo: 'Ismeretlen modelo {modelo!r}; elérhető modelók: {available}'
             year_help: Bevallási év (pl. 2025)
           export_help: Exportálja a regiszter számítási felületét egy modelo+időszakhoz
             a Google Sheets munkafüzetbe az `aeat-vault/` alá

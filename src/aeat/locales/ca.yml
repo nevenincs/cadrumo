@@ -1,6 +1,3 @@
-access_gate:
-  errors:
-    default_translatable: "l'enviament en viu a l'AEAT està permanentment prohibit; utilitza produce -> verify -> export i puja el fitxer tu mateix al portal de l'AEAT"
 aggregation:
   counterpart:
     errors:
@@ -76,7 +73,16 @@ cli:
   app:
     ledger:
       collectible_invoice:
+        add_help: cli.app.ledger.collectible_invoice.add_help
         group_help: cli.app.ledger.collectible_invoice.group_help
+        invoice_date_help: cli.app.ledger.collectible_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.collectible_invoice.invoice_id_help
+        list_help: cli.app.ledger.collectible_invoice.list_help
+        remove_help: cli.app.ledger.collectible_invoice.remove_help
+        update_help: cli.app.ledger.collectible_invoice.update_help
+        view_help: cli.app.ledger.collectible_invoice.view_help
+        yes_help: cli.app.ledger.collectible_invoice.yes_help
+        yes_required: cli.app.ledger.collectible_invoice.yes_required
       evidence:
         add_help: cli.app.ledger.evidence.add_help
         evidence_id_help: cli.app.ledger.evidence.evidence_id_help
@@ -116,7 +122,16 @@ cli:
         vat_rate_help: cli.app.ledger.inventory.vat_rate_help
         year_help: cli.app.ledger.inventory.year_help
       payable_invoice:
+        add_help: cli.app.ledger.payable_invoice.add_help
         group_help: cli.app.ledger.payable_invoice.group_help
+        invoice_date_help: cli.app.ledger.payable_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.payable_invoice.invoice_id_help
+        list_help: cli.app.ledger.payable_invoice.list_help
+        remove_help: cli.app.ledger.payable_invoice.remove_help
+        update_help: cli.app.ledger.payable_invoice.update_help
+        view_help: cli.app.ledger.payable_invoice.view_help
+        yes_help: cli.app.ledger.payable_invoice.yes_help
+        yes_required: cli.app.ledger.payable_invoice.yes_required
       ratios:
         category_help: cli.app.ledger.ratios.category_help
         eligible_help: cli.app.ledger.ratios.eligible_help
@@ -220,8 +235,8 @@ cli:
         missing_required_options: 'Falten opcions obligatòries: %{options}'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
-        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o
-          baja; exemples periodics inclouen 2026Q1 i 2026-01
+        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
+          exemples periodics inclouen 2026Q1 i 2026-01
         preview_help: Previsualitzar els bindings amb sobreescriptures temporals sense
           mutar l'estat
         year_help: Exercici fiscal del model (p. ex. 2026)
@@ -230,15 +245,15 @@ cli:
         input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
           computed, informational)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o
-          baja; exemples periodics inclouen 2026Q1 i 2026-01
+        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
+          exemples periodics inclouen 2026Q1 i 2026-01
         required_help: Mostrar només les caselles marcades com a obligatòries
       describe:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         period_help: Token de periode per resoldre la revisio del model; per a Modelo
-          036 usa alta, modificacion o baja; exemples periodics inclouen 2026Q1
-          i 2026-01
+          036 usa alta, modificacion o baja; exemples periodics inclouen 2026Q1 i
+          2026-01
       filing_record:
         app_help: Inspeccionar els filing records interns registrats
         bucket_id_help: Filtrar per bucket
@@ -258,8 +273,8 @@ cli:
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o
-          baja; exemples periodics inclouen 2026Q1 i 2026-01
+        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
+          exemples periodics inclouen 2026Q1 i 2026-01
       history:
         modelo_help: cli.app.modelo.history.modelo_help
         period_help: cli.app.modelo.history.period_help
