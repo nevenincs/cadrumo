@@ -969,7 +969,11 @@ def _build_business_invoice_app(name: str, help_text: str, service_factory):
         ctx: typer.Context,
         counterparty_nif: str = typer.Option(..., "--counterparty-nif"),
         invoice_number: str = typer.Option(..., "--invoice-number"),
-        invoice_date: str = typer.Option(..., "--invoice-date", help="Invoice date (YYYY-MM-DD)."),
+        invoice_date: str = typer.Option(
+            ...,
+            "--invoice-date",
+            help=tr(f"cli.app.ledger.{name}.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
+        ),
         counterparty_name: str = typer.Option("", "--counterparty-name"),
         currency: str = typer.Option("EUR", "--currency"),
         taxable_base: str = typer.Option("0", "--taxable-base"),
