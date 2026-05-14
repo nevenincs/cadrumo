@@ -2902,44 +2902,44 @@ This Phase delivers backend implementation for modelo 100 borrador binding as re
 This Phase delivers shadow duplicate removal for modelo 100 borrador binding as required by `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr`.
 
 - [x] `W48.P237.S1417` - Audit duplicate implementations that overlap modelo 100 borrador binding; `src/aeat/application/modelo`.
-- [ ] `W48.P237.S1418` - Delete duplicate backend branches that compete with modelo 100 borrador binding; `src/aeat/application/modelo`.
-- [ ] `W48.P237.S1419` - Remove stale aliases that bypass the canonical service for modelo 100 borrador binding; `src/aeat/entrypoints/cli`.
-- [ ] `W48.P237.S1420` - Migrate internal callers to the canonical service for modelo 100 borrador binding; `src/aeat/application/modelo`.
-- [ ] `W48.P237.S1421` - Remove stale fixtures and tests that encode duplicate behavior for modelo 100 borrador binding; `tests/application/modelo`.
-- [ ] `W48.P237.S1422` - Update boundary inventory entries that describe duplicate behavior for modelo 100 borrador binding; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W48.P237.S1418` - Delete duplicate backend branches that compete with modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P237.S1419` - Remove stale aliases that bypass the canonical service for modelo 100 borrador binding; `src/aeat/entrypoints/cli`.
+- [x] `W48.P237.S1420` - Migrate internal callers to the canonical service for modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P237.S1421` - Remove stale fixtures and tests that encode duplicate behavior for modelo 100 borrador binding; `tests/application/modelo`.
+- [x] `W48.P237.S1422` - Update boundary inventory entries that describe duplicate behavior for modelo 100 borrador binding; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W48.P238` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for modelo 100 borrador binding as required by `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr`.
 
-- [ ] `W48.P238.S1423` - Delete compatibility shims that preserve rejected behavior for modelo 100 borrador binding; `src/aeat/application/modelo`.
-- [ ] `W48.P238.S1424` - Delete placeholder stubs that claim support for modelo 100 borrador binding; `src/aeat/application/modelo`.
-- [ ] `W48.P238.S1425` - Replace stubbed paths with real backend service calls for modelo 100 borrador binding; `src/aeat/application/modelo`.
-- [ ] `W48.P238.S1426` - Remove deprecated command spelling and help text for modelo 100 borrador binding; `src/aeat/entrypoints/cli`.
-- [ ] `W48.P238.S1427` - Remove tests that assert shim or stub behavior for modelo 100 borrador binding; `tests/application/modelo`.
-- [ ] `W48.P238.S1428` - Record the removed shim and stub surfaces for modelo 100 borrador binding; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W48.P238.S1423` - Delete compatibility shims that preserve rejected behavior for modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P238.S1424` - Delete placeholder stubs that claim support for modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P238.S1425` - Replace stubbed paths with real backend service calls for modelo 100 borrador binding; `src/aeat/application/modelo`.
+- [x] `W48.P238.S1426` - Remove deprecated command spelling and help text for modelo 100 borrador binding; `src/aeat/entrypoints/cli`.
+- [x] `W48.P238.S1427` - Remove tests that assert shim or stub behavior for modelo 100 borrador binding; `tests/application/modelo`.
+- [x] `W48.P238.S1428` - Record the removed shim and stub surfaces for modelo 100 borrador binding; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W48.P239` - real behavior verification
 
 This Phase delivers real behavior verification for modelo 100 borrador binding as required by `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr`.
 
-- [ ] `W48.P239.S1429` - Add service contract tests for modelo 100 borrador binding; `tests/application/modelo`.
-- [ ] `W48.P239.S1430` - Add persistence or registry integration tests for modelo 100 borrador binding; `tests/application/modelo`.
-- [ ] `W48.P239.S1431` - Add negative tests proving rejected aliases do not reach modelo 100 borrador binding; `tests/entrypoints/cli`.
-- [ ] `W48.P239.S1432` - Add command behavior tests that exercise modelo 100 borrador binding through real services; `tests/entrypoints/cli`.
-- [ ] `W48.P239.S1433` - Add end-to-end workflow coverage for modelo 100 borrador binding; `tests`.
-- [ ] `W48.P239.S1434` - Run the targeted test slice for modelo 100 borrador binding without skips or xfails; `tests/application/modelo`.
+- [x] `W48.P239.S1429` - Add service contract tests for modelo 100 borrador binding; `tests/application/modelo`.
+- [x] `W48.P239.S1430` - Add persistence or registry integration tests for modelo 100 borrador binding; `tests/application/modelo`.
+- [x] `W48.P239.S1431` - Add negative tests proving rejected aliases do not reach modelo 100 borrador binding; `tests/entrypoints/cli`.
+- [x] `W48.P239.S1432` - Add command behavior tests that exercise modelo 100 borrador binding through real services; `tests/entrypoints/cli`.
+- [x] `W48.P239.S1433` - Add end-to-end workflow coverage for modelo 100 borrador binding; `tests`.
+- [x] `W48.P239.S1434` - Run the targeted test slice for modelo 100 borrador binding without skips or xfails; `tests/application/modelo`.
 
 ### Phase `W48.P240` - thin cli exposure
 
 This Phase delivers thin cli exposure for modelo 100 borrador binding as required by `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr`.
 
-- [ ] `W48.P240.S1435` - Expose accepted command handlers for modelo 100 borrador binding under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W48.P240.S1436` - Keep argument parsing for modelo 100 borrador binding separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W48.P240.S1437` - Delegate modelo 100 borrador binding execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W48.P240.S1438` - Render modelo 100 borrador binding results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W48.P240.S1439` - Handle modelo 100 borrador binding failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W48.P240.S1440` - Validate help text for modelo 100 borrador binding uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W48.P240.S1435` - Expose accepted command handlers for modelo 100 borrador binding under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W48.P240.S1436` - Keep argument parsing for modelo 100 borrador binding separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W48.P240.S1437` - Delegate modelo 100 borrador binding execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W48.P240.S1438` - Render modelo 100 borrador binding results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W48.P240.S1439` - Handle modelo 100 borrador binding failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W48.P240.S1440` - Validate help text for modelo 100 borrador binding uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W49` - amend external filing path
 
@@ -3141,8 +3141,8 @@ This Phase delivers shadow duplicate removal for per modelo aggregation as requi
 - [x] `W52.P257.S1538` - Delete duplicate backend branches that compete with per modelo aggregation; `src/aeat/application/aggregation`.
 - [x] `W52.P257.S1539` - Remove stale aliases that bypass the canonical service for per modelo aggregation; `src/aeat/entrypoints/cli`.
 - [x] `W52.P257.S1540` - Migrate internal callers to the canonical service for per modelo aggregation; `src/aeat/application/aggregation`.
-- [x] `W52.P257.S1541` - Remove stale fixtures and tests that encode duplicate behavior for per modelo aggregation; `tests/application/aggregation`.
-- [x] `W52.P257.S1542` - Update boundary inventory entries that describe duplicate behavior for per modelo aggregation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [ ] `W52.P257.S1541` - Remove stale fixtures and tests that encode duplicate behavior for per modelo aggregation; `tests/application/aggregation`.
+- [ ] `W52.P257.S1542` - Update boundary inventory entries that describe duplicate behavior for per modelo aggregation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W52.P258` - de-shim and de-stub cleanup
 
@@ -3160,7 +3160,7 @@ This Phase delivers de-shim and de-stub cleanup for per modelo aggregation as re
 This Phase delivers real behavior verification for per modelo aggregation as required by `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr`.
 
 - [x] `W52.P259.S1549` - Add service contract tests for per modelo aggregation; `tests/application/aggregation`.
-- [x] `W52.P259.S1550` - Add persistence or registry integration tests for per modelo aggregation; `tests/application/aggregation`.
+- [ ] `W52.P259.S1550` - Add persistence or registry integration tests for per modelo aggregation; `tests/application/aggregation`.
 - [x] `W52.P259.S1551` - Add negative tests proving rejected aliases do not reach per modelo aggregation; `tests/entrypoints/cli`.
 - [x] `W52.P259.S1552` - Add command behavior tests that exercise per modelo aggregation through real services; `tests/entrypoints/cli`.
 - [x] `W52.P259.S1553` - Add end-to-end workflow coverage for per modelo aggregation; `tests`.
