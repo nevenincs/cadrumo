@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from functools import cache
 from pathlib import Path
 
 import pytest
@@ -12,8 +11,7 @@ from reportlab.pdfgen import canvas
 
 from aeat.tests import FIXTURES_DIR
 
-from ....core.paths import PROJECT_ROOT
-from ....domain.calculations.registry._authority import ValidatedRegistryAuthority
+from ....domain.calculations.registry import default_registry_authority
 from . import DeclaracionParseError, parse_declaracion
 
 _REAL_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
@@ -140,12 +138,7 @@ def _modelo_130_snapshot():
 
 
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
-    return _registry_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
-
-
-@cache
-def _registry_authority() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+    return default_registry_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
 
 
 def _write_declaration_pdf(

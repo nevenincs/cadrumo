@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ._authority import ValidatedRegistryAuthority
+from ._authority import ValidatedRegistryAuthority, default_registry_authority
 from ._bindings import (
     InvoiceObservation,
     InvoiceObservationRequirement,
@@ -312,6 +312,7 @@ __all__ = [
     "compare_registry_to_workbook",
     "convert_binary_xls_with_libreoffice",
     "converted_binary_xls_with_libreoffice",
+    "default_registry_authority",
     "derive_export_layouts_from_bindings",
     "detect_workbook_runner",
     "discover_workbooks",
