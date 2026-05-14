@@ -636,56 +636,56 @@ This Wave implements the `2026-05-07-config-cli-profile-surface-adr` decision fo
 
 This Phase delivers backend implementation for config profile service surface as required by `2026-05-07-config-cli-profile-surface-adr`.
 
-- [ ] `W10.P046.S0271` - Map the `2026-05-07-config-cli-profile-surface-adr` decision into non-CLI service ownership for config profile service surface; `src/aeat/application/profile`.
-- [ ] `W10.P046.S0272` - Implement Pydantic command and result contracts for config profile service surface; `src/aeat/application/profile`.
-- [ ] `W10.P046.S0273` - Wire application or domain services required by config profile service surface; `src/aeat/application/profile`.
-- [ ] `W10.P046.S0274` - Connect persistence, bucket events, registry data, or provider adapters required by config profile service surface; `src/aeat/application/profile`.
-- [ ] `W10.P046.S0275` - Route existing backend functionality into the canonical service for config profile service surface; `src/aeat/application/profile`.
-- [ ] `W10.P046.S0276` - Record service-level error codes and log fields for config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P046.S0271` - Map the `2026-05-07-config-cli-profile-surface-adr` decision into non-CLI service ownership for config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P046.S0272` - Implement Pydantic command and result contracts for config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P046.S0273` - Wire application or domain services required by config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P046.S0274` - Connect persistence, bucket events, registry data, or provider adapters required by config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P046.S0275` - Route existing backend functionality into the canonical service for config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P046.S0276` - Record service-level error codes and log fields for config profile service surface; `src/aeat/application/profile`.
 
 ### Phase `W10.P047` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for config profile service surface as required by `2026-05-07-config-cli-profile-surface-adr`.
 
-- [ ] `W10.P047.S0277` - Audit duplicate implementations that overlap config profile service surface; `src/aeat/application/profile`.
-- [ ] `W10.P047.S0278` - Delete duplicate backend branches that compete with config profile service surface; `src/aeat/application/profile`.
-- [ ] `W10.P047.S0279` - Remove stale aliases that bypass the canonical service for config profile service surface; `src/aeat/entrypoints/cli`.
-- [ ] `W10.P047.S0280` - Migrate internal callers to the canonical service for config profile service surface; `src/aeat/application/profile`.
-- [ ] `W10.P047.S0281` - Remove stale fixtures and tests that encode duplicate behavior for config profile service surface; `tests/entrypoints/cli`.
-- [ ] `W10.P047.S0282` - Update boundary inventory entries that describe duplicate behavior for config profile service surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W10.P047.S0277` - Audit duplicate implementations that overlap config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P047.S0278` - Delete duplicate backend branches that compete with config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P047.S0279` - Remove stale aliases that bypass the canonical service for config profile service surface; `src/aeat/entrypoints/cli`.
+- [x] `W10.P047.S0280` - Migrate internal callers to the canonical service for config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P047.S0281` - Remove stale fixtures and tests that encode duplicate behavior for config profile service surface; `tests/entrypoints/cli`.
+- [x] `W10.P047.S0282` - Update boundary inventory entries that describe duplicate behavior for config profile service surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W10.P048` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for config profile service surface as required by `2026-05-07-config-cli-profile-surface-adr`.
 
-- [ ] `W10.P048.S0283` - Delete compatibility shims that preserve rejected behavior for config profile service surface; `src/aeat/application/profile`.
-- [ ] `W10.P048.S0284` - Delete placeholder stubs that claim support for config profile service surface; `src/aeat/application/profile`.
-- [ ] `W10.P048.S0285` - Replace stubbed paths with real backend service calls for config profile service surface; `src/aeat/application/profile`.
-- [ ] `W10.P048.S0286` - Remove deprecated command spelling and help text for config profile service surface; `src/aeat/entrypoints/cli`.
-- [ ] `W10.P048.S0287` - Remove tests that assert shim or stub behavior for config profile service surface; `tests/entrypoints/cli`.
-- [ ] `W10.P048.S0288` - Record the removed shim and stub surfaces for config profile service surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W10.P048.S0283` - Delete compatibility shims that preserve rejected behavior for config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P048.S0284` - Delete placeholder stubs that claim support for config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P048.S0285` - Replace stubbed paths with real backend service calls for config profile service surface; `src/aeat/application/profile`.
+- [x] `W10.P048.S0286` - Remove deprecated command spelling and help text for config profile service surface; `src/aeat/entrypoints/cli`.
+- [x] `W10.P048.S0287` - Remove tests that assert shim or stub behavior for config profile service surface; `tests/entrypoints/cli`.
+- [x] `W10.P048.S0288` - Record the removed shim and stub surfaces for config profile service surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W10.P049` - real behavior verification
 
 This Phase delivers real behavior verification for config profile service surface as required by `2026-05-07-config-cli-profile-surface-adr`.
 
-- [ ] `W10.P049.S0289` - Add service contract tests for config profile service surface; `tests/entrypoints/cli`.
-- [ ] `W10.P049.S0290` - Add persistence or registry integration tests for config profile service surface; `tests/entrypoints/cli`.
-- [ ] `W10.P049.S0291` - Add negative tests proving rejected aliases do not reach config profile service surface; `tests/entrypoints/cli`.
-- [ ] `W10.P049.S0292` - Add command behavior tests that exercise config profile service surface through real services; `tests/entrypoints/cli`.
-- [ ] `W10.P049.S0293` - Add end-to-end workflow coverage for config profile service surface; `tests`.
-- [ ] `W10.P049.S0294` - Run the targeted test slice for config profile service surface without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W10.P049.S0289` - Add service contract tests for config profile service surface; `tests/entrypoints/cli`.
+- [x] `W10.P049.S0290` - Add persistence or registry integration tests for config profile service surface; `tests/entrypoints/cli`.
+- [x] `W10.P049.S0291` - Add negative tests proving rejected aliases do not reach config profile service surface; `tests/entrypoints/cli`.
+- [x] `W10.P049.S0292` - Add command behavior tests that exercise config profile service surface through real services; `tests/entrypoints/cli`.
+- [x] `W10.P049.S0293` - Add end-to-end workflow coverage for config profile service surface; `tests`.
+- [x] `W10.P049.S0294` - Run the targeted test slice for config profile service surface without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W10.P050` - thin cli exposure
 
 This Phase delivers thin cli exposure for config profile service surface as required by `2026-05-07-config-cli-profile-surface-adr`.
 
-- [ ] `W10.P050.S0295` - Expose accepted command handlers for config profile service surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W10.P050.S0296` - Keep argument parsing for config profile service surface separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W10.P050.S0297` - Delegate config profile service surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W10.P050.S0298` - Render config profile service surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W10.P050.S0299` - Handle config profile service surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W10.P050.S0300` - Validate help text for config profile service surface uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W10.P050.S0295` - Expose accepted command handlers for config profile service surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W10.P050.S0296` - Keep argument parsing for config profile service surface separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W10.P050.S0297` - Delegate config profile service surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W10.P050.S0298` - Render config profile service surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W10.P050.S0299` - Handle config profile service surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W10.P050.S0300` - Validate help text for config profile service surface uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W11` - config versus setup namespace
 
@@ -933,56 +933,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-config-init-shape-adr
 
 This Phase delivers backend implementation for first run configuration initialization as required by `2026-05-12-cli-workflow-redesign-config-init-shape-adr`.
 
-- [ ] `W15.P071.S0421` - Map the `2026-05-12-cli-workflow-redesign-config-init-shape-adr` decision into non-CLI service ownership for first run configuration initialization; `src/aeat/application/setup`.
-- [ ] `W15.P071.S0422` - Implement Pydantic command and result contracts for first run configuration initialization; `src/aeat/application/setup`.
-- [ ] `W15.P071.S0423` - Wire application or domain services required by first run configuration initialization; `src/aeat/application/setup`.
-- [ ] `W15.P071.S0424` - Connect persistence, bucket events, registry data, or provider adapters required by first run configuration initialization; `src/aeat/application/setup`.
-- [ ] `W15.P071.S0425` - Route existing backend functionality into the canonical service for first run configuration initialization; `src/aeat/application/setup`.
-- [ ] `W15.P071.S0426` - Record service-level error codes and log fields for first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P071.S0421` - Map the `2026-05-12-cli-workflow-redesign-config-init-shape-adr` decision into non-CLI service ownership for first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P071.S0422` - Implement Pydantic command and result contracts for first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P071.S0423` - Wire application or domain services required by first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P071.S0424` - Connect persistence, bucket events, registry data, or provider adapters required by first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P071.S0425` - Route existing backend functionality into the canonical service for first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P071.S0426` - Record service-level error codes and log fields for first run configuration initialization; `src/aeat/application/setup`.
 
 ### Phase `W15.P072` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for first run configuration initialization as required by `2026-05-12-cli-workflow-redesign-config-init-shape-adr`.
 
-- [ ] `W15.P072.S0427` - Audit duplicate implementations that overlap first run configuration initialization; `src/aeat/application/setup`.
-- [ ] `W15.P072.S0428` - Delete duplicate backend branches that compete with first run configuration initialization; `src/aeat/application/setup`.
-- [ ] `W15.P072.S0429` - Remove stale aliases that bypass the canonical service for first run configuration initialization; `src/aeat/entrypoints/cli`.
-- [ ] `W15.P072.S0430` - Migrate internal callers to the canonical service for first run configuration initialization; `src/aeat/application/setup`.
-- [ ] `W15.P072.S0431` - Remove stale fixtures and tests that encode duplicate behavior for first run configuration initialization; `tests/entrypoints/cli`.
-- [ ] `W15.P072.S0432` - Update boundary inventory entries that describe duplicate behavior for first run configuration initialization; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W15.P072.S0427` - Audit duplicate implementations that overlap first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P072.S0428` - Delete duplicate backend branches that compete with first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P072.S0429` - Remove stale aliases that bypass the canonical service for first run configuration initialization; `src/aeat/entrypoints/cli`.
+- [x] `W15.P072.S0430` - Migrate internal callers to the canonical service for first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P072.S0431` - Remove stale fixtures and tests that encode duplicate behavior for first run configuration initialization; `tests/entrypoints/cli`.
+- [x] `W15.P072.S0432` - Update boundary inventory entries that describe duplicate behavior for first run configuration initialization; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W15.P073` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for first run configuration initialization as required by `2026-05-12-cli-workflow-redesign-config-init-shape-adr`.
 
-- [ ] `W15.P073.S0433` - Delete compatibility shims that preserve rejected behavior for first run configuration initialization; `src/aeat/application/setup`.
-- [ ] `W15.P073.S0434` - Delete placeholder stubs that claim support for first run configuration initialization; `src/aeat/application/setup`.
-- [ ] `W15.P073.S0435` - Replace stubbed paths with real backend service calls for first run configuration initialization; `src/aeat/application/setup`.
-- [ ] `W15.P073.S0436` - Remove deprecated command spelling and help text for first run configuration initialization; `src/aeat/entrypoints/cli`.
-- [ ] `W15.P073.S0437` - Remove tests that assert shim or stub behavior for first run configuration initialization; `tests/entrypoints/cli`.
-- [ ] `W15.P073.S0438` - Record the removed shim and stub surfaces for first run configuration initialization; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W15.P073.S0433` - Delete compatibility shims that preserve rejected behavior for first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P073.S0434` - Delete placeholder stubs that claim support for first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P073.S0435` - Replace stubbed paths with real backend service calls for first run configuration initialization; `src/aeat/application/setup`.
+- [x] `W15.P073.S0436` - Remove deprecated command spelling and help text for first run configuration initialization; `src/aeat/entrypoints/cli`.
+- [x] `W15.P073.S0437` - Remove tests that assert shim or stub behavior for first run configuration initialization; `tests/entrypoints/cli`.
+- [x] `W15.P073.S0438` - Record the removed shim and stub surfaces for first run configuration initialization; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W15.P074` - real behavior verification
 
 This Phase delivers real behavior verification for first run configuration initialization as required by `2026-05-12-cli-workflow-redesign-config-init-shape-adr`.
 
-- [ ] `W15.P074.S0439` - Add service contract tests for first run configuration initialization; `tests/entrypoints/cli`.
-- [ ] `W15.P074.S0440` - Add persistence or registry integration tests for first run configuration initialization; `tests/entrypoints/cli`.
-- [ ] `W15.P074.S0441` - Add negative tests proving rejected aliases do not reach first run configuration initialization; `tests/entrypoints/cli`.
-- [ ] `W15.P074.S0442` - Add command behavior tests that exercise first run configuration initialization through real services; `tests/entrypoints/cli`.
-- [ ] `W15.P074.S0443` - Add end-to-end workflow coverage for first run configuration initialization; `tests`.
-- [ ] `W15.P074.S0444` - Run the targeted test slice for first run configuration initialization without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W15.P074.S0439` - Add service contract tests for first run configuration initialization; `tests/entrypoints/cli`.
+- [x] `W15.P074.S0440` - Add persistence or registry integration tests for first run configuration initialization; `tests/entrypoints/cli`.
+- [x] `W15.P074.S0441` - Add negative tests proving rejected aliases do not reach first run configuration initialization; `tests/entrypoints/cli`.
+- [x] `W15.P074.S0442` - Add command behavior tests that exercise first run configuration initialization through real services; `tests/entrypoints/cli`.
+- [x] `W15.P074.S0443` - Add end-to-end workflow coverage for first run configuration initialization; `tests`.
+- [x] `W15.P074.S0444` - Run the targeted test slice for first run configuration initialization without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W15.P075` - thin cli exposure
 
 This Phase delivers thin cli exposure for first run configuration initialization as required by `2026-05-12-cli-workflow-redesign-config-init-shape-adr`.
 
-- [ ] `W15.P075.S0445` - Expose accepted command handlers for first run configuration initialization under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W15.P075.S0446` - Keep argument parsing for first run configuration initialization separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W15.P075.S0447` - Delegate first run configuration initialization execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W15.P075.S0448` - Render first run configuration initialization results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W15.P075.S0449` - Handle first run configuration initialization failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W15.P075.S0450` - Validate help text for first run configuration initialization uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W15.P075.S0445` - Expose accepted command handlers for first run configuration initialization under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W15.P075.S0446` - Keep argument parsing for first run configuration initialization separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W15.P075.S0447` - Delegate first run configuration initialization execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W15.P075.S0448` - Render first run configuration initialization results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W15.P075.S0449` - Handle first run configuration initialization failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W15.P075.S0450` - Validate help text for first run configuration initialization uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W16` - auth cli
 
@@ -3990,8 +3990,8 @@ This Phase implements the ledger-transaction-management 2026-05-14 amendment. It
 - [ ] `W70.P332.S1937` - Read the ledger-transaction-management ADR's 2026-05-14 amendment before editing; `.vault/adr`.
 - [ ] `W70.P332.S1938` - Add `full_id` and `display_id` properties to the ledger transaction Pydantic model with the bucket-derived display-prefix length policy; `src/aeat/domain/transactions`.
 - [ ] `W70.P332.S1939` - Update every ledger read leaf (`list`, `review`, `show`) to render both `full_id` and `display_id` in `--format text` and both keys in `--format json`; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P332.S1940` - Teach every mutating ledger leaf (`read`, `classify`, `edit`, `allocate`, `attach`, `archive`, `stash`, `remove`, evidence verbs) to accept either `full_id` or any unambiguous prefix; resolve in the application service and refuse on collision with a typed validation error; `src/aeat/application/ledger`.
-- [ ] `W70.P332.S1941` - Smoke: piping `aeat app ledger list --format text | tail -n 1` into `xargs aeat app ledger classify` resolves; an ambiguous prefix refuses with the matching `full_id` set; `tests/entrypoints/cli`.
+- [ ] `W70.P332.S1940` - Teach every mutating ledger leaf (`read`, `classify`, `edit`, `allocate`, `attach`, `archive`, `stash`, `remove`, evidence verbs) to accept either `full_id` or any unambiguous prefix; `resolve in the application service and refuse on collision with a typed validation error; `src/aeat/application/ledger`.
+- [ ] `W70.P332.S1941` - Smoke: piping `aeat app ledger list --format text | tail -n 1` into `xargs aeat app ledger classify` resolves; `an ambiguous prefix refuses with the matching `full_id` set; `tests/entrypoints/cli`.
 
 ### Phase `W70.P333` - finding P0 #4: evidence ingest surface (locked verb `aeat app ledger evidence`)
 
@@ -4000,7 +4000,7 @@ This Phase implements the ledger-transaction-management and receipt-ocr-pdf-evid
 - [ ] `W70.P333.S1942` - Read the receipt-ocr-pdf-evidence and ledger-transaction-management ADRs' 2026-05-14 amendments (locked verb + out-of-scope file-type fence) before editing; `.vault/adr`.
 - [ ] `W70.P333.S1943` - Implement a strict Pydantic application service that wraps the receipt OCR adapter, accepts only PDF and image source paths, refuses non-PDF/non-image inputs with a typed validation error pointing at the deferred `evidence-source-expansion` ADR, and returns a `purchase_invoice_evidence_id`; `src/aeat/application/ledger`.
 - [ ] `W70.P333.S1944` - Register the locked CRUD noun group `aeat app ledger evidence` with five subcommands wired to backend services and `_emit` rendering: `add <file>` consumes a PDF or image path, runs OCR, emits the `purchase_invoice_evidence` event, prints the new record's `full_id`; `remove --id <full|prefix>` retires a record and emits the matching event; `update --id <full|prefix>` updates manual-review fields; `view --id <full|prefix>` prints a single record; `list` lists records in the active bucket (bare invocation, list-vs-query contract); every verb supports `--format json|text` through `_emit`; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P333.S1945` - Update `aeat app ledger attach --help` to name `aeat app ledger evidence add` as the upstream producer of `--purchase-invoice-evidence-id`; ensure `aeat app ledger evidence --help` enumerates all five CRUD verbs; `src/aeat/entrypoints/cli`.
+- [ ] `W70.P333.S1945` - Update `aeat app ledger attach --help` to name `aeat app ledger evidence add` as the upstream producer of `--purchase-invoice-evidence-id`; `ensure `aeat app ledger evidence --help` enumerates all five CRUD verbs; `src/aeat/entrypoints/cli`.
 - [ ] `W70.P333.S1946` - Smoke: `aeat app ledger evidence add ./some.pdf` returns an evidence id; `aeat app ledger attach --id <full> --purchase-invoice-evidence-id <evidence-id>` accepts that id end-to-end; the remaining four CRUD verbs are exercised against the produced record; a non-PDF/non-image source path is refused with a typed validation error naming the deferred `evidence-source-expansion` ADR; `tests/entrypoints/cli`.
 
 ### Phase `W70.P334` - finding P1 #5: retire `aeat config doctor` and verify `aeat config repair` next/report exhaustiveness
@@ -4012,17 +4012,11 @@ Legacy retirement steps:
 - [ ] `W70.P334.S1947` - Read the config-doctor-shape ADR (retirement status), the config-repair-shape ADR's "absorbs from retired doctor" section, and the apex audit-amendment "doctor retirement enforced" bullet before editing; `.vault/adr`.
 - [ ] `W70.P334.S1948` - Remove the `aeat config doctor` Typer entrypoint, unregister every doctor subcommand (`connectivity`, `integrity`, `list`, `quarantine`, `logs`), and delete the legacy diagnostic emitters that do not ship a `next_action` or `dead_end` field; `src/aeat/entrypoints/cli`.
 - [ ] `W70.P334.S1949` - Delete every help-text reference, every refusal-message reference, and every i18n-translated reference to `aeat config doctor` (replace with `aeat config repair` where the reference still points at a real recovery path); `src/aeat/core/i18n`.
-
-`config repair` exhaustiveness verification:
-
-- [ ] `W70.P334.S1950` - Promote `DiagnosticCheck` to a discriminated union: every `fail`/`warn` row carries exactly one of `next_action` (a runnable leaf command string) or `dead_end` (non-recoverable guidance), enforced at construction by a Pydantic validator; rows with neither or both raise `ValidationError`; `src/aeat/application/config`.
+- [ ] `W70.P334.S1950` - Promote `DiagnosticCheck` to a discriminated union: every `fail`/`warn` row carries exactly one of `next_action` (a runnable leaf command string) or `dead_end` (non-recoverable guidance), enforced at construction by a Pydantic validator; `rows with neither or both raise `ValidationError`; `src/aeat/application/config`.
 - [ ] `W70.P334.S1951` - Backfill the four named failure classes from the repair-shape ADR's "failure classes covered" table - quarantinable rows (`next_action`), `secure_state.load` schema-shape mismatch (`next_action`), master-key handling failure (`dead_end`), unknown integrity-warning class (`dead_end`) - so every emitter site produces a row with the prescribed field populated; `src/aeat/application/config`.
 - [ ] `W70.P334.S1952` - Smoke per failure class: a CLI smoke test for each of the four classes (quarantinable rows, schema-shape mismatch, master-key failure, unknown integrity-warning class) asserts the rendered `--format text` row carries the literal `next:` or `report:` prefix and the `--format json` payload carries exactly one of `next_action` or `dead_end`; `tests/entrypoints/cli`.
-
-False-positive guard (non-negotiable acceptance criterion; mirrors finding #9 on `app review queue`):
-
 - [ ] `W70.P334.S1953` - Smoke: `aeat config init` on a clean profile followed immediately by `aeat config repair --format json` produces ZERO `fail` and ZERO `warn` rows. Any finding that fires on a clean profile is removed or suppressed at source - not annotated as "expected noise", not gated behind a flag, not allow-listed; `tests/entrypoints/cli`.
-- [ ] `W70.P334.S1954` - Smoke: `aeat config doctor --help` exits with the standard unknown-command exit code (no shim, no alias); a regex test asserts no help text and no refusal message anywhere in the codebase names `aeat config doctor`; `tests/entrypoints/cli`.
+- [ ] `W70.P334.S1954` - Smoke: `aeat config doctor --help` exits with the standard unknown-command exit code (no shim, no alias); `a regex test asserts no help text and no refusal message anywhere in the codebase names `aeat config doctor`; `tests/entrypoints/cli`.
 
 ### Phase `W70.P335` - finding P1 #6: post-init hint leaf target
 
@@ -4038,8 +4032,8 @@ This Phase implements the config-init-shape 2026-05-14 amendment. It locks every
 This Phase implements the `2026-05-14-cli-workflow-redesign-list-vs-query-leaf-semantics-adr` decision and the per-surface amendments to `app-modelo-bindings-shape` and `app-live-shape`.
 
 - [ ] `W70.P336.S1959` - Read the list-vs-query-leaf-semantics ADR and the affected shape ADRs' 2026-05-14 amendments before editing; `.vault/adr`.
-- [ ] `W70.P336.S1960` - Make `--modelo`, `--year`, `--period`, and `--missing` optional refining filters on `aeat app modelo bindings list`; default to the full configured-binding set; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P336.S1961` - Make `--modelo` an optional refining filter on `aeat app live filed list`; default to the full filed set the live read adapter exposes; `src/aeat/entrypoints/cli`.
+- [ ] `W70.P336.S1960` - Make `--modelo`, `--year`, `--period`, and `--missing` optional refining filters on `aeat app modelo bindings list`; `default to the full configured-binding set; `src/aeat/entrypoints/cli`.
+- [ ] `W70.P336.S1961` - Make `--modelo` an optional refining filter on `aeat app live filed list`; `default to the full filed set the live read adapter exposes; `src/aeat/entrypoints/cli`.
 - [ ] `W70.P336.S1962` - Surface the accepted `--modelo` enum in `--help` (Typer choice or inline help text) for both leaves, derived from the registry; `src/aeat/entrypoints/cli`.
 - [ ] `W70.P336.S1963` - Add a Typer-graph traversal test that asserts every `list`-named leaf accepts bare invocation without required parameters; `tests/entrypoints/cli`.
 
@@ -4057,10 +4051,10 @@ This Phase implements the output-rendering-normalization 2026-05-14 amendment. I
 This Phase implements the app-review-queue-execution 2026-05-14 amendment. It auto-classifies pre-existing `borrador` records into a `legacy-borrador` cohort at profile init and demotes the cohort below `critical` severity.
 
 - [ ] `W70.P338.S1968` - Read the app-review-queue-execution ADR's 2026-05-14 amendment before editing; `.vault/adr`.
-- [ ] `W70.P338.S1969` - Add `legacy-borrador` cohort classification to the profile initialization service so `borrador` records present at init time are tagged at construction; emit a bucket event; `src/aeat/application/config`.
+- [ ] `W70.P338.S1969` - Add `legacy-borrador` cohort classification to the profile initialization service so `borrador` records present at init time are tagged at construction; `emit a bucket event; `src/aeat/application/config`.
 - [ ] `W70.P338.S1970` - Update the review-queue execution surface to demote the `legacy-borrador` cohort to `info` severity by default and surface a drill verb that lets the operator inspect, accept, or quarantine the cohort; `src/aeat/application/review`.
 - [ ] `W70.P338.S1971` - Add a migration step to `aeat config repair` (or equivalent already-approved migration path) that assigns the cohort on pre-existing profiles on next run; `src/aeat/application/config`.
-- [ ] `W70.P338.S1972` - Smoke: `aeat config init` followed by `aeat app review queue` on a fresh profile emits zero `critical` findings sourced from `legacy-borrador`; the drill verb returns the legacy records and labels their cohort; `tests/application/review`.
+- [ ] `W70.P338.S1972` - Smoke: `aeat config init` followed by `aeat app review queue` on a fresh profile emits zero `critical` findings sourced from `legacy-borrador`; `the drill verb returns the legacy records and labels their cohort; `tests/application/review`.
 
 ### Phase `W70.P339` - finding P2 #10: integrity-warning stability probes (confirm or falsify the concurrent-writer hypothesis first)
 
@@ -4069,9 +4063,9 @@ This Phase implements the `2026-05-14-cli-workflow-redesign-integrity-warning-st
 - [ ] `W70.P339.S1973` - Read the integrity-warning-stability ADR (Hypothesis section + Implementation probes) before editing; `.vault/adr`.
 - [ ] `W70.P339.S1974` - Add a determinism probe script that runs the secure-objects integrity scan N times without mutation and records `(row_namespace, row_key, integrity_status, observing_pid, observed_at_iso8601)` tuples plus the PIDs of any peer processes holding write handles concurrently with each observation; `scripts`.
 - [ ] `W70.P339.S1975` - Add a schema-stability probe that snapshots the secure-objects table schema at process start and exit and reports drift, also logging the observing PID and ISO-8601 timestamps; `scripts`.
-- [ ] `W70.P339.S1976` - Confirm or falsify the concurrent-writer hypothesis: run both probes against a fresh install, AND re-run the determinism probe under a controlled multi-process scenario (two or more concurrent integrity scans + writer handles open against the same secure-objects table). Capture findings in a follow-up reference document linked from the ADR's frontmatter; the reference document MUST state explicitly whether the captured PID + timestamp data confirms or falsifies the concurrent-writer hypothesis; `.vault/reference`.
-- [ ] `W70.P339.S1977` - Only after the prior step's reference document records a confirmed or falsified verdict, land the fix that matches the actual root cause: if confirmed, serialise integrity-scan writes against the secure-objects table; if falsified, address whichever root cause the captured data points at (master-key derivation drift, scan-pass classification, schema mutation under normal use). The fix must make the integrity scan a pure function of secure-objects table state and master key, with no wallclock, PID, or ambient input mixed into the computation; `src/aeat/adapters/persistence/storage`.
-- [ ] `W70.P339.S1978` - Smoke: a deterministic-scan test asserts the integrity-warning count is identical across N consecutive runs without mutation; an additional smoke runs two concurrent integrity scans and asserts the count remains stable under the controlled multi-process scenario; `tests/adapters/persistence`.
+- [ ] `W70.P339.S1976` - Confirm or falsify the concurrent-writer hypothesis: run both probes against a fresh install, AND re-run the determinism probe under a controlled multi-process scenario (two or more concurrent integrity scans + writer handles open against the same secure-objects table). Capture findings in a follow-up reference document linked from the ADR's frontmatter; `the reference document MUST state explicitly whether the captured PID + timestamp data confirms or falsifies the concurrent-writer hypothesis; `.vault/reference`.
+- [ ] `W70.P339.S1977` - Only after the prior step's reference document records a confirmed or falsified verdict, land the fix that matches the actual root cause: if confirmed, serialise integrity-scan writes against the secure-objects table; `if falsified, address whichever root cause the captured data points at (master-key derivation drift, scan-pass classification, schema mutation under normal use). The fix must make the integrity scan a pure function of secure-objects table state and master key, with no wallclock, PID, or ambient input mixed into the computation; `src/aeat/adapters/persistence/storage`.
+- [ ] `W70.P339.S1978` - Smoke: a deterministic-scan test asserts the integrity-warning count is identical across N consecutive runs without mutation; `an additional smoke runs two concurrent integrity scans and asserts the count remains stable under the controlled multi-process scenario; `tests/adapters/persistence`.
 
 ## Wave `W71` - Reconciliation: CRUD verb contract (cross-cutting lock)
 
