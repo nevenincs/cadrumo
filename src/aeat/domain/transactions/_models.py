@@ -28,7 +28,7 @@ from typing import Any, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator, model_validator
 
 from .._identifiers import canonical_decimal_string
-from ._enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._raw_transaction import RawTransaction
 
@@ -391,6 +391,121 @@ class TransactionLifecycleLineageEntry(BaseModel):
         return self
 
 
+class SplitLineage(BaseModel):
+    """Split-lineage anchor embedded on a parent/child/merged transaction.
+
+    Attributes:
+        split_group_id: Lowercase 64-char SHA-256 derived deterministically
+            by :func:`derive_split_group_id` from the parent's
+            ``transaction_id`` plus the sorted child amounts and narratives.
+            Identical inputs yield identical group ids so re-emission is
+            idempotent by construction.
+        role: Position in the lineage — PARENT, CHILD, or MERGED.
+        sibling_transaction_ids: For PARENT, every child id; for CHILD,
+            the parent id followed by every other child id; for MERGED,
+            the cohort of merged child ids (the original parent id is
+            not included — the parent has its own MERGED entry on the
+            archived parent record). Sorted lexicographically.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    split_group_id: str = Field(min_length=64, max_length=64)
+    role: SplitRole
+    sibling_transaction_ids: tuple[str, ...] = ()
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_role(cls, data: Any) -> Any:
+        if not isinstance(data, Mapping):
+            return data
+        payload = dict(data)
+        if isinstance(payload.get("role"), str):
+            payload["role"] = SplitRole(payload["role"])
+        return payload
+
+    @field_validator("split_group_id")
+    @classmethod
+    def _require_lowercase_hex(cls, value: str) -> str:
+        try:
+            int(value, 16)
+        except ValueError as exc:
+            raise TransactionValidationError(
+                "split_group_id must be a 64-character lowercase hex digest"
+            ) from exc
+        if value != value.lower():
+            raise TransactionValidationError("split_group_id must be lowercase")
+        return value
+
+    @field_validator("sibling_transaction_ids")
+    @classmethod
+    def _normalise_siblings(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        cleaned: list[str] = []
+        for sibling in value:
+            trimmed = sibling.strip()
+            if not trimmed:
+                raise TransactionValidationError("sibling_transaction_ids entries must not be blank")
+            if len(trimmed) != 64:
+                raise TransactionValidationError(
+                    "sibling_transaction_ids entries must be 64-character SHA-256 digests"
+                )
+            try:
+                int(trimmed, 16)
+            except ValueError as exc:
+                raise TransactionValidationError(
+                    "sibling_transaction_ids entries must be lowercase hex digests"
+                ) from exc
+            if trimmed != trimmed.lower():
+                raise TransactionValidationError("sibling_transaction_ids entries must be lowercase")
+            cleaned.append(trimmed)
+        if len(set(cleaned)) != len(cleaned):
+            raise TransactionValidationError("sibling_transaction_ids must be unique")
+        return tuple(sorted(cleaned))
+
+    @model_validator(mode="after")
+    def _require_siblings_for_lineage(self) -> Self:
+        if not self.sibling_transaction_ids:
+            raise TransactionValidationError(
+                "split_lineage must reference at least one sibling transaction id"
+            )
+        return self
+
+
+def derive_split_group_id(
+    *,
+    parent_transaction_id: str,
+    child_amounts: tuple[Decimal, ...],
+    child_narratives: tuple[str, ...],
+) -> str:
+    """Deterministically derive the ``split_group_id`` for a split cohort.
+
+    Identical (parent_id, amounts, narratives) tuples yield an identical
+    group id; this is what makes split-event re-emission idempotent.
+    Caller is responsible for amount/narrative pairing — the function
+    sorts amounts and narratives independently before hashing because
+    the group id identifies the *cohort*, not the per-child ordering.
+
+    Args:
+        parent_transaction_id: The 64-char SHA-256 of the parent row.
+        child_amounts: Per-child amounts, in any order.
+        child_narratives: Per-child narrative strings, in any order.
+
+    Returns:
+        Lowercase 64-char SHA-256 hex digest.
+    """
+    payload = json.dumps(
+        {
+            "parent_transaction_id": parent_transaction_id,
+            "child_amounts": sorted(canonical_decimal_string(amount) for amount in child_amounts),
+            "child_narratives": sorted(child_narratives),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 class Transaction(BaseModel):
     """Immutable transaction wrapper that preserves raw provenance verbatim.
 
@@ -423,8 +538,11 @@ class Transaction(BaseModel):
         created_event_id: Bucket event id for the create event when available.
         evidence_provenance: Actor/source lineage for attached evidence.
         edit_lineage: Durable edit chain for manual corrections.
-        lifecycle_state: Current active/archive/stash state.
+        lifecycle_state: Current active/archive/stash/split state.
         lifecycle_lineage: Durable lifecycle transition chain.
+        split_lineage: Optional :class:`SplitLineage` recording this row's
+            role within an N-way split cohort. ``None`` for transactions
+            that have never been split.
         notes: Free-text notes.
         classified_at: Timezone-aware timestamp of the active decision
             (``None`` when never classified).
@@ -460,6 +578,7 @@ class Transaction(BaseModel):
     edit_lineage: tuple[TransactionEditLineageEntry, ...] = ()
     lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE
     lifecycle_lineage: tuple[TransactionLifecycleLineageEntry, ...] = ()
+    split_lineage: SplitLineage | None = None
     notes: str = ""
     source_import_id: str | None = None
     classified_at: datetime | None = None
