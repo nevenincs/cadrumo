@@ -4780,48 +4780,48 @@ Enforce four-source taxonomy and ship missing aggregators.
 - [x] `W84.P405.S2304` - Read the per-modelo-aggregation-pipeline, invoice-domain-decoupling ADRs, apex §2 source-kind taxonomy, and identify every binding declaration that still admits bare invoice; `.vault/adr`.
 - [x] `W84.P405.S2305` - Reject bare invoice source-kind at the registry domain layer and enforce one of the four canonical source kinds; `src/aeat/domain/calculations/registry`.
 - [x] `W84.P405.S2306` - Implement retenciones aggregators for 111, 115, 123, 180, 190, 193 consuming explicit source kinds; `src/aeat/application/aggregation`.
-- [ ] `W84.P405.S2307` - Implement 347 and 349 counterpart aggregators using ledger and business-operation source kinds with GROI and NIF-IVA gating for 349; `src/aeat/application/aggregation`.
-- [ ] `W84.P405.S2308` - Implement 720 assets aggregator using purchase_invoice_evidence and payable_invoice source kinds to 720 casillas; `src/aeat/application/aggregation`.
+- [x] `W84.P405.S2307` - Implement 347 and 349 counterpart aggregators using ledger and business-operation source kinds with GROI and NIF-IVA gating for 349; `src/aeat/application/aggregation`.
+- [x] `W84.P405.S2308` - Implement 720 assets aggregator using purchase_invoice_evidence and payable_invoice source kinds to 720 casillas; `src/aeat/application/aggregation`.
 
 ### Phase `W84.P406` - shadow duplicate removal
 
 Audit registry TOMLs and fix test collection errors.
 
 - [x] `W84.P406.S2309` - Audit every modelo registry TOML for bare invoice source declarations and migrate to canonical source kinds; `registry/aeat/modelos`.
-- [ ] `W84.P406.S2310` - Remove any shadow aggregation paths that bypass the four-source taxonomy; `src/aeat/application/aggregation`.
-- [ ] `W84.P406.S2311` - Fix test collection errors in test_renta_ledger files per audit observation; `src/aeat/application/aggregation`.
-- [ ] `W84.P406.S2312` - Confirm _renta_ledger and _iva_ledger aggregators use only canonical source kinds; `src/aeat/application/aggregation`.
-- [ ] `W84.P406.S2313` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W84.P406.S2310` - Remove any shadow aggregation paths that bypass the four-source taxonomy; `src/aeat/application/aggregation`.
+- [x] `W84.P406.S2311` - Fix test collection errors in test_renta_ledger files per audit observation; `src/aeat/application/aggregation`.
+- [x] `W84.P406.S2312` - Confirm _renta_ledger and _iva_ledger aggregators use only canonical source kinds; `src/aeat/application/aggregation`.
+- [x] `W84.P406.S2313` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W84.P407` - de-shim and de-stub cleanup
 
 Remove aggregation stubs and wire observation models.
 
-- [ ] `W84.P407.S2314` - Remove any aggregation stub that returned empty results for retenciones, 347, 349, or 720; `src/aeat/application/aggregation`.
-- [ ] `W84.P407.S2315` - Wire renta-ledger-style aggregation observation models for retenciones, counterpart, assets pipelines; `src/aeat/application/aggregation`.
+- [x] `W84.P407.S2314` - Remove any aggregation stub that returned empty results for retenciones, 347, 349, or 720; `src/aeat/application/aggregation`.
+- [x] `W84.P407.S2315` - Wire renta-ledger-style aggregation observation models for retenciones, counterpart, assets pipelines; `src/aeat/application/aggregation`.
 - [x] `W84.P407.S2316` - Ensure rejection at registry domain layer emits a typed error naming the four canonical source-kind names; `src/aeat/domain/calculations/registry`.
-- [ ] `W84.P407.S2317` - Update help text and i18n where source-kind labels appear; `src/aeat/core/i18n`.
-- [ ] `W84.P407.S2318` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W84.P407.S2317` - Update help text and i18n where source-kind labels appear; `src/aeat/core/i18n`.
+- [x] `W84.P407.S2318` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W84.P408` - real behavior verification
 
 Test registry rejection, aggregator pipelines, end-to-end calculation.
 
 - [x] `W84.P408.S2319` - Add registry-load tests asserting bare invoice source declarations refuse to load with a typed error naming the four canonical source kinds; `tests/domain/calculations/registry`.
-- [ ] `W84.P408.S2320` - Add aggregator tests for retenciones, counterpart, assets pipelines; `tests/application/aggregation`.
-- [ ] `W84.P408.S2321` - Add end-to-end tests feeding canonical source-kind facts through pipeline to calculate revision asserting correct casilla values per workbook parity refs; `tests/application/aggregation`.
+- [x] `W84.P408.S2320` - Add aggregator tests for retenciones, counterpart, assets pipelines; `tests/application/aggregation`.
+- [x] `W84.P408.S2321` - Add end-to-end tests feeding canonical source-kind facts through pipeline to calculate revision asserting correct casilla values per workbook parity refs; `tests/application/aggregation`.
 - [x] `W84.P408.S2322` - Confirm test collection of test_renta_ledger files passes; `tests/application/aggregation`.
-- [ ] `W84.P408.S2323` - Run the W71 contract-conformance harness and assert four-source taxonomy is enforced everywhere; `tests/domain/calculations/registry`.
+- [x] `W84.P408.S2323` - Run the W71 contract-conformance harness and assert four-source taxonomy is enforced everywhere; `tests/domain/calculations/registry`.
 
 ### Phase `W84.P409` - thin cli exposure
 
 Render aggregation readiness in bindings list and update apex.
 
-- [ ] `W84.P409.S2324` - Confirm aeat app modelo bindings list and preview correctly render new aggregation readiness categories without adding new CLI surface; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W84.P409.S2325` - Validate help text and i18n alignment for source-kind labels; `src/aeat/core/i18n`.
-- [ ] `W84.P409.S2326` - Update apex ADR §2 source-kind taxonomy lock to record registry-layer enforcement and mark R21 closed by W84; `.vault/adr`.
-- [ ] `W84.P409.S2327` - Amend per-modelo-aggregation-pipeline and invoice-domain-decoupling child ADRs; `.vault/adr`.
-- [ ] `W84.P409.S2328` - Run vault check to confirm clean; `.vault`.
+- [x] `W84.P409.S2324` - Confirm aeat app modelo bindings list and preview correctly render new aggregation readiness categories without adding new CLI surface; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W84.P409.S2325` - Validate help text and i18n alignment for source-kind labels; `src/aeat/core/i18n`.
+- [x] `W84.P409.S2326` - Update apex ADR §2 source-kind taxonomy lock to record registry-layer enforcement and mark R21 closed by W84; `.vault/adr`.
+- [x] `W84.P409.S2327` - Amend per-modelo-aggregation-pipeline and invoice-domain-decoupling child ADRs; `.vault/adr`.
+- [x] `W84.P409.S2328` - Run vault check to confirm clean; `.vault`.
 
 ## Wave `W85` - Reconciliation: modelo foundations + harvest completions
 
