@@ -813,56 +813,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-bucket-adr` decision 
 
 This Phase delivers backend implementation for profile scoped storage bucket as required by `2026-05-12-cli-workflow-redesign-bucket-adr`.
 
-- [ ] `W13.P061.S0361` - Map the `2026-05-12-cli-workflow-redesign-bucket-adr` decision into non-CLI service ownership for profile scoped storage bucket; `src/aeat/adapters/persistence`.
-- [ ] `W13.P061.S0362` - Implement Pydantic command and result contracts for profile scoped storage bucket; `src/aeat/adapters/persistence`.
-- [ ] `W13.P061.S0363` - Wire application or domain services required by profile scoped storage bucket; `src/aeat/adapters/persistence`.
-- [ ] `W13.P061.S0364` - Connect persistence, bucket events, registry data, or provider adapters required by profile scoped storage bucket; `src/aeat/adapters/persistence`.
-- [ ] `W13.P061.S0365` - Route existing backend functionality into the canonical service for profile scoped storage bucket; `src/aeat/adapters/persistence`.
-- [ ] `W13.P061.S0366` - Record service-level error codes and log fields for profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P061.S0361` - Map the `2026-05-12-cli-workflow-redesign-bucket-adr` decision into non-CLI service ownership for profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P061.S0362` - Implement Pydantic command and result contracts for profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P061.S0363` - Wire application or domain services required by profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P061.S0364` - Connect persistence, bucket events, registry data, or provider adapters required by profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P061.S0365` - Route existing backend functionality into the canonical service for profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P061.S0366` - Record service-level error codes and log fields for profile scoped storage bucket; `src/aeat/adapters/persistence`.
 
 ### Phase `W13.P062` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for profile scoped storage bucket as required by `2026-05-12-cli-workflow-redesign-bucket-adr`.
 
-- [ ] `W13.P062.S0367` - Audit duplicate implementations that overlap profile scoped storage bucket; `src/aeat/adapters/persistence`.
-- [ ] `W13.P062.S0368` - Delete duplicate backend branches that compete with profile scoped storage bucket; `src/aeat/adapters/persistence`.
-- [ ] `W13.P062.S0369` - Remove stale aliases that bypass the canonical service for profile scoped storage bucket; `src/aeat/entrypoints/cli`.
-- [ ] `W13.P062.S0370` - Migrate internal callers to the canonical service for profile scoped storage bucket; `src/aeat/adapters/persistence`.
-- [ ] `W13.P062.S0371` - Remove stale fixtures and tests that encode duplicate behavior for profile scoped storage bucket; `tests/adapters/persistence`.
-- [ ] `W13.P062.S0372` - Update boundary inventory entries that describe duplicate behavior for profile scoped storage bucket; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W13.P062.S0367` - Audit duplicate implementations that overlap profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P062.S0368` - Delete duplicate backend branches that compete with profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P062.S0369` - Remove stale aliases that bypass the canonical service for profile scoped storage bucket; `src/aeat/entrypoints/cli`.
+- [x] `W13.P062.S0370` - Migrate internal callers to the canonical service for profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P062.S0371` - Remove stale fixtures and tests that encode duplicate behavior for profile scoped storage bucket; `tests/adapters/persistence`.
+- [x] `W13.P062.S0372` - Update boundary inventory entries that describe duplicate behavior for profile scoped storage bucket; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W13.P063` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for profile scoped storage bucket as required by `2026-05-12-cli-workflow-redesign-bucket-adr`.
 
-- [ ] `W13.P063.S0373` - Delete compatibility shims that preserve rejected behavior for profile scoped storage bucket; `src/aeat/adapters/persistence`.
-- [ ] `W13.P063.S0374` - Delete placeholder stubs that claim support for profile scoped storage bucket; `src/aeat/adapters/persistence`.
-- [ ] `W13.P063.S0375` - Replace stubbed paths with real backend service calls for profile scoped storage bucket; `src/aeat/adapters/persistence`.
-- [ ] `W13.P063.S0376` - Remove deprecated command spelling and help text for profile scoped storage bucket; `src/aeat/entrypoints/cli`.
-- [ ] `W13.P063.S0377` - Remove tests that assert shim or stub behavior for profile scoped storage bucket; `tests/adapters/persistence`.
-- [ ] `W13.P063.S0378` - Record the removed shim and stub surfaces for profile scoped storage bucket; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W13.P063.S0373` - Delete compatibility shims that preserve rejected behavior for profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P063.S0374` - Delete placeholder stubs that claim support for profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P063.S0375` - Replace stubbed paths with real backend service calls for profile scoped storage bucket; `src/aeat/adapters/persistence`.
+- [x] `W13.P063.S0376` - Remove deprecated command spelling and help text for profile scoped storage bucket; `src/aeat/entrypoints/cli`.
+- [x] `W13.P063.S0377` - Remove tests that assert shim or stub behavior for profile scoped storage bucket; `tests/adapters/persistence`.
+- [x] `W13.P063.S0378` - Record the removed shim and stub surfaces for profile scoped storage bucket; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W13.P064` - real behavior verification
 
 This Phase delivers real behavior verification for profile scoped storage bucket as required by `2026-05-12-cli-workflow-redesign-bucket-adr`.
 
-- [ ] `W13.P064.S0379` - Add service contract tests for profile scoped storage bucket; `tests/adapters/persistence`.
-- [ ] `W13.P064.S0380` - Add persistence or registry integration tests for profile scoped storage bucket; `tests/adapters/persistence`.
-- [ ] `W13.P064.S0381` - Add negative tests proving rejected aliases do not reach profile scoped storage bucket; `tests/entrypoints/cli`.
-- [ ] `W13.P064.S0382` - Add command behavior tests that exercise profile scoped storage bucket through real services; `tests/entrypoints/cli`.
-- [ ] `W13.P064.S0383` - Add end-to-end workflow coverage for profile scoped storage bucket; `tests`.
-- [ ] `W13.P064.S0384` - Run the targeted test slice for profile scoped storage bucket without skips or xfails; `tests/adapters/persistence`.
+- [x] `W13.P064.S0379` - Add service contract tests for profile scoped storage bucket; `tests/adapters/persistence`.
+- [x] `W13.P064.S0380` - Add persistence or registry integration tests for profile scoped storage bucket; `tests/adapters/persistence`.
+- [x] `W13.P064.S0381` - Add negative tests proving rejected aliases do not reach profile scoped storage bucket; `tests/entrypoints/cli`.
+- [x] `W13.P064.S0382` - Add command behavior tests that exercise profile scoped storage bucket through real services; `tests/entrypoints/cli`.
+- [x] `W13.P064.S0383` - Add end-to-end workflow coverage for profile scoped storage bucket; `tests`.
+- [x] `W13.P064.S0384` - Run the targeted test slice for profile scoped storage bucket without skips or xfails; `tests/adapters/persistence`.
 
 ### Phase `W13.P065` - thin cli exposure
 
 This Phase delivers thin cli exposure for profile scoped storage bucket as required by `2026-05-12-cli-workflow-redesign-bucket-adr`.
 
-- [ ] `W13.P065.S0385` - Expose accepted command handlers for profile scoped storage bucket under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W13.P065.S0386` - Keep argument parsing for profile scoped storage bucket separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W13.P065.S0387` - Delegate profile scoped storage bucket execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W13.P065.S0388` - Render profile scoped storage bucket results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W13.P065.S0389` - Handle profile scoped storage bucket failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W13.P065.S0390` - Validate help text for profile scoped storage bucket uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W13.P065.S0385` - Expose accepted command handlers for profile scoped storage bucket under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W13.P065.S0386` - Keep argument parsing for profile scoped storage bucket separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W13.P065.S0387` - Delegate profile scoped storage bucket execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W13.P065.S0388` - Render profile scoped storage bucket results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W13.P065.S0389` - Handle profile scoped storage bucket failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W13.P065.S0390` - Validate help text for profile scoped storage bucket uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W14` - bucket event history
 
@@ -992,56 +992,56 @@ This Wave implements the `2026-04-21-auth-cli-adr` decision for authentication c
 
 This Phase delivers backend implementation for authentication cli migration as required by `2026-04-21-auth-cli-adr`.
 
-- [ ] `W16.P076.S0451` - Map the `2026-04-21-auth-cli-adr` decision into non-CLI service ownership for authentication cli migration; `src/aeat/application/auth`.
-- [ ] `W16.P076.S0452` - Implement Pydantic command and result contracts for authentication cli migration; `src/aeat/application/auth`.
-- [ ] `W16.P076.S0453` - Wire application or domain services required by authentication cli migration; `src/aeat/application/auth`.
-- [ ] `W16.P076.S0454` - Connect persistence, bucket events, registry data, or provider adapters required by authentication cli migration; `src/aeat/application/auth`.
-- [ ] `W16.P076.S0455` - Route existing backend functionality into the canonical service for authentication cli migration; `src/aeat/application/auth`.
-- [ ] `W16.P076.S0456` - Record service-level error codes and log fields for authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P076.S0451` - Map the `2026-04-21-auth-cli-adr` decision into non-CLI service ownership for authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P076.S0452` - Implement Pydantic command and result contracts for authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P076.S0453` - Wire application or domain services required by authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P076.S0454` - Connect persistence, bucket events, registry data, or provider adapters required by authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P076.S0455` - Route existing backend functionality into the canonical service for authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P076.S0456` - Record service-level error codes and log fields for authentication cli migration; `src/aeat/application/auth`.
 
 ### Phase `W16.P077` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for authentication cli migration as required by `2026-04-21-auth-cli-adr`.
 
-- [ ] `W16.P077.S0457` - Audit duplicate implementations that overlap authentication cli migration; `src/aeat/application/auth`.
-- [ ] `W16.P077.S0458` - Delete duplicate backend branches that compete with authentication cli migration; `src/aeat/application/auth`.
-- [ ] `W16.P077.S0459` - Remove stale aliases that bypass the canonical service for authentication cli migration; `src/aeat/entrypoints/cli`.
-- [ ] `W16.P077.S0460` - Migrate internal callers to the canonical service for authentication cli migration; `src/aeat/application/auth`.
-- [ ] `W16.P077.S0461` - Remove stale fixtures and tests that encode duplicate behavior for authentication cli migration; `tests/application/auth`.
-- [ ] `W16.P077.S0462` - Update boundary inventory entries that describe duplicate behavior for authentication cli migration; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W16.P077.S0457` - Audit duplicate implementations that overlap authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P077.S0458` - Delete duplicate backend branches that compete with authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P077.S0459` - Remove stale aliases that bypass the canonical service for authentication cli migration; `src/aeat/entrypoints/cli`.
+- [x] `W16.P077.S0460` - Migrate internal callers to the canonical service for authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P077.S0461` - Remove stale fixtures and tests that encode duplicate behavior for authentication cli migration; `tests/application/auth`.
+- [x] `W16.P077.S0462` - Update boundary inventory entries that describe duplicate behavior for authentication cli migration; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W16.P078` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for authentication cli migration as required by `2026-04-21-auth-cli-adr`.
 
-- [ ] `W16.P078.S0463` - Delete compatibility shims that preserve rejected behavior for authentication cli migration; `src/aeat/application/auth`.
-- [ ] `W16.P078.S0464` - Delete placeholder stubs that claim support for authentication cli migration; `src/aeat/application/auth`.
-- [ ] `W16.P078.S0465` - Replace stubbed paths with real backend service calls for authentication cli migration; `src/aeat/application/auth`.
-- [ ] `W16.P078.S0466` - Remove deprecated command spelling and help text for authentication cli migration; `src/aeat/entrypoints/cli`.
-- [ ] `W16.P078.S0467` - Remove tests that assert shim or stub behavior for authentication cli migration; `tests/application/auth`.
-- [ ] `W16.P078.S0468` - Record the removed shim and stub surfaces for authentication cli migration; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W16.P078.S0463` - Delete compatibility shims that preserve rejected behavior for authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P078.S0464` - Delete placeholder stubs that claim support for authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P078.S0465` - Replace stubbed paths with real backend service calls for authentication cli migration; `src/aeat/application/auth`.
+- [x] `W16.P078.S0466` - Remove deprecated command spelling and help text for authentication cli migration; `src/aeat/entrypoints/cli`.
+- [x] `W16.P078.S0467` - Remove tests that assert shim or stub behavior for authentication cli migration; `tests/application/auth`.
+- [x] `W16.P078.S0468` - Record the removed shim and stub surfaces for authentication cli migration; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W16.P079` - real behavior verification
 
 This Phase delivers real behavior verification for authentication cli migration as required by `2026-04-21-auth-cli-adr`.
 
-- [ ] `W16.P079.S0469` - Add service contract tests for authentication cli migration; `tests/application/auth`.
-- [ ] `W16.P079.S0470` - Add persistence or registry integration tests for authentication cli migration; `tests/application/auth`.
-- [ ] `W16.P079.S0471` - Add negative tests proving rejected aliases do not reach authentication cli migration; `tests/entrypoints/cli`.
-- [ ] `W16.P079.S0472` - Add command behavior tests that exercise authentication cli migration through real services; `tests/entrypoints/cli`.
-- [ ] `W16.P079.S0473` - Add end-to-end workflow coverage for authentication cli migration; `tests`.
-- [ ] `W16.P079.S0474` - Run the targeted test slice for authentication cli migration without skips or xfails; `tests/application/auth`.
+- [x] `W16.P079.S0469` - Add service contract tests for authentication cli migration; `tests/application/auth`.
+- [x] `W16.P079.S0470` - Add persistence or registry integration tests for authentication cli migration; `tests/application/auth`.
+- [x] `W16.P079.S0471` - Add negative tests proving rejected aliases do not reach authentication cli migration; `tests/entrypoints/cli`.
+- [x] `W16.P079.S0472` - Add command behavior tests that exercise authentication cli migration through real services; `tests/entrypoints/cli`.
+- [x] `W16.P079.S0473` - Add end-to-end workflow coverage for authentication cli migration; `tests`.
+- [x] `W16.P079.S0474` - Run the targeted test slice for authentication cli migration without skips or xfails; `tests/application/auth`.
 
 ### Phase `W16.P080` - thin cli exposure
 
 This Phase delivers thin cli exposure for authentication cli migration as required by `2026-04-21-auth-cli-adr`.
 
-- [ ] `W16.P080.S0475` - Expose accepted command handlers for authentication cli migration under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W16.P080.S0476` - Keep argument parsing for authentication cli migration separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W16.P080.S0477` - Delegate authentication cli migration execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W16.P080.S0478` - Render authentication cli migration results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W16.P080.S0479` - Handle authentication cli migration failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W16.P080.S0480` - Validate help text for authentication cli migration uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W16.P080.S0475` - Expose accepted command handlers for authentication cli migration under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W16.P080.S0476` - Keep argument parsing for authentication cli migration separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W16.P080.S0477` - Delegate authentication cli migration execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W16.P080.S0478` - Render authentication cli migration results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W16.P080.S0479` - Handle authentication cli migration failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W16.P080.S0480` - Validate help text for authentication cli migration uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W17` - config auth shape
 
@@ -1051,56 +1051,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-config-auth-shape-adr
 
 This Phase delivers backend implementation for authentication configuration surface as required by `2026-05-12-cli-workflow-redesign-config-auth-shape-adr`.
 
-- [ ] `W17.P081.S0481` - Map the `2026-05-12-cli-workflow-redesign-config-auth-shape-adr` decision into non-CLI service ownership for authentication configuration surface; `src/aeat/application/auth`.
-- [ ] `W17.P081.S0482` - Implement Pydantic command and result contracts for authentication configuration surface; `src/aeat/application/auth`.
-- [ ] `W17.P081.S0483` - Wire application or domain services required by authentication configuration surface; `src/aeat/application/auth`.
-- [ ] `W17.P081.S0484` - Connect persistence, bucket events, registry data, or provider adapters required by authentication configuration surface; `src/aeat/application/auth`.
-- [ ] `W17.P081.S0485` - Route existing backend functionality into the canonical service for authentication configuration surface; `src/aeat/application/auth`.
-- [ ] `W17.P081.S0486` - Record service-level error codes and log fields for authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P081.S0481` - Map the `2026-05-12-cli-workflow-redesign-config-auth-shape-adr` decision into non-CLI service ownership for authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P081.S0482` - Implement Pydantic command and result contracts for authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P081.S0483` - Wire application or domain services required by authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P081.S0484` - Connect persistence, bucket events, registry data, or provider adapters required by authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P081.S0485` - Route existing backend functionality into the canonical service for authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P081.S0486` - Record service-level error codes and log fields for authentication configuration surface; `src/aeat/application/auth`.
 
 ### Phase `W17.P082` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for authentication configuration surface as required by `2026-05-12-cli-workflow-redesign-config-auth-shape-adr`.
 
-- [ ] `W17.P082.S0487` - Audit duplicate implementations that overlap authentication configuration surface; `src/aeat/application/auth`.
-- [ ] `W17.P082.S0488` - Delete duplicate backend branches that compete with authentication configuration surface; `src/aeat/application/auth`.
-- [ ] `W17.P082.S0489` - Remove stale aliases that bypass the canonical service for authentication configuration surface; `src/aeat/entrypoints/cli`.
-- [ ] `W17.P082.S0490` - Migrate internal callers to the canonical service for authentication configuration surface; `src/aeat/application/auth`.
-- [ ] `W17.P082.S0491` - Remove stale fixtures and tests that encode duplicate behavior for authentication configuration surface; `tests/application/auth`.
-- [ ] `W17.P082.S0492` - Update boundary inventory entries that describe duplicate behavior for authentication configuration surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W17.P082.S0487` - Audit duplicate implementations that overlap authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P082.S0488` - Delete duplicate backend branches that compete with authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P082.S0489` - Remove stale aliases that bypass the canonical service for authentication configuration surface; `src/aeat/entrypoints/cli`.
+- [x] `W17.P082.S0490` - Migrate internal callers to the canonical service for authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P082.S0491` - Remove stale fixtures and tests that encode duplicate behavior for authentication configuration surface; `tests/application/auth`.
+- [x] `W17.P082.S0492` - Update boundary inventory entries that describe duplicate behavior for authentication configuration surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W17.P083` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for authentication configuration surface as required by `2026-05-12-cli-workflow-redesign-config-auth-shape-adr`.
 
-- [ ] `W17.P083.S0493` - Delete compatibility shims that preserve rejected behavior for authentication configuration surface; `src/aeat/application/auth`.
-- [ ] `W17.P083.S0494` - Delete placeholder stubs that claim support for authentication configuration surface; `src/aeat/application/auth`.
-- [ ] `W17.P083.S0495` - Replace stubbed paths with real backend service calls for authentication configuration surface; `src/aeat/application/auth`.
-- [ ] `W17.P083.S0496` - Remove deprecated command spelling and help text for authentication configuration surface; `src/aeat/entrypoints/cli`.
-- [ ] `W17.P083.S0497` - Remove tests that assert shim or stub behavior for authentication configuration surface; `tests/application/auth`.
-- [ ] `W17.P083.S0498` - Record the removed shim and stub surfaces for authentication configuration surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W17.P083.S0493` - Delete compatibility shims that preserve rejected behavior for authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P083.S0494` - Delete placeholder stubs that claim support for authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P083.S0495` - Replace stubbed paths with real backend service calls for authentication configuration surface; `src/aeat/application/auth`.
+- [x] `W17.P083.S0496` - Remove deprecated command spelling and help text for authentication configuration surface; `src/aeat/entrypoints/cli`.
+- [x] `W17.P083.S0497` - Remove tests that assert shim or stub behavior for authentication configuration surface; `tests/application/auth`.
+- [x] `W17.P083.S0498` - Record the removed shim and stub surfaces for authentication configuration surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W17.P084` - real behavior verification
 
 This Phase delivers real behavior verification for authentication configuration surface as required by `2026-05-12-cli-workflow-redesign-config-auth-shape-adr`.
 
-- [ ] `W17.P084.S0499` - Add service contract tests for authentication configuration surface; `tests/application/auth`.
-- [ ] `W17.P084.S0500` - Add persistence or registry integration tests for authentication configuration surface; `tests/application/auth`.
-- [ ] `W17.P084.S0501` - Add negative tests proving rejected aliases do not reach authentication configuration surface; `tests/entrypoints/cli`.
-- [ ] `W17.P084.S0502` - Add command behavior tests that exercise authentication configuration surface through real services; `tests/entrypoints/cli`.
-- [ ] `W17.P084.S0503` - Add end-to-end workflow coverage for authentication configuration surface; `tests`.
-- [ ] `W17.P084.S0504` - Run the targeted test slice for authentication configuration surface without skips or xfails; `tests/application/auth`.
+- [x] `W17.P084.S0499` - Add service contract tests for authentication configuration surface; `tests/application/auth`.
+- [x] `W17.P084.S0500` - Add persistence or registry integration tests for authentication configuration surface; `tests/application/auth`.
+- [x] `W17.P084.S0501` - Add negative tests proving rejected aliases do not reach authentication configuration surface; `tests/entrypoints/cli`.
+- [x] `W17.P084.S0502` - Add command behavior tests that exercise authentication configuration surface through real services; `tests/entrypoints/cli`.
+- [x] `W17.P084.S0503` - Add end-to-end workflow coverage for authentication configuration surface; `tests`.
+- [x] `W17.P084.S0504` - Run the targeted test slice for authentication configuration surface without skips or xfails; `tests/application/auth`.
 
 ### Phase `W17.P085` - thin cli exposure
 
 This Phase delivers thin cli exposure for authentication configuration surface as required by `2026-05-12-cli-workflow-redesign-config-auth-shape-adr`.
 
-- [ ] `W17.P085.S0505` - Expose accepted command handlers for authentication configuration surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W17.P085.S0506` - Keep argument parsing for authentication configuration surface separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W17.P085.S0507` - Delegate authentication configuration surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W17.P085.S0508` - Render authentication configuration surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W17.P085.S0509` - Handle authentication configuration surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W17.P085.S0510` - Validate help text for authentication configuration surface uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W17.P085.S0505` - Expose accepted command handlers for authentication configuration surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W17.P085.S0506` - Keep argument parsing for authentication configuration surface separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W17.P085.S0507` - Delegate authentication configuration surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W17.P085.S0508` - Render authentication configuration surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W17.P085.S0509` - Handle authentication configuration surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W17.P085.S0510` - Validate help text for authentication configuration surface uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W18` - config repair shape
 
@@ -1110,56 +1110,56 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-config-repair-shape-a
 
 This Phase delivers backend implementation for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
-- [ ] `W18.P086.S0511` - Map the `2026-05-13-cli-workflow-redesign-config-repair-shape-adr` decision into non-CLI service ownership for diagnostic, integrity, and maintenance surface; `src/aeat/application/diagnostics`.
-- [ ] `W18.P086.S0512` - Implement Pydantic command and result contracts for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
-- [ ] `W18.P086.S0513` - Wire application or domain services required by diagnostic and integrity surface; `src/aeat/application/diagnostics`.
-- [ ] `W18.P086.S0514` - Connect persistence, bucket events, registry data, or provider adapters required by diagnostic and integrity surface; `src/aeat/application/diagnostics`.
-- [ ] `W18.P086.S0515` - Route existing backend functionality into the canonical service for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
-- [ ] `W18.P086.S0516` - Record service-level error codes and log fields for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P086.S0511` - Map the `2026-05-13-cli-workflow-redesign-config-repair-shape-adr` decision into non-CLI service ownership for diagnostic, integrity, and maintenance surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P086.S0512` - Implement Pydantic command and result contracts for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P086.S0513` - Wire application or domain services required by diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P086.S0514` - Connect persistence, bucket events, registry data, or provider adapters required by diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P086.S0515` - Route existing backend functionality into the canonical service for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P086.S0516` - Record service-level error codes and log fields for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
 
 ### Phase `W18.P087` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
-- [ ] `W18.P087.S0517` - Audit duplicate implementations that overlap diagnostic and integrity surface; `src/aeat/application/diagnostics`.
-- [ ] `W18.P087.S0518` - Delete duplicate backend branches that compete with diagnostic and integrity surface; `src/aeat/application/diagnostics`.
-- [ ] `W18.P087.S0519` - Remove stale aliases that bypass the canonical service for diagnostic and integrity surface; `src/aeat/entrypoints/cli`.
-- [ ] `W18.P087.S0520` - Migrate internal callers to the canonical service for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
-- [ ] `W18.P087.S0521` - Remove stale fixtures and tests that encode duplicate behavior for diagnostic and integrity surface; `tests/entrypoints/cli`.
-- [ ] `W18.P087.S0522` - Update boundary inventory entries that describe duplicate behavior for diagnostic and integrity surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W18.P087.S0517` - Audit duplicate implementations that overlap diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P087.S0518` - Delete duplicate backend branches that compete with diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P087.S0519` - Remove stale aliases that bypass the canonical service for diagnostic and integrity surface; `src/aeat/entrypoints/cli`.
+- [x] `W18.P087.S0520` - Migrate internal callers to the canonical service for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P087.S0521` - Remove stale fixtures and tests that encode duplicate behavior for diagnostic and integrity surface; `tests/entrypoints/cli`.
+- [x] `W18.P087.S0522` - Update boundary inventory entries that describe duplicate behavior for diagnostic and integrity surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W18.P088` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
-- [ ] `W18.P088.S0523` - Delete compatibility shims that preserve rejected behavior for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
-- [ ] `W18.P088.S0524` - Delete placeholder stubs that claim support for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
-- [ ] `W18.P088.S0525` - Replace stubbed paths with real backend service calls for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
-- [ ] `W18.P088.S0526` - Remove deprecated command spelling and help text for diagnostic and integrity surface; `src/aeat/entrypoints/cli`.
-- [ ] `W18.P088.S0527` - Remove tests that assert shim or stub behavior for diagnostic and integrity surface; `tests/entrypoints/cli`.
-- [ ] `W18.P088.S0528` - Record the removed shim and stub surfaces for diagnostic and integrity surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W18.P088.S0523` - Delete compatibility shims that preserve rejected behavior for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P088.S0524` - Delete placeholder stubs that claim support for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P088.S0525` - Replace stubbed paths with real backend service calls for diagnostic and integrity surface; `src/aeat/application/diagnostics`.
+- [x] `W18.P088.S0526` - Remove deprecated command spelling and help text for diagnostic and integrity surface; `src/aeat/entrypoints/cli`.
+- [x] `W18.P088.S0527` - Remove tests that assert shim or stub behavior for diagnostic and integrity surface; `tests/entrypoints/cli`.
+- [x] `W18.P088.S0528` - Record the removed shim and stub surfaces for diagnostic and integrity surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W18.P089` - real behavior verification
 
 This Phase delivers real behavior verification for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
-- [ ] `W18.P089.S0529` - Add service contract tests for diagnostic and integrity surface; `tests/entrypoints/cli`.
-- [ ] `W18.P089.S0530` - Add persistence or registry integration tests for diagnostic and integrity surface; `tests/entrypoints/cli`.
-- [ ] `W18.P089.S0531` - Add negative tests proving rejected aliases do not reach diagnostic and integrity surface; `tests/entrypoints/cli`.
-- [ ] `W18.P089.S0532` - Add command behavior tests that exercise diagnostic and integrity surface through real services; `tests/entrypoints/cli`.
-- [ ] `W18.P089.S0533` - Add end-to-end workflow coverage for diagnostic and integrity surface; `tests`.
-- [ ] `W18.P089.S0534` - Run the targeted test slice for diagnostic and integrity surface without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W18.P089.S0529` - Add service contract tests for diagnostic and integrity surface; `tests/entrypoints/cli`.
+- [x] `W18.P089.S0530` - Add persistence or registry integration tests for diagnostic and integrity surface; `tests/entrypoints/cli`.
+- [x] `W18.P089.S0531` - Add negative tests proving rejected aliases do not reach diagnostic and integrity surface; `tests/entrypoints/cli`.
+- [x] `W18.P089.S0532` - Add command behavior tests that exercise diagnostic and integrity surface through real services; `tests/entrypoints/cli`.
+- [x] `W18.P089.S0533` - Add end-to-end workflow coverage for diagnostic and integrity surface; `tests`.
+- [x] `W18.P089.S0534` - Run the targeted test slice for diagnostic and integrity surface without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W18.P090` - thin cli exposure
 
 This Phase delivers thin cli exposure for diagnostic and integrity surface as required by `2026-05-13-cli-workflow-redesign-config-repair-shape-adr`.
 
-- [ ] `W18.P090.S0535` - Expose accepted command handlers for diagnostic and integrity surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W18.P090.S0536` - Keep argument parsing for diagnostic and integrity surface separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W18.P090.S0537` - Delegate diagnostic and integrity surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W18.P090.S0538` - Render diagnostic and integrity surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W18.P090.S0539` - Handle diagnostic and integrity surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W18.P090.S0540` - Validate help text for diagnostic and integrity surface uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W18.P090.S0535` - Expose accepted command handlers for diagnostic and integrity surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W18.P090.S0536` - Keep argument parsing for diagnostic and integrity surface separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W18.P090.S0537` - Delegate diagnostic and integrity surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W18.P090.S0538` - Render diagnostic and integrity surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W18.P090.S0539` - Handle diagnostic and integrity surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W18.P090.S0540` - Validate help text for diagnostic and integrity surface uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W19` - config profile use and status
 
@@ -1169,56 +1169,56 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-config-profile-use-an
 
 This Phase delivers backend implementation for active profile selection and status as required by `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr`.
 
-- [ ] `W19.P091.S0541` - Map the `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr` decision into non-CLI service ownership for active profile selection and status; `src/aeat/application/profile`.
-- [ ] `W19.P091.S0542` - Implement Pydantic command and result contracts for active profile selection and status; `src/aeat/application/profile`.
-- [ ] `W19.P091.S0543` - Wire application or domain services required by active profile selection and status; `src/aeat/application/profile`.
-- [ ] `W19.P091.S0544` - Connect persistence, bucket events, registry data, or provider adapters required by active profile selection and status; `src/aeat/application/profile`.
-- [ ] `W19.P091.S0545` - Route existing backend functionality into the canonical service for active profile selection and status; `src/aeat/application/profile`.
-- [ ] `W19.P091.S0546` - Record service-level error codes and log fields for active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P091.S0541` - Map the `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr` decision into non-CLI service ownership for active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P091.S0542` - Implement Pydantic command and result contracts for active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P091.S0543` - Wire application or domain services required by active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P091.S0544` - Connect persistence, bucket events, registry data, or provider adapters required by active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P091.S0545` - Route existing backend functionality into the canonical service for active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P091.S0546` - Record service-level error codes and log fields for active profile selection and status; `src/aeat/application/profile`.
 
 ### Phase `W19.P092` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for active profile selection and status as required by `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr`.
 
-- [ ] `W19.P092.S0547` - Audit duplicate implementations that overlap active profile selection and status; `src/aeat/application/profile`.
-- [ ] `W19.P092.S0548` - Delete duplicate backend branches that compete with active profile selection and status; `src/aeat/application/profile`.
-- [ ] `W19.P092.S0549` - Remove stale aliases that bypass the canonical service for active profile selection and status; `src/aeat/entrypoints/cli`.
-- [ ] `W19.P092.S0550` - Migrate internal callers to the canonical service for active profile selection and status; `src/aeat/application/profile`.
-- [ ] `W19.P092.S0551` - Remove stale fixtures and tests that encode duplicate behavior for active profile selection and status; `tests/entrypoints/cli`.
-- [ ] `W19.P092.S0552` - Update boundary inventory entries that describe duplicate behavior for active profile selection and status; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W19.P092.S0547` - Audit duplicate implementations that overlap active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P092.S0548` - Delete duplicate backend branches that compete with active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P092.S0549` - Remove stale aliases that bypass the canonical service for active profile selection and status; `src/aeat/entrypoints/cli`.
+- [x] `W19.P092.S0550` - Migrate internal callers to the canonical service for active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P092.S0551` - Remove stale fixtures and tests that encode duplicate behavior for active profile selection and status; `tests/entrypoints/cli`.
+- [x] `W19.P092.S0552` - Update boundary inventory entries that describe duplicate behavior for active profile selection and status; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W19.P093` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for active profile selection and status as required by `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr`.
 
-- [ ] `W19.P093.S0553` - Delete compatibility shims that preserve rejected behavior for active profile selection and status; `src/aeat/application/profile`.
-- [ ] `W19.P093.S0554` - Delete placeholder stubs that claim support for active profile selection and status; `src/aeat/application/profile`.
-- [ ] `W19.P093.S0555` - Replace stubbed paths with real backend service calls for active profile selection and status; `src/aeat/application/profile`.
-- [ ] `W19.P093.S0556` - Remove deprecated command spelling and help text for active profile selection and status; `src/aeat/entrypoints/cli`.
-- [ ] `W19.P093.S0557` - Remove tests that assert shim or stub behavior for active profile selection and status; `tests/entrypoints/cli`.
-- [ ] `W19.P093.S0558` - Record the removed shim and stub surfaces for active profile selection and status; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W19.P093.S0553` - Delete compatibility shims that preserve rejected behavior for active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P093.S0554` - Delete placeholder stubs that claim support for active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P093.S0555` - Replace stubbed paths with real backend service calls for active profile selection and status; `src/aeat/application/profile`.
+- [x] `W19.P093.S0556` - Remove deprecated command spelling and help text for active profile selection and status; `src/aeat/entrypoints/cli`.
+- [x] `W19.P093.S0557` - Remove tests that assert shim or stub behavior for active profile selection and status; `tests/entrypoints/cli`.
+- [x] `W19.P093.S0558` - Record the removed shim and stub surfaces for active profile selection and status; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W19.P094` - real behavior verification
 
 This Phase delivers real behavior verification for active profile selection and status as required by `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr`.
 
-- [ ] `W19.P094.S0559` - Add service contract tests for active profile selection and status; `tests/entrypoints/cli`.
-- [ ] `W19.P094.S0560` - Add persistence or registry integration tests for active profile selection and status; `tests/entrypoints/cli`.
-- [ ] `W19.P094.S0561` - Add negative tests proving rejected aliases do not reach active profile selection and status; `tests/entrypoints/cli`.
-- [ ] `W19.P094.S0562` - Add command behavior tests that exercise active profile selection and status through real services; `tests/entrypoints/cli`.
-- [ ] `W19.P094.S0563` - Add end-to-end workflow coverage for active profile selection and status; `tests`.
-- [ ] `W19.P094.S0564` - Run the targeted test slice for active profile selection and status without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W19.P094.S0559` - Add service contract tests for active profile selection and status; `tests/entrypoints/cli`.
+- [x] `W19.P094.S0560` - Add persistence or registry integration tests for active profile selection and status; `tests/entrypoints/cli`.
+- [x] `W19.P094.S0561` - Add negative tests proving rejected aliases do not reach active profile selection and status; `tests/entrypoints/cli`.
+- [x] `W19.P094.S0562` - Add command behavior tests that exercise active profile selection and status through real services; `tests/entrypoints/cli`.
+- [x] `W19.P094.S0563` - Add end-to-end workflow coverage for active profile selection and status; `tests`.
+- [x] `W19.P094.S0564` - Run the targeted test slice for active profile selection and status without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W19.P095` - thin cli exposure
 
 This Phase delivers thin cli exposure for active profile selection and status as required by `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr`.
 
-- [ ] `W19.P095.S0565` - Expose accepted command handlers for active profile selection and status under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W19.P095.S0566` - Keep argument parsing for active profile selection and status separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W19.P095.S0567` - Delegate active profile selection and status execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W19.P095.S0568` - Render active profile selection and status results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W19.P095.S0569` - Handle active profile selection and status failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W19.P095.S0570` - Validate help text for active profile selection and status uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W19.P095.S0565` - Expose accepted command handlers for active profile selection and status under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W19.P095.S0566` - Keep argument parsing for active profile selection and status separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W19.P095.S0567` - Delegate active profile selection and status execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W19.P095.S0568` - Render active profile selection and status results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W19.P095.S0569` - Handle active profile selection and status failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W19.P095.S0570` - Validate help text for active profile selection and status uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W20` - apoderamientos surface
 
