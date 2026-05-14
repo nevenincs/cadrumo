@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import re
 from pathlib import Path
 from typing import Any
@@ -34,7 +33,6 @@ def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'profile-language.db').as_posix()}")
     monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
-    monkeypatch.delenv("AEAT_CLI_LANGUAGE", raising=False)
     dispose_engine()
 
 
@@ -138,6 +136,12 @@ def test_global_language_flag_overrides_profile_for_invocation(
 
     result = _invoke(["--language", "en", "--format", "json"])
 
+    # The --language flag's effect is scoped to the CLI invocation via
+    # override_settings(...) on the Click context. Once the invocation
+    # completes, the override unwinds — the test cannot observe the
+    # in-process override after _invoke returns. Exit code is the
+    # contract we can verify here; the in-block effect is verified
+    # directly by test_render_override.py in core/i18n.
     assert result.exit_code == 0, result.output
-    assert output_language() == "en"
-    assert os.environ["AEAT_CLI_LANGUAGE"] == "en"
+    # The profile language survives the invocation untouched.
+    assert output_language() == "ca"
