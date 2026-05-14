@@ -63,8 +63,11 @@ from ._protocols import (
 
 # ---- resume action (depends on _models + _persistence) ----------------------
 from ._resume import (
+    WorkflowResumeCommand,
     WorkflowResumeContext,
+    WorkflowResumeLogFields,
     WorkflowResumeRefusedError,
+    WorkflowResumeResult,
     resume_modelo_workflow,
 )
 
@@ -89,8 +92,11 @@ __all__ = [
     "WorkflowError",
     "WorkflowEvent",
     "WorkflowResult",
+    "WorkflowResumeCommand",
     "WorkflowResumeContext",
+    "WorkflowResumeLogFields",
     "WorkflowResumeRefusedError",
+    "WorkflowResumeResult",
     "WorkflowStage",
     "WorkflowState",
     "WorkflowStateRepository",

@@ -62,6 +62,10 @@ def test_config_init_writes_profile_output_language(monkeypatch: pytest.MonkeyPa
             "00000000T",
             "--activity",
             "Servicios",
+            "--iva-regime",
+            "GENERAL",
+            "--tax-residence-ccaa",
+            "madrid",
             "--output-language",
             "en",
         ]
@@ -80,13 +84,9 @@ def test_config_init_writes_profile_output_language(monkeypatch: pytest.MonkeyPa
     assert ("profile.created", "default", "default") in [
         (event.action, event.bucket_id, event.object_id) for event in state.bucket_events
     ]
-    assert any(
-        event.action == "profile.values.updated"
-        and event.bucket_id == "default"
-        and event.object_id is not None
-        and event.object_id.startswith("keys:")
-        for event in state.bucket_events
-    )
+    assert ("profile.selected", "default", "default") in [
+        (event.action, event.bucket_id, event.object_id) for event in state.bucket_events
+    ]
     assert output_language() == "en"
 
 

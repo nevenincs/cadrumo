@@ -7,6 +7,7 @@ import pytest
 from aeat.core.config import PROJECT_ROOT
 
 from ._authority import ValidatedRegistryAuthority
+from ._errors import RegistrySnapshotError
 from ._queries import RegistryQueryService, parse_modelo_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -59,3 +60,13 @@ def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision
     assert formulas.code == "303"
     assert formulas.rows
     assert any(row.input_casillas or row.input_bindings or row.input_parameters for row in formulas.rows)
+
+
+@pytest.mark.parametrize("modelo", [" 036", "036 ", " 036 "])
+def test_query_service_rejects_padded_census_modelo_codes(modelo: str) -> None:
+    service = _service()
+
+    with pytest.raises(RegistrySnapshotError, match="not present"):
+        service.bindings_for_scope(modelo, filing_year=2025, period="alta")
+    with pytest.raises(RegistrySnapshotError, match="not present"):
+        service.describe_modelo(modelo)

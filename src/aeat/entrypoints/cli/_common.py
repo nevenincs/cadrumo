@@ -24,7 +24,6 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     resolve_ledger_renta_expense_aggregation_binding_values,
 )
-from ...domain.deadlines import AutonomoProfile, autonomo_profile_from_mapping
 from ...domain.filing import FilingDraft, FilingDraftRepository
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository
 from ...domain.profile import ProfileKey
@@ -129,13 +128,6 @@ def _parse_iso_date(raw: str, *, label: str) -> _date:
         return _date.fromisoformat(raw.strip())
     except ValueError as exc:
         raise _bad(tr("cli.common.errors.invalid_iso_date", label=label, raw=raw)) from exc
-
-
-def _profile_to_autonomo(state: WorkflowState) -> AutonomoProfile:
-    from ...application.user_profile._projections import record_to_values
-
-    record = state.active_profile_record()
-    return autonomo_profile_from_mapping(record_to_values(record), tax_id_default="00000000T")
 
 
 # ---------------------------------------------------------------------

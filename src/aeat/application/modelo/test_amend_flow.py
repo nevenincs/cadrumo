@@ -10,7 +10,8 @@ bucket event.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import os
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -25,7 +26,6 @@ from aeat.adapters.persistence.storage.sql.engine import create_engine_from_sett
 from aeat.application.modelo import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
-    AmendmentVerificationRefusedError,
     AmendmentTargetStateError,
     CalculationRevisionStateError,
     amend_modelo_revision,
@@ -42,6 +42,7 @@ from aeat.domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventType,
 )
+from aeat.domain.deadlines import AutonomoProfile, IVARegime
 from aeat.domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -76,6 +77,8 @@ _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
 _T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 1, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 1, 16, 12, 0, 0, tzinfo=UTC)
+_WORKFLOW_TODAY = date(2026, 4, 10)
+_WORKFLOW_PROFILE = AutonomoProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
 
 
 @pytest.fixture
@@ -85,6 +88,13 @@ def repos(tmp_path):
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     db_path = tmp_path / "modelo_amend_flow.db"
+    env_values = {
+        "AEAT_DATABASE_URL": f"sqlite:///{db_path.as_posix()}",
+        "AEAT_AUTH_PROVIDER": "clave_movil",
+        "AEAT_CLAVE_MOVIL_DNI_NIE": "12345678Z",
+    }
+    previous_env = {key: os.environ.get(key) for key in env_values}
+    os.environ.update(env_values)
     engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
     Base.metadata.create_all(engine)
     try:
@@ -97,6 +107,11 @@ def repos(tmp_path):
         yield wu, cr, fr, vr, bv
     finally:
         engine.dispose()
+        for key, previous in previous_env.items():
+            if previous is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = previous
         override_master_key_provider(None)
 
 
@@ -120,7 +135,13 @@ _DEFAULT_130_BINDING_VALUES = {
 }
 
 
-def _seed_external_baseline(repos_tuple, *, casilla_values):
+def _seed_external_baseline(
+    repos_tuple,
+    *,
+    casilla_values,
+    borrador_snapshot_id: str | None = None,
+    bindings_sourced_from_borrador: tuple[str, ...] = (),
+):
     """Seed a CURRENT filing record carrying ``external_evidence`` plus
     its underlying calculation revision and work unit."""
 
@@ -134,6 +155,8 @@ def _seed_external_baseline(repos_tuple, *, casilla_values):
         inputs_snapshot=inputs,
         binding_overrides=overrides_map,
         casilla_values=casilla_values,
+        borrador_snapshot_id=borrador_snapshot_id,
+        bindings_sourced_from_borrador=bindings_sourced_from_borrador,
     )
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit.work_unit_id,
@@ -147,6 +170,8 @@ def _seed_external_baseline(repos_tuple, *, casilla_values):
         state=CalculationRevisionState.FILED,
         inputs_snapshot=inputs,
         binding_overrides=overrides_map,
+        borrador_snapshot_id=borrador_snapshot_id,
+        bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         casilla_values=casilla_values,
         created_at=_T1,
         updated_at=_T1,
@@ -209,6 +234,8 @@ def test_amend_refuses_without_external_evidence(repos) -> None:
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        workflow_profile=_WORKFLOW_PROFILE,
+        workflow_today=_WORKFLOW_TODAY,
         clock=_T3,
     )
     assert locally_filed.external_evidence is None
@@ -319,6 +346,33 @@ def test_amend_creates_complementaria_filing_supersedes_baseline(repos) -> None:
     assert event.payload["amends_filing_record_id"] == baseline.filing_record_id
     assert event.payload["amendment_kind"] == "complementaria"
     assert event.payload["override_count"] == "1"
+
+
+def test_amend_preserves_borrador_source_trace_from_baseline(repos) -> None:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    _, _, baseline = _seed_external_baseline(
+        repos,
+        casilla_values={"01": Decimal("1000"), "02": Decimal("250")},
+        borrador_snapshot_id="borrador-100-2025-active",
+        bindings_sourced_from_borrador=("renta-2025-modelo-111-retenciones-periodicas",),
+    )
+
+    new_filing = amend_modelo_revision(
+        from_filing_record_id=baseline.filing_record_id,
+        overrides={"01": Decimal("1100")},
+        amendment_kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
+        reason="under-reported turnover discovered in audit",
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T4,
+    )
+
+    amended_revision = get_calculation_revision(new_filing.calculation_revision_id, calculation_repository=cr_repo)
+    assert amended_revision.borrador_snapshot_id == "borrador-100-2025-active"
+    assert amended_revision.bindings_sourced_from_borrador == ("renta-2025-modelo-111-retenciones-periodicas",)
 
 
 def test_amend_refuses_no_op_overrides(repos) -> None:

@@ -40,11 +40,20 @@ def _clear_output_language_cache() -> None:
     clear_output_language_cache()
 
 
+EmitWorkflowStateReset = Callable[..., object]
+
+
 class WorkflowStateRepository:
     """Encrypted SQL object repository for :class:`WorkflowState`."""
 
-    def __init__(self) -> None:
-        self._objects = SecureObjectRepository()
+    def __init__(
+        self,
+        *,
+        objects: SecureObjectRepository | None = None,
+        emit_reset_event: EmitWorkflowStateReset = emit_workflow_state_reset,
+    ) -> None:
+        self._objects = objects or SecureObjectRepository()
+        self._emit_reset_event = emit_reset_event
 
     @classmethod
     def from_settings(cls, settings: Settings | None = None) -> Self:
@@ -163,7 +172,7 @@ class WorkflowStateRepository:
         """
 
         fingerprint = self.fingerprint_state(reason_class=reason_class)
-        emit_workflow_state_reset(fingerprint=fingerprint, actor=actor, source=source)
+        self._emit_reset_event(fingerprint=fingerprint, actor=actor, source=source)
         self._objects.delete(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
         _clear_output_language_cache()
         _logger.info("workflow state envelope reset; recovery route fired by operator")
@@ -214,7 +223,12 @@ def _validate_run_id(run_id: str) -> str:
     return trimmed
 
 
-def save_run(result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
+def save_run(
+    result: WorkflowResult,
+    *,
+    runs_dir: Path | None = None,
+    objects: SecureObjectRepository | None = None,
+) -> Path:
     """Persist one workflow result in the secure object backend.
 
     ``runs_dir`` remains part of the API as a logical marker path for callers
@@ -229,7 +243,8 @@ def save_run(result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
         classification=SensitivityClass.FINANCIAL,
         payload=result,
     )
-    SecureObjectRepository().save(
+    repository = objects or SecureObjectRepository()
+    repository.save(
         namespace=_RUN_NAMESPACE,
         object_key=run_id,
         classification=SensitivityClass.FINANCIAL,
@@ -240,12 +255,18 @@ def save_run(result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
     return marker_dir / run_id
 
 
-def load_run(run_id: str, *, runs_dir: Path | None = None) -> WorkflowResult:
+def load_run(
+    run_id: str,
+    *,
+    runs_dir: Path | None = None,
+    objects: SecureObjectRepository | None = None,
+) -> WorkflowResult:
     """Load one persisted workflow result from the secure backend."""
 
     del runs_dir
     safe_run_id = _validate_run_id(run_id)
-    record = SecureObjectRepository().load(
+    repository = objects or SecureObjectRepository()
+    record = repository.load(
         _RUN_NAMESPACE,
         safe_run_id,
         expected_class=SensitivityClass.FINANCIAL,
@@ -266,11 +287,17 @@ def load_run(run_id: str, *, runs_dir: Path | None = None) -> WorkflowResult:
     return envelope.payload
 
 
-def list_runs(*, runs_dir: Path | None = None, since: date | None = None) -> tuple[WorkflowResult, ...]:
+def list_runs(
+    *,
+    runs_dir: Path | None = None,
+    since: date | None = None,
+    objects: SecureObjectRepository | None = None,
+) -> tuple[WorkflowResult, ...]:
     """List persisted workflow runs newest-first, optionally filtered by date."""
 
     del runs_dir
-    records = SecureObjectRepository().list_records(
+    repository = objects or SecureObjectRepository()
+    records = repository.list_records(
         _RUN_NAMESPACE,
         expected_class=SensitivityClass.FINANCIAL,
         max_supported_version=_RUN_VERSION,

@@ -23,7 +23,7 @@ class ModeloLifecycleStep(StrEnum):
 
 
 class SourceKind(StrEnum):
-    """Canonical source-kind taxonomy from the CLI workflow redesign ADRs."""
+    """Canonical source-kind taxonomy for the CLI workflow."""
 
     LEDGER_TRANSACTION = "ledger_transaction"
     PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"

@@ -204,3 +204,31 @@ class TestWorkflowResultTerminal:
         blob = original.model_dump_json()
         reconstructed = WorkflowResult.model_validate_json(blob)
         assert reconstructed == original
+
+    def test_resumed_result_records_prior_run_id(self) -> None:
+        """Resume attempts carry the prior workflow-run id."""
+        now = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
+        result = WorkflowResult(
+            run_id="1" * 16,
+            started_at=now,
+            ended_at=now,
+            final_stage=WorkflowStage.DONE,
+            resumed_from="0" * 16,
+            steps=(self._step(),),
+            summary="resumed run",
+        )
+        assert result.resumed_from == "0" * 16
+
+    def test_resumed_result_refuses_self_reference(self) -> None:
+        """A workflow result cannot resume from itself."""
+        now = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)
+        with pytest.raises(ValidationError, match=r"resumed_from must reference a different workflow run"):
+            WorkflowResult(
+                run_id="1" * 16,
+                started_at=now,
+                ended_at=now,
+                final_stage=WorkflowStage.DONE,
+                resumed_from="1" * 16,
+                steps=(self._step(),),
+                summary="invalid resume link",
+            )

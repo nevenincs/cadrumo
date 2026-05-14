@@ -7,11 +7,48 @@ error (malformed period, unknown modelo) must surface as a
 
 from __future__ import annotations
 
+import json
+import logging
+import re
+from collections.abc import Iterator
+from pathlib import Path
+
 import pytest
 
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from aeat.adapters.persistence.storage.sql import dispose_engine
+from aeat.core.config import override_settings
 from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+@pytest.fixture
+def isolated_cli_storage(tmp_path: Path) -> Iterator[None]:
+    provider = EphemeralMasterKeyProvider()
+    db_path = tmp_path / "aeat.db"
+    dispose_engine()
+    override_master_key_provider(provider)
+    try:
+        with override_settings(
+            aeat_database_url=f"sqlite:///{db_path.as_posix()}",
+            aeat_secret_store_dir=tmp_path / "secrets",
+            aeat_blob_store_dir=tmp_path / "blobs",
+            aeat_audit_dir=tmp_path / "audit",
+            aeat_token_dir=tmp_path / "tokens",
+            aeat_financial_txs_dir=tmp_path / "financial" / "transactions",
+            aeat_invoices_dir=tmp_path / "financial" / "invoices",
+            aeat_attachments_dir=tmp_path / "financial" / "attachments",
+            aeat_purchase_invoice_evidence_dir=tmp_path / "financial" / "purchase-invoice-evidence",
+            aeat_ledgers_dir=tmp_path / "financial" / "ledgers",
+            aeat_drafts_dir=tmp_path / "drafts",
+            aeat_runs_dir=tmp_path / "runs",
+            aeat_workflow_runs_dir=tmp_path / "workflow" / "runs",
+        ):
+            yield
+    finally:
+        override_master_key_provider(None)
+        dispose_engine()
 
 
 @pytest.mark.parametrize(
@@ -74,6 +111,59 @@ def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None
     assert "missing_filter\tTrue" in result.output
 
 
+def test_bindings_list_preserves_census_event_period() -> None:
+    """Modelo 036 event periods are exact registry-owned values, not year-prefixed CLI aliases."""
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "036",
+            "--year",
+            "2025",
+            "--period",
+            "alta",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+    payload = json.loads(result.output)
+    assert payload["period_filter"] == "alta"
+    assert payload["bindings"][0]["period"] == "alta"
+
+
+def test_bindings_list_rejects_census_modelo_alias_without_foundation_resolution(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.DEBUG, logger="aeat.domain.calculations.registry._census_modelos")
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "36",
+            "--year",
+            "2025",
+            "--period",
+            "alta",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "modelo '36' is not present in the calculation registry" in result.output
+    assert "census modelo foundation" not in result.output.lower()
+    assert all(record.getMessage() != "resolved census modelo foundation" for record in caplog.records)
+
+
 def test_bindings_preview_echoes_override_for_known_key() -> None:
     """An override targeting a known binding id surfaces in the
     payload's ``override`` column."""
@@ -98,6 +188,64 @@ def test_bindings_preview_echoes_override_for_known_key() -> None:
     assert "operation\tregistry.modelo.bindings.preview" in result.output
     assert "override_count\t1" in result.output
     assert "1234.56" in result.output
+
+
+def test_bindings_preview_preserves_census_event_period() -> None:
+    """Binding preview passes the exact Modelo 036 event period into the registry query service."""
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "preview",
+            "--modelo",
+            "036",
+            "--year",
+            "2025",
+            "--period",
+            "modificacion",
+            "--binding",
+            "modelo-036-profile-census-status=modificacion",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+    payload = json.loads(result.output)
+    assert payload["period"] == "modificacion"
+    assert payload["bindings"][0]["override"] == "modificacion"
+
+
+def test_bindings_preview_rejects_year_prefixed_census_event_alias_without_foundation_resolution(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.DEBUG, logger="aeat.domain.calculations.registry._census_modelos")
+    rejected_period = "2025" + "-alta"
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "bindings",
+            "preview",
+            "--modelo",
+            "036",
+            "--year",
+            "2025",
+            "--period",
+            rejected_period,
+            "--binding",
+            "modelo-036-profile-census-status=alta",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "period must be YYYY, YYYYQn, YYYY-Qn, or YYYY-MM" in result.output
+    assert "census modelo foundation" not in result.output.lower()
+    assert all(record.getMessage() != "resolved census modelo foundation" for record in caplog.records)
 
 
 def test_bindings_preview_rejects_unknown_binding_with_suggestion_list() -> None:
@@ -152,6 +300,171 @@ def test_bindings_preview_rejects_malformed_override_syntax() -> None:
     assert "KEY=VALUE" in result.output
 
 
+def test_work_create_accepts_modelo_036_exact_event_periods_through_foundation(
+    isolated_cli_storage: None,
+) -> None:
+    bucket_id = "census-cli-s1492-active"
+    revision_id = "2025-02-03-y-siguientes"
+
+    for period in ("alta", "modificacion", "baja"):
+        result = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "036",
+                "--year",
+                "2025",
+                "--period",
+                period,
+                "--revision",
+                revision_id,
+                "--bucket-id",
+                bucket_id,
+            ],
+        )
+
+        assert result.exit_code == 0, result.output
+        payload = json.loads(result.output)
+        assert payload["operation"] == "modelo.work.create"
+        assert payload["modelo"] == "036"
+        assert payload["filing_year"] == 2025
+        assert payload["period"] == period
+        assert payload["revision_id"] == revision_id
+        assert payload["name"] == f"036-2025-{period}"
+        assert payload["work_unit_id"]
+
+    listed = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "list",
+            "--bucket-id",
+            bucket_id,
+        ],
+    )
+
+    assert listed.exit_code == 0, listed.output
+    list_payload = json.loads(listed.output)
+    assert list_payload["work_unit_count"] == 3
+    assert sorted(unit["period"] for unit in list_payload["work_units"]) == ["alta", "baja", "modificacion"]
+
+
+def test_work_create_rejects_modelo_037_historical_only_without_persisting(
+    isolated_cli_storage: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    bucket_id = "census-cli-s1492-historical"
+    caplog.set_level(logging.DEBUG, logger="aeat.domain.calculations.registry._census_modelos")
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "037",
+            "--year",
+            "2025",
+            "--period",
+            "alta",
+            "--revision",
+            "historical",
+            "--bucket-id",
+            bucket_id,
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    output_lower = result.output.lower()
+    assert "historical census metadata only" in output_lower
+    assert "cannot create active work units" in output_lower
+    assert all(record.getMessage() != "resolved census modelo foundation" for record in caplog.records)
+
+    listed = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "list",
+            "--bucket-id",
+            bucket_id,
+        ],
+    )
+
+    assert listed.exit_code == 0, listed.output
+    assert json.loads(listed.output)["work_unit_count"] == 0
+
+
+@pytest.mark.parametrize(
+    ("modelo", "period", "expected"),
+    [
+        ("36", "alta", "unknown census modelo code '36'"),
+        ("036", "2025" + "-alta", "active census modelo 036 work units require one of the census event periods"),
+    ],
+)
+def test_work_create_rejects_census_aliases_without_persisting(
+    isolated_cli_storage: None,
+    caplog: pytest.LogCaptureFixture,
+    modelo: str,
+    period: str,
+    expected: str,
+) -> None:
+    bucket_id = f"census-cli-s1492-rejected-{modelo}-{period}"
+    caplog.set_level(logging.DEBUG, logger="aeat.domain.calculations.registry._census_modelos")
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            modelo,
+            "--year",
+            "2025",
+            "--period",
+            period,
+            "--revision",
+            "2025-02-03-y-siguientes",
+            "--bucket-id",
+            bucket_id,
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert expected in result.output
+    assert all(record.getMessage() != "resolved census modelo foundation" for record in caplog.records)
+
+    listed = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "list",
+            "--bucket-id",
+            bucket_id,
+        ],
+    )
+
+    assert listed.exit_code == 0, listed.output
+    assert json.loads(listed.output)["work_unit_count"] == 0
+
+
 # ---------------------------------------------------------------------------
 # Boundary regression guards
 # ---------------------------------------------------------------------------
@@ -162,8 +475,6 @@ def test_no_parallel_bindings_typer_outside_canonical_module() -> None:
     ``_modelo.py``. Any other module that re-implements a Typer
     named ``bindings`` competes with the canonical surface and must
     be removed."""
-
-    from pathlib import Path
 
     from aeat.core.paths import PROJECT_ROOT
 
@@ -209,34 +520,105 @@ def test_bindings_list_and_preview_emit_no_bucket_event() -> None:
 
 
 @pytest.mark.parametrize(
-    "raw,expected",
+    "raw",
     [
-        ("aeat_justificante_pdf", "aeat_justificante_pdf"),
-        ("aeat-justificante-pdf", "aeat_justificante_pdf"),
-        ("aeat_csv_register", "aeat_csv_register"),
-        ("aeat-csv-register", "aeat_csv_register"),
-        ("aeat_live_capture", "aeat_live_capture"),
-        ("aeat-live-capture", "aeat_live_capture"),
+        "aeat_justificante_pdf",
+        "aeat_csv_register",
+        "aeat_live_capture",
     ],
 )
-def test_evidence_kind_accepts_canonical_and_hyphenated_values(raw: str, expected: str) -> None:
-    """``--evidence-kind`` accepts both canonical underscore values and
-    their hyphenated aliases (``aeat-justificante-pdf`` ↔ ``aeat_justificante_pdf``).
-    The import command parses the alias and normalises it before
-    dispatching the application action."""
+def test_evidence_kind_accepts_canonical_values(raw: str) -> None:
+    """``--evidence-kind`` accepts only canonical underscore enum values."""
 
     from aeat.domain.modelos._filing_record import ExternalEvidenceKind
 
-    normalised = raw.strip().replace("-", "_")
-    assert ExternalEvidenceKind(normalised) is ExternalEvidenceKind(expected)
+    assert ExternalEvidenceKind(raw).value == raw
 
 
-def test_evidence_kind_rejects_unrelated_token() -> None:
-    """``--evidence-kind`` still rejects values that aren't a valid
-    enum member after hyphen-to-underscore normalisation."""
+@pytest.mark.parametrize("raw", ["aeat_bogus_evidence", "not_canonical_evidence"])
+def test_evidence_kind_rejects_non_canonical_token(raw: str) -> None:
+    """``--evidence-kind`` rejects aliases and unrelated values."""
 
     from aeat.domain.modelos._filing_record import ExternalEvidenceKind
 
-    raw = "aeat_bogus_evidence"
-    with pytest.raises(ValueError, match="aeat_bogus_evidence"):
-        ExternalEvidenceKind(raw.strip().replace("-", "_"))
+    with pytest.raises(ValueError, match=raw):
+        ExternalEvidenceKind(raw)
+
+
+def test_modelo_aggregate_retenciones_delegates_to_backend_service() -> None:
+    observation = {
+        "source_kind": "ledger_transaction",
+        "source_object_id": "tx-ret-1",
+        "perceptor_nif": "B00000001",
+        "perceptor_name": "Proveedor Retencion",
+        "scheme": "rendimientos_trabajo",
+        "taxable_base": "1000.00",
+        "retencion_amount": "150.00",
+        "accrued_on": "2025-03-01",
+    }
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "111",
+            "--period",
+            "2025-Q1",
+            "--retencion-observation",
+            json.dumps(observation),
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["operation"] == "modelo.aggregate"
+    assert payload["provider"] == "retenciones"
+    assert payload["aggregation"]["modelo"] == "111"
+    assert payload["aggregation"]["total_retencion"] == "150.00"
+    assert payload["log_fields"]["observation_count"] == 1
+
+
+def test_modelo_aggregate_rejects_wrong_observation_family_through_error_boundary() -> None:
+    observation = {
+        "source_kind": "purchase_invoice_evidence",
+        "source_object_id": "asset-1",
+        "asset_class": "account",
+        "asset_external_id": "ad-account",
+        "country": "AD",
+        "valuation_eur": "50000.01",
+        "acquisition_date": "2023-01-15",
+    }
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "aggregate",
+            "--modelo",
+            "111",
+            "--period",
+            "2025-Q1",
+            "--foreign-asset-observation",
+            json.dumps(observation),
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert "command input failed validation" in result.output.lower()
+
+
+def test_modelo_aggregate_help_uses_accepted_source_vocabulary_only() -> None:
+    result = invoke_cached_cli(["app", "modelo", "aggregate", "--help"])
+
+    assert result.exit_code == 0, result.output
+    assert "ledger_transaction" in result.output
+    assert "purchase_invoice_evidence" in result.output
+    assert "payable_invoice" in result.output
+    assert "collectible_invoice" in result.output
+    lowered = result.output.lower()
+    assert not re.search(r"(?<![a-z_])invoice(?![a-z_])", lowered)

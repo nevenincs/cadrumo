@@ -230,6 +230,70 @@ class ManualLedgerTransactionResult(BaseModel):
     bucket_event_ids: tuple[str, ...] = ()
 
 
+class SplitChildCommand(BaseModel):
+    """One slice of an N-way split.
+
+    Attributes:
+        amount: Signed Decimal in the parent's currency. Must agree
+            with the parent's direction sign convention (positive for
+            INCOMING, negative for OUTGOING).
+        description: Non-blank narrative for this slice.
+        counterparty: Optional override; falls back to the parent's
+            counterparty when ``None``.
+        booked_date: Optional override; falls back to the parent's
+            ``booked_date``.
+        value_date: Optional override; falls back to the parent's
+            ``value_date``.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    amount: Decimal
+    description: str = Field(min_length=1, max_length=1024)
+    counterparty: str | None = None
+    booked_date: date | None = None
+    value_date: date | None = None
+
+    @field_validator("description", "counterparty")
+    @classmethod
+    def _trim_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        if not trimmed:
+            return None
+        return trimmed
+
+
+class SplitTransactionResult(BaseModel):
+    """Backend result of a successful N-way split."""
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str = Field(min_length=1, max_length=128)
+    parent_transaction_id: str = Field(min_length=64, max_length=64)
+    split_group_id: str = Field(min_length=64, max_length=64)
+    child_transaction_ids: tuple[str, ...]
+    parent_transaction: Transaction
+    child_transactions: tuple[Transaction, ...]
+    bucket_event_id: str = Field(min_length=64, max_length=64)
+
+
+class MergeTransactionsResult(BaseModel):
+    """Backend result of a successful split re-merge."""
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str = Field(min_length=1, max_length=128)
+    split_group_id: str = Field(min_length=64, max_length=64)
+    parent_transaction_id: str = Field(min_length=64, max_length=64)
+    merged_transaction_id: str = Field(min_length=64, max_length=64)
+    source_child_ids: tuple[str, ...]
+    merged_transaction: Transaction
+    parent_transaction: Transaction
+    bucket_event_id: str = Field(min_length=64, max_length=64)
+
+
 class LedgerImportOperationResult(BaseModel):
     """Backend result for an imported ledger transaction batch."""
 

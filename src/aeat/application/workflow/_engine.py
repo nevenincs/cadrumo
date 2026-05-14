@@ -104,6 +104,16 @@ def _registry_period_token(period: str) -> tuple[int, str]:
     raise WorkflowError(f"cannot map workflow period {period!r} to a registry period")
 
 
+def _validate_resumed_from(value: str | None) -> str | None:
+    if value is None:
+        return None
+    if value != value.strip() or len(value) != 16:
+        raise WorkflowError("resumed_from must be a 16-character workflow run id")
+    if "/" in value or "\\" in value:
+        raise WorkflowError("resumed_from must not contain path separators")
+    return value
+
+
 _logger = get_logger(__name__)
 
 
@@ -253,6 +263,7 @@ class WorkflowEngine:
             target_modelo=None,
             target_period=None,
             fail_on_warning=fail_on_warning,
+            resumed_from=None,
             today=today,
         )
 
@@ -263,6 +274,7 @@ class WorkflowEngine:
         period: str,
         *,
         fail_on_warning: bool = False,
+        resumed_from: str | None = None,
         today: date | None = None,
     ) -> WorkflowResult:
         """Drive the workflow for a caller-specified ``(modelo, period)``.
@@ -272,16 +284,19 @@ class WorkflowEngine:
             modelo: Target modelo identifier.
             period: Target period identifier.
             fail_on_warning: See :meth:`run_next`.
+            resumed_from: Prior workflow run id when this run is a resume attempt.
             today: See :meth:`run_next`.
 
         Returns:
             A fully populated :class:`WorkflowResult`.
         """
+        resumed_from = _validate_resumed_from(resumed_from)
         return await self._drive(
             profile=profile,
             target_modelo=modelo,
             target_period=period,
             fail_on_warning=fail_on_warning,
+            resumed_from=resumed_from,
             today=today,
         )
 
@@ -294,6 +309,7 @@ class WorkflowEngine:
         target_modelo: str | None,
         target_period: str | None,
         fail_on_warning: bool,
+        resumed_from: str | None,
         today: date | None,
     ) -> WorkflowResult:
         """Linearly walk the read-only stages, bailing on the first failure."""
@@ -407,6 +423,7 @@ class WorkflowEngine:
             obligation=obligation,
             draft_id=draft.draft_id if draft is not None else None,
             submission_id=None,
+            resumed_from=resumed_from,
             steps=tuple(steps),
             summary=summary,
         )

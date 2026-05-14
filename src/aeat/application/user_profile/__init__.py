@@ -2,7 +2,7 @@
 
 This package owns the lifecycle API contracts for the centralised
 schema-driven profile backend defined by the
-``2026-05-07-user-profile-backend-schema-adr``. The domain layer
+user profile backend schema specification. The domain layer
 (``aeat.domain.user_profile``) owns the schema, value records, and
 registry-contract validation; this package owns the application-layer
 service surface: strict Pydantic command and result records that flow
@@ -10,7 +10,7 @@ between the CLI thin adapters, the secure-storage persistence wiring,
 and the calculation/filing/aggregation consumers.
 
 The records here have no business logic — they are the typed contract.
-Subsequent W09 plan rows wire the service implementations
+Service implementations are wired in the orchestration layer
 (``ProfileLifecycleService``, ``ProfileSnapshotService``,
 ``ProfileValidationService``, ``ProfilePreflightService``) and the
 secure-storage adapters that consume these records.

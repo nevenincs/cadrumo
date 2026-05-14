@@ -2,7 +2,7 @@
 
 The tests use Typer's ``CliRunner`` to exercise the live command
 surface: invalid choice tokens are rejected at the CLI boundary,
-descriptor-validated values pass through to ``ProfileRecord.values``,
+descriptor-validated values persist as canonical user-profile facts,
 and the case-insensitive lookup resolves ``TAX.ID`` and ``tax.id`` to
 the same descriptor entry.
 """

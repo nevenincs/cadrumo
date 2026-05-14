@@ -25,13 +25,11 @@ class UnknownScopeError(AeatError):
 
 
 class ApoderadoScope(BaseModel):
-    """One scope entry: code plus localized names plus optional modelo binding."""
+    """One scope entry: code plus optional modelo binding."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     code: str = Field(min_length=1, max_length=32)
-    name_es: str = Field(min_length=1, max_length=200)
-    name_en: str = Field(min_length=1, max_length=200)
     modelo_codes: tuple[str, ...] = Field(default_factory=tuple)
 
     @field_validator("code")
@@ -69,8 +67,6 @@ def load_default_catalogue(path: Path | None = None) -> ApoderamientosCatalogue:
     scopes = tuple(
         ApoderadoScope(
             code=entry["code"],
-            name_es=entry["name_es"],
-            name_en=entry["name_en"],
             modelo_codes=tuple(entry.get("modelo_codes", [])),
         )
         for entry in raw.get("scopes", [])

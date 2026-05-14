@@ -418,6 +418,257 @@ def test_census_modelo_foundation_stays_backend_owned() -> None:
     assert offenders == [], "census modelo foundation logic leaked into CLI:\n  " + "\n  ".join(offenders)
 
 
+def test_census_modelo_scope_arguments_stay_raw_until_backend_calls() -> None:
+    """Modelo and period scope parsing must stay separate from backend policy."""
+
+    source_path = _CLI_ROOT / "_modelo.py"
+    source = source_path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(source_path))
+    functions = {
+        node.name: node
+        for node in ast.iter_child_nodes(tree)
+        if isinstance(node, ast.FunctionDef)
+    }
+    work_create = functions["work_create"]
+    bindings_list = functions["bindings_list"]
+    bindings_preview = functions["bindings_preview"]
+
+    work_create_call = next(
+        call
+        for call in ast.walk(work_create)
+        if isinstance(call, ast.Call)
+        and isinstance(call.func, ast.Name)
+        and call.func.id == "create_work_unit"
+    )
+    work_create_keywords = {keyword.arg: keyword.value for keyword in work_create_call.keywords}
+    assert isinstance(work_create_keywords["modelo"], ast.Name)
+    assert work_create_keywords["modelo"].id == "modelo"
+    assert isinstance(work_create_keywords["period"], ast.Name)
+    assert work_create_keywords["period"].id == "period"
+
+    targets_assignment = next(
+        node
+        for node in ast.walk(bindings_list)
+        if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name) and target.id == "targets" for target in node.targets)
+    )
+    assert isinstance(targets_assignment.value, ast.IfExp)
+    assert isinstance(targets_assignment.value.orelse, ast.Tuple)
+    assert [ast.dump(element) for element in targets_assignment.value.orelse.elts] == [
+        ast.dump(ast.Name(id="modelo", ctx=ast.Load())),
+    ]
+
+    preview_scope_call = next(
+        call
+        for call in ast.walk(bindings_preview)
+        if isinstance(call, ast.Call)
+        and isinstance(call.func, ast.Attribute)
+        and call.func.attr == "bindings_for_scope"
+    )
+    assert preview_scope_call.args
+    assert isinstance(preview_scope_call.args[0], ast.Name)
+    assert preview_scope_call.args[0].id == "modelo"
+    preview_scope_keywords = {keyword.arg: keyword.value for keyword in preview_scope_call.keywords}
+    assert isinstance(preview_scope_keywords["period"], ast.Name)
+    assert preview_scope_keywords["period"].id == "period"
+
+    forbidden_methods = {
+        "strip",
+        "lstrip",
+        "rstrip",
+        "removeprefix",
+        "removesuffix",
+        "replace",
+        "zfill",
+    }
+    scope_functions = (work_create, bindings_list, bindings_preview)
+    offenders: list[str] = []
+    for function in scope_functions:
+        for node in ast.walk(function):
+            if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
+                continue
+            if node.func.attr not in forbidden_methods:
+                continue
+            segment = ast.get_source_segment(source, node) or ""
+            if "modelo" in segment or "period" in segment:
+                offenders.append(f"{function.name}: {segment}")
+    assert offenders == [], "CLI-local census scope normalization survived:\n  " + "\n  ".join(offenders)
+
+
+def test_census_modelo_execution_stays_delegated_to_backend_services() -> None:
+    """Accepted census-facing CLI paths must call central services for execution."""
+
+    source_path = _CLI_ROOT / "_modelo.py"
+    source = source_path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(source_path))
+    functions = {
+        node.name: node
+        for node in ast.iter_child_nodes(tree)
+        if isinstance(node, ast.FunctionDef)
+    }
+
+    imports_by_module: dict[tuple[int, str | None], set[str]] = {}
+    for node in ast.iter_child_nodes(tree):
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        imports_by_module[(node.level, node.module)] = {alias.name for alias in node.names}
+
+    assert "RegistryQueryService" in imports_by_module[(3, "domain.calculations.registry")]
+    assert "create_work_unit" in imports_by_module[(3, "application.modelo")]
+
+    def called_names(function_name: str) -> set[str]:
+        names: set[str] = set()
+        for node in ast.walk(functions[function_name]):
+            if not isinstance(node, ast.Call):
+                continue
+            if isinstance(node.func, ast.Name):
+                names.add(node.func.id)
+            elif isinstance(node.func, ast.Attribute):
+                names.add(node.func.attr)
+        return names
+
+    assert {"bindings", "bindings_for_scope"} <= called_names("bindings_list")
+    assert "bindings_for_scope" in called_names("bindings_preview")
+    assert "create_work_unit" in called_names("work_create")
+    assert "assemble_work_unit_history" in called_names("work_history")
+
+    service_function = functions["_service"]
+    service_calls = called_names("_service")
+    assert "RegistryQueryService" in service_calls
+    assert any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "load"
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "ValidatedRegistryAuthority"
+        for node in ast.walk(service_function)
+    )
+    assert all(
+        not isinstance(node, ast.Constant) or node.value != "036"
+        for node in ast.walk(service_function)
+    )
+
+
+def test_census_modelo_results_render_through_emitters() -> None:
+    """Accepted census-facing CLI paths must render only through central emitters."""
+
+    source_path = _CLI_ROOT / "_modelo.py"
+    source = source_path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(source_path))
+    functions = {
+        node.name: node
+        for node in ast.iter_child_nodes(tree)
+        if isinstance(node, ast.FunctionDef)
+    }
+    census_facing_functions = (
+        "bindings_list",
+        "bindings_preview",
+        "work_create",
+        "work_list",
+        "work_history",
+    )
+    forbidden_call_names = {
+        "echo",
+        "print",
+        "Console",
+        "render",
+        "emit_json_success",
+        "emit_json_document",
+    }
+    forbidden_attribute_calls = {
+        ("typer", "echo"),
+        ("json", "dump"),
+        ("json", "dumps"),
+    }
+    offenders: list[str] = []
+    for function_name in census_facing_functions:
+        function = functions[function_name]
+        calls_emit = any(
+            isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "_emit"
+            for node in ast.walk(function)
+        )
+        if not calls_emit:
+            offenders.append(f"{function_name}: missing _emit")
+        for node in ast.walk(function):
+            if not isinstance(node, ast.Call):
+                continue
+            if isinstance(node.func, ast.Name) and node.func.id in forbidden_call_names:
+                offenders.append(f"{function_name}: {node.func.id}")
+            if (
+                isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and (node.func.value.id, node.func.attr) in forbidden_attribute_calls
+            ):
+                offenders.append(f"{function_name}: {node.func.value.id}.{node.func.attr}")
+    assert offenders == [], "census modelo CLI rendering bypasses central emitters:\n  " + "\n  ".join(offenders)
+
+
+def test_census_modelo_failures_use_central_error_boundary() -> None:
+    """Census foundation failures must emit registered stderr errors, not prose fallbacks."""
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "037",
+            "--year",
+            "2025",
+            "--period",
+            "alta",
+            "--revision",
+            "historical",
+            "--bucket-id",
+            "census-boundary-error",
+        ]
+    )
+
+    assert result.exit_code != 0
+    assert result.stdout == ""
+    payload = json.loads(result.stderr)
+    assert payload["error"]["code"] == "ERROR_MODELO_WORK_UNIT_MUTATION_REFUSED"
+    assert payload["error"]["message"] == (
+        "census modelo 037 is historical census metadata only and cannot create active work units"
+    )
+    assert "Traceback" not in result.output
+
+
+def test_census_modelo_help_uses_accepted_foundation_vocabulary_only() -> None:
+    """Help for census-facing modelo commands must describe only the accepted 036 workflow."""
+
+    help_outputs = [
+        _invoke_help("app", "modelo", "work", "create"),
+        _invoke_help("app", "modelo", "bindings", "list"),
+        _invoke_help("app", "modelo", "bindings", "preview"),
+    ]
+    forbidden_tokens = (
+        "037",
+        "setup wizard",
+        "portal-only",
+        "integer modelo",
+        "live submission",
+        "compatibility",
+        "shim",
+        "stub",
+        "fake",
+        "alias",
+        "not implemented",
+    )
+
+    for help_text in help_outputs:
+        assert "Modelo 036" in help_text
+        assert "alta" in help_text
+        assert "modificacion" in help_text
+        assert "baja" in help_text
+        lowered = help_text.lower()
+        for token in forbidden_tokens:
+            assert token not in lowered
+
+
 def test_census_modelo_removed_shims_and_stubs_stay_removed() -> None:
     """Removed census-foundation aliases and placeholder support must not return."""
 

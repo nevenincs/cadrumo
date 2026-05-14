@@ -84,6 +84,33 @@ FormulaOperator = Literal[
     "previous_period_sum",
     "cross_model_sum",
 ]
+CanonicalAggregationSourceKind = Literal[
+    "ledger_transaction",
+    "purchase_invoice_evidence",
+    "payable_invoice",
+    "collectible_invoice",
+]
+CANONICAL_AGGREGATION_SOURCE_KINDS: tuple[CanonicalAggregationSourceKind, ...] = (
+    "ledger_transaction",
+    "purchase_invoice_evidence",
+    "payable_invoice",
+    "collectible_invoice",
+)
+SUPPORTED_BINDING_SOURCE_KINDS = frozenset(
+    (
+        "ledger",
+        *CANONICAL_AGGREGATION_SOURCE_KINDS,
+        "rental",
+        "vat",
+        "category",
+        "profile",
+        "previous_filing",
+        "manual_input",
+        "ledger_oss_aggregation",
+        "ledger_iva_aggregation",
+        "ledger_renta_expense_aggregation",
+    )
+)
 
 
 class RegistryModel(BaseModel):
@@ -785,25 +812,29 @@ class ParameterDefinition(RegistryModel):
 
 class DataBindingDefinition(RegistryModel):
     id: BindingId
-    source: Literal[
-        "ledger",
-        "invoice",
-        "rental",
-        "vat",
-        "category",
-        "profile",
-        "previous_filing",
-        "manual_input",
-        "ledger_oss_aggregation",
-        "ledger_iva_aggregation",
-        "ledger_renta_expense_aggregation",
-    ]
+    source: str = Field(min_length=1)
     selector: Mapping[str, str | int | DecimalValue | bool | tuple[str, ...]]
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
     typed_enum: str | None = None
+    aeat_prefilled: bool = False
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
+
+    @field_validator("source")
+    @classmethod
+    def _source_kind_supported(cls, value: str) -> str:
+        if value == "invoice":
+            canonical = ", ".join(CANONICAL_AGGREGATION_SOURCE_KINDS)
+            raise RegistryValidationError(
+                f"binding source kind 'invoice' is forbidden; use one of {canonical}"
+            )
+        if value not in SUPPORTED_BINDING_SOURCE_KINDS:
+            supported = ", ".join(sorted(SUPPORTED_BINDING_SOURCE_KINDS))
+            raise RegistryValidationError(
+                f"binding source kind {value!r} is unsupported; supported source kinds are {supported}"
+            )
+        return value
 
 
 class FormulaDefinition(RegistryModel):
@@ -1065,7 +1096,7 @@ class RegistrySnapshot(RegistryModel):
     modelo: ModeloDefinition
     revision: ModeloRevision
     filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=8)
+    period: str = Field(min_length=1, max_length=16)
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
     extraction_profiles: Mapping[ExtractionProfileId, ExtractionProfileDefinition]

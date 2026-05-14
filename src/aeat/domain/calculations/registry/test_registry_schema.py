@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from aeat.core.paths import PROJECT_ROOT
 
@@ -17,7 +18,13 @@ from . import (
     load_modelo_file,
 )
 from ._loader import load_registry_tree
-from ._schema import ExportFieldDefinition, ModeloDefinition, ModeloRevision, SupportRemovalDecisionDefinition
+from ._schema import (
+    DataBindingDefinition,
+    ExportFieldDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    SupportRemovalDecisionDefinition,
+)
 from ._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -360,7 +367,7 @@ def test_validator_rejects_binding_citation_missing_from_official_source() -> No
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
-def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
+def test_validator_rejects_bare_invoice_source_kind_with_canonical_alternatives() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
     binding = revision.bindings[0].model_copy(
@@ -373,8 +380,29 @@ def test_validator_rejects_invoice_binding_without_typed_selector() -> None:
     bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
     mutated = revision.model_copy(update={"bindings": bindings})
 
-    with pytest.raises(RegistryValidationError, match="malformed invoice selector"):
+    with pytest.raises(
+        RegistryValidationError,
+        match=(
+            r"forbidden source kind 'invoice'.*ledger_transaction.*purchase_invoice_evidence.*"
+            r"payable_invoice.*collectible_invoice"
+        ),
+    ):
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_binding_schema_rejects_bare_invoice_source_kind_with_canonical_alternatives() -> None:
+    valid_binding = _revision(_committed_registry()[0]).bindings[0]
+    payload = valid_binding.model_dump(mode="python")
+    payload["source"] = "invoice"
+
+    with pytest.raises(
+        ValidationError,
+        match=(
+            r"source kind 'invoice' is forbidden.*ledger_transaction.*purchase_invoice_evidence.*"
+            r"payable_invoice.*collectible_invoice"
+        ),
+    ):
+        DataBindingDefinition.model_validate(payload)
 
 
 def test_validator_rejects_profile_binding_selector_missing_from_user_profile_schema() -> None:
@@ -393,12 +421,29 @@ def test_validator_rejects_profile_binding_selector_missing_from_user_profile_sc
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
-def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
+def test_validator_rejects_counterpart_binding_without_typed_selector() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
     binding = revision.bindings[0].model_copy(
         update={
-            "source": "invoice",
+            "source": "ledger_transaction",
+            "selector": {"claves": ("E",)},
+            "aggregation": {"op": "sum"},
+        }
+    )
+    bindings = tuple(item if item.id != binding.id else binding for item in revision.bindings)
+    mutated = revision.model_copy(update={"bindings": bindings})
+
+    with pytest.raises(RegistryValidationError, match="malformed counterpart aggregation selector"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_counterpart_binding_aggregation_mismatch() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    binding = revision.bindings[0].model_copy(
+        update={
+            "source": "ledger_transaction",
             "selector": {"fact": "operator_count", "claves": ("E",)},
             "aggregation": {"op": "sum"},
         }
@@ -410,12 +455,12 @@ def test_validator_rejects_invoice_binding_aggregation_mismatch() -> None:
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
-def test_validator_rejects_invoice_rectification_delta_without_rectification_scope() -> None:
+def test_validator_rejects_counterpart_rectification_delta_without_rectification_scope() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
     binding = revision.bindings[0].model_copy(
         update={
-            "source": "invoice",
+            "source": "ledger_transaction",
             "selector": {"fact": "rectified_base_delta_sum", "claves": ("E",)},
             "aggregation": {"op": "sum"},
         }
@@ -427,12 +472,12 @@ def test_validator_rejects_invoice_rectification_delta_without_rectification_sco
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 
-def test_validator_rejects_invoice_period_rows_without_rectification_scope() -> None:
+def test_validator_rejects_counterpart_period_rows_without_rectification_scope() -> None:
     modelo, catalogues = _committed_registry()
     revision = _revision(modelo)
     binding = revision.bindings[0].model_copy(
         update={
-            "source": "invoice",
+            "source": "ledger_transaction",
             "selector": {
                 "fact": "row_field",
                 "row_field": "base_imponible",

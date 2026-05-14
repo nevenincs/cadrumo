@@ -10,14 +10,14 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from . import (
-    InvoiceObservation,
+    CounterpartAggregationObservation,
     RegistryValidator,
     build_snapshot,
-    invoice_binding_requirements,
+    counterpart_binding_requirements,
     load_registry_tree,
     resolve_bound_casilla_inputs,
-    resolve_invoice_binding_row_values,
-    resolve_invoice_binding_values,
+    resolve_counterpart_binding_row_values,
+    resolve_counterpart_binding_values,
 )
 from ._export import resolve_export_layout
 from ._export_parse import parse_export_payload
@@ -577,16 +577,16 @@ def _fixed_width_record(length: int, fields: dict[tuple[int, int], str]) -> str:
     return "".join(record)
 
 
-def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_summary() -> None:
+def test_committed_modelo_349_declares_ledger_transaction_bindings_for_declarant_summary() -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
 
-    invoice_bindings = {
+    counterpart_bindings = {
         b.id: b
         for b in revision.bindings
-        if b.source == "invoice" and b.aggregation is not None and b.aggregation.get("op") != "rows"
+        if b.source == "ledger_transaction" and b.aggregation is not None and b.aggregation.get("op") != "rows"
     }
-    assert set(invoice_bindings) == {
+    assert set(counterpart_bindings) == {
         "vat-349-declarante-numero-operadores",
         "vat-349-declarante-importe-operaciones",
         "vat-349-declarante-numero-rectificaciones",
@@ -597,22 +597,22 @@ def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_sum
         "vat-349-declarante-numero-operadores",
         "vat-349-declarante-importe-operaciones",
     ):
-        binding = invoice_bindings[binding_id]
+        binding = counterpart_bindings[binding_id]
         assert binding.selector["rectification_scope"] == "exclude_rectifications"
         assert tuple(binding.selector["claves"]) == expected_claves
     for binding_id in (
         "vat-349-declarante-numero-rectificaciones",
         "vat-349-declarante-importe-rectificaciones",
     ):
-        binding = invoice_bindings[binding_id]
+        binding = counterpart_bindings[binding_id]
         assert binding.selector["rectification_scope"] == "only_rectifications"
         assert tuple(binding.selector["claves"]) == expected_claves
 
 
-def test_committed_modelo_349_invoice_binding_requirements_split_by_rectification_scope() -> None:
+def test_committed_modelo_349_counterpart_binding_requirements_split_by_rectification_scope() -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
-    requirements = invoice_binding_requirements(revision)
+    requirements = counterpart_binding_requirements(revision)
 
     by_scope = {req.rectification_scope: req for req in requirements}
     assert set(by_scope) == {"exclude_rectifications", "only_rectifications"}
@@ -644,22 +644,22 @@ def test_committed_modelo_349_invoice_binding_requirements_split_by_rectificatio
     assert set(by_scope["only_rectifications"].binding_ids) == expected_only
 
 
-def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledger() -> None:
+def test_committed_modelo_349_counterpart_binding_resolver_aggregates_synthetic_counterpart_source() -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
 
     observations = (
         # Two distinct operators in non-rectification scope, base sum 1500.50.
-        InvoiceObservation(
-            invoice_id="inv-de-1",
+        CounterpartAggregationObservation(
+            source_id="inv-de-1",
             party_tax_id="DE111",
             country_code="DE",
             transaction_date=date(2026, 3, 1),
             base_amount=Decimal("1000.00"),
             intracommunity_clave="E",
         ),
-        InvoiceObservation(
-            invoice_id="inv-fr-1",
+        CounterpartAggregationObservation(
+            source_id="inv-fr-1",
             party_tax_id="FR222",
             country_code="FR",
             transaction_date=date(2026, 3, 5),
@@ -667,8 +667,8 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
             intracommunity_clave="S",
         ),
         # One rectification: previous 180, new 200 → delta 20.
-        InvoiceObservation(
-            invoice_id="inv-it-1-rect",
+        CounterpartAggregationObservation(
+            source_id="inv-it-1-rect",
             party_tax_id="IT333",
             country_code="IT",
             transaction_date=date(2026, 3, 8),
@@ -681,7 +681,7 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
         ),
     )
 
-    resolved = resolve_invoice_binding_values(revision, observations)
+    resolved = resolve_counterpart_binding_values(revision, observations)
 
     assert resolved == {
         "vat-349-declarante-numero-operadores": Decimal("2"),
@@ -691,14 +691,14 @@ def test_committed_modelo_349_invoice_binding_resolver_aggregates_synthetic_ledg
     }
 
 
-def test_committed_modelo_349_construct_includes_invoice_bindings() -> None:
+def test_committed_modelo_349_construct_includes_counterpart_bindings() -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
     construct = revision.constructs[0]
-    assert set(construct.bindings) == {b.id for b in revision.bindings if b.source == "invoice"}
+    assert set(construct.bindings) == {b.id for b in revision.bindings if b.source == "ledger_transaction"}
 
 
-def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bindings() -> None:
+def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_counterpart_bindings() -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
 
@@ -722,7 +722,7 @@ def test_committed_modelo_349_declares_operador_and_rectificacion_row_bindings()
     row_bindings = {
         b.id: b
         for b in revision.bindings
-        if b.source == "invoice" and b.aggregation is not None and b.aggregation.get("op") == "rows"
+        if b.source == "ledger_transaction" and b.aggregation is not None and b.aggregation.get("op") == "rows"
     }
     expected_operador_row_bindings = {
         "vat-349-operador-row-codigo-pais",
@@ -756,8 +756,8 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
     revision = modelo.revisions["2020-y-siguientes"]
 
     observations = (
-        InvoiceObservation(
-            invoice_id="inv-de-1",
+        CounterpartAggregationObservation(
+            source_id="inv-de-1",
             party_tax_id="DE111",
             country_code="DE",
             transaction_date=date(2026, 3, 1),
@@ -765,8 +765,8 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
             intracommunity_clave="E",
             party_legal_name="ALEMAN GMBH",
         ),
-        InvoiceObservation(
-            invoice_id="inv-de-2",
+        CounterpartAggregationObservation(
+            source_id="inv-de-2",
             party_tax_id="DE111",
             country_code="DE",
             transaction_date=date(2026, 3, 5),
@@ -774,8 +774,8 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
             intracommunity_clave="E",
             party_legal_name="ALEMAN GMBH",
         ),
-        InvoiceObservation(
-            invoice_id="inv-fr-1",
+        CounterpartAggregationObservation(
+            source_id="inv-fr-1",
             party_tax_id="FR222",
             country_code="FR",
             transaction_date=date(2026, 3, 7),
@@ -785,7 +785,7 @@ def test_committed_modelo_349_operador_row_resolver_groups_by_operator_and_clave
         ),
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations)
+    rows = resolve_counterpart_binding_row_values(revision, observations)
 
     # Two row groups: (DE, DE111, E) at row 1 and (FR, FR222, S) at row 2.
     assert rows[("vat-349-operador-row-codigo-pais", 1)] == "DE"
@@ -814,8 +814,8 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
     revision = modelo.revisions["2020-y-siguientes"]
 
     observations = (
-        InvoiceObservation(
-            invoice_id="inv-de-rect",
+        CounterpartAggregationObservation(
+            source_id="inv-de-rect",
             party_tax_id="DE111",
             country_code="DE",
             transaction_date=date(2026, 3, 1),
@@ -827,8 +827,8 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
             rectified_period="2T",
             rectified_year=2025,
         ),
-        InvoiceObservation(
-            invoice_id="inv-it-rect",
+        CounterpartAggregationObservation(
+            source_id="inv-it-rect",
             party_tax_id="IT333",
             country_code="IT",
             transaction_date=date(2026, 3, 5),
@@ -842,7 +842,7 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
         ),
     )
 
-    rows = resolve_invoice_binding_row_values(revision, observations)
+    rows = resolve_counterpart_binding_row_values(revision, observations)
 
     # DE/DE111/E/2025/2T at row 1, IT/IT333/E/2025/4T at row 2.
     assert rows[("vat-349-rectificacion-row-codigo-pais", 1)] == "DE"
@@ -858,29 +858,29 @@ def test_committed_modelo_349_rectificacion_row_resolver_groups_by_operator_clav
     assert rows[("vat-349-rectificacion-row-base-anterior", 2)] == Decimal("180.00")
 
 
-def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
+def test_committed_modelo_349_full_counterpart_to_casilla_pipeline() -> None:
     modelo, _ = _load_modelo_349()
     revision = modelo.revisions["2020-y-siguientes"]
 
     observations = (
-        InvoiceObservation(
-            invoice_id="inv-de-1",
+        CounterpartAggregationObservation(
+            source_id="inv-de-1",
             party_tax_id="DE111",
             country_code="DE",
             transaction_date=date(2026, 3, 1),
             base_amount=Decimal("1000.00"),
             intracommunity_clave="E",
         ),
-        InvoiceObservation(
-            invoice_id="inv-fr-1",
+        CounterpartAggregationObservation(
+            source_id="inv-fr-1",
             party_tax_id="FR222",
             country_code="FR",
             transaction_date=date(2026, 3, 5),
             base_amount=Decimal("500.50"),
             intracommunity_clave="S",
         ),
-        InvoiceObservation(
-            invoice_id="inv-it-1-rect",
+        CounterpartAggregationObservation(
+            source_id="inv-it-1-rect",
             party_tax_id="IT333",
             country_code="IT",
             transaction_date=date(2026, 3, 8),
@@ -893,7 +893,7 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
         ),
     )
 
-    binding_values = resolve_invoice_binding_values(revision, observations)
+    binding_values = resolve_counterpart_binding_values(revision, observations)
     casilla_values = resolve_bound_casilla_inputs(revision, binding_values)
 
     assert casilla_values == {

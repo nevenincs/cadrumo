@@ -114,6 +114,8 @@ def derive_calculation_revision_id(
     binding_overrides: Mapping[str, str],
     casilla_values: Mapping[str, Decimal],
     source_transaction_ids: Sequence[str] = (),
+    borrador_snapshot_id: str | None = None,
+    bindings_sourced_from_borrador: Sequence[str] = (),
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt.
 
@@ -132,6 +134,8 @@ def derive_calculation_revision_id(
         "overrides": dict(sorted((k.strip(), v.strip()) for k, v in binding_overrides.items())),
         "outputs": dict(sorted((k.strip(), _canonical_decimal(v)) for k, v in casilla_values.items())),
         "source_transaction_ids": tuple(sorted(item.strip() for item in source_transaction_ids)),
+        "borrador_snapshot_id": borrador_snapshot_id.strip() if borrador_snapshot_id is not None else None,
+        "bindings_sourced_from_borrador": tuple(sorted(item.strip() for item in bindings_sourced_from_borrador)),
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
@@ -159,6 +163,10 @@ class CalculationRevision(BaseModel):
             contributed to this revision through bucket-local
             aggregation. Empty for calculations that did not consume
             ledger transactions.
+        borrador_snapshot_id: Optional Modelo 100 borrador snapshot id
+            explicitly consumed during calculation.
+        bindings_sourced_from_borrador: Registry binding ids populated
+            from ``borrador_snapshot_id`` after operator overrides.
         casilla_values: Mapping of computed casilla values (decimal
             output). The values that would be exported to AEAT if
             this revision were filed.
@@ -189,6 +197,8 @@ class CalculationRevision(BaseModel):
     inputs_snapshot: Mapping[str, str] = Field(default_factory=dict)
     binding_overrides: Mapping[str, str] = Field(default_factory=dict)
     source_transaction_ids: tuple[_CalculationRevisionId, ...] = Field(default_factory=tuple)
+    borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    bindings_sourced_from_borrador: tuple[str, ...] = Field(default_factory=tuple)
     casilla_values: Mapping[str, Decimal] = Field(default_factory=dict)
     created_at: datetime
     updated_at: datetime
@@ -212,6 +222,8 @@ class CalculationRevision(BaseModel):
             binding_overrides=self.binding_overrides,
             casilla_values=self.casilla_values,
             source_transaction_ids=self.source_transaction_ids,
+            borrador_snapshot_id=self.borrador_snapshot_id,
+            bindings_sourced_from_borrador=self.bindings_sourced_from_borrador,
         )
         if derived != self.calculation_revision_id:
             raise ModeloValidationError(
@@ -261,6 +273,8 @@ class CalculationRevision(BaseModel):
             raise ModeloValidationError(
                 "amendment_kind, amends_filing_record_id, and amendment_reason must all be set together or all be None"
             )
+        if self.borrador_snapshot_id is None and self.bindings_sourced_from_borrador:
+            raise ModeloValidationError("borrador-sourced bindings require borrador_snapshot_id")
         return self
 
     @field_validator("source_transaction_ids", mode="before")
@@ -281,6 +295,16 @@ class CalculationRevision(BaseModel):
         normalized = tuple(sorted(item.strip().lower() for item in value))
         if len(set(normalized)) != len(normalized):
             raise ModeloValidationError("source_transaction_ids must not contain duplicates")
+        return normalized
+
+    @field_validator("bindings_sourced_from_borrador")
+    @classmethod
+    def _normalise_borrador_bindings(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        normalized = tuple(sorted(item.strip() for item in value))
+        if any(not item for item in normalized):
+            raise ModeloValidationError("bindings_sourced_from_borrador must not contain blank ids")
+        if len(set(normalized)) != len(normalized):
+            raise ModeloValidationError("bindings_sourced_from_borrador must not contain duplicates")
         return normalized
 
     def _require_set(self, *names: str) -> None:

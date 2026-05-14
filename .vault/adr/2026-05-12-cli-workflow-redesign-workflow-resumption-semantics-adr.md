@@ -121,3 +121,10 @@ ADR. Checkpoint continuation is out of scope.
 Run-trace replay remains separate diagnostic and audit functionality. Resume
 creates a new workflow result linked by `resumed_from`; replay reproduces
 recorded CLI argv and uses replay-specific metadata.
+
+## W80 closure note
+
+The W80 verify/file preflight closure does not change the resume contract.
+Resume remains scoped to workflow-engine run ids and does not introduce
+`aeat workflow`, `aeat run`, replay semantics, or standalone preflight
+commands.
