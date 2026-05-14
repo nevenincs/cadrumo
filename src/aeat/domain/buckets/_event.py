@@ -6,7 +6,7 @@ inside a bucket. Events are immutable, content-addressed by their
 payload) tuple, and grouped into a frozen catalogue.
 
 The closed :class:`BucketEventType` enum fixes the emission scope
-mandated by the bucket-event-history ADR. New event kinds enter the
+mandated by the bucket event history specification. New event kinds enter the
 codebase as enum additions, never as ad-hoc strings.
 """
 
@@ -55,12 +55,12 @@ class BucketEventType(StrEnum):
     """Closed catalogue of bucket-event kinds.
 
     The enum mirrors the per-service emission scope declared by the
-    bucket-event-history ADR. Emitters land incrementally with their
-    owning Waves; new kinds are added here only when a corresponding
-    ADR sanctions the emission.
+    bucket event history specification. Emitters land incrementally with their
+    owning implementations; new kinds are added here only when a corresponding
+    specification sanctions the emission.
     """
 
-    # modelo lifecycle (Wave W14 + W39 + W40 + W42 + W43)
+    # modelo lifecycle
     MODELO_CALCULATION_CREATED = "modelo.calculation.created"
     MODELO_VERIFICATION_PASSED = "modelo.verification.passed"
     MODELO_VERIFICATION_REFUSED = "modelo.verification.refused"
@@ -68,10 +68,10 @@ class BucketEventType(StrEnum):
     MODELO_FILED_SUPERSEDED = "modelo.filed_superseded"
     MODELO_AMENDED = "modelo.amended"
     MODELO_FILING_IMPORTED = "modelo.filing.imported"
-    # Work-unit lifecycle (W78A R10 per apex ADR §12)
+    # Work-unit lifecycle
     MODELO_WORK_UNIT_DISCARDED = "modelo.work_unit.discarded"
 
-    # profile lifecycle (Wave W08 + W09)
+    # profile lifecycle
     PROFILE_BUCKET_CREATED = "profile.bucket.created"
     PROFILE_SELECTED = "profile.selected"
     PROFILE_VALUES_UPDATED = "profile.values.updated"
@@ -79,7 +79,7 @@ class BucketEventType(StrEnum):
     PROFILE_TOMBSTONED = "profile.tombstoned"
     PROFILE_DUPLICATED = "profile.duplicated"
 
-    # ledger transaction lifecycle (Wave W61)
+    # ledger transaction lifecycle
     LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"
     LEDGER_TRANSACTION_IMPORTED = "ledger.transaction.imported"
     LEDGER_IMPORT_DIAGNOSTIC_RECORDED = "ledger.import.diagnostic_recorded"
@@ -90,29 +90,30 @@ class BucketEventType(StrEnum):
     LEDGER_TRANSACTION_ARCHIVED = "ledger.transaction.archived"
     LEDGER_TRANSACTION_STASHED = "ledger.transaction.stashed"
     LEDGER_TRANSACTION_EXPORTED = "ledger.transaction.exported"
+    LEDGER_TRANSACTION_SPLIT = "ledger.transaction.split"
+    LEDGER_TRANSACTION_MERGED = "ledger.transaction.merged"
     LEDGER_CATALOGUE_RESET = "ledger.catalogue.reset"
     LEDGER_SANITIZATION_COMPLETED = "ledger.sanitization.completed"
     PURCHASE_INVOICE_EVIDENCE_ATTACHED = "purchase_invoice_evidence.attached"
     PURCHASE_INVOICE_EVIDENCE_REPLACED = "purchase_invoice_evidence.replaced"
     PURCHASE_INVOICE_EVIDENCE_DETACHED = "purchase_invoice_evidence.detached"
-    # business-operation invoice noun-groups (W73A invoice-domain-decoupling
-    # CRUD mounts per apex ADR §12.b)
+    # business-operation invoice noun-groups (invoice-domain-decoupling)
     PAYABLE_INVOICE_CREATED = "payable_invoice.created"
     PAYABLE_INVOICE_UPDATED = "payable_invoice.updated"
     PAYABLE_INVOICE_REMOVED = "payable_invoice.removed"
     COLLECTIBLE_INVOICE_CREATED = "collectible_invoice.created"
     COLLECTIBLE_INVOICE_UPDATED = "collectible_invoice.updated"
     COLLECTIBLE_INVOICE_REMOVED = "collectible_invoice.removed"
-    # inventory noun-group (W76A inventory placement per apex ADR §4.2)
+    # inventory noun-group (inventory placement)
     LEDGER_INVENTORY_CREATED = "ledger.inventory.created"
     LEDGER_INVENTORY_MOVEMENT_ADDED = "ledger.inventory.movement_added"
     LEDGER_INVENTORY_VALUATION_PREVIEWED = "ledger.inventory.valuation_previewed"
     LEDGER_INVENTORY_REMOVED = "ledger.inventory.removed"
-    # audit verb-group (W85A evidence bundle per apex ADR §4.3)
+    # audit verb-group (evidence bundle)
     MODELO_AUDIT_VERIFIED = "modelo.audit.verified"
     MODELO_AUDIT_EXPORTED = "modelo.audit.exported"
     MODELO_AUDIT_REPLAYED = "modelo.audit.replayed"
-    # live AEAT read surface (W79A app-live-shape per apex ADR §4.4).
+    # live AEAT read surface.
     # Every event below records a READ-ONLY capture; submission is
     # permanently forbidden per the live-AEAT charter.
     LIVE_NOTIFICATIONS_SNAPSHOT_CAPTURED = "live.notifications.snapshot_captured"
@@ -123,10 +124,10 @@ class BucketEventType(StrEnum):
     ATTACHMENT_LINKED = "attachment.linked"
     ATTACHMENT_REMOVED = "attachment.removed"
 
-    # workflow-state recovery (config repair shape ADR)
+    # workflow-state recovery
     WORKFLOW_STATE_RESET = "workflow_state.reset"
 
-    # reverse-merge corrections (google-oauth taxonomy ADR + two-way deferral ADR)
+    # reverse-merge corrections
     LEDGER_TRANSACTION_CORRECTION_APPLIED = "ledger.transaction.correction.applied"
     LEDGER_PURCHASE_INVOICE_EVIDENCE_CORRECTION_APPLIED = (
         "ledger.purchase_invoice_evidence.correction.applied"
