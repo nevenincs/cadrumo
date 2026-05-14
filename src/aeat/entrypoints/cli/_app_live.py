@@ -215,6 +215,85 @@ def filed_capture_sources_cmd(
 
 
 # ─────────────────────────────────────────────────────────────────────────
+# Notifications subgroup (W54/W79 app-live-shape, apex §4.4)
+# ─────────────────────────────────────────────────────────────────────────
+# list and show read persisted DEHú notification snapshots from the
+# active bucket. They are local-only reads (no AEAT contact); the
+# capture verb (not shipped here) would invoke require_live_read.
+
+notifications_app = typer.Typer(
+    name="notifications",
+    help=tr("cli.app.live.notifications.app_help", default="DEHú notification snapshots (read-only)."),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(notifications_app, name="notifications")
+
+
+def _active_bucket_id() -> str:
+    from ...application.workflow._models import active_bucket_id_or_raise
+    from ...application.workflow._persistence import workflow_state_repository
+
+    try:
+        return active_bucket_id_or_raise(workflow_state_repository().load())
+    except Exception as exc:
+        raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
+
+
+@notifications_app.command("list", help=tr("cli.app.live.notifications.list_help", default="List persisted DEHú notification snapshots in the active bucket."))
+def notifications_list(ctx: typer.Context) -> None:
+    from ...application.live._notifications import NotificationsService
+
+    bucket_id = _active_bucket_id()
+    rows = NotificationsService().list_snapshots(bucket_id=bucket_id)
+    payload = {
+        "bucket_id": bucket_id,
+        "count": len(rows),
+        "rows": [
+            {
+                "snapshot_id": r.snapshot_id,
+                "captured_at": r.captured_at.isoformat(),
+                "notification_count": len(r.snapshot.notifications),
+            }
+            for r in rows
+        ],
+    }
+    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    for r in rows:
+        lines.append(
+            f"{r.snapshot_id}\t{r.captured_at.isoformat()}\tnotifications={len(r.snapshot.notifications)}"
+        )
+    _emit(ctx, payload, lines)
+
+
+@notifications_app.command("show", help=tr("cli.app.live.notifications.show_help", default="Show one DEHú notification snapshot."))
+def notifications_show(
+    ctx: typer.Context,
+    snapshot_id: Annotated[str, typer.Argument(help=tr("cli.app.live.notifications.snapshot_id_help", default="Snapshot id (or unambiguous prefix)."))],
+) -> None:
+    from ...application.live._notifications import NotificationsService
+
+    bucket_id = _active_bucket_id()
+    record = NotificationsService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
+    payload = {
+        "bucket_id": bucket_id,
+        "snapshot_id": record.snapshot_id,
+        "captured_at": record.captured_at.isoformat(),
+        "notification_count": len(record.snapshot.notifications),
+        "notifications": [n.model_dump(mode="json") for n in record.snapshot.notifications],
+    }
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"snapshot_id\t{record.snapshot_id}",
+        f"captured_at\t{record.captured_at.isoformat()}",
+        f"notification_count\t{len(record.snapshot.notifications)}",
+    ]
+    for n in record.snapshot.notifications:
+        lines.append(f"{getattr(n, 'identifier', '<no-id>')}\t{getattr(n, 'subject', '')}")
+    _emit(ctx, payload, lines)
+
+
+# ─────────────────────────────────────────────────────────────────────────
 # Portals subgroup (W79 app-live-shape, apex §4.4 + R13)
 # ─────────────────────────────────────────────────────────────────────────
 # Portals list and show are local-only catalogue reads. They do NOT call
