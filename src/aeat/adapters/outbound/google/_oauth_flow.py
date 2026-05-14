@@ -217,27 +217,60 @@ def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ..
     return (
         str(credentials.refresh_token),
         str(credentials.token_uri),
-        str(getattr(credentials, "id_token_email", "") or _decode_email_from_id_token(credentials)),
+        _decode_email_from_id_token(credentials, audience=client.client_id),
         tuple(str(scope) for scope in (credentials.scopes or ())),
     )
 
 
-def _decode_email_from_id_token(credentials: object) -> str:
-    """Best-effort email extraction from an ID-token payload."""
+def _decode_email_from_id_token(credentials: object, *, audience: str) -> str:
+    """Verify the ID token and return the `email` claim.
+
+    Follows Google's OpenID Connect verification guidance:
+    https://developers.google.com/identity/openid-connect/openid-connect#validatinganidtoken
+
+    Verification requires the audience (our OAuth client_id) to match
+    the token's `aud` claim. The OAuth client must have requested the
+    `openid` + `userinfo.email` scopes for Google to include the
+    `email` claim in the id_token.
+
+    Raises:
+        GoogleAuthScopeInsufficientError: When the credential carries
+            no `id_token` (the operator did not consent to the
+            openid+email scopes the OAuth client requested).
+        GoogleAuthNetworkError: When `google.oauth2.id_token` is not
+            importable or the verification HTTP fetch fails.
+    """
 
     id_token_jwt = getattr(credentials, "id_token", None)
     if id_token_jwt is None:
-        return ""
+        raise GoogleAuthScopeInsufficientError(
+            "Google did not return an id_token; the OAuth consent did not include the openid+email scopes",
+            context={"audience": audience},
+            suggestion="aeat config google login",
+        )
     try:
         from google.auth.transport import requests as auth_requests
         from google.oauth2 import id_token as id_token_module
-    except ImportError:
-        return ""
+    except ImportError as exc:
+        raise GoogleAuthNetworkError(
+            f"google-auth id_token module not importable: {exc}",
+            suggestion="uv sync",
+        ) from exc
     try:
-        payload = id_token_module.verify_oauth2_token(id_token_jwt, auth_requests.Request())
-    except (ValueError, AttributeError):
-        return ""
-    return str(payload.get("email", ""))
+        payload = id_token_module.verify_oauth2_token(id_token_jwt, auth_requests.Request(), audience)
+    except ValueError as exc:
+        raise GoogleAuthNetworkError(
+            f"id_token verification failed: {exc}",
+            context={"audience": audience},
+        ) from exc
+    email = str(payload.get("email", ""))
+    if not email:
+        raise GoogleAuthScopeInsufficientError(
+            "id_token verified but carries no `email` claim",
+            context={"audience": audience},
+            suggestion="aeat config google login",
+        )
+    return email
 
 
 __all__ = [
