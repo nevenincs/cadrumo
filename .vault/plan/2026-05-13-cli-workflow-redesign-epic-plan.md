@@ -2068,42 +2068,42 @@ This Phase delivers shadow duplicate removal for rental calculation facts as req
 - [x] `W34.P167.S0997` - Audit duplicate implementations that overlap rental calculation facts; `src/aeat/domain/rental`.
 - [x] `W34.P167.S0998` - Delete duplicate backend branches that compete with rental calculation facts; `src/aeat/domain/rental`.
 - [x] `W34.P167.S0999` - Remove stale aliases that bypass the canonical service for rental calculation facts; `src/aeat/entrypoints/cli`.
-- [ ] `W34.P167.S1000` - Migrate internal callers to the canonical service for rental calculation facts; `src/aeat/domain/rental`.
-- [ ] `W34.P167.S1001` - Remove stale fixtures and tests that encode duplicate behavior for rental calculation facts; `tests/domain/rental`.
-- [ ] `W34.P167.S1002` - Update boundary inventory entries that describe duplicate behavior for rental calculation facts; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W34.P167.S1000` - Migrate internal callers to the canonical service for rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P167.S1001` - Remove stale fixtures and tests that encode duplicate behavior for rental calculation facts; `tests/domain/rental`.
+- [x] `W34.P167.S1002` - Update boundary inventory entries that describe duplicate behavior for rental calculation facts; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W34.P168` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for rental calculation facts as required by `2026-05-12-cli-workflow-redesign-domain-harvest-rental-adr`.
 
-- [ ] `W34.P168.S1003` - Delete compatibility shims that preserve rejected behavior for rental calculation facts; `src/aeat/domain/rental`.
-- [ ] `W34.P168.S1004` - Delete placeholder stubs that claim support for rental calculation facts; `src/aeat/domain/rental`.
-- [ ] `W34.P168.S1005` - Replace stubbed paths with real backend service calls for rental calculation facts; `src/aeat/domain/rental`.
-- [ ] `W34.P168.S1006` - Remove deprecated command spelling and help text for rental calculation facts; `src/aeat/entrypoints/cli`.
-- [ ] `W34.P168.S1007` - Remove tests that assert shim or stub behavior for rental calculation facts; `tests/domain/rental`.
-- [ ] `W34.P168.S1008` - Record the removed shim and stub surfaces for rental calculation facts; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W34.P168.S1003` - Delete compatibility shims that preserve rejected behavior for rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P168.S1004` - Delete placeholder stubs that claim support for rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P168.S1005` - Replace stubbed paths with real backend service calls for rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P168.S1006` - Remove deprecated command spelling and help text for rental calculation facts; `src/aeat/entrypoints/cli`.
+- [x] `W34.P168.S1007` - Remove tests that assert shim or stub behavior for rental calculation facts; `tests/domain/rental`.
+- [x] `W34.P168.S1008` - Record the removed shim and stub surfaces for rental calculation facts; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W34.P169` - real behavior verification
 
 This Phase delivers real behavior verification for rental calculation facts as required by `2026-05-12-cli-workflow-redesign-domain-harvest-rental-adr`.
 
-- [ ] `W34.P169.S1009` - Add service contract tests for rental calculation facts; `tests/domain/rental`.
-- [ ] `W34.P169.S1010` - Add persistence or registry integration tests for rental calculation facts; `tests/domain/rental`.
-- [ ] `W34.P169.S1011` - Add negative tests proving rejected aliases do not reach rental calculation facts; `tests/entrypoints/cli`.
-- [ ] `W34.P169.S1012` - Add command behavior tests that exercise rental calculation facts through real services; `tests/entrypoints/cli`.
-- [ ] `W34.P169.S1013` - Add end-to-end workflow coverage for rental calculation facts; `tests`.
-- [ ] `W34.P169.S1014` - Run the targeted test slice for rental calculation facts without skips or xfails; `tests/domain/rental`.
+- [x] `W34.P169.S1009` - Add service contract tests for rental calculation facts; `tests/domain/rental`.
+- [x] `W34.P169.S1010` - Add persistence or registry integration tests for rental calculation facts; `tests/domain/rental`.
+- [x] `W34.P169.S1011` - Add negative tests proving rejected aliases do not reach rental calculation facts; `tests/entrypoints/cli`.
+- [x] `W34.P169.S1012` - Add command behavior tests that exercise rental calculation facts through real services; `tests/entrypoints/cli`.
+- [x] `W34.P169.S1013` - Add end-to-end workflow coverage for rental calculation facts; `tests`.
+- [x] `W34.P169.S1014` - Run the targeted test slice for rental calculation facts without skips or xfails; `tests/domain/rental`.
 
 ### Phase `W34.P170` - thin cli exposure
 
 This Phase delivers thin cli exposure for rental calculation facts as required by `2026-05-12-cli-workflow-redesign-domain-harvest-rental-adr`.
 
-- [ ] `W34.P170.S1015` - Expose accepted command handlers for rental calculation facts under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W34.P170.S1016` - Keep argument parsing for rental calculation facts separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W34.P170.S1017` - Delegate rental calculation facts execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W34.P170.S1018` - Render rental calculation facts results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W34.P170.S1019` - Handle rental calculation facts failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W34.P170.S1020` - Validate help text for rental calculation facts uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W34.P170.S1015` - Expose accepted command handlers for rental calculation facts under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W34.P170.S1016` - Keep argument parsing for rental calculation facts separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W34.P170.S1017` - Delegate rental calculation facts execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W34.P170.S1018` - Render rental calculation facts results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W34.P170.S1019` - Handle rental calculation facts failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W34.P170.S1020` - Validate help text for rental calculation facts uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W35` - domain portals harvest
 
@@ -2113,56 +2113,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-domain-portals-harves
 
 This Phase delivers backend implementation for portal reference catalog as required by `2026-05-12-cli-workflow-redesign-domain-portals-harvest-adr`.
 
-- [ ] `W35.P171.S1021` - Map the `2026-05-12-cli-workflow-redesign-domain-portals-harvest-adr` decision into non-CLI service ownership for portal reference catalog; `src/aeat/domain/portals`.
-- [ ] `W35.P171.S1022` - Implement Pydantic command and result contracts for portal reference catalog; `src/aeat/domain/portals`.
-- [ ] `W35.P171.S1023` - Wire application or domain services required by portal reference catalog; `src/aeat/domain/portals`.
-- [ ] `W35.P171.S1024` - Connect persistence, bucket events, registry data, or provider adapters required by portal reference catalog; `src/aeat/domain/portals`.
-- [ ] `W35.P171.S1025` - Route existing backend functionality into the canonical service for portal reference catalog; `src/aeat/domain/portals`.
-- [ ] `W35.P171.S1026` - Record service-level error codes and log fields for portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P171.S1021` - Map the `2026-05-12-cli-workflow-redesign-domain-portals-harvest-adr` decision into non-CLI service ownership for portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P171.S1022` - Implement Pydantic command and result contracts for portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P171.S1023` - Wire application or domain services required by portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P171.S1024` - Connect persistence, bucket events, registry data, or provider adapters required by portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P171.S1025` - Route existing backend functionality into the canonical service for portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P171.S1026` - Record service-level error codes and log fields for portal reference catalog; `src/aeat/domain/portals`.
 
 ### Phase `W35.P172` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for portal reference catalog as required by `2026-05-12-cli-workflow-redesign-domain-portals-harvest-adr`.
 
-- [ ] `W35.P172.S1027` - Audit duplicate implementations that overlap portal reference catalog; `src/aeat/domain/portals`.
-- [ ] `W35.P172.S1028` - Delete duplicate backend branches that compete with portal reference catalog; `src/aeat/domain/portals`.
-- [ ] `W35.P172.S1029` - Remove stale aliases that bypass the canonical service for portal reference catalog; `src/aeat/entrypoints/cli`.
-- [ ] `W35.P172.S1030` - Migrate internal callers to the canonical service for portal reference catalog; `src/aeat/domain/portals`.
-- [ ] `W35.P172.S1031` - Remove stale fixtures and tests that encode duplicate behavior for portal reference catalog; `tests/domain/portals`.
-- [ ] `W35.P172.S1032` - Update boundary inventory entries that describe duplicate behavior for portal reference catalog; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W35.P172.S1027` - Audit duplicate implementations that overlap portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P172.S1028` - Delete duplicate backend branches that compete with portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P172.S1029` - Remove stale aliases that bypass the canonical service for portal reference catalog; `src/aeat/entrypoints/cli`.
+- [x] `W35.P172.S1030` - Migrate internal callers to the canonical service for portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P172.S1031` - Remove stale fixtures and tests that encode duplicate behavior for portal reference catalog; `tests/domain/portals`.
+- [x] `W35.P172.S1032` - Update boundary inventory entries that describe duplicate behavior for portal reference catalog; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W35.P173` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for portal reference catalog as required by `2026-05-12-cli-workflow-redesign-domain-portals-harvest-adr`.
 
-- [ ] `W35.P173.S1033` - Delete compatibility shims that preserve rejected behavior for portal reference catalog; `src/aeat/domain/portals`.
-- [ ] `W35.P173.S1034` - Delete placeholder stubs that claim support for portal reference catalog; `src/aeat/domain/portals`.
-- [ ] `W35.P173.S1035` - Replace stubbed paths with real backend service calls for portal reference catalog; `src/aeat/domain/portals`.
-- [ ] `W35.P173.S1036` - Remove deprecated command spelling and help text for portal reference catalog; `src/aeat/entrypoints/cli`.
-- [ ] `W35.P173.S1037` - Remove tests that assert shim or stub behavior for portal reference catalog; `tests/domain/portals`.
-- [ ] `W35.P173.S1038` - Record the removed shim and stub surfaces for portal reference catalog; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W35.P173.S1033` - Delete compatibility shims that preserve rejected behavior for portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P173.S1034` - Delete placeholder stubs that claim support for portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P173.S1035` - Replace stubbed paths with real backend service calls for portal reference catalog; `src/aeat/domain/portals`.
+- [x] `W35.P173.S1036` - Remove deprecated command spelling and help text for portal reference catalog; `src/aeat/entrypoints/cli`.
+- [x] `W35.P173.S1037` - Remove tests that assert shim or stub behavior for portal reference catalog; `tests/domain/portals`.
+- [x] `W35.P173.S1038` - Record the removed shim and stub surfaces for portal reference catalog; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W35.P174` - real behavior verification
 
 This Phase delivers real behavior verification for portal reference catalog as required by `2026-05-12-cli-workflow-redesign-domain-portals-harvest-adr`.
 
-- [ ] `W35.P174.S1039` - Add service contract tests for portal reference catalog; `tests/domain/portals`.
-- [ ] `W35.P174.S1040` - Add persistence or registry integration tests for portal reference catalog; `tests/domain/portals`.
-- [ ] `W35.P174.S1041` - Add negative tests proving rejected aliases do not reach portal reference catalog; `tests/entrypoints/cli`.
-- [ ] `W35.P174.S1042` - Add command behavior tests that exercise portal reference catalog through real services; `tests/entrypoints/cli`.
-- [ ] `W35.P174.S1043` - Add end-to-end workflow coverage for portal reference catalog; `tests`.
-- [ ] `W35.P174.S1044` - Run the targeted test slice for portal reference catalog without skips or xfails; `tests/domain/portals`.
+- [x] `W35.P174.S1039` - Add service contract tests for portal reference catalog; `tests/domain/portals`.
+- [x] `W35.P174.S1040` - Add persistence or registry integration tests for portal reference catalog; `tests/domain/portals`.
+- [x] `W35.P174.S1041` - Add negative tests proving rejected aliases do not reach portal reference catalog; `tests/entrypoints/cli`.
+- [x] `W35.P174.S1042` - Add command behavior tests that exercise portal reference catalog through real services; `tests/entrypoints/cli`.
+- [x] `W35.P174.S1043` - Add end-to-end workflow coverage for portal reference catalog; `tests`.
+- [x] `W35.P174.S1044` - Run the targeted test slice for portal reference catalog without skips or xfails; `tests/domain/portals`.
 
 ### Phase `W35.P175` - thin cli exposure
 
 This Phase delivers thin cli exposure for portal reference catalog as required by `2026-05-12-cli-workflow-redesign-domain-portals-harvest-adr`.
 
-- [ ] `W35.P175.S1045` - Expose accepted command handlers for portal reference catalog under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W35.P175.S1046` - Keep argument parsing for portal reference catalog separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W35.P175.S1047` - Delegate portal reference catalog execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W35.P175.S1048` - Render portal reference catalog results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W35.P175.S1049` - Handle portal reference catalog failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W35.P175.S1050` - Validate help text for portal reference catalog uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W35.P175.S1045` - Expose accepted command handlers for portal reference catalog under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W35.P175.S1046` - Keep argument parsing for portal reference catalog separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W35.P175.S1047` - Delegate portal reference catalog execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W35.P175.S1048` - Render portal reference catalog results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W35.P175.S1049` - Handle portal reference catalog failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W35.P175.S1050` - Validate help text for portal reference catalog uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W36` - iva prorrata art 101 103
 
@@ -4345,51 +4345,51 @@ Closes apex §12 ledger row R07. Inventory domain and persistence exist but the 
 
 Implement InventoryService and add bucket events.
 
-- [ ] `W76.P365.S2104` - Read the inventory-management-cli-design and inventory-placement ADRs in full; `.vault/adr`.
-- [ ] `W76.P365.S2105` - Implement InventoryService satisfying the W71 MutatingNounGroupContract over inventory rows; `src/aeat/application/inventory`.
-- [ ] `W76.P365.S2106` - Add Pydantic command and result contracts for create-actividad, movement-add, valuation-preview; `src/aeat/application/inventory`.
-- [ ] `W76.P365.S2107` - Add ledger.inventory.created, ledger.inventory.movement_added, ledger.inventory.valuation_previewed enum members; `src/aeat/domain/buckets`.
-- [ ] `W76.P365.S2108` - Wire persistence over the existing bucket-scoped storage; `src/aeat/adapters/persistence/profile/inventory`.
+- [x] `W76.P365.S2104` - Read the inventory-management-cli-design and inventory-placement ADRs in full; `.vault/adr`.
+- [x] `W76.P365.S2105` - Implement InventoryService satisfying the W71 MutatingNounGroupContract over inventory rows; `src/aeat/application/inventory`.
+- [x] `W76.P365.S2106` - Add Pydantic command and result contracts for create-actividad, movement-add, valuation-preview; `src/aeat/application/inventory`.
+- [x] `W76.P365.S2107` - Add ledger.inventory.created, ledger.inventory.movement_added, ledger.inventory.valuation_previewed enum members; `src/aeat/domain/buckets`.
+- [x] `W76.P365.S2108` - Wire persistence over the existing bucket-scoped storage; `src/aeat/adapters/persistence/profile/inventory`.
 
 ### Phase `W76.P366` - shadow duplicate removal
 
 Retire aeat data ledgers root and migrate callers.
 
-- [ ] `W76.P366.S2109` - Audit entrypoints/cli/data/ledgers/inventory.py legacy CLI and confirm migration vs deletion; `src/aeat/entrypoints/cli/data`.
-- [ ] `W76.P366.S2110` - Remove aeat data ledgers root and aeat profile inventory references per apex §1 fold-under; `src/aeat/entrypoints/cli`.
-- [ ] `W76.P366.S2111` - Migrate internal callers to the new InventoryService; `src/aeat/application`.
-- [ ] `W76.P366.S2112` - Update CLI suggestion error messages to point at aeat app ledger inventory; `src/aeat/core/i18n`.
-- [ ] `W76.P366.S2113` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W76.P366.S2109` - Audit entrypoints/cli/data/ledgers/inventory.py legacy CLI and confirm migration vs deletion; `src/aeat/entrypoints/cli/data`.
+- [x] `W76.P366.S2110` - Remove aeat data ledgers root and aeat profile inventory references per apex §1 fold-under; `src/aeat/entrypoints/cli`.
+- [x] `W76.P366.S2111` - Migrate internal callers to the new InventoryService; `src/aeat/application`.
+- [x] `W76.P366.S2112` - Update CLI suggestion error messages to point at aeat app ledger inventory; `src/aeat/core/i18n`.
+- [x] `W76.P366.S2113` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W76.P367` - de-shim and de-stub cleanup
 
 Decide canonical verb shape and remove deprecated spellings.
 
-- [ ] `W76.P367.S2114` - Decide whether actividad, movement, valuation are CRUD verbs or orthogonal sub-verbs per W71 contract and document; `.vault/adr`.
-- [ ] `W76.P367.S2115` - Remove deprecated inventory command spellings and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
-- [ ] `W76.P367.S2116` - Remove legacy data ledgers references from help text and i18n; `src/aeat/core/i18n`.
-- [ ] `W76.P367.S2117` - Remove any compatibility shims; `src/aeat/entrypoints/cli`.
-- [ ] `W76.P367.S2118` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W76.P367.S2114` - Decide whether actividad, movement, valuation are CRUD verbs or orthogonal sub-verbs per W71 contract and document; `.vault/adr`.
+- [x] `W76.P367.S2115` - Remove deprecated inventory command spellings and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
+- [x] `W76.P367.S2116` - Remove legacy data ledgers references from help text and i18n; `src/aeat/core/i18n`.
+- [x] `W76.P367.S2117` - Remove any compatibility shims; `src/aeat/entrypoints/cli`.
+- [x] `W76.P367.S2118` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W76.P368` - real behavior verification
 
 Test service, persistence, events, and CLI surface.
 
-- [ ] `W76.P368.S2119` - Add service-contract tests for InventoryService; `tests/application/inventory`.
-- [ ] `W76.P368.S2120` - Add persistence integration tests; `tests/adapters/persistence`.
-- [ ] `W76.P368.S2121` - Add bucket-event-emission tests; `tests/domain/buckets`.
-- [ ] `W76.P368.S2122` - Add CLI surface tests for the inventory verb tree; `tests/entrypoints/cli`.
-- [ ] `W76.P368.S2123` - Add negative tests proving aeat data ledgers inventory is unknown; `tests/entrypoints/cli`.
+- [x] `W76.P368.S2119` - Add service-contract tests for InventoryService; `tests/application/inventory`.
+- [x] `W76.P368.S2120` - Add persistence integration tests; `tests/adapters/persistence`.
+- [x] `W76.P368.S2121` - Add bucket-event-emission tests; `tests/domain/buckets`.
+- [x] `W76.P368.S2122` - Add CLI surface tests for the inventory verb tree; `tests/entrypoints/cli`.
+- [x] `W76.P368.S2123` - Add negative tests proving aeat data ledgers inventory is unknown; `tests/entrypoints/cli`.
 
 ### Phase `W76.P369` - thin cli exposure
 
 Register inventory_app and update apex cross-references.
 
-- [ ] `W76.P369.S2124` - Register inventory_app Typer subgroup under ledger_app; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W76.P369.S2125` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
-- [ ] `W76.P369.S2126` - Wire help text and i18n; `src/aeat/core/i18n`.
-- [ ] `W76.P369.S2127` - Update apex ADR §4.2 to reflect the shipped subgroup and mark R07 closed by W76; `.vault/adr`.
-- [ ] `W76.P369.S2128` - Amend inventory-management-cli-design and inventory-placement child ADRs; `.vault/adr`.
+- [x] `W76.P369.S2124` - Register inventory_app Typer subgroup under ledger_app; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W76.P369.S2125` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [x] `W76.P369.S2126` - Wire help text and i18n; `src/aeat/core/i18n`.
+- [x] `W76.P369.S2127` - Update apex ADR §4.2 to reflect the shipped subgroup and mark R07 closed by W76; `.vault/adr`.
+- [x] `W76.P369.S2128` - Amend inventory-management-cli-design and inventory-placement child ADRs; `.vault/adr`.
 
 ## Wave `W77` - Reconciliation: ratios + bucket noun-groups
 
