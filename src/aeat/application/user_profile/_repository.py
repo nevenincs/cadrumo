@@ -7,7 +7,7 @@ Two namespaces are owned by this module:
 - ``aeat.application.user_profile.snapshot`` — immutable filing-time
   snapshots per ``(bucket_id, snapshot_id)``.
 
-Both namespaces ride the W61.P301 active-bucket plumbing: every read and
+Both namespaces ride the active-bucket plumbing: every read and
 write resolves through a profile bucket so two operators never share
 profile storage. ``snapshot_id`` is deterministic in shape but globally
 unique within a bucket per ``new_profile_snapshot_id``.

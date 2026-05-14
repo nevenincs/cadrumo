@@ -1098,15 +1098,20 @@ capability without a CLI verb appears here with its assigned mini-app
 target. As each verb lands, the entry is removed.
 
 - **`WorkflowEngine.run_next` / `run_for_period`** (`application/workflow/
-  _engine.py`) — read/preflight lifecycle gate. **Target behavior locked**:
-  `WorkflowEngine.run_for_period(profile, modelo, period, as_of=...)` is
-  invoked internally by `aeat app modelo file`; `run_next` remains
-  application-only. No `aeat workflow` root, per-stage verbs, or standalone
-  `app modelo preflight` command.
+  _engine.py`) — internal modelo lifecycle gate. **Closed W80 behavior**:
+  `verify_modelo_revision` runs the modelo workflow gate after local
+  completeness grants and before verification-report/state persistence;
+  `file_modelo_revision` runs the gate before filing writes. The gate calls
+  `WorkflowEngine.run_for_period`, persists the workflow result, and raises
+  `ModeloWorkflowGateError` on non-`DONE`. `run_next` remains
+  application-only. No `aeat workflow` root, `aeat run`, per-stage verbs, or
+  standalone `app modelo preflight` command.
 - **`SubmissionEngine.preflight`** (`domain/submission/_engine.py`,
-  `_preflight.py`) — preflight gate (auth, deadline, draft approval, no
-  blockers). **Target behavior**: invoked internally by `app modelo verify`
-  or `app modelo file`; no standalone `app modelo preflight` verb.
+  `_preflight.py`) — preflight implementation used behind the workflow gate.
+  **Closed W80 behavior**: there is no direct CLI/modelo standalone
+  `SubmissionEngine.preflight` surface. `WorkflowEngine` is the only caller
+  through `SubmissionEngineAdapter`; verify/file reach preflight only by
+  routing through the workflow gate.
 - **`FilingHistoryRepository`** (`application/filing/_history_repository.py`,
   `_history_models.py`) — encrypted per-modelo filing history. **Target
   verb**: `aeat app modelo history` (§4.3).
@@ -1658,9 +1663,9 @@ amendments to the affected child ADR.
 | R11 | `aeat app modelo calculate --borrador SNAPSHOT_ID` flag absent | borrador-100-binding-integration ADR, W48 | Regression — wire borrador-100 binding integration per ADR | `W78` |
 | R12 | `aeat app live` mounts only `filed` subgroup; ADR §4.4 locks 7 subgroups | app-live-shape ADR, W54 | Regression — mount 6 missing subgroups (notifications/expedientes/verify nif-iva+tgvi/borrador/portals) behind `require_live_read()` | `W79` |
 | R13 | `aeat app live portals` mount absent; `application/portals/` wrapper missing | domain-portals-harvest ADR, W35 | Regression — close P174 (application wrapper + Typer mount) | `W79` |
-| R14 | `WorkflowEngine.run_for_period` exists but is not invoked from `aeat app modelo file` | workflow-engine-harvest ADR, W58 | Regression — wire `run_for_period` into `file_modelo_revision` per apex §8 backend exit-cap mandate | `W80` |
-| R15 | `SubmissionEngine.preflight` exists but is not invoked from `verify_modelo_revision`/`file_modelo_revision` | apex §8, W65 | Regression — invoke preflight inside both modelo actions (alternative: route everything through `WorkflowEngine`; adjudicate during wave) | `W80` |
-| R16 | `aeat app modelo resume <workflow_run_id>` entirely absent | workflow-resumption-semantics ADR, W59 | Regression — ship verb per ADR with `resumed_from` tracking + idempotency | `W80` |
+| R14 | `WorkflowEngine.run_for_period` exists and must gate modelo verify/file lifecycle transitions through the application workflow path | workflow-engine-harvest ADR, W58 | Closed — WorkflowEngine-only preflight routing is the adjudicated path; `file_modelo_revision` gates before filing writes and `verify_modelo_revision` runs the same workflow gate after local completeness grants and before report/state persistence | `W80` |
+| R15 | `SubmissionEngine.preflight` exists without a direct CLI/modelo standalone surface | apex §8, W65 | Closed — no direct `SubmissionEngine.preflight` CLI/modelo action is introduced; `WorkflowEngine` remains the only caller of `SubmissionEngine.preflight` through `SubmissionEngineAdapter` | `W80` |
+| R16 | Modelo workflow resume placement | workflow-resumption-semantics ADR, W59 | Closed — resume remains under the modelo workflow lifecycle; no `aeat workflow`, `aeat run`, or standalone modelo preflight command is added | `W80` |
 | R17 | `aeat app overview` ships only `status` verb; `calendar/agenda/backlog/explain` not exposed as discrete verbs (`--calendar` is a flag on `status`) | app-overview-shape ADR, W53 | Adjudicate — flag-on-status may be Improvement (single verb with axis switches) or Regression (loses discoverability); if Improvement, amend §4.1 | `W81` |
 | R18 | `domain/deadlines/_festivos.shift_deadline` exists but is never called from `OverviewCalendarEntry`; `adjusted_closes_on` field absent | festivos-deadline-shift ADR, W37 | Regression — wire into overview calendar; add field; retire legacy `entrypoints/cli/deadlines/` package | `W81` |
 | R19 | `aeat config repair` ships 4 of 6 locked subverbs (`connectivity/quarantine/reset-state/logs`); missing `integrity` and `list` | config-repair-shape ADR, W18 | Regression — add 2 subcommands wired to existing AES-256-GCM scan + namespace inventory functions | `W82` |
@@ -1729,9 +1734,9 @@ sweep.
 | R08 | W77 | ✅ closed |
 | R09, R10, R11 | W78 | ✅ closed |
 | R12, R13 | W79 | ✅ closed |
-| R14 | W80 | ⏳ research-blocked — *not* a user-adjudication question. The underlying question is legal: under BOE / AEAT instrucciones, when is a Modelo declaration considered legally filed, and what gates (auth attestation, deadline-window check, draft completeness, preflight) must the audit trail prove ran before a state transition? Resolution path: BOE LGT art. 119–123 (autoliquidación + presentación), per-modelo instrucciones for the active filing set, and registry-schema `boe_references` for each `FilingRecord.status` transition. Plan rows kept open pending research: `W80.P385.S2205`, `W80.P388.S2219`, `W80.P389.S2227` |
-| R15 | W80 | ⏳ research-blocked — *not* a user-adjudication question. The underlying question is legal: which preflight gates (auth validity, deadline window, draft completeness, NIF-IVA, GROI, Modelo 369 cutoff, etc.) are AEAT-mandatory before a declaration may transition to a filed state, and which are advisory hygiene? The "direct call vs `WorkflowEngine`-only" axis is software-internal; the legally-binding axis is "what set of gates is regulatorily required and at which lifecycle point". Resolution path: per-modelo presentation requirements from AEAT instrucciones, BOE references already in the registry schema, and the existing live-AEAT pre-filing validator surface. Plan rows kept open pending research: `W80.P385.S2206`, `W80.P385.S2207`, `W80.P386.S2209`, `W80.P388.S2220`, `W80.P389.S2228` |
-| R16 | W80 | ✅ closed — `resume_modelo_workflow` local action shipped; CLI mount `aeat app modelo work resume WORKFLOW_RUN_ID` shipped; 17 of 25 W80 plan rows ticked (the 8 remaining are R14/R15 adjudication-bound) |
+| R14 | W80 | ✅ closed — WorkflowEngine-only preflight routing is implemented; `file_modelo_revision` gates before filing writes and `verify_modelo_revision` gates after local completeness grants and before verification-report/state persistence |
+| R15 | W80 | ✅ closed — `SubmissionEngine.preflight` remains internal to `WorkflowEngine` through `SubmissionEngineAdapter`; no direct CLI/modelo preflight surface, workflow root, or run root was introduced |
+| R16 | W80 | ✅ closed — `resume_modelo_workflow` local action shipped; CLI mount `aeat app modelo work resume WORKFLOW_RUN_ID` shipped; W80 R14/R15/R16 adjudication rows are closed |
 | R17, R18 | W81 | ✅ closed (`shift_deadline` wired into `OverviewCalendarEntry`; calendar adjudication ratified) |
 | R19 | W82 | ✅ closed |
 | R20 | W83 | ✅ closed |

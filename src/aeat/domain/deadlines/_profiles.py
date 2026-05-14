@@ -1,11 +1,10 @@
 """Profile construction helpers for deadline and schedule consumers.
 
-The helper projects a ``ProfileRecord.values``-shaped mapping into an
-:class:`AutonomoProfile` by deferring to the wizard descriptor's
-typed projection (``project_answers``). The wizard catalogue is the
-single source of truth for the canonical-token shape of every field;
-this helper composes the typed answer over the deadline-engine's
-record.
+The helper projects canonical profile facts into an
+:class:`AutonomoProfile` by deferring to the wizard descriptor's typed
+projection (``project_answers``). The wizard catalogue is the single
+source of truth for the canonical-token shape of every field; this
+helper composes the typed answer over the deadline-engine's record.
 """
 
 from __future__ import annotations

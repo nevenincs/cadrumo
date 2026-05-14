@@ -6,13 +6,15 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.aggregation._foreign_assets import (
+import aeat.application.aggregation as aggregation_api
+from aeat.application.aggregation import (
     THRESHOLD_720_EUR_PER_CLASS,
     ForeignAssetClass,
     ForeignAssetClassRollup,
     ForeignAssetObservation,
     ForeignAssetsAggregation,
     aggregate_foreign_assets_720,
+    declarable_asset_classes_720,
     declarable_class,
 )
 
@@ -46,14 +48,54 @@ class TestObservationContract:
     def test_bare_invoice_source_kind_rejected(self) -> None:
         from pydantic import ValidationError
 
-        with pytest.raises(ValidationError, match="bare 'invoice'"):
+        with pytest.raises(ValidationError, match="unsupported source_kind"):
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", source_kind="invoice")
+
+    def test_noncanonical_source_kind_rejected(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="collectible_invoice"):
+            _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", source_kind="foreign_account_statement")
+
+    @pytest.mark.parametrize(
+        "source_kind",
+        [
+            "ledger_transaction",
+            "purchase_invoice_evidence",
+            "payable_invoice",
+            "collectible_invoice",
+        ],
+    )
+    def test_canonical_source_kinds_are_accepted(self, source_kind: str) -> None:
+        observation = _obs(
+            asset_class=ForeignAssetClass.ACCOUNT,
+            valuation="1000",
+            source_kind=source_kind,
+        )
+        assert observation.source_kind == source_kind
 
     def test_lowercase_country_rejected(self) -> None:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError, match="uppercase ISO-3166"):
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", country="ad")
+
+    def test_non_alpha_country_rejected(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="uppercase ISO-3166"):
+            _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", country="1!")
+
+    def test_non_ascii_country_letters_rejected(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="uppercase ISO-3166"):
+            _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="1000", country="ÑÑ")
+
+    def test_foreign_asset_api_is_publicly_exported(self) -> None:
+        assert "ForeignAssetObservation" in aggregation_api.__all__
+        assert aggregation_api.ForeignAssetObservation is ForeignAssetObservation
+        assert "aggregate_foreign_assets_720" in aggregation_api.__all__
 
 
 class TestAggregateBasic:
@@ -101,8 +143,30 @@ class TestAggregateBasic:
         assert len(result.rollups) == 1
         row = result.rollups[0]
         assert row.assets_count == 2
+        assert row.source_kind == "ledger_transaction"
         assert row.total_valuation_eur == Decimal("50000")
         assert row.countries == ("AD", "CH")
+
+    def test_same_asset_class_different_source_kinds_yield_separate_rollups(self) -> None:
+        observations = (
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="20000",
+                asset_external_id="A1",
+                source_kind="purchase_invoice_evidence",
+            ),
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="30000",
+                asset_external_id="A2",
+                source_kind="payable_invoice",
+            ),
+        )
+        result = aggregate_foreign_assets_720(observations, period="2025")
+        assert [(row.source_kind, row.asset_class, row.total_valuation_eur) for row in result.rollups] == [
+            ("payable_invoice", ForeignAssetClass.ACCOUNT, Decimal("30000")),
+            ("purchase_invoice_evidence", ForeignAssetClass.ACCOUNT, Decimal("20000")),
+        ]
 
     def test_rollups_sort_by_asset_class_value(self) -> None:
         observations = (
@@ -128,28 +192,55 @@ class TestAggregateBasic:
 
 class TestThreshold720:
     def test_threshold_is_canonical_50000(self) -> None:
-        assert THRESHOLD_720_EUR_PER_CLASS == Decimal("50000.00")
+        assert Decimal("50000.00") == THRESHOLD_720_EUR_PER_CLASS
 
     def test_declarable_strict_above_50000(self) -> None:
         observations = (
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.01", asset_external_id="A1"),
         )
         result = aggregate_foreign_assets_720(observations, period="2025")
-        assert declarable_class(result.rollups[0]) is True
+        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is True
 
     def test_not_declarable_at_exactly_50000(self) -> None:
         observations = (
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.00", asset_external_id="A1"),
         )
         result = aggregate_foreign_assets_720(observations, period="2025")
-        assert declarable_class(result.rollups[0]) is False
+        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
 
     def test_not_declarable_below_threshold(self) -> None:
         observations = (
             _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="49999.99", asset_external_id="A1"),
         )
         result = aggregate_foreign_assets_720(observations, period="2025")
-        assert declarable_class(result.rollups[0]) is False
+        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
+
+    def test_threshold_sums_all_source_kind_cohorts_per_asset_class(self) -> None:
+        observations = (
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="25000",
+                asset_external_id="A1",
+                source_kind="purchase_invoice_evidence",
+            ),
+            _obs(
+                asset_class=ForeignAssetClass.ACCOUNT,
+                valuation="25000.01",
+                asset_external_id="A2",
+                source_kind="payable_invoice",
+            ),
+            _obs(
+                asset_class=ForeignAssetClass.SECURITY,
+                valuation="50000.00",
+                asset_external_id="S1",
+                source_kind="collectible_invoice",
+            ),
+        )
+        result = aggregate_foreign_assets_720(observations, period="2025")
+        assert all(row.total_valuation_eur <= THRESHOLD_720_EUR_PER_CLASS for row in result.rollups)
+        assert declarable_asset_classes_720(result) == frozenset({ForeignAssetClass.ACCOUNT})
+        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is True
+        assert declarable_class(result, asset_class=ForeignAssetClass.SECURITY) is False
 
 
 class TestInvariants:
@@ -167,6 +258,7 @@ class TestInvariants:
 
         with pytest.raises(ValidationError, match="held_at_year_end_count"):
             ForeignAssetClassRollup(
+                source_kind="ledger_transaction",
                 asset_class=ForeignAssetClass.ACCOUNT,
                 assets_count=2,
                 held_at_year_end_count=99,
@@ -174,17 +266,31 @@ class TestInvariants:
                 countries=("AD",),
             )
 
+    def test_rollup_rejects_invalid_public_country_tuple_values(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="uppercase ISO-3166"):
+            ForeignAssetClassRollup(
+                source_kind="ledger_transaction",
+                asset_class=ForeignAssetClass.ACCOUNT,
+                assets_count=1,
+                held_at_year_end_count=1,
+                total_valuation_eur=Decimal("10000"),
+                countries=("ad", "1!", "ÑÑ"),
+            )
+
     def test_aggregation_rejects_duplicate_class_rows(self) -> None:
         from pydantic import ValidationError
 
         row = ForeignAssetClassRollup(
+            source_kind="ledger_transaction",
             asset_class=ForeignAssetClass.ACCOUNT,
             assets_count=1,
             held_at_year_end_count=1,
             total_valuation_eur=Decimal("1000"),
             countries=("AD",),
         )
-        with pytest.raises(ValidationError, match="may appear at most once"):
+        with pytest.raises(ValidationError, match="cohort may appear at most once"):
             ForeignAssetsAggregation(
                 modelo="720",
                 period="2025",

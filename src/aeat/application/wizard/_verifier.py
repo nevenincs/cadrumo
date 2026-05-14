@@ -1,10 +1,10 @@
 """Post-persistence verification for wizard flows.
 
-After ``persist_answers`` writes a flow's answers into ``ProfileRecord``,
-the verifier runs a closed set of :class:`WizardCheck` records against
-the typed projection and emits one :class:`WizardCheckFinding` per
-check. Findings carry a severity and a translation key so renderers
-can localise the outcome.
+After ``persist_answers`` writes a flow's answers as user-profile
+facts, the verifier runs a closed set of :class:`WizardCheck` records
+against the typed projection and emits one :class:`WizardCheckFinding`
+per check. Findings carry a severity and a translation key so
+renderers can localise the outcome.
 
 Each check is a pure function ``(BaseModel) -> WizardCheckFinding``;
 the verifier accumulates the per-check findings into a

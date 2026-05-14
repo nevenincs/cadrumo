@@ -305,6 +305,7 @@ class WorkflowResult(BaseModel):
     obligation: FilingObligation | None = None
     draft_id: str | None = None
     submission_id: str | None = None
+    resumed_from: str | None = Field(default=None, min_length=16, max_length=16)
     steps: tuple[WorkflowStep, ...]
     summary: str
 
@@ -318,6 +319,8 @@ class WorkflowResult(BaseModel):
             raise ValueError("ABORTED results must carry an aborted_reason")
         if self.final_stage is WorkflowStage.DONE and self.aborted_reason is not None:
             raise ValueError("DONE results must not carry an aborted_reason")
+        if self.resumed_from is not None and self.resumed_from == self.run_id:
+            raise ValueError("resumed_from must reference a different workflow run")
         return self
 
 

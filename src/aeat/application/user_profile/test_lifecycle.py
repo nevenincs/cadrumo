@@ -70,6 +70,14 @@ def _all_required_facts(schema) -> tuple[UserProfileFact, ...]:
     return tuple(facts)
 
 
+def _all_schema_facts(schema) -> tuple[UserProfileFact, ...]:
+    facts: list[UserProfileFact] = []
+    for section in schema.sections:
+        for field in section.fields:
+            facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value="placeholder"))
+    return tuple(facts)
+
+
 def test_register_rejects_schema_violations(secure_objects, schema) -> None:
     svc = _service(secure_objects, schema)
     with pytest.raises(ProfileSchemaValidationError, match="required_field_missing"):
@@ -173,9 +181,7 @@ def test_lifecycle_emits_bucket_events(secure_objects, schema) -> None:
             facts=_all_required_facts(schema),
         )
     )
-    svc.edit_field(
-        EditProfileFieldCommand(profile_id="operator", path="identity.email", value="op@example.test")
-    )
+    svc.edit_field(EditProfileFieldCommand(profile_id="operator", path="identity.email", value="op@example.test"))
     svc.edit_field(EditProfileFieldCommand(profile_id="operator", path="identity.email", value=None))
     svc.duplicate(
         DuplicateProfileCommand(
@@ -195,6 +201,29 @@ def test_lifecycle_emits_bucket_events(secure_objects, schema) -> None:
     assert by_type[BucketEventType.PROFILE_VALUES_CLEARED] == 1
     assert by_type[BucketEventType.PROFILE_DUPLICATED] == 1
     assert by_type[BucketEventType.PROFILE_TOMBSTONED] == 1
+
+
+def test_register_event_payload_stays_bounded_for_full_schema(secure_objects, schema) -> None:
+    events_repo = BucketEventHistoryRepository(objects=secure_objects)
+    svc = ProfileLifecycleService(
+        repository=UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects),
+        validator=ProfileValidationService(schema=schema),
+        events=events_repo,
+    )
+    facts = _all_schema_facts(schema)
+
+    svc.register(RegisterProfileCommand(profile_id="operator", display_name="Operator", facts=facts))
+
+    updated_events = [
+        event
+        for event in events_repo.load().events.values()
+        if event.event_type is BucketEventType.PROFILE_VALUES_UPDATED
+    ]
+    assert updated_events
+    payload = updated_events[-1].payload
+    assert int(payload["path_count"]) == len({fact.path for fact in facts})
+    assert len(payload["paths_sha256"]) == 64
+    assert all(len(value) <= 500 for value in payload.values())
 
 
 def test_list_profiles_returns_sorted_listings(secure_objects, schema) -> None:

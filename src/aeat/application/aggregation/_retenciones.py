@@ -21,6 +21,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ._errors import AggregationUnsupportedModeloError, t
+
 
 class RetencionScheme(StrEnum):
     """Closed catalogue of retenciones schemes across the retenciones family.
@@ -118,7 +120,7 @@ class RetencionesAggregation(BaseModel):
     total_retencion: Decimal = Field(ge=Decimal("0"))
 
     @model_validator(mode="after")
-    def _totals_match_rollups(self) -> "RetencionesAggregation":
+    def _totals_match_rollups(self) -> RetencionesAggregation:
         computed_base = sum((row.total_taxable_base for row in self.rollups), Decimal("0"))
         computed_ret = sum((row.total_retencion for row in self.rollups), Decimal("0"))
         if computed_base != self.total_taxable_base:
@@ -181,8 +183,11 @@ def _filter_observations_for_modelo(
     quarterly scheme catalogue over an annual period.
     """
     if modelo not in _MODELO_SCHEME_CATALOGUE:
-        msg = f"retenciones aggregator for modelo {modelo!r} is not implemented"
-        raise NotImplementedError(msg)
+        raise AggregationUnsupportedModeloError(
+            t("aggregation.retenciones.errors.unsupported_modelo"),
+            context={"modelo": modelo},
+            suggestion="use one of 111, 115, 123, 180, 190, 193",
+        )
     eligible = _MODELO_SCHEME_CATALOGUE[modelo]
     return tuple(o for o in observations if o.scheme in eligible)
 
@@ -204,7 +209,10 @@ def _aggregate_for_modelo(
         if obs.perceptor_name and not perceptor_names.get(name_key):
             perceptor_names[name_key] = obs.perceptor_name
     rollups: list[RetencionPerceptorRollup] = []
-    for (source_kind, nif, scheme), group in sorted(grouped.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2].value)):
+    for (source_kind, nif, scheme), group in sorted(
+        grouped.items(),
+        key=lambda kv: (kv[0][0], kv[0][1], kv[0][2].value),
+    ):
         total_base = sum((g.taxable_base for g in group), Decimal("0"))
         total_ret = sum((g.retencion_amount for g in group), Decimal("0"))
         rollups.append(
@@ -310,10 +318,10 @@ def aggregate_retenciones_193(
 
 
 __all__ = [
-    "RetencionesAggregation",
     "RetencionObservation",
     "RetencionPerceptorRollup",
     "RetencionScheme",
+    "RetencionesAggregation",
     "aggregate_retenciones_111",
     "aggregate_retenciones_115",
     "aggregate_retenciones_123",

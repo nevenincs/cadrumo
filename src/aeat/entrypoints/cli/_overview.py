@@ -18,7 +18,6 @@ from ._common import (
     _load_invoices,
     _load_transactions,
     _parse_iso_date,
-    _profile_to_autonomo,
     _state,
 )
 from ._i18n import tr
@@ -59,12 +58,14 @@ def overview_status(
             from_date=_parse_iso_date(from_date, label="--from"),
             to_date=_parse_iso_date(to_date, label="--to"),
         )
-        from ...application.user_profile._projections import record_to_values
+        from ...application.user_profile._projections import projection_for_autonomo, record_to_values
 
         record = current.active_profile_record()
-        raw_values = record_to_values(record) if record is not None else None
+        if record is None:
+            raise _bad(tr("cli.common.errors.no_active_profile"))
+        raw_values = record_to_values(record)
         cal: OverviewCalendar = build_overview_calendar(
-            _profile_to_autonomo(current),
+            projection_for_autonomo(record, tax_id_default="00000000T"),
             rng,
             today=_date.today(),
             raw_values=raw_values,

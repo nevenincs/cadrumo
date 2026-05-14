@@ -97,7 +97,7 @@ def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
                 elif relation.dependency_role == "factual_evidence":
                     assert relation.kind == "cross_model_output", relation.id
                 elif relation.dependency_role == "profile_schedule":
-                    assert relation.source_modelo in {"036", "037", "840"}, relation.id
+                    assert relation.source_modelo in {"036", "840"}, relation.id
 
 
 def test_cross_dependency_source_requirements_are_derivable_for_target_periods() -> None:

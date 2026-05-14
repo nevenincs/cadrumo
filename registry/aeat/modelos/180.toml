@@ -1460,6 +1460,14 @@ application_links = [
     "modelo-180-approval",
     "modelo-180-reconciliation",
     "modelo-180-workflow",
+    "modelo-180-deadline",
+]
+filing_schedules = ["modelo-180-anual"]
+deadline_windows = [
+    "modelo-180-2023-0a",
+    "modelo-180-2024-0a",
+    "modelo-180-2025-0a",
+    "modelo-180-2026-0a",
 ]
 dependency_classifications = ["modelo-180-dep-115"]
 
@@ -2647,3 +2655,103 @@ consumer = "aeat.application.workflow"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
 source_refs = ["aeat-modelo-180-procedure", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".application_links]]
+id = "modelo-180-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".filing_schedules]]
+id = "modelo-180-anual"
+period_kind = "annual"
+periods = ["0A"]
+profile_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".filing_schedules.profile_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-180-2023-0a"
+filing_year = 2023
+period = "2023-0A"
+period_kind = "annual"
+opens_on = 2024-01-01
+closes_on = 2024-01-31
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-180-2024-0a"
+filing_year = 2024
+period = "2024-0A"
+period_kind = "annual"
+opens_on = 2025-01-01
+closes_on = 2025-01-31
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-180-2025-0a"
+filing_year = 2025
+period = "2025-0A"
+period_kind = "annual"
+opens_on = 2026-01-01
+closes_on = 2026-01-31
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".deadline_windows]]
+id = "modelo-180-2026-0a"
+filing_year = 2026
+period = "2026-0A"
+period_kind = "annual"
+opens_on = 2027-01-01
+closes_on = 2027-01-31
+applicability_condition_mode = "any"
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]
+
+[[revisions."2023-y-siguientes".deadline_windows.applicability_conditions]]
+field = "pays_rent_with_retencion"
+op = "equals"
+value = true
+explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7"]
+source_refs = ["aeat-modelo-180-procedure", "aeat-modelo-180-ayuda-presentacion", "boe-modelo-180-2014-form", "boe-modelo-180-2023-form"]

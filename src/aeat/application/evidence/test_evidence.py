@@ -1,4 +1,4 @@
-"""Tests for the evidence bundle service per apex ADR §4.3."""
+"""Tests for the evidence bundle service."""
 
 from __future__ import annotations
 

@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ._bindings import (
-    validate_invoice_binding_definition,
+    validate_counterpart_binding_definition,
     validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
     validate_ledger_renta_expense_aggregation_binding_definition,
@@ -19,6 +19,7 @@ from ._errors import RegistryValidationError
 from ._legal import verify_legal_catalogue
 from ._runtime_graph import expression_casilla_refs
 from ._schema import (
+    CANONICAL_AGGREGATION_SOURCE_KINDS,
     DataBindingDefinition,
     DatedValue,
     ExtractionProfileDefinition,
@@ -30,6 +31,7 @@ from ._schema import (
     RegistryCatalogues,
     SourceCitation,
     SourceReference,
+    SUPPORTED_BINDING_SOURCE_KINDS,
 )
 from ._sources import verify_source_catalogue
 from ._text import normalise_corpus_text
@@ -481,8 +483,22 @@ class RegistryValidator:
                     )
                 )
             if binding.source == "invoice":
+                canonical = ", ".join(CANONICAL_AGGREGATION_SOURCE_KINDS)
+                failures.append(
+                    f"{prefix}: binding {binding.id!r} declares forbidden source kind 'invoice'; "
+                    f"use one of {canonical}"
+                )
+                continue
+            if binding.source not in SUPPORTED_BINDING_SOURCE_KINDS:
+                supported = ", ".join(sorted(SUPPORTED_BINDING_SOURCE_KINDS))
+                failures.append(
+                    f"{prefix}: binding {binding.id!r} declares unsupported source kind {binding.source!r}; "
+                    f"supported source kinds are {supported}"
+                )
+                continue
+            if binding.source in CANONICAL_AGGREGATION_SOURCE_KINDS:
                 try:
-                    validate_invoice_binding_definition(binding)
+                    validate_counterpart_binding_definition(binding)
                 except RegistryValidationError as exc:
                     failures.append(f"{prefix}: {exc}")
             if binding.source == "ledger_oss_aggregation":

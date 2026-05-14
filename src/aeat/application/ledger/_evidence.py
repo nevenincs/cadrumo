@@ -1,16 +1,13 @@
 """Purchase invoice evidence records and the CRUD application service.
 
-Implements the locked verb shape from
-``2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr``
-and ``2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr``:
+Implements the verb shape for evidence management:
 ``aeat app ledger evidence {add|remove|update|view|list}`` operate over a
 :class:`PurchaseInvoiceEvidence` pydantic record.
 
-File-type scope is restricted to PDF and image inputs handled by the OCR
-path defined in the receipt-ocr-pdf-evidence ADR. Plaintext, email body,
-and Drive-URL evidence sources are out of scope and deferred to a future
-``evidence-source-expansion`` ADR. ``add`` refuses non-PDF/non-image
-source paths with a typed :class:`PurchaseInvoiceEvidenceInputError`.
+File-type scope is restricted to PDF and image inputs. Plaintext,
+email body, and other sources are out of scope. ``add`` refuses
+non-PDF/non-image source paths with a typed
+:class:`PurchaseInvoiceEvidenceInputError`.
 
 Persistence is a bucket-scoped JSON file under
 ``Settings.aeat_purchase_invoice_evidence_dir / <bucket_id>.jsonl``. Each
@@ -35,11 +32,6 @@ from ...core.errors import AeatError
 
 _PDF_EXTENSIONS = frozenset({".pdf"})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
-
-_DEFERRED_ADR_REF = (
-    "evidence-source-expansion (deferred; only PDF and image inputs are accepted)"
-)
-
 
 class PurchaseInvoiceEvidenceInputError(AeatError):
     """Raised when a CLI-supplied evidence input violates the typed contract."""
@@ -96,7 +88,7 @@ def _resolve_media_kind(source_path: Path) -> str:
         return "image"
     raise PurchaseInvoiceEvidenceInputError(
         f"source path {source_path!s} has unsupported extension {suffix!r}; "
-        f"only PDF and image inputs are accepted. See {_DEFERRED_ADR_REF}.",
+        "only PDF and image inputs are accepted.",
         suggestion="aeat app ledger evidence list",
     )
 

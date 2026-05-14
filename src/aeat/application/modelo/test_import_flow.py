@@ -11,7 +11,8 @@ consumes these records as its baseline.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import os
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -45,6 +46,7 @@ from aeat.domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from aeat.domain.deadlines import AutonomoProfile, IVARegime
 from aeat.domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
 )
@@ -73,6 +75,8 @@ _T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
 _T3 = datetime(2026, 1, 15, 15, 0, 0, tzinfo=UTC)
 _T4 = datetime(2026, 1, 16, 12, 0, 0, tzinfo=UTC)
 _T5 = datetime(2026, 1, 16, 13, 0, 0, tzinfo=UTC)
+_WORKFLOW_TODAY = date(2026, 4, 10)
+_WORKFLOW_PROFILE = AutonomoProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
 
 
 @pytest.fixture
@@ -82,6 +86,13 @@ def repos(tmp_path):
     provider = EphemeralMasterKeyProvider()
     override_master_key_provider(provider)
     db_path = tmp_path / "modelo_import_flow.db"
+    env_values = {
+        "AEAT_DATABASE_URL": f"sqlite:///{db_path.as_posix()}",
+        "AEAT_AUTH_PROVIDER": "clave_movil",
+        "AEAT_CLAVE_MOVIL_DNI_NIE": "12345678Z",
+    }
+    previous_env = {key: os.environ.get(key) for key in env_values}
+    os.environ.update(env_values)
     engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
     Base.metadata.create_all(engine)
     try:
@@ -94,6 +105,11 @@ def repos(tmp_path):
         yield wu, cr, fr, vr, bv
     finally:
         engine.dispose()
+        for key, previous in previous_env.items():
+            if previous is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = previous
         override_master_key_provider(None)
 
 
@@ -416,6 +432,8 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos) -> No
         calculation_repository=cr_repo,
         filing_repository=fr_repo,
         bucket_event_repository=bv_repo,
+        workflow_profile=_WORKFLOW_PROFILE,
+        workflow_today=_WORKFLOW_TODAY,
         clock=_T3,
     )
     assert locally_filed.external_evidence is None

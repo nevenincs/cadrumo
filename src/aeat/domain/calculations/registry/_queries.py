@@ -251,6 +251,43 @@ class RegistryQueryService:
             rows=rows,
         )
 
+    def bindings_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+    ) -> ModeloBindingsReport:
+        definition = self._authority.validate_modelo(modelo)
+        registry_period = _resolve_registry_period_for_year(definition, filing_year=filing_year, period=period)
+        snapshot = self._authority.snapshot(
+            str(definition.id),
+            filing_year=filing_year,
+            period=registry_period,
+            on=as_of,
+        )
+        revision = snapshot.revision
+        rows = tuple(
+            ModeloBindingRow(
+                binding_id=str(binding.id),
+                source=binding.source,
+                typed_enum=binding.typed_enum,
+                selector=_public_mapping(binding.selector),
+                aggregation=_public_mapping(binding.aggregation) if binding.aggregation is not None else None,
+                legal_refs=tuple(str(ref) for ref in binding.legal_refs),
+                source_refs=tuple(str(ref) for ref in binding.source_refs),
+            )
+            for binding in revision.bindings
+        )
+        return ModeloBindingsReport(
+            code=str(definition.id),
+            revision=str(revision.id),
+            filing_year=filing_year,
+            period=registry_period,
+            rows=rows,
+        )
+
     def formulas(
         self,
         modelo: str,
@@ -288,7 +325,7 @@ class RegistryQueryService:
         period: str | None,
         as_of: date | None,
     ) -> tuple[ModeloDefinition, ModeloRevision, int | None, str | None]:
-        definition = self._authority.validate_modelo(modelo.strip())
+        definition = self._authority.validate_modelo(modelo)
         if period is None:
             revision = max(definition.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
             return definition, revision, None, None
@@ -317,6 +354,30 @@ def parse_modelo_period(raw: str) -> tuple[int, str]:
     if month is not None:
         return year, month
     return year, "0A"
+
+
+def _resolve_registry_period_for_year(
+    modelo: ModeloDefinition,
+    *,
+    filing_year: int,
+    period: str,
+) -> str:
+    candidate = period.strip()
+    exact_periods = {
+        registry_period
+        for revision in modelo.revisions.values()
+        if revision.period_selector.includes_year(filing_year)
+        for registry_period in revision.period_selector.periods
+    }
+    if candidate in exact_periods:
+        return candidate
+    raw_period = candidate if candidate.startswith(str(filing_year)) else f"{filing_year}-{candidate}"
+    parsed_year, registry_period = parse_modelo_period(raw_period)
+    if parsed_year != filing_year:
+        raise RegistryValidationError(
+            f"period filing year {parsed_year!r} does not match --year {filing_year!r}"
+        )
+    return registry_period
 
 
 def _modelo_covers_year(modelo: ModeloDefinition, year: int) -> bool:

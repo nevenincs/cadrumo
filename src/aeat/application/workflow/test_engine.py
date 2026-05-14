@@ -59,6 +59,7 @@ from . import (
     SubmissionEngineProtocol,
     WorkflowAbortReason,
     WorkflowEngine,
+    WorkflowError,
     WorkflowStage,
 )
 
@@ -354,6 +355,21 @@ class TestHappyPath:
             )
         )
         assert result.final_stage is WorkflowStage.DONE
+
+    def test_run_for_period_rejects_invalid_resume_link_before_stages(self) -> None:
+        """Malformed resume links must fail before any workflow stage or preflight runs."""
+        fx = _fixtures()
+        with pytest.raises(WorkflowError, match=r"resumed_from"):
+            asyncio.run(
+                fx.engine().run_for_period(
+                    fx.profile,
+                    fx.obligation.modelo,
+                    fx.obligation.period,
+                    resumed_from="bad",
+                    today=fx.today,
+                )
+            )
+        assert fx.submission_engine.preflight_calls == []
 
 
 # ── Every abort reason ──────────────────────────────────────────────────

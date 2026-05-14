@@ -3041,82 +3041,82 @@ This Phase delivers de-shim and de-stub cleanup for census modelo foundation as 
 
 This Phase delivers real behavior verification for census modelo foundation as required by `2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr`.
 
-- [ ] `W50.P249.S1489` - Add service contract tests for census modelo foundation; `tests/domain/calculations/registry`.
-- [ ] `W50.P249.S1490` - Add persistence or registry integration tests for census modelo foundation; `tests/domain/calculations/registry`.
-- [ ] `W50.P249.S1491` - Add negative tests proving rejected aliases do not reach census modelo foundation; `tests/entrypoints/cli`.
-- [ ] `W50.P249.S1492` - Add command behavior tests that exercise census modelo foundation through real services; `tests/entrypoints/cli`.
-- [ ] `W50.P249.S1493` - Add end-to-end workflow coverage for census modelo foundation; `tests`.
-- [ ] `W50.P249.S1494` - Run the targeted test slice for census modelo foundation without skips or xfails; `tests/domain/calculations/registry`.
+- [x] `W50.P249.S1489` - Add service contract tests for census modelo foundation (Added registry-backed service tests proving active 036 work-unit periods resolve from the committed revision, historical 037 status is backed by active-definition absence plus suppression source metadata, malformed census-looking codes are rejected before resolver routing, and structured foundation log fields carry stable decisions.); `tests/domain/calculations/registry`.
+- [x] `W50.P249.S1490` - Add persistence or registry integration tests for census modelo foundation (Verified existing committed-registry integration coverage loads the real registry tree, builds Modelo 036 snapshots from TOML/catalogues, validates event schedules, profile binding, authority coverage, source-file integrity, historical 037 suppression metadata, and absence of active 037 TOML without adding duplicate tests.); `tests/domain/calculations/registry`.
+- [x] `W50.P249.S1491` - Add negative tests proving rejected aliases do not reach census modelo foundation (Added CLI negative coverage proving shortened census modelo aliases and year-prefixed census event aliases fail at the registry query boundary without resolving through the census foundation service.); `tests/entrypoints/cli`.
+- [x] `W50.P249.S1492` - Add command behavior tests that exercise census modelo foundation through real services (Added isolated real-CLI work-create coverage that persists active Modelo 036 work units for exact census event periods, verifies persisted periods via work list, and proves historical 037 plus census alias inputs are rejected without persisted work units.); `tests/entrypoints/cli`.
+- [x] `W50.P249.S1493` - Add end-to-end workflow coverage for census modelo foundation (Added active Modelo 036 import-backed filing history coverage using real encrypted repositories: create work unit, import external filing evidence, verify work-unit and revision pointers, and assert exact filing-imported history payload fields.); `tests`.
+- [x] `W50.P249.S1494` - Run the targeted test slice for census modelo foundation without skips or xfails (Ran the registry-domain census foundation slice under `src/aeat/domain/calculations/registry` with `-rA`: 51 passed, no skips or xfails; `also ran broader W50.P249 census/application/CLI slice: 128 passed.); `tests/domain/calculations/registry`.
 
 ### Phase `W50.P250` - thin cli exposure
 
 This Phase delivers thin cli exposure for census modelo foundation as required by `2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr`.
 
-- [ ] `W50.P250.S1495` - Expose accepted command handlers for census modelo foundation under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W50.P250.S1496` - Keep argument parsing for census modelo foundation separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W50.P250.S1497` - Delegate census modelo foundation execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W50.P250.S1498` - Render census modelo foundation results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W50.P250.S1499` - Handle census modelo foundation failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W50.P250.S1500` - Validate help text for census modelo foundation uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W50.P250.S1495` - Expose accepted command handlers for census modelo foundation under `aeat config` or `aeat app` (Verified accepted handlers already exist under `aeat app modelo`: registry-backed bindings list/preview, work create/list/history, and central app registration; `no new census-specific CLI command was added because it would duplicate backend foundation logic.); `src/aeat/entrypoints/cli`.
+- [x] `W50.P250.S1496` - Keep argument parsing for census modelo foundation separate from backend behavior (Added a boundary AST guard proving `app modelo` work/bindings commands pass raw `modelo` and `period` scope values to backend/query services and reject CLI-local strip/padding/replacement normalization for those scope arguments; `verified existing real CLI tests still prove accepted 036 periods and rejected 037/alias inputs.); `src/aeat/entrypoints/cli`.
+- [x] `W50.P250.S1497` - Delegate census modelo foundation execution to centralized backend services (Added a boundary AST guard proving accepted census-facing `app modelo` paths delegate to `RegistryQueryService`, `create_work_unit`, and `assemble_work_unit_history`, while the service factory loads the registry authority and contains no census-specific execution branch.); `src/aeat/entrypoints/cli`.
+- [x] `W50.P250.S1498` - Render census modelo foundation results with `_emit` or schema emitters (Added a boundary AST guard proving accepted census-facing bindings/work commands render through `_emit` and reject direct `typer.echo`, `print`, Rich/Console, direct JSON dumping, or direct schema-emitter bypasses in those command handlers.); `src/aeat/entrypoints/cli`.
+- [x] `W50.P250.S1499` - Handle census modelo foundation failures through the central command error boundary (Verified historical 037 work-create foundation refusal emits the registered JSON stderr error envelope through the decorated Typer command tree, leaves stdout empty, and prints no traceback; generic bindings input failures remain clean Typer user-input errors and are not census foundation resolver failures.); `src/aeat/entrypoints/cli`.
+- [x] `W50.P250.S1500` - Validate help text for census modelo foundation uses accepted vocabulary only (Verified help for census-facing work create and bindings commands describes only accepted Modelo 036 event workflow vocabulary and excludes 037, setup-wizard, portal-only, integer-code, live-submission, compatibility, shim, stub, fake, alias, and placeholder wording.); `tests/entrypoints/cli`.
 
 ## Wave `W51` - modelo 145 foundation
 
-This Wave implements the `2026-05-12-cli-workflow-redesign-modelo-145-foundation-adr` decision for modelo 145 foundation. It delivers backend behavior before CLI exposure, removes shadow paths, removes shims and stubs, proves the behavior with real tests, and then exposes only thin CLI adapters that call centralized services.
+This Wave is superseded by the Apex R22 closure-state adjudication: Modelo 145 foundation remains deferred pending a live-AEAT reconciliation research pass. Baseline verification found no 145 registry TOML, service, CLI surface, duplicate shim, stub, or placeholder to remove. Do not implement a 145 registry, backend, or CLI path from these rows until the deferred research produces a successor ADR.
 
 ### Phase `W51.P251` - backend implementation
 
-This Phase delivers backend implementation for modelo 145 foundation as required by `2026-05-12-cli-workflow-redesign-modelo-145-foundation-adr`.
+Deferred. Do not implement Modelo 145 backend ownership, contracts, services, persistence, routing, or error fields from this phase while Apex R22 remains deferred pending live-AEAT reconciliation research.
 
-- [ ] `W51.P251.S1501` - Map the `2026-05-12-cli-workflow-redesign-modelo-145-foundation-adr` decision into non-CLI service ownership for modelo 145 foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W51.P251.S1502` - Implement Pydantic command and result contracts for modelo 145 foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W51.P251.S1503` - Wire application or domain services required by modelo 145 foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W51.P251.S1504` - Connect persistence, bucket events, registry data, or provider adapters required by modelo 145 foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W51.P251.S1505` - Route existing backend functionality into the canonical service for modelo 145 foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W51.P251.S1506` - Record service-level error codes and log fields for modelo 145 foundation; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P251.S1501` - Deferred pending successor ADR for Modelo 145 foundation: map non-CLI service ownership only after apex R22 research reopens scope; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P251.S1502` - Deferred pending successor ADR for Modelo 145 foundation: implement Pydantic command and result contracts only after apex R22 research reopens scope; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P251.S1503` - Deferred pending successor ADR for Modelo 145 foundation: wire application or domain services only after apex R22 research reopens scope; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P251.S1504` - Deferred pending successor ADR for Modelo 145 foundation: connect persistence, bucket events, registry data, or adapters only after apex R22 research reopens scope; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P251.S1505` - Deferred pending successor ADR for Modelo 145 foundation: route backend functionality into a canonical service only after apex R22 research reopens scope; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P251.S1506` - Deferred pending successor ADR for Modelo 145 foundation: record service error codes and log fields only after apex R22 research reopens scope; `src/aeat/domain/calculations/registry`.
 
 ### Phase `W51.P252` - shadow duplicate removal
 
-This Phase delivers shadow duplicate removal for modelo 145 foundation as required by `2026-05-12-cli-workflow-redesign-modelo-145-foundation-adr`.
+Deferred. Baseline verification found no Modelo 145 duplicate backend branches, stale aliases, stale fixtures, or boundary inventory entries to remove while the foundation itself is not shipped.
 
-- [ ] `W51.P252.S1507` - Audit duplicate implementations that overlap modelo 145 foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W51.P252.S1508` - Delete duplicate backend branches that compete with modelo 145 foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W51.P252.S1509` - Remove stale aliases that bypass the canonical service for modelo 145 foundation; `src/aeat/entrypoints/cli`.
-- [ ] `W51.P252.S1510` - Migrate internal callers to the canonical service for modelo 145 foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W51.P252.S1511` - Remove stale fixtures and tests that encode duplicate behavior for modelo 145 foundation; `tests/domain/calculations/registry`.
-- [ ] `W51.P252.S1512` - Update boundary inventory entries that describe duplicate behavior for modelo 145 foundation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [ ] `W51.P252.S1507` - Deferred pending successor ADR for Modelo 145 foundation: audit duplicate implementations after scope is reopened, baseline found none to remove now; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P252.S1508` - Deferred pending successor ADR for Modelo 145 foundation: delete duplicate backend branches after scope is reopened, baseline found none to delete now; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P252.S1509` - Deferred pending successor ADR for Modelo 145 foundation: remove stale aliases after scope is reopened, baseline found none to remove now; `src/aeat/entrypoints/cli`.
+- [ ] `W51.P252.S1510` - Deferred pending successor ADR for Modelo 145 foundation: migrate internal callers after scope is reopened, baseline found no callers now; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P252.S1511` - Deferred pending successor ADR for Modelo 145 foundation: remove stale fixtures and tests after scope is reopened, baseline found none now; `tests/domain/calculations/registry`.
+- [ ] `W51.P252.S1512` - Deferred pending successor ADR for Modelo 145 foundation: update boundary inventory after scope is reopened, baseline found no duplicate behavior now; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W51.P253` - de-shim and de-stub cleanup
 
-This Phase delivers de-shim and de-stub cleanup for modelo 145 foundation as required by `2026-05-12-cli-workflow-redesign-modelo-145-foundation-adr`.
+Deferred. Baseline verification found no Modelo 145 compatibility shim, placeholder stub, deprecated command spelling, or shim/stub test to delete because no 145 foundation implementation exists.
 
-- [ ] `W51.P253.S1513` - Delete compatibility shims that preserve rejected behavior for modelo 145 foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W51.P253.S1514` - Delete placeholder stubs that claim support for modelo 145 foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W51.P253.S1515` - Replace stubbed paths with real backend service calls for modelo 145 foundation; `src/aeat/domain/calculations/registry`.
-- [ ] `W51.P253.S1516` - Remove deprecated command spelling and help text for modelo 145 foundation; `src/aeat/entrypoints/cli`.
-- [ ] `W51.P253.S1517` - Remove tests that assert shim or stub behavior for modelo 145 foundation; `tests/domain/calculations/registry`.
-- [ ] `W51.P253.S1518` - Record the removed shim and stub surfaces for modelo 145 foundation; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [ ] `W51.P253.S1513` - Deferred pending successor ADR for Modelo 145 foundation: delete compatibility shims after scope is reopened, baseline found none now; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P253.S1514` - Deferred pending successor ADR for Modelo 145 foundation: delete placeholder stubs after scope is reopened, baseline found none now; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P253.S1515` - Deferred pending successor ADR for Modelo 145 foundation: replace stubbed paths with real backend calls after scope is reopened, baseline found no stubbed path now; `src/aeat/domain/calculations/registry`.
+- [ ] `W51.P253.S1516` - Deferred pending successor ADR for Modelo 145 foundation: remove deprecated command spelling and help after scope is reopened, baseline found none now; `src/aeat/entrypoints/cli`.
+- [ ] `W51.P253.S1517` - Deferred pending successor ADR for Modelo 145 foundation: remove tests asserting shim or stub behavior after scope is reopened, baseline found none now; `tests/domain/calculations/registry`.
+- [ ] `W51.P253.S1518` - Deferred pending successor ADR for Modelo 145 foundation: record removed shim and stub surfaces after scope is reopened, baseline found none now; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W51.P254` - real behavior verification
 
-This Phase delivers real behavior verification for modelo 145 foundation as required by `2026-05-12-cli-workflow-redesign-modelo-145-foundation-adr`.
+Deferred. Do not add Modelo 145 service, persistence, CLI, or end-to-end tests until a successor ADR reopens the foundation after live-AEAT reconciliation research.
 
-- [ ] `W51.P254.S1519` - Add service contract tests for modelo 145 foundation; `tests/domain/calculations/registry`.
-- [ ] `W51.P254.S1520` - Add persistence or registry integration tests for modelo 145 foundation; `tests/domain/calculations/registry`.
-- [ ] `W51.P254.S1521` - Add negative tests proving rejected aliases do not reach modelo 145 foundation; `tests/entrypoints/cli`.
-- [ ] `W51.P254.S1522` - Add command behavior tests that exercise modelo 145 foundation through real services; `tests/entrypoints/cli`.
-- [ ] `W51.P254.S1523` - Add end-to-end workflow coverage for modelo 145 foundation; `tests`.
-- [ ] `W51.P254.S1524` - Run the targeted test slice for modelo 145 foundation without skips or xfails; `tests/domain/calculations/registry`.
+- [ ] `W51.P254.S1519` - Deferred pending successor ADR for Modelo 145 foundation: add service contract tests only after apex R22 research reopens scope; `tests/domain/calculations/registry`.
+- [ ] `W51.P254.S1520` - Deferred pending successor ADR for Modelo 145 foundation: add persistence or registry integration tests only after apex R22 research reopens scope; `tests/domain/calculations/registry`.
+- [ ] `W51.P254.S1521` - Deferred pending successor ADR for Modelo 145 foundation: add negative alias tests only after apex R22 research reopens scope; `tests/entrypoints/cli`.
+- [ ] `W51.P254.S1522` - Deferred pending successor ADR for Modelo 145 foundation: add command behavior tests only after apex R22 research reopens scope; `tests/entrypoints/cli`.
+- [ ] `W51.P254.S1523` - Deferred pending successor ADR for Modelo 145 foundation: add end-to-end workflow coverage only after apex R22 research reopens scope; `tests`.
+- [ ] `W51.P254.S1524` - Deferred pending successor ADR for Modelo 145 foundation: run targeted test slice only after apex R22 research reopens scope; `tests/domain/calculations/registry`.
 
 ### Phase `W51.P255` - thin cli exposure
 
-This Phase delivers thin cli exposure for modelo 145 foundation as required by `2026-05-12-cli-workflow-redesign-modelo-145-foundation-adr`.
+Deferred. Do not expose Modelo 145 command handlers, argument parsing, rendering, error handling, or help text while Apex R22 keeps the foundation deferred.
 
-- [ ] `W51.P255.S1525` - Expose accepted command handlers for modelo 145 foundation under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W51.P255.S1526` - Keep argument parsing for modelo 145 foundation separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W51.P255.S1527` - Delegate modelo 145 foundation execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W51.P255.S1528` - Render modelo 145 foundation results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W51.P255.S1529` - Handle modelo 145 foundation failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W51.P255.S1530` - Validate help text for modelo 145 foundation uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [ ] `W51.P255.S1525` - Deferred pending successor ADR for Modelo 145 foundation: expose accepted command handlers only after apex R22 research reopens scope; `src/aeat/entrypoints/cli`.
+- [ ] `W51.P255.S1526` - Deferred pending successor ADR for Modelo 145 foundation: keep argument parsing separate from backend behavior only after apex R22 research reopens scope; `src/aeat/entrypoints/cli`.
+- [ ] `W51.P255.S1527` - Deferred pending successor ADR for Modelo 145 foundation: delegate execution to centralized backend services only after apex R22 research reopens scope; `src/aeat/entrypoints/cli`.
+- [ ] `W51.P255.S1528` - Deferred pending successor ADR for Modelo 145 foundation: render results with central emitters only after apex R22 research reopens scope; `src/aeat/entrypoints/cli`.
+- [ ] `W51.P255.S1529` - Deferred pending successor ADR for Modelo 145 foundation: handle failures through central command error boundary only after apex R22 research reopens scope; `src/aeat/entrypoints/cli`.
+- [ ] `W51.P255.S1530` - Deferred pending successor ADR for Modelo 145 foundation: validate help text vocabulary only after apex R22 research reopens scope; `tests/entrypoints/cli`.
 
 ## Wave `W52` - per modelo aggregation pipeline
 
@@ -4562,16 +4562,16 @@ Closes apex §12 ledger rows R14 (WorkflowEngine.run_for_period not wired), R15 
 Wire workflow engine, preflight, and resume actions.
 
 - [x] `W80.P385.S2204` - Read the workflow-engine-harvest and workflow-resumption-semantics ADRs and apex §8 backend exit-cap mandates; `.vault/adr`.
-- [ ] `W80.P385.S2205` - Wire WorkflowEngine.run_for_period invocation inside file_modelo_revision so the modelo file action defers to the workflow engine for stage orchestration; `src/aeat/application/modelo`.
-- [ ] `W80.P385.S2206` - Adjudicate whether SubmissionEngine.preflight is invoked directly from verify and file actions or routed through WorkflowEngine only and record the verdict; `.vault/adr`.
-- [ ] `W80.P385.S2207` - Apply the verdict by wiring preflight invocation per the adjudicated path so auth, deadline, draft-approval, blocker gates run before state transitions; `src/aeat/application/modelo`.
+- [x] `W80.P385.S2205` - Wire WorkflowEngine.run_for_period invocation inside file_modelo_revision so the modelo file action defers to the workflow engine for stage orchestration; `src/aeat/application/modelo`.
+- [x] `W80.P385.S2206` - Adjudicate whether SubmissionEngine.preflight is invoked directly from verify and file actions or routed through WorkflowEngine only and record the verdict; `.vault/adr`.
+- [x] `W80.P385.S2207` - Apply the verdict by wiring preflight invocation per the adjudicated path so auth, deadline, draft-approval, blocker gates run before state transitions; `src/aeat/application/modelo`.
 - [x] `W80.P385.S2208` - Implement resume_modelo_workflow loading a prior terminal aborted result, starting a new lifecycle attempt, recording resumed_from, refusing mid-stage, idempotent if already filed; `src/aeat/application/modelo`.
 
 ### Phase `W80.P386` - shadow duplicate removal
 
 Consolidate preflight and workflow paths.
 
-- [ ] `W80.P386.S2209` - Audit verify_modelo_revision and file_modelo_revision for duplicate preflight logic and consolidate behind the wired path; `src/aeat/application/modelo`.
+- [x] `W80.P386.S2209` - Audit verify_modelo_revision and file_modelo_revision for duplicate preflight logic and consolidate behind the wired path; `src/aeat/application/modelo`.
 - [x] `W80.P386.S2210` - Audit _modelo.py CLI for any direct workflow-engine invocation that bypasses the application service and consolidate; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W80.P386.S2211` - Confirm no aeat workflow root, no per-stage verbs, no standalone app modelo preflight verb per apex §8 lock; `src/aeat/entrypoints/cli`.
 - [x] `W80.P386.S2212` - Remove any observability run-id or replay-id rejection logic that conflated argv replay with evidence replay per apex §2; `src/aeat/application/modelo`.
@@ -4591,8 +4591,8 @@ Remove historical argv reconstruction and root workflow references.
 
 Test workflow invocation, preflight wiring, resume semantics.
 
-- [ ] `W80.P388.S2219` - Add tests asserting file_modelo_revision invokes WorkflowEngine.run_for_period and refuses to proceed if preflight blocks; `tests/application/modelo`.
-- [ ] `W80.P388.S2220` - Add tests asserting verify_modelo_revision invokes the appropriate preflight path per the adjudicated verdict; `tests/application/modelo`.
+- [x] `W80.P388.S2219` - Add tests asserting file_modelo_revision invokes WorkflowEngine.run_for_period and refuses to proceed if preflight blocks; `tests/application/modelo`.
+- [x] `W80.P388.S2220` - Add tests asserting verify_modelo_revision invokes the appropriate preflight path per the adjudicated verdict; `tests/application/modelo`.
 - [x] `W80.P388.S2221` - Add tests for resume_modelo_workflow covering valid run-id resumes, mid-stage refuses, idempotency, unknown run-id refuses; `tests/application/modelo`.
 - [x] `W80.P388.S2222` - Add CLI surface tests for aeat app modelo resume workflow_run_id; `tests/entrypoints/cli`.
 - [x] `W80.P388.S2223` - Add negative tests asserting aeat workflow, aeat run, app modelo preflight are unknown commands; `tests/entrypoints/cli`.
@@ -4604,8 +4604,8 @@ Register resume verb and update apex cross-references.
 - [x] `W80.P389.S2224` - Register aeat app modelo resume verb; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W80.P389.S2225` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
 - [x] `W80.P389.S2226` - Wire help text and i18n; `src/aeat/core/i18n`.
-- [ ] `W80.P389.S2227` - Update apex ADR §4.3 and §8 to ratify the wiring and mark R14, R15, R16 closed by W80; `.vault/adr`.
-- [ ] `W80.P389.S2228` - Amend workflow-engine-harvest and workflow-resumption-semantics child ADRs; `.vault/adr`.
+- [x] `W80.P389.S2227` - Update apex ADR §4.3 and §8 to ratify the wiring and mark R14, R15, R16 closed by W80; `.vault/adr`.
+- [x] `W80.P389.S2228` - Amend workflow-engine-harvest and workflow-resumption-semantics child ADRs; `.vault/adr`.
 
 ## Wave `W81` - Reconciliation: overview shape completion
 
@@ -4825,24 +4825,24 @@ Render aggregation readiness in bindings list and update apex.
 
 ## Wave `W85` - Reconciliation: modelo foundations + harvest completions
 
-Closes apex §12 ledger rows R22 (modelo 036/037 + 145 foundations), R23 (evidence bundle), R24 (W32/W34/W64 harvest CLI completions).
+Closes apex §12 ledger row R23 (evidence bundle) and the shipped portions of R24 (W32/W34 harvest wrappers). R22 remains deferred by the Apex closure state pending live-AEAT reconciliation research: Modelo 036/037 census foundation shipped, Modelo 145 foundation did not ship and no 145 registry TOML/backend/CLI path is present.
 
 ### Phase `W85.P410` - backend implementation
 
 Ship registry TOMLs, EvidenceBundle, and harvest wrappers.
 
 - [x] `W85.P410.S2329` - Read the modelo-036-037-foundation, modelo-145-foundation, evidence-bundle-shape, domain-harvest-vat-classification, domain-harvest-rental ADRs; `.vault/adr`.
-- [x] `W85.P410.S2330` - Ship registry aeat modelos 036 revision, 037 (historical-inactive metadata only), 145 revision TOMLs with form schema, casillas, binding contracts; `registry/aeat/modelos`.
+- [x] `W85.P410.S2330` - Ship registry aeat modelo 036 revision and 037 historical-inactive metadata, and record Modelo 145 foundation as deferred per apex R22 closure state with no 145 registry TOML shipped; `registry/aeat/modelos`.
 - [x] `W85.P410.S2331` - Implement EvidenceBundle Pydantic model and application evidence service for bundle build, verify, export, replay - bucket-scoped, work-unit-bound, ZIP manifest-last, verification-first export; `src/aeat/application/evidence`.
 - [x] `W85.P410.S2332` - Implement application ledger classify_ledger_transaction wrapper consuming domain vat classify_vat and implement application rental wrapper with rental_register_aggregation binding consumer; `src/aeat/application`.
-- [x] `W85.P410.S2333` - Implement event-triggered alta, modificacion, baja lifecycle for Modelo 036 work units 037 is registry-only metadata 145 is non-filing payer communication; `src/aeat/application/modelo`.
+- [x] `W85.P410.S2333` - Implement event-triggered alta, modificacion, baja lifecycle for Modelo 036 work units, keep 037 registry-only metadata, and avoid Modelo 145 non-filing communication lifecycle while apex R22 is deferred; `src/aeat/application/modelo`.
 
 ### Phase `W85.P411` - shadow duplicate removal
 
 Audit legacy references and confirm canonical paths.
 
-- [x] `W85.P411.S2334` - Audit for any legacy 036, 037, 145 references and consolidate behind the new registry; `src/aeat`.
-- [x] `W85.P411.S2335` - Confirm no live AEAT presentation path is wired for 036, 037, 145 per live-AEAT charter; `src/aeat/application/modelo`.
+- [x] `W85.P411.S2334` - Audit for any legacy 036 and 037 references, consolidate behind the new registry, and confirm no Modelo 145 implementation exists while apex R22 is deferred; `src/aeat`.
+- [x] `W85.P411.S2335` - Confirm no live AEAT presentation path is wired for 036, 037, or deferred 145 per live-AEAT charter; `src/aeat/application/modelo`.
 - [x] `W85.P411.S2336` - Confirm application ledger classify_ledger_transaction is the only path that persists VAT classification with ledger.classification.set event; `src/aeat/application/ledger`.
 - [x] `W85.P411.S2337` - Confirm application rental is the only path that produces rental_register_aggregation bindings; `src/aeat/application/rental`.
 - [x] `W85.P411.S2338` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
@@ -4861,7 +4861,7 @@ Wire audit verbs, reconcile, and remove placeholder stubs.
 
 Test foundations, evidence bundle, harvest wrappers.
 
-- [x] `W85.P413.S2344` - Add tests for 036 and 145 registry load, casilla resolution, binding contracts and assert 037 is metadata-only; `tests/domain/calculations/registry`.
+- [x] `W85.P413.S2344` - Add tests for 036 registry load, casilla resolution, binding contracts, and 037 metadata-only behavior while keeping Modelo 145 tests absent during apex R22 deferral; `tests/domain/calculations/registry`.
 - [x] `W85.P413.S2345` - Add tests for EvidenceBundle build, verify, export, replay covering ZIP manifest-last invariant and verification-first export; `tests/application/evidence`.
 - [x] `W85.P413.S2346` - Add tests for classify_ledger_transaction wrapper and VAT-criteria CLI flags on aeat app ledger classify; `tests/application/ledger`.
 - [x] `W85.P413.S2347` - Add tests for application rental and Modelo 100 rental_register_aggregation binding consumption; `tests/application/rental`.
@@ -4874,5 +4874,5 @@ Register lifecycle and harvest verbs and update apex.
 - [x] `W85.P414.S2349` - Register Modelo 036 lifecycle verbs (alta, modificacion, baja) under aeat app modelo and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W85.P414.S2350` - Register aeat app modelo audit verbs, aeat app ledger rental verbs, aeat app modelo reconcile from-justificante, VAT-criteria flags on aeat app ledger classify; `src/aeat/entrypoints/cli`.
 - [x] `W85.P414.S2351` - Wire help text and i18n for every new verb and flag; `src/aeat/core/i18n`.
-- [x] `W85.P414.S2352` - Update apex ADR §5, §7, §8 to reflect closeouts and mark R22, R23, R24 closed by W85; `.vault/adr`.
-- [x] `W85.P414.S2353` - Amend modelo-036-037-foundation, modelo-145-foundation, evidence-bundle-shape, domain-harvest-vat-classification, domain-harvest-rental child ADRs and run vault check; `.vault`.
+- [x] `W85.P414.S2352` - Update apex ADR §5, §7, §8 to reflect R23/R24 closeouts and record R22 as deferred pending live-AEAT reconciliation research; `.vault/adr`.
+- [x] `W85.P414.S2353` - Amend modelo-036-037-foundation, evidence-bundle-shape, domain-harvest-vat-classification, and domain-harvest-rental child ADRs, leave modelo-145 foundation superseded by apex R22 deferral, and run vault check; `.vault`.

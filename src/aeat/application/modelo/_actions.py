@@ -13,11 +13,23 @@ service layer is unit-testable without a workflow-state fixture.
 
 from __future__ import annotations
 
+import asyncio
+import hashlib
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...application.auth import AuthProviderKind, select_provider
+from ...application.filing import FilingDraftStatus
+from ...application.filing._review import approve_draft
+from ...application.filing.runtime import build_runtime_schema_provider
+from ...application.workflow import WorkflowEngine, WorkflowResult, WorkflowStage, save_run
+from ...application.workflow._adapters import DeadlineEngineAdapter, SubmissionEngineAdapter
+from ...core.config import PROJECT_ROOT, Settings, load_settings
+from ...core.logging import get_logger
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -26,7 +38,21 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
-from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry import (
+    ModeloRevision,
+    RegistryValidationError,
+    resolve_census_modelo_work_unit_foundation,
+)
+from ...domain.deadlines import AutonomoProfile, DeadlineEngine
+from ...domain.filing import (
+    FilingBindingValue,
+    FilingDraft,
+    FilingValidator,
+    FilingValue,
+    FilingValueKind,
+    apply_validation,
+    compute_draft_id,
+)
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
@@ -74,15 +100,21 @@ from ...domain.modelos._work_unit import (
     derive_work_unit_id,
 )
 from ...domain.period import period_end_date
+from ...domain.submission import SubmissionEngine
 from ...domain.transactions import TransactionCatalogueRepository
 from ..live import Borrador100SnapshotRepository
 from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
-    Modelo100BorradorBindingResult,
     resolve_modelo_100_borrador_bindings,
 )
 
-_BUCKET_EVENT_PAYLOAD_VERSION = 1
+_BUCKET_EVENT_PAYLOAD_VERSION = 2
+_LOGGER = get_logger(__name__)
+
+
+def _binding_trace_digest(binding_ids: tuple[str, ...]) -> str:
+    payload = "\n".join(binding_ids)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def _emit_bucket_event(
@@ -201,6 +233,358 @@ class AmendmentVerificationRefusedError(ModeloError):
     legal basis of the filing."""
 
 
+class ModeloWorkflowGateError(ModeloError):
+    """Raised when the workflow/preflight gate aborts a modelo lifecycle action."""
+
+    def __init__(self, result: WorkflowResult) -> None:
+        self.result = result
+        reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
+        super().__init__(
+            f"modelo workflow aborted run_id={result.run_id} "
+            f"reason={reason}: {result.summary}"
+        )
+
+
+class _ModeloDeadlineEngineAdapter:
+    def __init__(self, *, deadline_engine: DeadlineEngine, filing_year: int) -> None:
+        self._deadline_engine = deadline_engine
+        self._filing_year = filing_year
+
+    def compute(
+        self,
+        profile: AutonomoProfile,
+        year: int,
+        *,
+        today: date | None = None,
+    ):
+        del year
+        schedule = self._deadline_engine.compute(profile, self._filing_year, today=today)
+        obligations = tuple(
+            obligation.model_copy(
+                update={"period": _workflow_period_from_deadline_period(obligation.period)}
+            )
+            for obligation in schedule.obligations
+        )
+        return schedule.model_copy(update={"obligations": obligations})
+
+
+class _ModeloDeadlineWindowChecker:
+    def __init__(self, *, deadline_engine: DeadlineEngine, profile: AutonomoProfile) -> None:
+        self._deadline_engine = deadline_engine
+        self._profile = profile
+
+    def is_window_open(self, modelo: str, period: str, today: date) -> bool:
+        schedule = self._deadline_engine.compute(self._profile, _workflow_period_year(period, today=today), today=today)
+        return any(
+            obligation.modelo == modelo
+            and _workflow_period_from_deadline_period(obligation.period) == period
+            and obligation.opens_on <= today <= obligation.closes_on
+            for obligation in schedule.obligations
+        )
+
+
+class _ModeloRevisionInputsProvider:
+    def __init__(self, *, work_unit: WorkUnit, revision: CalculationRevision, workflow_period: str) -> None:
+        self._work_unit = work_unit
+        self._revision = revision
+        self._workflow_period = workflow_period
+
+    def load_inputs(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+    ) -> Mapping[str, object]:
+        del profile
+        if modelo != str(self._work_unit.modelo) or period != self._workflow_period:
+            raise ModeloError(
+                f"workflow requested modelo={modelo!r} period={period!r}; "
+                f"expected modelo={self._work_unit.modelo!s} period={self._workflow_period!r}"
+            )
+        return {
+            **dict(self._revision.inputs_snapshot),
+            **dict(self._revision.binding_overrides),
+        }
+
+
+class _ModeloRevisionDraftBuilder:
+    def __init__(
+        self,
+        *,
+        work_unit: WorkUnit,
+        revision: CalculationRevision,
+        schema_provider: Any,
+        approved_by: str,
+        approved_at: datetime,
+    ) -> None:
+        self._work_unit = work_unit
+        self._revision = revision
+        self._schema_provider = schema_provider
+        self._approved_by = approved_by
+        self._approved_at = approved_at
+
+    def build(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+        inputs: Mapping[str, object],
+        fail_on_warning: bool = False,
+    ):
+        del inputs
+        draft = _build_revision_filing_draft(
+            work_unit=self._work_unit,
+            revision=self._revision,
+            modelo=modelo,
+            period=period,
+            profile=profile,
+            schema_provider=self._schema_provider,
+        )
+        if fail_on_warning and draft.findings:
+            raise ModeloError("revision-backed filing draft validation produced findings under fail_on_warning")
+        if draft.status is not FilingDraftStatus.READY_TO_SUBMIT:
+            return draft
+        return approve_draft(
+            draft,
+            bucket_id=self._work_unit.bucket_id,
+            approved_by=self._approved_by,
+            schema_provider=self._schema_provider,
+            approved_at=self._approved_at,
+        )
+
+
+def _build_revision_filing_draft(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    modelo: str,
+    period: str,
+    profile: AutonomoProfile,
+    schema_provider: Any,
+) -> FilingDraft:
+    from ...domain.calculations.registry import ValidatedRegistryAuthority
+    from ...domain.period import parse_canonical_period
+
+    del work_unit
+    filing_year, registry_period = parse_canonical_period(period)
+    snapshot = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT).snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=registry_period,
+    )
+    collection = schema_provider.get_collection(modelo)
+    values: list[FilingValue] = []
+    for casilla in snapshot.revision.casillas:
+        casilla_id = str(casilla.id)
+        if casilla_id in revision.inputs_snapshot:
+            raw_input = revision.inputs_snapshot[casilla_id]
+            try:
+                input_value: Decimal | str = Decimal(raw_input)
+            except Exception:
+                input_value = raw_input
+            values.append(
+                FilingValue(
+                    casilla_id=casilla_id,
+                    value=input_value,
+                    kind=FilingValueKind.LITERAL,
+                    source="calculation revision input",
+                )
+            )
+            continue
+        if casilla_id not in revision.casilla_values:
+            values.append(
+                FilingValue(
+                    casilla_id=casilla_id,
+                    value=None,
+                    kind=FilingValueKind.EMPTY,
+                    source="calculation revision",
+                )
+            )
+            continue
+        if casilla.input_kind == "computed":
+            kind = FilingValueKind.COMPUTED
+            source = "calculation revision output"
+            schema_casilla = collection.get(casilla_id)
+            formula_trace = schema_casilla.formula_inputs if schema_casilla is not None else None
+        else:
+            kind = FilingValueKind.DEFAULT
+            source = "calculation revision resolved value"
+            formula_trace = None
+        values.append(
+            FilingValue(
+                casilla_id=casilla_id,
+                value=revision.casilla_values[casilla_id],
+                kind=kind,
+                source=source,
+                formula_trace=formula_trace,
+            )
+        )
+    binding_values = tuple(
+        FilingBindingValue(
+            binding_id=key,
+            value=Decimal(value),
+            kind=FilingValueKind.LITERAL,
+            source="calculation revision binding",
+        )
+        for key, value in sorted(revision.binding_overrides.items())
+    )
+    value_tuple = tuple(sorted(values, key=lambda value: value.casilla_id))
+    draft = FilingDraft(
+        draft_id=compute_draft_id(
+            modelo=modelo,
+            period=period,
+            profile_tax_id=profile.tax_id,
+            schema_version=collection.schema_version,
+            values=value_tuple,
+            binding_values=binding_values,
+        ),
+        modelo=modelo,
+        period=period,
+        profile_tax_id=profile.tax_id,
+        status=FilingDraftStatus.DRAFT,
+        values=value_tuple,
+        binding_values=binding_values,
+        created_at=revision.created_at,
+        updated_at=revision.created_at,
+        schema_version=collection.schema_version,
+    )
+    validator = FilingValidator(schema_provider=schema_provider)
+    return apply_validation(draft, validator.validate(draft))
+
+
+def _workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
+    period = work_unit.period.strip().upper()
+    year = work_unit.filing_year
+    if period in {"0A", "A", "ANNUAL"}:
+        return f"{year}A"
+    if len(period) == 2 and period[0] in "1234" and period[1] == "T":
+        return f"{year}Q{period[0]}"
+    if len(period) == 2 and period.isdigit():
+        return f"{year}-{period}"
+    if period.startswith(str(year)):
+        return period
+    return period
+
+
+def _workflow_period_from_deadline_period(period: str) -> str:
+    if len(period) == 7 and period[:4].isdigit() and period[4:] == "-0A":
+        return f"{period[:4]}A"
+    return period
+
+
+def _workflow_period_year(period: str, *, today: date) -> int:
+    head = period[:4]
+    return int(head) if head.isdigit() else today.year
+
+
+def _load_active_workflow_profile() -> AutonomoProfile:
+    from ...application.wizard._status import load_active_autonomo_profile
+    from ...application.workflow._persistence import workflow_state_repository
+
+    return load_active_autonomo_profile(workflow_state_repository().load())
+
+
+def _configured_auth_provider_kind(settings: Settings) -> AuthProviderKind:
+    from ...application.workflow._persistence import workflow_state_repository
+
+    try:
+        state = workflow_state_repository().load()
+        if state.auth.provider:
+            return AuthProviderKind(state.auth.provider)
+    except Exception:
+        _LOGGER.debug("workflow auth provider state could not be loaded; falling back to settings", exc_info=True)
+    if settings.aeat_auth_provider is not None:
+        return AuthProviderKind(settings.aeat_auth_provider.value)
+    return AuthProviderKind.CERTIFICATE
+
+
+def _build_modelo_workflow_engine(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    actor: str,
+    profile: AutonomoProfile,
+    settings: Settings,
+    now: datetime,
+    workflow_period: str,
+) -> WorkflowEngine:
+    deadline_engine = DeadlineEngine()
+    schema_provider = build_runtime_schema_provider(
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        modelos=(str(work_unit.modelo),),
+    )
+    auth_provider = select_provider(_configured_auth_provider_kind(settings), settings=settings)
+    submission_engine = SubmissionEngine(
+        auth_provider=auth_provider,
+        deadline_checker=_ModeloDeadlineWindowChecker(deadline_engine=deadline_engine, profile=profile),
+        settings=settings,
+    )
+    return WorkflowEngine(
+        deadline_engine=DeadlineEngineAdapter(
+            _ModeloDeadlineEngineAdapter(
+                deadline_engine=deadline_engine,
+                filing_year=work_unit.filing_year,
+            )
+        ),
+        filing_draft_builder=_ModeloRevisionDraftBuilder(
+            work_unit=work_unit,
+            revision=revision,
+            schema_provider=schema_provider,
+            approved_by=actor,
+            approved_at=now,
+        ),
+        submission_engine=SubmissionEngineAdapter(submission_engine),
+        session=None,
+        certificate_bundle=auth_provider,
+        inputs_provider=_ModeloRevisionInputsProvider(
+            work_unit=work_unit,
+            revision=revision,
+            workflow_period=workflow_period,
+        ),
+        settings=settings,
+    )
+
+
+def _run_modelo_workflow_gate(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    actor: str,
+    profile: AutonomoProfile | None,
+    settings: Settings | None,
+    today: date | None,
+    now: datetime,
+    objects: SecureObjectRepository | None,
+) -> WorkflowResult:
+    resolved_profile = profile or _load_active_workflow_profile()
+    resolved_settings = settings or load_settings()
+    workflow_period = _workflow_period_for_work_unit(work_unit)
+    engine = _build_modelo_workflow_engine(
+        work_unit=work_unit,
+        revision=revision,
+        actor=actor,
+        profile=resolved_profile,
+        settings=resolved_settings,
+        now=now,
+        workflow_period=workflow_period,
+    )
+    result = asyncio.run(
+        engine.run_for_period(
+            resolved_profile,
+            str(work_unit.modelo),
+            workflow_period,
+            today=today or now.date(),
+        )
+    )
+    save_run(result, objects=objects)
+    if result.final_stage is not WorkflowStage.DONE:
+        raise ModeloWorkflowGateError(result)
+    return result
+
+
 def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
     """Return the default display name for a fresh work unit.
 
@@ -210,6 +594,19 @@ def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
     care to name the unit.
     """
     return f"{modelo}-{filing_year}-{period}"
+
+
+def _route_census_work_unit_through_foundation(*, modelo: str, period: str) -> None:
+    try:
+        result = resolve_census_modelo_work_unit_foundation(modelo=str(modelo), period=period)
+    except RegistryValidationError as exc:
+        raise WorkUnitMutationRefusedError(str(exc)) from exc
+    if result is None:
+        return
+    if not result.active_work_unit_allowed:
+        raise WorkUnitMutationRefusedError(
+            f"modelo {result.modelo} is historical census metadata only; active work units must use modelo 036"
+        )
 
 
 def create_work_unit(
@@ -248,6 +645,7 @@ def create_work_unit(
         The persisted :class:`aeat.domain.modelos.WorkUnit`.
     """
 
+    _route_census_work_unit_through_foundation(modelo=modelo, period=period)
     repo = repository or WorkUnitCatalogueRepository()
     catalogue = repo.load()
     work_unit_id = derive_work_unit_id(
@@ -523,6 +921,7 @@ def calculate_modelo_revision(
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
     if work_unit.state is WorkUnitState.DISCARDED:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
+    _route_census_work_unit_through_foundation(modelo=str(work_unit.modelo), period=work_unit.period)
 
     try:
         from ...core.config import PROJECT_ROOT
@@ -552,14 +951,16 @@ def calculate_modelo_revision(
     caller_binding_values = dict(binding_values or {})
     caller_enum_binding_values = dict(enum_binding_values or {})
     lower_precedence_binding_values = dict(backend_binding_values or {})
-    borrador_result = _resolve_borrador_bindings_for_calculation(
-        bucket_id=work_unit.bucket_id,
-        modelo=str(work_unit.modelo),
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        borrador_snapshot_id=borrador_snapshot_id,
-        caller_binding_values=caller_binding_values,
-        caller_enum_binding_values=caller_enum_binding_values,
+    borrador_result = resolve_modelo_100_borrador_bindings(
+        Modelo100BorradorBindingCommand(
+            bucket_id=work_unit.bucket_id,
+            modelo=str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            borrador_snapshot_id=borrador_snapshot_id,
+            caller_binding_values=caller_binding_values,
+            caller_enum_binding_values=caller_enum_binding_values,
+        ),
         registry_snapshot=snapshot,
         snapshot_repository=borrador_snapshot_repository,
     )
@@ -652,6 +1053,7 @@ def calculate_modelo_revision(
         object_type=BucketEventObjectType.CALCULATION_REVISION,
         object_id=revision_id,
         payload={
+            "calculation_revision_id": revision_id,
             "work_unit_id": work_unit_id,
             "modelo": str(work_unit.modelo),
             "filing_year": str(work_unit.filing_year),
@@ -660,8 +1062,12 @@ def calculate_modelo_revision(
             "casilla_count": str(len(casilla_values)),
             "formula_count": str(len(engine_result.entries)),
             "source_transaction_count": str(len(source_transaction_ids)),
+            "borrador_participated": "true" if borrador_result.borrador_snapshot_id is not None else "false",
             "borrador_snapshot_id": borrador_result.borrador_snapshot_id or "",
             "borrador_binding_count": str(len(borrador_result.bindings_sourced_from_borrador)),
+            "borrador_bindings_trace_sha256": _binding_trace_digest(
+                borrador_result.bindings_sourced_from_borrador
+            ),
         },
     )
     return revision
@@ -698,6 +1104,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
     if work_unit.state is WorkUnitState.DISCARDED:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
+    _route_census_work_unit_through_foundation(modelo=str(work_unit.modelo), period=work_unit.period)
 
     try:
         authority = ValidatedRegistryAuthority.load(_registry_root(), source_root=PROJECT_ROOT)
@@ -751,33 +1158,6 @@ def calculate_modelo_revision_from_bucket_aggregation(
         bucket_event_repository=bucket_event_repository,
         borrador_snapshot_repository=borrador_snapshot_repository,
         clock=clock,
-    )
-
-
-def _resolve_borrador_bindings_for_calculation(
-    *,
-    bucket_id: str,
-    modelo: str,
-    filing_year: int,
-    period: str,
-    borrador_snapshot_id: str | None,
-    caller_binding_values: Mapping[str, Decimal],
-    caller_enum_binding_values: Mapping[str, str],
-    registry_snapshot: RegistrySnapshot,
-    snapshot_repository: Borrador100SnapshotRepository | None,
-) -> Modelo100BorradorBindingResult:
-    return resolve_modelo_100_borrador_bindings(
-        Modelo100BorradorBindingCommand(
-            bucket_id=bucket_id,
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            borrador_snapshot_id=borrador_snapshot_id,
-            caller_binding_values=caller_binding_values,
-            caller_enum_binding_values=caller_enum_binding_values,
-        ),
-        registry_snapshot=registry_snapshot,
-        snapshot_repository=snapshot_repository,
     )
 
 
@@ -961,6 +1341,7 @@ def _reject_unknown_override_casillas(
 
     if not overrides:
         return
+    _route_census_work_unit_through_foundation(modelo=modelo, period=period)
 
     from ...core.config import PROJECT_ROOT
     from ...domain.calculations.registry import (
@@ -1003,6 +1384,7 @@ def _reject_unknown_import_casillas(
 
     if not casilla_values:
         return
+    _route_census_work_unit_through_foundation(modelo=modelo, period=period)
 
     from ...core.config import PROJECT_ROOT
     from ...domain.calculations.registry import (
@@ -1057,6 +1439,7 @@ def _required_input_casillas_for_revision(
     bindings layer is responsible for them.
     """
 
+    _route_census_work_unit_through_foundation(modelo=modelo, period=period)
 
     from ...core.config import PROJECT_ROOT
     from ...domain.calculations.registry import (
@@ -1093,6 +1476,10 @@ def verify_modelo_revision(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
+    workflow_profile: AutonomoProfile | None = None,
+    workflow_settings: Settings | None = None,
+    workflow_today: date | None = None,
+    workflow_objects: SecureObjectRepository | None = None,
     clock: datetime | None = None,
 ) -> VerificationReport:
     """Evaluate a draft revision against the verified-complete contract.
@@ -1148,6 +1535,7 @@ def verify_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
         )
+    _route_census_work_unit_through_foundation(modelo=str(work_unit.modelo), period=work_unit.period)
 
     findings: list[VerificationFinding] = []
     resolved_casillas: list[str] = []
@@ -1230,6 +1618,18 @@ def verify_modelo_revision(
         granted_verified_complete=granted,
     )
 
+    if granted:
+        _run_modelo_workflow_gate(
+            work_unit=work_unit,
+            revision=target,
+            actor=actor.strip(),
+            profile=workflow_profile,
+            settings=workflow_settings,
+            today=workflow_today,
+            now=now,
+            objects=workflow_objects,
+        )
+
     # Persist the report regardless of outcome — failed attempts
     # are part of the audit trail.
     vr_repo.save(upsert_verification_report(vr_repo.load(), report))
@@ -1279,6 +1679,10 @@ def file_modelo_revision(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     filing_repository: FilingRecordCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
+    workflow_profile: AutonomoProfile | None = None,
+    workflow_settings: Settings | None = None,
+    workflow_today: date | None = None,
+    workflow_objects: SecureObjectRepository | None = None,
     clock: datetime | None = None,
 ) -> FilingRecord:
     """File a verified-complete revision as the current filed answer.
@@ -1330,8 +1734,19 @@ def file_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
         )
+    _route_census_work_unit_through_foundation(modelo=str(work_unit.modelo), period=work_unit.period)
 
     now = clock or datetime.now(UTC)
+    _run_modelo_workflow_gate(
+        work_unit=work_unit,
+        revision=target,
+        actor=actor.strip(),
+        profile=workflow_profile,
+        settings=workflow_settings,
+        today=workflow_today,
+        now=now,
+        objects=workflow_objects,
+    )
 
     new_filing_id = derive_filing_record_id(
         work_unit_id=target.work_unit_id,
@@ -1614,6 +2029,7 @@ def amend_modelo_revision(
         raise WorkUnitNotFoundError(
             f"filing record {from_filing_record_id!r} references missing work_unit_id={baseline.work_unit_id!r}"
         )
+    _route_census_work_unit_through_foundation(modelo=str(work_unit.modelo), period=work_unit.period)
 
     revisions = cr_repo.load()
     baseline_revision = revisions.get(baseline.calculation_revision_id)
@@ -1833,6 +2249,7 @@ def import_external_filing_evidence(
         raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
     if work_unit.state is WorkUnitState.DISCARDED:
         raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot import")
+    _route_census_work_unit_through_foundation(modelo=str(work_unit.modelo), period=work_unit.period)
 
     _reject_unknown_import_casillas(
         modelo=work_unit.modelo,
@@ -1984,6 +2401,7 @@ __all__ = [
     "ExternalFilingImportError",
     "FilingRecordNotFoundError",
     "ModeloAggregationBindingError",
+    "ModeloWorkflowGateError",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",

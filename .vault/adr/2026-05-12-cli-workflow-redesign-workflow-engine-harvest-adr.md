@@ -124,6 +124,27 @@ Rejected public shapes:
 - shims from app declaration approve/file/filing paths
 - standalone workflow root
 
+## W80 closure note
+
+W80 closes the implementation path as WorkflowEngine-only preflight routing for
+modelo verify/file. `verify_modelo_revision` runs `_run_modelo_workflow_gate`
+after local completeness grants and before verification report/state
+persistence. `file_modelo_revision` runs the same gate before filing writes.
+
+`_run_modelo_workflow_gate` builds the revision-backed filing draft from the
+immutable `CalculationRevision` output, auto-approves the `READY_TO_SUBMIT`
+draft for preflight, runs `WorkflowEngine.run_for_period`, saves the workflow
+result, and raises `ModeloWorkflowGateError` when the result is not `DONE`.
+`WorkflowEngine` remains the only caller of `SubmissionEngine.preflight`
+through `SubmissionEngineAdapter`.
+
+Consequences: no standalone `aeat workflow`, `aeat run`, `app modelo
+preflight`, or direct modelo `SubmissionEngine.preflight` command is exposed.
+The verify path aborts before report/state persistence and the file path
+aborts before filing writes on workflow/preflight failure. Modelo 180 deadline
+support and cross-year filing-window coverage were added as part of the W80
+verification surface.
+
 ## Rationale
 
 The workflow engine is valuable as an internal readiness/preflight gate, but it

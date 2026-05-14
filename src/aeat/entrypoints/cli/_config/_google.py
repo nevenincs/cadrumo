@@ -53,12 +53,26 @@ from ....adapters.outbound.google._session_store import (
     save_metadata,
     save_token,
 )
+from ....adapters.outbound.google._calc_sheets_apply import (
+    CalcSheetsApplyResult,
+    apply_export_plan,
+)
 from ....adapters.outbound.storage import (
     StorageError,
     get_storage_provider,
 )
+from ....adapters.outbound.storage._factory import (
+    _build_google_credentials,
+    _resolve_drive_root_folder_id,
+)
+from ....application.storage.calc_sheets import (
+    OperatorInputs,
+    build_export_plan,
+)
+from ....domain.calculations.registry._loader import load_registry_tree
+from ....domain.calculations.registry._snapshot import build_snapshot
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core.config import load_settings
+from ....core.config import PROJECT_ROOT, load_settings
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 from .._i18n import tr
@@ -486,9 +500,8 @@ def _label_for(namespace: str) -> str:
     """Pick a Drive-filename label from `namespace`.
 
     Default policy: trailing dotted segment, capped at 32 chars,
-    sanitised to alnum/dash/underscore. Per-namespace registered
-    label-derivers (per P03.S04-S06 + P06.S14-S24) override this
-    default once they ship.
+    sanitised to alnum/dash/underscore. When per-namespace label
+    derivers are registered they override this default.
     """
 
     leaf = namespace.rsplit(".", 1)[-1] or "obj"
@@ -523,8 +536,8 @@ def google_sync_push(
     `(namespace, object_key)`. Each row's ciphertext payload uploads
     via `GoogleDriveProvider.put(...)` under the namespace's Drive
     folder, named `<hmac_prefix_8>--<label>.bin`. The local master
-    key never leaves the host — only ciphertext reaches Drive per
-    ADR-3's ciphertext-layer mirror.
+    key never leaves the host — only ciphertext reaches Drive (the
+    mirror operates entirely at the ciphertext layer).
     """
 
     try:
@@ -608,6 +621,135 @@ def google_sync_push(
     _emit(ctx, payload, tuple(lines))
 
 
+calc_app = typer.Typer(
+    name="calc",
+    help=tr("cli.config.google.sync.calc.help"),
+    no_args_is_help=True,
+)
+
+
+def _resolve_credentials_and_root(profile: str) -> tuple[object, str]:
+    """Hydrate refreshable Google credentials + the configured Drive root.
+
+    Reuses the storage-factory helpers so the calc-sheets surface
+    shares the exact same OAuth + folder-resolution path as the
+    ciphertext mirror; no parallel construction.
+    """
+
+    settings = load_settings()
+    credentials = _build_google_credentials(profile=profile)
+    root_folder_id = _resolve_drive_root_folder_id(profile=profile, settings=settings)
+    if not root_folder_id:
+        raise CliRefusedBoundaryError(
+            tr("cli.config.google.sync.calc.export.root_folder_required"),
+        )
+    return credentials, root_folder_id
+
+
+def _load_snapshot(modelo: str, period: str, year: int):
+    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    chosen = next((candidate for candidate in modelos if candidate.id == modelo), None)
+    if chosen is None:
+        available = ", ".join(sorted(candidate.id for candidate in modelos))
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.google.sync.calc.export.unknown_modelo",
+                modelo=modelo,
+                available=available,
+            ),
+        )
+    return build_snapshot(
+        chosen,
+        catalogues,
+        source_root=PROJECT_ROOT,
+        filing_year=year,
+        period=period,
+    )
+
+
+@calc_app.command("export", help=tr("cli.config.google.sync.calc.export_help"))
+def google_sync_calc_export(
+    ctx: typer.Context,
+    modelo: str = typer.Option(..., "--modelo", help=tr("cli.config.google.sync.calc.export.modelo_help")),
+    period: str = typer.Option(..., "--period", help=tr("cli.config.google.sync.calc.export.period_help")),
+    year: int = typer.Option(..., "--year", help=tr("cli.config.google.sync.calc.export.year_help"), min=2000, max=2099),
+    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
+) -> None:
+    """Export the registry-derived calculation surface for a modelo + period
+    to a real Google Sheets workbook under the operator's `aeat-vault/`.
+
+    The workbook materialises four tabs: Entradas (operator inputs),
+    Cálculos (formula cells with per-casilla ROUND-wrapped Decimal
+    parity), Procedencia (per-casilla audit trail) and Tarifas (a
+    mirror of every parameter the formulas consult). A Guía tab
+    stamps engine version + registry SHA for the pull adapter to
+    validate compatibility on the way back.
+    """
+
+    try:
+        active = resolve_active_profile(profile)
+    except GoogleAuthError as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+
+    try:
+        credentials, root_folder_id = _resolve_credentials_and_root(active)
+    except (GoogleAuthError, StorageError) as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+
+    snapshot = _load_snapshot(modelo, period, year)
+    plan = build_export_plan(snapshot, operator_inputs=OperatorInputs())
+
+    try:
+        result: CalcSheetsApplyResult = apply_export_plan(
+            plan,
+            credentials=credentials,
+            root_folder_id=root_folder_id,
+        )
+    except (GoogleAuthError, StorageError) as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+
+    payload = {
+        "operation": "config.google.sync.calc.export",
+        "profile": active,
+        "modelo": snapshot.modelo.id,
+        "revision": snapshot.revision.id,
+        "period": snapshot.period,
+        "year": snapshot.filing_year,
+        "engine_version": plan.metadata.engine_version,
+        "registry_sha": plan.metadata.registry_sha,
+        "root_folder_id": root_folder_id,
+        "folder_id": result.folder_id,
+        "spreadsheet_id": result.spreadsheet_id,
+        "spreadsheet_url": result.spreadsheet_url,
+        "value_cells_written": result.value_cells_written,
+        "formula_cells_written": result.formula_cells_written,
+        "protected_ranges_written": result.protected_ranges_written,
+        "tab_count": result.tab_count,
+    }
+    _emit(
+        ctx,
+        payload,
+        (
+            "operation\tconfig.google.sync.calc.export",
+            f"profile\t{active}",
+            f"modelo\t{snapshot.modelo.id}",
+            f"revision\t{snapshot.revision.id}",
+            f"period\t{snapshot.period}",
+            f"year\t{snapshot.filing_year}",
+            f"engine_version\t{plan.metadata.engine_version}",
+            f"registry_sha\t{plan.metadata.registry_sha}",
+            f"folder_id\t{result.folder_id}",
+            f"spreadsheet_id\t{result.spreadsheet_id}",
+            f"spreadsheet_url\t{result.spreadsheet_url}",
+            f"value_cells_written\t{result.value_cells_written}",
+            f"formula_cells_written\t{result.formula_cells_written}",
+            f"protected_ranges_written\t{result.protected_ranges_written}",
+            f"tab_count\t{result.tab_count}",
+        ),
+    )
+
+
+sync_app.add_typer(calc_app, name="calc")
 google_app.add_typer(sync_app, name="sync")
 
 

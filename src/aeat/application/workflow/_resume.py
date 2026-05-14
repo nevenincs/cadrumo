@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.deadlines import FilingObligation
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowResult, WorkflowStage
@@ -60,13 +61,61 @@ class WorkflowResumeContext(BaseModel):
     aborted_reason: WorkflowAbortReason
 
 
-def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
-    """Validate that ``run_id`` may be resumed and return a fresh-attempt context.
+class WorkflowResumeCommand(BaseModel):
+    """Command contract for continuing an aborted workflow run."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    workflow_run_id: str = Field(min_length=16, max_length=16)
+
+
+class WorkflowResumeLogFields(BaseModel):
+    """Stable, non-secret log fields for workflow resume decisions."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    service_name: str = "workflow_resume"
+    prior_workflow_run_id: str = Field(min_length=16, max_length=16)
+    modelo: str = Field(min_length=1, max_length=8)
+    period: str = Field(min_length=1, max_length=16)
+    aborted_reason: WorkflowAbortReason
+
+    def as_extra(self) -> dict[str, str]:
+        return {
+            "service_name": self.service_name,
+            "prior_workflow_run_id": self.prior_workflow_run_id,
+            "modelo": self.modelo,
+            "period": self.period,
+            "aborted_reason": self.aborted_reason.value,
+        }
+
+
+class WorkflowResumeResult(BaseModel):
+    """Backend result contract for an accepted workflow resume request."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    prior_workflow_run_id: str = Field(min_length=16, max_length=16)
+    modelo: str = Field(min_length=1, max_length=8)
+    period: str = Field(min_length=1, max_length=16)
+    obligation: FilingObligation
+    aborted_reason: WorkflowAbortReason
+    context: WorkflowResumeContext
+    log_fields: WorkflowResumeLogFields
+
+
+def resume_modelo_workflow(
+    command: WorkflowResumeCommand,
+    *,
+    objects: SecureObjectRepository | None = None,
+) -> WorkflowResumeResult:
+    """Validate a workflow resume command and return a fresh-attempt contract.
 
     The caller is expected to drive
     :meth:`WorkflowEngine.run_for_period` with
-    ``modelo=context.modelo`` and ``period=context.period`` to produce
-    a fresh :class:`WorkflowResult`.
+    ``modelo=result.context.modelo``, ``period=result.context.period``, and
+    ``resumed_from=result.context.resumed_from_run_id`` to produce a fresh
+    :class:`WorkflowResult`.
 
     Raises:
         WorkflowError: When the prior run cannot be loaded.
@@ -74,41 +123,59 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
             ``ABORTED`` state, was aborted for a non-resumable reason,
             or lacks an ``obligation``.
     """
-    prior: WorkflowResult = load_run(run_id)
+    prior: WorkflowResult = load_run(command.workflow_run_id, objects=objects)
 
     if prior.final_stage is not WorkflowStage.ABORTED:
         raise WorkflowResumeRefusedError(
-            f"workflow run {run_id!r} is in final_stage="
+            f"workflow run {command.workflow_run_id!r} is in final_stage="
             f"{prior.final_stage.value!r}; only ABORTED runs may be resumed",
         )
     if prior.aborted_reason is None:  # defensive: validator enforces this
         raise WorkflowResumeRefusedError(
-            f"workflow run {run_id!r} is ABORTED without aborted_reason; "
+            f"workflow run {command.workflow_run_id!r} is ABORTED without aborted_reason; "
             f"refusing to resume an inconsistent record",
         )
     if prior.aborted_reason in _NON_RESUMABLE_REASONS:
         raise WorkflowResumeRefusedError(
-            f"workflow run {run_id!r} aborted for "
+            f"workflow run {command.workflow_run_id!r} aborted for "
             f"{prior.aborted_reason.value}; this reason is terminal by "
             f"design and may not be resumed",
         )
     if prior.obligation is None:
         raise WorkflowResumeRefusedError(
-            f"workflow run {run_id!r} carries no obligation; cannot "
+            f"workflow run {command.workflow_run_id!r} carries no obligation; cannot "
             f"determine (modelo, period) for a retry",
         )
 
-    return WorkflowResumeContext(
+    context = WorkflowResumeContext(
         resumed_from_run_id=prior.run_id,
         modelo=prior.obligation.modelo,
         period=prior.obligation.period,
         obligation=prior.obligation,
         aborted_reason=prior.aborted_reason,
     )
+    log_fields = WorkflowResumeLogFields(
+        prior_workflow_run_id=context.resumed_from_run_id,
+        modelo=context.modelo,
+        period=context.period,
+        aborted_reason=context.aborted_reason,
+    )
+    return WorkflowResumeResult(
+        prior_workflow_run_id=context.resumed_from_run_id,
+        modelo=context.modelo,
+        period=context.period,
+        obligation=context.obligation,
+        aborted_reason=context.aborted_reason,
+        context=context,
+        log_fields=log_fields,
+    )
 
 
 __all__ = [
+    "WorkflowResumeCommand",
     "WorkflowResumeContext",
+    "WorkflowResumeLogFields",
     "WorkflowResumeRefusedError",
+    "WorkflowResumeResult",
     "resume_modelo_workflow",
 ]

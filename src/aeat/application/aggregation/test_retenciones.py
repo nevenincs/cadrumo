@@ -6,7 +6,8 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.aggregation._retenciones import (
+from aeat.application.aggregation import (
+    AggregationUnsupportedModeloError,
     RetencionesAggregation,
     RetencionObservation,
     RetencionScheme,
@@ -17,6 +18,7 @@ from aeat.application.aggregation._retenciones import (
     aggregate_retenciones_190,
     aggregate_retenciones_193,
 )
+from aeat.core.errors import get_registered_error_code
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -62,7 +64,38 @@ class TestObservationContract:
     def test_observation_accepts_canonical_source_kinds(self) -> None:
         for kind in ("ledger_transaction", "purchase_invoice_evidence", "payable_invoice", "collectible_invoice"):
             obs = _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="0", retencion="0", source_kind=kind)
-            assert obs.source_kind == kind
+        assert obs.source_kind == kind
+
+    def test_observation_rejects_noncanonical_source_kind(self) -> None:
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError, match="source_kind 'attachment' is unsupported"):
+            _obs(
+                nif="A1",
+                scheme=RetencionScheme.WORK_INCOME,
+                base="0",
+                retencion="0",
+                source_kind="attachment",
+            )
+
+    def test_retenciones_exports_are_public_package_api(self) -> None:
+        import aeat.application.aggregation as aggregation
+
+        expected_names = {
+            "RetencionesAggregation",
+            "RetencionObservation",
+            "RetencionPerceptorRollup",
+            "RetencionScheme",
+            "aggregate_retenciones_111",
+            "aggregate_retenciones_115",
+            "aggregate_retenciones_123",
+            "aggregate_retenciones_180",
+            "aggregate_retenciones_190",
+            "aggregate_retenciones_193",
+        }
+
+        assert expected_names.issubset(set(aggregation.__all__))
+        assert all(hasattr(aggregation, name) for name in expected_names)
 
 
 class TestAggregate111:
@@ -125,6 +158,34 @@ class TestAggregate111:
         # Same perceptor counted once
         assert result.total_perceptors == 1
 
+    def test_same_perceptor_scheme_different_source_kinds_yield_separate_rollups(self) -> None:
+        observations = (
+            _obs(
+                nif="B1",
+                scheme=RetencionScheme.WORK_INCOME,
+                base="500.00",
+                retencion="75.00",
+                source_kind="ledger_transaction",
+                source_id="tx-1",
+            ),
+            _obs(
+                nif="B1",
+                scheme=RetencionScheme.WORK_INCOME,
+                base="700.00",
+                retencion="105.00",
+                source_kind="payable_invoice",
+                source_id="payable-1",
+            ),
+        )
+
+        result = aggregate_retenciones_111(observations, period="2025-Q1")
+
+        assert [(row.source_kind, row.total_taxable_base) for row in result.rollups] == [
+            ("ledger_transaction", Decimal("500.00")),
+            ("payable_invoice", Decimal("700.00")),
+        ]
+        assert result.total_perceptors == 1
+
     def test_distinct_perceptors_count_separately(self) -> None:
         observations = (
             _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="t1"),
@@ -155,11 +216,13 @@ class TestAggregate111:
         reverse = aggregate_retenciones_111(tuple(reversed(observations)), period="2025-Q1")
         assert forward.model_dump_json() == reverse.model_dump_json()
 
-    def test_unimplemented_modelo_raises(self) -> None:
+    def test_unknown_modelo_uses_registered_aggregation_error(self) -> None:
         from aeat.application.aggregation._retenciones import _filter_observations_for_modelo
 
-        with pytest.raises(NotImplementedError, match="modelo '347'"):
+        with pytest.raises(AggregationUnsupportedModeloError, match="unsupported_modelo") as exc_info:
             _filter_observations_for_modelo((), modelo="347")
+        assert exc_info.value.suggestion == "use one of 111, 115, 123, 180, 190, 193"
+        assert get_registered_error_code(exc_info.value).code == "REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO"
 
 
 class TestAggregate123:
@@ -185,7 +248,7 @@ class TestAggregate123:
         assert result.rollups[0].scheme is RetencionScheme.CAPITAL_OTHER
 
 
-class TestAggregate180_190_193:
+class TestAnnualRetencionesSummaries:
     def test_180_widens_115_observations_to_annual_period(self) -> None:
         observations = (
             _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="2000", retencion="380", source_id="r1"),

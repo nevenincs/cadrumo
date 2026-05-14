@@ -2,9 +2,8 @@
 
 The existing usage-ratio CRUD verbs (``list``/``set``/``unset``) live in
 the application-layer ledger actions backed by the domain
-``usage_ratios`` module. The 2026-05-13
-``ledger-ratios-eligible-and-validate`` ADR adds two read-only verbs
-that close the discoverability and pre-calculate readiness gaps:
+``usage_ratios`` module. Two read-only verbs
+close the discoverability and pre-calculate readiness gaps:
 
   ``eligible``  enumerate categories that may carry a user ratio,
                 annotated with their statutory default ratio

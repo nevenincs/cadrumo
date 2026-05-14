@@ -1,18 +1,18 @@
 """Registered noun-group catalogue for the CRUD verb contract.
 
-Per apex ADR §12.b, every mutating noun-group in the redesigned CLI
+Every mutating noun-group in the redesigned CLI
 registers a :class:`MutatingNounGroupContract`. The catalogue exposed
 here is the **single source of truth** consumed by cross-cutting
-conformance tests and W72-W77 reconciliation waves.
+conformance tests.
 
 Entries shipped in this initial registry:
 
-  - ``aeat app ledger evidence``     (W70.P333 locked CRUD reference)
-  - ``aeat app ledger payable-invoice``      (W73A)
-  - ``aeat app ledger collectible-invoice``  (W73A)
+  - ``aeat app ledger evidence``     (locked CRUD reference)
+  - ``aeat app ledger payable-invoice``
+  - ``aeat app ledger collectible-invoice``
   - ``aeat app ledger ratios``       (key-value exception)
   - ``aeat app ledger inventory``    (lifecycle operations)
-  - ``aeat config auth apoderado``   (W75A; lifecycle operations)
+  - ``aeat config auth apoderado``   (lifecycle operations)
 
 Each entry documents the noun-group's intended verb set plus its
 declared exception class. The conformance harness in
@@ -36,13 +36,13 @@ from ._crud_contract import (
 EVIDENCE = MutatingNounGroupContract(
     noun="purchase_invoice_evidence",
     cli_path="aeat app ledger evidence",
-    # W70.P333 reference shape: strict 5-verb CRUD, no orthogonal axes.
+    # reference shape: strict 5-verb CRUD, no orthogonal axes.
 )
 
 PAYABLE_INVOICE = MutatingNounGroupContract(
     noun="payable_invoice",
     cli_path="aeat app ledger payable-invoice",
-    # W73A: strict 5-verb CRUD with link-to-ledger-transaction orthogonal axis.
+    # strict 5-verb CRUD with link-to-ledger-transaction orthogonal axis.
     orthogonal_axes=frozenset({OrthogonalAxis.LINK}),
 )
 
@@ -55,12 +55,12 @@ COLLECTIBLE_INVOICE = MutatingNounGroupContract(
 USAGE_RATIOS = MutatingNounGroupContract(
     noun="usage_ratio",
     cli_path="aeat app ledger ratios",
-    # Key-value-as-record exception per W71 contract; the operator edits
+    # Key-value-as-record exception per the contract; the operator edits
     # keyed scalars (per-category proportions) rather than entities.
     exception=NounGroupExceptionKind.KEY_VALUE_AS_RECORD,
     crud_verbs=frozenset(),
     key_value_verbs=frozenset({KeyValueVerb.SET, KeyValueVerb.GET, KeyValueVerb.UNSET, KeyValueVerb.LIST}),
-    # The 2026-05-13 ledger-ratios-eligible-and-validate ADR adds two
+    # Specification adds two
     # orthogonal read-only verbs (eligible, validate). They're not in
     # the OrthogonalAxis enum; documented inline as a noun-group
     # specific extension.
@@ -71,7 +71,7 @@ INVENTORY = MutatingNounGroupContract(
     cli_path="aeat app ledger inventory",
     # Lifecycle-only exception: create + movement add + valuation
     # preview are distinct named operations rather than CRUD-shaped
-    # CRUD per the inventory-placement ADR.
+    # per the inventory specification.
     exception=NounGroupExceptionKind.LIFECYCLE_OPERATIONS_ONLY,
     crud_verbs=frozenset(),
     lifecycle_state_verbs=frozenset({LifecycleStateVerb.RESET}),
@@ -80,7 +80,7 @@ INVENTORY = MutatingNounGroupContract(
 APODERADO = MutatingNounGroupContract(
     noun="apoderado",
     cli_path="aeat config auth apoderado",
-    # Lifecycle-only exception per apoderamientos-surface ADR §3.3:
+    # Lifecycle-only exception per specification:
     # configure + clear are state transitions, status + check are
     # read-only.
     exception=NounGroupExceptionKind.LIFECYCLE_OPERATIONS_ONLY,

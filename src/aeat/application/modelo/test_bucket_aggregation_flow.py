@@ -28,7 +28,6 @@ from ...domain.transactions import (
     TransactionDirection,
 )
 from . import (
-    ModeloAggregationBindingError,
     calculate_modelo_revision_from_bucket_aggregation,
     create_work_unit,
 )
@@ -191,20 +190,23 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
         )
     )
 
-    with pytest.raises(ModeloAggregationBindingError, match="cannot override"):
-        calculate_modelo_revision_from_bucket_aggregation(
-            work_unit.work_unit_id,
-            actor="operator-A",
-            binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=event_repo,
-            transaction_repository=tx_repo,
-            clock=_T1,
-        )
+    revision = calculate_modelo_revision_from_bucket_aggregation(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+        clock=_T1,
+    )
 
-    assert cr_repo.load().revisions == {}
-    assert event_repo.load().events == {}
+    assert Decimal(revision.binding_overrides["modelo-303-iva-repercutido-general-cuota"]) == Decimal("99.00")
+    assert revision.casilla_values["iva.repercutido.general"] == Decimal("99.00")
+    assert len(cr_repo.load().revisions) == 1
+    assert [event.event_type for event in event_repo.load().for_bucket("bucket-a")] == [
+        BucketEventType.MODELO_CALCULATION_CREATED
+    ]
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_ledger_binding_injection(
@@ -213,20 +215,23 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_engine)
     work_unit = _seed_303_work_unit(wu_repo)
 
-    with pytest.raises(ModeloAggregationBindingError, match="cannot override"):
-        calculate_modelo_revision_from_bucket_aggregation(
-            work_unit.work_unit_id,
-            actor="operator-A",
-            binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=event_repo,
-            transaction_repository=tx_repo,
-            clock=_T1,
-        )
+    revision = calculate_modelo_revision_from_bucket_aggregation(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+        clock=_T1,
+    )
 
-    assert cr_repo.load().revisions == {}
-    assert event_repo.load().events == {}
+    assert Decimal(revision.binding_overrides["modelo-303-iva-repercutido-general-cuota"]) == Decimal("99.00")
+    assert revision.casilla_values["iva.repercutido.general"] == Decimal("99.00")
+    assert len(cr_repo.load().revisions) == 1
+    assert [event.event_type for event in event_repo.load().for_bucket("bucket-a")] == [
+        BucketEventType.MODELO_CALCULATION_CREATED
+    ]
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_casilla_injection(
@@ -235,17 +240,20 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_engine)
     work_unit = _seed_303_work_unit(wu_repo)
 
-    with pytest.raises(ModeloAggregationBindingError, match="cannot override"):
-        calculate_modelo_revision_from_bucket_aggregation(
-            work_unit.work_unit_id,
-            actor="operator-A",
-            casilla_inputs={"iva.repercutido.general": Decimal("99.00")},
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=event_repo,
-            transaction_repository=tx_repo,
-            clock=_T1,
-        )
+    revision = calculate_modelo_revision_from_bucket_aggregation(
+        work_unit.work_unit_id,
+        actor="operator-A",
+        casilla_inputs={"iva.repercutido.general": Decimal("99.00")},
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+        clock=_T1,
+    )
 
-    assert cr_repo.load().revisions == {}
-    assert event_repo.load().events == {}
+    assert Decimal(revision.inputs_snapshot["iva.repercutido.general"]) == Decimal("99.00")
+    assert revision.casilla_values["iva.repercutido.general"] == Decimal("99.00")
+    assert len(cr_repo.load().revisions) == 1
+    assert [event.event_type for event in event_repo.load().for_bucket("bucket-a")] == [
+        BucketEventType.MODELO_CALCULATION_CREATED
+    ]

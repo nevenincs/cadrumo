@@ -21,6 +21,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ._errors import AggregationUnsupportedModeloError, t
+
 _CANONICAL_SOURCE_KINDS: frozenset[str] = frozenset(
     {
         "ledger_transaction",
@@ -179,8 +181,11 @@ def _filter_observations_for_modelo(
     modelo: str,
 ) -> tuple[CounterpartObservation, ...]:
     if modelo not in _MODELO_KIND_CATALOGUE:
-        msg = f"counterpart aggregator for modelo {modelo!r} is not implemented"
-        raise NotImplementedError(msg)
+        raise AggregationUnsupportedModeloError(
+            t("aggregation.counterpart.errors.unsupported_modelo"),
+            context={"modelo": modelo},
+            suggestion="use one of 347, 349",
+        )
     eligible = _MODELO_KIND_CATALOGUE[modelo]
     return tuple(o for o in observations if o.operation_kind in eligible)
 
