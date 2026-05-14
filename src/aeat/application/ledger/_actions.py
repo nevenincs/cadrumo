@@ -42,6 +42,8 @@ from ...domain.transactions import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
+    SplitLineage,
+    SplitRole,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepository,
@@ -52,6 +54,7 @@ from ...domain.transactions import (
     TransactionLifecycleState,
     TransactionNotFoundError,
     TransactionValidationError,
+    derive_split_group_id,
     derive_transaction_id,
 )
 from ...domain.usage_ratios import (
@@ -83,6 +86,9 @@ from ._models import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
+    MergeTransactionsResult,
+    SplitChildCommand,
+    SplitTransactionResult,
 )
 from ._preflight import preflight_ledger_tax_readiness
 
@@ -1122,6 +1128,258 @@ def update_manual_transaction_fields(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         occurred_at=occurred_at,
+    )
+
+
+def split_transaction(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    children: tuple[SplitChildCommand, ...],
+    actor: str,
+    source_command: str = "aeat app ledger split",
+    reason: str = "",
+    transaction_repository: TransactionCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    work_unit_repository: WorkUnitCatalogueRepository | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepository | None = None,
+    occurred_at: datetime | None = None,
+) -> SplitTransactionResult:
+    """Redistribute one parent transaction into N child transactions.
+
+    Pre-conditions:
+    - Parent must be in ACTIVE lifecycle state.
+    - Parent must not be referenced by a finalized modelo calculation.
+    - At least two children must be supplied.
+    - Sum of child amounts equals the parent amount exactly (no rounding).
+    - Every child amount carries the same sign as the parent amount.
+
+    Effect:
+    - Parent transitions ACTIVE -> SPLIT and gains
+      ``split_lineage`` with role=PARENT and the child ids as siblings.
+    - Each child is persisted as ACTIVE with
+      ``split_lineage`` role=CHILD and (parent + other-child) ids as siblings.
+    - Children inherit currency, direction, and (by default)
+      counterparty / booked_date / value_date from the parent.
+    - Children default to ``BusinessClassification.NOT_YET_PROCESSED``
+      to force conscious tax treatment per row; classification, evidence,
+      and attachment links are NOT auto-cloned.
+    - A single ``LEDGER_TRANSACTION_SPLIT`` event is emitted, anchored on
+      the parent transaction id so ``for_object(parent_id)`` returns the
+      whole lineage chain in chronological order.
+    - Catalogue + event are persisted atomically.
+    """
+
+    now = _normalise_timestamp(occurred_at)
+    trimmed_actor = _require_actor(actor, operation="ledger split")
+    trimmed_source_command = _require_source_command(source_command, operation="ledger split")
+    if len(children) < 2:
+        raise TransactionValidationError(
+            "ledger split requires at least two children",
+            context={"bucket_id": bucket_id, "transaction_id": transaction_id, "child_count": len(children)},
+        )
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repository = bucket_event_repository or BucketEventHistoryRepository()
+    catalogue = repository.load()
+    parent = _require_transaction(catalogue, transaction_id)
+    if parent.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "only active ledger transactions can be split",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": transaction_id,
+                "lifecycle_state": parent.lifecycle_state.value,
+            },
+        )
+    blockers = _blocking_modelo_references(
+        bucket_id=bucket_id,
+        transaction_ids=_transaction_modelo_source_ids(parent),
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+    )
+    if blockers:
+        _raise_finalized_modelo_blocked(
+            operation="ledger split",
+            transaction_ids=_transaction_modelo_source_ids(parent),
+            blockers=blockers,
+        )
+
+    parent_amount = parent.raw.amount
+    child_sum = sum((child.amount for child in children), start=Decimal("0"))
+    if child_sum != parent_amount:
+        raise TransactionValidationError(
+            "ledger split child amounts must sum to the parent amount exactly",
+            context={
+                "parent_amount": str(parent_amount),
+                "child_sum": str(child_sum),
+                "child_amounts": tuple(str(child.amount) for child in children),
+            },
+        )
+    parent_negative = parent_amount < Decimal("0")
+    for index, child in enumerate(children):
+        if child.amount == Decimal("0"):
+            raise TransactionValidationError(
+                "ledger split child amount must not be zero",
+                context={"child_index": index},
+            )
+        child_negative = child.amount < Decimal("0")
+        if child_negative != parent_negative:
+            raise TransactionValidationError(
+                "ledger split child amounts must share the parent's sign",
+                context={
+                    "parent_amount": str(parent_amount),
+                    "child_index": index,
+                    "child_amount": str(child.amount),
+                },
+            )
+
+    child_amounts = tuple(child.amount for child in children)
+    child_narratives = tuple(child.description for child in children)
+    split_group_id = derive_split_group_id(
+        parent_transaction_id=parent.transaction_id,
+        child_amounts=child_amounts,
+        child_narratives=child_narratives,
+    )
+
+    child_transactions_initial = tuple(
+        _build_split_child_transaction(
+            parent=parent,
+            child=child,
+            index=index,
+            occurred_at=now,
+            actor=trimmed_actor,
+            source_command=trimmed_source_command,
+        )
+        for index, child in enumerate(children)
+    )
+    child_ids = tuple(transaction.transaction_id for transaction in child_transactions_initial)
+    if len(set(child_ids)) != len(child_ids):
+        raise TransactionValidationError(
+            "ledger split produced duplicate child transaction ids; "
+            "vary amount, description, value_date, or counterparty between siblings",
+            context={"child_ids": child_ids},
+        )
+
+    parent_lineage = SplitLineage(
+        split_group_id=split_group_id,
+        role=SplitRole.PARENT,
+        sibling_transaction_ids=child_ids,
+    )
+    parent_transition = TransactionLifecycleLineageEntry(
+        previous_state=parent.lifecycle_state,
+        state=TransactionLifecycleState.SPLIT,
+        actor=trimmed_actor,
+        source_command=trimmed_source_command,
+        changed_at=now,
+        reason=reason.strip() or "split",
+    )
+    parent_after = parent.model_copy(
+        update={
+            "lifecycle_state": TransactionLifecycleState.SPLIT,
+            "lifecycle_lineage": (*parent.lifecycle_lineage, parent_transition),
+            "split_lineage": parent_lineage,
+        }
+    )
+
+    final_children = tuple(
+        transaction.model_copy(
+            update={
+                "split_lineage": SplitLineage(
+                    split_group_id=split_group_id,
+                    role=SplitRole.CHILD,
+                    sibling_transaction_ids=(
+                        parent.transaction_id,
+                        *(other for other in child_ids if other != transaction.transaction_id),
+                    ),
+                ),
+            }
+        )
+        for transaction in child_transactions_initial
+    )
+
+    event = _build_bucket_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_TRANSACTION_SPLIT,
+        occurred_at=now,
+        actor=trimmed_actor,
+        object_id=parent.transaction_id,
+        payload={
+            "source_command": trimmed_source_command,
+            "reason": reason.strip(),
+            "split_group_id": split_group_id,
+            "parent_transaction_id": parent.transaction_id,
+            "child_transaction_ids": ",".join(child_ids),
+            "child_count": str(len(child_ids)),
+        },
+    )
+
+    updated_transactions = dict(catalogue.transactions)
+    updated_transactions[parent_after.transaction_id] = parent_after
+    for child_transaction in final_children:
+        updated_transactions[child_transaction.transaction_id] = child_transaction
+    new_catalogue = TransactionCatalogue.model_validate({"transactions": updated_transactions})
+
+    _save_transaction_catalogue_and_events(
+        transaction_repository=repository,
+        event_repository=event_repository,
+        catalogue=new_catalogue,
+        events=(event,),
+    )
+
+    return SplitTransactionResult(
+        bucket_id=bucket_id,
+        parent_transaction_id=parent.transaction_id,
+        split_group_id=split_group_id,
+        child_transaction_ids=child_ids,
+        parent_transaction=parent_after,
+        child_transactions=final_children,
+        bucket_event_id=event.event_id,
+    )
+
+
+def _build_split_child_transaction(
+    *,
+    parent: Transaction,
+    child: SplitChildCommand,
+    index: int,
+    occurred_at: datetime,
+    actor: str,
+    source_command: str,
+) -> Transaction:
+    """Build one child Transaction. ``split_lineage`` is filled in by the caller
+    once all child ids are known so siblings can reference each other."""
+    parent_raw = parent.raw
+    provider_transaction_id = f"split:{parent.transaction_id}:{index:04d}"
+    raw_child = RawTransaction(
+        transaction_id=provider_transaction_id,
+        booked_date=child.booked_date or parent_raw.booked_date,
+        value_date=child.value_date if child.value_date is not None else parent_raw.value_date,
+        amount=child.amount,
+        currency=parent_raw.currency,
+        counterparty=child.counterparty if child.counterparty is not None else parent_raw.counterparty,
+        description=child.description,
+        provenance=RawProvenance(
+            source_path=Path.cwd() / ".aeat-ledger-split",
+            source_sha256=hashlib.sha256(
+                f"split:{parent.transaction_id}:{index}".encode("utf-8")
+            ).hexdigest(),
+            source_row_index=index + 1,
+            source_format=SourceFormat.MANUAL,
+            ingested_at=occurred_at,
+            provider_name="ledger-split",
+        ),
+        raw_fields={"parent_transaction_id": parent.transaction_id, "split_index": str(index)},
+    )
+    return Transaction.model_validate(
+        {
+            "raw": raw_child,
+            "direction": parent.direction,
+            "business_classification": BusinessClassification.NOT_YET_PROCESSED,
+            "created_by": actor,
+            "source_command": source_command,
+            "lifecycle_state": TransactionLifecycleState.ACTIVE,
+            "notes": "",
+        }
     )
 
 
