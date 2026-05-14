@@ -268,6 +268,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.workflow._resume.WorkflowResumeRefusedError",
+        ErrorCode(
+            code="REFUSED_WORKFLOW_RESUME",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_workflow_resume",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.workflow._errors.WorkflowAbortSignal",
         ErrorCode(
             code="INTERNAL_WORKFLOW_ABORT_SIGNAL",
@@ -472,6 +483,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_wizard_status",
             default_suggestion="aeat config init --profile NAME --tax-id NIF",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._borrador_binding.Modelo100BorradorBindingError",
+        ErrorCode(
+            code="REFUSED_MODELO_100_BORRADOR_BINDING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_100_borrador_binding",
+            default_suggestion="aeat app live borrador 100 fetch",
             retryable=False,
             runbook_id=None,
         ),

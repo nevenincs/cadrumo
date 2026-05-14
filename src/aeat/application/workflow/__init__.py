@@ -61,6 +61,13 @@ from ._protocols import (
     SubmissionEngineProtocol,
 )
 
+# ---- resume action (depends on _models + _persistence) ----------------------
+from ._resume import (
+    WorkflowResumeContext,
+    WorkflowResumeRefusedError,
+    resume_modelo_workflow,
+)
+
 __all__ = [
     "CertificateBundleProtocol",
     "DeadlineEngineAdapter",
@@ -82,6 +89,8 @@ __all__ = [
     "WorkflowError",
     "WorkflowEvent",
     "WorkflowResult",
+    "WorkflowResumeContext",
+    "WorkflowResumeRefusedError",
     "WorkflowStage",
     "WorkflowState",
     "WorkflowStateRepository",
@@ -93,6 +102,7 @@ __all__ = [
     "default_engine",
     "list_runs",
     "load_run",
+    "resume_modelo_workflow",
     "save_run",
     "update_declaration_pointer",
     "utc_now",
