@@ -73,6 +73,26 @@ required_text = [
     "33.007,2 euros",
 ]
 
+[legal."orden-eha-586-2011:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-586-2011.html#articulo-1"
+document_id = "BOE-A-2011-4948"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2011-4948#a1"
+published_at = 2011-03-18
+effective_from = 2011-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Aprobacion del modelo 111 — autoliquidacion de retenciones e ingresos a cuenta del IRPF sobre rendimientos del trabajo, actividades economicas, premios, determinadas ganancias patrimoniales e imputaciones de renta. Foundational orden for the Modelo 111 quarterly retenciones return."
+required_text = [
+    "Aprobación del modelo 111",
+    "Retenciones e ingresos a cuenta del Impuesto sobre la Renta de las Personas Físicas",
+    "Rendimientos del trabajo y de actividades económicas",
+]
+
 [legal."orden-eha-672-2007:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
