@@ -695,56 +695,56 @@ This Wave implements the `2026-05-12-aeat-cli-config-vs-setup-namespace-adr` dec
 
 This Phase delivers backend implementation for config namespace replacement for setup as required by `2026-05-12-aeat-cli-config-vs-setup-namespace-adr`.
 
-- [ ] `W11.P051.S0301` - Map the `2026-05-12-aeat-cli-config-vs-setup-namespace-adr` decision into non-CLI service ownership for config namespace replacement for setup; `src/aeat/application/setup`.
-- [ ] `W11.P051.S0302` - Implement Pydantic command and result contracts for config namespace replacement for setup; `src/aeat/application/setup`.
-- [ ] `W11.P051.S0303` - Wire application or domain services required by config namespace replacement for setup; `src/aeat/application/setup`.
-- [ ] `W11.P051.S0304` - Connect persistence, bucket events, registry data, or provider adapters required by config namespace replacement for setup; `src/aeat/application/setup`.
-- [ ] `W11.P051.S0305` - Route existing backend functionality into the canonical service for config namespace replacement for setup; `src/aeat/application/setup`.
-- [ ] `W11.P051.S0306` - Record service-level error codes and log fields for config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P051.S0301` - Map the `2026-05-12-aeat-cli-config-vs-setup-namespace-adr` decision into non-CLI service ownership for config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P051.S0302` - Implement Pydantic command and result contracts for config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P051.S0303` - Wire application or domain services required by config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P051.S0304` - Connect persistence, bucket events, registry data, or provider adapters required by config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P051.S0305` - Route existing backend functionality into the canonical service for config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P051.S0306` - Record service-level error codes and log fields for config namespace replacement for setup; `src/aeat/application/setup`.
 
 ### Phase `W11.P052` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for config namespace replacement for setup as required by `2026-05-12-aeat-cli-config-vs-setup-namespace-adr`.
 
-- [ ] `W11.P052.S0307` - Audit duplicate implementations that overlap config namespace replacement for setup; `src/aeat/application/setup`.
-- [ ] `W11.P052.S0308` - Delete duplicate backend branches that compete with config namespace replacement for setup; `src/aeat/application/setup`.
-- [ ] `W11.P052.S0309` - Remove stale aliases that bypass the canonical service for config namespace replacement for setup; `src/aeat/entrypoints/cli`.
-- [ ] `W11.P052.S0310` - Migrate internal callers to the canonical service for config namespace replacement for setup; `src/aeat/application/setup`.
-- [ ] `W11.P052.S0311` - Remove stale fixtures and tests that encode duplicate behavior for config namespace replacement for setup; `tests/entrypoints/cli`.
-- [ ] `W11.P052.S0312` - Update boundary inventory entries that describe duplicate behavior for config namespace replacement for setup; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W11.P052.S0307` - Audit duplicate implementations that overlap config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P052.S0308` - Delete duplicate backend branches that compete with config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P052.S0309` - Remove stale aliases that bypass the canonical service for config namespace replacement for setup; `src/aeat/entrypoints/cli`.
+- [x] `W11.P052.S0310` - Migrate internal callers to the canonical service for config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P052.S0311` - Remove stale fixtures and tests that encode duplicate behavior for config namespace replacement for setup; `tests/entrypoints/cli`.
+- [x] `W11.P052.S0312` - Update boundary inventory entries that describe duplicate behavior for config namespace replacement for setup; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W11.P053` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for config namespace replacement for setup as required by `2026-05-12-aeat-cli-config-vs-setup-namespace-adr`.
 
-- [ ] `W11.P053.S0313` - Delete compatibility shims that preserve rejected behavior for config namespace replacement for setup; `src/aeat/application/setup`.
-- [ ] `W11.P053.S0314` - Delete placeholder stubs that claim support for config namespace replacement for setup; `src/aeat/application/setup`.
-- [ ] `W11.P053.S0315` - Replace stubbed paths with real backend service calls for config namespace replacement for setup; `src/aeat/application/setup`.
-- [ ] `W11.P053.S0316` - Remove deprecated command spelling and help text for config namespace replacement for setup; `src/aeat/entrypoints/cli`.
-- [ ] `W11.P053.S0317` - Remove tests that assert shim or stub behavior for config namespace replacement for setup; `tests/entrypoints/cli`.
-- [ ] `W11.P053.S0318` - Record the removed shim and stub surfaces for config namespace replacement for setup; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W11.P053.S0313` - Delete compatibility shims that preserve rejected behavior for config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P053.S0314` - Delete placeholder stubs that claim support for config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P053.S0315` - Replace stubbed paths with real backend service calls for config namespace replacement for setup; `src/aeat/application/setup`.
+- [x] `W11.P053.S0316` - Remove deprecated command spelling and help text for config namespace replacement for setup; `src/aeat/entrypoints/cli`.
+- [x] `W11.P053.S0317` - Remove tests that assert shim or stub behavior for config namespace replacement for setup; `tests/entrypoints/cli`.
+- [x] `W11.P053.S0318` - Record the removed shim and stub surfaces for config namespace replacement for setup; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W11.P054` - real behavior verification
 
 This Phase delivers real behavior verification for config namespace replacement for setup as required by `2026-05-12-aeat-cli-config-vs-setup-namespace-adr`.
 
-- [ ] `W11.P054.S0319` - Add service contract tests for config namespace replacement for setup; `tests/entrypoints/cli`.
-- [ ] `W11.P054.S0320` - Add persistence or registry integration tests for config namespace replacement for setup; `tests/entrypoints/cli`.
-- [ ] `W11.P054.S0321` - Add negative tests proving rejected aliases do not reach config namespace replacement for setup; `tests/entrypoints/cli`.
-- [ ] `W11.P054.S0322` - Add command behavior tests that exercise config namespace replacement for setup through real services; `tests/entrypoints/cli`.
-- [ ] `W11.P054.S0323` - Add end-to-end workflow coverage for config namespace replacement for setup; `tests`.
-- [ ] `W11.P054.S0324` - Run the targeted test slice for config namespace replacement for setup without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W11.P054.S0319` - Add service contract tests for config namespace replacement for setup; `tests/entrypoints/cli`.
+- [x] `W11.P054.S0320` - Add persistence or registry integration tests for config namespace replacement for setup; `tests/entrypoints/cli`.
+- [x] `W11.P054.S0321` - Add negative tests proving rejected aliases do not reach config namespace replacement for setup; `tests/entrypoints/cli`.
+- [x] `W11.P054.S0322` - Add command behavior tests that exercise config namespace replacement for setup through real services; `tests/entrypoints/cli`.
+- [x] `W11.P054.S0323` - Add end-to-end workflow coverage for config namespace replacement for setup; `tests`.
+- [x] `W11.P054.S0324` - Run the targeted test slice for config namespace replacement for setup without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W11.P055` - thin cli exposure
 
 This Phase delivers thin cli exposure for config namespace replacement for setup as required by `2026-05-12-aeat-cli-config-vs-setup-namespace-adr`.
 
-- [ ] `W11.P055.S0325` - Expose accepted command handlers for config namespace replacement for setup under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W11.P055.S0326` - Keep argument parsing for config namespace replacement for setup separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W11.P055.S0327` - Delegate config namespace replacement for setup execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W11.P055.S0328` - Render config namespace replacement for setup results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W11.P055.S0329` - Handle config namespace replacement for setup failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W11.P055.S0330` - Validate help text for config namespace replacement for setup uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W11.P055.S0325` - Expose accepted command handlers for config namespace replacement for setup under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W11.P055.S0326` - Keep argument parsing for config namespace replacement for setup separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W11.P055.S0327` - Delegate config namespace replacement for setup execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W11.P055.S0328` - Render config namespace replacement for setup results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W11.P055.S0329` - Handle config namespace replacement for setup failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W11.P055.S0330` - Validate help text for config namespace replacement for setup uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W12` - eliminate user cli shim
 
