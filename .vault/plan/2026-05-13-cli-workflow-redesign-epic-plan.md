@@ -1877,56 +1877,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-domain-harvest-normat
 
 This Phase delivers backend implementation for normative and manual harvest as required by `2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr`.
 
-- [ ] `W31.P151.S0901` - Map the `2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr` decision into non-CLI service ownership for normative and manual harvest; `src/aeat/domain/normatives`.
-- [ ] `W31.P151.S0902` - Implement Pydantic command and result contracts for normative and manual harvest; `src/aeat/domain/normatives`.
-- [ ] `W31.P151.S0903` - Wire application or domain services required by normative and manual harvest; `src/aeat/domain/normatives`.
-- [ ] `W31.P151.S0904` - Connect persistence, bucket events, registry data, or provider adapters required by normative and manual harvest; `src/aeat/domain/normatives`.
-- [ ] `W31.P151.S0905` - Route existing backend functionality into the canonical service for normative and manual harvest; `src/aeat/domain/normatives`.
-- [ ] `W31.P151.S0906` - Record service-level error codes and log fields for normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P151.S0901` - Map the `2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr` decision into non-CLI service ownership for normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P151.S0902` - Implement Pydantic command and result contracts for normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P151.S0903` - Wire application or domain services required by normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P151.S0904` - Connect persistence, bucket events, registry data, or provider adapters required by normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P151.S0905` - Route existing backend functionality into the canonical service for normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P151.S0906` - Record service-level error codes and log fields for normative and manual harvest; `src/aeat/domain/normatives`.
 
 ### Phase `W31.P152` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for normative and manual harvest as required by `2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr`.
 
-- [ ] `W31.P152.S0907` - Audit duplicate implementations that overlap normative and manual harvest; `src/aeat/domain/normatives`.
-- [ ] `W31.P152.S0908` - Delete duplicate backend branches that compete with normative and manual harvest; `src/aeat/domain/normatives`.
-- [ ] `W31.P152.S0909` - Remove stale aliases that bypass the canonical service for normative and manual harvest; `src/aeat/entrypoints/cli`.
-- [ ] `W31.P152.S0910` - Migrate internal callers to the canonical service for normative and manual harvest; `src/aeat/domain/normatives`.
-- [ ] `W31.P152.S0911` - Remove stale fixtures and tests that encode duplicate behavior for normative and manual harvest; `tests/domain/normatives`.
-- [ ] `W31.P152.S0912` - Update boundary inventory entries that describe duplicate behavior for normative and manual harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W31.P152.S0907` - Audit duplicate implementations that overlap normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P152.S0908` - Delete duplicate backend branches that compete with normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P152.S0909` - Remove stale aliases that bypass the canonical service for normative and manual harvest; `src/aeat/entrypoints/cli`.
+- [x] `W31.P152.S0910` - Migrate internal callers to the canonical service for normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P152.S0911` - Remove stale fixtures and tests that encode duplicate behavior for normative and manual harvest; `tests/domain/normatives`.
+- [x] `W31.P152.S0912` - Update boundary inventory entries that describe duplicate behavior for normative and manual harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W31.P153` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for normative and manual harvest as required by `2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr`.
 
-- [ ] `W31.P153.S0913` - Delete compatibility shims that preserve rejected behavior for normative and manual harvest; `src/aeat/domain/normatives`.
-- [ ] `W31.P153.S0914` - Delete placeholder stubs that claim support for normative and manual harvest; `src/aeat/domain/normatives`.
-- [ ] `W31.P153.S0915` - Replace stubbed paths with real backend service calls for normative and manual harvest; `src/aeat/domain/normatives`.
-- [ ] `W31.P153.S0916` - Remove deprecated command spelling and help text for normative and manual harvest; `src/aeat/entrypoints/cli`.
-- [ ] `W31.P153.S0917` - Remove tests that assert shim or stub behavior for normative and manual harvest; `tests/domain/normatives`.
-- [ ] `W31.P153.S0918` - Record the removed shim and stub surfaces for normative and manual harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W31.P153.S0913` - Delete compatibility shims that preserve rejected behavior for normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P153.S0914` - Delete placeholder stubs that claim support for normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P153.S0915` - Replace stubbed paths with real backend service calls for normative and manual harvest; `src/aeat/domain/normatives`.
+- [x] `W31.P153.S0916` - Remove deprecated command spelling and help text for normative and manual harvest; `src/aeat/entrypoints/cli`.
+- [x] `W31.P153.S0917` - Remove tests that assert shim or stub behavior for normative and manual harvest; `tests/domain/normatives`.
+- [x] `W31.P153.S0918` - Record the removed shim and stub surfaces for normative and manual harvest; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W31.P154` - real behavior verification
 
 This Phase delivers real behavior verification for normative and manual harvest as required by `2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr`.
 
-- [ ] `W31.P154.S0919` - Add service contract tests for normative and manual harvest; `tests/domain/normatives`.
-- [ ] `W31.P154.S0920` - Add persistence or registry integration tests for normative and manual harvest; `tests/domain/normatives`.
-- [ ] `W31.P154.S0921` - Add negative tests proving rejected aliases do not reach normative and manual harvest; `tests/entrypoints/cli`.
-- [ ] `W31.P154.S0922` - Add command behavior tests that exercise normative and manual harvest through real services; `tests/entrypoints/cli`.
-- [ ] `W31.P154.S0923` - Add end-to-end workflow coverage for normative and manual harvest; `tests`.
-- [ ] `W31.P154.S0924` - Run the targeted test slice for normative and manual harvest without skips or xfails; `tests/domain/normatives`.
+- [x] `W31.P154.S0919` - Add service contract tests for normative and manual harvest; `tests/domain/normatives`.
+- [x] `W31.P154.S0920` - Add persistence or registry integration tests for normative and manual harvest; `tests/domain/normatives`.
+- [x] `W31.P154.S0921` - Add negative tests proving rejected aliases do not reach normative and manual harvest; `tests/entrypoints/cli`.
+- [x] `W31.P154.S0922` - Add command behavior tests that exercise normative and manual harvest through real services; `tests/entrypoints/cli`.
+- [x] `W31.P154.S0923` - Add end-to-end workflow coverage for normative and manual harvest; `tests`.
+- [x] `W31.P154.S0924` - Run the targeted test slice for normative and manual harvest without skips or xfails; `tests/domain/normatives`.
 
 ### Phase `W31.P155` - thin cli exposure
 
 This Phase delivers thin cli exposure for normative and manual harvest as required by `2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr`.
 
-- [ ] `W31.P155.S0925` - Expose accepted command handlers for normative and manual harvest under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W31.P155.S0926` - Keep argument parsing for normative and manual harvest separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W31.P155.S0927` - Delegate normative and manual harvest execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W31.P155.S0928` - Render normative and manual harvest results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W31.P155.S0929` - Handle normative and manual harvest failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W31.P155.S0930` - Validate help text for normative and manual harvest uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W31.P155.S0925` - Expose accepted command handlers for normative and manual harvest under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W31.P155.S0926` - Keep argument parsing for normative and manual harvest separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W31.P155.S0927` - Delegate normative and manual harvest execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W31.P155.S0928` - Render normative and manual harvest results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W31.P155.S0929` - Handle normative and manual harvest failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W31.P155.S0930` - Validate help text for normative and manual harvest uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W32` - domain harvest vat classification
 
@@ -2654,56 +2654,56 @@ This Wave implements the `2026-05-13-cli-workflow-redesign-actor-attribution-adr
 
 This Phase delivers backend implementation for actor attribution for mutations as required by `2026-05-13-cli-workflow-redesign-actor-attribution-adr`.
 
-- [ ] `W44.P216.S1291` - Map the `2026-05-13-cli-workflow-redesign-actor-attribution-adr` decision into non-CLI service ownership for actor attribution for mutations; `src/aeat/application`.
-- [ ] `W44.P216.S1292` - Implement Pydantic command and result contracts for actor attribution for mutations; `src/aeat/application`.
-- [ ] `W44.P216.S1293` - Wire application or domain services required by actor attribution for mutations; `src/aeat/application`.
-- [ ] `W44.P216.S1294` - Connect persistence, bucket events, registry data, or provider adapters required by actor attribution for mutations; `src/aeat/application`.
-- [ ] `W44.P216.S1295` - Route existing backend functionality into the canonical service for actor attribution for mutations; `src/aeat/application`.
-- [ ] `W44.P216.S1296` - Record service-level error codes and log fields for actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P216.S1291` - Map the `2026-05-13-cli-workflow-redesign-actor-attribution-adr` decision into non-CLI service ownership for actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P216.S1292` - Implement Pydantic command and result contracts for actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P216.S1293` - Wire application or domain services required by actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P216.S1294` - Connect persistence, bucket events, registry data, or provider adapters required by actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P216.S1295` - Route existing backend functionality into the canonical service for actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P216.S1296` - Record service-level error codes and log fields for actor attribution for mutations; `src/aeat/application`.
 
 ### Phase `W44.P217` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for actor attribution for mutations as required by `2026-05-13-cli-workflow-redesign-actor-attribution-adr`.
 
-- [ ] `W44.P217.S1297` - Audit duplicate implementations that overlap actor attribution for mutations; `src/aeat/application`.
-- [ ] `W44.P217.S1298` - Delete duplicate backend branches that compete with actor attribution for mutations; `src/aeat/application`.
-- [ ] `W44.P217.S1299` - Remove stale aliases that bypass the canonical service for actor attribution for mutations; `src/aeat/entrypoints/cli`.
-- [ ] `W44.P217.S1300` - Migrate internal callers to the canonical service for actor attribution for mutations; `src/aeat/application`.
-- [ ] `W44.P217.S1301` - Remove stale fixtures and tests that encode duplicate behavior for actor attribution for mutations; `tests/application`.
-- [ ] `W44.P217.S1302` - Update boundary inventory entries that describe duplicate behavior for actor attribution for mutations; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W44.P217.S1297` - Audit duplicate implementations that overlap actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P217.S1298` - Delete duplicate backend branches that compete with actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P217.S1299` - Remove stale aliases that bypass the canonical service for actor attribution for mutations; `src/aeat/entrypoints/cli`.
+- [x] `W44.P217.S1300` - Migrate internal callers to the canonical service for actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P217.S1301` - Remove stale fixtures and tests that encode duplicate behavior for actor attribution for mutations; `tests/application`.
+- [x] `W44.P217.S1302` - Update boundary inventory entries that describe duplicate behavior for actor attribution for mutations; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W44.P218` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for actor attribution for mutations as required by `2026-05-13-cli-workflow-redesign-actor-attribution-adr`.
 
-- [ ] `W44.P218.S1303` - Delete compatibility shims that preserve rejected behavior for actor attribution for mutations; `src/aeat/application`.
-- [ ] `W44.P218.S1304` - Delete placeholder stubs that claim support for actor attribution for mutations; `src/aeat/application`.
-- [ ] `W44.P218.S1305` - Replace stubbed paths with real backend service calls for actor attribution for mutations; `src/aeat/application`.
-- [ ] `W44.P218.S1306` - Remove deprecated command spelling and help text for actor attribution for mutations; `src/aeat/entrypoints/cli`.
-- [ ] `W44.P218.S1307` - Remove tests that assert shim or stub behavior for actor attribution for mutations; `tests/application`.
-- [ ] `W44.P218.S1308` - Record the removed shim and stub surfaces for actor attribution for mutations; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W44.P218.S1303` - Delete compatibility shims that preserve rejected behavior for actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P218.S1304` - Delete placeholder stubs that claim support for actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P218.S1305` - Replace stubbed paths with real backend service calls for actor attribution for mutations; `src/aeat/application`.
+- [x] `W44.P218.S1306` - Remove deprecated command spelling and help text for actor attribution for mutations; `src/aeat/entrypoints/cli`.
+- [x] `W44.P218.S1307` - Remove tests that assert shim or stub behavior for actor attribution for mutations; `tests/application`.
+- [x] `W44.P218.S1308` - Record the removed shim and stub surfaces for actor attribution for mutations; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W44.P219` - real behavior verification
 
 This Phase delivers real behavior verification for actor attribution for mutations as required by `2026-05-13-cli-workflow-redesign-actor-attribution-adr`.
 
-- [ ] `W44.P219.S1309` - Add service contract tests for actor attribution for mutations; `tests/application`.
-- [ ] `W44.P219.S1310` - Add persistence or registry integration tests for actor attribution for mutations; `tests/application`.
-- [ ] `W44.P219.S1311` - Add negative tests proving rejected aliases do not reach actor attribution for mutations; `tests/entrypoints/cli`.
-- [ ] `W44.P219.S1312` - Add command behavior tests that exercise actor attribution for mutations through real services; `tests/entrypoints/cli`.
-- [ ] `W44.P219.S1313` - Add end-to-end workflow coverage for actor attribution for mutations; `tests`.
-- [ ] `W44.P219.S1314` - Run the targeted test slice for actor attribution for mutations without skips or xfails; `tests/application`.
+- [x] `W44.P219.S1309` - Add service contract tests for actor attribution for mutations; `tests/application`.
+- [x] `W44.P219.S1310` - Add persistence or registry integration tests for actor attribution for mutations; `tests/application`.
+- [x] `W44.P219.S1311` - Add negative tests proving rejected aliases do not reach actor attribution for mutations; `tests/entrypoints/cli`.
+- [x] `W44.P219.S1312` - Add command behavior tests that exercise actor attribution for mutations through real services; `tests/entrypoints/cli`.
+- [x] `W44.P219.S1313` - Add end-to-end workflow coverage for actor attribution for mutations; `tests`.
+- [x] `W44.P219.S1314` - Run the targeted test slice for actor attribution for mutations without skips or xfails; `tests/application`.
 
 ### Phase `W44.P220` - thin cli exposure
 
 This Phase delivers thin cli exposure for actor attribution for mutations as required by `2026-05-13-cli-workflow-redesign-actor-attribution-adr`.
 
-- [ ] `W44.P220.S1315` - Expose accepted command handlers for actor attribution for mutations under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W44.P220.S1316` - Keep argument parsing for actor attribution for mutations separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W44.P220.S1317` - Delegate actor attribution for mutations execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W44.P220.S1318` - Render actor attribution for mutations results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W44.P220.S1319` - Handle actor attribution for mutations failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W44.P220.S1320` - Validate help text for actor attribution for mutations uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W44.P220.S1315` - Expose accepted command handlers for actor attribution for mutations under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W44.P220.S1316` - Keep argument parsing for actor attribution for mutations separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W44.P220.S1317` - Delegate actor attribution for mutations execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W44.P220.S1318` - Render actor attribution for mutations results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W44.P220.S1319` - Handle actor attribution for mutations failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W44.P220.S1320` - Validate help text for actor attribution for mutations uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W45` - app modelo discard
 
@@ -2772,56 +2772,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-app-modelo-shape-adr`
 
 This Phase delivers backend implementation for app modelo command surface as required by `2026-05-12-cli-workflow-redesign-app-modelo-shape-adr`.
 
-- [ ] `W46.P226.S1351` - Map the `2026-05-12-cli-workflow-redesign-app-modelo-shape-adr` decision into non-CLI service ownership for app modelo command surface; `src/aeat/application/modelo`.
-- [ ] `W46.P226.S1352` - Implement Pydantic command and result contracts for app modelo command surface; `src/aeat/application/modelo`.
-- [ ] `W46.P226.S1353` - Wire application or domain services required by app modelo command surface; `src/aeat/application/modelo`.
-- [ ] `W46.P226.S1354` - Connect persistence, bucket events, registry data, or provider adapters required by app modelo command surface; `src/aeat/application/modelo`.
-- [ ] `W46.P226.S1355` - Route existing backend functionality into the canonical service for app modelo command surface; `src/aeat/application/modelo`.
-- [ ] `W46.P226.S1356` - Record service-level error codes and log fields for app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P226.S1351` - Map the `2026-05-12-cli-workflow-redesign-app-modelo-shape-adr` decision into non-CLI service ownership for app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P226.S1352` - Implement Pydantic command and result contracts for app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P226.S1353` - Wire application or domain services required by app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P226.S1354` - Connect persistence, bucket events, registry data, or provider adapters required by app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P226.S1355` - Route existing backend functionality into the canonical service for app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P226.S1356` - Record service-level error codes and log fields for app modelo command surface; `src/aeat/application/modelo`.
 
 ### Phase `W46.P227` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for app modelo command surface as required by `2026-05-12-cli-workflow-redesign-app-modelo-shape-adr`.
 
-- [ ] `W46.P227.S1357` - Audit duplicate implementations that overlap app modelo command surface; `src/aeat/application/modelo`.
-- [ ] `W46.P227.S1358` - Delete duplicate backend branches that compete with app modelo command surface; `src/aeat/application/modelo`.
-- [ ] `W46.P227.S1359` - Remove stale aliases that bypass the canonical service for app modelo command surface; `src/aeat/entrypoints/cli`.
-- [ ] `W46.P227.S1360` - Migrate internal callers to the canonical service for app modelo command surface; `src/aeat/application/modelo`.
-- [ ] `W46.P227.S1361` - Remove stale fixtures and tests that encode duplicate behavior for app modelo command surface; `tests/entrypoints/cli`.
-- [ ] `W46.P227.S1362` - Update boundary inventory entries that describe duplicate behavior for app modelo command surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W46.P227.S1357` - Audit duplicate implementations that overlap app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P227.S1358` - Delete duplicate backend branches that compete with app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P227.S1359` - Remove stale aliases that bypass the canonical service for app modelo command surface; `src/aeat/entrypoints/cli`.
+- [x] `W46.P227.S1360` - Migrate internal callers to the canonical service for app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P227.S1361` - Remove stale fixtures and tests that encode duplicate behavior for app modelo command surface; `tests/entrypoints/cli`.
+- [x] `W46.P227.S1362` - Update boundary inventory entries that describe duplicate behavior for app modelo command surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W46.P228` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for app modelo command surface as required by `2026-05-12-cli-workflow-redesign-app-modelo-shape-adr`.
 
-- [ ] `W46.P228.S1363` - Delete compatibility shims that preserve rejected behavior for app modelo command surface; `src/aeat/application/modelo`.
-- [ ] `W46.P228.S1364` - Delete placeholder stubs that claim support for app modelo command surface; `src/aeat/application/modelo`.
-- [ ] `W46.P228.S1365` - Replace stubbed paths with real backend service calls for app modelo command surface; `src/aeat/application/modelo`.
-- [ ] `W46.P228.S1366` - Remove deprecated command spelling and help text for app modelo command surface; `src/aeat/entrypoints/cli`.
-- [ ] `W46.P228.S1367` - Remove tests that assert shim or stub behavior for app modelo command surface; `tests/entrypoints/cli`.
-- [ ] `W46.P228.S1368` - Record the removed shim and stub surfaces for app modelo command surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W46.P228.S1363` - Delete compatibility shims that preserve rejected behavior for app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P228.S1364` - Delete placeholder stubs that claim support for app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P228.S1365` - Replace stubbed paths with real backend service calls for app modelo command surface; `src/aeat/application/modelo`.
+- [x] `W46.P228.S1366` - Remove deprecated command spelling and help text for app modelo command surface; `src/aeat/entrypoints/cli`.
+- [x] `W46.P228.S1367` - Remove tests that assert shim or stub behavior for app modelo command surface; `tests/entrypoints/cli`.
+- [x] `W46.P228.S1368` - Record the removed shim and stub surfaces for app modelo command surface; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W46.P229` - real behavior verification
 
 This Phase delivers real behavior verification for app modelo command surface as required by `2026-05-12-cli-workflow-redesign-app-modelo-shape-adr`.
 
-- [ ] `W46.P229.S1369` - Add service contract tests for app modelo command surface; `tests/entrypoints/cli`.
-- [ ] `W46.P229.S1370` - Add persistence or registry integration tests for app modelo command surface; `tests/entrypoints/cli`.
-- [ ] `W46.P229.S1371` - Add negative tests proving rejected aliases do not reach app modelo command surface; `tests/entrypoints/cli`.
-- [ ] `W46.P229.S1372` - Add command behavior tests that exercise app modelo command surface through real services; `tests/entrypoints/cli`.
-- [ ] `W46.P229.S1373` - Add end-to-end workflow coverage for app modelo command surface; `tests`.
-- [ ] `W46.P229.S1374` - Run the targeted test slice for app modelo command surface without skips or xfails; `tests/entrypoints/cli`.
+- [x] `W46.P229.S1369` - Add service contract tests for app modelo command surface; `tests/entrypoints/cli`.
+- [x] `W46.P229.S1370` - Add persistence or registry integration tests for app modelo command surface; `tests/entrypoints/cli`.
+- [x] `W46.P229.S1371` - Add negative tests proving rejected aliases do not reach app modelo command surface; `tests/entrypoints/cli`.
+- [x] `W46.P229.S1372` - Add command behavior tests that exercise app modelo command surface through real services; `tests/entrypoints/cli`.
+- [x] `W46.P229.S1373` - Add end-to-end workflow coverage for app modelo command surface; `tests`.
+- [x] `W46.P229.S1374` - Run the targeted test slice for app modelo command surface without skips or xfails; `tests/entrypoints/cli`.
 
 ### Phase `W46.P230` - thin cli exposure
 
 This Phase delivers thin cli exposure for app modelo command surface as required by `2026-05-12-cli-workflow-redesign-app-modelo-shape-adr`.
 
-- [ ] `W46.P230.S1375` - Expose accepted command handlers for app modelo command surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W46.P230.S1376` - Keep argument parsing for app modelo command surface separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W46.P230.S1377` - Delegate app modelo command surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W46.P230.S1378` - Render app modelo command surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W46.P230.S1379` - Handle app modelo command surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W46.P230.S1380` - Validate help text for app modelo command surface uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W46.P230.S1375` - Expose accepted command handlers for app modelo command surface under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W46.P230.S1376` - Keep argument parsing for app modelo command surface separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W46.P230.S1377` - Delegate app modelo command surface execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W46.P230.S1378` - Render app modelo command surface results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W46.P230.S1379` - Handle app modelo command surface failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W46.P230.S1380` - Validate help text for app modelo command surface uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W47` - app modelo bindings shape
 
@@ -4777,7 +4777,7 @@ Closes apex §12 ledger row R21. The registry domain layer still admits bare inv
 
 Enforce four-source taxonomy and ship missing aggregators.
 
-- [ ] `W84.P405.S2304` - Read the per-modelo-aggregation-pipeline, invoice-domain-decoupling ADRs, apex §2 source-kind taxonomy, and identify every binding declaration that still admits bare invoice; `.vault/adr`.
+- [x] `W84.P405.S2304` - Read the per-modelo-aggregation-pipeline, invoice-domain-decoupling ADRs, apex §2 source-kind taxonomy, and identify every binding declaration that still admits bare invoice; `.vault/adr`.
 - [x] `W84.P405.S2305` - Reject bare invoice source-kind at the registry domain layer and enforce one of the four canonical source kinds; `src/aeat/domain/calculations/registry`.
 - [ ] `W84.P405.S2306` - Implement retenciones aggregators for 111, 115, 123, 180, 190, 193 consuming explicit source kinds; `src/aeat/application/aggregation`.
 - [ ] `W84.P405.S2307` - Implement 347 and 349 counterpart aggregators using ledger and business-operation source kinds with GROI and NIF-IVA gating for 349; `src/aeat/application/aggregation`.
@@ -4787,7 +4787,7 @@ Enforce four-source taxonomy and ship missing aggregators.
 
 Audit registry TOMLs and fix test collection errors.
 
-- [ ] `W84.P406.S2309` - Audit every modelo registry TOML for bare invoice source declarations and migrate to canonical source kinds; `registry/aeat/modelos`.
+- [x] `W84.P406.S2309` - Audit every modelo registry TOML for bare invoice source declarations and migrate to canonical source kinds; `registry/aeat/modelos`.
 - [ ] `W84.P406.S2310` - Remove any shadow aggregation paths that bypass the four-source taxonomy; `src/aeat/application/aggregation`.
 - [ ] `W84.P406.S2311` - Fix test collection errors in test_renta_ledger files per audit observation; `src/aeat/application/aggregation`.
 - [ ] `W84.P406.S2312` - Confirm _renta_ledger and _iva_ledger aggregators use only canonical source kinds; `src/aeat/application/aggregation`.
@@ -4799,7 +4799,7 @@ Remove aggregation stubs and wire observation models.
 
 - [ ] `W84.P407.S2314` - Remove any aggregation stub that returned empty results for retenciones, 347, 349, or 720; `src/aeat/application/aggregation`.
 - [ ] `W84.P407.S2315` - Wire renta-ledger-style aggregation observation models for retenciones, counterpart, assets pipelines; `src/aeat/application/aggregation`.
-- [ ] `W84.P407.S2316` - Ensure rejection at registry domain layer emits a typed error naming the four canonical source-kind names; `src/aeat/domain/calculations/registry`.
+- [x] `W84.P407.S2316` - Ensure rejection at registry domain layer emits a typed error naming the four canonical source-kind names; `src/aeat/domain/calculations/registry`.
 - [ ] `W84.P407.S2317` - Update help text and i18n where source-kind labels appear; `src/aeat/core/i18n`.
 - [ ] `W84.P407.S2318` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
@@ -4807,7 +4807,7 @@ Remove aggregation stubs and wire observation models.
 
 Test registry rejection, aggregator pipelines, end-to-end calculation.
 
-- [ ] `W84.P408.S2319` - Add registry-load tests asserting bare invoice source declarations refuse to load with a typed error naming the four canonical source kinds; `tests/domain/calculations/registry`.
+- [x] `W84.P408.S2319` - Add registry-load tests asserting bare invoice source declarations refuse to load with a typed error naming the four canonical source kinds; `tests/domain/calculations/registry`.
 - [ ] `W84.P408.S2320` - Add aggregator tests for retenciones, counterpart, assets pipelines; `tests/application/aggregation`.
 - [ ] `W84.P408.S2321` - Add end-to-end tests feeding canonical source-kind facts through pipeline to calculate revision asserting correct casilla values per workbook parity refs; `tests/application/aggregation`.
 - [x] `W84.P408.S2322` - Confirm test collection of test_renta_ledger files passes; `tests/application/aggregation`.
