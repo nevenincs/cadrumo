@@ -1564,7 +1564,10 @@ def _as_of(raw: str | None) -> date | None:
 
 audit_app = typer.Typer(
     name="audit",
-    help="Evidence bundle audit verbs (view/check/export/replay).",
+    help=tr(
+        "cli.app.modelo.audit.group_help",
+        default="Evidence bundle audit verbs (view/check/export/replay).",
+    ),
     no_args_is_help=True,
 )
 app.add_typer(audit_app, name="audit")
@@ -1586,10 +1589,19 @@ def _audit_bucket_id() -> str:
         raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
 
 
-@audit_app.command("view", help="Render an evidence bundle's manifest and referenced records.")
+@audit_app.command(
+    "view",
+    help=tr(
+        "cli.app.modelo.audit.view_help",
+        default="Render an evidence bundle's manifest and referenced records.",
+    ),
+)
 def audit_show(
     ctx: typer.Context,
-    bundle_id: Annotated[str, typer.Argument(help="Evidence bundle id.")],
+    bundle_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
+    ],
 ) -> None:
     bucket_id = _audit_bucket_id()
     bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
@@ -1605,10 +1617,19 @@ def audit_show(
     _emit(ctx, payload, lines)
 
 
-@audit_app.command("check", help="Re-verify the evidence bundle's integrity (report-only).")
+@audit_app.command(
+    "check",
+    help=tr(
+        "cli.app.modelo.audit.check_help",
+        default="Re-verify the evidence bundle's integrity (report-only).",
+    ),
+)
 def audit_check(
     ctx: typer.Context,
-    bundle_id: Annotated[str, typer.Argument(help="Evidence bundle id.")],
+    bundle_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
+    ],
 ) -> None:
     bucket_id = _audit_bucket_id()
     report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
@@ -1624,14 +1645,35 @@ def audit_check(
     _emit(ctx, payload, lines)
 
 
-@audit_app.command("export", help="Write a ZIP archive of the bundle (manifest emitted last).")
+@audit_app.command(
+    "export",
+    help=tr(
+        "cli.app.modelo.audit.export_help",
+        default="Write a ZIP archive of the bundle (manifest emitted last).",
+    ),
+)
 def audit_export(
     ctx: typer.Context,
-    bundle_id: Annotated[str, typer.Argument(help="Evidence bundle id.")],
-    output: Annotated[Path, typer.Option("--output", help="Output ZIP path.")],
+    bundle_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
+    ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            help=tr("cli.app.modelo.audit.output_help", default="Output ZIP path."),
+        ),
+    ],
     force_incomplete: Annotated[
         bool,
-        typer.Option("--force-incomplete", help="Allow export when verification is incomplete."),
+        typer.Option(
+            "--force-incomplete",
+            help=tr(
+                "cli.app.modelo.audit.force_incomplete_help",
+                default="Allow export when verification is incomplete.",
+            ),
+        ),
     ] = False,
 ) -> None:
     bucket_id = _audit_bucket_id()
@@ -1651,10 +1693,19 @@ def audit_export(
     _emit(ctx, payload, lines)
 
 
-@audit_app.command("replay", help="Replay the bundle's evidence case (never contacts AEAT).")
+@audit_app.command(
+    "replay",
+    help=tr(
+        "cli.app.modelo.audit.replay_help",
+        default="Replay the bundle's evidence case (never contacts AEAT).",
+    ),
+)
 def audit_replay(
     ctx: typer.Context,
-    bundle_id: Annotated[str, typer.Argument(help="Evidence bundle id.")],
+    bundle_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
+    ],
 ) -> None:
     bucket_id = _audit_bucket_id()
     report = _evidence_bundle_service().replay(bucket_id=bucket_id, bundle_id=bundle_id)
@@ -1682,9 +1733,30 @@ def audit_replay(
 )
 def modelo_history(
     ctx: typer.Context,
-    modelo: Annotated[str, typer.Option("--modelo", help="Modelo code (e.g. 100, 303).")],
-    year: Annotated[int | None, typer.Option("--year", help="Optional filing year filter.")] = None,
-    period: Annotated[str | None, typer.Option("--period", help="Optional period filter (e.g. Q1, annual).")] = None,
+    modelo: Annotated[
+        str,
+        typer.Option(
+            "--modelo",
+            help=tr("cli.app.modelo.history.modelo_help", default="Modelo code (e.g. 100, 303)."),
+        ),
+    ],
+    year: Annotated[
+        int | None,
+        typer.Option(
+            "--year",
+            help=tr("cli.app.modelo.history.year_help", default="Optional filing year filter."),
+        ),
+    ] = None,
+    period: Annotated[
+        str | None,
+        typer.Option(
+            "--period",
+            help=tr(
+                "cli.app.modelo.history.period_help",
+                default="Optional period filter (e.g. Q1, annual).",
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
 
