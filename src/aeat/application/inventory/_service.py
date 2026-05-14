@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.config import Settings
+from ...domain.buckets import (
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
+    append_bucket_event,
+)
 from ...domain.profile.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
@@ -64,6 +70,68 @@ class InventoryValuationPreview(BaseModel):
     cogs: Decimal = Field(ge=Decimal("0"))
 
 
+class InventoryLedgerResult(BaseModel):
+    """Return record from a mutating inventory verb — ledger plus emitted event id."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    ledger: InventoryLedger
+    bucket_event_ids: tuple[str, ...] = ()
+
+
+class InventoryValuationPreviewResult(BaseModel):
+    """Return record from valuation_preview — preview plus emitted event id."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    preview: InventoryValuationPreview
+    bucket_event_ids: tuple[str, ...] = ()
+
+
+_INVENTORY_EVENT_PAYLOAD_VERSION = 1
+
+
+def _now_utc() -> datetime:
+    return datetime.now(tz=UTC)
+
+
+def _emit_inventory_event(
+    *,
+    event_repository: BucketEventHistoryRepository,
+    bucket_id: str,
+    event_type: BucketEventType,
+    actividad_id: str,
+    year: int,
+    actor: str,
+    occurred_at: datetime,
+    payload: dict[str, str],
+) -> str:
+    from ...domain.buckets._event import BucketEvent, derive_bucket_event_id
+
+    object_id = f"{actividad_id}:{year}"
+    event = BucketEvent(
+        event_id=derive_bucket_event_id(
+            bucket_id=bucket_id,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            actor=actor,
+            object_type=BucketEventObjectType.LEDGER_CATALOGUE,
+            object_id=object_id,
+            payload=payload,
+        ),
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.LEDGER_CATALOGUE,
+        object_id=object_id,
+        payload_version=_INVENTORY_EVENT_PAYLOAD_VERSION,
+        payload=payload,
+    )
+    event_repository.save(append_bucket_event(event_repository.load(), event))
+    return event.event_id
+
+
 def _storage_path(settings: Settings, bucket_id: str) -> Path:
     root = settings.aeat_ledgers_dir / "inventory"
     root.mkdir(parents=True, exist_ok=True)
@@ -101,8 +169,13 @@ def _replace_ledger(document: InventoryLedgerDocument, ledger: InventoryLedger) 
 class InventoryService:
     """Bucket-scoped CRUD over per-actividad inventory ledgers."""
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        bucket_event_repository: BucketEventHistoryRepository | None = None,
+    ) -> None:
         self._settings = settings or Settings()
+        self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
 
     def create(
         self,
@@ -112,7 +185,8 @@ class InventoryService:
         year: int,
         valuation_method: str,
         opening_stock: Decimal = Decimal("0"),
-    ) -> InventoryLedger:
+        actor: str = "cli",
+    ) -> InventoryLedgerResult:
         """Create a fresh ledger for one actividad/year. Rejects duplicates."""
         try:
             method = parse_valuation_method(valuation_method)
@@ -135,7 +209,18 @@ class InventoryService:
         )
         document = InventoryLedgerDocument(ledgers=(*document.ledgers, ledger))
         _save_document(self._settings, bucket_id, document)
-        return ledger
+        now = _now_utc()
+        event_id = _emit_inventory_event(
+            event_repository=self._event_repository,
+            bucket_id=bucket_id,
+            event_type=BucketEventType.LEDGER_INVENTORY_CREATED,
+            actividad_id=actividad_id,
+            year=year,
+            actor=actor,
+            occurred_at=now,
+            payload={"valuation_method": method.value},
+        )
+        return InventoryLedgerResult(ledger=ledger, bucket_event_ids=(event_id,))
 
     def list_all(self, *, bucket_id: str) -> tuple[InventoryActividadSummary, ...]:
         document = _load_document(self._settings, bucket_id)
@@ -167,7 +252,8 @@ class InventoryService:
         actividad_id: str,
         year: int,
         movement: InventoryMovementCommand,
-    ) -> InventoryLedger:
+        actor: str = "cli",
+    ) -> InventoryLedgerResult:
         """Append a movement to the named ledger; refuses duplicate movement_id."""
         ledger = self.show(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
         if any(m.movement_id == movement.movement_id for m in ledger.period_movements):
@@ -190,7 +276,18 @@ class InventoryService:
         document = _load_document(self._settings, bucket_id)
         document = _replace_ledger(document, updated)
         _save_document(self._settings, bucket_id, document)
-        return updated
+        now = _now_utc()
+        event_id = _emit_inventory_event(
+            event_repository=self._event_repository,
+            bucket_id=bucket_id,
+            event_type=BucketEventType.LEDGER_INVENTORY_MOVEMENT_ADDED,
+            actividad_id=actividad_id,
+            year=year,
+            actor=actor,
+            occurred_at=now,
+            payload={"movement_id": movement.movement_id, "kind": movement.kind.value},
+        )
+        return InventoryLedgerResult(ledger=updated, bucket_event_ids=(event_id,))
 
     def valuation_preview(
         self,
@@ -198,19 +295,39 @@ class InventoryService:
         bucket_id: str,
         actividad_id: str,
         year: int,
-    ) -> InventoryValuationPreview:
+        actor: str = "cli",
+    ) -> InventoryValuationPreviewResult:
         """Run the domain-layer valuation engine and report closing stock + COGS."""
         ledger = self.show(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
         result: InventoryValuationResult = compute_inventory_valuation(ledger)
-        return InventoryValuationPreview(
+        preview = InventoryValuationPreview(
             actividad_id=ledger.actividad_id,
             year=ledger.year,
             valuation_method=ledger.valuation_method,
             closing_stock=result.closing_value,
             cogs=result.cogs_value,
         )
+        now = _now_utc()
+        event_id = _emit_inventory_event(
+            event_repository=self._event_repository,
+            bucket_id=bucket_id,
+            event_type=BucketEventType.LEDGER_INVENTORY_VALUATION_PREVIEWED,
+            actividad_id=actividad_id,
+            year=year,
+            actor=actor,
+            occurred_at=now,
+            payload={"valuation_method": ledger.valuation_method.value},
+        )
+        return InventoryValuationPreviewResult(preview=preview, bucket_event_ids=(event_id,))
 
-    def remove(self, *, bucket_id: str, actividad_id: str, year: int) -> InventoryLedger:
+    def remove(
+        self,
+        *,
+        bucket_id: str,
+        actividad_id: str,
+        year: int,
+        actor: str = "cli",
+    ) -> InventoryLedgerResult:
         """Drop the entire ledger for actividad/year. Idempotent on absence."""
         document = _load_document(self._settings, bucket_id)
         ledger = _find_ledger(document, actividad_id, year)
@@ -227,12 +344,25 @@ class InventoryService:
             ),
         )
         _save_document(self._settings, bucket_id, document)
-        return ledger
+        now = _now_utc()
+        event_id = _emit_inventory_event(
+            event_repository=self._event_repository,
+            bucket_id=bucket_id,
+            event_type=BucketEventType.LEDGER_INVENTORY_REMOVED,
+            actividad_id=actividad_id,
+            year=year,
+            actor=actor,
+            occurred_at=now,
+            payload={"actividad_id": actividad_id, "year": str(year)},
+        )
+        return InventoryLedgerResult(ledger=ledger, bucket_event_ids=(event_id,))
 
 
 __all__ = [
     "InventoryActividadSummary",
+    "InventoryLedgerResult",
     "InventoryMovementCommand",
     "InventoryService",
     "InventoryValuationPreview",
+    "InventoryValuationPreviewResult",
 ]
