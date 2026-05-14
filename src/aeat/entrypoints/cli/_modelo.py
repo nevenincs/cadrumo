@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
+from contextlib import suppress
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -10,6 +12,10 @@ from typing import Annotated, Any, Literal
 
 import typer
 
+from ...application.aggregation import (
+    PerModeloAggregationCommand,
+    aggregate_per_modelo,
+)
 from ...application.modelo import (
     AmendmentEvidenceMissingError,
     AmendmentTargetStateError,
@@ -62,7 +68,7 @@ def _resolve_default_actor() -> str:
     fallback label keeps the audit record populated rather than raising.
     """
 
-    try:
+    with suppress(Exception):
         from ...application.workflow._persistence import workflow_state_repository
 
         state = workflow_state_repository().load()
@@ -71,8 +77,6 @@ def _resolve_default_actor() -> str:
             return record.display_name
         if state.active_profile:
             return state.active_profile
-    except Exception:
-        pass
     return "operator"
 
 
@@ -280,11 +284,7 @@ def bindings_list(
     """
 
     service = _service()
-    targets: tuple[str, ...]
-    if modelo is None:
-        targets = tuple(str(m.id) for m in service._authority.modelos)
-    else:
-        targets = (modelo,)
+    targets = tuple(str(m.id) for m in service._authority.modelos) if modelo is None else (modelo,)
     scoped_period = (
         f"{year}-{period}" if year is not None and period is not None and not period.startswith(str(year)) else period
     )
@@ -472,6 +472,95 @@ def formulas(
     )
 
 
+def _parse_json_object_options(values: list[str] | None, *, flag: str) -> tuple[dict[str, object], ...]:
+    parsed: list[dict[str, object]] = []
+    for raw in values or ():
+        try:
+            value = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise typer.BadParameter(f"{flag} must be a JSON object; invalid JSON at byte {exc.pos}") from exc
+        if not isinstance(value, dict):
+            raise typer.BadParameter(f"{flag} must be a JSON object")
+        parsed.append(value)
+    return tuple(parsed)
+
+
+@app.command(
+    "aggregate",
+    help=tr(
+        "cli.app.modelo.aggregate_help",
+        default=(
+            "Run the backend per-modelo aggregation service from explicit canonical observations "
+            "(ledger_transaction, purchase_invoice_evidence, payable_invoice, collectible_invoice)."
+        ),
+    ),
+)
+def aggregate_modelo(
+    ctx: typer.Context,
+    modelo: Annotated[str, typer.Option("--modelo", help=tr("cli.app.modelo.aggregate.modelo_help"))],
+    period: Annotated[str, typer.Option("--period", help=tr("cli.app.modelo.aggregate.period_help"))],
+    retencion_observation: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--retencion-observation",
+            help=tr("cli.app.modelo.aggregate.retencion_observation_help"),
+        ),
+    ] = None,
+    counterpart_observation: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--counterpart-observation",
+            help=tr("cli.app.modelo.aggregate.counterpart_observation_help"),
+        ),
+    ] = None,
+    foreign_asset_observation: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--foreign-asset-observation",
+            help=tr("cli.app.modelo.aggregate.foreign_asset_observation_help"),
+        ),
+    ] = None,
+) -> None:
+    """Delegate per-modelo aggregation execution to the backend service."""
+
+    command = PerModeloAggregationCommand.model_validate_json(
+        json.dumps(
+            {
+                "modelo": modelo,
+                "period": period,
+                "retencion_observations": _parse_json_object_options(
+                    retencion_observation,
+                    flag="--retencion-observation",
+                ),
+                "counterpart_observations": _parse_json_object_options(
+                    counterpart_observation,
+                    flag="--counterpart-observation",
+                ),
+                "foreign_asset_observations": _parse_json_object_options(
+                    foreign_asset_observation,
+                    flag="--foreign-asset-observation",
+                ),
+            }
+        )
+    )
+    result = aggregate_per_modelo(command)
+    payload = {
+        "operation": "modelo.aggregate",
+        **result.model_dump(mode="json"),
+    }
+    source_kinds = ", ".join(source_kind.value for source_kind in result.source_kinds) or "-"
+    lines = [
+        "operation\tmodelo.aggregate",
+        f"modelo\t{result.modelo}",
+        f"period\t{result.period}",
+        f"provider\t{result.provider.value}",
+        f"observation_count\t{result.log_fields.observation_count}",
+        f"source_kinds\t{source_kinds}",
+        f"result_row_count\t{result.log_fields.result_row_count}",
+    ]
+    _emit(ctx, payload, lines)
+
+
 work_app = typer.Typer(
     name="work",
     help=tr("cli.app.modelo.work.app_help"),
@@ -625,7 +714,7 @@ def work_status(
         typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
     ],
 ) -> None:
-    """Show one work unit's metadata."""
+    """View one work unit's metadata."""
 
     try:
         unit = get_work_unit(work_unit_id)
@@ -824,9 +913,9 @@ def work_calculate(
     borrador_snapshot_id: Annotated[
         str | None,
         typer.Option(
-            "--borrador-snapshot-id",
+            "--borrador",
             help=tr(
-                "cli.app.modelo.work.borrador_snapshot_id_help",
+                "cli.app.modelo.work.borrador_help",
                 default=(
                     "Modelo 100 borrador snapshot id (full or unambiguous "
                     "prefix). Snapshot binding values flow into the calculation "
@@ -1321,7 +1410,7 @@ def verification_report_list(
     _emit(ctx, payload, lines)
 
 
-@verification_report_app.command("show", help=tr("cli.app.modelo.verification_report.show_help"))
+@verification_report_app.command("view", help=tr("cli.app.modelo.verification_report.view_help"))
 def verification_report_show(
     ctx: typer.Context,
     verification_report_id: Annotated[
@@ -1329,7 +1418,7 @@ def verification_report_show(
         typer.Argument(help=tr("cli.app.modelo.verification_report.verification_report_id_help")),
     ],
 ) -> None:
-    """Show one verification report by id."""
+    """View one verification report by id."""
 
     try:
         report = get_verification_report(verification_report_id)
@@ -1344,7 +1433,7 @@ def verification_report_show(
     _emit(ctx, payload, lines)
 
 
-@filing_record_app.command("show", help=tr("cli.app.modelo.filing_record.show_help"))
+@filing_record_app.command("view", help=tr("cli.app.modelo.filing_record.view_help"))
 def filing_record_show(
     ctx: typer.Context,
     filing_record_id: Annotated[
@@ -1352,7 +1441,7 @@ def filing_record_show(
         typer.Argument(help=tr("cli.app.modelo.filing_record.filing_record_id_help")),
     ],
 ) -> None:
-    """Show one filing record by id."""
+    """View one filing record by id."""
 
     try:
         record = get_filing_record(filing_record_id)
@@ -1475,7 +1564,7 @@ def _as_of(raw: str | None) -> date | None:
 
 audit_app = typer.Typer(
     name="audit",
-    help="Evidence bundle audit verbs (show/check/export/replay).",
+    help="Evidence bundle audit verbs (view/check/export/replay).",
     no_args_is_help=True,
 )
 app.add_typer(audit_app, name="audit")
@@ -1497,7 +1586,7 @@ def _audit_bucket_id() -> str:
         raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
 
 
-@audit_app.command("show", help="Render an evidence bundle's manifest and referenced records.")
+@audit_app.command("view", help="Render an evidence bundle's manifest and referenced records.")
 def audit_show(
     ctx: typer.Context,
     bundle_id: Annotated[str, typer.Argument(help="Evidence bundle id.")],

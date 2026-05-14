@@ -43,5 +43,5 @@ def test_notifications_list_is_empty_on_fresh_bucket(cli_runner: CliRunner) -> N
 
 
 def test_notifications_show_refuses_unknown_snapshot(cli_runner: CliRunner) -> None:
-    result = cli_runner.invoke(notifications_app, ["show", "no-such-snapshot"])
+    result = cli_runner.invoke(notifications_app, ["view", "no-such-snapshot"])
     assert result.exit_code != 0

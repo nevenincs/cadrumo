@@ -60,6 +60,15 @@ cli:
   app:
     live:
       app_help: Csak olvasható élő AEAT megfigyelési parancsok
+      borrador:
+        app_help: Modelo 100 borrador snapshotok
+        filing_year_help: Adóév (pl. 2024)
+        latest_help: A legutóbbi aktív snapshot megjelenítése egy adóévre
+        list_help: Rögzített Modelo 100 borrador snapshotok listázása
+        modelo_100_help: Modelo 100 borrador snapshot parancsok
+        view_help: Egy Modelo 100 borrador snapshot megjelenítése
+        snapshot_id_help: Snapshot azonosító (vagy egyértelmű prefix)
+        state_help: 'Snapshot állapotszűrő: active, superseded, discarded vagy all'
       expediente_help: AEAT expediente azonosító
       filed:
         capture_help: Benyújtott bevallási adatok rögzítése az AEAT-ból
@@ -116,7 +125,7 @@ cli:
         include_superseded_help: A felülírt filing recordokat is mutassa (alapértelmezetten
           kihagyva)
         list_help: Regisztrált filing recordok listázása
-        show_help: Egy filing record megjelenítése azonosító alapján
+        view_help: Egy filing record megjelenítése azonosító alapján
       formulas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
@@ -127,7 +136,7 @@ cli:
         app_help: Rögzített verifikációs jelentések megtekintése
         list_help: Verifikációs jelentések listázása, opcionálisan egy kalkulációs
           revízió szerint szűrve
-        show_help: Egy verifikációs jelentés megjelenítése azonosító alapján
+        view_help: Egy verifikációs jelentés megjelenítése azonosító alapján
         verification_report_id_help: Egy verifikációs jelentés stabil 64-karakteres
           SHA-256 azonosítója
       work:
@@ -138,6 +147,9 @@ cli:
         amendment_kind_help: Helyesbítés jogi típusa (complementaria vagy sustitutiva)
         amendment_reason_help: Helyesbítés szabadszöveges oka (kezelői auditnyom)
         app_help: Modell-munkaegységek életciklusának kezelése
+        borrador_help: Modelo 100 borrador snapshot azonosító (teljes vagy egyértelmű
+          prefix). A snapshot binding értékei csak aeat_prefilled jelölésű bindingokhoz
+          használhatók; a kezelő --binding felülírásai mindig elsőbbséget élveznek.
         bucket_id_help: A munkaegységet tartalmazó bucket azonosítója
         calculate_help: Új draft kalkulációs revízió rögzítése a munkaegységhez
         calculation_revision_id_help: Egy kalkulációs revízió 64-karakteres SHA-256
@@ -313,7 +325,7 @@ cli:
       remove_requires_yes: A törlés destruktív művelet. Futtasd újra 'aeat config
         profile remove %{name} --yes' megerősítéshez.
       remove_yes_help: A sírkövezés művelet kifejezett megerősítése
-      show_help: Egy profil tényeinek megjelenítése (alapértelmezetten az aktív profil)
+      view_help: Egy profil tényeinek megjelenítése (alapértelmezetten az aktív profil)
       show_name_help: A megjelenítendő profil azonosítója (alapértelmezetten az aktív
         profil)
       unknown_profile: 'Ismeretlen profil: %{name}. Futtasd: ''aeat config profile
@@ -605,7 +617,7 @@ cli:
       articulo_help: Megjelenítendő konkrét cikk (pl. 91.Uno.2.1º)
       list_help: A jogi korpuszban rögzített jogszabályok listázása
       normative_id_help: Stabil jogszabály-azonosító (pl. ley-37-1992)
-      show_help: Egy jogszabály és opcionálisan az egyik cikke megjelenítése
+      view_help: Egy jogszabály és opcionálisan az egyik cikke megjelenítése
       tag_help: Szűrés adónemtag szerint (pl. 'irpf', 'iva')
       verify_help: Jogi korpusz integritásának ellenőrzése
     inspect_help: A nyilvántartás állapotának és hivatkozásainak ellenőrzése
@@ -618,7 +630,7 @@ cli:
       part_help: Kézikönyvkötet (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: Egy kézikönyvben kódolt szabályok listázása
       section_help: Opcionális szakasz-azonosító megjelenítéshez
-      show_help: Kézikönyv struktúrájának és opcionálisan egy szakaszának megjelenítése
+      view_help: Kézikönyv struktúrájának és opcionálisan egy szakaszának megjelenítése
       verify_help: Kézikönyv integritásának ellenőrzése a szerződésével szemben
       year_help: A kézikönyv adóéve (pl. 2024)
     metrics:

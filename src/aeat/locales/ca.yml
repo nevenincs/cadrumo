@@ -60,6 +60,15 @@ cli:
   app:
     live:
       app_help: Ordres d'observació AEAT en viu de només lectura
+      borrador:
+        app_help: Snapshots de borrador del model 100
+        filing_year_help: Exercici fiscal (p. ex. 2024)
+        latest_help: Mostrar el snapshot actiu més recent d'un exercici fiscal
+        list_help: Llistar snapshots persistits del borrador del model 100
+        modelo_100_help: Ordres de snapshots del borrador del model 100
+        view_help: Mostrar un snapshot del borrador del model 100
+        snapshot_id_help: Id del snapshot (o prefix no ambigu)
+        state_help: 'Filtre d''estat del snapshot: active, superseded, discarded o all'
       expediente_help: Identificador d'expedient AEAT
       filed:
         capture_help: Capturar dades de declaracions presentades des d'AEAT
@@ -119,7 +128,7 @@ cli:
         include_superseded_help: Incloure els filing records superats (exclosos per
           defecte)
         list_help: Llistar els filing records registrats
-        show_help: Mostrar un filing record per id
+        view_help: Mostrar un filing record per id
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
@@ -130,7 +139,7 @@ cli:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per
           revisió de càlcul
-        show_help: Mostrar un informe de verificació per id
+        view_help: Mostrar un informe de verificació per id
         verification_report_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'un informe de verificació
       work:
@@ -142,6 +151,10 @@ cli:
         amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
           tributari
+        borrador_help: Id del snapshot de borrador del model 100 (complet o prefix
+          no ambigu). Els seus valors de binding s'usen només per a bindings marcats
+          aeat_prefilled; les sobrescriptures --binding de l'operador sempre tenen
+          prioritat.
         bucket_id_help: Identificador del bucket al qual pertany la unitat de treball
         calculate_help: Persistir una nova revisió draft de càlcul per a la unitat
           de treball
@@ -319,7 +332,7 @@ cli:
       remove_requires_yes: La retirada és destructiva. Torna a executar 'aeat config
         profile remove %{name} --yes' per confirmar.
       remove_yes_help: Confirma explícitament l''operació de retirada
-      show_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
+      view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
       show_name_help: Id del perfil a mostrar (per defecte el perfil actiu)
       unknown_profile: 'Perfil desconegut: %{name}. Executa ''aeat config profile
         list'' per veure els perfils registrats.'
@@ -613,7 +626,7 @@ cli:
       articulo_help: Article concret a mostrar (p. ex. 91.U.2.1r)
       list_help: Llistar les normatives registrades al corpus legal
       normative_id_help: Id estable de la normativa (p. ex. ley-37-1992)
-      show_help: Mostrar una normativa i, opcionalment, un dels seus articles
+      view_help: Mostrar una normativa i, opcionalment, un dels seus articles
       tag_help: Filtrar per etiqueta de domini fiscal (p. ex. 'irpf', 'iva')
       verify_help: Verificar la integritat del corpus normatiu
     inspect_help: Inspeccionar l'estat del registre i les referències
@@ -626,7 +639,7 @@ cli:
       part_help: Volum del manual (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: Llistar les regles codificades en un manual
       section_help: Identificador opcional de secció a mostrar
-      show_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
+      view_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
       verify_help: Verificar la integritat del manual contra el seu contracte
       year_help: Any fiscal del manual (p. ex. 2024)
     metrics:

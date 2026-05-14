@@ -64,7 +64,7 @@ def list_citations_cmd(
     _emit(ctx, report, _citation_list_lines(report))
 
 
-@citations_app.command("show", help=tr("cli.registry.citations.show_help"))
+@citations_app.command("view", help=tr("cli.registry.citations.view_help"))
 def show_citation_cmd(
     ctx: typer.Context,
     normative_id: Annotated[
@@ -76,7 +76,7 @@ def show_citation_cmd(
         typer.Option("--articulo", help=tr("cli.registry.citations.articulo_help")),
     ] = None,
 ) -> None:
-    """Show one normative and, optionally, one cited article."""
+    """View one normative and, optionally, one cited article."""
 
     report = show_registry_citation(RegistryCitationShowCommand(normative_id=normative_id, articulo=articulo))
     _emit(ctx, report, _citation_show_lines(report))
@@ -110,7 +110,7 @@ def list_manuals_cmd(
     _emit(ctx, report, _manuals_list_lines(report))
 
 
-@manuals_app.command("show", help=tr("cli.registry.manuals.show_help"))
+@manuals_app.command("view", help=tr("cli.registry.manuals.view_help"))
 def show_manual_cmd(
     ctx: typer.Context,
     manual: Annotated[
@@ -130,7 +130,7 @@ def show_manual_cmd(
         typer.Option("--section", help=tr("cli.registry.manuals.section_help")),
     ] = None,
 ) -> None:
-    """Show one manual's metadata and, optionally, one section by id."""
+    """View one manual's metadata and, optionally, one section by id."""
 
     report = show_registry_manual(RegistryManualShowCommand(manual=manual, year=year, part=part, section=section))
     _emit(ctx, report, _manual_show_lines(report))
