@@ -2,6 +2,13 @@
 
 from __future__ import annotations
 
+from ._evidence import (
+    PurchaseInvoiceEvidence,
+    PurchaseInvoiceEvidenceInputError,
+    PurchaseInvoiceEvidenceNotFoundError,
+    PurchaseInvoiceEvidencePatch,
+    PurchaseInvoiceEvidenceService,
+)
 from ._id_resolution import (
     MINIMUM_DISPLAY_ID_WIDTH,
     compute_display_id_width,
@@ -82,6 +89,11 @@ __all__ = [
     "ManualLedgerTransactionCommand",
     "ManualLedgerTransactionPatch",
     "ManualLedgerTransactionResult",
+    "PurchaseInvoiceEvidence",
+    "PurchaseInvoiceEvidenceInputError",
+    "PurchaseInvoiceEvidenceNotFoundError",
+    "PurchaseInvoiceEvidencePatch",
+    "PurchaseInvoiceEvidenceService",
     "archive_manual_transaction",
     "attach_manual_transaction_evidence",
     "compute_display_id_width",

@@ -246,6 +246,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.ledger._evidence.PurchaseInvoiceEvidenceInputError",
+        ErrorCode(
+            code="REFUSED_LEDGER_EVIDENCE_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_evidence_input",
+            default_suggestion="aeat app ledger evidence list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.ledger._evidence.PurchaseInvoiceEvidenceNotFoundError",
+        ErrorCode(
+            code="REFUSED_LEDGER_EVIDENCE_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_evidence_not_found",
+            default_suggestion="aeat app ledger evidence list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.transactions._errors.TransactionIdPrefixError",
         ErrorCode(
             code="REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",

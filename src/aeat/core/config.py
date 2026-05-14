@@ -131,6 +131,10 @@ class Settings(BaseSettings):
         default=PROJECT_ROOT / "var" / "financial" / "attachments",
         description="Root directory for the attachment byte and manifest store",
     )
+    aeat_purchase_invoice_evidence_dir: Path = Field(
+        default=PROJECT_ROOT / "var" / "financial" / "purchase-invoice-evidence",
+        description="Root directory for purchase invoice evidence record manifests",
+    )
     aeat_usage_ratios_path: Path = Field(
         default=PROJECT_ROOT / "var" / "financial" / "usage-ratios.json",
         description="User-configured per-category usage ratio overrides",
