@@ -3421,56 +3421,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-evidence-bundle-shape
 
 This Phase delivers backend implementation for evidence bundle lifecycle as required by `2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr`.
 
-- [ ] `W57.P281.S1681` - Map the `2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr` decision into non-CLI service ownership for evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P281.S1682` - Implement Pydantic command and result contracts for evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P281.S1683` - Wire application or domain services required by evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P281.S1684` - Connect persistence, bucket events, registry data, or provider adapters required by evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P281.S1685` - Route existing backend functionality into the canonical service for evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P281.S1686` - Record service-level error codes and log fields for evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P281.S1681` - Map the `2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr` decision into non-CLI service ownership for evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P281.S1682` - Implement Pydantic command and result contracts for evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P281.S1683` - Wire application or domain services required by evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P281.S1684` - Connect persistence, bucket events, registry data, or provider adapters required by evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P281.S1685` - Route existing backend functionality into the canonical service for evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P281.S1686` - Record service-level error codes and log fields for evidence bundle lifecycle; `src/aeat/application/evidence`.
 
 ### Phase `W57.P282` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for evidence bundle lifecycle as required by `2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr`.
 
-- [ ] `W57.P282.S1687` - Audit duplicate implementations that overlap evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P282.S1688` - Delete duplicate backend branches that compete with evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P282.S1689` - Remove stale aliases that bypass the canonical service for evidence bundle lifecycle; `src/aeat/entrypoints/cli`.
-- [ ] `W57.P282.S1690` - Migrate internal callers to the canonical service for evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P282.S1691` - Remove stale fixtures and tests that encode duplicate behavior for evidence bundle lifecycle; `tests/application/evidence`.
-- [ ] `W57.P282.S1692` - Update boundary inventory entries that describe duplicate behavior for evidence bundle lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W57.P282.S1687` - Audit duplicate implementations that overlap evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P282.S1688` - Delete duplicate backend branches that compete with evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P282.S1689` - Remove stale aliases that bypass the canonical service for evidence bundle lifecycle; `src/aeat/entrypoints/cli`.
+- [x] `W57.P282.S1690` - Migrate internal callers to the canonical service for evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P282.S1691` - Remove stale fixtures and tests that encode duplicate behavior for evidence bundle lifecycle; `tests/application/evidence`.
+- [x] `W57.P282.S1692` - Update boundary inventory entries that describe duplicate behavior for evidence bundle lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W57.P283` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for evidence bundle lifecycle as required by `2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr`.
 
-- [ ] `W57.P283.S1693` - Delete compatibility shims that preserve rejected behavior for evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P283.S1694` - Delete placeholder stubs that claim support for evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P283.S1695` - Replace stubbed paths with real backend service calls for evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [ ] `W57.P283.S1696` - Remove deprecated command spelling and help text for evidence bundle lifecycle; `src/aeat/entrypoints/cli`.
-- [ ] `W57.P283.S1697` - Remove tests that assert shim or stub behavior for evidence bundle lifecycle; `tests/application/evidence`.
-- [ ] `W57.P283.S1698` - Record the removed shim and stub surfaces for evidence bundle lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W57.P283.S1693` - Delete compatibility shims that preserve rejected behavior for evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P283.S1694` - Delete placeholder stubs that claim support for evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P283.S1695` - Replace stubbed paths with real backend service calls for evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [x] `W57.P283.S1696` - Remove deprecated command spelling and help text for evidence bundle lifecycle; `src/aeat/entrypoints/cli`.
+- [x] `W57.P283.S1697` - Remove tests that assert shim or stub behavior for evidence bundle lifecycle; `tests/application/evidence`.
+- [x] `W57.P283.S1698` - Record the removed shim and stub surfaces for evidence bundle lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W57.P284` - real behavior verification
 
 This Phase delivers real behavior verification for evidence bundle lifecycle as required by `2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr`.
 
-- [ ] `W57.P284.S1699` - Add service contract tests for evidence bundle lifecycle; `tests/application/evidence`.
-- [ ] `W57.P284.S1700` - Add persistence or registry integration tests for evidence bundle lifecycle; `tests/application/evidence`.
-- [ ] `W57.P284.S1701` - Add negative tests proving rejected aliases do not reach evidence bundle lifecycle; `tests/entrypoints/cli`.
-- [ ] `W57.P284.S1702` - Add command behavior tests that exercise evidence bundle lifecycle through real services; `tests/entrypoints/cli`.
-- [ ] `W57.P284.S1703` - Add end-to-end workflow coverage for evidence bundle lifecycle; `tests`.
-- [ ] `W57.P284.S1704` - Run the targeted test slice for evidence bundle lifecycle without skips or xfails; `tests/application/evidence`.
+- [x] `W57.P284.S1699` - Add service contract tests for evidence bundle lifecycle; `tests/application/evidence`.
+- [x] `W57.P284.S1700` - Add persistence or registry integration tests for evidence bundle lifecycle; `tests/application/evidence`.
+- [x] `W57.P284.S1701` - Add negative tests proving rejected aliases do not reach evidence bundle lifecycle; `tests/entrypoints/cli`.
+- [x] `W57.P284.S1702` - Add command behavior tests that exercise evidence bundle lifecycle through real services; `tests/entrypoints/cli`.
+- [x] `W57.P284.S1703` - Add end-to-end workflow coverage for evidence bundle lifecycle; `tests`.
+- [x] `W57.P284.S1704` - Run the targeted test slice for evidence bundle lifecycle without skips or xfails; `tests/application/evidence`.
 
 ### Phase `W57.P285` - thin cli exposure
 
 This Phase delivers thin cli exposure for evidence bundle lifecycle as required by `2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr`.
 
-- [ ] `W57.P285.S1705` - Expose accepted command handlers for evidence bundle lifecycle under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W57.P285.S1706` - Keep argument parsing for evidence bundle lifecycle separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W57.P285.S1707` - Delegate evidence bundle lifecycle execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W57.P285.S1708` - Render evidence bundle lifecycle results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W57.P285.S1709` - Handle evidence bundle lifecycle failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W57.P285.S1710` - Validate help text for evidence bundle lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W57.P285.S1705` - Expose accepted command handlers for evidence bundle lifecycle under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W57.P285.S1706` - Keep argument parsing for evidence bundle lifecycle separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W57.P285.S1707` - Delegate evidence bundle lifecycle execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W57.P285.S1708` - Render evidence bundle lifecycle results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W57.P285.S1709` - Handle evidence bundle lifecycle failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W57.P285.S1710` - Validate help text for evidence bundle lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W58` - workflow engine harvest
 
@@ -4831,48 +4831,48 @@ Closes apex §12 ledger rows R22 (modelo 036/037 + 145 foundations), R23 (eviden
 
 Ship registry TOMLs, EvidenceBundle, and harvest wrappers.
 
-- [ ] `W85.P410.S2329` - Read the modelo-036-037-foundation, modelo-145-foundation, evidence-bundle-shape, domain-harvest-vat-classification, domain-harvest-rental ADRs; `.vault/adr`.
-- [ ] `W85.P410.S2330` - Ship registry aeat modelos 036 revision, 037 (historical-inactive metadata only), 145 revision TOMLs with form schema, casillas, binding contracts; `registry/aeat/modelos`.
-- [ ] `W85.P410.S2331` - Implement EvidenceBundle Pydantic model and application evidence service for bundle build, verify, export, replay - bucket-scoped, work-unit-bound, ZIP manifest-last, verification-first export; `src/aeat/application/evidence`.
-- [ ] `W85.P410.S2332` - Implement application ledger classify_ledger_transaction wrapper consuming domain vat classify_vat and implement application rental wrapper with rental_register_aggregation binding consumer; `src/aeat/application`.
-- [ ] `W85.P410.S2333` - Implement event-triggered alta, modificacion, baja lifecycle for Modelo 036 work units 037 is registry-only metadata 145 is non-filing payer communication; `src/aeat/application/modelo`.
+- [x] `W85.P410.S2329` - Read the modelo-036-037-foundation, modelo-145-foundation, evidence-bundle-shape, domain-harvest-vat-classification, domain-harvest-rental ADRs; `.vault/adr`.
+- [x] `W85.P410.S2330` - Ship registry aeat modelos 036 revision, 037 (historical-inactive metadata only), 145 revision TOMLs with form schema, casillas, binding contracts; `registry/aeat/modelos`.
+- [x] `W85.P410.S2331` - Implement EvidenceBundle Pydantic model and application evidence service for bundle build, verify, export, replay - bucket-scoped, work-unit-bound, ZIP manifest-last, verification-first export; `src/aeat/application/evidence`.
+- [x] `W85.P410.S2332` - Implement application ledger classify_ledger_transaction wrapper consuming domain vat classify_vat and implement application rental wrapper with rental_register_aggregation binding consumer; `src/aeat/application`.
+- [x] `W85.P410.S2333` - Implement event-triggered alta, modificacion, baja lifecycle for Modelo 036 work units 037 is registry-only metadata 145 is non-filing payer communication; `src/aeat/application/modelo`.
 
 ### Phase `W85.P411` - shadow duplicate removal
 
 Audit legacy references and confirm canonical paths.
 
-- [ ] `W85.P411.S2334` - Audit for any legacy 036, 037, 145 references and consolidate behind the new registry; `src/aeat`.
-- [ ] `W85.P411.S2335` - Confirm no live AEAT presentation path is wired for 036, 037, 145 per live-AEAT charter; `src/aeat/application/modelo`.
-- [ ] `W85.P411.S2336` - Confirm application ledger classify_ledger_transaction is the only path that persists VAT classification with ledger.classification.set event; `src/aeat/application/ledger`.
-- [ ] `W85.P411.S2337` - Confirm application rental is the only path that produces rental_register_aggregation bindings; `src/aeat/application/rental`.
-- [ ] `W85.P411.S2338` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W85.P411.S2334` - Audit for any legacy 036, 037, 145 references and consolidate behind the new registry; `src/aeat`.
+- [x] `W85.P411.S2335` - Confirm no live AEAT presentation path is wired for 036, 037, 145 per live-AEAT charter; `src/aeat/application/modelo`.
+- [x] `W85.P411.S2336` - Confirm application ledger classify_ledger_transaction is the only path that persists VAT classification with ledger.classification.set event; `src/aeat/application/ledger`.
+- [x] `W85.P411.S2337` - Confirm application rental is the only path that produces rental_register_aggregation bindings; `src/aeat/application/rental`.
+- [x] `W85.P411.S2338` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W85.P412` - de-shim and de-stub cleanup
 
 Wire audit verbs, reconcile, and remove placeholder stubs.
 
-- [ ] `W85.P412.S2339` - Remove any borrador-import refusal stubs replaced by the app live borrador 100 surface per apex §8 lock; `src/aeat/application`.
-- [ ] `W85.P412.S2340` - Remove any rental-stub references and ensure aeat app ledger rental verbs delegate to application rental; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W85.P412.S2341` - Wire aeat app modelo audit show, check, export, replay verbs to application evidence and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W85.P412.S2342` - Wire aeat app modelo reconcile from-justificante PATH CLI verb to existing reconciler closing W64; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W85.P412.S2343` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W85.P412.S2339` - Remove any borrador-import refusal stubs replaced by the app live borrador 100 surface per apex §8 lock; `src/aeat/application`.
+- [x] `W85.P412.S2340` - Remove any rental-stub references and ensure aeat app ledger rental verbs delegate to application rental; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W85.P412.S2341` - Wire aeat app modelo audit show, check, export, replay verbs to application evidence and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W85.P412.S2342` - Wire aeat app modelo reconcile from-justificante PATH CLI verb to existing reconciler closing W64; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W85.P412.S2343` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W85.P413` - real behavior verification
 
 Test foundations, evidence bundle, harvest wrappers.
 
-- [ ] `W85.P413.S2344` - Add tests for 036 and 145 registry load, casilla resolution, binding contracts and assert 037 is metadata-only; `tests/domain/calculations/registry`.
-- [ ] `W85.P413.S2345` - Add tests for EvidenceBundle build, verify, export, replay covering ZIP manifest-last invariant and verification-first export; `tests/application/evidence`.
-- [ ] `W85.P413.S2346` - Add tests for classify_ledger_transaction wrapper and VAT-criteria CLI flags on aeat app ledger classify; `tests/application/ledger`.
-- [ ] `W85.P413.S2347` - Add tests for application rental and Modelo 100 rental_register_aggregation binding consumption; `tests/application/rental`.
-- [ ] `W85.P413.S2348` - Add tests for aeat app modelo reconcile from-justificante PATH; `tests/entrypoints/cli`.
+- [x] `W85.P413.S2344` - Add tests for 036 and 145 registry load, casilla resolution, binding contracts and assert 037 is metadata-only; `tests/domain/calculations/registry`.
+- [x] `W85.P413.S2345` - Add tests for EvidenceBundle build, verify, export, replay covering ZIP manifest-last invariant and verification-first export; `tests/application/evidence`.
+- [x] `W85.P413.S2346` - Add tests for classify_ledger_transaction wrapper and VAT-criteria CLI flags on aeat app ledger classify; `tests/application/ledger`.
+- [x] `W85.P413.S2347` - Add tests for application rental and Modelo 100 rental_register_aggregation binding consumption; `tests/application/rental`.
+- [x] `W85.P413.S2348` - Add tests for aeat app modelo reconcile from-justificante PATH; `tests/entrypoints/cli`.
 
 ### Phase `W85.P414` - thin cli exposure
 
 Register lifecycle and harvest verbs and update apex.
 
-- [ ] `W85.P414.S2349` - Register Modelo 036 lifecycle verbs (alta, modificacion, baja) under aeat app modelo and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W85.P414.S2350` - Register aeat app modelo audit verbs, aeat app ledger rental verbs, aeat app modelo reconcile from-justificante, VAT-criteria flags on aeat app ledger classify; `src/aeat/entrypoints/cli`.
-- [ ] `W85.P414.S2351` - Wire help text and i18n for every new verb and flag; `src/aeat/core/i18n`.
-- [ ] `W85.P414.S2352` - Update apex ADR §5, §7, §8 to reflect closeouts and mark R22, R23, R24 closed by W85; `.vault/adr`.
-- [ ] `W85.P414.S2353` - Amend modelo-036-037-foundation, modelo-145-foundation, evidence-bundle-shape, domain-harvest-vat-classification, domain-harvest-rental child ADRs and run vault check; `.vault`.
+- [x] `W85.P414.S2349` - Register Modelo 036 lifecycle verbs (alta, modificacion, baja) under aeat app modelo and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W85.P414.S2350` - Register aeat app modelo audit verbs, aeat app ledger rental verbs, aeat app modelo reconcile from-justificante, VAT-criteria flags on aeat app ledger classify; `src/aeat/entrypoints/cli`.
+- [x] `W85.P414.S2351` - Wire help text and i18n for every new verb and flag; `src/aeat/core/i18n`.
+- [x] `W85.P414.S2352` - Update apex ADR §5, §7, §8 to reflect closeouts and mark R22, R23, R24 closed by W85; `.vault/adr`.
+- [x] `W85.P414.S2353` - Amend modelo-036-037-foundation, modelo-145-foundation, evidence-bundle-shape, domain-harvest-vat-classification, domain-harvest-rental child ADRs and run vault check; `.vault`.
