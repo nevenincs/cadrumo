@@ -101,6 +101,15 @@ class BucketEventType(StrEnum):
     COLLECTIBLE_INVOICE_CREATED = "collectible_invoice.created"
     COLLECTIBLE_INVOICE_UPDATED = "collectible_invoice.updated"
     COLLECTIBLE_INVOICE_REMOVED = "collectible_invoice.removed"
+    # inventory noun-group (W76A inventory placement per apex ADR §4.2)
+    LEDGER_INVENTORY_CREATED = "ledger.inventory.created"
+    LEDGER_INVENTORY_MOVEMENT_ADDED = "ledger.inventory.movement_added"
+    LEDGER_INVENTORY_VALUATION_PREVIEWED = "ledger.inventory.valuation_previewed"
+    LEDGER_INVENTORY_REMOVED = "ledger.inventory.removed"
+    # audit verb-group (W85A evidence bundle per apex ADR §4.3)
+    MODELO_AUDIT_VERIFIED = "modelo.audit.verified"
+    MODELO_AUDIT_EXPORTED = "modelo.audit.exported"
+    MODELO_AUDIT_REPLAYED = "modelo.audit.replayed"
     ATTACHMENT_LINKED = "attachment.linked"
     ATTACHMENT_REMOVED = "attachment.removed"
 
