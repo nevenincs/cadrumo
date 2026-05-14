@@ -262,12 +262,13 @@ class Settings(BaseSettings):
     )
 
     # ── Master-key passphrase (live-write security perimeter) ───────────────
-    aeat_master_key_passphrase: SecretStr | None = Field(
+    aeat_secret_passphrase: SecretStr | None = Field(
         default=None,
         description=(
             "Passphrase that derives the encrypted-secret-store master key. "
             "Default None — the master-key loader refuses operation on None or "
-            "empty value to preserve fail-closed behaviour."
+            "empty value to preserve fail-closed behaviour. Operator-facing "
+            "env var is AEAT_SECRET_PASSPHRASE."
         ),
     )
 

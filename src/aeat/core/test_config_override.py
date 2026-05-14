@@ -128,11 +128,11 @@ def test_override_settings_carries_secretstr_through_validation() -> None:
     produce the same shape callers get from .env."""
 
     baseline = load_settings()
-    assert baseline.aeat_master_key_passphrase is None
+    assert baseline.aeat_secret_passphrase is None
 
-    with override_settings(aeat_master_key_passphrase=SecretStr("test-pass")):
+    with override_settings(aeat_secret_passphrase=SecretStr("test-pass")):
         overridden = load_settings()
-        assert overridden.aeat_master_key_passphrase is not None
-        assert overridden.aeat_master_key_passphrase.get_secret_value() == "test-pass"
+        assert overridden.aeat_secret_passphrase is not None
+        assert overridden.aeat_secret_passphrase.get_secret_value() == "test-pass"
 
-    assert load_settings().aeat_master_key_passphrase is None
+    assert load_settings().aeat_secret_passphrase is None
