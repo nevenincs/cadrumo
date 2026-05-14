@@ -265,7 +265,6 @@ async def test_browser_session_prefers_explicit_storage_state_path(tmp_path: Pat
 
 
 @pytest.mark.asyncio
-@pytest.mark.unit
 async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     """Certificate propagates into new_context kwargs and thumbprint marker."""
     import os
@@ -313,11 +312,12 @@ async def test_browser_session_wires_certificate(tmp_path: Path) -> None:
     )
     bundle_path = tmp_path / "bundle.p12"
     bundle_path.write_bytes(pfx_bytes)
-    os.environ["AEAT_BROWSER_TEST_PW"] = "pw"
+    from pydantic import SecretStr
+
     loaded = load_certificate(
         CertificateBundle(
             path=bundle_path,
-            password_env_var="AEAT_BROWSER_TEST_PW",
+            password=SecretStr("pw"),
             friendly_name=None,
             backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
         )

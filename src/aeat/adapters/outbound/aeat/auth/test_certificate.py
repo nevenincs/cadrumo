@@ -16,6 +16,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
+from pydantic import SecretStr
 
 from . import (
     CertificateBackend,
@@ -84,7 +85,7 @@ def test_bundle_rejects_extra_fields(tmp_path: Path) -> None:
         CertificateBundle.model_validate(
             {
                 "path": tmp_path / "x.p12",
-                "password_env_var": "X",
+                "password": SecretStr(SECRET_PASSPHRASE),
                 "backend": CertificateBackend.PLAYWRIGHT_CONTEXT,
                 "not_a_field": 1,
             }
@@ -94,20 +95,24 @@ def test_bundle_rejects_extra_fields(tmp_path: Path) -> None:
 def test_bundle_is_frozen(tmp_path: Path) -> None:
     bundle = CertificateBundle(
         path=tmp_path / "x.p12",
-        password_env_var="X",
+        password=SecretStr(SECRET_PASSPHRASE),
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     with pytest.raises(ValueError, match=r"frozen|Instance is frozen"):
         bundle.path = tmp_path / "y.p12"  # type: ignore[misc]
 
 
-def test_bundle_rejects_empty_env_var_name(tmp_path: Path) -> None:
-    with pytest.raises(ValueError, match=r"password_env_var|at least 1 character"):
-        CertificateBundle(
-            path=tmp_path / "x.p12",
-            password_env_var="",
-            backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
-        )
+def test_bundle_password_does_not_leak_in_repr_or_dump(tmp_path: Path) -> None:
+    """The passphrase is a SecretStr — repr() and model_dump_json()
+    never surface the cleartext."""
+    bundle = CertificateBundle(
+        path=tmp_path / "x.p12",
+        password=SecretStr(SECRET_PASSPHRASE),
+        backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
+    )
+    assert SECRET_PASSPHRASE not in repr(bundle)
+    assert SECRET_PASSPHRASE not in bundle.model_dump_json()
+    assert bundle.password.get_secret_value() == SECRET_PASSPHRASE
 
 
 # ── load_certificate happy path ─────────────────────────────────────────────
@@ -118,10 +123,9 @@ def test_load_certificate_happy_path(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(SECRET_PASSPHRASE),
         friendly_name=None,
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
@@ -136,30 +140,22 @@ def test_load_certificate_happy_path(
 # ── Error paths ─────────────────────────────────────────────────────────────
 
 
-def test_load_certificate_missing_env_var(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_load_certificate_empty_password(tmp_path: Path) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
-    monkeypatch.delenv("AEAT_TEST_CERT_PW", raising=False)
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(""),
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
-    with pytest.raises(CertificatePasswordError, match=r"password|env|AEAT_TEST_CERT_PW"):
+    with pytest.raises(CertificatePasswordError, match=r"empty|passphrase"):
         load_certificate(bundle)
 
 
-def test_load_certificate_wrong_password(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_load_certificate_wrong_password(tmp_path: Path) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", "definitely-wrong")
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr("definitely-wrong"),
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     with pytest.raises(CertificatePasswordError, match=r"password|incorrect|wrong|decrypt"):
@@ -176,10 +172,9 @@ def test_load_certificate_expired(
         not_valid_before=now - timedelta(days=365),
         not_valid_after=now - timedelta(days=1),
     )
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(SECRET_PASSPHRASE),
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     with pytest.raises(CertificateExpiredError, match=r"certificate|expired"):
@@ -192,10 +187,9 @@ def test_load_certificate_garbage_bytes(
 ) -> None:
     bad = tmp_path / "bad.p12"
     bad.write_bytes(b"this is not a pkcs12 file")
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
     bundle = CertificateBundle(
         path=bad,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(SECRET_PASSPHRASE),
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     with pytest.raises((CertificateLoadError, CertificatePasswordError), match=r"certificate|pkcs12|password|load"):
@@ -210,10 +204,9 @@ def test_loaded_certificate_does_not_leak_secrets(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(SECRET_PASSPHRASE),
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     loaded = load_certificate(bundle)
@@ -263,10 +256,9 @@ def test_verify_handshake_rejects_empty_url(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(SECRET_PASSPHRASE),
         backend=CertificateBackend.HTTPX_FALLBACK,
     )
     loaded = load_certificate(bundle)
@@ -279,10 +271,9 @@ def test_verify_handshake_returns_failure_on_tls_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(SECRET_PASSPHRASE),
         backend=CertificateBackend.HTTPX_FALLBACK,
     )
     loaded = load_certificate(bundle)
@@ -305,10 +296,9 @@ def test_playwright_preload_rejects_unmarked_context(
     from .certificate import CertificateError
 
     p12 = _build_pkcs12_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(SECRET_PASSPHRASE),
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     loaded = load_certificate(bundle)
@@ -325,10 +315,9 @@ def test_playwright_preload_accepts_marked_context(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     p12 = _build_pkcs12_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(SECRET_PASSPHRASE),
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     loaded = load_certificate(bundle)
@@ -352,10 +341,9 @@ def test_playwright_client_certificates_kwarg_materialises_secret(
     )
 
     p12 = _build_pkcs12_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(SECRET_PASSPHRASE),
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     loaded = load_certificate(bundle)
@@ -379,10 +367,9 @@ def test_httpx_fallback_preload_raises_not_implemented(
     from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
 
     p12 = _build_pkcs12_bundle(tmp_path)
-    monkeypatch.setenv("AEAT_TEST_CERT_PW", SECRET_PASSPHRASE)
     bundle = CertificateBundle(
         path=p12,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(SECRET_PASSPHRASE),
         backend=CertificateBackend.HTTPX_FALLBACK,
     )
     loaded = load_certificate(bundle)
