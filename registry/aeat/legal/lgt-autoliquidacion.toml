@@ -11,6 +11,26 @@
 #   Grounds amend_modelo_revision behaviour and the FilingRecord
 #   SUPERSEDED state transition.
 
+[legal."ley-58-2003:art-27.2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003-art-27.html#a27-2"
+document_id = "BOE-A-2003-23186"
+article = "27.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a27"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Recargos por declaración extemporánea sin requerimiento previo, apartado 2 of LGT art-27. Establishes the 1 per cent + 1 per cent additional per completed month of delay rule (post-Ley 11/2021); 15 per cent once 12 months have elapsed since the end of the original presentation deadline. The band table at registry/aeat/legal/ley-58-2003-recargo-bands.toml is parameterised against this article."
+required_text = [
+    "1 por ciento más otro 1 por ciento adicional por cada mes completo de retraso",
+    "transcurridos 12 meses",
+    "el recargo será del 15 por ciento",
+]
+
 [legal."ley-58-2003:art-119"]
 evidence_tier = "legal_authority"
 authority = "boe"
