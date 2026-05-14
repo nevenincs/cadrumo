@@ -15,6 +15,7 @@ lives.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import date
 
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.user_profile import (
@@ -37,6 +38,7 @@ from . import (
 from ._lifecycle import ProfileLifecycleService
 
 _SHARED_SCHEMA: ProfileSchemaDefinition | None = None
+_SENTINEL_DATE = date.min
 
 
 def _shared_schema() -> ProfileSchemaDefinition:
@@ -203,6 +205,24 @@ def read_active_profile(
         return None
 
 
+def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
+    """Return the live string-rendered value of one fact path on ``record``.
+
+    Returns ``None`` when ``record`` is ``None``, when the path has no
+    fact, or when the recorded value is ``None``. Repeated facts at
+    the same path (effective-dated windows) resolve to the
+    chronologically last :attr:`UserProfileFact.valid_from`.
+    """
+
+    if record is None:
+        return None
+    matches = [fact for fact in record.facts if fact.path == path and fact.value is not None]
+    if not matches:
+        return None
+    matches.sort(key=lambda fact: fact.valid_from or _SENTINEL_DATE)
+    return str(matches[-1].value)
+
+
 def _require_active(state: WorkflowState) -> str:
     if state.active_profile is None:
         raise ProfileNotFoundError("no active profile selected")
@@ -211,6 +231,7 @@ def _require_active(state: WorkflowState) -> str:
 
 __all__ = [
     "build_lifecycle_service",
+    "fact_value",
     "read_active_profile",
     "register_active_profile",
     "remove_active_profile",
