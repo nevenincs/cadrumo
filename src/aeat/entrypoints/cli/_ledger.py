@@ -14,6 +14,8 @@ from ...application.ledger import (
     LedgerSourceVerificationReport,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
+    PurchaseInvoiceEvidencePatch,
+    PurchaseInvoiceEvidenceService,
     archive_manual_transaction,
     attach_manual_transaction_evidence,
     compute_display_id_width,
@@ -804,3 +806,146 @@ def ledger_review(
     if not result.rows:
         lines.append(tr("cli.ledger.review.no_rows"))
     _emit(ctx, payload, lines)
+
+
+evidence_app = typer.Typer(
+    name="evidence",
+    help="Purchase invoice evidence records (PDF or image).",
+    no_args_is_help=True,
+)
+app.add_typer(evidence_app, name="evidence")
+
+
+def _evidence_service() -> PurchaseInvoiceEvidenceService:
+    return PurchaseInvoiceEvidenceService()
+
+
+def _evidence_payload(record: object) -> dict[str, object]:
+    return record.model_dump(mode="json")  # type: ignore[attr-defined]
+
+
+def _evidence_text_lines(record: object) -> list[str]:
+    payload = _evidence_payload(record)
+    return [
+        f"evidence_id\t{payload['evidence_id']}",
+        f"bucket_id\t{payload['bucket_id']}",
+        f"source_path\t{payload['source_path']}",
+        f"source_sha256\t{payload['source_sha256']}",
+        f"media_kind\t{payload['media_kind']}",
+        f"supplier\t{payload.get('supplier') or '-'}",
+        f"invoice_number\t{payload.get('invoice_number') or '-'}",
+        f"invoice_date\t{payload.get('invoice_date') or '-'}",
+        f"taxable_base\t{payload.get('taxable_base') or '-'}",
+        f"iva_rate\t{payload.get('iva_rate') or '-'}",
+        f"iva_amount\t{payload.get('iva_amount') or '-'}",
+        f"notes\t{payload.get('notes') or '-'}",
+        f"created_at\t{payload['created_at']}",
+        f"updated_at\t{payload['updated_at']}",
+    ]
+
+
+@evidence_app.command("add", help="Register a purchase invoice evidence record from a PDF or image file.")
+def evidence_add(
+    ctx: typer.Context,
+    source_path: Path = typer.Argument(..., help="Path to a PDF or image receipt/invoice."),
+    supplier: str | None = typer.Option(None, "--supplier", help="Supplier name."),
+    invoice_number: str | None = typer.Option(None, "--invoice-number", help="Supplier invoice number."),
+    invoice_date: str | None = typer.Option(None, "--invoice-date", help="Invoice date (ISO-8601)."),
+    taxable_base: str | None = typer.Option(None, "--taxable-base", help="Taxable base (Decimal)."),
+    iva_rate: str | None = typer.Option(None, "--iva-rate", help="IVA rate (Decimal)."),
+    iva_amount: str | None = typer.Option(None, "--iva-amount", help="IVA amount (Decimal)."),
+    notes: str = typer.Option("", "--notes", help="Free-text notes."),
+) -> None:
+    """Register a purchase invoice evidence record and return its id."""
+    transaction_repository = _tx_repo(_state())
+    record = _evidence_service().add(
+        bucket_id=transaction_repository.bucket_id,
+        source_path=source_path,
+        supplier=supplier,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
+        iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
+        iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+        notes=notes,
+    )
+    _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
+
+
+@evidence_app.command("view", help="Show one purchase invoice evidence record.")
+def evidence_view(
+    ctx: typer.Context,
+    evidence_id: str = typer.Argument(..., help="Evidence record id."),
+) -> None:
+    transaction_repository = _tx_repo(_state())
+    record = _evidence_service().view(
+        bucket_id=transaction_repository.bucket_id,
+        evidence_id=evidence_id,
+    )
+    _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
+
+
+@evidence_app.command("list", help="List every purchase invoice evidence record in the active bucket.")
+def evidence_list(ctx: typer.Context) -> None:
+    transaction_repository = _tx_repo(_state())
+    records = _evidence_service().list_all(bucket_id=transaction_repository.bucket_id)
+    payload = {
+        "bucket_id": transaction_repository.bucket_id,
+        "count": len(records),
+        "rows": [_evidence_payload(record) for record in records],
+    }
+    lines = ["evidence_id\tmedia_kind\tsupplier\tinvoice_number\tinvoice_date\ttaxable_base\tnotes"]
+    for record in records:
+        data = _evidence_payload(record)
+        lines.append(
+            f"{data['evidence_id']}\t{data['media_kind']}\t{data.get('supplier') or '-'}\t"
+            f"{data.get('invoice_number') or '-'}\t{data.get('invoice_date') or '-'}\t"
+            f"{data.get('taxable_base') or '-'}\t{data.get('notes') or '-'}"
+        )
+    _emit(ctx, payload, lines)
+
+
+@evidence_app.command("update", help="Update mutable fields on a purchase invoice evidence record.")
+def evidence_update(
+    ctx: typer.Context,
+    evidence_id: str = typer.Argument(..., help="Evidence record id."),
+    supplier: str | None = typer.Option(None, "--supplier"),
+    invoice_number: str | None = typer.Option(None, "--invoice-number"),
+    invoice_date: str | None = typer.Option(None, "--invoice-date"),
+    taxable_base: str | None = typer.Option(None, "--taxable-base"),
+    iva_rate: str | None = typer.Option(None, "--iva-rate"),
+    iva_amount: str | None = typer.Option(None, "--iva-amount"),
+    notes: str | None = typer.Option(None, "--notes"),
+) -> None:
+    transaction_repository = _tx_repo(_state())
+    patch = PurchaseInvoiceEvidencePatch(
+        supplier=supplier,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
+        iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
+        iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+        notes=notes,
+    )
+    record = _evidence_service().update(
+        bucket_id=transaction_repository.bucket_id,
+        evidence_id=evidence_id,
+        patch=patch,
+    )
+    _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
+
+
+@evidence_app.command("remove", help="Delete a purchase invoice evidence record.")
+def evidence_remove(
+    ctx: typer.Context,
+    evidence_id: str = typer.Argument(..., help="Evidence record id."),
+    yes: bool = typer.Option(False, "--yes", help="Confirm removal."),
+) -> None:
+    if not yes:
+        raise _bad("--yes is required to remove an evidence record")
+    transaction_repository = _tx_repo(_state())
+    record = _evidence_service().remove(
+        bucket_id=transaction_repository.bucket_id,
+        evidence_id=evidence_id,
+    )
+    _emit(ctx, _evidence_payload(record), _evidence_text_lines(record))
