@@ -5,6 +5,7 @@ from __future__ import annotations
 import tomllib
 from collections.abc import Mapping
 from decimal import Decimal
+from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, cast
@@ -32,33 +33,46 @@ _DEFAULT_PROFILE_ROOT = PROJECT_ROOT / "registry" / "aeat" / "categories" / "pro
 def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, CategoryProfile]:
     """Load one year-keyed spending-category profile TOML file."""
 
+    resolved = path.resolve()
+    stat = resolved.stat()
+    return _load_category_profile_file_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=32)
+def _load_category_profile_file_cached(
+    path: str,
+    byte_count: int,
+    modified_ns: int,
+) -> Mapping[SpendingCategory, CategoryProfile]:
+    del byte_count, modified_ns
+    target = Path(path)
     try:
-        with path.open("rb") as fh:
+        with target.open("rb") as fh:
             payload = tomllib.load(fh)
     except tomllib.TOMLDecodeError as exc:
-        raise CategoryValidationError(f"{path}: invalid category profile TOML: {exc}") from exc
+        raise CategoryValidationError(f"{target}: invalid category profile TOML: {exc}") from exc
     except OSError as exc:
-        raise CategoryValidationError(f"{path}: cannot read category profile registry: {exc}") from exc
+        raise CategoryValidationError(f"{target}: cannot read category profile registry: {exc}") from exc
 
     raw_profiles = payload.get("profiles")
     if not isinstance(raw_profiles, list) or not raw_profiles:
-        raise CategoryValidationError(f"{path}: missing [[profiles]] entries")
+        raise CategoryValidationError(f"{target}: missing [[profiles]] entries")
 
     profiles: dict[SpendingCategory, CategoryProfile] = {}
     for index, raw_profile in enumerate(raw_profiles, start=1):
         if not isinstance(raw_profile, dict):
-            raise CategoryValidationError(f"{path}: profiles[{index}] must be a table")
+            raise CategoryValidationError(f"{target}: profiles[{index}] must be a table")
         try:
             profile = _parse_profile(cast("Mapping[str, Any]", raw_profile))
         except (ValidationError, ValueError) as exc:
-            raise CategoryValidationError(f"{path}: invalid profiles[{index}]: {exc}") from exc
+            raise CategoryValidationError(f"{target}: invalid profiles[{index}]: {exc}") from exc
         if profile.category in profiles:
-            raise CategoryValidationError(f"{path}: duplicate spending category {profile.category.value!r}")
+            raise CategoryValidationError(f"{target}: duplicate spending category {profile.category.value!r}")
         profiles[profile.category] = profile
 
     missing = sorted(category.value for category in set(SpendingCategory) - set(profiles))
     if missing:
-        raise CategoryValidationError(f"{path}: category profile registry missing categories: {missing}")
+        raise CategoryValidationError(f"{target}: category profile registry missing categories: {missing}")
     return MappingProxyType(profiles)
 
 
@@ -67,15 +81,33 @@ def load_category_profile_registry(
 ) -> Mapping[int, Mapping[SpendingCategory, CategoryProfile]]:
     """Load every committed year-keyed spending-category profile registry."""
 
+    resolved = root.resolve()
+    paths = tuple(sorted(resolved.glob("*.toml")))
+    fingerprint = tuple(_file_fingerprint(path) for path in paths)
+    return _load_category_profile_registry_cached(str(resolved), fingerprint)
+
+
+def _file_fingerprint(path: Path) -> tuple[str, int, int]:
+    stat = path.stat()
+    return (path.name, stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=8)
+def _load_category_profile_registry_cached(
+    root: str,
+    fingerprint: tuple[tuple[str, int, int], ...],
+) -> Mapping[int, Mapping[SpendingCategory, CategoryProfile]]:
+    root_path = Path(root)
     registries: dict[int, Mapping[SpendingCategory, CategoryProfile]] = {}
-    for path in sorted(root.glob("*.toml")):
+    for filename, _byte_count, _modified_ns in fingerprint:
+        path = root_path / filename
         try:
             year = int(path.stem)
         except ValueError as exc:
             raise CategoryValidationError(f"{path}: category profile filename must be a year") from exc
         registries[year] = load_category_profile_file(path)
     if not registries:
-        raise CategoryValidationError(f"{root}: no category profile TOML files found")
+        raise CategoryValidationError(f"{root_path}: no category profile TOML files found")
     return MappingProxyType(registries)
 
 

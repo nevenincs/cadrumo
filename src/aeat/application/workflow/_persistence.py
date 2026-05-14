@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable
 from datetime import date
 from pathlib import Path
@@ -67,10 +66,6 @@ class WorkflowStateRepository:
         try:
             envelope = Envelope[WorkflowState].model_validate_json(raw_payload)
         except ValidationError as exc:
-            migrated = self._migrate_legacy_inline_profiles(raw_payload)
-            if migrated is not None:
-                self.save(migrated)
-                return migrated
             raise WorkflowError(
                 "Local configuration state could not be read.",
             ) from exc
@@ -84,71 +79,6 @@ class WorkflowStateRepository:
                 f"workflow state is at version {envelope.schema_version}; consumer supports up to {_STATE_VERSION}",
             )
         return envelope.payload
-
-    def _migrate_legacy_inline_profiles(self, raw_payload: str) -> WorkflowState | None:
-        """Move legacy inline profile values into profile buckets.
-
-        Older workflow-state records stored profile values directly under
-        ``payload.profiles.<name>``. Current state stores only bucket pointers
-        there. This migration preserves recoverable values while preventing a
-        pydantic validation traceback from crossing the CLI boundary.
-        """
-
-        try:
-            envelope = json.loads(raw_payload)
-        except json.JSONDecodeError:
-            return None
-        if not isinstance(envelope, dict):
-            return None
-        if envelope.get("classification") != SensitivityClass.FINANCIAL.value:
-            return None
-        payload = envelope.get("payload")
-        if not isinstance(payload, dict):
-            return None
-        profiles = payload.get("profiles")
-        if not isinstance(profiles, dict):
-            return None
-
-        from ..profile._models import ProfileRecord
-        from ..profile._repository import profile_bucket_id, profile_bucket_repository
-        from ._utils import _normalise_key
-
-        profile_repository = profile_bucket_repository()
-        migrated_profiles: dict[str, dict[str, str]] = {}
-        active_profile_map: dict[str, str] = {}
-        saw_inline_profile = False
-        for raw_name, raw_entry in profiles.items():
-            if not isinstance(raw_name, str) or not isinstance(raw_entry, dict):
-                return None
-            if isinstance(raw_entry.get("bucket_id"), str):
-                bucket_id = raw_entry["bucket_id"].strip()
-                if not bucket_id:
-                    return None
-                migrated_profiles[raw_name] = {"bucket_id": bucket_id}
-                active_profile_map[raw_name] = raw_name
-                continue
-            try:
-                bucket_id = profile_bucket_id(raw_name)
-            except ValueError:
-                return None
-            values = {
-                _normalise_key(str(key)): str(value).strip()
-                for key, value in raw_entry.items()
-                if value is not None and str(value).strip()
-            }
-            profile_repository.save(ProfileRecord(name=bucket_id, values=values))
-            migrated_profiles[bucket_id] = {"bucket_id": bucket_id}
-            active_profile_map[raw_name] = bucket_id
-            saw_inline_profile = True
-
-        if not saw_inline_profile:
-            return None
-        migrated_payload = dict(payload)
-        migrated_payload["profiles"] = migrated_profiles
-        active_profile = migrated_payload.get("active_profile")
-        if isinstance(active_profile, str):
-            migrated_payload["active_profile"] = active_profile_map.get(active_profile, active_profile)
-        return WorkflowState.model_validate_json(json.dumps(migrated_payload))
 
     def save(self, state: WorkflowState) -> None:
         """Persist state in the encrypted database object store."""

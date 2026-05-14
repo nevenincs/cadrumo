@@ -53,7 +53,7 @@ def test_empty_state_yields_no_active_profile_report() -> None:
 
 def test_active_profile_without_iva_regime_is_identity_ready_only() -> None:
     state = set_active_profile(
-        set_profile_values(WorkflowState(), "operator", {"tax.id": "12345678Z", "activity": "design"}),
+        set_profile_values(WorkflowState(), "operator", {"identity.tax_id": "12345678Z", "activities.description": "design"}),
         "operator",
     )
     report = build_wizard_status(state)
@@ -69,7 +69,7 @@ def test_active_profile_with_identity_and_iva_regime_is_profile_ready() -> None:
         set_profile_values(
             WorkflowState(),
             "operator",
-            {"tax.id": "12345678Z", "activity": "design", "iva.regime": "GENERAL"},
+            {"identity.tax_id": "12345678Z", "activities.description": "design", "iva.regime": "GENERAL"},
         ),
         "operator",
     )
@@ -115,7 +115,7 @@ def test_load_active_autonomo_profile_raises_wizard_status_error_when_no_profile
 
 def test_load_active_autonomo_profile_raises_wizard_status_error_when_tax_id_missing() -> None:
     state = set_active_profile(
-        set_profile_values(WorkflowState(), "operator", {"activity": "design"}),
+        set_profile_values(WorkflowState(), "operator", {"activities.description": "design"}),
         "operator",
     )
     with pytest.raises(WizardStatusError, match=r"tax|profile|operator|missing"):

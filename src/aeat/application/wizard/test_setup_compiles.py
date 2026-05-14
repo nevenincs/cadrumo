@@ -64,12 +64,12 @@ def test_compile_profile_keys_returns_one_entry_per_profile_bound_question() -> 
 
 def test_tax_residence_ccaa_is_a_descriptor_bound_profile_key() -> None:
     profile_keys = {question.profile_key for question in _setup_questions()}
-    assert "tax.residence.ccaa" in profile_keys
+    assert "tax_residence.ccaa" in profile_keys
     registered = {entry.key for entry in PROFILE_KEYS}
-    assert "tax.residence.ccaa" in registered
+    assert "tax_residence.ccaa" in registered
 
 
 def test_pays_capital_income_and_uses_objective_estimation_are_now_descriptor_questions() -> None:
     profile_keys = {question.profile_key for question in _setup_questions()}
-    assert "pays_capital_income_with_retencion" in profile_keys
-    assert "uses_objective_estimation_irpf" in profile_keys
+    assert "withholding.pays_capital_income_with_retencion" in profile_keys
+    assert "irpf.uses_objective_estimation" in profile_keys

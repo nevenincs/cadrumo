@@ -97,6 +97,21 @@ def snapshot_to_values(
     return facts_to_values(snapshot.facts, schema=schema)
 
 
+def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None) -> dict[str, str]:
+    """Project facts into a schema-path-keyed string mapping.
+
+    Unlike :func:`record_to_values` (which projects via the schema's
+    ``model_selectors`` aliases), this keeps the canonical schema
+    path as the key. The mapping is what the wizard catalogue,
+    :func:`validate_profile_values`, and CLI status surfaces consume
+    after the W09 canonical migration.
+    """
+
+    if record is None:
+        return {}
+    return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+
+
 def projection_for_autonomo(
     facts: Mapping[str, object] | UserProfileRecord | UserProfileSnapshot,
     *,
@@ -124,6 +139,7 @@ def projection_for_autonomo(
 __all__ = [
     "facts_to_values",
     "projection_for_autonomo",
+    "record_to_path_values",
     "record_to_values",
     "snapshot_to_values",
 ]

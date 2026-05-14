@@ -132,8 +132,10 @@ def _parse_iso_date(raw: str, *, label: str) -> _date:
 
 
 def _profile_to_autonomo(state: WorkflowState) -> AutonomoProfile:
+    from ...application.user_profile._projections import record_to_values
+
     record = state.active_profile_record()
-    return autonomo_profile_from_mapping(record.values if record else {}, tax_id_default="00000000T")
+    return autonomo_profile_from_mapping(record_to_values(record), tax_id_default="00000000T")
 
 
 # ---------------------------------------------------------------------
