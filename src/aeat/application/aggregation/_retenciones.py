@@ -30,13 +30,17 @@ class RetencionScheme(StrEnum):
     in the per-modelo entry-point functions; this enum is the union.
     """
 
-    # Modelo 111 schemes
+    # Modelo 111 schemes (quarterly retenciones IRPF on labor + activities)
     WORK_INCOME = "rendimientos_trabajo"          # clave A
     ECONOMIC_ACTIVITY = "actividades_economicas"  # clave G
     PROFESSIONAL = "actividades_profesionales"    # clave H (subset of G)
     PRIZE = "premios"                              # clave I (lottery, prize)
     # Modelo 115 schemes (urban rental withholding)
     URBAN_RENTAL = "arrendamiento_urbano"          # locales de negocio
+    # Modelo 123 schemes (capital mobiliario, dividends, interest)
+    CAPITAL_INTEREST = "intereses"                 # clave I (interest income)
+    CAPITAL_DIVIDEND = "dividendos"                # clave A (dividend income)
+    CAPITAL_OTHER = "otros_capital_mobiliario"     # clave C (other capital income)
 
 
 class RetencionObservation(BaseModel):
@@ -124,14 +128,32 @@ class RetencionesAggregation(BaseModel):
         return self
 
 
+_MODELO_111_SCHEMES: frozenset[RetencionScheme] = frozenset({
+    RetencionScheme.WORK_INCOME,
+    RetencionScheme.ECONOMIC_ACTIVITY,
+    RetencionScheme.PROFESSIONAL,
+    RetencionScheme.PRIZE,
+})
+
+_MODELO_115_SCHEMES: frozenset[RetencionScheme] = frozenset({
+    RetencionScheme.URBAN_RENTAL,
+})
+
+_MODELO_123_SCHEMES: frozenset[RetencionScheme] = frozenset({
+    RetencionScheme.CAPITAL_INTEREST,
+    RetencionScheme.CAPITAL_DIVIDEND,
+    RetencionScheme.CAPITAL_OTHER,
+})
+
+# Modelo 180/190/193 are annual summaries of 115/111/123 respectively;
+# they consume the same observation set widened over a full year period.
 _MODELO_SCHEME_CATALOGUE: dict[str, frozenset[RetencionScheme]] = {
-    "111": frozenset({
-        RetencionScheme.WORK_INCOME,
-        RetencionScheme.ECONOMIC_ACTIVITY,
-        RetencionScheme.PROFESSIONAL,
-        RetencionScheme.PRIZE,
-    }),
-    "115": frozenset({RetencionScheme.URBAN_RENTAL}),
+    "111": _MODELO_111_SCHEMES,
+    "115": _MODELO_115_SCHEMES,
+    "123": _MODELO_123_SCHEMES,
+    "180": _MODELO_115_SCHEMES,
+    "190": _MODELO_111_SCHEMES,
+    "193": _MODELO_123_SCHEMES,
 }
 
 
@@ -211,13 +233,65 @@ def aggregate_retenciones_115(
     *,
     period: str,
 ) -> RetencionesAggregation:
-    """Aggregate Modelo 115 (retenciones e ingresos a cuenta sobre rendimientos
-    procedentes del arrendamiento o subarrendamiento de inmuebles urbanos).
+    """Aggregate Modelo 115 (retenciones sobre arrendamiento urbano).
 
-    Only ``URBAN_RENTAL`` scheme observations are in scope; observations
-    carrying other schemes are dropped at the filter boundary.
+    Only ``URBAN_RENTAL`` scheme observations are in scope.
     """
     return _aggregate_for_modelo(observations, modelo="115", period=period)
+
+
+def aggregate_retenciones_123(
+    observations: tuple[RetencionObservation, ...],
+    *,
+    period: str,
+) -> RetencionesAggregation:
+    """Aggregate Modelo 123 (retenciones sobre rendimientos del capital mobiliario:
+    intereses, dividendos, otros).
+
+    In-scope schemes: CAPITAL_INTEREST, CAPITAL_DIVIDEND, CAPITAL_OTHER.
+    """
+    return _aggregate_for_modelo(observations, modelo="123", period=period)
+
+
+def aggregate_retenciones_180(
+    observations: tuple[RetencionObservation, ...],
+    *,
+    period: str,
+) -> RetencionesAggregation:
+    """Aggregate Modelo 180 (resumen anual de retenciones sobre arrendamiento urbano).
+
+    Shares the URBAN_RENTAL scheme catalogue with Modelo 115; the
+    difference is the period scope (full year vs quarter) which the
+    caller supplies. Callers should pass an annual period string
+    (e.g. ``"2025"``) and feed in the union of the year's 115
+    observations.
+    """
+    return _aggregate_for_modelo(observations, modelo="180", period=period)
+
+
+def aggregate_retenciones_190(
+    observations: tuple[RetencionObservation, ...],
+    *,
+    period: str,
+) -> RetencionesAggregation:
+    """Aggregate Modelo 190 (resumen anual de retenciones IRPF de Modelo 111).
+
+    Shares the 111 scheme catalogue (WORK_INCOME + ECONOMIC_ACTIVITY +
+    PROFESSIONAL + PRIZE) widened over the annual period.
+    """
+    return _aggregate_for_modelo(observations, modelo="190", period=period)
+
+
+def aggregate_retenciones_193(
+    observations: tuple[RetencionObservation, ...],
+    *,
+    period: str,
+) -> RetencionesAggregation:
+    """Aggregate Modelo 193 (resumen anual de retenciones sobre capital mobiliario).
+
+    Shares the 123 scheme catalogue.
+    """
+    return _aggregate_for_modelo(observations, modelo="193", period=period)
 
 
 __all__ = [
@@ -227,4 +301,8 @@ __all__ = [
     "RetencionScheme",
     "aggregate_retenciones_111",
     "aggregate_retenciones_115",
+    "aggregate_retenciones_123",
+    "aggregate_retenciones_180",
+    "aggregate_retenciones_190",
+    "aggregate_retenciones_193",
 ]
