@@ -253,7 +253,9 @@ def test_retired_commands_are_not_registered() -> None:
         ["app", "declarations", "--help"],
         ["app", "workspaces", "--help"],
         ["app", "audits", "--help"],
-        ["app", "ledger", "split", "--help"],
+        ["app", "ledger", "create", "--help"],
+        ["app", "ledger", "edit", "--help"],
+        ["app", "ledger", "read", "--help"],
         ["app", "invoice", "view", "--help"],
     ]
 
@@ -412,15 +414,21 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
         assert "cli." not in result.output, command
 
 
-def test_ledger_split_is_nested_inside_edit() -> None:
+def test_ledger_split_is_top_level_verb_with_yes_and_reason() -> None:
+    """Per the 2026-05-14 ledger-transaction-lifecycle ADR, `split` is the
+    canonical N-way row splitter — a first-class top-level verb, not a
+    flag nested under `update`. It requires --yes confirmation and accepts
+    --reason for the bucket-event payload."""
+
     ledger = _invoke(["app", "ledger", "--help"])
-    edit = _invoke(["app", "ledger", "edit", "--help"])
+    split = _invoke(["app", "ledger", "split", "--help"])
 
     assert ledger.exit_code == 0, ledger.output
-    assert edit.exit_code == 0, edit.output
-    assert "--split" in edit.output
-    assert "--skip" in edit.output
-    assert "--reason" in edit.output
+    assert split.exit_code == 0, split.output
+    assert "--child-amount" in split.output
+    assert "--child-description" in split.output
+    assert "--yes" in split.output
+    assert "--reason" in split.output
 
 
 def test_review_and_ledger_share_review_wording_without_retired_invoice_surface() -> None:

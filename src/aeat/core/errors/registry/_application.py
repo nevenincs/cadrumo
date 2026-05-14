@@ -207,7 +207,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_REVIEW_EDIT_PARSE",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_review_edit_parse",
-            default_suggestion="aeat app ledger edit --id ID --set category=V-01 --reason reason",
+            default_suggestion="aeat app ledger update --id ID --set category=V-01 --reason reason",
             retryable=False,
             runbook_id=None,
         ),
