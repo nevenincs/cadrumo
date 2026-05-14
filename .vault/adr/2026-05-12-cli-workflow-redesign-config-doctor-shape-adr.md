@@ -10,6 +10,7 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]"
+  - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]"
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
@@ -21,7 +22,16 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `cli-workflow-redesign` adr: `config doctor shape` | (**status:** `accepted`)
+# `cli-workflow-redesign` adr: `config doctor shape` | (**status:** `superseded by [[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]`)
+
+> Superseded by the `config repair shape` ADR. The `doctor` namespace is
+> replaced by `aeat config repair`: same composite-diagnostics surface,
+> renamed to plain operator vocabulary, with two contract additions —
+> every diagnostic row must populate `next_action` or an explicit
+> `dead_end` reason, and a new `reset-state --yes` subcommand exists to
+> recover from `WorkflowState` envelope shape drift. The grammar below
+> is retained only as historical record; see the repair-shape ADR for
+> the accepted shape.
 
 ## CLI Backend Boundary
 

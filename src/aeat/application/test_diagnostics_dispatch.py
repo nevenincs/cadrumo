@@ -1,26 +1,20 @@
 """Focused unit tests for diagnostics dispatch helpers.
 
-Three private dispatch helpers back the config-doctor rendering:
+Three private dispatch helpers back the config-repair rendering:
 
 - ``_overall_status(checks)`` — rolls up a tuple of
   :class:`DiagnosticCheck` into a single :class:`DiagnosticStatus`
   with priority ``fail`` > ``warn`` > ``ok``.
 - ``_profile_check(report)`` — projects a
-  :class:`WizardStatusReport` into the ``profile.*`` diagnostic
-  row. Three branches: no active profile, missing required keys,
-  happy path.
+  :class:`WizardStatusReport` into the ``profile.readiness``
+  diagnostic row. Three branches: no active profile, missing
+  required keys, happy path; all carry the same row name with the
+  branch encoded in ``summary``.
 - ``_auth_check(report)`` — projects a
-  :class:`WizardStatusReport` into the ``auth.*`` diagnostic row.
-  Three branches: no provider, provider + no session, happy path.
-
-Previously exercised only indirectly through
-``test_config_doctor_report_contains_registry_and_setup_checks``,
-which inspects the whole doctor report end-to-end and cannot pin
-the branch semantics of each dispatch helper. A regression that
-swapped the priority order in ``_overall_status`` (e.g. warn over
-fail) would silently downgrade every doctor report's overall
-status from fail → warn; the integration tests would still pass
-if no individual check happened to be fail.
+  :class:`WizardStatusReport` into the ``auth.readiness`` diagnostic
+  row. Three branches: no provider, provider + no session, happy
+  path; all carry the same row name with the branch encoded in
+  ``summary``.
 
 Tests pin each branch's :class:`DiagnosticStatus` and
 ``next_action`` shape; assertions are predicate-contract /
@@ -91,7 +85,7 @@ def test_overall_status_returns_ok_when_every_check_is_ok() -> None:
 def test_overall_status_returns_warn_when_any_check_is_warn_and_none_fail() -> None:
     checks = (
         DiagnosticCheck(name="a", status="ok", summary="alpha"),
-        DiagnosticCheck(name="b", status="warn", summary="beta"),
+        DiagnosticCheck(name="b", status="warn", summary="beta", next_action="aeat config repair"),
         DiagnosticCheck(name="c", status="ok", summary="gamma"),
     )
 
@@ -101,7 +95,7 @@ def test_overall_status_returns_warn_when_any_check_is_warn_and_none_fail() -> N
 def test_overall_status_returns_fail_when_any_check_is_fail() -> None:
     checks = (
         DiagnosticCheck(name="a", status="ok", summary="alpha"),
-        DiagnosticCheck(name="b", status="fail", summary="beta"),
+        DiagnosticCheck(name="b", status="fail", summary="beta", dead_end="terminal"),
     )
 
     assert _overall_status(checks) == "fail"
@@ -111,10 +105,10 @@ def test_overall_status_fail_priority_overrides_warn() -> None:
     """A single ``fail`` outranks any number of ``warn`` checks —
     the rollup never downgrades fail → warn."""
     checks = (
-        DiagnosticCheck(name="a", status="warn", summary="alpha"),
-        DiagnosticCheck(name="b", status="warn", summary="beta"),
-        DiagnosticCheck(name="c", status="fail", summary="gamma"),
-        DiagnosticCheck(name="d", status="warn", summary="delta"),
+        DiagnosticCheck(name="a", status="warn", summary="alpha", next_action="aeat config repair"),
+        DiagnosticCheck(name="b", status="warn", summary="beta", next_action="aeat config repair"),
+        DiagnosticCheck(name="c", status="fail", summary="gamma", dead_end="terminal"),
+        DiagnosticCheck(name="d", status="warn", summary="delta", next_action="aeat config repair"),
     )
 
     assert _overall_status(checks) == "fail"
@@ -122,8 +116,8 @@ def test_overall_status_fail_priority_overrides_warn() -> None:
 
 def test_overall_status_returns_fail_when_every_check_is_fail() -> None:
     checks = (
-        DiagnosticCheck(name="a", status="fail", summary="alpha"),
-        DiagnosticCheck(name="b", status="fail", summary="beta"),
+        DiagnosticCheck(name="a", status="fail", summary="alpha", dead_end="terminal"),
+        DiagnosticCheck(name="b", status="fail", summary="beta", dead_end="terminal"),
     )
 
     assert _overall_status(checks) == "fail"
@@ -139,16 +133,16 @@ def test_profile_check_no_active_profile_returns_warn_with_setup_next_action() -
 
     result = _profile_check(report)
 
-    assert result.name == "profile.active"
+    assert result.name == "profile.readiness"
     assert result.status == "warn"
-    assert result.next_action == "aeat config init --profile NAME --tax-id NIF"
+    assert result.next_action == "aeat config init --tax-id <TAX_ID> --activity <ACTIVITY>"
 
 
-def test_profile_check_missing_required_keys_returns_warn_with_report_next_action() -> None:
-    """When the profile exists but isn't ready, the renderer
-    forwards the wizard status's own ``next_action`` so the
-    doctor row points at the same remediation step the wizard
-    reports."""
+def test_profile_check_missing_required_keys_returns_warn_with_canonical_next_action() -> None:
+    """When the profile exists but isn't ready, the diagnostic
+    row carries the ADR-canonical ``aeat config init`` literal so
+    every operator surface points at the same recovery command.
+    """
     report = _wizard_status(
         profile_ready=False,
         missing_required=("tax_id", "ccaa"),
@@ -157,9 +151,9 @@ def test_profile_check_missing_required_keys_returns_warn_with_report_next_actio
 
     result = _profile_check(report)
 
-    assert result.name == "profile.required_keys"
+    assert result.name == "profile.readiness"
     assert result.status == "warn"
-    assert result.next_action == "aeat config set tax.id NIF"
+    assert result.next_action == "aeat config init --tax-id <TAX_ID> --activity <ACTIVITY>"
     assert "tax_id" in result.summary
     assert "ccaa" in result.summary
 
@@ -173,7 +167,7 @@ def test_profile_check_happy_path_returns_ok_with_present_total_summary() -> Non
 
     result = _profile_check(report)
 
-    assert result.name == "profile.required_keys"
+    assert result.name == "profile.readiness"
     assert result.status == "ok"
     assert result.next_action is None
     assert "4/4" in result.summary
@@ -181,8 +175,9 @@ def test_profile_check_happy_path_returns_ok_with_present_total_summary() -> Non
 
 def test_profile_check_active_profile_set_but_not_ready_does_not_short_circuit_to_active_branch() -> None:
     """The first branch keys on ``active_profile is None`` strictly.
-    A non-None active_profile with profile_ready=False routes to
-    the ``profile.required_keys`` branch, not ``profile.active``."""
+    A non-None active_profile with profile_ready=False still routes
+    to the consolidated ``profile.readiness`` row; the consolidated
+    row name carries every branch."""
     report = _wizard_status(
         active_profile="kent",
         profile_ready=False,
@@ -192,7 +187,7 @@ def test_profile_check_active_profile_set_but_not_ready_does_not_short_circuit_t
 
     result = _profile_check(report)
 
-    assert result.name == "profile.required_keys"
+    assert result.name == "profile.readiness"
 
 
 # ---------------------------------------------------------------------------
@@ -202,14 +197,14 @@ def test_profile_check_active_profile_set_but_not_ready_does_not_short_circuit_t
 
 def test_auth_check_no_provider_returns_warn_with_auth_setup_next_action() -> None:
     """auth_provider is the empty string → no provider configured →
-    ``auth.provider`` warn row pointing at ``aeat config auth``."""
+    ``auth.readiness`` warn row pointing at ``aeat config auth setup``."""
     report = _wizard_status(auth_provider="", login_ready=False)
 
     result = _auth_check(report)
 
-    assert result.name == "auth.provider"
+    assert result.name == "auth.readiness"
     assert result.status == "warn"
-    assert result.next_action == "aeat config auth --provider certificate --file PATH"
+    assert result.next_action == "aeat config auth setup"
 
 
 def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
@@ -217,10 +212,10 @@ def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
 
     result = _auth_check(report)
 
-    assert result.name == "auth.session"
+    assert result.name == "auth.readiness"
     assert result.status == "warn"
     assert "certificate" in result.summary
-    assert result.next_action == "aeat config auth --provider certificate"
+    assert result.next_action == "aeat config auth setup"
 
 
 def test_auth_check_happy_path_returns_ok_with_provider_session_summary() -> None:
@@ -228,7 +223,7 @@ def test_auth_check_happy_path_returns_ok_with_provider_session_summary() -> Non
 
     result = _auth_check(report)
 
-    assert result.name == "auth.session"
+    assert result.name == "auth.readiness"
     assert result.status == "ok"
     assert "certificate" in result.summary
     assert result.next_action is None
@@ -242,17 +237,18 @@ def test_auth_check_summary_carries_provider_name_under_session_warn() -> None:
 
     result = _auth_check(report)
 
-    assert result.name == "auth.session"
+    assert result.name == "auth.readiness"
     assert "clave-movil" in result.summary
 
 
 def test_auth_check_no_provider_branch_wins_when_login_ready_is_also_false() -> None:
     """Branch ordering: the auth_provider falsy check fires first.
     A WizardStatusReport with both auth_provider='' and
-    login_ready=False routes to ``auth.provider``, never
-    ``auth.session``."""
+    login_ready=False routes to the consolidated ``auth.readiness``
+    row, with the no-provider summary, never the no-session
+    summary."""
     report = _wizard_status(auth_provider="", login_ready=False)
 
     result = _auth_check(report)
 
-    assert result.name == "auth.provider"
+    assert result.name == "auth.readiness"
