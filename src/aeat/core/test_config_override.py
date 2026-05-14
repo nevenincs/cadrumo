@@ -102,6 +102,26 @@ def test_override_settings_nested_blocks_compose_lifo() -> None:
     assert load_settings().aeat_log_dir is None
 
 
+def test_override_settings_preserves_explicit_fields_set_signal() -> None:
+    """Call sites that distinguish "operator set this explicitly" from
+    "default flowed through" rely on ``model_fields_set``. The override
+    helper must report ONLY the override keys plus whatever the source
+    instance already had explicit, not every field that flowed through
+    the merged dict."""
+
+    baseline = load_settings()
+    baseline_explicit = set(baseline.model_fields_set)
+    assert "aeat_log_dir" not in baseline_explicit
+
+    with override_settings(aeat_log_dir=Path("/tmp/explicit")):
+        overridden = load_settings()
+        # The override key is now in the explicit set.
+        assert "aeat_log_dir" in overridden.model_fields_set
+        # Defaults that were not overridden remain NOT in the explicit
+        # set — operator did not touch them in this override block.
+        assert "aeat_cert_warn_days" not in overridden.model_fields_set
+
+
 def test_override_settings_carries_secretstr_through_validation() -> None:
     """The master-key passphrase override travels as a real SecretStr —
     Pydantic accepts a bare string and coerces; the override path must
