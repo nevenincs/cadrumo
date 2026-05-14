@@ -183,8 +183,9 @@ def test_manual_ledger_registry_uses_accepted_command_vocabulary() -> None:
     """The retained ledger Typer registry must expose current lifecycle names only."""
 
     accepted_commands = {
-        "create",
-        "edit",
+        "add",
+        "update",
+        "view",
         "classify",
         "allocate",
         "attach",
@@ -192,15 +193,17 @@ def test_manual_ledger_registry_uses_accepted_command_vocabulary() -> None:
         "stash",
         "remove",
         "reset",
+        "split",
+        "merge",
+        "history",
         "export",
         "list",
-        "read",
         "status",
         "track",
         "import",
         "review",
     }
-    rejected_commands = {"set-ratio", "unset-ratio", "split", "sanitize", "financial"}
+    rejected_commands = {"set-ratio", "unset-ratio", "sanitize", "financial", "create", "edit", "read"}
 
     command_names = _registered_ledger_command_names()
     assert accepted_commands <= command_names
@@ -210,7 +213,7 @@ def test_manual_ledger_registry_uses_accepted_command_vocabulary() -> None:
 def test_manual_ledger_help_rejects_legacy_vocabulary_across_subcommands() -> None:
     """Legacy command names and retired domain words must not leak into ledger help."""
 
-    rejected_terms = ("set-ratio", "unset-ratio", "split", "sanitize", "financial")
+    rejected_terms = ("set-ratio", "unset-ratio", "sanitize", "financial")
     offences: list[str] = []
     for command_name, help_text in _ledger_help_by_command().items():
         lowered = help_text.lower()
