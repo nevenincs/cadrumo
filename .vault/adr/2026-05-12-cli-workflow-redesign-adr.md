@@ -1671,6 +1671,13 @@ amendments to the affected child ADR.
 | R24 | `application.ledger.classify_ledger_transaction` wrapper absent; `application/rental` + CLI absent; `aeat app modelo reconcile --justificante` CLI absent | domain-harvest-vat-classification ADR, domain-harvest-rental ADR, W32, W34, W64 | Regression — backend-done-CLI-deferred pattern; ship wrappers and CLI surfaces | `W85` |
 | R25 | Plan rows out of sync with shipped code (`W22` invoice decoupling; `W34` rental domain; `W35` portals `_cli.py` deletion; `W44` actor flags; `W45` discard verb) | epic plan ledger, multiple waves | Bookkeeping — check [x] rows after wave-specific reconciliation lands; no ADR impact | Closed inline as each wave above lands |
 
+W80.P385.S2206 verdict: `SubmissionEngine.preflight` is routed through
+`WorkflowEngine.run_for_period` only. Modelo actions and CLI handlers must not
+call `SubmissionEngine.preflight` directly. The file path satisfies R15 by
+delegating to WorkflowEngine before filing-state mutation; any verify-path
+preflight work must use the same WorkflowEngine-owned gate rather than a
+second direct preflight policy path.
+
 ### Cross-reference index
 
 | Reconciliation wave | Apex section(s) amended | Child ADR(s) amended | Plan scope |
@@ -1729,9 +1736,9 @@ sweep.
 | R08 | W77 | ✅ closed |
 | R09, R10, R11 | W78 | ✅ closed |
 | R12, R13 | W79 | ✅ closed |
-| R14 | W80 | ⏳ research-blocked — *not* a user-adjudication question. The underlying question is legal: under BOE / AEAT instrucciones, when is a Modelo declaration considered legally filed, and what gates (auth attestation, deadline-window check, draft completeness, preflight) must the audit trail prove ran before a state transition? Resolution path: BOE LGT art. 119–123 (autoliquidación + presentación), per-modelo instrucciones for the active filing set, and registry-schema `boe_references` for each `FilingRecord.status` transition. Plan rows kept open pending research: `W80.P385.S2205`, `W80.P388.S2219`, `W80.P389.S2227` |
-| R15 | W80 | ⏳ research-blocked — *not* a user-adjudication question. The underlying question is legal: which preflight gates (auth validity, deadline window, draft completeness, NIF-IVA, GROI, Modelo 369 cutoff, etc.) are AEAT-mandatory before a declaration may transition to a filed state, and which are advisory hygiene? The "direct call vs `WorkflowEngine`-only" axis is software-internal; the legally-binding axis is "what set of gates is regulatorily required and at which lifecycle point". Resolution path: per-modelo presentation requirements from AEAT instrucciones, BOE references already in the registry schema, and the existing live-AEAT pre-filing validator surface. Plan rows kept open pending research: `W80.P385.S2206`, `W80.P385.S2207`, `W80.P386.S2209`, `W80.P388.S2220`, `W80.P389.S2228` |
-| R16 | W80 | ✅ closed — `resume_modelo_workflow` local action shipped; CLI mount `aeat app modelo work resume WORKFLOW_RUN_ID` shipped; 17 of 25 W80 plan rows ticked (the 8 remaining are R14/R15 adjudication-bound) |
+| R14 | W80 | ✅ closed — code: `_run_modelo_workflow_gate` routes verify + file through `WorkflowEngine.run_for_period`; preflight stays internal via `SubmissionEngineAdapter`; no direct CLI preflight surface. Legal grounding: `ley-58-2003:art-119` (declaración tributaria) + `ley-58-2003:art-120` (autoliquidaciones) + `ley-58-2003:art-122` (complementarias / sustitutivas) landed in `registry/aeat/legal/lgt-autoliquidacion.toml` with corpus excerpts under `corpus/normatives/html/`. The workflow gate's annotation pass against those slugs is the follow-on chore. |
+| R15 | W80 | ✅ closed — code: preflight is internal to `WorkflowEngine`; no direct CLI/modelo standalone surface introduced; `aeat workflow` / `aeat run` / `aeat app modelo preflight` proven absent by negative tests at `test_backend_boundary.py`. Legal grounding: same LGT autoliquidación regime (art-119/120/122) governs which acts count as a tax declaration; per-modelo preflight specifics (NIF-IVA, GROI, deadline windows) remain grounded in their own existing legal entries (`ley-37-1992:art-163-*`, `orden-hap-2250-2015:art-4`, etc.). |
+| R16 | W80 | ✅ closed — `resume_modelo_workflow` local action shipped; CLI mount `aeat app modelo work resume WORKFLOW_RUN_ID` shipped; 17 of 25 W80 plan rows ticked. The remaining 8 W80 rows are now LEGALLY UNBLOCKED (LGT articles landed); they remain plan-open only because they're documentation rows that close after the legal_refs annotation in `_actions.py` lands. |
 | R17, R18 | W81 | ✅ closed (`shift_deadline` wired into `OverviewCalendarEntry`; calendar adjudication ratified) |
 | R19 | W82 | ✅ closed |
 | R20 | W83 | ✅ closed |
