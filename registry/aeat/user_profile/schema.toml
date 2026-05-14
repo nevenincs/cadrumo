@@ -53,6 +53,27 @@ required = false
 sensitivity = "identity"
 description = "Operator contact email used by configuration surfaces."
 
+[[sections.fields]]
+key = "notes"
+type = "string"
+required = false
+sensitivity = "identity"
+description = "Operator free-form notes attached to the profile."
+
+[[sections]]
+key = "preferences"
+title = "Operator preferences"
+sensitivity = "operational"
+effective_dated = false
+
+[[sections.fields]]
+key = "output_language"
+type = "enum"
+required = false
+sensitivity = "operational"
+description = "Output language used by CLI rendering and notification copy."
+enum_values = ["es", "en", "ca", "eu", "gl"]
+
 [[sections]]
 key = "contact"
 title = "Contact and fiscal address"
@@ -312,6 +333,30 @@ effective_dated = true
 description = "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field."
 model_selectors = ["iva.oss_enrolled"]
 schedule_predicates = ["iva.oss_enrolled"]
+
+[[sections]]
+key = "obligations"
+title = "Filing obligation thresholds"
+sensitivity = "financial"
+effective_dated = true
+
+[[sections.fields]]
+key = "third_party_transactions_above_347_threshold"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 347 eligibility: declared yearly transactions with a single counterpart exceed the legal threshold."
+schedule_predicates = ["third_party_transactions_above_347_threshold"]
+
+[[sections.fields]]
+key = "bienes_extranjero_above_threshold"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold."
+schedule_predicates = ["bienes_extranjero_above_threshold"]
 
 [[sections]]
 key = "filing_export"
