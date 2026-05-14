@@ -553,10 +553,11 @@ cli:
       actor_help: Operator name recorded on the bucket event
       amount_help: Signed transaction amount in the bucket currency
       attachment_help: Supplementary attachment id (repeatable)
-      business_pct_help: Business-use share from 0 to 1 (only when classification is
-        MIXED)
+      business_pct_help: Business-use share from 0 to 1 (only when classification
+        is MIXED)
       category_help: Spending or income category id
-      classification_help: Business classification (BUSINESS / PERSONAL / MIXED / ...)
+      classification_help: Business classification (BUSINESS / PERSONAL / MIXED /
+        ...)
       counterparty_help: Counterparty descriptor
       currency_help: Three-letter ISO 4217 currency code
       date_help: Booked date (YYYY-MM-DD)
@@ -628,8 +629,8 @@ cli:
     history:
       help: Emit the chronological bucket-event chain for one ledger transaction id
       id_help: Ledger transaction id (or unambiguous hex prefix) to inspect
-      include_split_siblings_help: Expand the chain to include events for every
-        split sibling that shares a split_group_id with this transaction
+      include_split_siblings_help: Expand the chain to include events for every split
+        sibling that shares a split_group_id with this transaction
     import:
       dry_run_help: Run the import in dry-run mode (without saving)
       help: Import bank statements or records into the accounting ledger
@@ -683,14 +684,14 @@ cli:
       help: List ledger transactions in the active profile bucket
     merge:
       actor_help: Operator name recorded on the LEDGER_TRANSACTION_MERGED event
-      child_id_help: One child id (or unambiguous prefix) to merge. Repeat for
-        every sibling in the cohort; partial merges are refused.
+      child_id_help: One child id (or unambiguous prefix) to merge. Repeat for every
+        sibling in the cohort; partial merges are refused.
       errors:
         min_two_children: ledger merge requires at least two --child-id values
       help: Re-merge a complete cohort of split children into a fresh transaction
       reason_help: Reason recorded in the bucket-event payload and lifecycle history
-      yes_help: Confirm the merge (archives every child and the parent, persists
-        a fresh content-addressed merged transaction)
+      yes_help: Confirm the merge (archives every child and the parent, persists a
+        fresh content-addressed merged transaction)
     remove:
       actor_help: Operator name recorded on the bucket event
       dry_run_help: Report removal effects without deleting the ledger transaction
@@ -720,14 +721,14 @@ cli:
       errors:
         child_args_mismatch: ledger split requires the same number of --child-amount
           and --child-description arguments
-        min_two_children: ledger split requires at least two --child-amount /
-          --child-description pairs
-      help: Redistribute one parent transaction into N child transactions whose
-        amounts sum to the parent amount exactly
+        min_two_children: ledger split requires at least two --child-amount / --child-description
+          pairs
+      help: Redistribute one parent transaction into N child transactions whose amounts
+        sum to the parent amount exactly
       id_help: Parent transaction id (or unambiguous hex prefix) to split
       reason_help: Reason recorded in the bucket-event payload and lifecycle history
-      yes_help: Confirm the split (transitions the parent to SPLIT and persists
-        N child transactions)
+      yes_help: Confirm the split (transitions the parent to SPLIT and persists N
+        child transactions)
     stash:
       actor_help: Operator name recorded on the bucket event
       help: Stash one ledger transaction in the active profile bucket
