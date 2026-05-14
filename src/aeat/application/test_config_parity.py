@@ -29,16 +29,26 @@ def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") -> None:
     """Seed an active profile through the profile application service."""
 
-    from aeat.application.profile._actions import set_active_profile, set_profile_values
+    from aeat.application.user_profile._orchestration import register_active_profile
     from aeat.application.workflow._persistence import workflow_state_repository
+    from aeat.domain.user_profile import UserProfileFact
 
     repo = workflow_state_repository()
-    repo.update(lambda state: set_active_profile(state, "default"))
+    facts = (
+        UserProfileFact(path="identity.tax_id", value=tax_id),
+        UserProfileFact(path="identity.name", value="operator"),
+        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="activities.description", value=activity),
+        UserProfileFact(path="provenance.source", value="manual_cli"),
+    )
     repo.update(
-        lambda state: set_profile_values(
+        lambda state: register_active_profile(
             state,
-            "default",
-            {"tax.id": tax_id, "activity": activity, "name": "kent"},
+            profile_id="default",
+            display_name="operator",
+            facts=facts,
         )
     )
 
@@ -64,14 +74,14 @@ def test_config_set_then_config_get_round_trips_iva_regime(
     assert get_via_config.exit_code == 0, get_via_config.output
     assert "GENERAL" in get_via_config.output
 
-    from aeat.application.profile._repository import profile_bucket_repository
+    from aeat.application.user_profile import UserProfileLifecycleRepository
+    from aeat.application.user_profile._orchestration import fact_value
     from aeat.application.workflow._persistence import workflow_state_repository
 
     workflow_state = workflow_state_repository().load()
     assert workflow_state.profiles["default"].bucket_id == "default"
-    bucket = profile_bucket_repository().load("default")
-    assert bucket is not None
-    assert bucket.values["iva.regime"] == "GENERAL"
+    record = UserProfileLifecycleRepository(bucket_id="default").load("default")
+    assert fact_value(record, "iva.regime") == "GENERAL"
 
 
 def test_config_set_then_config_status_surfaces_assigned_value(

@@ -28,12 +28,16 @@ def isolated_language_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
 
 
 def _seed_profile_language(language: str) -> None:
-    from aeat.application.profile._actions import set_active_profile, set_profile_values
+    from aeat.application.user_profile._orchestration import set_active_field
+    from aeat.application.user_profile._testing import register_minimal_profile
     from aeat.application.workflow._persistence import workflow_state_repository
+    from aeat.domain.user_profile import UserProfileFact
 
     repository = workflow_state_repository()
-    repository.update(lambda state: set_active_profile(state, "default"))
-    repository.update(lambda state: set_profile_values(state, "default", {"output.language": language}))
+    repository.update(lambda state: register_minimal_profile(state, profile_id="default"))
+    repository.update(
+        lambda state: set_active_field(state, UserProfileFact(path="preferences.output_language", value=language))
+    )
 
 
 def test_output_language_reads_active_profile_without_emitting_bucket_events(

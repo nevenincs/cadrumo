@@ -23,7 +23,7 @@ export_headers = ["profile_tax_id"]
 [[sections.fields]]
 key = "name"
 type = "string"
-required = true
+required = false
 sensitivity = "identity"
 description = "Declarant given name or display name."
 model_selectors = ["name"]
@@ -132,10 +132,10 @@ model_selectors = ["TaxResidenceProfile.ccaa"]
 [[sections.fields]]
 key = "jurisdiction_scope"
 type = "enum"
-required = true
+required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Common-regime or explicit unsupported foral state."
+description = "Common-regime or explicit unsupported foral state. Defaults to common_regime when no wizard answer is recorded."
 enum_values = ["common_regime", "foral_unsupported"]
 
 [[sections]]
@@ -684,9 +684,9 @@ effective_dated = false
 [[sections.fields]]
 key = "source"
 type = "enum"
-required = true
+required = false
 sensitivity = "audit"
-description = "Source of the profile fact."
+description = "Source of the profile fact. Defaults to manual_cli when the wizard runner does not record a provenance value."
 enum_values = ["manual_cli", "setup_wizard", "modelo_036_import", "aeat_census_read", "registry_inference"]
 
 [[sections.fields]]

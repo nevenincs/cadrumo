@@ -93,32 +93,37 @@ def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) ->
 def _seed_profile(
     *,
     tax_id: str = "00000000T",
-    name: str = "kent",
+    name: str = "operator",
     activity: str = "design",
     iva_regime: str = "GENERAL",
     extra_values: dict[str, str] | None = None,
 ) -> None:
     """Seed an active profile through workflow pointers and profile buckets.
 
-    Composes ``set_active_profile('default')`` with ``set_profile_values``
-    over the supplied identity fields. Workflow state keeps the active
-    profile pointer; profile values are written through the profile
-    bucket repository by the profile application service.
+    Registers the profile through canonical user-profile orchestration.
+    Workflow state keeps the active profile pointer; profile facts are
+    written through the profile lifecycle service.
 
     ``iva.regime`` defaults to ``GENERAL`` so the seeded profile
     matches the operator's state after a quiet, no-override
     ``aeat config init`` run.
     """
 
-    from aeat.application.profile._actions import set_active_profile, set_profile_values
+    from aeat.application.user_profile._testing import register_minimal_profile
     from aeat.application.workflow._persistence import workflow_state_repository
 
     repo = workflow_state_repository()
-    repo.update(lambda state: set_active_profile(state, "default"))
-    values = {"tax.id": tax_id, "name": name, "activity": activity, "iva.regime": iva_regime}
+    values = {"identity.tax_id": tax_id, "identity.name": name, "activities.description": activity, "iva.regime": iva_regime}
     if extra_values:
         values.update(extra_values)
-    repo.update(lambda state: set_profile_values(state, "default", values))
+    repo.update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id="default",
+            display_name=name,
+            overrides=values,
+        )
+    )
 
 
 def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_bucket(
@@ -128,7 +133,8 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
 
     from aeat.application.filing import load_default_filing_profile
-    from aeat.application.profile._repository import profile_bucket_repository
+    from aeat.application.user_profile import UserProfileLifecycleRepository
+    from aeat.application.user_profile._orchestration import fact_value
     from aeat.application.workflow import workflow_state_repository
 
     _isolate_user_cli(monkeypatch, tmp_path)
@@ -139,7 +145,7 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
             "init",
             "--quiet",
             "--profile",
-            "kent",
+            "operator",
             "--tax-id",
             "00000000T",
             "--activity",
@@ -150,25 +156,24 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     )
     assert init_result.exit_code == 0, init_result.output
 
-    set_result = _invoke(["config", "profile", "set", "output.language", "en"])
+    set_result = _invoke(["config", "profile", "set", "preferences.output_language", "en"])
     assert set_result.exit_code == 0, set_result.output
 
-    get_result = _invoke(["--format", "json", "config", "profile", "get", "output.language"])
+    get_result = _invoke(["--format", "json", "config", "profile", "get", "preferences.output_language"])
     assert get_result.exit_code == 0, get_result.output
     assert json.loads(_json_output(get_result))["value"] == "en"
 
     status_result = _invoke(["--format", "json", "config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output
     status_payload = json.loads(_json_output(status_result))
-    assert status_payload["active_profile"] == "kent"
+    assert status_payload["active_profile"] == "operator"
     assert status_payload["iva_regime"] == "GENERAL"
 
     state = workflow_state_repository().load()
-    assert state.profiles["kent"].bucket_id == "kent"
-    stored = profile_bucket_repository().load("kent")
-    assert stored is not None
-    assert stored.values["tax.id"] == "00000000T"
-    assert stored.values["output.language"] == "en"
+    assert state.profiles["operator"].bucket_id == "operator"
+    stored = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
+    assert fact_value(stored, "identity.tax_id") == "00000000T"
+    assert fact_value(stored, "preferences.output_language") == "en"
 
     calendar_result = _invoke(
         [
@@ -266,7 +271,7 @@ def test_config_repair_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch
     assert "registry.load" in text_result.output
     payload = json.loads(_json_output(json_result))
     assert payload["registry"]["available"] is True
-    assert "registry.load" in {check["name"] for check in payload["checks"]}
+    assert "registry.load" in {check["identity.name"] for check in payload["checks"]}
     assert logs_result.exit_code == 0, logs_result.output
     assert "path\t" in logs_result.output
 
@@ -488,7 +493,7 @@ def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, 
 
 def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_user_cli: Path) -> None:
     tmp_path = encrypted_user_cli
-    _seed_profile(tax_id="00000000T", name="kent", activity="design")
+    _seed_profile(tax_id="00000000T", name="operator", activity="design")
     canary = "CLI_ENCRYPTED_LEDGER_CANARY_5A2F"
     transaction_ref = "n26-secure-row-001"
     statement = tmp_path / "n26-secure.csv"
@@ -613,7 +618,7 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
 
 def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="00000000T", name="kent", activity="design")
+    _seed_profile(tax_id="00000000T", name="operator", activity="design")
 
     config_status = _invoke(["--format", "json", "config", "profile", "status"])
     overview = _invoke(["--format", "json", "app", "overview", "status"])
@@ -642,7 +647,7 @@ def test_config_profile_set_requires_active_profile_with_typed_error(
 
     _isolate_user_cli(monkeypatch, tmp_path)
 
-    result = _invoke(["config", "profile", "set", "tax.id", "12345678Z"])
+    result = _invoke(["config", "profile", "set", "identity.tax_id", "12345678Z"])
 
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
@@ -659,11 +664,12 @@ def test_config_profile_set_iva_regime_round_trips_to_deadline_engine(
     ``IVARegime.GENERAL``. The wizard's SELECT validator only accepts
     the canonical uppercase token form.
     """
+    from aeat.application.user_profile._projections import projection_for_autonomo
     from aeat.application.workflow import workflow_state_repository
-    from aeat.domain.deadlines import IVARegime, autonomo_profile_from_mapping
+    from aeat.domain.deadlines import IVARegime
 
     _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
+    _seed_profile(tax_id="00000000T", name="operator", activity="Servicios")
 
     set_result = _invoke(["config", "profile", "set", "iva.regime", "GENERAL"])
     assert set_result.exit_code == 0, set_result.output
@@ -671,7 +677,7 @@ def test_config_profile_set_iva_regime_round_trips_to_deadline_engine(
     state = workflow_state_repository().load()
     record = state.active_profile_record()
     assert record is not None
-    profile = autonomo_profile_from_mapping(record.values, tax_id_default="00000000T")
+    profile = projection_for_autonomo(record, tax_id_default="00000000T")
     assert profile.iva_regime is IVARegime.GENERAL
 
 
@@ -686,11 +692,11 @@ def test_config_set_does_intracomunitario_round_trips_to_deadline_engine(
     record matches the engine lookup; this test pins the round-trip
     through ``aeat config profile set``.
     """
+    from aeat.application.user_profile._projections import projection_for_autonomo
     from aeat.application.workflow import workflow_state_repository
-    from aeat.domain.deadlines import autonomo_profile_from_mapping
 
     _isolate_user_cli(monkeypatch, tmp_path)
-    _seed_profile(tax_id="00000000T", name="kent", activity="Servicios")
+    _seed_profile(tax_id="00000000T", name="operator", activity="Servicios")
 
     set_result = _invoke(["config", "profile", "set", "does_intracomunitario", "true"])
     assert set_result.exit_code == 0, set_result.output
@@ -703,7 +709,7 @@ def test_config_set_does_intracomunitario_round_trips_to_deadline_engine(
     state = workflow_state_repository().load()
     record = state.active_profile_record()
     assert record is not None
-    profile = autonomo_profile_from_mapping(record.values, tax_id_default="00000000T")
+    profile = projection_for_autonomo(record, tax_id_default="00000000T")
     assert profile.does_intracomunitario is True
 
 

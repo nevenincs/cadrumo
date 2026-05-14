@@ -315,7 +315,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(
     authenticated) and asserting the report shape across each.
     """
     from aeat.application.auth import update_auth
-    from aeat.application.profile import set_active_profile, set_profile_values
+    from aeat.application.user_profile._testing import register_minimal_profile
     from aeat.application.workflow import WorkflowState
 
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'auth.db').as_posix()}")
@@ -323,13 +323,14 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     dispose_engine()
 
-    base = set_active_profile(
-        set_profile_values(
-            WorkflowState(),
-            "operator",
-            {"tax.id": "00000000T", "activity": "design", "iva.regime": "general"},
-        ),
-        "operator",
+    base = register_minimal_profile(
+        WorkflowState(),
+        profile_id="operator",
+        overrides={
+            "identity.tax_id": "00000000T",
+            "activities.description": "design",
+            "iva.regime": "GENERAL",
+        },
     )
 
     no_provider = base
