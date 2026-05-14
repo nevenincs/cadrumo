@@ -1582,56 +1582,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-app-ledger-ratios-sha
 
 This Phase delivers backend implementation for ledger usage ratio behavior as required by `2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr`.
 
-- [ ] `W26.P126.S0751` - Map the `2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr` decision into non-CLI service ownership for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
-- [ ] `W26.P126.S0752` - Implement Pydantic command and result contracts for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
-- [ ] `W26.P126.S0753` - Wire application or domain services required by ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
-- [ ] `W26.P126.S0754` - Connect persistence, bucket events, registry data, or provider adapters required by ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
-- [ ] `W26.P126.S0755` - Route existing backend functionality into the canonical service for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
-- [ ] `W26.P126.S0756` - Record service-level error codes and log fields for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P126.S0751` - Map the `2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr` decision into non-CLI service ownership for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P126.S0752` - Implement Pydantic command and result contracts for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P126.S0753` - Wire application or domain services required by ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P126.S0754` - Connect persistence, bucket events, registry data, or provider adapters required by ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P126.S0755` - Route existing backend functionality into the canonical service for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P126.S0756` - Record service-level error codes and log fields for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
 
 ### Phase `W26.P127` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for ledger usage ratio behavior as required by `2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr`.
 
-- [ ] `W26.P127.S0757` - Audit duplicate implementations that overlap ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
-- [ ] `W26.P127.S0758` - Delete duplicate backend branches that compete with ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
-- [ ] `W26.P127.S0759` - Remove stale aliases that bypass the canonical service for ledger usage ratio behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W26.P127.S0760` - Migrate internal callers to the canonical service for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
-- [ ] `W26.P127.S0761` - Remove stale fixtures and tests that encode duplicate behavior for ledger usage ratio behavior; `tests/domain/usage_ratios`.
-- [ ] `W26.P127.S0762` - Update boundary inventory entries that describe duplicate behavior for ledger usage ratio behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W26.P127.S0757` - Audit duplicate implementations that overlap ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P127.S0758` - Delete duplicate backend branches that compete with ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P127.S0759` - Remove stale aliases that bypass the canonical service for ledger usage ratio behavior; `src/aeat/entrypoints/cli`.
+- [x] `W26.P127.S0760` - Migrate internal callers to the canonical service for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P127.S0761` - Remove stale fixtures and tests that encode duplicate behavior for ledger usage ratio behavior; `tests/domain/usage_ratios`.
+- [x] `W26.P127.S0762` - Update boundary inventory entries that describe duplicate behavior for ledger usage ratio behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W26.P128` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for ledger usage ratio behavior as required by `2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr`.
 
-- [ ] `W26.P128.S0763` - Delete compatibility shims that preserve rejected behavior for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
-- [ ] `W26.P128.S0764` - Delete placeholder stubs that claim support for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
-- [ ] `W26.P128.S0765` - Replace stubbed paths with real backend service calls for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
-- [ ] `W26.P128.S0766` - Remove deprecated command spelling and help text for ledger usage ratio behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W26.P128.S0767` - Remove tests that assert shim or stub behavior for ledger usage ratio behavior; `tests/domain/usage_ratios`.
-- [ ] `W26.P128.S0768` - Record the removed shim and stub surfaces for ledger usage ratio behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W26.P128.S0763` - Delete compatibility shims that preserve rejected behavior for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P128.S0764` - Delete placeholder stubs that claim support for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P128.S0765` - Replace stubbed paths with real backend service calls for ledger usage ratio behavior; `src/aeat/domain/usage_ratios`.
+- [x] `W26.P128.S0766` - Remove deprecated command spelling and help text for ledger usage ratio behavior; `src/aeat/entrypoints/cli`.
+- [x] `W26.P128.S0767` - Remove tests that assert shim or stub behavior for ledger usage ratio behavior; `tests/domain/usage_ratios`.
+- [x] `W26.P128.S0768` - Record the removed shim and stub surfaces for ledger usage ratio behavior; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W26.P129` - real behavior verification
 
 This Phase delivers real behavior verification for ledger usage ratio behavior as required by `2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr`.
 
-- [ ] `W26.P129.S0769` - Add service contract tests for ledger usage ratio behavior; `tests/domain/usage_ratios`.
-- [ ] `W26.P129.S0770` - Add persistence or registry integration tests for ledger usage ratio behavior; `tests/domain/usage_ratios`.
-- [ ] `W26.P129.S0771` - Add negative tests proving rejected aliases do not reach ledger usage ratio behavior; `tests/entrypoints/cli`.
-- [ ] `W26.P129.S0772` - Add command behavior tests that exercise ledger usage ratio behavior through real services; `tests/entrypoints/cli`.
-- [ ] `W26.P129.S0773` - Add end-to-end workflow coverage for ledger usage ratio behavior; `tests`.
-- [ ] `W26.P129.S0774` - Run the targeted test slice for ledger usage ratio behavior without skips or xfails; `tests/domain/usage_ratios`.
+- [x] `W26.P129.S0769` - Add service contract tests for ledger usage ratio behavior; `tests/domain/usage_ratios`.
+- [x] `W26.P129.S0770` - Add persistence or registry integration tests for ledger usage ratio behavior; `tests/domain/usage_ratios`.
+- [x] `W26.P129.S0771` - Add negative tests proving rejected aliases do not reach ledger usage ratio behavior; `tests/entrypoints/cli`.
+- [x] `W26.P129.S0772` - Add command behavior tests that exercise ledger usage ratio behavior through real services; `tests/entrypoints/cli`.
+- [x] `W26.P129.S0773` - Add end-to-end workflow coverage for ledger usage ratio behavior; `tests`.
+- [x] `W26.P129.S0774` - Run the targeted test slice for ledger usage ratio behavior without skips or xfails; `tests/domain/usage_ratios`.
 
 ### Phase `W26.P130` - thin cli exposure
 
 This Phase delivers thin cli exposure for ledger usage ratio behavior as required by `2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr`.
 
-- [ ] `W26.P130.S0775` - Expose accepted command handlers for ledger usage ratio behavior under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W26.P130.S0776` - Keep argument parsing for ledger usage ratio behavior separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W26.P130.S0777` - Delegate ledger usage ratio behavior execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W26.P130.S0778` - Render ledger usage ratio behavior results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W26.P130.S0779` - Handle ledger usage ratio behavior failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W26.P130.S0780` - Validate help text for ledger usage ratio behavior uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W26.P130.S0775` - Expose accepted command handlers for ledger usage ratio behavior under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W26.P130.S0776` - Keep argument parsing for ledger usage ratio behavior separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W26.P130.S0777` - Delegate ledger usage ratio behavior execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W26.P130.S0778` - Render ledger usage ratio behavior results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W26.P130.S0779` - Handle ledger usage ratio behavior failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W26.P130.S0780` - Validate help text for ledger usage ratio behavior uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W27` - bank provider expansion
 
@@ -1641,56 +1641,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-bank-provider-expansi
 
 This Phase delivers backend implementation for bank provider import coverage as required by `2026-05-12-cli-workflow-redesign-bank-provider-expansion-adr`.
 
-- [ ] `W27.P131.S0781` - Map the `2026-05-12-cli-workflow-redesign-bank-provider-expansion-adr` decision into non-CLI service ownership for bank provider import coverage; `src/aeat/adapters/inbound`.
-- [ ] `W27.P131.S0782` - Implement Pydantic command and result contracts for bank provider import coverage; `src/aeat/adapters/inbound`.
-- [ ] `W27.P131.S0783` - Wire application or domain services required by bank provider import coverage; `src/aeat/adapters/inbound`.
-- [ ] `W27.P131.S0784` - Connect persistence, bucket events, registry data, or provider adapters required by bank provider import coverage; `src/aeat/adapters/inbound`.
-- [ ] `W27.P131.S0785` - Route existing backend functionality into the canonical service for bank provider import coverage; `src/aeat/adapters/inbound`.
-- [ ] `W27.P131.S0786` - Record service-level error codes and log fields for bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P131.S0781` - Map the `2026-05-12-cli-workflow-redesign-bank-provider-expansion-adr` decision into non-CLI service ownership for bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P131.S0782` - Implement Pydantic command and result contracts for bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P131.S0783` - Wire application or domain services required by bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P131.S0784` - Connect persistence, bucket events, registry data, or provider adapters required by bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P131.S0785` - Route existing backend functionality into the canonical service for bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P131.S0786` - Record service-level error codes and log fields for bank provider import coverage; `src/aeat/adapters/inbound`.
 
 ### Phase `W27.P132` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for bank provider import coverage as required by `2026-05-12-cli-workflow-redesign-bank-provider-expansion-adr`.
 
-- [ ] `W27.P132.S0787` - Audit duplicate implementations that overlap bank provider import coverage; `src/aeat/adapters/inbound`.
-- [ ] `W27.P132.S0788` - Delete duplicate backend branches that compete with bank provider import coverage; `src/aeat/adapters/inbound`.
-- [ ] `W27.P132.S0789` - Remove stale aliases that bypass the canonical service for bank provider import coverage; `src/aeat/entrypoints/cli`.
-- [ ] `W27.P132.S0790` - Migrate internal callers to the canonical service for bank provider import coverage; `src/aeat/adapters/inbound`.
-- [ ] `W27.P132.S0791` - Remove stale fixtures and tests that encode duplicate behavior for bank provider import coverage; `tests/adapters/inbound`.
-- [ ] `W27.P132.S0792` - Update boundary inventory entries that describe duplicate behavior for bank provider import coverage; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W27.P132.S0787` - Audit duplicate implementations that overlap bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P132.S0788` - Delete duplicate backend branches that compete with bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P132.S0789` - Remove stale aliases that bypass the canonical service for bank provider import coverage; `src/aeat/entrypoints/cli`.
+- [x] `W27.P132.S0790` - Migrate internal callers to the canonical service for bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P132.S0791` - Remove stale fixtures and tests that encode duplicate behavior for bank provider import coverage; `tests/adapters/inbound`.
+- [x] `W27.P132.S0792` - Update boundary inventory entries that describe duplicate behavior for bank provider import coverage; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W27.P133` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for bank provider import coverage as required by `2026-05-12-cli-workflow-redesign-bank-provider-expansion-adr`.
 
-- [ ] `W27.P133.S0793` - Delete compatibility shims that preserve rejected behavior for bank provider import coverage; `src/aeat/adapters/inbound`.
-- [ ] `W27.P133.S0794` - Delete placeholder stubs that claim support for bank provider import coverage; `src/aeat/adapters/inbound`.
-- [ ] `W27.P133.S0795` - Replace stubbed paths with real backend service calls for bank provider import coverage; `src/aeat/adapters/inbound`.
-- [ ] `W27.P133.S0796` - Remove deprecated command spelling and help text for bank provider import coverage; `src/aeat/entrypoints/cli`.
-- [ ] `W27.P133.S0797` - Remove tests that assert shim or stub behavior for bank provider import coverage; `tests/adapters/inbound`.
-- [ ] `W27.P133.S0798` - Record the removed shim and stub surfaces for bank provider import coverage; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W27.P133.S0793` - Delete compatibility shims that preserve rejected behavior for bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P133.S0794` - Delete placeholder stubs that claim support for bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P133.S0795` - Replace stubbed paths with real backend service calls for bank provider import coverage; `src/aeat/adapters/inbound`.
+- [x] `W27.P133.S0796` - Remove deprecated command spelling and help text for bank provider import coverage; `src/aeat/entrypoints/cli`.
+- [x] `W27.P133.S0797` - Remove tests that assert shim or stub behavior for bank provider import coverage; `tests/adapters/inbound`.
+- [x] `W27.P133.S0798` - Record the removed shim and stub surfaces for bank provider import coverage; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W27.P134` - real behavior verification
 
 This Phase delivers real behavior verification for bank provider import coverage as required by `2026-05-12-cli-workflow-redesign-bank-provider-expansion-adr`.
 
-- [ ] `W27.P134.S0799` - Add service contract tests for bank provider import coverage; `tests/adapters/inbound`.
-- [ ] `W27.P134.S0800` - Add persistence or registry integration tests for bank provider import coverage; `tests/adapters/inbound`.
-- [ ] `W27.P134.S0801` - Add negative tests proving rejected aliases do not reach bank provider import coverage; `tests/entrypoints/cli`.
-- [ ] `W27.P134.S0802` - Add command behavior tests that exercise bank provider import coverage through real services; `tests/entrypoints/cli`.
-- [ ] `W27.P134.S0803` - Add end-to-end workflow coverage for bank provider import coverage; `tests`.
-- [ ] `W27.P134.S0804` - Run the targeted test slice for bank provider import coverage without skips or xfails; `tests/adapters/inbound`.
+- [x] `W27.P134.S0799` - Add service contract tests for bank provider import coverage; `tests/adapters/inbound`.
+- [x] `W27.P134.S0800` - Add persistence or registry integration tests for bank provider import coverage; `tests/adapters/inbound`.
+- [x] `W27.P134.S0801` - Add negative tests proving rejected aliases do not reach bank provider import coverage; `tests/entrypoints/cli`.
+- [x] `W27.P134.S0802` - Add command behavior tests that exercise bank provider import coverage through real services; `tests/entrypoints/cli`.
+- [x] `W27.P134.S0803` - Add end-to-end workflow coverage for bank provider import coverage; `tests`.
+- [x] `W27.P134.S0804` - Run the targeted test slice for bank provider import coverage without skips or xfails; `tests/adapters/inbound`.
 
 ### Phase `W27.P135` - thin cli exposure
 
 This Phase delivers thin cli exposure for bank provider import coverage as required by `2026-05-12-cli-workflow-redesign-bank-provider-expansion-adr`.
 
-- [ ] `W27.P135.S0805` - Expose accepted command handlers for bank provider import coverage under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W27.P135.S0806` - Keep argument parsing for bank provider import coverage separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W27.P135.S0807` - Delegate bank provider import coverage execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W27.P135.S0808` - Render bank provider import coverage results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W27.P135.S0809` - Handle bank provider import coverage failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W27.P135.S0810` - Validate help text for bank provider import coverage uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W27.P135.S0805` - Expose accepted command handlers for bank provider import coverage under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W27.P135.S0806` - Keep argument parsing for bank provider import coverage separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W27.P135.S0807` - Delegate bank provider import coverage execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W27.P135.S0808` - Render bank provider import coverage results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W27.P135.S0809` - Handle bank provider import coverage failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W27.P135.S0810` - Validate help text for bank provider import coverage uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W28` - foreign currency normalization
 
@@ -1700,56 +1700,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-foreign-currency-norm
 
 This Phase delivers backend implementation for currency normalization layer as required by `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr`.
 
-- [ ] `W28.P136.S0811` - Map the `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr` decision into non-CLI service ownership for currency normalization layer; `src/aeat/domain/currency`.
-- [ ] `W28.P136.S0812` - Implement Pydantic command and result contracts for currency normalization layer; `src/aeat/domain/currency`.
-- [ ] `W28.P136.S0813` - Wire application or domain services required by currency normalization layer; `src/aeat/domain/currency`.
-- [ ] `W28.P136.S0814` - Connect persistence, bucket events, registry data, or provider adapters required by currency normalization layer; `src/aeat/domain/currency`.
-- [ ] `W28.P136.S0815` - Route existing backend functionality into the canonical service for currency normalization layer; `src/aeat/domain/currency`.
-- [ ] `W28.P136.S0816` - Record service-level error codes and log fields for currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P136.S0811` - Map the `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr` decision into non-CLI service ownership for currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P136.S0812` - Implement Pydantic command and result contracts for currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P136.S0813` - Wire application or domain services required by currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P136.S0814` - Connect persistence, bucket events, registry data, or provider adapters required by currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P136.S0815` - Route existing backend functionality into the canonical service for currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P136.S0816` - Record service-level error codes and log fields for currency normalization layer; `src/aeat/domain/currency`.
 
 ### Phase `W28.P137` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for currency normalization layer as required by `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr`.
 
-- [ ] `W28.P137.S0817` - Audit duplicate implementations that overlap currency normalization layer; `src/aeat/domain/currency`.
-- [ ] `W28.P137.S0818` - Delete duplicate backend branches that compete with currency normalization layer; `src/aeat/domain/currency`.
-- [ ] `W28.P137.S0819` - Remove stale aliases that bypass the canonical service for currency normalization layer; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P137.S0820` - Migrate internal callers to the canonical service for currency normalization layer; `src/aeat/domain/currency`.
-- [ ] `W28.P137.S0821` - Remove stale fixtures and tests that encode duplicate behavior for currency normalization layer; `tests/domain/currency`.
-- [ ] `W28.P137.S0822` - Update boundary inventory entries that describe duplicate behavior for currency normalization layer; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W28.P137.S0817` - Audit duplicate implementations that overlap currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P137.S0818` - Delete duplicate backend branches that compete with currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P137.S0819` - Remove stale aliases that bypass the canonical service for currency normalization layer; `src/aeat/entrypoints/cli`.
+- [x] `W28.P137.S0820` - Migrate internal callers to the canonical service for currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P137.S0821` - Remove stale fixtures and tests that encode duplicate behavior for currency normalization layer; `tests/domain/currency`.
+- [x] `W28.P137.S0822` - Update boundary inventory entries that describe duplicate behavior for currency normalization layer; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W28.P138` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for currency normalization layer as required by `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr`.
 
-- [ ] `W28.P138.S0823` - Delete compatibility shims that preserve rejected behavior for currency normalization layer; `src/aeat/domain/currency`.
-- [ ] `W28.P138.S0824` - Delete placeholder stubs that claim support for currency normalization layer; `src/aeat/domain/currency`.
-- [ ] `W28.P138.S0825` - Replace stubbed paths with real backend service calls for currency normalization layer; `src/aeat/domain/currency`.
-- [ ] `W28.P138.S0826` - Remove deprecated command spelling and help text for currency normalization layer; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P138.S0827` - Remove tests that assert shim or stub behavior for currency normalization layer; `tests/domain/currency`.
-- [ ] `W28.P138.S0828` - Record the removed shim and stub surfaces for currency normalization layer; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W28.P138.S0823` - Delete compatibility shims that preserve rejected behavior for currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P138.S0824` - Delete placeholder stubs that claim support for currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P138.S0825` - Replace stubbed paths with real backend service calls for currency normalization layer; `src/aeat/domain/currency`.
+- [x] `W28.P138.S0826` - Remove deprecated command spelling and help text for currency normalization layer; `src/aeat/entrypoints/cli`.
+- [x] `W28.P138.S0827` - Remove tests that assert shim or stub behavior for currency normalization layer; `tests/domain/currency`.
+- [x] `W28.P138.S0828` - Record the removed shim and stub surfaces for currency normalization layer; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W28.P139` - real behavior verification
 
 This Phase delivers real behavior verification for currency normalization layer as required by `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr`.
 
-- [ ] `W28.P139.S0829` - Add service contract tests for currency normalization layer; `tests/domain/currency`.
-- [ ] `W28.P139.S0830` - Add persistence or registry integration tests for currency normalization layer; `tests/domain/currency`.
-- [ ] `W28.P139.S0831` - Add negative tests proving rejected aliases do not reach currency normalization layer; `tests/entrypoints/cli`.
-- [ ] `W28.P139.S0832` - Add command behavior tests that exercise currency normalization layer through real services; `tests/entrypoints/cli`.
-- [ ] `W28.P139.S0833` - Add end-to-end workflow coverage for currency normalization layer; `tests`.
-- [ ] `W28.P139.S0834` - Run the targeted test slice for currency normalization layer without skips or xfails; `tests/domain/currency`.
+- [x] `W28.P139.S0829` - Add service contract tests for currency normalization layer; `tests/domain/currency`.
+- [x] `W28.P139.S0830` - Add persistence or registry integration tests for currency normalization layer; `tests/domain/currency`.
+- [x] `W28.P139.S0831` - Add negative tests proving rejected aliases do not reach currency normalization layer; `tests/entrypoints/cli`.
+- [x] `W28.P139.S0832` - Add command behavior tests that exercise currency normalization layer through real services; `tests/entrypoints/cli`.
+- [x] `W28.P139.S0833` - Add end-to-end workflow coverage for currency normalization layer; `tests`.
+- [x] `W28.P139.S0834` - Run the targeted test slice for currency normalization layer without skips or xfails; `tests/domain/currency`.
 
 ### Phase `W28.P140` - thin cli exposure
 
 This Phase delivers thin cli exposure for currency normalization layer as required by `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr`.
 
-- [ ] `W28.P140.S0835` - Expose accepted command handlers for currency normalization layer under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P140.S0836` - Keep argument parsing for currency normalization layer separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P140.S0837` - Delegate currency normalization layer execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P140.S0838` - Render currency normalization layer results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P140.S0839` - Handle currency normalization layer failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W28.P140.S0840` - Validate help text for currency normalization layer uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W28.P140.S0835` - Expose accepted command handlers for currency normalization layer under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W28.P140.S0836` - Keep argument parsing for currency normalization layer separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W28.P140.S0837` - Delegate currency normalization layer execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W28.P140.S0838` - Render currency normalization layer results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W28.P140.S0839` - Handle currency normalization layer failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W28.P140.S0840` - Validate help text for currency normalization layer uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W29` - receipt ocr pdf evidence
 
@@ -1759,56 +1759,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evide
 
 This Phase delivers backend implementation for receipt evidence extraction as required by `2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr`.
 
-- [ ] `W29.P141.S0841` - Map the `2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr` decision into non-CLI service ownership for receipt evidence extraction; `src/aeat/application/evidence`.
-- [ ] `W29.P141.S0842` - Implement Pydantic command and result contracts for receipt evidence extraction; `src/aeat/application/evidence`.
-- [ ] `W29.P141.S0843` - Wire application or domain services required by receipt evidence extraction; `src/aeat/application/evidence`.
-- [ ] `W29.P141.S0844` - Connect persistence, bucket events, registry data, or provider adapters required by receipt evidence extraction; `src/aeat/application/evidence`.
-- [ ] `W29.P141.S0845` - Route existing backend functionality into the canonical service for receipt evidence extraction; `src/aeat/application/evidence`.
-- [ ] `W29.P141.S0846` - Record service-level error codes and log fields for receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P141.S0841` - Map the `2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr` decision into non-CLI service ownership for receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P141.S0842` - Implement Pydantic command and result contracts for receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P141.S0843` - Wire application or domain services required by receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P141.S0844` - Connect persistence, bucket events, registry data, or provider adapters required by receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P141.S0845` - Route existing backend functionality into the canonical service for receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P141.S0846` - Record service-level error codes and log fields for receipt evidence extraction; `src/aeat/application/evidence`.
 
 ### Phase `W29.P142` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for receipt evidence extraction as required by `2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr`.
 
-- [ ] `W29.P142.S0847` - Audit duplicate implementations that overlap receipt evidence extraction; `src/aeat/application/evidence`.
-- [ ] `W29.P142.S0848` - Delete duplicate backend branches that compete with receipt evidence extraction; `src/aeat/application/evidence`.
-- [ ] `W29.P142.S0849` - Remove stale aliases that bypass the canonical service for receipt evidence extraction; `src/aeat/entrypoints/cli`.
-- [ ] `W29.P142.S0850` - Migrate internal callers to the canonical service for receipt evidence extraction; `src/aeat/application/evidence`.
-- [ ] `W29.P142.S0851` - Remove stale fixtures and tests that encode duplicate behavior for receipt evidence extraction; `tests/application/evidence`.
-- [ ] `W29.P142.S0852` - Update boundary inventory entries that describe duplicate behavior for receipt evidence extraction; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W29.P142.S0847` - Audit duplicate implementations that overlap receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P142.S0848` - Delete duplicate backend branches that compete with receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P142.S0849` - Remove stale aliases that bypass the canonical service for receipt evidence extraction; `src/aeat/entrypoints/cli`.
+- [x] `W29.P142.S0850` - Migrate internal callers to the canonical service for receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P142.S0851` - Remove stale fixtures and tests that encode duplicate behavior for receipt evidence extraction; `tests/application/evidence`.
+- [x] `W29.P142.S0852` - Update boundary inventory entries that describe duplicate behavior for receipt evidence extraction; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W29.P143` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for receipt evidence extraction as required by `2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr`.
 
-- [ ] `W29.P143.S0853` - Delete compatibility shims that preserve rejected behavior for receipt evidence extraction; `src/aeat/application/evidence`.
-- [ ] `W29.P143.S0854` - Delete placeholder stubs that claim support for receipt evidence extraction; `src/aeat/application/evidence`.
-- [ ] `W29.P143.S0855` - Replace stubbed paths with real backend service calls for receipt evidence extraction; `src/aeat/application/evidence`.
-- [ ] `W29.P143.S0856` - Remove deprecated command spelling and help text for receipt evidence extraction; `src/aeat/entrypoints/cli`.
-- [ ] `W29.P143.S0857` - Remove tests that assert shim or stub behavior for receipt evidence extraction; `tests/application/evidence`.
-- [ ] `W29.P143.S0858` - Record the removed shim and stub surfaces for receipt evidence extraction; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W29.P143.S0853` - Delete compatibility shims that preserve rejected behavior for receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P143.S0854` - Delete placeholder stubs that claim support for receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P143.S0855` - Replace stubbed paths with real backend service calls for receipt evidence extraction; `src/aeat/application/evidence`.
+- [x] `W29.P143.S0856` - Remove deprecated command spelling and help text for receipt evidence extraction; `src/aeat/entrypoints/cli`.
+- [x] `W29.P143.S0857` - Remove tests that assert shim or stub behavior for receipt evidence extraction; `tests/application/evidence`.
+- [x] `W29.P143.S0858` - Record the removed shim and stub surfaces for receipt evidence extraction; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W29.P144` - real behavior verification
 
 This Phase delivers real behavior verification for receipt evidence extraction as required by `2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr`.
 
-- [ ] `W29.P144.S0859` - Add service contract tests for receipt evidence extraction; `tests/application/evidence`.
-- [ ] `W29.P144.S0860` - Add persistence or registry integration tests for receipt evidence extraction; `tests/application/evidence`.
-- [ ] `W29.P144.S0861` - Add negative tests proving rejected aliases do not reach receipt evidence extraction; `tests/entrypoints/cli`.
-- [ ] `W29.P144.S0862` - Add command behavior tests that exercise receipt evidence extraction through real services; `tests/entrypoints/cli`.
-- [ ] `W29.P144.S0863` - Add end-to-end workflow coverage for receipt evidence extraction; `tests`.
-- [ ] `W29.P144.S0864` - Run the targeted test slice for receipt evidence extraction without skips or xfails; `tests/application/evidence`.
+- [x] `W29.P144.S0859` - Add service contract tests for receipt evidence extraction; `tests/application/evidence`.
+- [x] `W29.P144.S0860` - Add persistence or registry integration tests for receipt evidence extraction; `tests/application/evidence`.
+- [x] `W29.P144.S0861` - Add negative tests proving rejected aliases do not reach receipt evidence extraction; `tests/entrypoints/cli`.
+- [x] `W29.P144.S0862` - Add command behavior tests that exercise receipt evidence extraction through real services; `tests/entrypoints/cli`.
+- [x] `W29.P144.S0863` - Add end-to-end workflow coverage for receipt evidence extraction; `tests`.
+- [x] `W29.P144.S0864` - Run the targeted test slice for receipt evidence extraction without skips or xfails; `tests/application/evidence`.
 
 ### Phase `W29.P145` - thin cli exposure
 
 This Phase delivers thin cli exposure for receipt evidence extraction as required by `2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr`.
 
-- [ ] `W29.P145.S0865` - Expose accepted command handlers for receipt evidence extraction under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W29.P145.S0866` - Keep argument parsing for receipt evidence extraction separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W29.P145.S0867` - Delegate receipt evidence extraction execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W29.P145.S0868` - Render receipt evidence extraction results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W29.P145.S0869` - Handle receipt evidence extraction failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W29.P145.S0870` - Validate help text for receipt evidence extraction uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W29.P145.S0865` - Expose accepted command handlers for receipt evidence extraction under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W29.P145.S0866` - Keep argument parsing for receipt evidence extraction separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W29.P145.S0867` - Delegate receipt evidence extraction execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W29.P145.S0868` - Render receipt evidence extraction results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W29.P145.S0869` - Handle receipt evidence extraction failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W29.P145.S0870` - Validate help text for receipt evidence extraction uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W30` - libros boe format exporters
 
@@ -1818,56 +1818,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-libros-boe-format-exp
 
 This Phase delivers backend implementation for official ledger book export as required by `2026-05-12-cli-workflow-redesign-libros-boe-format-exporters-adr`.
 
-- [ ] `W30.P146.S0871` - Map the `2026-05-12-cli-workflow-redesign-libros-boe-format-exporters-adr` decision into non-CLI service ownership for official ledger book export; `src/aeat/application/export`.
-- [ ] `W30.P146.S0872` - Implement Pydantic command and result contracts for official ledger book export; `src/aeat/application/export`.
-- [ ] `W30.P146.S0873` - Wire application or domain services required by official ledger book export; `src/aeat/application/export`.
-- [ ] `W30.P146.S0874` - Connect persistence, bucket events, registry data, or provider adapters required by official ledger book export; `src/aeat/application/export`.
-- [ ] `W30.P146.S0875` - Route existing backend functionality into the canonical service for official ledger book export; `src/aeat/application/export`.
-- [ ] `W30.P146.S0876` - Record service-level error codes and log fields for official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P146.S0871` - Map the `2026-05-12-cli-workflow-redesign-libros-boe-format-exporters-adr` decision into non-CLI service ownership for official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P146.S0872` - Implement Pydantic command and result contracts for official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P146.S0873` - Wire application or domain services required by official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P146.S0874` - Connect persistence, bucket events, registry data, or provider adapters required by official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P146.S0875` - Route existing backend functionality into the canonical service for official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P146.S0876` - Record service-level error codes and log fields for official ledger book export; `src/aeat/application/export`.
 
 ### Phase `W30.P147` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for official ledger book export as required by `2026-05-12-cli-workflow-redesign-libros-boe-format-exporters-adr`.
 
-- [ ] `W30.P147.S0877` - Audit duplicate implementations that overlap official ledger book export; `src/aeat/application/export`.
-- [ ] `W30.P147.S0878` - Delete duplicate backend branches that compete with official ledger book export; `src/aeat/application/export`.
-- [ ] `W30.P147.S0879` - Remove stale aliases that bypass the canonical service for official ledger book export; `src/aeat/entrypoints/cli`.
-- [ ] `W30.P147.S0880` - Migrate internal callers to the canonical service for official ledger book export; `src/aeat/application/export`.
-- [ ] `W30.P147.S0881` - Remove stale fixtures and tests that encode duplicate behavior for official ledger book export; `tests/application/export`.
-- [ ] `W30.P147.S0882` - Update boundary inventory entries that describe duplicate behavior for official ledger book export; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W30.P147.S0877` - Audit duplicate implementations that overlap official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P147.S0878` - Delete duplicate backend branches that compete with official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P147.S0879` - Remove stale aliases that bypass the canonical service for official ledger book export; `src/aeat/entrypoints/cli`.
+- [x] `W30.P147.S0880` - Migrate internal callers to the canonical service for official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P147.S0881` - Remove stale fixtures and tests that encode duplicate behavior for official ledger book export; `tests/application/export`.
+- [x] `W30.P147.S0882` - Update boundary inventory entries that describe duplicate behavior for official ledger book export; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W30.P148` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for official ledger book export as required by `2026-05-12-cli-workflow-redesign-libros-boe-format-exporters-adr`.
 
-- [ ] `W30.P148.S0883` - Delete compatibility shims that preserve rejected behavior for official ledger book export; `src/aeat/application/export`.
-- [ ] `W30.P148.S0884` - Delete placeholder stubs that claim support for official ledger book export; `src/aeat/application/export`.
-- [ ] `W30.P148.S0885` - Replace stubbed paths with real backend service calls for official ledger book export; `src/aeat/application/export`.
-- [ ] `W30.P148.S0886` - Remove deprecated command spelling and help text for official ledger book export; `src/aeat/entrypoints/cli`.
-- [ ] `W30.P148.S0887` - Remove tests that assert shim or stub behavior for official ledger book export; `tests/application/export`.
-- [ ] `W30.P148.S0888` - Record the removed shim and stub surfaces for official ledger book export; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W30.P148.S0883` - Delete compatibility shims that preserve rejected behavior for official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P148.S0884` - Delete placeholder stubs that claim support for official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P148.S0885` - Replace stubbed paths with real backend service calls for official ledger book export; `src/aeat/application/export`.
+- [x] `W30.P148.S0886` - Remove deprecated command spelling and help text for official ledger book export; `src/aeat/entrypoints/cli`.
+- [x] `W30.P148.S0887` - Remove tests that assert shim or stub behavior for official ledger book export; `tests/application/export`.
+- [x] `W30.P148.S0888` - Record the removed shim and stub surfaces for official ledger book export; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W30.P149` - real behavior verification
 
 This Phase delivers real behavior verification for official ledger book export as required by `2026-05-12-cli-workflow-redesign-libros-boe-format-exporters-adr`.
 
-- [ ] `W30.P149.S0889` - Add service contract tests for official ledger book export; `tests/application/export`.
-- [ ] `W30.P149.S0890` - Add persistence or registry integration tests for official ledger book export; `tests/application/export`.
-- [ ] `W30.P149.S0891` - Add negative tests proving rejected aliases do not reach official ledger book export; `tests/entrypoints/cli`.
-- [ ] `W30.P149.S0892` - Add command behavior tests that exercise official ledger book export through real services; `tests/entrypoints/cli`.
-- [ ] `W30.P149.S0893` - Add end-to-end workflow coverage for official ledger book export; `tests`.
-- [ ] `W30.P149.S0894` - Run the targeted test slice for official ledger book export without skips or xfails; `tests/application/export`.
+- [x] `W30.P149.S0889` - Add service contract tests for official ledger book export; `tests/application/export`.
+- [x] `W30.P149.S0890` - Add persistence or registry integration tests for official ledger book export; `tests/application/export`.
+- [x] `W30.P149.S0891` - Add negative tests proving rejected aliases do not reach official ledger book export; `tests/entrypoints/cli`.
+- [x] `W30.P149.S0892` - Add command behavior tests that exercise official ledger book export through real services; `tests/entrypoints/cli`.
+- [x] `W30.P149.S0893` - Add end-to-end workflow coverage for official ledger book export; `tests`.
+- [x] `W30.P149.S0894` - Run the targeted test slice for official ledger book export without skips or xfails; `tests/application/export`.
 
 ### Phase `W30.P150` - thin cli exposure
 
 This Phase delivers thin cli exposure for official ledger book export as required by `2026-05-12-cli-workflow-redesign-libros-boe-format-exporters-adr`.
 
-- [ ] `W30.P150.S0895` - Expose accepted command handlers for official ledger book export under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W30.P150.S0896` - Keep argument parsing for official ledger book export separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W30.P150.S0897` - Delegate official ledger book export execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W30.P150.S0898` - Render official ledger book export results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W30.P150.S0899` - Handle official ledger book export failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W30.P150.S0900` - Validate help text for official ledger book export uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W30.P150.S0895` - Expose accepted command handlers for official ledger book export under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W30.P150.S0896` - Keep argument parsing for official ledger book export separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W30.P150.S0897` - Delegate official ledger book export execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W30.P150.S0898` - Render official ledger book export results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W30.P150.S0899` - Handle official ledger book export failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W30.P150.S0900` - Validate help text for official ledger book export uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W31` - domain harvest normatives
 
@@ -2054,20 +2054,20 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-domain-harvest-rental
 
 This Phase delivers backend implementation for rental calculation facts as required by `2026-05-12-cli-workflow-redesign-domain-harvest-rental-adr`.
 
-- [ ] `W34.P166.S0991` - Map the `2026-05-12-cli-workflow-redesign-domain-harvest-rental-adr` decision into non-CLI service ownership for rental calculation facts; `src/aeat/domain/rental`.
-- [ ] `W34.P166.S0992` - Implement Pydantic command and result contracts for rental calculation facts; `src/aeat/domain/rental`.
-- [ ] `W34.P166.S0993` - Wire application or domain services required by rental calculation facts; `src/aeat/domain/rental`.
-- [ ] `W34.P166.S0994` - Connect persistence, bucket events, registry data, or provider adapters required by rental calculation facts; `src/aeat/domain/rental`.
-- [ ] `W34.P166.S0995` - Route existing backend functionality into the canonical service for rental calculation facts; `src/aeat/domain/rental`.
-- [ ] `W34.P166.S0996` - Record service-level error codes and log fields for rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P166.S0991` - Map the `2026-05-12-cli-workflow-redesign-domain-harvest-rental-adr` decision into non-CLI service ownership for rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P166.S0992` - Implement Pydantic command and result contracts for rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P166.S0993` - Wire application or domain services required by rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P166.S0994` - Connect persistence, bucket events, registry data, or provider adapters required by rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P166.S0995` - Route existing backend functionality into the canonical service for rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P166.S0996` - Record service-level error codes and log fields for rental calculation facts; `src/aeat/domain/rental`.
 
 ### Phase `W34.P167` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for rental calculation facts as required by `2026-05-12-cli-workflow-redesign-domain-harvest-rental-adr`.
 
-- [ ] `W34.P167.S0997` - Audit duplicate implementations that overlap rental calculation facts; `src/aeat/domain/rental`.
-- [ ] `W34.P167.S0998` - Delete duplicate backend branches that compete with rental calculation facts; `src/aeat/domain/rental`.
-- [ ] `W34.P167.S0999` - Remove stale aliases that bypass the canonical service for rental calculation facts; `src/aeat/entrypoints/cli`.
+- [x] `W34.P167.S0997` - Audit duplicate implementations that overlap rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P167.S0998` - Delete duplicate backend branches that compete with rental calculation facts; `src/aeat/domain/rental`.
+- [x] `W34.P167.S0999` - Remove stale aliases that bypass the canonical service for rental calculation facts; `src/aeat/entrypoints/cli`.
 - [ ] `W34.P167.S1000` - Migrate internal callers to the canonical service for rental calculation facts; `src/aeat/domain/rental`.
 - [ ] `W34.P167.S1001` - Remove stale fixtures and tests that encode duplicate behavior for rental calculation facts; `tests/domain/rental`.
 - [ ] `W34.P167.S1002` - Update boundary inventory entries that describe duplicate behavior for rental calculation facts; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
@@ -4399,51 +4399,51 @@ Closes apex §12 ledger row R08. Ratifies the ratios key-value shape, ships the 
 
 Ratify ratios verbs and implement BucketMaintenanceService.
 
-- [ ] `W77.P370.S2129` - Read the app-ledger-ratios-shape, bucket, and ledger-ratios-eligible-and-validate ADRs; `.vault/adr`.
-- [ ] `W77.P370.S2130` - Ratify aeat app ledger ratios list set unset as canonical key-value-exception verbs per W71 and add eligible and validate per the 2026-05-13 ADR extension; `src/aeat/application/ledger`.
-- [ ] `W77.P370.S2131` - Implement BucketMaintenanceService with verbs browse, search, export, import, rename, delete documented as lifecycle operations; `src/aeat/application`.
-- [ ] `W77.P370.S2132` - Add Pydantic command and result contracts and ensure destructive operations require explicit yes flag; `src/aeat/application`.
-- [ ] `W77.P370.S2133` - Add bucket.exported, bucket.imported, bucket.renamed, bucket.deleted enum members; `src/aeat/domain/buckets`.
+- [x] `W77.P370.S2129` - Read the app-ledger-ratios-shape, bucket, and ledger-ratios-eligible-and-validate ADRs; `.vault/adr`.
+- [x] `W77.P370.S2130` - Ratify aeat app ledger ratios list set unset as canonical key-value-exception verbs per W71 and add eligible and validate per the 2026-05-13 ADR extension; `src/aeat/application/ledger`.
+- [x] `W77.P370.S2131` - Implement BucketMaintenanceService with verbs browse, search, export, import, rename, delete documented as lifecycle operations; `src/aeat/application`.
+- [x] `W77.P370.S2132` - Add Pydantic command and result contracts and ensure destructive operations require explicit yes flag; `src/aeat/application`.
+- [x] `W77.P370.S2133` - Add bucket.exported, bucket.imported, bucket.renamed, bucket.deleted enum members; `src/aeat/domain/buckets`.
 
 ### Phase `W77.P371` - shadow duplicate removal
 
 Retire archive root and audit bucket app for gaps.
 
-- [ ] `W77.P371.S2134` - Confirm aeat archive root retirement per apex §1 fold-under; `src/aeat/entrypoints/cli`.
-- [ ] `W77.P371.S2135` - Audit _config bucket app for verb gaps; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W77.P371.S2136` - Migrate any legacy archive or browse callers to BucketMaintenanceService; `src/aeat/application`.
-- [ ] `W77.P371.S2137` - Remove stale tests; `tests/entrypoints/cli`.
-- [ ] `W77.P371.S2138` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W77.P371.S2134` - Confirm aeat archive root retirement per apex §1 fold-under; `src/aeat/entrypoints/cli`.
+- [x] `W77.P371.S2135` - Audit _config bucket app for verb gaps; `src/aeat/entrypoints/cli/_config`.
+- [x] `W77.P371.S2136` - Migrate any legacy archive or browse callers to BucketMaintenanceService; `src/aeat/application`.
+- [x] `W77.P371.S2137` - Remove stale tests; `tests/entrypoints/cli`.
+- [x] `W77.P371.S2138` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W77.P372` - de-shim and de-stub cleanup
 
 Wire events and reject retired roots.
 
-- [ ] `W77.P372.S2139` - Remove aeat financial profile ratios references and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
-- [ ] `W77.P372.S2140` - Wire ledger.ratios.set and ledger.ratios.unset event emission per ADR; `src/aeat/application/ledger`.
-- [ ] `W77.P372.S2141` - Reject aeat archive and aeat data ledgers paths at root; `src/aeat/entrypoints/cli`.
-- [ ] `W77.P372.S2142` - Update help text and i18n; `src/aeat/core/i18n`.
-- [ ] `W77.P372.S2143` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W77.P372.S2139` - Remove aeat financial profile ratios references and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
+- [x] `W77.P372.S2140` - Wire ledger.ratios.set and ledger.ratios.unset event emission per ADR; `src/aeat/application/ledger`.
+- [x] `W77.P372.S2141` - Reject aeat archive and aeat data ledgers paths at root; `src/aeat/entrypoints/cli`.
+- [x] `W77.P372.S2142` - Update help text and i18n; `src/aeat/core/i18n`.
+- [x] `W77.P372.S2143` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W77.P373` - real behavior verification
 
 Test ratios, bucket maintenance, and destructive-action safeguards.
 
-- [ ] `W77.P373.S2144` - Add service-contract tests for ledger ratios covering list, set, unset, eligible, validate; `tests/application/ledger`.
-- [ ] `W77.P373.S2145` - Add service-contract tests for BucketMaintenanceService; `tests/application`.
-- [ ] `W77.P373.S2146` - Add CLI surface tests for aeat app ledger ratios and aeat config bucket maintenance verbs; `tests/entrypoints/cli`.
-- [ ] `W77.P373.S2147` - Add destructive-action safeguard tests asserting delete refuses without explicit yes; `tests/entrypoints/cli`.
-- [ ] `W77.P373.S2148` - Run the W71 contract-conformance harness with key-value-exception and lifecycle-state-verb annotations; `tests/entrypoints/cli`.
+- [x] `W77.P373.S2144` - Add service-contract tests for ledger ratios covering list, set, unset, eligible, validate; `tests/application/ledger`.
+- [x] `W77.P373.S2145` - Add service-contract tests for BucketMaintenanceService; `tests/application`.
+- [x] `W77.P373.S2146` - Add CLI surface tests for aeat app ledger ratios and aeat config bucket maintenance verbs; `tests/entrypoints/cli`.
+- [x] `W77.P373.S2147` - Add destructive-action safeguard tests asserting delete refuses without explicit yes; `tests/entrypoints/cli`.
+- [x] `W77.P373.S2148` - Run the W71 contract-conformance harness with key-value-exception and lifecycle-state-verb annotations; `tests/entrypoints/cli`.
 
 ### Phase `W77.P374` - thin cli exposure
 
 Register ratios and bucket maintenance verbs and update apex.
 
-- [ ] `W77.P374.S2149` - Register ratios_app under ledger_app and add eligible and validate verbs; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W77.P374.S2150` - Register browse, search, export, import, rename, delete verbs under bucket_app; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W77.P374.S2151` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
-- [ ] `W77.P374.S2152` - Update apex ADR §3.4 and §4.2 to document the dual annotation and mark R08 closed by W77; `.vault/adr`.
-- [ ] `W77.P374.S2153` - Amend app-ledger-ratios-shape and bucket child ADRs; `.vault/adr`.
+- [x] `W77.P374.S2149` - Register ratios_app under ledger_app and add eligible and validate verbs; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W77.P374.S2150` - Register browse, search, export, import, rename, delete verbs under bucket_app; `src/aeat/entrypoints/cli/_config`.
+- [x] `W77.P374.S2151` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [x] `W77.P374.S2152` - Update apex ADR §3.4 and §4.2 to document the dual annotation and mark R08 closed by W77; `.vault/adr`.
+- [x] `W77.P374.S2153` - Amend app-ledger-ratios-shape and bucket child ADRs; `.vault/adr`.
 
 ## Wave `W78` - Reconciliation: modelo lifecycle drift fixes
 
