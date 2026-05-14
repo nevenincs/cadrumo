@@ -24,6 +24,7 @@ JSON envelope semantics.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -40,12 +41,15 @@ from ....adapters.outbound.google import (
 from ....adapters.outbound.google._oauth_flow import run_login_flow
 from ....adapters.outbound.google._profile_binding import resolve_active_profile
 from ....adapters.outbound.google._records import REQUIRED_SCOPES
+from ....adapters.outbound.google._records import DriveConfig
 from ....adapters.outbound.google._session_store import (
     delete_session,
     load_client,
+    load_drive_config,
     load_metadata,
     load_token,
     save_client,
+    save_drive_config,
     save_metadata,
     save_token,
 )
@@ -53,6 +57,7 @@ from ....adapters.outbound.storage import (
     StorageError,
     get_storage_provider,
 )
+from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import load_settings
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
@@ -312,6 +317,78 @@ def google_logout(
     )
 
 
+folder_app = typer.Typer(
+    name="folder",
+    help=tr("cli.config.google.folder.help"),
+    no_args_is_help=True,
+)
+
+
+@folder_app.command("set", help=tr("cli.config.google.folder.set_help"))
+def google_folder_set(
+    ctx: typer.Context,
+    folder_id: str = typer.Argument(..., help=tr("cli.config.google.folder.folder_id_help")),
+    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
+) -> None:
+    """Persist the Drive root folder id under the active profile."""
+
+    try:
+        active = resolve_active_profile(profile)
+    except GoogleAuthError as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+
+    config = DriveConfig(root_folder_id=folder_id.strip())
+    save_drive_config(active, config)
+    payload = {
+        "operation": "config.google.folder.set",
+        "profile": active,
+        "root_folder_id": config.root_folder_id,
+    }
+    _emit(
+        ctx,
+        payload,
+        (
+            "operation\tconfig.google.folder.set",
+            f"profile\t{active}",
+            f"root_folder_id\t{config.root_folder_id}",
+        ),
+    )
+
+
+@folder_app.command("get", help=tr("cli.config.google.folder.get_help"))
+def google_folder_get(
+    ctx: typer.Context,
+    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
+) -> None:
+    """Show the persisted Drive root folder id for the active profile."""
+
+    try:
+        active = resolve_active_profile(profile)
+    except GoogleAuthError as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+
+    config = load_drive_config(active)
+    payload = {
+        "operation": "config.google.folder.get",
+        "profile": active,
+        "configured": config is not None,
+        "root_folder_id": config.root_folder_id if config is not None else None,
+    }
+    _emit(
+        ctx,
+        payload,
+        (
+            "operation\tconfig.google.folder.get",
+            f"profile\t{active}",
+            f"configured\t{config is not None}",
+            f"root_folder_id\t{config.root_folder_id if config is not None else '<unset>'}",
+        ),
+    )
+
+
+google_app.add_typer(folder_app, name="folder")
+
+
 sync_app = typer.Typer(
     name="sync",
     help=tr("cli.config.google.sync.help"),
@@ -346,10 +423,10 @@ def google_sync_probe(
     # The factory uses Settings.aeat_storage_provider_kind to pick the
     # backend. For the operator-driven probe we override to Google Drive
     # explicitly so the probe always exercises the Drive path regardless
-    # of how the operator's environment is configured.
+    # of how the operator's environment is configured. The folder id
+    # itself is resolved by the factory via the canonical precedence
+    # (env var > persisted DriveConfig record); no separate gate here.
     drive_settings = settings.model_copy(update={"aeat_storage_provider_kind": "google_drive"})
-    if not drive_settings.aeat_google_drive_root_folder_id:
-        raise CliRefusedBoundaryError(tr("cli.config.google.sync.root_folder_id_unset"))
 
     try:
         provider = get_storage_provider(profile_override=active, settings=drive_settings)
@@ -357,6 +434,10 @@ def google_sync_probe(
     except (GoogleAuthError, StorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
+    # Pull the actual root folder id from the provider — the env var
+    # OR the persisted DriveConfig may have supplied it; the provider
+    # is the single resolved source of truth.
+    resolved_root_folder_id = getattr(provider, "root_folder_id", "")
     payload = {
         "operation": "config.google.sync.probe",
         "profile": active,
@@ -365,7 +446,7 @@ def google_sync_probe(
         "writable": report.writable,
         "read_only": report.read_only,
         "root_folder_present": report.root_folder_present,
-        "root_folder_id": drive_settings.aeat_google_drive_root_folder_id,
+        "root_folder_id": resolved_root_folder_id,
         "detail": report.detail,
     }
     _emit(
@@ -379,19 +460,159 @@ def google_sync_probe(
             f"writable\t{report.writable}",
             f"read_only\t{report.read_only}",
             f"root_folder_present\t{report.root_folder_present}",
-            f"root_folder_id\t{drive_settings.aeat_google_drive_root_folder_id}",
+            f"root_folder_id\t{resolved_root_folder_id}",
             f"detail\t{report.detail}",
         ),
     )
+
+
+def _object_key_hmac(namespace: str, object_key: bytes) -> str:
+    """Compute a stable per-`(namespace, object_key)` hex digest.
+
+    Used by sync push to produce the Drive-side filename prefix
+    `<hmac_prefix_8>--<label>.bin`. For v0 the digest is plain
+    sha256(namespace + object_key); a per-profile keyed HMAC for
+    unlinkability lands alongside P04 (snapshot escrow + HKDF).
+    """
+
+    hasher = hashlib.sha256()
+    hasher.update(namespace.encode("utf-8"))
+    hasher.update(b"\x00")
+    hasher.update(object_key)
+    return hasher.hexdigest()
+
+
+def _label_for(namespace: str) -> str:
+    """Pick a Drive-filename label from `namespace`.
+
+    Default policy: trailing dotted segment, capped at 32 chars,
+    sanitised to alnum/dash/underscore. Per-namespace registered
+    label-derivers (per P03.S04-S06 + P06.S14-S24) override this
+    default once they ship.
+    """
+
+    leaf = namespace.rsplit(".", 1)[-1] or "obj"
+    safe = "".join(c if c.isalnum() or c in "-_." else "-" for c in leaf)
+    return safe[:32] or "obj"
+
+
+@sync_app.command("push", help=tr("cli.config.google.sync.push_help"))
+def google_sync_push(
+    ctx: typer.Context,
+    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
+    namespace_filter: str | None = typer.Option(
+        None,
+        "--namespace",
+        help=tr("cli.config.google.sync.push_namespace_help"),
+    ),
+    limit: int | None = typer.Option(
+        None,
+        "--limit",
+        help=tr("cli.config.google.sync.push_limit_help"),
+        min=1,
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run/--no-dry-run",
+        help=tr("cli.config.google.sync.push_dry_run_help"),
+    ),
+) -> None:
+    """Mirror every SecureObjectRepository row's on-wire ciphertext to Drive.
+
+    Walks `SecureObjectRepository.iter_all_records_raw()` ordered by
+    `(namespace, object_key)`. Each row's ciphertext payload uploads
+    via `GoogleDriveProvider.put(...)` under the namespace's Drive
+    folder, named `<hmac_prefix_8>--<label>.bin`. The local master
+    key never leaves the host — only ciphertext reaches Drive per
+    ADR-3's ciphertext-layer mirror.
+    """
+
+    try:
+        active = resolve_active_profile(profile)
+    except GoogleAuthError as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+
+    settings = load_settings()
+    drive_settings = settings.model_copy(update={"aeat_storage_provider_kind": "google_drive"})
+
+    try:
+        provider = get_storage_provider(profile_override=active, settings=drive_settings)
+    except (GoogleAuthError, StorageError) as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+
+    repository = SecureObjectRepository()
+    pushed_by_ns: dict[str, int] = {}
+    skipped_by_ns: dict[str, int] = {}
+    failed: list[tuple[str, str, str]] = []
+    total_seen = 0
+
+    for raw_row in repository.iter_all_records_raw():
+        if namespace_filter is not None and raw_row.namespace != namespace_filter:
+            continue
+        total_seen += 1
+        if limit is not None and total_seen > limit:
+            break
+        hmac_hex = _object_key_hmac(raw_row.namespace, raw_row.object_key)
+        label = _label_for(raw_row.namespace)
+        content_hash = f"sha256-{hashlib.sha256(raw_row.payload).hexdigest()}"
+        if dry_run:
+            skipped_by_ns[raw_row.namespace] = skipped_by_ns.get(raw_row.namespace, 0) + 1
+            continue
+        try:
+            provider.put(
+                raw_row.namespace,
+                hmac_hex,
+                raw_row.payload,
+                content_hash=content_hash,
+                label=label,
+            )
+        except StorageError as exc:
+            failed.append((raw_row.namespace, hmac_hex, str(exc)))
+            continue
+        pushed_by_ns[raw_row.namespace] = pushed_by_ns.get(raw_row.namespace, 0) + 1
+
+    payload: dict[str, object] = {
+        "operation": "config.google.sync.push",
+        "profile": active,
+        "root_folder_id": resolved_root_folder_id,
+        "dry_run": dry_run,
+        "namespace_filter": namespace_filter,
+        "limit": limit,
+        "pushed_total": sum(pushed_by_ns.values()),
+        "skipped_total": sum(skipped_by_ns.values()),
+        "failed_total": len(failed),
+        "pushed_by_namespace": pushed_by_ns,
+        "skipped_by_namespace": skipped_by_ns,
+        "failed_objects": [
+            {"namespace": ns, "hmac": h, "error": err}
+            for ns, h, err in failed
+        ],
+    }
+    lines: list[str] = [
+        "operation\tconfig.google.sync.push",
+        f"profile\t{active}",
+        f"root_folder_id\t{resolved_root_folder_id}",
+        f"dry_run\t{dry_run}",
+        f"namespace_filter\t{namespace_filter or '<all>'}",
+        f"limit\t{limit or '<none>'}",
+        f"pushed_total\t{sum(pushed_by_ns.values())}",
+        f"skipped_total\t{sum(skipped_by_ns.values())}",
+        f"failed_total\t{len(failed)}",
+    ]
+    for ns in sorted(set(pushed_by_ns) | set(skipped_by_ns)):
+        pushed = pushed_by_ns.get(ns, 0)
+        skipped = skipped_by_ns.get(ns, 0)
+        lines.append(f"namespace\t{ns}\tpushed={pushed}\tskipped={skipped}")
+    for ns, h, err in failed:
+        lines.append(f"failed\t{ns}\t{h[:16]}\t{err}")
+    _emit(ctx, payload, tuple(lines))
 
 
 google_app.add_typer(sync_app, name="sync")
 
 
 # Suppress unused-import false positive for `load_token` and `REQUIRED_SCOPES`;
-# both are part of the public surface the sync sub-commands consume during
-# their own command implementations (sync push / sync pull / sync calc export
-# will land alongside P03 / P07 and import them through this same module).
+# both are part of the public surface the sync sub-commands consume.
 _ = (load_token, REQUIRED_SCOPES)
 
 

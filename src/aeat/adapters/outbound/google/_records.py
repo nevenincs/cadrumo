@@ -113,6 +113,21 @@ class OAuthMetadata(BaseModel):
         return value
 
 
+class DriveConfig(BaseModel):
+    """Per-profile Drive backend configuration persisted alongside OAuth records.
+
+    Carries the operator's chosen `aeat-vault/` parent folder id. Set
+    via `aeat config google folder set <id>`; loaded by the storage
+    provider factory as the canonical source for the Drive root folder
+    (precedence above the legacy `AEAT_GOOGLE_DRIVE_ROOT_FOLDER_ID`
+    env var so env vars only act as overrides for one-off / CI runs).
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    root_folder_id: str = Field(min_length=1)
+
+
 class DriveAppProperties(BaseModel):
     """Drive `appProperties` commit-log payload written on every push.
 
@@ -141,6 +156,7 @@ __all__ = [
     "REQUIRED_SCOPES",
     "SHEETS_SCOPE",
     "DriveAppProperties",
+    "DriveConfig",
     "OAuthClient",
     "OAuthMetadata",
     "OAuthToken",

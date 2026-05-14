@@ -52,6 +52,14 @@ _HMAC_PREFIX_LEN = 8
 _FILE_EXTENSION = ".bin"
 _DEFAULT_LABEL = "object"
 _PROBE_NAMESPACE = "_probe"
+# Drive `appProperties` ownership marker. The provider stamps this key
+# onto every folder + file it creates and refuses to touch any entry
+# that lacks the marker. This isolates the operator's pre-existing
+# Drive content from the app's mirror — a folder named `aeat-vault`
+# the operator created manually for unrelated work will be rejected
+# rather than silently adopted.
+_OWNERSHIP_KEY = "aeat_vault_app"
+_OWNERSHIP_VALUE = "aeat"
 
 
 def _validate_namespace(namespace: str) -> str:
@@ -167,7 +175,10 @@ class GoogleDriveProvider:
     def _resolve_vault_folder(self) -> str:
         """Resolve (or create) the `aeat-vault/` folder ID under the configured root.
 
-        Cached for the lifetime of the provider instance.
+        Refuses to adopt a pre-existing folder of the same name unless
+        it carries the `appProperties.aeat_vault_app=aeat` ownership
+        marker — protects operator-created same-named work from
+        silent merge. Cached for the lifetime of the provider instance.
         """
 
         if self._vault_folder_id is not None:
@@ -180,7 +191,7 @@ class GoogleDriveProvider:
             f"and trashed=false"
         )
         response = self._execute(
-            service.files().list(q=query, fields="files(id,name,mimeType)", pageSize=10),
+            service.files().list(q=query, fields="files(id,name,mimeType,appProperties)", pageSize=10),
             action="resolve_vault_folder",
         )
         files = response.get("files", []) if isinstance(response, dict) else []
@@ -192,16 +203,18 @@ class GoogleDriveProvider:
                     f"a file named {_VAULT_FOLDER_NAME!r} that is not itself a folder",
                     context={"root_folder_id": self._root_folder_id},
                 )
+            self._verify_ownership_or_adopt(entry, kind=_VAULT_FOLDER_NAME)
             self._vault_folder_id = str(entry["id"])
             return self._vault_folder_id
-        # Create the folder.
+        # Create the folder with the ownership marker.
         body = {
             "name": _VAULT_FOLDER_NAME,
             "mimeType": _FOLDER_MIME,
             "parents": [self._root_folder_id],
+            "appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE},
         }
         created = self._execute(
-            service.files().create(body=body, fields="id"),
+            service.files().create(body=body, fields="id,appProperties"),
             action="create_vault_folder",
         )
         if not isinstance(created, dict) or "id" not in created:
@@ -211,6 +224,54 @@ class GoogleDriveProvider:
             )
         self._vault_folder_id = str(created["id"])
         return self._vault_folder_id
+
+    def _verify_ownership_or_adopt(self, entry: dict[str, Any], *, kind: str) -> None:
+        """Refuse to adopt a foreign Drive folder; auto-stamp our own.
+
+        - If the entry carries `appProperties.aeat_vault_app=aeat`,
+          treat it as ours (no-op).
+        - If the entry was created by us in a previous session but
+          predates ownership marking (no `appProperties` at all),
+          stamp the marker on it now (one-time backfill).
+        - If the entry carries `appProperties` but the marker is
+          missing or different, refuse — the operator must rename
+          their own folder or change `aeat_google_drive_root_folder_id`.
+
+        Raises:
+            StorageConflictError: When the entry has appProperties that
+                do not include our ownership marker — the folder
+                belongs to the operator's pre-existing work.
+        """
+
+        existing = entry.get("appProperties") or {}
+        existing_value = existing.get(_OWNERSHIP_KEY)
+        if existing_value == _OWNERSHIP_VALUE:
+            return
+        if not existing:
+            # Probably a folder we created in a prior session before
+            # ownership marking landed. Stamp it now.
+            service = self._get_service()
+            self._execute(
+                service.files().update(
+                    fileId=entry["id"],
+                    body={"appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE}},
+                    fields="id,appProperties",
+                ),
+                action=f"stamp_ownership_{kind}",
+            )
+            return
+        raise StorageConflictError(
+            f"Drive folder named {kind!r} exists under the configured root but is not "
+            f"marked as owned by this app. Refusing to write to it to protect operator data. "
+            f"To use this folder for the aeat-vault mirror, manually add "
+            f"appProperties.{_OWNERSHIP_KEY}={_OWNERSHIP_VALUE} to it, or change "
+            f"aeat_google_drive_root_folder_id.",
+            context={
+                "folder_id": entry["id"],
+                "folder_name": entry.get("name", ""),
+                "existing_app_properties": existing,
+            },
+        )
 
     def _resolve_namespace_folder(self, namespace: str, *, create: bool = True) -> str | None:
         """Resolve (or create) the namespace folder ID under `aeat-vault/`.
@@ -231,12 +292,14 @@ class GoogleDriveProvider:
             f"and trashed=false"
         )
         response = self._execute(
-            service.files().list(q=query, fields="files(id,name)", pageSize=10),
+            service.files().list(q=query, fields="files(id,name,appProperties)", pageSize=10),
             action=f"resolve_namespace_{namespace}",
         )
         files = response.get("files", []) if isinstance(response, dict) else []
         if files:
-            folder_id = str(files[0]["id"])
+            entry = files[0]
+            self._verify_ownership_or_adopt(entry, kind=f"namespace:{namespace}")
+            folder_id = str(entry["id"])
             self._namespace_folder_ids[namespace] = folder_id
             return folder_id
         if not create:
@@ -245,9 +308,10 @@ class GoogleDriveProvider:
             "name": namespace,
             "mimeType": _FOLDER_MIME,
             "parents": [vault_id],
+            "appProperties": {_OWNERSHIP_KEY: _OWNERSHIP_VALUE},
         }
         created = self._execute(
-            service.files().create(body=body, fields="id"),
+            service.files().create(body=body, fields="id,appProperties"),
             action=f"create_namespace_{namespace}",
         )
         if not isinstance(created, dict) or "id" not in created:
@@ -260,6 +324,20 @@ class GoogleDriveProvider:
         return folder_id
 
     def _find_file(self, namespace_folder_id: str, object_key_hmac: str) -> dict[str, Any] | None:
+        """Locate a file by `(namespace_folder_id, object_key_hmac)`.
+
+        Matches the 8-char prefix on the filename for the SQL query,
+        then verifies the FULL HMAC matches via `appProperties.object_key_hmac`
+        AND that the file carries our ownership marker. Refuses to
+        return any file lacking both — protects operator-placed files
+        whose name happens to collide with the 8-char prefix space.
+
+        Returns:
+            The Drive entry dict when a marker-verified match exists.
+            `None` when no marker-verified match exists (including the
+            case where a foreign file shares the prefix).
+        """
+
         service = self._get_service()
         prefix = object_key_hmac[:_HMAC_PREFIX_LEN]
         query = (
@@ -278,8 +356,18 @@ class GoogleDriveProvider:
         files = response.get("files", []) if isinstance(response, dict) else []
         for entry in files:
             name = str(entry.get("name", ""))
-            if name.startswith(f"{prefix}--") and name.endswith(_FILE_EXTENSION):
-                return entry
+            if not (name.startswith(f"{prefix}--") and name.endswith(_FILE_EXTENSION)):
+                continue
+            app_properties = entry.get("appProperties") or {}
+            if app_properties.get(_OWNERSHIP_KEY) != _OWNERSHIP_VALUE:
+                # Foreign file: operator-placed content that happens to
+                # share the 8-hex prefix. Refuse to touch it.
+                continue
+            if app_properties.get("object_key_hmac") != object_key_hmac:
+                # Different aeat object that shares the prefix (extremely
+                # rare HMAC collision). Refuse to touch it.
+                continue
+            return entry
         return None
 
     def put(
@@ -308,6 +396,7 @@ class GoogleDriveProvider:
             "name": target_name,
             "parents": [namespace_folder_id] if existing is None else None,
             "appProperties": {
+                _OWNERSHIP_KEY: _OWNERSHIP_VALUE,
                 "namespace": namespace_clean,
                 "object_key_hmac": hmac_clean,
                 "content_hash": content_hash,

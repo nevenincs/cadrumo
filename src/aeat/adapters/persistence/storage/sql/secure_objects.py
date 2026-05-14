@@ -216,14 +216,32 @@ class SecureObjectRepository:
                     written_at_value = datetime.fromisoformat(written_at_raw)
                 else:
                     written_at_value = written_at_raw
+                # SQLite returns BLOB columns as bytes when the stored
+                # value contains non-text bytes, but as str when the
+                # bytes happen to be valid UTF-8. Normalise both into
+                # bytes so downstream consumers see a consistent type.
+                object_key_raw = raw.object_key
+                if isinstance(object_key_raw, bytes):
+                    object_key_value = object_key_raw
+                elif isinstance(object_key_raw, str):
+                    object_key_value = object_key_raw.encode("utf-8")
+                else:
+                    object_key_value = bytes(object_key_raw)
+                payload_raw = raw.payload
+                if isinstance(payload_raw, bytes):
+                    payload_value = payload_raw
+                elif isinstance(payload_raw, str):
+                    payload_value = payload_raw.encode("utf-8")
+                else:
+                    payload_value = bytes(payload_raw)
                 yield SecureObjectRawRow(
                     row_id=int(raw.id),
                     namespace=str(raw.namespace),
-                    object_key=bytes(raw.object_key),
+                    object_key=object_key_value,
                     classification=str(raw.classification),
                     schema_version=int(raw.schema_version),
                     written_at=written_at_value,
-                    payload=bytes(raw.payload),
+                    payload=payload_value,
                 )
 
     def list_namespaces(self) -> tuple[str, ...]:
