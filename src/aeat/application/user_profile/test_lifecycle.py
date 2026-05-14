@@ -11,6 +11,7 @@ from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override
 from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from ...adapters.persistence.storage.sql._orm import Base
 from ...core.config import Settings
+from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.user_profile import (
     DEFAULT_USER_PROFILE_SCHEMA_PATH,
     ProfileAlreadyExistsError,
@@ -54,6 +55,7 @@ def _service(secure_objects, schema) -> ProfileLifecycleService:
     return ProfileLifecycleService(
         repository=UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects),
         validator=ProfileValidationService(schema=schema),
+        events=BucketEventHistoryRepository(objects=secure_objects),
     )
 
 
@@ -158,6 +160,41 @@ def test_duplicate_copies_to_a_new_id(secure_objects, schema) -> None:
     assert result.profile.profile_id == "operator-spouse"
     assert result.profile.display_name == "Spouse"
     assert result.profile.status is UserProfileStatus.ACTIVE
+
+
+def test_lifecycle_emits_bucket_events(secure_objects, schema) -> None:
+    svc = _service(secure_objects, schema)
+    events_repo = BucketEventHistoryRepository(objects=secure_objects)
+
+    svc.register(
+        RegisterProfileCommand(
+            profile_id="operator",
+            display_name="Operator",
+            facts=_all_required_facts(schema),
+        )
+    )
+    svc.edit_field(
+        EditProfileFieldCommand(profile_id="operator", path="identity.email", value="op@example.test")
+    )
+    svc.edit_field(EditProfileFieldCommand(profile_id="operator", path="identity.email", value=None))
+    svc.duplicate(
+        DuplicateProfileCommand(
+            source_profile_id="operator",
+            target_profile_id="operator-spouse",
+            target_display_name="Spouse",
+        )
+    )
+    svc.remove(RemoveProfileCommand(profile_id="operator-spouse"))
+
+    catalogue = events_repo.load()
+    by_type: dict[BucketEventType, int] = {}
+    for event in catalogue.events.values():
+        by_type[event.event_type] = by_type.get(event.event_type, 0) + 1
+    assert by_type[BucketEventType.PROFILE_BUCKET_CREATED] == 1
+    assert by_type[BucketEventType.PROFILE_VALUES_UPDATED] >= 2  # register-with-facts + edit_field
+    assert by_type[BucketEventType.PROFILE_VALUES_CLEARED] == 1
+    assert by_type[BucketEventType.PROFILE_DUPLICATED] == 1
+    assert by_type[BucketEventType.PROFILE_TOMBSTONED] == 1
 
 
 def test_list_profiles_returns_sorted_listings(secure_objects, schema) -> None:
