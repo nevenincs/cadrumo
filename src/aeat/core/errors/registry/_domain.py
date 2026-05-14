@@ -345,6 +345,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.auth.apoderamientos._catalogue.UnknownScopeError",
+        ErrorCode(
+            code="REFUSED_APODERADO_UNKNOWN_SCOPE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_apoderado_unknown_scope",
+            default_suggestion="aeat config auth apoderado configure --scope ALL",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.auth._apoderado.ApoderadoConfigurationNotSetError",
+        ErrorCode(
+            code="REFUSED_APODERADO_NOT_CONFIGURED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_apoderado_not_configured",
+            default_suggestion="aeat config auth apoderado configure",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.auth._apoderado.ApoderadoLiveCheckUnavailableError",
+        ErrorCode(
+            code="REFUSED_APODERADO_LIVE_CHECK_UNAVAILABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_apoderado_live_check_unavailable",
+            default_suggestion="aeat config auth apoderado status",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.transactions._errors.TransactionIdPrefixError",
         ErrorCode(
             code="REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
