@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 from typing import Annotated, Any, Literal
 
 import typer
@@ -51,6 +52,28 @@ app = typer.Typer(
     help=tr("cli.app.modelo.app_help"),
     no_args_is_help=True,
 )
+
+
+def _resolve_default_actor() -> str:
+    """Return the active profile display_name, or a permanent fallback label.
+
+    Per the actor-attribution ADR, ``--by`` defaults to the active profile's
+    display name. When no active profile exists or the bucket is empty the
+    fallback label keeps the audit record populated rather than raising.
+    """
+
+    try:
+        from ...application.workflow._persistence import workflow_state_repository
+
+        state = workflow_state_repository().load()
+        record = state.active_profile_record()
+        if record is not None and record.display_name:
+            return record.display_name
+        if state.active_profile:
+            return state.active_profile
+    except Exception:
+        pass
+    return "operator"
 
 
 def _run_query[T](call: Callable[[], T]) -> T:
@@ -650,9 +673,9 @@ def work_discard(
         typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
     ],
     actor: Annotated[
-        str,
+        str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ],
+    ] = None,
     reason: Annotated[
         str | None,
         typer.Option("--reason", help=tr("cli.app.modelo.work.reason_help")),
@@ -668,7 +691,7 @@ def work_discard(
     """
 
     try:
-        unit = discard_work_unit(work_unit_id, actor=actor, reason=reason)
+        unit = discard_work_unit(work_unit_id, actor=actor or _resolve_default_actor(), reason=reason)
     except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
         raise typer.BadParameter(str(exc)) from exc
     payload = {
@@ -937,9 +960,9 @@ def work_verify(
         typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
     ],
     actor: Annotated[
-        str,
+        str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ],
+    ] = None,
 ) -> None:
     """Verify a draft calculation revision against the verified-complete contract.
 
@@ -950,7 +973,7 @@ def work_verify(
     """
 
     try:
-        report = verify_modelo_revision(calculation_revision_id, actor=actor)
+        report = verify_modelo_revision(calculation_revision_id, actor=actor or _resolve_default_actor())
     except (
         CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
@@ -977,9 +1000,9 @@ def work_file(
         typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
     ],
     actor: Annotated[
-        str,
+        str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ],
+    ] = None,
     notes: Annotated[
         str | None,
         typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
@@ -990,7 +1013,7 @@ def work_file(
     try:
         record = file_modelo_revision(
             calculation_revision_id,
-            actor=actor,
+            actor=actor or _resolve_default_actor(),
             notes=notes,
         )
     except (
@@ -1050,9 +1073,9 @@ def work_amend(
         ),
     ],
     actor: Annotated[
-        str,
+        str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ],
+    ] = None,
     set_overrides: Annotated[
         list[str] | None,
         typer.Option("--set", help=tr("cli.app.modelo.work.set_override_help")),
@@ -1080,7 +1103,7 @@ def work_amend(
             overrides=overrides,
             amendment_kind=amendment_kind,
             reason=reason,
-            actor=actor,
+            actor=actor or _resolve_default_actor(),
         )
     except (
         FilingRecordNotFoundError,
@@ -1320,7 +1343,7 @@ def filing_record_import(
             casilla_values=casilla_values,
             evidence_kind=kind,
             evidence_reference_id=evidence_reference_id,
-            actor=actor,
+            actor=actor or _resolve_default_actor(),
         )
     except (
         WorkUnitNotFoundError,
