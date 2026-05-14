@@ -227,6 +227,14 @@ ignore = [
 # `_NAMESPACE_TOKEN` is a SecureObjectRepository namespace identifier,
 # not a password literal; ruff's S105 misreads the constant name.
 "src/aeat/adapters/outbound/google/_session_store.py" = ["S105"]
+# Drive provider tests build long inline `_FakeFile(...)` fixtures with
+# stable id + name + parents + payload tuples that read better on one
+# line; E501 wrapping would obscure intent.
+"src/aeat/adapters/outbound/storage/test_google_drive.py" = [
+  "S101",
+  "E501",
+  "T20"
+]
 # Google CLI tests use synthetic OAuth refresh_token + token_uri
 # fixtures and emit long inline kwargs that are easier to read on one
 # line than wrapped.
@@ -340,13 +348,6 @@ markers = [
   "unit: deterministic tests with no external I/O",
   "live_read: opt-in tests that READ from a real external service; see src/aeat/tests/README.md",
   "live_write: permanently forbidden external write-shaped tests; collection-dropped with no bypass",
-  "domain_outbound: exercises AEAT Sede Electronica read paths (auth, browser, inbox, justificante, portals, status, sync)",
-  "domain_submission: exercises local filing export, preflight, and historical submission records; no AEAT write surface",
-  "domain_inbound: exercises financial ingest (financial, cli/financial)",
-  "domain_persistence: exercises on-disk catalogues and local SQLite mirror (storage, models, normatives, manuals, corpus, registry, deadlines, cli/deadlines)",
-  "domain_application: exercises workflow orchestration, LLM, i18n, testing subpackages",
-  "domain_core: exercises project plumbing (root modules, non-domain cli, setup, bundled src/aeat/tests meta)",
-  # Hexagonal layered markers.
   "domain_inbound: exercises adapters.inbound.* (financial providers, borrador, declaracion, identity, sanitizer, pdf shared)",
   "domain_outbound: exercises adapters.outbound.* (aeat auth/browser/sede/export/verify, llm)",
   "domain_export: sub-marker on adapters.outbound.aeat.export.* (fichero-BOE serialise / verify pipelines)",
@@ -355,8 +356,6 @@ markers = [
   "domain_application: exercises application.* use-cases / orchestration (filing, workflow, sync, setup, review, verification)",
   "domain_core: exercises core.* foundational cross-cutting (config, logging, errors, paths, observability, identity, i18n, env_io)",
   "flaky: opt-in retry via pytest-rerunfailures; live_read / live_write tests only",
-  "fixture_tier_l1: test uses committed or fetched public AEAT anchors (BOE / Manual práctico / Renta Web Open)",
-  "fixture_tier_l2: test uses scrubbed private anchors from the user archive (contributor-local only)",
   "fixture_tier_l3: test uses synthetic generator output; no fixtures on disk",
 ]
 
