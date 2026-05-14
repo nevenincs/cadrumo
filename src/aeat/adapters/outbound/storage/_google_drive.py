@@ -28,7 +28,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import Any
 
@@ -133,18 +133,9 @@ class GoogleDriveProvider:
             `aeat_google_drive_root_folder_id`. The provider creates
             `aeat-vault/` lazily under this parent on first probe /
             first put.
-        service_factory: Test seam. When `None`, the real
-            `_service_factory` runs. The seam receives `credentials`
-            and returns a Drive Resource-shaped object.
     """
 
-    def __init__(
-        self,
-        *,
-        credentials: object,
-        root_folder_id: str,
-        service_factory: Callable[[object], Any] | None = None,
-    ) -> None:
+    def __init__(self, *, credentials: object, root_folder_id: str) -> None:
         if not root_folder_id.strip():
             raise StorageValidationError(
                 "root_folder_id must not be blank for GoogleDriveProvider",
@@ -152,7 +143,6 @@ class GoogleDriveProvider:
             )
         self._credentials = credentials
         self._root_folder_id = root_folder_id.strip()
-        self._factory = service_factory if service_factory is not None else _service_factory
         self._service: Any | None = None
         self._vault_folder_id: str | None = None
         self._namespace_folder_ids: dict[str, str] = {}
@@ -163,7 +153,7 @@ class GoogleDriveProvider:
 
     def _get_service(self) -> Any:
         if self._service is None:
-            self._service = self._factory(self._credentials)
+            self._service = _service_factory(self._credentials)
         return self._service
 
     def _execute(self, request: Any, *, action: str) -> Any:

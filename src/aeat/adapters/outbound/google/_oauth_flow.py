@@ -18,14 +18,13 @@ Two policy gates fire before any network IO happens:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import UTC, datetime
 
 from ....adapters.persistence.storage.master_key._master_key import looks_like_real_tax_id
 from ....application.user_profile._orchestration import build_lifecycle_service, fact_value
 from ....application.workflow._persistence import workflow_state_repository
-from ....domain.user_profile import ProfileNotFoundError
 from ....core.config import SecretStoreBackend, load_settings
+from ....domain.user_profile import ProfileNotFoundError
 from ._errors import (
     GoogleAuthBrowserOpenError,
     GoogleAuthLoopbackBindError,
@@ -66,8 +65,8 @@ def resolve_active_tax_id(profile: str) -> str:
     """Return the `tax.id` value for the named profile, or empty string.
 
     Looks up the workflow state's pointer for `profile`, loads the
-    secure profile bucket, and reads `record.values["tax.id"]`. Used by
-    the orchestrator to feed `check_unsecured_mode_safety`.
+    canonical user-profile record, and reads the identity tax-id fact.
+    Used by the orchestrator to feed `check_unsecured_mode_safety`.
     """
 
     state = workflow_state_repository().load()
@@ -128,23 +127,17 @@ def credentials_to_records(
     return token, metadata
 
 
-def run_login_flow(
-    client: OAuthClient,
-    profile: str,
-    *,
-    flow_runner: Callable[[OAuthClient], tuple[str, str, str, tuple[str, ...]]] | None = None,
-    clock: Callable[[], datetime] | None = None,
-) -> tuple[OAuthToken, OAuthMetadata]:
+def run_login_flow(client: OAuthClient, profile: str) -> tuple[OAuthToken, OAuthMetadata]:
     """Execute the loopback-IP + PKCE OAuth Desktop flow.
+
+    Always runs the real `google_auth_oauthlib.flow.InstalledAppFlow.
+    run_local_server(port=0)` against `accounts.google.com`. No test
+    seams. Failure modes surface as typed `GoogleAuthError` subclasses
+    with concrete remediation context.
 
     Args:
         client: The operator-imported OAuth client metadata.
         profile: Resolved active profile name (per `_profile_binding`).
-        flow_runner: Test seam. When `None`, the real
-            `google_auth_oauthlib.flow.InstalledAppFlow.run_local_server(port=0)`
-            executes. The runner receives the client and returns
-            `(refresh_token, token_uri, account_email, granted_scopes)`.
-        clock: Test seam producing `issued_at`. Defaults to `datetime.now(timezone.utc)`.
 
     Returns:
         A `(OAuthToken, OAuthMetadata)` pair ready for persistence.
@@ -153,7 +146,7 @@ def run_login_flow(
         GoogleAuthUnsecuredModeRefusedError: Per `check_unsecured_mode_safety`.
         GoogleAuthScopeInsufficientError: Per `credentials_to_records`.
         GoogleAuthLoopbackBindError: When the loopback HTTP receiver
-            fails to bind a port (typically port-exhaustion in CI).
+            fails to bind a port (typically port-exhaustion).
         GoogleAuthBrowserOpenError: When the OS launcher refuses to
             open the consent URL (typically headless environments).
         GoogleAuthNetworkError: When the OAuth or token endpoint is
@@ -161,29 +154,22 @@ def run_login_flow(
     """
 
     check_unsecured_mode_safety(profile, resolve_active_tax_id(profile))
-    runner = flow_runner if flow_runner is not None else _real_run_local_server
-    now = clock if clock is not None else _utc_now
-    refresh_token, token_uri, account_email, granted_scopes = runner(client)
+    refresh_token, token_uri, account_email, granted_scopes = _run_local_server(client)
     return credentials_to_records(
         refresh_token=refresh_token,
         token_uri=token_uri,
         account_email=account_email,
         granted_scopes=granted_scopes,
-        issued_at=now(),
+        issued_at=datetime.now(UTC),
     )
 
 
-def _utc_now() -> datetime:
-    return datetime.now(UTC)
+def _run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ...]]:
+    """Loopback-IP + PKCE OAuth Desktop flow runner.
 
-
-def _real_run_local_server(client: OAuthClient) -> tuple[str, str, str, tuple[str, ...]]:
-    """Real loopback-IP + PKCE OAuth Desktop flow runner.
-
-    Imported lazily so the test seam path does not import
-    `google_auth_oauthlib` (heavyweight). The error-class translation
-    layer maps the common upstream failure modes onto our typed
-    `GoogleAuthError` subclasses.
+    Imports `google_auth_oauthlib` lazily so the failure mode of a
+    missing transitive dependency surfaces as a typed
+    `GoogleAuthNetworkError` rather than an opaque ImportError.
     """
 
     try:

@@ -18,9 +18,7 @@ cases at refresh time:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from typing import Protocol
 
 from ._errors import (
     GoogleAuthError,
@@ -28,7 +26,7 @@ from ._errors import (
     GoogleAuthNetworkError,
     GoogleAuthRevokedError,
 )
-from ._records import OAuthClient, OAuthMetadata, OAuthToken
+from ._records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
 
 # Window before nominal expiry inside which we treat the access token
 # as already expired. Mirrors `google.auth.credentials._helpers`'s
@@ -41,15 +39,6 @@ ACCESS_TOKEN_REFRESH_BUFFER: timedelta = timedelta(minutes=5)
 # so the operator has 24h of lead-time to re-consent.
 TESTING_PROJECT_TOKEN_LIFETIME: timedelta = timedelta(days=7)
 TESTING_PROJECT_WARN_AFTER: timedelta = timedelta(days=6)
-
-
-class RefreshOutcome(Protocol):
-    """Shape of the result returned by `refresh_credentials`.
-
-    The orchestrator returns a tuple of (rotated_token, updated_metadata,
-    new_access_token, warning_message). A warning is `None` when the
-    refresh did not trip any operator-actionable advisory.
-    """
 
 
 def is_token_expired(
@@ -118,9 +107,13 @@ def refresh_credentials(
     token: OAuthToken,
     metadata: OAuthMetadata,
     now: datetime,
-    refresher: Callable[[OAuthClient, OAuthToken], tuple[str, str, datetime]],
 ) -> tuple[OAuthToken, OAuthMetadata, str, str | None]:
     """Run one refresh cycle and return rotated artefacts plus advisories.
+
+    Always executes the real
+    `google.oauth2.credentials.Credentials.refresh(...)` against
+    Google's token endpoint. No test seams. Failure modes surface as
+    typed `GoogleAuthError` subclasses with concrete remediation context.
 
     Args:
         client: The operator's OAuth client metadata.
@@ -128,11 +121,6 @@ def refresh_credentials(
         metadata: The current audit metadata. The output metadata
             updates `last_refresh_at` and may flip `reauth_required`.
         now: The current UTC timestamp.
-        refresher: Test seam. Real call is
-            `google.oauth2.credentials.Credentials.refresh(...)`. The
-            seam returns `(new_refresh_token, new_access_token, new_expiry_utc)`
-            on success or raises `GoogleAuthRevokedError` on `invalid_grant`
-            and `GoogleAuthNetworkError` on transport failure.
 
     Returns:
         `(new_token, new_metadata, new_access_token, warning)`. The
@@ -158,7 +146,7 @@ def refresh_credentials(
         )
 
     try:
-        new_refresh_token, new_access_token, new_expiry = refresher(client, token)
+        new_refresh_token, new_access_token, _ = _refresh_against_google(client, token)
     except GoogleAuthRevokedError as exc:
         # Capture the marked-for-reauth metadata on the exception so the
         # caller can persist it before re-raising onward.
@@ -180,8 +168,60 @@ def refresh_credentials(
         now=now,
         last_refresh_at=metadata.last_refresh_at,
     )
-    del new_expiry  # The orchestrator returns the access token; expiry stays in caller scope.
     return rotated_token, updated_metadata, new_access_token, warning
+
+
+def _refresh_against_google(client: OAuthClient, token: OAuthToken) -> tuple[str, str, datetime]:
+    """Run the real `Credentials.refresh(...)` cycle against `oauth2.googleapis.com`.
+
+    Imports `google-auth` lazily so a missing transitive dependency
+    surfaces as a typed `GoogleAuthNetworkError` rather than an opaque
+    ImportError.
+
+    Returns:
+        `(new_refresh_token, new_access_token, new_expiry_utc)`.
+
+    Raises:
+        GoogleAuthRevokedError: Maps Google's `invalid_grant` response.
+        GoogleAuthNetworkError: Maps transport failures.
+    """
+
+    try:
+        from google.auth.transport.requests import Request
+        from google.oauth2.credentials import Credentials
+    except ImportError as exc:
+        raise GoogleAuthNetworkError(
+            f"google-auth not importable: {exc}",
+            suggestion="uv sync",
+        ) from exc
+
+    creds = Credentials(
+        token=None,
+        refresh_token=token.refresh_token,
+        token_uri=token.token_uri,
+        client_id=client.client_id,
+        client_secret=client.client_secret,
+        scopes=list(REQUIRED_SCOPES),
+    )
+    try:
+        creds.refresh(Request())
+    except Exception as exc:
+        message = str(exc).lower()
+        if "invalid_grant" in message or "revoked" in message:
+            raise GoogleAuthRevokedError(
+                f"google OAuth refresh refused: {exc}",
+                suggestion="aeat config google login",
+            ) from exc
+        raise GoogleAuthNetworkError(
+            f"google OAuth refresh failed: {exc}",
+            suggestion="check network connectivity and retry",
+        ) from exc
+
+    return (
+        str(creds.refresh_token or token.refresh_token),
+        str(creds.token or ""),
+        creds.expiry if creds.expiry is not None else datetime.now(UTC),
+    )
 
 
 def utc_now() -> datetime:

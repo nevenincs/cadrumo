@@ -17,7 +17,6 @@ Composition order:
 2. Read settings via `load_settings()`.
 3. Dispatch on `ProviderKind`:
    - `LOCAL_FILESYSTEM` → `LocalFileSystemProvider(root=settings.aeat_local_storage_root / profile)`
-   - `IN_MEMORY` → `InMemoryDriveProvider()` (no profile scoping; tests own the lifetime)
    - `GOOGLE_DRIVE` → loads `oauth-client` + `oauth-token` for profile, builds `Credentials`,
      instantiates `GoogleDriveProvider(credentials=..., root_folder_id=settings.aeat_google_drive_root_folder_id)`.
 4. Refuse unknown kinds with `StorageValidationError`.
@@ -33,7 +32,6 @@ from ._google_drive import GoogleDriveProvider
 from ._local import LocalFileSystemProvider
 from ._protocol import StorageProvider
 from ._records import ProviderKind
-from ._testing import InMemoryDriveProvider
 
 
 def _parse_kind(raw: str) -> ProviderKind:
@@ -131,12 +129,6 @@ def get_storage_provider(
 
     settings_resolved = settings if settings is not None else load_settings()
     kind = _parse_kind(settings_resolved.aeat_storage_provider_kind)
-
-    if kind is ProviderKind.IN_MEMORY:
-        # In-memory backend ignores profile and credentials; tests own
-        # the instance lifetime directly.
-        return InMemoryDriveProvider()
-
     profile = _resolve_profile(profile_override)
 
     if kind is ProviderKind.LOCAL_FILESYSTEM:
