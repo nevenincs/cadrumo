@@ -22,16 +22,10 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 from ..bucket._errors import BucketLockedError
+from ._zeroise import zeroise as _zeroise
 
 _KEK_BYTES = 32
 _DEK_BYTES = 32
-
-
-def _zeroise(buffer: bytearray) -> None:
-    """Overwrite every byte of a mutable buffer with zero."""
-
-    for index in range(len(buffer)):
-        buffer[index] = 0
 
 
 class BucketSession:
