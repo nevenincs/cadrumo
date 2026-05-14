@@ -78,6 +78,7 @@ class BucketEventType(StrEnum):
     # ledger transaction lifecycle (Wave W61)
     LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"
     LEDGER_TRANSACTION_IMPORTED = "ledger.transaction.imported"
+    LEDGER_IMPORT_DIAGNOSTIC_RECORDED = "ledger.import.diagnostic_recorded"
     LEDGER_TRANSACTION_UPDATED = "ledger.transaction.updated"
     LEDGER_TRANSACTION_CLASSIFIED = "ledger.transaction.classified"
     LEDGER_TRANSACTION_ALLOCATED = "ledger.transaction.allocated"
@@ -95,6 +96,16 @@ class BucketEventType(StrEnum):
 
     # workflow-state recovery (config repair shape ADR)
     WORKFLOW_STATE_RESET = "workflow_state.reset"
+
+    # reverse-merge corrections (google-oauth taxonomy ADR + two-way deferral ADR)
+    LEDGER_TRANSACTION_CORRECTION_APPLIED = "ledger.transaction.correction.applied"
+    LEDGER_PURCHASE_INVOICE_EVIDENCE_CORRECTION_APPLIED = (
+        "ledger.purchase_invoice_evidence.correction.applied"
+    )
+    LEDGER_PAYABLE_INVOICE_CORRECTION_APPLIED = "ledger.payable_invoice.correction.applied"
+    LEDGER_COLLECTIBLE_INVOICE_CORRECTION_APPLIED = "ledger.collectible_invoice.correction.applied"
+    LEDGER_RENTAL_INCOME_CORRECTION_APPLIED = "ledger.rental_income.correction.applied"
+    LEDGER_RENTAL_EXPENSE_CORRECTION_APPLIED = "ledger.rental_expense.correction.applied"
 
 
 class BucketEventObjectType(StrEnum):
