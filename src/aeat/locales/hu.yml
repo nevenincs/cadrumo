@@ -2,6 +2,9 @@ aggregation:
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért aggregációs buckettel.
+  modelo_bindings:
+    errors:
+      unsupported_period: Nem támogatott modelo időszak a főkönyvi aggregációhoz.
   models:
     errors:
       annual_period_mixed: Az időszak nem keverhet éves és szévén belüli (negyedév/hónap)
@@ -15,12 +18,10 @@ aggregation:
   renta_ledger:
     errors:
       annual_period_required: Éves időszak szükséges a Renta nyilvántartás összesítéséhez.
-      bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért Renta főkönyvi buckettel.
+      bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért Renta főkönyvi
+        buckettel.
       modelo_mismatch: Az adómodell nem egyezik a Renta nyilvántartás várt modeljével.
       period_mismatch: Az időszak nem egyezik a Renta nyilvántartás várt időszakával.
-  modelo_bindings:
-    errors:
-      unsupported_period: Nem támogatott modelo időszak a főkönyvi aggregációhoz.
 application:
   auth:
     provider_impact:
@@ -181,6 +182,29 @@ cli:
   config:
     app_help: Helyi konfiguráció és diagnosztika kezelése
     auth:
+      apoderado:
+        check_help: Read-only live verification
+        clear_help: Retire the apoderado configuration
+        configure:
+          represented_nif_help: NIF of the represented party
+          scope_help: Scope tokens (can be repeated)
+        configure_help: Set active apoderado configuration
+        help: Manage apoderado configuration
+        scope:
+          censo: Nyilvántartási adatok (bejelentkezés, módosítás, kijelentkezés) (modelo
+            036, 037)
+          exped: Ügyiratok és eljárások
+          generalnt: Általános adóügyi eljárások
+          inform: Informatív bevallások (modelo 347, 349, 720)
+          iva: ÁFA időszaki és éves bevallások (modelo 303, 390)
+          notific: Értesítések és kommunikációk
+          pagosf: Negyedéves egyéni vállalkozói részletek (modelo 130, 131)
+          rent: Személyi jövedelemadó és vagyonnyilatkozat (modelo 100, 714)
+          reten: Forrásadó bevallások (modelo 111, 115, 123, 180, 190, 193)
+        scopes:
+          help: Manage apoderado scope vocabulary
+          list_help: List accepted apoderado scopes
+        status_help: Show active apoderado configuration
       clear_all_help: Minden konfigurált hitelesítési szolgáltató törlése
       clear_help: Helyi hitelesítési metaadatok törlése
       clear_locks_help: Hitelesítési beszerzési zárolások törlése
@@ -197,14 +221,18 @@ cli:
       unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtasd
         az ''aeat config auth --help'' parancsot az érvényes azonosítókért.'
     bucket:
-      actor_help: A történet szűrése egy adott aktor által rögzített eseményekre (pontos egyezés)
+      actor_help: A történet szűrése egy adott aktor által rögzített eseményekre (pontos
+        egyezés)
       bucket_id_help: A bucket azonosítója, amelynek eseménytörténetét megjelenítjük
       event_type_help: A történet szűrése egy vagy több eseménytípusra (ismételhető)
       help: Bucket-szintű tároló és eseménytörténet vizsgálata
       history_help: Egy bucket csak-hozzáfűz eseménytörténetének megjelenítése
-      object_id_help: A történet szűrése egy adott object_id-t célzó eseményekre (pontos egyezés)
-      since_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy utána) történt eseményekre (pl. 2026-04-01T00:00:00+00:00)
-      until_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy előtte) történt eseményekre (pl. 2026-04-30T23:59:59+00:00)
+      object_id_help: A történet szűrése egy adott object_id-t célzó eseményekre (pontos
+        egyezés)
+      since_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy utána) történt
+        eseményekre (pl. 2026-04-01T00:00:00+00:00)
+      until_help: A történet szűrése ezen ISO-8601 időbélyegen (vagy előtte) történt
+        eseményekre (pl. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Érvénytelen érték a %{name} kulcshoz: %{value}'
       no_active_profile: Nincs aktív profil. Futtasd először az 'aeat config init
@@ -220,36 +248,84 @@ cli:
       login_help: OAuth hozzájárulási folyamat futtatása (vagy meglévő hitelesítő
         adat frissítése)
       logout_help: A frissítő token és metaadatok törlése; a regisztrált kliens megőrzése
-      profile_help: AEAT profil neve (alapértelmezett = a munkafolyam állapotában aktív
-        profil)
+      profile_help: AEAT profil neve (alapértelmezett = a munkafolyam állapotában
+        aktív profil)
       refresh_only_help: A hozzájárulás kihagyása; csak meglévő hitelesítő adat frissítése
       register_help: Cloud Console Desktop OAuth kliens JSON regisztrálása az aktív
         profilhoz
       status_help: A Google OAuth munkamenet aktuális állapotának megjelenítése az
         aktív profilhoz
+      sync:
+        help: cli.config.google.sync.help
+        probe_help: cli.config.google.sync.probe_help
+        probe_read_only_help: cli.config.google.sync.probe_read_only_help
+        root_folder_id_unset: cli.config.google.sync.root_folder_id_unset
+    init:
+      activity_help: Economic activity description (e.g. 761.1, programador)
+      auth_provider_help: Authentication provider ID to use for the profile
+      certificate_password_env_help: Environment variable name containing the certificate
+        password
+      certificate_path_help: Path to the .p12 or .pfx certificate file
+      drafts_dir_help: Directory to store local filing drafts
+      dry_run_help: Report changes without modifying the configuration
+      from_help: Source profile ID to import settings from
+      help: Initialize a new active profile and config bucket.
+      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
+      manuals_root_help: Root directory for AEAT technical manuals
+      non_interactive_help: Run without prompting for user input
+      output_language_help: Primary language for CLI output (en, es, ca)
+      profile_name_help: Unique identifier for this configuration profile
+      submissions_dir_help: Directory to store submitted filing receipts
+      success:
+        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
+      tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
+      tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Az összes konfigurációs kulcs és aktuális értékének listázása
     profile:
-      already_exists: 'A(z) %{name} profil már létezik. Válassz másik cél-azonosítót.'
-      duplicate_display_name_help: Megjelenített név az új profilhoz (alapértelmezetten a cél-azonosító)
+      already_exists: A(z) %{name} profil már létezik. Válassz másik cél-azonosítót.
+      duplicate_display_name_help: Megjelenített név az új profilhoz (alapértelmezetten
+        a cél-azonosító)
       duplicate_help: Profil másolása új azonosítóval és megjelenített névvel
       duplicate_source_help: A duplikálandó forrásprofil azonosítója
       duplicate_target_help: A duplikátum cél-azonosítója
       help: Az aktív profil konfigurációs értékeinek kezelése
-      remove_help: Profil sírkövezése (a megváltoztathatatlan jelentés-pillanatképek megmaradnak)
+      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
+        first.
+      preflight_help: Report whether the active profile is ready for one modelo /
+        year / period.
+      preflight_modelo_help: Modelo code (e.g. 303).
+      preflight_period_help: Period token (e.g. Q1, annual).
+      preflight_revision_help: Registry revision id.
+      preflight_year_help: Filing year.
+      remove_help: Profil sírkövezése (a megváltoztathatatlan jelentés-pillanatképek
+        megmaradnak)
       remove_name_help: A sírkövezendő profil azonosítója
-      remove_requires_yes: 'A törlés destruktív művelet. Futtasd újra ''aeat config profile remove %{name} --yes'' megerősítéshez.'
+      remove_requires_yes: A törlés destruktív művelet. Futtasd újra 'aeat config
+        profile remove %{name} --yes' megerősítéshez.
       remove_yes_help: A sírkövezés művelet kifejezett megerősítése
       show_help: Egy profil tényeinek megjelenítése (alapértelmezetten az aktív profil)
-      show_name_help: A megjelenítendő profil azonosítója (alapértelmezetten az aktív profil)
-      unknown_profile: 'Ismeretlen profil: %{name}. Futtasd: ''aeat config profile list'' a regisztrált profilok megtekintéséhez.'
+      show_name_help: A megjelenítendő profil azonosítója (alapértelmezetten az aktív
+        profil)
+      unknown_profile: 'Ismeretlen profil: %{name}. Futtasd: ''aeat config profile
+        list'' a regisztrált profilok megtekintéséhez.'
       use_help: Meglévő profil kiválasztása aktív profilként
       use_name_help: Az aktiválandó profil azonosítója
+      validate_help: Validate the active profile against the schema.
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolat ellenőrzése
       connectivity_target_help: Ellenőrizendő kapcsolati cél
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
         és javítása
+      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
+        all).
+      integrity_namespace_help: Restrict the integrity probe to one namespace.
+      list_all_help: Return every key, including unreadable.
+      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
+        or neither.
+      list_help: List secure-object keys stored under one namespace.
+      list_namespace_help: Namespace to inventory.
+      list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
       logs_lines_help: Megjelenítendő friss naplósorok száma
       quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;
@@ -257,15 +333,12 @@ cli:
       quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
         a megerősítéshez.
       quarantine_yes_help: A karantén művelet kifejezett megerősítése
-      reset_state_help: Az olvashatatlan munkafolyamat-állapot boríték eldobása
-        (romboló; --yes szükséges)
-      reset_state_requires_yes: Ez a művelet romboló. Futtasd újra a --yes
-        kapcsolóval a megerősítéshez, vagy adj --dry-run paramétert az
-        ujjlenyomat megtekintéséhez.
-      reset_state_yes_help: A munkafolyamat-állapot visszaállítás kifejezett
-        megerősítése
-      reset_state_dry_run_help: A boríték ujjlenyomatának közlése a sor törlése
-        nélkül
+      reset_state_dry_run_help: A boríték ujjlenyomatának közlése a sor törlése nélkül
+      reset_state_help: Az olvashatatlan munkafolyamat-állapot boríték eldobása (romboló;
+        --yes szükséges)
+      reset_state_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
+        a megerősítéshez, vagy adj --dry-run paramétert az ujjlenyomat megtekintéséhez.
+      reset_state_yes_help: A munkafolyamat-állapot visszaállítás kifejezett megerősítése
     reset:
       help: Operátor által megadott konfigurációs hatókörök visszaállítása
       invalid_scope: 'Érvénytelen hatókör: %{scope}. Az érvényes hatókörök: %{valid}.'
@@ -300,11 +373,43 @@ cli:
       key_help: A törlendő kulcs
     workflow_help: Konfigurációs munkafolyamat súgójának megjelenítése
   ledger:
+    allocate:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      business_pct_help: Üzleti használati arány 0 és 1 között
+      category_help: Kiadási vagy bevételi kategória azonosítója
+      help: Üzleti/magán proporcionalitás rögzítése egy főkönyvi tranzakcióhoz
+      id_help: Kiosztandó főkönyvi tranzakcióazonosító
+      prorrata_reference_help: IVA prorrata hivatkozás ÁFA munkafolyamatokhoz
+      usage_ratio_help: Használati arány azonosítója arányos üzleti használathoz
     app_help: Könyvelési naplók és ÁFA-nyilvántartások kezelése
+    archive:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      help: Egy főkönyvi tranzakció archiválása az aktív profil bucketjében
+      id_help: Archiválandó főkönyvi tranzakcióazonosító
+      reason_help: Az életciklus-előzményben rögzített ok
+    attach:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször
+        is megadható
+      help: Biztonságos bizonyítékobjektumok csatolása egy főkönyvi tranzakcióhoz
+      id_help: Főkönyvi tranzakcióazonosító, amelyhez bizonyítékot kell csatolni
+      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat
+        azonosítója
+    classify:
+      actor_help: A bucket eseményen rögzített kezelő neve
+      category_help: Kiadási vagy bevételi kategória azonosítója
+      classification_help: A tranzakció üzleti besorolási állapota
+      help: Egy főkönyvi tranzakció besorolása az aktív profil bucketjében
+      id_help: Besorolandó főkönyvi tranzakcióazonosító
+      irpf_category_help: IRPF kategória modell-számításokhoz
+      iva_amount_help: IVA összeg
+      iva_rate_help: IVA kulcs tizedesként, például 0.21
+      taxable_base_help: Adóalap összege
     create:
       actor_help: A bucket eseményen rögzített kezelő neve
       amount_help: Előjeles tranzakciós összeg; a kimenő értékek negatívak
-      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször is megadható
+      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször
+        is megadható
       business_pct_help: Üzleti használati arány MIXED besoroláshoz, 0 és 1 között
       category_help: Kiadási vagy bevételi kategória azonosítója
       classification_help: A tranzakció üzleti besorolási állapota
@@ -320,39 +425,11 @@ cli:
       iva_rate_help: IVA kulcs tizedesként, például 0.21
       notes_help: A naplótranzakcióval tárolt kezelői jegyzetek
       prorrata_reference_help: IVA prorrata hivatkozás ÁFA munkafolyamatokhoz
-      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat azonosítója
+      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat
+        azonosítója
       taxable_base_help: Adóalap összege
       usage_ratio_help: Használati arány azonosítója arányos üzleti használathoz
       value_date_help: Értéknap (YYYY-MM-DD)
-    allocate:
-      actor_help: A bucket eseményen rögzített kezelő neve
-      business_pct_help: Üzleti használati arány 0 és 1 között
-      category_help: Kiadási vagy bevételi kategória azonosítója
-      help: Üzleti/magán proporcionalitás rögzítése egy főkönyvi tranzakcióhoz
-      id_help: Kiosztandó főkönyvi tranzakcióazonosító
-      prorrata_reference_help: IVA prorrata hivatkozás ÁFA munkafolyamatokhoz
-      usage_ratio_help: Használati arány azonosítója arányos üzleti használathoz
-    archive:
-      actor_help: A bucket eseményen rögzített kezelő neve
-      help: Egy főkönyvi tranzakció archiválása az aktív profil bucketjében
-      id_help: Archiválandó főkönyvi tranzakcióazonosító
-      reason_help: Az életciklus-előzményben rögzített ok
-    attach:
-      actor_help: A bucket eseményen rögzített kezelő neve
-      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször is megadható
-      help: Biztonságos bizonyítékobjektumok csatolása egy főkönyvi tranzakcióhoz
-      id_help: Főkönyvi tranzakcióazonosító, amelyhez bizonyítékot kell csatolni
-      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat azonosítója
-    classify:
-      actor_help: A bucket eseményen rögzített kezelő neve
-      category_help: Kiadási vagy bevételi kategória azonosítója
-      classification_help: A tranzakció üzleti besorolási állapota
-      help: Egy főkönyvi tranzakció besorolása az aktív profil bucketjében
-      id_help: Besorolandó főkönyvi tranzakcióazonosító
-      irpf_category_help: IRPF kategória modell-számításokhoz
-      iva_amount_help: IVA összeg
-      iva_rate_help: IVA kulcs tizedesként, például 0.21
-      taxable_base_help: Adóalap összege
     edit:
       actor_help: A bucket eseményen rögzített kezelő neve
       amount_help: Előjeles tranzakciós összeg; a kimenő értékek negatívak
@@ -369,19 +446,17 @@ cli:
       notes_help: A naplótranzakcióval tárolt kezelői jegyzetek
       taxable_base_help: Adóalap összege
       value_date_help: Értéknap (YYYY-MM-DD)
+    errors:
+      confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez,
+        vagy használd előbb a --dry-run kapcsolót
+      filter_parse_error: A naplószűrő elemzése sikertelen
+      invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
     export:
       actor_help: A bucket eseményen rögzített kezelő neve
       format_help: Exportálási szerializációs formátum
       help: Kanonikus főkönyvi sorok exportálása az aktív profil bucketjéből
       include_inactive_help: Archivált és félretett főkönyvi tranzakciók belefoglalása
       output_help: Az exportált főkönyvi fájl írási útvonala
-    list:
-      header: FŐKÖNYVI TRANZAKCIÓK
-      help: Főkönyvi tranzakciók listázása az aktív profil bucketjében
-    errors:
-      confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez, vagy használd előbb a --dry-run kapcsolót
-      filter_parse_error: A naplószűrő elemzése sikertelen
-      invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
     import:
       dry_run_help: Az importálás futtatása próba üzemmódban (mentés nélkül)
       help: Bankkivonatok vagy bejegyzések importálása a könyvelési naplóba
@@ -392,19 +467,19 @@ cli:
       verbose_help: Részletes információk megjelenítése az importálás során
       verify_help: Bejegyzések ellenőrzése az importálás után
     labels:
-      amount: Összeg
-      date: Dátum
-      description: Leírás
-      dialect: Felismert formátum
-      dry_run: PRÓBA ÜZEMMÓD (DRY RUN)
-      id: Azonosító
-      imported: Bejegyzések importálva
       active: Aktív
+      amount: Összeg
       archived: Archivált
       bucket: Bucket
       checked: Ellenőrzött tranzakciók
       created_event_id: Létrehozási bucket esemény
+      date: Dátum
+      description: Leírás
+      dialect: Felismert formátum
+      dry_run: PRÓBA ÜZEMMÓD (DRY RUN)
       export_id: Exportazonosító
+      id: Azonosító
+      imported: Bejegyzések importálva
       lifecycle_state: Életciklus állapot
       'no': Nem
       output: Kimenet
@@ -424,13 +499,9 @@ cli:
       valid: Érvényes
       warnings: Figyelmeztetések
       'yes': Igen
-    review:
-      filter_help: Sorok szűrése status, period, issue vagy import szerint
-      header: KÖNYVELÉSI NAPLÓ FELÜLVIZSGÁLATI ÜLÉS
-      help: Naplóbejegyzések interaktív felülvizsgálata és ellenőrzése
-      id_help: A felülvizsgálandó adott bejegyzés azonosítója
-      no_rows: Nincsenek felülvizsgálatra váró naplóbejegyzések
-      verbose_help: Részletes információk megjelenítése a felülvizsgálat során
+    list:
+      header: FŐKÖNYVI TRANZAKCIÓK
+      help: Főkönyvi tranzakciók listázása az aktív profil bucketjében
     read:
       help: Egy főkönyvi tranzakció olvasása az aktív profil bucketjéből
       transaction_id_help: Olvasandó főkönyvi tranzakcióazonosító
@@ -443,17 +514,26 @@ cli:
       yes_help: A főkönyvi tranzakció törlésének megerősítése
     reset:
       actor_help: A bucket eseményen rögzített kezelő neve
-      dry_run_help: Visszaállítási hatások jelentése a főkönyvi katalógus ürítése nélkül
+      dry_run_help: Visszaállítási hatások jelentése a főkönyvi katalógus ürítése
+        nélkül
       help: Az aktív profil bucket főkönyvi katalógusának visszaállítása
       reason_help: A visszaállítási előzményben rögzített ok
       yes_help: Az aktív főkönyvi katalógus ürítésének megerősítése
+    review:
+      filter_help: Sorok szűrése status, period, issue vagy import szerint
+      header: KÖNYVELÉSI NAPLÓ FELÜLVIZSGÁLATI ÜLÉS
+      help: Naplóbejegyzések interaktív felülvizsgálata és ellenőrzése
+      id_help: A felülvizsgálandó adott bejegyzés azonosítója
+      no_rows: Nincsenek felülvizsgálatra váró naplóbejegyzések
+      verbose_help: Részletes információk megjelenítése a felülvizsgálat során
     stash:
       actor_help: A bucket eseményen rögzített kezelő neve
       help: Egy főkönyvi tranzakció félretétele az aktív profil bucketjében
       id_help: Félreteendő főkönyvi tranzakcióazonosító
       reason_help: Az életciklus-előzményben rögzített ok
     status:
-      help: A főkönyvi állapot és számítási készenlét összefoglalása az aktív profil bucketjében
+      help: A főkönyvi állapot és számítási készenlét összefoglalása az aktív profil
+        bucketjében
       period_help: Preflight adóidőszak (YYYY-MM vagy modelo időszak)
     track:
       help: Egy főkönyvi tranzakció eseményláncának megjelenítése
@@ -632,20 +712,20 @@ cli:
 
 
       Quickstart: aeat config init --tax-id NIF --activity ACTIVITY'
-    app_help_help: cli.root.app_help_help
+    app_help_help: Show app workflow help
     debug_help: Belső hibakeresési naplók megjelenítése stderr-en
     detail_help: Also show the detailed registry summary
     format_help: A parancseredmények kimeneti formátuma
-    help_help: cli.root.help_help
+    help_help: Show workflow-oriented help
     landing:
       headline: AEAT adoasszisztens
       help_line: 'Tovabbi segitseg: futtasd az `aeat --help`, `aeat config --help`
         vagy `aeat app --help` parancsot.'
-      quick_start_repair: '  5. `aeat config repair` - konfiguracio, tarolo es helyi
-        allapot diagnosztikaja.'
       quick_start_heading: Gyors kezdes
       quick_start_import: '  3. `aeat app ledger import <banki-kivonat.csv> --provider
         csv` - banki tranzakciok hozzaadasa.'
+      quick_start_repair: '  5. `aeat config repair` - konfiguracio, tarolo es helyi
+        allapot diagnosztikaja.'
       quick_start_review: '  4. `aeat app ledger review` - importalt sorok ellenorzese
         es osztalyozasa.'
       quick_start_setup_done: '  1. `aeat config profile status` - aktiv profil ellenorzese
@@ -688,7 +768,7 @@ filing:
     schema_mismatch: Eltérés a várt sémától
 profile:
   keys:
-    description: profile.keys.description
+    description: Profile configuration keys and their descriptions
     tax:
       id: Tax identifier (NIF/NIE/CIF)
 topic:
@@ -768,15 +848,15 @@ transactions:
     message: A 2026-03 hónap hiányzik az importált fájlból.
 wizard:
   choices:
-    general: wizard.choices.general
-    irpf: wizard.choices.irpf
-    iva: wizard.choices.iva
-    simplificado: wizard.choices.simplificado
+    general: General
+    irpf: IRPF
+    iva: IVA
+    simplificado: Simplified
   demo:
-    description: wizard.demo.description
+    description: A demonstration section to test wizard functionality
     section:
-      title: wizard.demo.section.title
-    title: wizard.demo.title
+      title: Demo section
+    title: Demo
   errors:
     blank_integer: Integer value required for %{prompt_key}.
     blank_path: Path required for %{prompt_key}.
@@ -798,17 +878,17 @@ wizard:
       \ vizsgáld meg:\n  aeat config repair\n\nCsak a helyi profilállapot eldobásához\
       \ és újrakezdéshez:\n  aeat config reset --scope profile --yes"
   other:
-    description: wizard.other.description
+    description: Other configuration options
     section:
-      title: wizard.other.section.title
-    title: wizard.other.title
+      title: Other settings
+    title: Other
   progress:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
     certificate:
       path:
-        prompt: wizard.setup.certificate.path.prompt
+        prompt: Enter the path to your digital certificate (.p12, .pfx)
     codes:
       disability-grade:
         choices:
@@ -999,7 +1079,7 @@ wizard:
             label: Magyar
         prompt: A profil CLI-kimenetének nyelve
       regimes:
-        prompt: wizard.setup.profile.regimes.prompt
+        prompt: Select your applicable tax regimes
       surnames:
         prompt: Vezetéknév vagy cégnév az exportfejlécekhez
       tax-id:
@@ -1093,14 +1173,14 @@ wizard:
       title: Az első adózó
     title: Beállítás varázsló
   test:
-    description: wizard.test.description
+    description: Test your configuration and connectivity
     example:
       choices:
         'yes':
-          description: wizard.test.example.choices.yes.description
-          label: wizard.test.example.choices.yes.label
-      help: wizard.test.example.help
-      prompt: wizard.test.example.prompt
+          description: Select this to confirm
+          label: true
+      help: Example help text for testing
+      prompt: Example test question
     main:
-      title: wizard.test.main.title
-    title: wizard.test.title
+      title: Main test
+    title: Test

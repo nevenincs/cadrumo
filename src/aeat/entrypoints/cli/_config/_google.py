@@ -39,14 +39,21 @@ from ....adapters.outbound.google import (
 )
 from ....adapters.outbound.google._oauth_flow import run_login_flow
 from ....adapters.outbound.google._profile_binding import resolve_active_profile
+from ....adapters.outbound.google._records import REQUIRED_SCOPES
 from ....adapters.outbound.google._session_store import (
     delete_session,
     load_client,
     load_metadata,
+    load_token,
     save_client,
     save_metadata,
     save_token,
 )
+from ....adapters.outbound.storage import (
+    StorageError,
+    get_storage_provider,
+)
+from ....core.config import load_settings
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
 from .._i18n import tr
@@ -303,6 +310,89 @@ def google_logout(
             "client_preserved\tTrue",
         ),
     )
+
+
+sync_app = typer.Typer(
+    name="sync",
+    help=tr("cli.config.google.sync.help"),
+    no_args_is_help=True,
+)
+
+
+@sync_app.command("probe", help=tr("cli.config.google.sync.probe_help"))
+def google_sync_probe(
+    ctx: typer.Context,
+    profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
+    read_only: bool = typer.Option(
+        False,
+        "--read-only/--no-read-only",
+        help=tr("cli.config.google.sync.probe_read_only_help"),
+    ),
+) -> None:
+    """Build a real `GoogleDriveProvider` and execute `probe()` against `drive.googleapis.com`.
+
+    Confirms that the per-profile OAuth records persisted by `login`
+    yield usable credentials, the configured `aeat_google_drive_root_folder_id`
+    resolves to a real folder, and (when `--no-read-only`) a sentinel
+    file round-trips into `_probe/`.
+    """
+
+    try:
+        active = resolve_active_profile(profile)
+    except GoogleAuthError as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+
+    settings = load_settings()
+    # The factory uses Settings.aeat_storage_provider_kind to pick the
+    # backend. For the operator-driven probe we override to Google Drive
+    # explicitly so the probe always exercises the Drive path regardless
+    # of how the operator's environment is configured.
+    drive_settings = settings.model_copy(update={"aeat_storage_provider_kind": "google_drive"})
+    if not drive_settings.aeat_google_drive_root_folder_id:
+        raise CliRefusedBoundaryError(tr("cli.config.google.sync.root_folder_id_unset"))
+
+    try:
+        provider = get_storage_provider(profile_override=active, settings=drive_settings)
+        report = provider.probe(read_only=read_only)
+    except (GoogleAuthError, StorageError) as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+
+    payload = {
+        "operation": "config.google.sync.probe",
+        "profile": active,
+        "provider_kind": report.provider_kind.value,
+        "reachable": report.reachable,
+        "writable": report.writable,
+        "read_only": report.read_only,
+        "root_folder_present": report.root_folder_present,
+        "root_folder_id": drive_settings.aeat_google_drive_root_folder_id,
+        "detail": report.detail,
+    }
+    _emit(
+        ctx,
+        payload,
+        (
+            "operation\tconfig.google.sync.probe",
+            f"profile\t{active}",
+            f"provider_kind\t{report.provider_kind.value}",
+            f"reachable\t{report.reachable}",
+            f"writable\t{report.writable}",
+            f"read_only\t{report.read_only}",
+            f"root_folder_present\t{report.root_folder_present}",
+            f"root_folder_id\t{drive_settings.aeat_google_drive_root_folder_id}",
+            f"detail\t{report.detail}",
+        ),
+    )
+
+
+google_app.add_typer(sync_app, name="sync")
+
+
+# Suppress unused-import false positive for `load_token` and `REQUIRED_SCOPES`;
+# both are part of the public surface the sync sub-commands consume during
+# their own command implementations (sync push / sync pull / sync calc export
+# will land alongside P03 / P07 and import them through this same module).
+_ = (load_token, REQUIRED_SCOPES)
 
 
 __all__ = ["google_app"]
