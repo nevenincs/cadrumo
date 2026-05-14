@@ -312,6 +312,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.inventory._errors.InventoryServiceInputError",
+        ErrorCode(
+            code="REFUSED_INVENTORY_SERVICE_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_inventory_service_input",
+            default_suggestion="aeat app ledger inventory list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.inventory._errors.InventoryActividadNotFoundError",
+        ErrorCode(
+            code="REFUSED_INVENTORY_ACTIVIDAD_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_inventory_actividad_not_found",
+            default_suggestion="aeat app ledger inventory list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.inventory._errors.InventoryActividadConflictError",
+        ErrorCode(
+            code="REFUSED_INVENTORY_ACTIVIDAD_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_inventory_actividad_conflict",
+            default_suggestion="aeat app ledger inventory show",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.transactions._errors.TransactionIdPrefixError",
         ErrorCode(
             code="REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
