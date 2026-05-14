@@ -15,9 +15,9 @@ related:
 
 ## Problem Statement
 
-The user-stated intent for the Google integration includes calculation-to-worksheet exports for human verification — visual surfaces a Spanish autónomo (or their accountant) can read to verify that the project's calculation truth registry produced the right casilla values for a given tax form. ADR-6 closes the design: worksheet layout, formula translation strategy, read-only enforcement, provenance metadata, and Spanish UX for operators who don't read code.
+The user-stated intent for the Google integration includes calculation-to-worksheet exports for human verification — visual surfaces a Spanish autónomo (or their accountant) can read to verify that the project's calculation truth registry produced the right casilla values for a given tax form. ADR-6 closes the design: worksheet layout, formula translation strategy, protected-range enforcement, provenance metadata, and Spanish UX for operators who don't read code.
 
-ADR-6 is read-only verification. Two-way sync (operator edits a calculation cell, app pulls back) is ADR-7's territory and is independent of ADR-6.
+**Amended 2026-05-14**: ADR-6 originally framed the calc-sheets surface as read-only by design, deferring two-way sync to ADR-7. The amendment supersedes that framing: ADR-8 (`2026-05-14-google-oauth-adr.md`) formalises a bidirectional pull contract specifically for the `Entradas` (Inputs) sheet, with `Cálculos / Resultado / Procedencia` remaining app-owned and protected. ADR-6 retains ownership of the four-sheet layout, the formula translation strategy, the provenance metadata schema, and the Spanish UX details. ADR-8 owns the schema-to-sheet engine module boundary, the tiered parity oracle stack, and the `aeat config google sync calc pull` bidirectional command. ADR-7's deferral verdict no longer governs the calc-sheets surface; it still governs ledger reverse-merge (transactions, invoices, rental) per its own scope.
 
 ## Considerations
 
@@ -31,7 +31,7 @@ ADR-6 is read-only verification. Two-way sync (operator edits a calculation cell
 - **Pydantic v2 strict** for the export-plan record and the per-sheet layout descriptor.
 - **No partial implementations.** Every modelo currently in the registry can be exported; no "modelo 130 deferred" placeholders.
 - **No backwards-compat.** No legacy Sheets layout reader; no migration from any prior export shape.
-- **Read-only by design.** Operator can edit the Inputs sheet (per §5); all other sheets are protected. Even if ADR-7 enables two-way, ADR-6 sheets stay read-only — reverse-flow is restricted to Tier-1 domain Sheets (ADR-5), not calculation visualisation.
+- **Partition by cell ownership.** Operator can edit the `Entradas` sheet (per §5); `Cálculos / Resultado / Procedencia / Guía / _Tariffs` are app-owned and protected. Operator edits to `Entradas` flow back to the local substrate via `aeat config google sync calc pull` (ADR-8). Foreign edits to app-owned sheets (operator explicitly unprotects + edits) are detected at pull time and refused with `CalcSheetForeignWriteError`.
 - **Spanish UX.** AEAT-canonical terminology (casilla, base imponible, cuota, etc.); column labels in Spanish; "Guía de Lectura" reference sheet.
 
 ## Implementation
@@ -95,11 +95,11 @@ And in Procedencia (one row per casilla):
 
 Cell notes on Cálculos formula cells additionally embed Oracle + Normativa as hover-tooltips for at-a-glance verification without switching sheets.
 
-### 5. Read-only enforcement
+### 5. Protected-range enforcement + bidirectional Entradas surface
 
-`spreadsheets.batchUpdate` with `addProtectedRange` requests protects Cálculos, Resultado, Procedencia, and Guía de Lectura. The protection is `warningOnly: false` and `requestingUserCanEdit: false` — operator cannot edit those sheets in Drive UI without explicitly unprotecting (which is an in-Drive operator action; the app does not block that capability at the Google ACL level because the operator owns the file).
+`spreadsheets.batchUpdate` with `addProtectedRange` requests protects Cálculos, Resultado, Procedencia, Guía de Lectura, and the hidden `_Tariffs` lookup sheet. The protection is `warningOnly: false` and `requestingUserCanEdit: false` — operator cannot edit those sheets in Drive UI without explicitly unprotecting (which is an in-Drive operator action; the app does not block that capability at the Google ACL level because the operator owns the file). Foreign writes to app-owned cells are detected at `sync calc pull` time via Drive `headRevisionId` change + cell-address comparison; the pull refuses with `CalcSheetForeignWriteError` listing the cells the operator edited outside `Entradas`.
 
-The Entradas sheet is left unprotected. Operator can change input values and watch the Cálculos formulas recompute live. To make a corrected calculation permanent in the substrate, operator re-runs `aeat config google sync calc export --period <p>` after fixing the inputs locally via CLI; the export overwrites the Sheet with the substrate's new computation.
+The `Entradas` sheet is left unprotected and is the canonical operator-edit surface. Operator can change input values and watch the Cálculos formulas recompute live in Sheets. To flow those edits back into the local substrate (and trigger a fresh `CalculationRevision`), operator runs `aeat config google sync calc pull --modelo <NNN> --period <p>` per ADR-8. Operator may then re-run `aeat config google sync calc export --period <p>` to re-write the Sheet from the new authoritative state (idempotent under the existing semantics); the round-trip is multi-turn.
 
 ### 6. Spanish UX details
 
@@ -120,15 +120,16 @@ The Entradas sheet is left unprotected. Operator can change input values and wat
 
 ```
 aeat config google sync calc export --profile <id> --modelo <NNN> --period <period> [--batch]
+aeat config google sync calc pull   --profile <id> --modelo <NNN> --period <period> [--force --resolve {local,remote}]
 aeat config google sync calc list   --profile <id> [--format json|text]                            # lists exported Sheets per profile
 aeat config google sync calc delete --profile <id> --modelo <NNN> --period <period>    # removes the workspace Sheet
 ```
 
-`calc export` is idempotent: re-running on the same (modelo, period) updates the existing Sheet in place rather than creating a new file.
+`calc export` is idempotent: re-running on the same (modelo, period) updates the existing Sheet in place rather than creating a new file. `calc pull` reads the operator's `Entradas` edits and applies them to the local substrate per ADR-8; refer there for the full bidirectional contract.
 
 ### 8. Out of scope (deferred)
 
-- Two-way sync from these Sheets back into substrate (operator edits Cálculos cell → substrate updates). ADR-7's territory; ADR-6's read-only stance does not change regardless of ADR-7's verdict.
+- Two-way sync from app-owned Cálculos / Resultado / Procedencia cells (operator unprotects and overwrites). ADR-8 detects + refuses this with `CalcSheetForeignWriteError`. A future amendment to ADR-8 could add a `--accept-foreign-cell-overrides` opt-in but v1 refuses.
 - Multi-modelo single-Spreadsheet (one Sheet per modelo in one Spreadsheet). v1 creates one Spreadsheet per (modelo, period).
 - Comparative views across periods (Q1 vs Q2 column-side-by-side). v1 = one period per Sheet.
 - Docs API exports for prose-shaped tax reports. No consumer; out of scope (consistent with audit's refutation of Docs round-trip).

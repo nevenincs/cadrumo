@@ -36,19 +36,19 @@ The verdict has direct material consequences for v1 scope: it determines whether
 
 ## Implementation
 
-### 1. Verdict — DEFER the Sheets-pull entry-point to a future v1.x amendment
+### 1. Verdict — scope-split: calc-sheets is bidirectional in v1; ledger Sheets-pull remains deferred
 
-**v1 ships one-way Sheets export only. No Sheets-pull command exists in v1.**
+**Amended 2026-05-14**: The original deferral verdict ("v1 ships one-way Sheets export only") applied uniformly across every Sheets surface. ADR-8 (`2026-05-14-google-oauth-adr.md`) supersedes it for the **calc-sheets surface specifically**: `aeat config google sync calc pull` is an active v1 command that reads operator edits to the `Entradas` (Inputs) sheet of a `calc-modelo-<NNN>-<period>.gsheet` and applies them to the local `ModeloWorkUnit` substrate. The partition-by-cell-ownership contract (operator owns `Entradas`, app owns `Cálculos / Resultado / Procedencia`) makes the calc-sheets bidirectional surface operationally simpler than ledger reverse-merge.
+
+The **ledger reverse-merge surface (transactions, invoices, rental)** remains deferred per the original ADR-7 verdict. Operators correct ledger fields via the in-CLI edit commands (§3) or CSV upload (§4); no `aeat app ledger transaction sync pull --from-sheet` command exists in v1 because the four safety properties (§2) are not yet met for the Tier-1 ledger surface.
 
 The application-layer reverse-merge service exists and is fully active in v1 because the v1 CLI edit commands (`aeat app ledger transaction edit`, etc.) and CSV-corrections import commands (`aeat app ledger transaction corrections import-csv`, etc.) call it directly. The service validates editable-only field invariants, applies record subsets to the substrate, and emits audit + bucket events on every applied row. It is real, tested, used, and does not carry a settings flag.
 
-What v1 does NOT ship is a Sheets-pull command — a CLI verb that reads operator edits from `/aeat-vault/_workspace/` Sheets surfaces, builds record subsets from them, and routes those subsets through the reverse-merge service. That command does not exist in v1 source code. The future amendment adds it; it calls the same reverse-merge service the v1 CLI/CSV callers use.
+No `settings.aeat_enable_two_way_sync` flag exists in v1. There is nothing to gate (no ledger Sheets-pull code is present) and no flag to flip later. The calc-sheets bidirectional pull lands as a new CLI command per ADR-8; it does not depend on, or remove, a pre-existing flag. A future amendment may add ledger Sheets-pull alongside ADR-7's safety-property closure work; that amendment ships the new command alongside its own ADR amendment.
 
-No `settings.aeat_enable_two_way_sync` flag exists in v1. There is nothing to gate (no Sheets-pull code is present) and no flag to flip later. The future amendment ships a new CLI command alongside its own ADR amendment; it does not depend on, or remove, a pre-existing flag.
+### 2. Why ledger Sheets-pull is still deferred — the four unmet safety properties
 
-### 2. Why defer — the four unmet safety properties
-
-Two-way sync would need to demonstrate all four before flipping the gate:
+The four properties below pertain to the **ledger reverse-merge surface** (Tier-1 ledger domains: transactions, invoices, rental). They were the original ADR-7 deferral argument and continue to govern that surface. The calc-sheets surface (per ADR-8) is operationally distinct — it has no row-position-keyed Sheets layout, no per-cell schema validation requirement beyond formula-input shape, no need for an operator-recoverable validation UX since the parity oracle (ADR-8 §3) catches translation defects pre-export, and a much simpler audit-trail story (single `CalculationRevision` rather than per-row reverse-merge events). The four properties below therefore apply only to the ledger surface:
 
 | Property | What's needed | Why not v1 |
 |---|---|---|

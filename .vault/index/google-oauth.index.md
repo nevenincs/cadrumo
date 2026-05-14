@@ -30,7 +30,10 @@ related:
   - '[[2026-05-14-google-oauth-W01-P02-foundation-exec]]'
   - '[[2026-05-14-google-oauth-W01-P02-google-drive-exec]]'
   - '[[2026-05-14-google-oauth-W01-P06-S01-S02-S28-exec]]'
+  - '[[2026-05-14-google-oauth-adr]]'
   - '[[2026-05-14-google-oauth-audit]]'
+  - '[[2026-05-14-google-oauth-reference]]'
+  - '[[2026-05-14-google-oauth-research]]'
 ---
 
 # `google-oauth` feature index
@@ -49,6 +52,7 @@ Auto-generated index of all documents tagged with `#google-oauth`.
 - `2026-05-13-google-oauth-snapshot-adr` - `google-oauth` adr: `Snapshot, backup, and restore with encryption boundary` | (**status:** `accepted`)
 - `2026-05-13-google-oauth-taxonomy-adr` - `google-oauth` adr: `Per-domain export taxonomy` | (**status:** `accepted`)
 - `2026-05-13-google-oauth-twoway-adr` - `google-oauth` adr: `Two-way Sheets sync feasibility verdict` | (**status:** `accepted — deferred`)
+- `2026-05-14-google-oauth-adr` - `google-oauth` adr: `schema-to-sheet engine and parity guarantee for bidirectional modelo sheets` | (**status:** `accepted`)
 
 ### audit
 
@@ -76,6 +80,11 @@ Auto-generated index of all documents tagged with `#google-oauth`.
 
 - `2026-05-13-google-oauth-plan` - `google-oauth` `Google OAuth integration master plan` plan
 
+### reference
+
+- `2026-05-14-google-oauth-reference` - `google-oauth` reference: `calc engine + modelo schema reference`
+
 ### research
 
 - `2026-05-06-google-oauth-research` - `google-oauth` research: codebase reality + fresh-state OAuth design
+- `2026-05-14-google-oauth-research` - google-oauth research: Sheets bidirectional roundtrip research
