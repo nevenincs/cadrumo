@@ -49,6 +49,17 @@ from ._actions import (
     rename_work_unit,
     verify_modelo_revision,
 )
+from ._borrador_binding import (
+    Modelo100BorradorBindingCommand,
+    Modelo100BorradorBindingError,
+    Modelo100BorradorBindingResult,
+    resolve_modelo_100_borrador_bindings,
+)
+from ._history import (
+    WorkUnitHistory,
+    WorkUnitHistoryEvent,
+    assemble_work_unit_history,
+)
 
 __all__ = [
     "AmendmentEvidenceMissingError",
@@ -60,6 +71,9 @@ __all__ = [
     "CalculationRevisionStateError",
     "ExternalFilingImportError",
     "FilingRecordNotFoundError",
+    "Modelo100BorradorBindingCommand",
+    "Modelo100BorradorBindingError",
+    "Modelo100BorradorBindingResult",
     "ModeloAggregationBindingError",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
@@ -81,6 +95,10 @@ __all__ = [
     "list_verification_reports",
     "list_work_units",
     "mark_revision_verified_complete",
+    "WorkUnitHistory",
+    "WorkUnitHistoryEvent",
+    "assemble_work_unit_history",
     "rename_work_unit",
+    "resolve_modelo_100_borrador_bindings",
     "verify_modelo_revision",
 ]
