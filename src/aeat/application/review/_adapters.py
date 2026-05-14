@@ -201,7 +201,7 @@ def _to_transaction_item(
         modelo=None,
         severity=severity,
         summary=summary,
-        drill_command=f"aeat app ledger edit --id {transaction.transaction_id} --set category=... --reason ...",
+        drill_command=f"aeat app ledger review --id {transaction.transaction_id}",
         since=since,
         source=transaction,
     )
@@ -292,13 +292,26 @@ def drafts_pending(
     *,
     drafts: tuple[tuple[Path, FilingDraft], ...] | None = None,
 ) -> tuple[FindingReviewItem, ...]:
-    """Return :class:`FindingReviewItem`s for findings + unready drafts."""
+    """Return :class:`FindingReviewItem`s for findings + unready drafts.
+
+    Drafts whose ``profile_tax_id`` does not match the active profile's
+    tax id belong to a ``legacy-borrador`` cohort: they were created
+    under a different profile (commonly during scaffold runs before a
+    real profile init). Items emitted from the legacy cohort are
+    demoted to :attr:`ReviewSeverity.INFO` regardless of their finding
+    severity, per the
+    ``2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr``
+    2026-05-14 amendment, so a fresh profile does not show legacy
+    drafts as ``critical``.
+    """
     if drafts is None:
         drafts = _load_drafts(settings)
+    active_tax_id = _resolve_active_tax_id(settings)
     items: list[FindingReviewItem] = []
     seen: set[tuple[str, str, str]] = set()
     for path, draft in drafts:
         path_str = str(path)
+        legacy = _is_legacy_borrador(draft, active_tax_id)
         if draft.findings:
             for finding in draft.findings:
                 dedup_key = (draft.draft_id, finding.code, finding.casilla_id or "-")
@@ -310,6 +323,7 @@ def drafts_pending(
                         draft=draft,
                         path_str=path_str,
                         finding=finding,
+                        legacy=legacy,
                     )
                 )
             continue
@@ -318,6 +332,7 @@ def drafts_pending(
                 _to_placeholder_item(
                     draft=draft,
                     path_str=path_str,
+                    legacy=legacy,
                 )
             )
         elif draft.status is FilingDraftStatus.APPROVAL_STALE:
@@ -328,6 +343,35 @@ def drafts_pending(
                 )
             )
     return tuple(items)
+
+
+def _resolve_active_tax_id(settings: Settings) -> str | None:
+    """Return the active profile's tax id, or ``None`` when unknown."""
+    del settings
+    try:
+        from ..workflow import workflow_state_repository
+        from ..wizard._status import build_wizard_status
+    except Exception:
+        return None
+    try:
+        state = workflow_state_repository().load()
+        status = build_wizard_status(state)
+    except Exception:
+        return None
+    return status.tax_id or None
+
+
+def _is_legacy_borrador(draft: FilingDraft, active_tax_id: str | None) -> bool:
+    """Return ``True`` for drafts that pre-existed the active profile.
+
+    A draft whose ``profile_tax_id`` does not match the active profile's
+    tax id is classified as legacy. When the active profile is unknown
+    (no profile yet) every draft is treated as legacy so a brand-new
+    install does not emit critical findings.
+    """
+    if active_tax_id is None:
+        return True
+    return (draft.profile_tax_id or "") != active_tax_id
 
 
 def _load_drafts(settings: Settings) -> tuple[tuple[Path, FilingDraft], ...]:
@@ -362,14 +406,16 @@ def _to_finding_item(
     draft: FilingDraft,
     path_str: str,
     finding: FilingValidationFinding,
+    legacy: bool = False,
 ) -> FindingReviewItem:
     casilla = finding.casilla_id or "-"
     _first_translation(finding.message) or finding.code
     summary = Translatable("review.adapters.t_145612")
+    severity = ReviewSeverity.INFO if legacy else _classify_finding(finding.severity)
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:{finding.code}:{casilla}",
         modelo=draft.modelo,
-        severity=_classify_finding(finding.severity),
+        severity=severity,
         summary=summary,
         drill_command=f"aeat app review show {draft.draft_id}:{finding.code}:{casilla}",
         since=draft.updated_at,
@@ -379,7 +425,7 @@ def _to_finding_item(
     )
 
 
-def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
+def _to_placeholder_item(*, draft: FilingDraft, path_str: str, legacy: bool = False) -> FindingReviewItem:
     summary = _per_lang_summary(
         "review.adapters.t_397611",
         status=draft.status.value,
@@ -387,7 +433,7 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str) -> FindingReviewI
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:{draft.status.value}",
         modelo=draft.modelo,
-        severity=ReviewSeverity.NORMAL,
+        severity=ReviewSeverity.INFO if legacy else ReviewSeverity.NORMAL,
         summary=summary,
         drill_command=f"aeat app review show {draft.draft_id}:_status:{draft.status.value}",
         since=draft.updated_at,
