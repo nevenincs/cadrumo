@@ -142,8 +142,9 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     if "locale" not in kwargs or kwargs["locale"] is None:
         kwargs["locale"] = output_language()
     locale = _normalise_supported_language(kwargs["locale"]) or "en"
-    rendered = _lookup_translation(locale, translation_key)
-    interpolation = {key: value for key, value in kwargs.items() if key != "locale"}
+    default = kwargs.pop("default", None)
+    rendered = _lookup_translation(locale, translation_key, default=default)
+    interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
     if interpolation:
         rendered = _interpolate(rendered, interpolation)
     return rendered
@@ -167,13 +168,17 @@ def _flatten_translations(value: object, prefix: str = "") -> dict[str, str]:
     return {prefix: str(value)}
 
 
-def _lookup_translation(locale: str, translation_key: str) -> str:
+def _lookup_translation(locale: str, translation_key: str, *, default: object | None = None) -> str:
+    fallback = str(default) if default is not None else translation_key
     try:
-        return _locale_map(locale).get(translation_key, translation_key)
+        return _locale_map(locale).get(translation_key, fallback)
     except (OSError, yaml.YAMLError) as exc:
         _log.debug("i18n: unable to load locale %s; falling back to python-i18n (%s)", locale, exc)
         _ensure_initialised()
-        return i18n.t(translation_key, locale=locale)
+        rendered = i18n.t(translation_key, locale=locale)
+        if rendered == translation_key and default is not None:
+            return fallback
+        return rendered
 
 
 def _interpolate(rendered: str, values: Mapping[str, Any]) -> str:
