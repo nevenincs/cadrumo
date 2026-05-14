@@ -19,6 +19,7 @@ from ._errors import (
     RecoveryVerificationError,
 )
 from ._export_header import ExportArchiveHeader
+from ._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from ._manifest import BucketManifest, KdfParams
 
 __all__ = [
@@ -27,10 +28,13 @@ __all__ = [
     "BucketError",
     "BucketLockedError",
     "BucketManifest",
+    "BucketPaths",
     "ExportArchiveHeader",
     "KdfParams",
     "LegacyLayoutDetectedError",
     "NoActiveBucketError",
     "RecoveryUnavailableError",
     "RecoveryVerificationError",
+    "bucket_paths",
+    "provision_bucket_directory",
 ]
