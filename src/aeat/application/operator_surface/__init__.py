@@ -25,6 +25,7 @@ from ._crud_contract import (
     OrthogonalAxis,
     event_suffix_for,
 )
+from ._crud_registry import BUILTIN_CRUD_CATALOGUE, get_builtin_catalogue
 from ._errors import OperatorSurfaceContractError
 from ._help import (
     build_help_document,
@@ -55,6 +56,7 @@ from ._models import (
 
 __all__ = [
     "ACCEPTED_ROOTS",
+    "BUILTIN_CRUD_CATALOGUE",
     "CANONICAL_CRUD_VERBS",
     "MOUNTED_COMMAND_FAMILIES",
     "RETIRED_OPERATOR_SURFACES",
@@ -90,6 +92,7 @@ __all__ = [
     "build_operator_surface_contract",
     "build_root_landing_report",
     "event_suffix_for",
+    "get_builtin_catalogue",
     "get_operator_surface_contract",
     "render_help_text",
     "render_root_landing_text",
