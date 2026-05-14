@@ -290,6 +290,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.evidence._models.EvidenceBundleNotFoundError",
+        ErrorCode(
+            code="REFUSED_EVIDENCE_BUNDLE_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_evidence_bundle_not_found",
+            default_suggestion="aeat app modelo audit check",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.evidence._models.EvidenceBundleVerificationError",
+        ErrorCode(
+            code="REFUSED_EVIDENCE_BUNDLE_VERIFICATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_evidence_bundle_verification",
+            default_suggestion="aeat app modelo audit check",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.transactions._errors.TransactionIdPrefixError",
         ErrorCode(
             code="REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
