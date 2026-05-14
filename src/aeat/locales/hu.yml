@@ -638,6 +638,16 @@ cli:
       confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez,
         vagy használd előbb a --dry-run kapcsolót
       filter_parse_error: A naplószűrő elemzése sikertelen
+      id_prefix_collision: "A %{prefix!r} tranzakció-azonosító előtag több tranzakcióra
+        is illeszkedik: %{candidates}. Egyértelműsíts az előtag bővítésével."
+      id_prefix_empty: A tranzakció-azonosító előtag üres; adj meg legalább egy hex
+        karaktert.
+      id_prefix_not_found: 'Nincs olyan tranzakció, amely a %{prefix!r} azonosító-előtagra
+        illeszkedik.'
+      id_prefix_not_hex: "A %{prefix!r} tranzakció-azonosító előtag nem-hex karaktert
+        tartalmaz (megengedett: 0-9, a-f)."
+      id_prefix_too_long: A %{prefix!r} tranzakció-azonosító előtag hosszabb 64 karakternél
+        (egy teljes SHA-256 digest).
       invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
     export:
       actor_help: A bucket eseményen rögzített kezelő neve

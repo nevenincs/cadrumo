@@ -53,6 +53,7 @@ from ...domain.transactions import (
     BusinessClassification,
     Transaction,
     TransactionDirection,
+    TransactionIdPrefixError,
 )
 from ._common import (
     _bad,
@@ -97,8 +98,45 @@ def _bucket_transaction_ids(transaction_repository: object) -> tuple[str, ...]:
 
 
 def _resolve_id(transaction_repository: object, prefix: str) -> str:
-    """Resolve a CLI-supplied id or unambiguous prefix to a full transaction id."""
-    return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
+    """Resolve a CLI-supplied id or unambiguous prefix to a full transaction id.
+
+    Wraps the domain-layer :exc:`TransactionIdPrefixError` into ``tr()``-
+    rendered messages routed through ``_bad`` so the operator sees a
+    locale-translated explanation rather than a raw Python exception
+    string. Four distinct refusal keys are emitted depending on which
+    invariant was violated.
+    """
+
+    try:
+        return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
+    except TransactionIdPrefixError as exc:
+        raw_message = str(exc)
+        if "is empty" in raw_message:
+            raise _bad(tr("cli.ledger.errors.id_prefix_empty")) from exc
+        if "non-hex" in raw_message:
+            raise _bad(
+                tr("cli.ledger.errors.id_prefix_not_hex", prefix=prefix)
+            ) from exc
+        if "longer than" in raw_message:
+            raise _bad(
+                tr("cli.ledger.errors.id_prefix_too_long", prefix=prefix)
+            ) from exc
+        if "no transaction" in raw_message:
+            raise _bad(
+                tr("cli.ledger.errors.id_prefix_not_found", prefix=prefix)
+            ) from exc
+        if "matches" in raw_message:
+            # collision — surface the candidate ids inline so the
+            # operator can lengthen the prefix.
+            _, _, candidates = raw_message.partition(":")
+            raise _bad(
+                tr(
+                    "cli.ledger.errors.id_prefix_collision",
+                    prefix=prefix,
+                    candidates=candidates.strip() or "?",
+                )
+            ) from exc
+        raise _bad(raw_message) from exc
 
 
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
