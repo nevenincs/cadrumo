@@ -958,6 +958,7 @@ def summarize_manual_transactions(
         active_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ACTIVE),
         archived_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ARCHIVED),
         stashed_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.STASHED),
+        split_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.SPLIT),
         pending_review_count=status_counts["pending"],
         reviewed_count=status_counts["reviewed"],
         skipped_count=status_counts["skipped"],
@@ -990,7 +991,8 @@ def update_manual_transaction(
     current = _require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
-            "archived or stashed ledger transactions cannot be edited",
+            "only active ledger transactions can be edited; "
+            "archived, stashed, and split-parent rows are immutable",
             context={
                 "transaction_id": transaction_id,
                 "lifecycle_state": current.lifecycle_state.value,
@@ -1435,6 +1437,16 @@ def _transition_manual_transaction_lifecycle(
         raise TransactionValidationError(
             "archived ledger transactions cannot be stashed",
             context={"bucket_id": bucket_id, "transaction_id": transaction_id},
+        )
+    if current.lifecycle_state is TransactionLifecycleState.SPLIT or state is TransactionLifecycleState.SPLIT:
+        raise TransactionValidationError(
+            "split-lineage transitions are only available through split_transaction / merge_transactions",
+            context={
+                "bucket_id": bucket_id,
+                "transaction_id": transaction_id,
+                "current_state": current.lifecycle_state.value,
+                "requested_state": state.value,
+            },
         )
     blockers = _blocking_modelo_references(
         bucket_id=bucket_id,

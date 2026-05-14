@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from ._enums import (
     CLASSIFIED_STATES,
     BusinessClassification,
+    SplitRole,
     TransactionDirection,
     TransactionLifecycleState,
     is_classified,
@@ -131,6 +132,7 @@ __all__ = [
     "TransactionError",
     "TransactionEvidenceProvenanceEntry",
     "TransactionLifecycleLineageEntry",
+    "SplitRole",
     "TransactionLifecycleState",
     "TransactionIdPrefixError",
     "TransactionNotFoundError",
