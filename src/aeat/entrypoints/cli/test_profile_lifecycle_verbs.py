@@ -112,3 +112,42 @@ def test_config_profile_duplicate_refuses_existing_target(cli_runner: CliRunner)
     _seed("operator-spouse")
     result = cli_runner.invoke(profile_app, ["duplicate", "operator", "operator-spouse"])
     assert result.exit_code != 0
+
+
+def test_config_profile_validate_emits_validation_report(cli_runner: CliRunner) -> None:
+    _seed("operator")
+    result = cli_runner.invoke(profile_app, ["validate"])
+    assert result.exit_code == 0, result.output
+    assert "profile_id\toperator" in result.output
+    assert "valid\t" in result.output
+
+
+def test_config_profile_validate_refuses_when_no_active_profile(cli_runner: CliRunner) -> None:
+    # Reset the workflow state's active pointer so there is no active profile.
+    from aeat.application.workflow._utils import utc_now
+    workflow_state_repository().update(
+        lambda current: current.model_copy(update={"active_profile": None, "updated_at": utc_now()})
+    )
+    result = cli_runner.invoke(profile_app, ["validate"])
+    assert result.exit_code != 0
+
+
+def test_config_profile_preflight_emits_report(cli_runner: CliRunner) -> None:
+    _seed("operator")
+    result = cli_runner.invoke(
+        profile_app,
+        [
+            "preflight",
+            "--modelo",
+            "303",
+            "--revision-id",
+            "rev1",
+            "--year",
+            "2026",
+            "--period",
+            "Q1",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert "modelo\t303" in result.output
+    assert "ready\t" in result.output
