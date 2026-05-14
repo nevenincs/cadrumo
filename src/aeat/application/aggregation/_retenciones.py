@@ -23,17 +23,20 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 
 class RetencionScheme(StrEnum):
-    """Closed catalogue of retenciones schemes covered by Modelo 111.
+    """Closed catalogue of retenciones schemes across the retenciones family.
 
-    Source: AEAT Modelo 111 instrucciones (claves de retención).
-    Each scheme maps to one of the casillas (or grouped casillas)
-    on the Modelo 111 form.
+    Each scheme maps to one of the casillas (or grouped casillas) on
+    a retenciones modelo form. The mapping from scheme to modelo lives
+    in the per-modelo entry-point functions; this enum is the union.
     """
 
-    WORK_INCOME = "rendimientos_trabajo"        # clave A
+    # Modelo 111 schemes
+    WORK_INCOME = "rendimientos_trabajo"          # clave A
     ECONOMIC_ACTIVITY = "actividades_economicas"  # clave G
-    PROFESSIONAL = "actividades_profesionales"   # clave H (subset of G)
-    PRIZE = "premios"                            # clave I (lottery, prize)
+    PROFESSIONAL = "actividades_profesionales"    # clave H (subset of G)
+    PRIZE = "premios"                              # clave I (lottery, prize)
+    # Modelo 115 schemes (urban rental withholding)
+    URBAN_RENTAL = "arrendamiento_urbano"          # locales de negocio
 
 
 class RetencionObservation(BaseModel):
@@ -121,37 +124,42 @@ class RetencionesAggregation(BaseModel):
         return self
 
 
+_MODELO_SCHEME_CATALOGUE: dict[str, frozenset[RetencionScheme]] = {
+    "111": frozenset({
+        RetencionScheme.WORK_INCOME,
+        RetencionScheme.ECONOMIC_ACTIVITY,
+        RetencionScheme.PROFESSIONAL,
+        RetencionScheme.PRIZE,
+    }),
+    "115": frozenset({RetencionScheme.URBAN_RENTAL}),
+}
+
+
 def _filter_observations_for_modelo(
     observations: tuple[RetencionObservation, ...],
     modelo: str,
 ) -> tuple[RetencionObservation, ...]:
     """Filter observations to those whose scheme is in-scope for ``modelo``.
 
-    Modelo 111 covers WORK_INCOME + ECONOMIC_ACTIVITY +
-    PROFESSIONAL + PRIZE. Other modelos (115/123/180/190/193) use
-    different scheme catalogues; their entry points filter their own
-    in-scope sets.
+    Modelo 111 covers WORK_INCOME + ECONOMIC_ACTIVITY + PROFESSIONAL +
+    PRIZE. Modelo 115 covers URBAN_RENTAL. The remaining retenciones
+    modelos (123/180/190/193) extend the catalogue in follow-on commits.
     """
-    if modelo == "111":
-        eligible = frozenset(RetencionScheme)
-    else:
+    if modelo not in _MODELO_SCHEME_CATALOGUE:
         msg = f"retenciones aggregator for modelo {modelo!r} is not implemented"
         raise NotImplementedError(msg)
+    eligible = _MODELO_SCHEME_CATALOGUE[modelo]
     return tuple(o for o in observations if o.scheme in eligible)
 
 
-def aggregate_retenciones_111(
+def _aggregate_for_modelo(
     observations: tuple[RetencionObservation, ...],
     *,
+    modelo: str,
     period: str,
 ) -> RetencionesAggregation:
-    """Aggregate per (perceptor_nif, scheme) into a Modelo 111 payload.
-
-    The function is pure: identical observation input + period yields
-    identical output. Rollups are sorted by (perceptor_nif, scheme.value)
-    so two equal aggregations serialise to identical bytes.
-    """
-    filtered = _filter_observations_for_modelo(observations, modelo="111")
+    """Shared per-modelo aggregation. Filters by scheme catalogue + rolls up."""
+    filtered = _filter_observations_for_modelo(observations, modelo=modelo)
     grouped: dict[tuple[str, RetencionScheme], list[RetencionObservation]] = {}
     perceptor_names: dict[str, str] = {}
     for obs in filtered:
@@ -175,7 +183,7 @@ def aggregate_retenciones_111(
         )
     perceptors = {row.perceptor_nif for row in rollups}
     return RetencionesAggregation(
-        modelo="111",
+        modelo=modelo,
         period=period,
         rollups=tuple(rollups),
         total_perceptors=len(perceptors),
@@ -184,10 +192,39 @@ def aggregate_retenciones_111(
     )
 
 
+def aggregate_retenciones_111(
+    observations: tuple[RetencionObservation, ...],
+    *,
+    period: str,
+) -> RetencionesAggregation:
+    """Aggregate per (perceptor_nif, scheme) into a Modelo 111 payload.
+
+    Pure function: identical observation input + period yields identical
+    output. Rollups are sorted by (perceptor_nif, scheme.value) so two
+    equal aggregations serialise to identical bytes.
+    """
+    return _aggregate_for_modelo(observations, modelo="111", period=period)
+
+
+def aggregate_retenciones_115(
+    observations: tuple[RetencionObservation, ...],
+    *,
+    period: str,
+) -> RetencionesAggregation:
+    """Aggregate Modelo 115 (retenciones e ingresos a cuenta sobre rendimientos
+    procedentes del arrendamiento o subarrendamiento de inmuebles urbanos).
+
+    Only ``URBAN_RENTAL`` scheme observations are in scope; observations
+    carrying other schemes are dropped at the filter boundary.
+    """
+    return _aggregate_for_modelo(observations, modelo="115", period=period)
+
+
 __all__ = [
     "RetencionesAggregation",
     "RetencionObservation",
     "RetencionPerceptorRollup",
     "RetencionScheme",
     "aggregate_retenciones_111",
+    "aggregate_retenciones_115",
 ]

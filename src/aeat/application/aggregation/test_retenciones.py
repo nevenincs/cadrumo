@@ -11,6 +11,7 @@ from aeat.application.aggregation._retenciones import (
     RetencionObservation,
     RetencionScheme,
     aggregate_retenciones_111,
+    aggregate_retenciones_115,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -153,8 +154,42 @@ class TestAggregate111:
     def test_unimplemented_modelo_raises(self) -> None:
         from aeat.application.aggregation._retenciones import _filter_observations_for_modelo
 
-        with pytest.raises(NotImplementedError, match="modelo '115'"):
-            _filter_observations_for_modelo((), modelo="115")
+        with pytest.raises(NotImplementedError, match="modelo '123'"):
+            _filter_observations_for_modelo((), modelo="123")
+
+
+class TestAggregate115:
+    def test_115_filters_to_urban_rental_only(self) -> None:
+        observations = (
+            _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="800", retencion="152", source_id="r1"),
+            _obs(nif="L1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="r2"),
+        )
+        result = aggregate_retenciones_115(observations, period="2025-Q1")
+        assert result.modelo == "115"
+        assert len(result.rollups) == 1
+        row = result.rollups[0]
+        assert row.scheme is RetencionScheme.URBAN_RENTAL
+        assert row.total_taxable_base == Decimal("800")
+        assert row.total_retencion == Decimal("152")
+
+    def test_115_sums_per_landlord_nif(self) -> None:
+        observations = (
+            _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="500", retencion="95", source_id="r1"),
+            _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="500", retencion="95", source_id="r2"),
+            _obs(nif="L2", scheme=RetencionScheme.URBAN_RENTAL, base="700", retencion="133", source_id="r3"),
+        )
+        result = aggregate_retenciones_115(observations, period="2025-Q1")
+        assert result.total_perceptors == 2
+        l1 = next(row for row in result.rollups if row.perceptor_nif == "L1")
+        assert l1.observations_count == 2
+        assert l1.total_taxable_base == Decimal("1000")
+        assert l1.total_retencion == Decimal("190")
+
+    def test_115_empty_input_returns_zero_totals(self) -> None:
+        result = aggregate_retenciones_115((), period="2025-Q1")
+        assert result.modelo == "115"
+        assert result.rollups == ()
+        assert result.total_perceptors == 0
 
 
 class TestAggregationInvariants:
