@@ -246,6 +246,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.transactions._errors.TransactionIdPrefixError",
+        ErrorCode(
+            code="REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_financial_ledger_transaction_id_prefix",
+            default_suggestion="aeat app ledger list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.transactions._errors.LedgerNoActiveBucketError",
         ErrorCode(
             code="REFUSED_FINANCIAL_LEDGER_NO_ACTIVE_BUCKET",
