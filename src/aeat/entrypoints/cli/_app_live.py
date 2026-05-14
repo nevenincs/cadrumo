@@ -215,7 +215,7 @@ def filed_capture_sources_cmd(
 
 
 # ─────────────────────────────────────────────────────────────────────────
-# Notifications subgroup (W54/W79 app-live-shape, apex §4.4)
+# Notifications subgroup
 # ─────────────────────────────────────────────────────────────────────────
 # list and show read persisted DEHú notification snapshots from the
 # active bucket. They are local-only reads (no AEAT contact); the
@@ -331,10 +331,10 @@ def notifications_show(
 
 
 # ─────────────────────────────────────────────────────────────────────────
-# Portals subgroup (W79 app-live-shape, apex §4.4 + R13)
+# Portals subgroup
 # ─────────────────────────────────────────────────────────────────────────
 # Portals list and show are local-only catalogue reads. They do NOT call
-# AEAT and therefore do not invoke require_live_read; per apex §4.4 the
+# AEAT and therefore do not invoke require_live_read; the
 # subgroup lives under aeat app live for operator-discovery convenience.
 
 portals_app = typer.Typer(
@@ -411,8 +411,497 @@ def portals_show(
     _emit(ctx, payload, lines)
 
 
+# ─────────────────────────────────────────────────────────────────────────
+# Expedientes subgroup
+# ─────────────────────────────────────────────────────────────────────────
+# list / show / latest are local-only reads over the bucket-scoped
+# expedientes snapshot store. Capture is reserved for the live-driver
+# flow which invokes require_live_read before remote contact.
+
+expedientes_app = typer.Typer(
+    name="expedientes",
+    help=tr("cli.app.live.expedientes.app_help", default="AEAT expedientes snapshots (read-only)."),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(expedientes_app, name="expedientes")
+
+
+def _expedientes_row(snapshot) -> dict[str, object]:
+    return {
+        "snapshot_id": snapshot.snapshot_id,
+        "captured_at": snapshot.captured_at.isoformat(),
+        "source_url": snapshot.source_url,
+        "declaration_count": len(snapshot.declarations),
+    }
+
+
+@expedientes_app.command(
+    "list",
+    help=tr(
+        "cli.app.live.expedientes.list_help",
+        default="List persisted expedientes snapshots in the active bucket.",
+    ),
+)
+def expedientes_list(ctx: typer.Context) -> None:
+    from ...application.live._expedientes import ExpedientesService
+
+    bucket_id = _active_bucket_id()
+    rows = ExpedientesService().list_snapshots(bucket_id=bucket_id)
+    payload = {
+        "bucket_id": bucket_id,
+        "count": len(rows),
+        "rows": [_expedientes_row(r) for r in rows],
+    }
+    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    for r in rows:
+        lines.append(
+            f"{r.snapshot_id}\t{r.captured_at.isoformat()}\tdeclarations={len(r.declarations)}"
+        )
+    _emit(ctx, payload, lines)
+
+
+@expedientes_app.command(
+    "show",
+    help=tr(
+        "cli.app.live.expedientes.show_help",
+        default="Show one expedientes snapshot.",
+    ),
+)
+def expedientes_show(
+    ctx: typer.Context,
+    snapshot_id: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.app.live.expedientes.snapshot_id_help",
+                default="Snapshot id (or unambiguous prefix).",
+            ),
+        ),
+    ],
+) -> None:
+    from ...application.live._expedientes import ExpedientesService
+
+    bucket_id = _active_bucket_id()
+    record = ExpedientesService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
+    payload = {
+        "bucket_id": bucket_id,
+        **_expedientes_row(record),
+        "declarations": [d.model_dump(mode="json") for d in record.declarations],
+    }
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"snapshot_id\t{record.snapshot_id}",
+        f"captured_at\t{record.captured_at.isoformat()}",
+        f"source_url\t{record.source_url}",
+        f"declaration_count\t{len(record.declarations)}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@expedientes_app.command(
+    "latest",
+    help=tr(
+        "cli.app.live.expedientes.latest_help",
+        default="Show the most recent expedientes snapshot in the active bucket.",
+    ),
+)
+def expedientes_latest(ctx: typer.Context) -> None:
+    from ...application.live._expedientes import ExpedientesService
+
+    bucket_id = _active_bucket_id()
+    record = ExpedientesService().latest(bucket_id=bucket_id)
+    if record is None:
+        payload = {"bucket_id": bucket_id, "snapshot_id": None}
+        _emit(ctx, payload, [f"bucket\t{bucket_id}", "snapshot_id\t-"])
+        return
+    payload = {
+        "bucket_id": bucket_id,
+        **_expedientes_row(record),
+    }
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"snapshot_id\t{record.snapshot_id}",
+        f"captured_at\t{record.captured_at.isoformat()}",
+        f"declaration_count\t{len(record.declarations)}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Verify subgroup
+# ─────────────────────────────────────────────────────────────────────────
+# Read-only audit log over NIF-IVA (VIES) and TGVI verify observations.
+# Recording a fresh observation requires the live driver; the surface
+# here exposes the persisted audit trail.
+
+verify_app = typer.Typer(
+    name="verify",
+    help=tr("cli.app.live.verify.app_help", default="NIF verify audit log (read-only)."),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(verify_app, name="verify")
+
+
+def _verify_row(observation) -> dict[str, object]:
+    return {
+        "observation_id": observation.observation_id,
+        "surface": observation.surface.value,
+        "nif": observation.nif,
+        "verdict": observation.verdict,
+        "expected": observation.expected,
+        "matched_expectation": observation.matched_expectation,
+        "checked_at": observation.checked_at.isoformat(),
+    }
+
+
+@verify_app.command(
+    "list",
+    help=tr(
+        "cli.app.live.verify.list_help",
+        default="List persisted verify observations (optionally filter by surface or NIF).",
+    ),
+)
+def verify_list(
+    ctx: typer.Context,
+    surface: Annotated[
+        str | None,
+        typer.Option(
+            "--surface",
+            help=tr(
+                "cli.app.live.verify.surface_help",
+                default="Filter to one surface: nif_iva or tgvi.",
+            ),
+        ),
+    ] = None,
+    nif: Annotated[
+        str | None,
+        typer.Option("--nif", help=tr("cli.app.live.verify.nif_help", default="Filter to one NIF.")),
+    ] = None,
+) -> None:
+    from ...application.live._verify import VerifyService, VerifySurface
+
+    bucket_id = _active_bucket_id()
+    resolved_surface: VerifySurface | None = None
+    if surface is not None:
+        try:
+            resolved_surface = VerifySurface(surface)
+        except ValueError as exc:
+            raise typer.BadParameter(
+                f"Unknown verify surface: {surface!r} (expected nif_iva or tgvi)",
+            ) from exc
+    rows = VerifyService().list_observations(
+        bucket_id=bucket_id, surface=resolved_surface, nif=nif,
+    )
+    payload = {
+        "bucket_id": bucket_id,
+        "count": len(rows),
+        "rows": [_verify_row(r) for r in rows],
+    }
+    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    for r in rows:
+        lines.append(
+            f"{r.observation_id}\t{r.surface.value}\t{r.nif}\t{r.verdict}\t{r.checked_at.isoformat()}"
+        )
+    _emit(ctx, payload, lines)
+
+
+@verify_app.command(
+    "show",
+    help=tr("cli.app.live.verify.show_help", default="Show one persisted verify observation."),
+)
+def verify_show(
+    ctx: typer.Context,
+    observation_id: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.app.live.verify.observation_id_help",
+                default="Observation id (or unambiguous prefix).",
+            ),
+        ),
+    ],
+) -> None:
+    from ...application.live._verify import VerifyService
+
+    bucket_id = _active_bucket_id()
+    record = VerifyService().show(bucket_id=bucket_id, observation_id=observation_id)
+    payload = {"bucket_id": bucket_id, **_verify_row(record)}
+    lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
+    _emit(ctx, payload, lines)
+
+
+@verify_app.command(
+    "latest",
+    help=tr(
+        "cli.app.live.verify.latest_help",
+        default="Show the most recent observation for a (surface, NIF) pair.",
+    ),
+)
+def verify_latest(
+    ctx: typer.Context,
+    surface: Annotated[
+        str,
+        typer.Option(
+            "--surface",
+            help=tr(
+                "cli.app.live.verify.latest_surface_help",
+                default="Verify surface: nif_iva or tgvi.",
+            ),
+        ),
+    ],
+    nif: Annotated[
+        str,
+        typer.Option("--nif", help=tr("cli.app.live.verify.latest_nif_help", default="NIF to look up.")),
+    ],
+) -> None:
+    from ...application.live._verify import VerifyService, VerifySurface
+
+    bucket_id = _active_bucket_id()
+    try:
+        resolved_surface = VerifySurface(surface)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            f"Unknown verify surface: {surface!r} (expected nif_iva or tgvi)",
+        ) from exc
+    record = VerifyService().latest_for_nif(
+        bucket_id=bucket_id, surface=resolved_surface, nif=nif,
+    )
+    if record is None:
+        payload = {"bucket_id": bucket_id, "surface": surface, "nif": nif, "observation_id": None}
+        _emit(
+            ctx,
+            payload,
+            [
+                f"bucket\t{bucket_id}",
+                f"surface\t{surface}",
+                f"nif\t{nif}",
+                "observation_id\t-",
+            ],
+        )
+        return
+    payload = {"bucket_id": bucket_id, **_verify_row(record)}
+    lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
+    _emit(ctx, payload, lines)
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Borrador 100 subgroup
+# ─────────────────────────────────────────────────────────────────────────
+# Bucket-scoped read surface over Modelo 100 datos-fiscales pre-fill
+# snapshots. The live-fetch verb is reserved for the live driver
+# flow (which invokes require_live_read); list, show, latest, and
+# discard operate purely on local state.
+
+borrador_app = typer.Typer(
+    name="borrador",
+    help=tr("cli.app.live.borrador.app_help", default="Modelo 100 borrador snapshots (read-only)."),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(borrador_app, name="borrador")
+borrador_100_app = typer.Typer(
+    name="100",
+    help=tr("cli.app.live.borrador.modelo_100_help", default="Modelo 100 borrador subgroup."),
+    no_args_is_help=True,
+    add_completion=False,
+)
+borrador_app.add_typer(borrador_100_app, name="100")
+
+
+def _borrador_row(snapshot) -> dict[str, object]:
+    return {
+        "snapshot_id": snapshot.snapshot_id,
+        "tax_year": snapshot.tax_year,
+        "captured_at": snapshot.captured_at.isoformat(),
+        "source_url": snapshot.source_url,
+        "entry_count": len(snapshot.prefill_entries),
+        "discarded": snapshot.discarded,
+    }
+
+
+@borrador_100_app.command(
+    "list",
+    help=tr(
+        "cli.app.live.borrador.list_help",
+        default="List persisted Modelo 100 borrador snapshots.",
+    ),
+)
+def borrador_100_list(
+    ctx: typer.Context,
+    include_discarded: Annotated[
+        bool,
+        typer.Option(
+            "--include-discarded",
+            help=tr(
+                "cli.app.live.borrador.include_discarded_help",
+                default="Also list locally discarded snapshots.",
+            ),
+        ),
+    ] = False,
+) -> None:
+    from ...application.live._borrador import BorradorService
+
+    bucket_id = _active_bucket_id()
+    rows = BorradorService().list_snapshots(
+        bucket_id=bucket_id, include_discarded=include_discarded,
+    )
+    payload = {
+        "bucket_id": bucket_id,
+        "count": len(rows),
+        "rows": [_borrador_row(r) for r in rows],
+    }
+    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+    for r in rows:
+        flag = "discarded" if r.discarded else "active"
+        lines.append(
+            f"{r.snapshot_id}\t{r.tax_year}\t{r.captured_at.isoformat()}\tentries={len(r.prefill_entries)}\t{flag}"
+        )
+    _emit(ctx, payload, lines)
+
+
+@borrador_100_app.command(
+    "show",
+    help=tr(
+        "cli.app.live.borrador.show_help",
+        default="Show one Modelo 100 borrador snapshot.",
+    ),
+)
+def borrador_100_show(
+    ctx: typer.Context,
+    snapshot_id: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.app.live.borrador.snapshot_id_help",
+                default="Snapshot id (or unambiguous prefix).",
+            ),
+        ),
+    ],
+) -> None:
+    from ...application.live._borrador import BorradorService
+
+    bucket_id = _active_bucket_id()
+    record = BorradorService().show(bucket_id=bucket_id, snapshot_id=snapshot_id)
+    payload = {
+        "bucket_id": bucket_id,
+        **_borrador_row(record),
+        "prefill_entries": [e.model_dump(mode="json") for e in record.prefill_entries],
+    }
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"snapshot_id\t{record.snapshot_id}",
+        f"tax_year\t{record.tax_year}",
+        f"captured_at\t{record.captured_at.isoformat()}",
+        f"source_url\t{record.source_url}",
+        f"entry_count\t{len(record.prefill_entries)}",
+        f"discarded\t{record.discarded}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@borrador_100_app.command(
+    "latest",
+    help=tr(
+        "cli.app.live.borrador.latest_help",
+        default="Show the most recent non-discarded snapshot for a tax year.",
+    ),
+)
+def borrador_100_latest(
+    ctx: typer.Context,
+    tax_year: Annotated[
+        int,
+        typer.Option(
+            "--tax-year",
+            min=2000,
+            max=2099,
+            help=tr("cli.app.live.borrador.tax_year_help", default="Tax year (e.g. 2024)."),
+        ),
+    ],
+) -> None:
+    from ...application.live._borrador import BorradorService
+
+    bucket_id = _active_bucket_id()
+    record = BorradorService().latest_for_year(bucket_id=bucket_id, tax_year=tax_year)
+    if record is None:
+        payload = {"bucket_id": bucket_id, "tax_year": tax_year, "snapshot_id": None}
+        _emit(
+            ctx,
+            payload,
+            [
+                f"bucket\t{bucket_id}",
+                f"tax_year\t{tax_year}",
+                "snapshot_id\t-",
+            ],
+        )
+        return
+    payload = {"bucket_id": bucket_id, **_borrador_row(record)}
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"snapshot_id\t{record.snapshot_id}",
+        f"tax_year\t{record.tax_year}",
+        f"captured_at\t{record.captured_at.isoformat()}",
+        f"entry_count\t{len(record.prefill_entries)}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@borrador_100_app.command(
+    "discard",
+    help=tr(
+        "cli.app.live.borrador.discard_help",
+        default="Locally mark a borrador snapshot as no-longer-consumable. Does not contact AEAT.",
+    ),
+)
+def borrador_100_discard(
+    ctx: typer.Context,
+    snapshot_id: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.app.live.borrador.discard_snapshot_id_help",
+                default="Snapshot id (or unambiguous prefix).",
+            ),
+        ),
+    ],
+    reason: Annotated[
+        str,
+        typer.Option(
+            "--reason",
+            help=tr(
+                "cli.app.live.borrador.discard_reason_help",
+                default="Free-form reason recorded with the discard.",
+            ),
+        ),
+    ] = "",
+) -> None:
+    from ...application.live._borrador import BorradorService
+
+    bucket_id = _active_bucket_id()
+    record = BorradorService().discard(
+        bucket_id=bucket_id, snapshot_id=snapshot_id, reason=reason,
+    )
+    payload = {
+        "bucket_id": bucket_id,
+        "snapshot_id": record.snapshot_id,
+        "discarded_at": record.discarded_at.isoformat() if record.discarded_at else None,
+        "discarded_reason": record.discarded_reason,
+    }
+    lines = [
+        f"bucket\t{bucket_id}",
+        f"snapshot_id\t{record.snapshot_id}",
+        f"discarded_at\t{payload['discarded_at']}",
+        f"reason\t{record.discarded_reason}",
+    ]
+    _emit(ctx, payload, lines)
+
+
 __all__ = [
     "app",
+    "borrador_100_app",
+    "borrador_app",
+    "expedientes_app",
     "filed_app",
     "filed_capture_cmd",
     "filed_capture_sources_cmd",
@@ -420,4 +909,5 @@ __all__ = [
     "portals_app",
     "portals_list",
     "portals_show",
+    "verify_app",
 ]
