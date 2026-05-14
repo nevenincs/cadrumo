@@ -34,11 +34,11 @@ def test_portals_list_refuses_unknown_category(cli_runner: CliRunner) -> None:
 
 def test_portals_show_emits_one_entry(cli_runner: CliRunner) -> None:
     portal = next(iter(PORTAL_REGISTRY.values()))
-    result = cli_runner.invoke(portals_app, ["show", portal.portal.value])
+    result = cli_runner.invoke(portals_app, ["view", portal.portal.value])
     assert result.exit_code == 0, result.output
     assert f"portal\t{portal.portal.value}" in result.output
 
 
 def test_portals_show_refuses_unknown_portal(cli_runner: CliRunner) -> None:
-    result = cli_runner.invoke(portals_app, ["show", "NOT_A_PORTAL_ID"])
+    result = cli_runner.invoke(portals_app, ["view", "NOT_A_PORTAL_ID"])
     assert result.exit_code != 0

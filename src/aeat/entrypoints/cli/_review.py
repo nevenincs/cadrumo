@@ -37,12 +37,12 @@ def review_queue(
     )
 
 
-@app.command("show", help=tr("cli.review.show.help"))
+@app.command("view", help=tr("cli.review.show.help"))
 def review_show(
     ctx: typer.Context,
     item_id: str = typer.Argument(..., help=tr("cli.review.show.id_help")),
 ) -> None:
-    """Show one read-only review queue item."""
+    """View one read-only review queue item."""
 
     try:
         row = project_review_item(item_id)

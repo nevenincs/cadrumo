@@ -317,7 +317,7 @@ def notifications_list(ctx: typer.Context) -> None:
 
 
 @notifications_app.command(
-    "show", help=tr("cli.app.live.notifications.show_help", default="Show one DEHú notification snapshot.")
+    "view", help=tr("cli.app.live.notifications.view_help", default="View one DEHú notification snapshot.")
 )
 def notifications_show(
     ctx: typer.Context,
@@ -428,7 +428,7 @@ def portals_list(
 
 
 @portals_app.command(
-    "show", help=tr("cli.app.live.portals.show_help", default="Show one portal-registry entry by Portal id.")
+    "view", help=tr("cli.app.live.portals.view_help", default="View one portal-registry entry by Portal id.")
 )
 def portals_show(
     ctx: typer.Context,
@@ -534,10 +534,10 @@ def expedientes_list(ctx: typer.Context) -> None:
 
 
 @expedientes_app.command(
-    "show",
+    "view",
     help=tr(
-        "cli.app.live.expedientes.show_help",
-        default="Show one expedientes snapshot.",
+        "cli.app.live.expedientes.view_help",
+        default="View one expedientes snapshot.",
     ),
 )
 def expedientes_show(
@@ -684,8 +684,8 @@ def verify_list(
 
 
 @verify_app.command(
-    "show",
-    help=tr("cli.app.live.verify.show_help", default="Show one persisted verify observation."),
+    "view",
+    help=tr("cli.app.live.verify.view_help", default="View one persisted verify observation."),
 )
 def verify_show(
     ctx: typer.Context,
@@ -912,22 +912,26 @@ def _borrador_row(snapshot) -> dict[str, object]:
 )
 def borrador_100_list(
     ctx: typer.Context,
-    include_discarded: Annotated[
-        bool,
+    state: Annotated[
+        str,
         typer.Option(
-            "--include-discarded",
+            "--state",
             help=tr(
-                "cli.app.live.borrador.include_discarded_help",
-                default="Also list locally discarded snapshots.",
+                "cli.app.live.borrador.state_help",
+                default="Snapshot state filter: active, superseded, discarded, or all.",
             ),
         ),
-    ] = False,
+    ] = "active",
 ) -> None:
     from ...application.live import Borrador100SnapshotService, Borrador100SnapshotState
 
     bucket_id = _active_bucket_id()
+    try:
+        state_filter = None if state == "all" else Borrador100SnapshotState(state)
+    except ValueError as exc:
+        raise typer.BadParameter("state must be one of: active, superseded, discarded, all") from exc
     rows = Borrador100SnapshotService(bucket_id=bucket_id).list_snapshots(
-        state=None if include_discarded else Borrador100SnapshotState.ACTIVE,
+        state=state_filter,
     )
     payload = {
         "bucket_id": bucket_id,
@@ -944,10 +948,10 @@ def borrador_100_list(
 
 
 @borrador_100_app.command(
-    "show",
+    "view",
     help=tr(
-        "cli.app.live.borrador.show_help",
-        default="Show one Modelo 100 borrador snapshot.",
+        "cli.app.live.borrador.view_help",
+        default="View one Modelo 100 borrador snapshot.",
     ),
 )
 def borrador_100_show(
@@ -988,33 +992,33 @@ def borrador_100_show(
     "latest",
     help=tr(
         "cli.app.live.borrador.latest_help",
-        default="Show the most recent non-discarded snapshot for a tax year.",
+        default="Show the most recent active snapshot for a filing year.",
     ),
 )
 def borrador_100_latest(
     ctx: typer.Context,
-    tax_year: Annotated[
+    filing_year: Annotated[
         int,
         typer.Option(
-            "--tax-year",
+            "--filing-year",
             min=2000,
             max=2099,
-            help=tr("cli.app.live.borrador.tax_year_help", default="Tax year (e.g. 2024)."),
+            help=tr("cli.app.live.borrador.filing_year_help", default="Filing year (e.g. 2024)."),
         ),
     ],
 ) -> None:
     from ...application.live import Borrador100SnapshotService
 
     bucket_id = _active_bucket_id()
-    record = Borrador100SnapshotService(bucket_id=bucket_id).latest_for_year(filing_year=tax_year)
+    record = Borrador100SnapshotService(bucket_id=bucket_id).latest_for_year(filing_year=filing_year)
     if record is None:
-        payload = {"bucket_id": bucket_id, "filing_year": tax_year, "snapshot_id": None}
+        payload = {"bucket_id": bucket_id, "filing_year": filing_year, "snapshot_id": None}
         _emit(
             ctx,
             payload,
             [
                 f"bucket\t{bucket_id}",
-                f"filing_year\t{tax_year}",
+                f"filing_year\t{filing_year}",
                 "snapshot_id\t-",
             ],
         )

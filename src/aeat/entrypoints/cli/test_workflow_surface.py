@@ -113,7 +113,12 @@ def _seed_profile(
     from aeat.application.workflow._persistence import workflow_state_repository
 
     repo = workflow_state_repository()
-    values = {"identity.tax_id": tax_id, "identity.name": name, "activities.description": activity, "iva.regime": iva_regime}
+    values = {
+        "identity.tax_id": tax_id,
+        "identity.name": name,
+        "activities.description": activity,
+        "iva.regime": iva_regime,
+    }
     if extra_values:
         values.update(extra_values)
     repo.update(
@@ -152,6 +157,8 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
             "Servicios",
             "--iva-regime",
             "GENERAL",
+            "--tax-residence-ccaa",
+            "madrid",
         ]
     )
     assert init_result.exit_code == 0, init_result.output
@@ -247,7 +254,7 @@ def test_retired_commands_are_not_registered() -> None:
         ["app", "workspaces", "--help"],
         ["app", "audits", "--help"],
         ["app", "ledger", "split", "--help"],
-        ["app", "invoice", "show", "--help"],
+        ["app", "invoice", "view", "--help"],
     ]
 
     for command in removed_commands:
@@ -396,7 +403,7 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
         ["app", "modelo", "--help"],
         ["app", "review", "--help"],
         ["app", "review", "queue", "--help"],
-        ["app", "review", "show", "--help"],
+        ["app", "review", "view", "--help"],
     ]
 
     for command in commands:
@@ -698,10 +705,10 @@ def test_config_set_does_intracomunitario_round_trips_to_deadline_engine(
     _isolate_user_cli(monkeypatch, tmp_path)
     _seed_profile(tax_id="00000000T", name="operator", activity="Servicios")
 
-    set_result = _invoke(["config", "profile", "set", "does_intracomunitario", "true"])
+    set_result = _invoke(["config", "profile", "set", "iva.does_intracomunitario", "true"])
     assert set_result.exit_code == 0, set_result.output
 
-    get_result = _invoke(["--format", "json", "config", "profile", "get", "does_intracomunitario"])
+    get_result = _invoke(["--format", "json", "config", "profile", "get", "iva.does_intracomunitario"])
     assert get_result.exit_code == 0, get_result.output
     get_payload = json.loads(_json_output(get_result))
     assert get_payload["value"] == "true"

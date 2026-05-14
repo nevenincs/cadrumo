@@ -491,12 +491,12 @@ def config_profile_use(
     )
 
 
-@profile_app.command("show", help=tr("cli.config.profile.show_help"))
+@profile_app.command("view", help=tr("cli.config.profile.view_help"))
 def config_profile_show(
     ctx: typer.Context,
     name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
 ) -> None:
-    """Show one profile's facts (defaults to the active profile)."""
+    """View one profile's facts (defaults to the active profile)."""
 
     from ....application.user_profile._orchestration import build_lifecycle_service
     from ....application.user_profile._projections import record_to_path_values

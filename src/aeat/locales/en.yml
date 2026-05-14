@@ -54,6 +54,15 @@ cli:
   app:
     live:
       app_help: Read-only AEAT live observation commands
+      borrador:
+        app_help: Modelo 100 borrador snapshots
+        filing_year_help: Filing year (e.g. 2024)
+        latest_help: Show the most recent active snapshot for a filing year
+        list_help: List persisted Modelo 100 borrador snapshots
+        modelo_100_help: Modelo 100 borrador snapshot commands
+        view_help: Show one Modelo 100 borrador snapshot
+        snapshot_id_help: Snapshot id (or unambiguous prefix)
+        state_help: 'Snapshot state filter: active, superseded, discarded, or all'
       expediente_help: AEAT expediente identifier
       filed:
         capture_help: Capture filed declaration data from AEAT
@@ -70,6 +79,22 @@ cli:
       to_year_help: Last filing year
       year_help: Filing year
     modelo:
+      aggregate:
+        counterpart_observation_help: JSON CounterpartObservation object. The source_kind
+          value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
+          or collectible_invoice. Repeat for multiple observations.
+        foreign_asset_observation_help: JSON ForeignAssetObservation object. The source_kind
+          value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
+          or collectible_invoice. Repeat for multiple observations.
+        modelo_help: Supported modelo code for the backend aggregation service (111,
+          115, 123, 180, 190, 193, 347, 349, or 720).
+        period_help: Aggregation period passed to the backend service.
+        retencion_observation_help: JSON RetencionObservation object. The source_kind
+          value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
+          or collectible_invoice. Repeat for multiple observations.
+      aggregate_help: Run the backend per-modelo aggregation service from explicit
+        canonical observations. Accepted source_kind values are ledger_transaction,
+        purchase_invoice_evidence, payable_invoice, and collectible_invoice.
       app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
       bindings:
         app_help: Inspect and preview the bindings of an AEAT tax form
@@ -109,7 +134,7 @@ cli:
           carrying imported AEAT-attested evidence
         include_superseded_help: Include superseded filing records (excluded by default)
         list_help: List registered filing records
-        show_help: Show one filing record by id
+        view_help: Show one filing record by id
       formulas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
@@ -120,7 +145,7 @@ cli:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
           revision
-        show_help: Show one verification report by id
+        view_help: Show one verification report by id
         verification_report_id_help: Stable 64-character SHA-256 identifier of a verification
           report
       work:
@@ -131,6 +156,9 @@ cli:
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
         app_help: Manage the lifecycle of modelo work units
+        borrador_help: Modelo 100 borrador snapshot id (full or unambiguous prefix).
+          Snapshot binding values are used only for registry bindings marked aeat_prefilled;
+          caller --binding overrides always take precedence.
         bucket_id_help: Bucket identifier the work unit belongs to
         calculate_help: Persist a new draft calculation revision for the work unit
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
@@ -301,7 +329,7 @@ cli:
       remove_requires_yes: Removal is destructive. Re-run 'aeat config profile remove
         %{name} --yes' to confirm.
       remove_yes_help: Explicitly confirm the tombstone operation
-      show_help: Show one profile's facts (defaults to the active profile)
+      view_help: Show one profile's facts (defaults to the active profile)
       show_name_help: Profile id to show (defaults to the active profile)
       unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list''
         to see registered profiles.'
@@ -586,7 +614,7 @@ cli:
       articulo_help: Specific article to show (e.g. 91.Uno.2.1º)
       list_help: List the normatives codified in the legal corpus
       normative_id_help: Stable normative id (e.g. ley-37-1992)
-      show_help: Show one normative and, optionally, one of its articles
+      view_help: Show one normative and, optionally, one of its articles
       tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
       verify_help: Verify the legal-norm corpus integrity
     inspect_help: Inspect registry status and references
@@ -599,7 +627,7 @@ cli:
       part_help: Manual volume (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: List the rules codified in a manual
       section_help: Optional section identifier to show
-      show_help: Show a manual structure and, optionally, one section
+      view_help: Show a manual structure and, optionally, one section
       verify_help: Verify the manual integrity against its contract
       year_help: Tax year of the manual (e.g. 2024)
     metrics:

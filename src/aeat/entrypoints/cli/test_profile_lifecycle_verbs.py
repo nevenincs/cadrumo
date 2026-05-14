@@ -62,7 +62,7 @@ def test_config_profile_use_refuses_unknown_profile(cli_runner: CliRunner) -> No
 
 def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -> None:
     _seed("operator")
-    result = cli_runner.invoke(profile_app, ["show"])
+    result = cli_runner.invoke(profile_app, ["view"])
     assert result.exit_code == 0, result.output
     assert "profile_id\toperator" in result.output
     assert "identity.tax_id\t00000000T" in result.output
@@ -71,7 +71,7 @@ def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -
 def test_config_profile_show_named_profile_includes_canonical_facts(cli_runner: CliRunner) -> None:
     _seed("operator")
     _seed("spouse")
-    result = cli_runner.invoke(profile_app, ["show", "spouse"])
+    result = cli_runner.invoke(profile_app, ["view", "spouse"])
     assert result.exit_code == 0, result.output
     assert "profile_id\tspouse" in result.output
     assert "identity.tax_id\t00000000T" in result.output

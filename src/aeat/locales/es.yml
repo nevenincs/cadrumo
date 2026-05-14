@@ -61,6 +61,15 @@ cli:
   app:
     live:
       app_help: Comandos de observación AEAT en vivo de solo lectura
+      borrador:
+        app_help: Snapshots de borrador del modelo 100
+        filing_year_help: Ejercicio fiscal (p. ej. 2024)
+        latest_help: Mostrar el snapshot activo más reciente de un ejercicio fiscal
+        list_help: Listar snapshots persistidos del borrador del modelo 100
+        modelo_100_help: Comandos de snapshots del borrador del modelo 100
+        view_help: Mostrar un snapshot del borrador del modelo 100
+        snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
+        state_help: 'Filtro de estado del snapshot: active, superseded, discarded o all'
       expediente_help: Identificador de expediente AEAT
       filed:
         capture_help: Capturar datos de declaraciones presentadas desde AEAT
@@ -79,6 +88,22 @@ cli:
       to_year_help: Último ejercicio de presentación
       year_help: Ejercicio de presentación
     modelo:
+      aggregate:
+        counterpart_observation_help: Objeto JSON CounterpartObservation. El valor
+          source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
+          o collectible_invoice. Repetible para varias observaciones.
+        foreign_asset_observation_help: Objeto JSON ForeignAssetObservation. El valor
+          source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
+          o collectible_invoice. Repetible para varias observaciones.
+        modelo_help: Codigo de modelo soportado por el servicio backend de agregacion
+          (111, 115, 123, 180, 190, 193, 347, 349 o 720).
+        period_help: Periodo de agregacion enviado al servicio backend.
+        retencion_observation_help: Objeto JSON RetencionObservation. El valor source_kind
+          debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice o
+          collectible_invoice. Repetible para varias observaciones.
+      aggregate_help: Ejecuta el servicio backend de agregacion por modelo con observaciones
+        canonicas explicitas. Los valores source_kind aceptados son ledger_transaction,
+        purchase_invoice_evidence, payable_invoice y collectible_invoice.
       app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el registro
       bindings:
         app_help: Inspeccionar y previsualizar los bindings de un modelo tributario
@@ -124,7 +149,7 @@ cli:
         include_superseded_help: Incluir los filing records superados (excluidos por
           defecto)
         list_help: Listar los filing records registrados
-        show_help: Mostrar un filing record por id
+        view_help: Mostrar un filing record por id
       formulas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
@@ -136,7 +161,7 @@ cli:
         app_help: Inspeccionar los informes de verificación registrados
         list_help: Listar los informes de verificación, opcionalmente filtrados por
           revisión de cálculo
-        show_help: Mostrar un informe de verificación por id
+        view_help: Mostrar un informe de verificación por id
         verification_report_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de un informe de verificación
       work:
@@ -149,6 +174,10 @@ cli:
           operador)
         app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
           tributario
+        borrador_help: Id del snapshot de borrador del modelo 100 (completo o prefijo
+          no ambiguo). Sus valores de binding se usan solo para bindings marcados
+          aeat_prefilled; las sobrescrituras --binding del operador siempre tienen
+          prioridad.
         bucket_id_help: Identificador del bucket al que pertenece la unidad de trabajo
         calculate_help: Calcular una nueva revisión draft para la unidad de trabajo
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
@@ -325,7 +354,7 @@ cli:
       remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config
         profile remove %{name} --yes' para confirmar.
       remove_yes_help: Confirma explícitamente la operación de retirada
-      show_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
+      view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
       show_name_help: Id del perfil a mostrar (por defecto el perfil activo)
       unknown_profile: 'Perfil desconocido: %{name}. Ejecuta ''aeat config profile
         list'' para ver los perfiles registrados.'
@@ -623,7 +652,7 @@ cli:
       articulo_help: Artículo concreto a mostrar (p. ej. 91.Uno.2.1º)
       list_help: Listar las normativas registradas en el corpus legal
       normative_id_help: Id estable de la normativa (p. ej. ley-37-1992)
-      show_help: Mostrar una normativa y, opcionalmente, uno de sus artículos
+      view_help: Mostrar una normativa y, opcionalmente, uno de sus artículos
       tag_help: Filtrar por etiqueta de dominio fiscal (p. ej. 'irpf', 'iva')
       verify_help: Verificar la integridad del corpus normativo
     inspect_help: Inspeccionar el estado del registro y las referencias
@@ -637,7 +666,7 @@ cli:
         part3)
       rules_help: Listar las reglas codificadas en un manual
       section_help: Identificador opcional de sección a mostrar
-      show_help: Mostrar la estructura de un manual y, opcionalmente, una sección
+      view_help: Mostrar la estructura de un manual y, opcionalmente, una sección
       verify_help: Verificar la integridad del manual contra su contrato
       year_help: Año fiscal del manual (p. ej. 2024)
     metrics:
