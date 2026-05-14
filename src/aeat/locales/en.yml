@@ -1,7 +1,11 @@
 aggregation:
   iva_ledger:
     errors:
-      bucket_mismatch: Transaction repository bucket does not match the requested aggregation bucket.
+      bucket_mismatch: Transaction repository bucket does not match the requested
+        aggregation bucket.
+  modelo_bindings:
+    errors:
+      unsupported_period: Unsupported modelo period for ledger aggregation.
   models:
     errors:
       annual_period_mixed: Period cannot mix annual and sub-annual (quarter/month)
@@ -13,12 +17,10 @@ aggregation:
   renta_ledger:
     errors:
       annual_period_required: Annual period is required for Renta ledger aggregation.
-      bucket_mismatch: Transaction repository bucket does not match the requested Renta ledger bucket.
+      bucket_mismatch: Transaction repository bucket does not match the requested
+        Renta ledger bucket.
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
-  modelo_bindings:
-    errors:
-      unsupported_period: Unsupported modelo period for ledger aggregation.
 application:
   auth:
     provider_impact:
@@ -171,6 +173,29 @@ cli:
   config:
     app_help: Manage local configuration and diagnostics
     auth:
+      apoderado:
+        check_help: Read-only live verification
+        clear_help: Retire the apoderado configuration
+        configure:
+          represented_nif_help: NIF of the represented party
+          scope_help: Scope tokens (can be repeated)
+        configure_help: Set active apoderado configuration
+        help: Manage apoderado configuration
+        scope:
+          censo: Census declarations (registration, modification, deregistration)
+            (modelo 036, 037)
+          exped: Files and procedures
+          generalnt: General tax procedures
+          inform: Informative declarations (modelo 347, 349, 720)
+          iva: VAT periodic and annual returns (modelo 303, 390)
+          notific: Notifications and communications
+          pagosf: Quarterly self-employed instalments (modelo 130, 131)
+          rent: Income tax and wealth declaration (modelo 100, 714)
+          reten: Withholding tax declarations (modelo 111, 115, 123, 180, 190, 193)
+        scopes:
+          help: Manage apoderado scope vocabulary
+          list_help: List accepted apoderado scopes
+        status_help: Show active apoderado configuration
       clear_all_help: Clear all configured auth providers
       clear_help: Clear local authentication metadata
       clear_locks_help: Clear auth acquisition locks
@@ -186,14 +211,18 @@ cli:
       unknown_provider: 'Unknown authentication provider: %{provider}. Run ''aeat
         config auth --help'' for valid ids.'
     bucket:
-      actor_help: Filter the history to events recorded by a specific actor (exact match)
+      actor_help: Filter the history to events recorded by a specific actor (exact
+        match)
       bucket_id_help: Bucket identifier whose event history should be inspected
       event_type_help: Filter the history to one or more event types (repeatable)
       help: Inspect bucket-scoped storage and event history
       history_help: Show the append-only event history for one bucket
-      object_id_help: Filter the history to events targeting a specific object_id (exact match)
-      since_help: Filter the history to events at or after this ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00)
-      until_help: Filter the history to events at or before this ISO-8601 timestamp (e.g. 2026-04-30T23:59:59+00:00)
+      object_id_help: Filter the history to events targeting a specific object_id
+        (exact match)
+      since_help: Filter the history to events at or after this ISO-8601 timestamp
+        (e.g. 2026-04-01T00:00:00+00:00)
+      until_help: Filter the history to events at or before this ISO-8601 timestamp
+        (e.g. 2026-04-30T23:59:59+00:00)
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config init --tax-id <NIF>'
@@ -208,33 +237,82 @@ cli:
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow (or refresh an existing credential)
       logout_help: Clear the refresh token and metadata; preserve the registered client
-      profile_help: AEAT profile name override (default = active profile on workflow state)
-      refresh_only_help: Skip the consent screen and refresh an existing credential only
-      register_help: Register a Cloud Console Desktop OAuth client JSON for the active profile
+      profile_help: AEAT profile name override (default = active profile on workflow
+        state)
+      refresh_only_help: Skip the consent screen and refresh an existing credential
+        only
+      register_help: Register a Cloud Console Desktop OAuth client JSON for the active
+        profile
       status_help: Show the current Google OAuth session state for the active profile
+      sync:
+        help: cli.config.google.sync.help
+        probe_help: cli.config.google.sync.probe_help
+        probe_read_only_help: cli.config.google.sync.probe_read_only_help
+        root_folder_id_unset: cli.config.google.sync.root_folder_id_unset
+    init:
+      activity_help: Economic activity description (e.g. 761.1, programador)
+      auth_provider_help: Authentication provider ID to use for the profile
+      certificate_password_env_help: Environment variable name containing the certificate
+        password
+      certificate_path_help: Path to the .p12 or .pfx certificate file
+      drafts_dir_help: Directory to store local filing drafts
+      dry_run_help: Report changes without modifying the configuration
+      from_help: Source profile ID to import settings from
+      help: Initialize a new active profile and config bucket.
+      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
+      manuals_root_help: Root directory for AEAT technical manuals
+      non_interactive_help: Run without prompting for user input
+      output_language_help: Primary language for CLI output (en, es, ca)
+      profile_name_help: Unique identifier for this configuration profile
+      submissions_dir_help: Directory to store submitted filing receipts
+      success:
+        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
+      tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
+      tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every configuration key with its current value
     profile:
-      already_exists: 'Profile %{name} already exists. Pick a different target id.'
-      duplicate_display_name_help: Display name for the new profile (defaults to the target id)
+      already_exists: Profile %{name} already exists. Pick a different target id.
+      duplicate_display_name_help: Display name for the new profile (defaults to the
+        target id)
       duplicate_help: Copy a profile under a new id and display name
       duplicate_source_help: Source profile id to duplicate
       duplicate_target_help: Target profile id for the duplicate
       help: Manage active profile configuration values
+      no_active_profile: No active profile. Run `aeat config init --tax-id <NIF>`
+        first.
+      preflight_help: Report whether the active profile is ready for one modelo /
+        year / period.
+      preflight_modelo_help: Modelo code (e.g. 303).
+      preflight_period_help: Period token (e.g. Q1, annual).
+      preflight_revision_help: Registry revision id.
+      preflight_year_help: Filing year.
       remove_help: Tombstone a profile (immutable filing snapshots are retained)
       remove_name_help: Profile id to tombstone
-      remove_requires_yes: 'Removal is destructive. Re-run ''aeat config profile remove %{name} --yes'' to confirm.'
+      remove_requires_yes: Removal is destructive. Re-run 'aeat config profile remove
+        %{name} --yes' to confirm.
       remove_yes_help: Explicitly confirm the tombstone operation
       show_help: Show one profile's facts (defaults to the active profile)
       show_name_help: Profile id to show (defaults to the active profile)
-      unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list'' to see registered profiles.'
+      unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list''
+        to see registered profiles.'
       use_help: Select an existing profile as the active profile
       use_name_help: Profile id to make active
+      validate_help: Validate the active profile against the schema.
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       connectivity_target_help: Connectivity target to probe
-      help: Diagnose and repair local configuration, registry, profile, auth,
-        and logs
+      help: Diagnose and repair local configuration, registry, profile, auth, and
+        logs
+      integrity_help: Probe AES-256-GCM tag verification across one namespace (or
+        all).
+      integrity_namespace_help: Restrict the integrity probe to one namespace.
+      list_all_help: Return every key, including unreadable.
+      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
+        or neither.
+      list_help: List secure-object keys stored under one namespace.
+      list_namespace_help: Namespace to inventory.
+      list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
       quarantine_help: Move undecryptable rows into a quarantine table (destructive;
@@ -242,13 +320,13 @@ cli:
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
+      reset_state_dry_run_help: Report the envelope fingerprint without deleting the
+        row
       reset_state_help: Drop the unreadable workflow-state envelope (destructive;
         requires --yes)
-      reset_state_requires_yes: This operation is destructive. Re-run with --yes
-        to confirm or pass --dry-run to inspect the fingerprint.
+      reset_state_requires_yes: This operation is destructive. Re-run with --yes to
+        confirm or pass --dry-run to inspect the fingerprint.
       reset_state_yes_help: Explicitly confirm the workflow-state reset
-      reset_state_dry_run_help: Report the envelope fingerprint without deleting
-        the row
     reset:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
@@ -279,11 +357,43 @@ cli:
       key_help: Key to clear
     workflow_help: Show config workflow help
   ledger:
+    allocate:
+      actor_help: Operator name recorded on the bucket event
+      business_pct_help: Business-use share from 0 to 1
+      category_help: Spending or income category id
+      help: Record business/private proportionality for a ledger transaction
+      id_help: Ledger transaction id to allocate
+      prorrata_reference_help: IVA prorrata reference for VAT workflows
+      usage_ratio_help: Usage-ratio id for proportional business use
     app_help: Management of accounting ledgers and VAT records
+    archive:
+      actor_help: Operator name recorded on the bucket event
+      help: Archive one ledger transaction in the active profile bucket
+      id_help: Ledger transaction id to archive
+      reason_help: Reason recorded in lifecycle history
+    attach:
+      actor_help: Operator name recorded on the bucket event
+      attachment_help: Secure attachment id to link to the transaction; repeat for
+        multiple attachments
+      help: Attach secure evidence objects to one ledger transaction
+      id_help: Ledger transaction id to attach evidence to
+      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
+        transaction
+    classify:
+      actor_help: Operator name recorded on the bucket event
+      category_help: Spending or income category id
+      classification_help: Business classification state for the transaction
+      help: Classify one ledger transaction in the active profile bucket
+      id_help: Ledger transaction id to classify
+      irpf_category_help: IRPF category for modelo calculations
+      iva_amount_help: IVA amount
+      iva_rate_help: IVA rate as a decimal, for example 0.21
+      taxable_base_help: Taxable base amount
     create:
       actor_help: Operator name recorded on the bucket event
       amount_help: Signed transaction amount; outgoing values are negative
-      attachment_help: Secure attachment id to link to the transaction; repeat for multiple attachments
+      attachment_help: Secure attachment id to link to the transaction; repeat for
+        multiple attachments
       business_pct_help: Business-use share for MIXED classification, from 0 to 1
       category_help: Spending or income category id
       classification_help: Business classification state for the transaction
@@ -299,39 +409,11 @@ cli:
       iva_rate_help: IVA rate as a decimal, for example 0.21
       notes_help: Operator notes stored with the ledger transaction
       prorrata_reference_help: IVA prorrata reference for VAT workflows
-      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the transaction
+      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
+        transaction
       taxable_base_help: Taxable base amount
       usage_ratio_help: Usage-ratio id for proportional business use
       value_date_help: Value date (YYYY-MM-DD)
-    allocate:
-      actor_help: Operator name recorded on the bucket event
-      business_pct_help: Business-use share from 0 to 1
-      category_help: Spending or income category id
-      help: Record business/private proportionality for a ledger transaction
-      id_help: Ledger transaction id to allocate
-      prorrata_reference_help: IVA prorrata reference for VAT workflows
-      usage_ratio_help: Usage-ratio id for proportional business use
-    archive:
-      actor_help: Operator name recorded on the bucket event
-      help: Archive one ledger transaction in the active profile bucket
-      id_help: Ledger transaction id to archive
-      reason_help: Reason recorded in lifecycle history
-    attach:
-      actor_help: Operator name recorded on the bucket event
-      attachment_help: Secure attachment id to link to the transaction; repeat for multiple attachments
-      help: Attach secure evidence objects to one ledger transaction
-      id_help: Ledger transaction id to attach evidence to
-      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the transaction
-    classify:
-      actor_help: Operator name recorded on the bucket event
-      category_help: Spending or income category id
-      classification_help: Business classification state for the transaction
-      help: Classify one ledger transaction in the active profile bucket
-      id_help: Ledger transaction id to classify
-      irpf_category_help: IRPF category for modelo calculations
-      iva_amount_help: IVA amount
-      iva_rate_help: IVA rate as a decimal, for example 0.21
-      taxable_base_help: Taxable base amount
     edit:
       actor_help: Operator name recorded on the bucket event
       amount_help: Signed transaction amount; outgoing values are negative
@@ -348,19 +430,17 @@ cli:
       notes_help: Operator notes stored with the ledger transaction
       taxable_base_help: Taxable base amount
       value_date_help: Value date (YYYY-MM-DD)
+    errors:
+      confirm_required: Pass --yes to confirm this destructive ledger operation, or
+        use --dry-run first
+      filter_parse_error: Failed to parse ledger filter
+      invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
     export:
       actor_help: Operator name recorded on the bucket event
       format_help: Export serialization format
       help: Export canonical ledger rows from the active profile bucket
       include_inactive_help: Include archived and stashed ledger transactions
       output_help: Path to write the exported ledger file
-    list:
-      header: ACCOUNTING LEDGER TRANSACTIONS
-      help: List ledger transactions in the active profile bucket
-    errors:
-      confirm_required: Pass --yes to confirm this destructive ledger operation, or use --dry-run first
-      filter_parse_error: Failed to parse ledger filter
-      invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
     import:
       dry_run_help: Run the import in dry-run mode (without saving)
       help: Import bank statements or records into the accounting ledger
@@ -371,21 +451,21 @@ cli:
       verbose_help: Show detailed information during import
       verify_help: Verify entries after import
     labels:
-      amount: Amount
-      date: Date
-      description: Description
-      dialect: Detected format
-      dry_run: DRY RUN MODE
-      id: ID
-      imported: Entries imported
       active: Active
+      amount: Amount
       archived: Archived
       bucket: Bucket
       checked: Checked transactions
       created_event_id: Created bucket event
+      date: Date
+      description: Description
+      dialect: Detected format
+      dry_run: DRY RUN MODE
+      export_id: Export ID
+      id: ID
+      imported: Entries imported
       lifecycle_state: Lifecycle state
       'no': 'No'
-      export_id: Export ID
       output: Output
       pending: Pending review
       period: Period
@@ -403,13 +483,9 @@ cli:
       valid: Valid
       warnings: Warnings
       'yes': 'Yes'
-    review:
-      filter_help: Filter rows by status, period, issue, or import
-      header: ACCOUNTING LEDGER REVIEW SESSION
-      help: Interactive review and validation of ledger entries
-      id_help: Identifier of the specific entry to review
-      no_rows: No ledger entries pending review
-      verbose_help: Show detailed information during review
+    list:
+      header: ACCOUNTING LEDGER TRANSACTIONS
+      help: List ledger transactions in the active profile bucket
     read:
       help: Read one ledger transaction from the active profile bucket
       transaction_id_help: Ledger transaction id to read
@@ -426,13 +502,21 @@ cli:
       help: Reset the active profile bucket ledger catalogue
       reason_help: Reason recorded in reset history
       yes_help: Confirm clearing the active ledger catalogue
+    review:
+      filter_help: Filter rows by status, period, issue, or import
+      header: ACCOUNTING LEDGER REVIEW SESSION
+      help: Interactive review and validation of ledger entries
+      id_help: Identifier of the specific entry to review
+      no_rows: No ledger entries pending review
+      verbose_help: Show detailed information during review
     stash:
       actor_help: Operator name recorded on the bucket event
       help: Stash one ledger transaction in the active profile bucket
       id_help: Ledger transaction id to stash
       reason_help: Reason recorded in lifecycle history
     status:
-      help: Summarize ledger state and calculation readiness for the active profile bucket
+      help: Summarize ledger state and calculation readiness for the active profile
+        bucket
       period_help: Fiscal period to preflight (YYYY-MM or modelo period)
     track:
       help: Show the event lineage for one ledger transaction
@@ -510,51 +594,51 @@ cli:
       verify_help: Verify the manual integrity against its contract
       year_help: Tax year of the manual (e.g. 2024)
     metrics:
-      applicability_declaration_count: applicability_declaration_count
-      application_link_count: application_link_count
-      application_link_surfaces: application_link_surfaces
-      artefact_refs: artefact_refs
-      backend_exists: backend_exists
-      captured_count: captured_count
-      casilla_count: casilla_count
-      compared_casillas: compared_casillas
-      comparison_count: comparison_count
-      cross_reference_count: cross_reference_count
-      difference_count: difference_count
-      differences: differences
-      drift_count: drift_count
-      environment: environment
-      extraction_profile_count: extraction_profile_count
-      failed_count: failed_count
-      failure_count: failure_count
-      formula_count: formula_count
-      formula_workbook_count: formula_workbook_count
-      legal_reference_count: legal_reference_count
-      missing_filed_casillas: missing_filed_casillas
-      missing_local_casillas: missing_local_casillas
-      modelo: modelo
-      modelo_count: modelo_count
-      modelos: modelos
-      observation_paths: observation_paths
-      orphan_oracle_ids: orphan_oracle_ids
-      passed: passed
-      registered_oracle_ids: registered_oracle_ids
-      revision: revision
-      revision_count: revision_count
-      row_count: row_count
-      runner_detail: runner_detail
-      runner_status: runner_status
-      scanned_count: scanned_count
-      scenario_id: scenario_id
-      source_reference_count: source_reference_count
-      status: status
-      tape_path: tape_path
-      unsupported_xls_count: unsupported_xls_count
-      verification_expectation_count: verification_expectation_count
-      verified: verified
-      workbook_count: workbook_count
-      workbook_parity_ref_count: workbook_parity_ref_count
-      workbook_path: workbook_path
+      applicability_declaration_count: Applicability declaration count
+      application_link_count: Application link count
+      application_link_surfaces: Application link surfaces
+      artefact_refs: Artefact references
+      backend_exists: Backend exists
+      captured_count: Captured count
+      casilla_count: Casilla count
+      compared_casillas: Compared casillas
+      comparison_count: Comparison count
+      cross_reference_count: Cross reference count
+      difference_count: Difference count
+      differences: Differences
+      drift_count: Drift count
+      environment: Environment
+      extraction_profile_count: Extraction profile count
+      failed_count: Failed count
+      failure_count: Failure count
+      formula_count: Formula count
+      formula_workbook_count: Formula workbook count
+      legal_reference_count: Legal reference count
+      missing_filed_casillas: Missing filed casillas
+      missing_local_casillas: Missing local casillas
+      modelo: Modelo
+      modelo_count: Modelo count
+      modelos: Modelos
+      observation_paths: Observation paths
+      orphan_oracle_ids: Orphan oracle ids
+      passed: Passed
+      registered_oracle_ids: Registered oracle ids
+      revision: Revision
+      revision_count: Revision count
+      row_count: Row count
+      runner_detail: Runner detail
+      runner_status: Runner status
+      scanned_count: Scanned count
+      scenario_id: Scenario id
+      source_reference_count: Source reference count
+      status: Status
+      tape_path: Tape path
+      unsupported_xls_count: Unsupported XLS count
+      verification_expectation_count: Verification expectation count
+      verified: Verified
+      workbook_count: Workbook count
+      workbook_parity_ref_count: Workbook parity ref count
+      workbook_path: Workbook path
     observation_help: Encrypted filed-declaration observation manifest to verify
     parity_app_help: Scenario and tape parity runner for manual calculation checks
     parity_output_help: Destination JSON file for the generated parity tape
@@ -617,11 +701,11 @@ cli:
       headline: AEAT Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
         --help`.'
-      quick_start_repair: '  5. `aeat config repair` - diagnose configuration, storage,
-        and local health.'
       quick_start_heading: Quick start
       quick_start_import: '  3. `aeat app ledger import <bank-statement.csv> --provider
         csv` - add your bank transactions.'
+      quick_start_repair: '  5. `aeat config repair` - diagnose configuration, storage,
+        and local health.'
       quick_start_review: '  4. `aeat app ledger review` - check and classify imported
         rows.'
       quick_start_setup_done: '  1. `aeat config profile status` - check the active
@@ -663,7 +747,7 @@ filing:
     schema_mismatch: Mismatch with expected schema
 profile:
   keys:
-    description: profile.keys.description
+    description: Profile configuration keys and their descriptions
     tax:
       id: Tax identifier (NIF/NIE/CIF)
 topic:
@@ -740,15 +824,15 @@ transactions:
     message: Month 2026-03 is missing from the imported file.
 wizard:
   choices:
-    general: wizard.choices.general
-    irpf: wizard.choices.irpf
-    iva: wizard.choices.iva
-    simplificado: wizard.choices.simplificado
+    general: General
+    irpf: IRPF
+    iva: IVA
+    simplificado: Simplified
   demo:
-    description: wizard.demo.description
+    description: A demonstration section to test wizard functionality
     section:
-      title: wizard.demo.section.title
-    title: wizard.demo.title
+      title: Demo section
+    title: Demo
   errors:
     blank_integer: Integer value required for %{prompt_key}.
     blank_path: Path required for %{prompt_key}.
@@ -771,17 +855,17 @@ wizard:
       \ only local profile state and start over:\n  aeat config reset --scope profile\
       \ --yes"
   other:
-    description: wizard.other.description
+    description: Other configuration options
     section:
-      title: wizard.other.section.title
-    title: wizard.other.title
+      title: Other settings
+    title: Other
   progress:
     question_prefix: Question %{q_n} of %{q_total}
     section_header: 'Step %{section_n} of %{section_total}: %{title}'
   setup:
     certificate:
       path:
-        prompt: wizard.setup.certificate.path.prompt
+        prompt: Enter the path to your digital certificate (.p12, .pfx)
     codes:
       disability-grade:
         choices:
@@ -971,7 +1055,7 @@ wizard:
             label: Hungarian
         prompt: CLI output language for this profile
       regimes:
-        prompt: wizard.setup.profile.regimes.prompt
+        prompt: Select your applicable tax regimes
       surnames:
         prompt: Surnames or company name for export headers
       tax-id:
@@ -1065,14 +1149,14 @@ wizard:
       title: First taxpayer
     title: Setup wizard
   test:
-    description: wizard.test.description
+    description: Test your configuration and connectivity
     example:
       choices:
         'yes':
-          description: wizard.test.example.choices.yes.description
-          label: wizard.test.example.choices.yes.label
-      help: wizard.test.example.help
-      prompt: wizard.test.example.prompt
+          description: Select this to confirm
+          label: true
+      help: Example help text for testing
+      prompt: Example test question
     main:
-      title: wizard.test.main.title
-    title: wizard.test.title
+      title: Main test
+    title: Test
