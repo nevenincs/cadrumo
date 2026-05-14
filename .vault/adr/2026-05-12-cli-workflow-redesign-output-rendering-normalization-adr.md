@@ -61,3 +61,31 @@ emitters.
 
 Tests for retained surfaces must assert root `--format json` behavior and the
 absence of command-local `--json` compatibility flags.
+
+## 2026-05-14 amendment — test-user audit finding P1 #8 (refusal tone)
+
+Audit observation: a previous round flagged the all-caps `REFUSED:` prefix
+on validation refusals as tonally hostile to a user who is typically
+following the application's own instructions when the refusal fires. The
+prefix continues to surface (`REFUSED: The command input failed
+validation. Run \`aeat config doctor\` ...`).
+
+Rule:
+
+- The text renderer for boundary refusals (the `CliRefusedBoundaryError`
+  output path and any equivalent emitter) MUST NOT print all-caps status
+  prefixes. The leading token of a refusal line in `--format text` is
+  `Refused:` (sentence case) or an i18n-translated sentence-case
+  equivalent.
+- The JSON renderer continues to carry the machine-readable status code;
+  capitalization in `--format json` is unaffected and stable.
+- Stale references to `aeat config doctor` in refusal messages MUST be
+  rewritten to `aeat config repair` per the config-repair-shape ADR.
+- This is the target shape. No flag toggles the prefix.
+
+Acceptance criteria:
+
+- A test asserts no line in any `--format text` refusal output starts with
+  `REFUSED:` (regex `^REFUSED:`); the matching sentence-case token is
+  used instead.
+- A test asserts no refusal text mentions `aeat config doctor`.

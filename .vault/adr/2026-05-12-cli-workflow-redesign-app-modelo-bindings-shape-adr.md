@@ -149,3 +149,35 @@ Existing phantom `data require/readiness` references point to
 
 Raw missing binding errors are converted into readiness output with
 fix-oriented domain language.
+
+## 2026-05-14 amendment — test-user audit finding P1 #7 (list semantics)
+
+Audit observation: `aeat app modelo bindings list` requires `--modelo`,
+`--year`, and `--period`. With mandatory selectors it is a query, not a
+list. A user reaching the `list` verb cannot discover the available
+`--modelo` codes without first running `aeat app modelo list` to learn
+what shape `--modelo` accepts.
+
+Rule (this ADR scope; cross-cutting rule lives in the apex amendment):
+
+- The `list` verb under `aeat app modelo bindings` MUST default to the
+  unfiltered set: all configured bindings for the active profile/bucket.
+  `--modelo`, `--year`, `--period`, and `--missing` MUST be optional
+  refining filters, not gating selectors.
+- When `--modelo` is supplied, the CLI MUST validate the value against
+  the registry-derived enum of supported modelo codes and refuse unknown
+  values with a typed validation error that lists the accepted set.
+- `aeat app modelo bindings list --help` MUST surface the accepted
+  `--modelo` enum (either inline in the help text or via a Typer choice).
+- The query verb for "show me only the missing bindings for one modelo"
+  remains expressible by supplying the optional filters. No separate
+  `query` verb is introduced.
+
+Acceptance criteria:
+
+- `aeat app modelo bindings list` with no flags returns every binding for
+  the active profile.
+- `aeat app modelo bindings list --modelo BOGUS` refuses with a
+  validation error that lists accepted codes.
+- The accepted `--modelo` choices are derived from the registry, not
+  hardcoded in the CLI.

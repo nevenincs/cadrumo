@@ -167,3 +167,26 @@ Rejected alternatives:
 - Put live reads under `config repair`.
 - Source notifications under `overview`.
 - Add root-level `aeat live`.
+
+## 2026-05-14 amendment — test-user audit finding P1 #7 (list semantics)
+
+Audit observation: `aeat app live filed list` requires `--modelo` and is
+thus a query, not a list. A user who only knows "show me what I have filed"
+cannot reach an answer without first guessing or discovering a modelo code.
+
+Rule:
+
+- `aeat app live filed list` MUST default to the unfiltered set of filings
+  visible through the live read-only adapters for the active profile.
+  `--modelo`, year, and period selectors MUST be optional refining
+  filters.
+- When `--modelo` is supplied, the value MUST be validated against the
+  registry-derived enum.
+- `--help` MUST expose the accepted `--modelo` set.
+
+Acceptance criteria:
+
+- `aeat app live filed list` with no flags returns every filed record the
+  live read adapter exposes for the active profile.
+- `aeat app live filed list --modelo BOGUS` refuses with a typed
+  validation error.

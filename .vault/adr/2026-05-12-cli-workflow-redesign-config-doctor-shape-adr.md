@@ -194,3 +194,34 @@ The following command shapes are rejected:
 - Compatibility aliases or shims for browser health
 - Legacy `--json` on redesigned doctor commands
 - `doctor repair`
+
+## 2026-05-14 amendment — test-user audit finding P1 #5 (doctor retirement)
+
+This ADR is retired, not patched. The earlier draft of this amendment
+proposed promoting a `next:`/`report:` rule into the doctor surface; that
+draft is withdrawn. The `aeat config doctor` namespace and every one of
+its historical subcommands (`connectivity`, `integrity`, `list`,
+`quarantine`, `logs`) are removed from the redesigned CLI. The
+exhaustiveness rule lives natively on `aeat config repair`'s
+`DiagnosticCheck` discriminated union; see the config-repair-shape ADR's
+"absorbs from retired `config doctor`" section for the unambiguous rule
+statement and the per-failure-class mapping.
+
+W70.P334 carries out the removal in source: it deletes the
+`aeat config doctor` Typer entrypoint, removes its Typer wiring, removes
+the legacy diagnostic emitters that do not ship `next:`/`report:` fields,
+and removes every help reference, refusal-message reference, and
+i18n-translated reference to `aeat config doctor`. There is no shim,
+no alias, no compatibility flag. The doctor surface does not co-exist
+with the repair surface during a transition window: it is removed in
+the same wave that proves repair-surface exhaustiveness.
+
+Acceptance criteria (delegated to the repair-shape ADR and to W70.P334):
+
+- `aeat config doctor` is unregistered; `aeat config doctor --help` exits
+  with the standard unknown-command exit code.
+- Every `aeat config repair` diagnostic class (quarantinable rows,
+  `secure_state.load` schema-shape mismatch, master-key handling failure,
+  unknown integrity-warning class) ships either `next:` or `report:`.
+- `aeat config repair` produces ZERO false-positive diagnostics on a
+  freshly-initialised default profile.

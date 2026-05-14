@@ -280,3 +280,64 @@ The following command shapes are rejected:
   reset-state --yes`)
 - Compatibility aliases, deprecation shims, or legacy `--json`
 - `aeat config repair repair` and any nested duplicate-verb subcommand
+
+## Absorbs from retired `config doctor`
+
+The `aeat config doctor` namespace is retired by this ADR. The
+`next:`-or-report exhaustiveness rule that earlier drafts proposed for
+the doctor surface lives natively here, as a typed contract on
+`DiagnosticCheck`. The rule is restated unambiguously below so no
+reader has to chase the retired ADR for the canonical statement.
+
+### Exhaustiveness rule (restated, native to `config repair`)
+
+Every diagnostic row whose `status` is `fail` or `warn` MUST carry
+exactly one of the following two fields, populated at construction
+time:
+
+- `next_action: <verbatim aeat command>` — a single concrete runnable
+  leaf invocation the operator can copy-paste to make progress. The
+  command MUST resolve to a registered Typer leaf, not a group.
+- `dead_end: <verbatim guidance>` (rendered as `report:` in
+  `--format text`) — a non-recoverable finding the operator cannot
+  self-fix. The guidance MUST tell the operator what to capture and
+  where to report it.
+
+The `DiagnosticCheck` Pydantic model REFUSES at construction time to
+build a `fail`/`warn` row that has neither field, or that has both. This
+is a type-system contract, not a convention. There is no opt-in flag,
+no per-emitter exemption, no half-and-half.
+
+### Failure classes covered (no row may be silent)
+
+Every failure class the diagnostic surface can emit MUST ship either a
+`next_action` or a `dead_end`. The four classes called out by the
+2026-05-14 audit are bound below; the same rule extends to every other
+class enumerated in the implementation table above.
+
+| failure class | shipped field | value |
+| --- | --- | --- |
+| quarantinable rows present in secure-objects integrity scan | `next_action` | `aeat config repair quarantine --yes` |
+| `secure_state.load` schema-shape mismatch (envelope unreadable under the current frozen Pydantic model) | `next_action` | `aeat config repair reset-state --yes` |
+| master-key handling failure (derivation refuses, key material unreadable, or KEK rotation incomplete) | `dead_end` | `report: master-key state is incompatible with this build; capture the `aeat config repair logs` tail and file an issue` |
+| unknown integrity-warning class (a finding the emitter cannot map to a known class) | `dead_end` | `report: this finding is not classifiable by the current emitter; capture full `aeat config repair --format json` output and file an issue` |
+
+No half-and-half. Every class above ships exactly one of `next_action`
+or `dead_end`. A class that ships neither is a regression.
+
+### No false positives on a freshly-initialised profile
+
+`aeat config repair` MUST produce ZERO `fail` and ZERO `warn` rows when
+invoked against a freshly-initialised default profile (the state
+immediately after `aeat config init` succeeds, with no further operator
+action). A finding that fires on a clean profile is a regression to be
+removed or suppressed AT SOURCE — not annotated as "expected noise",
+not gated behind a flag, not allow-listed. This mirrors the
+no-false-positive rule on `aeat app review queue` (apex audit finding
+#9, app-review-queue-execution ADR); the two surfaces share the same
+operator-trust contract.
+
+This is a non-negotiable acceptance criterion for the W70.P334 phase.
+A CLI smoke test runs `aeat config init` on a clean profile and asserts
+the immediately-following `aeat config repair --format json` payload
+carries zero `fail` and zero `warn` rows.

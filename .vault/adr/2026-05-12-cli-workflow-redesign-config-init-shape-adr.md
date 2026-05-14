@@ -161,3 +161,34 @@ commands support `--format json` through `_emit`.
 
 The retirement of `load_profile_envelope` must continue; new profile reads must
 not depend on it.
+
+## 2026-05-14 amendment — test-user audit finding P1 #6 (next-step hint)
+
+Audit observation: a successful `aeat config init …` prints
+`Próximo paso: ejecuta \`aeat config init --tax-id … --activity …\`` style
+hints whose target ends with `aeat app overview`, but `app overview` is a
+Typer group and bare invocation prints group help, not the operator's
+intended status view.
+
+Rule:
+
+- Every post-command "next step" hint emitted by any leaf in this ADR's
+  scope MUST point at a leaf command, never at a Typer group. The
+  renderer MUST treat group-target hints as a programmer error.
+- The post-`init` hint specifically points at `aeat app overview status`,
+  which is the operator's first read after a fresh profile.
+- This rule is cross-cutting and applies to every hint surface in the
+  redesigned CLI, including help footers and i18n-translated variants.
+  The translation table MUST carry the full leaf-target command, not a
+  shortened group name.
+- A construction-time guard (a Pydantic validator on the hint model, or an
+  equivalent assertion in the central hint emitter) refuses to emit a
+  hint whose target resolves to a group inside the Typer app graph.
+
+Acceptance criteria:
+
+- A unit test enumerates every post-command hint string the CLI may emit
+  and asserts each one is registered as a leaf command in the Typer app
+  graph.
+- The `aeat config init` smoke run emits a hint that resolves to a leaf
+  when invoked verbatim by the operator.
