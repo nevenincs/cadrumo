@@ -56,7 +56,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     actor: str = Field(default="operator", min_length=1)
-    source_command: str = Field(default="aeat app ledger create", min_length=1)
+    source_command: str = Field(default="aeat app ledger add", min_length=1)
     idempotency_key: str | None = None
 
     @field_validator(

@@ -28,14 +28,22 @@ from ...application.ledger import (
     ledger_transaction_review_payload,
     ledger_transaction_review_status,
     ledger_transaction_tracking_payload,
+    SplitChildCommand,
     list_manual_transactions,
+    merge_transactions,
     query_ledger_review_rows,
     remove_manual_transaction,
     reset_ledger_catalogue,
     resolve_transaction_id,
+    split_transaction,
     stash_manual_transaction,
     summarize_manual_transactions,
     update_manual_transaction_fields,
+)
+from ...domain.buckets import (
+    BucketEventHistoryRepository,
+    BucketEventObjectType,
+    BucketEventType,
 )
 from ...application.review import (
     FilterParseError,
@@ -126,49 +134,49 @@ def _emit_update_result(
     )
 
 
-@app.command("create", help=tr("cli.ledger.create.help"))
-def ledger_create(
+@app.command("add", help=tr("cli.ledger.add.help"))
+def ledger_add(
     ctx: typer.Context,
-    booked_date: str = typer.Option(..., "--date", help=tr("cli.ledger.create.date_help")),
-    amount: str = typer.Option(..., "--amount", help=tr("cli.ledger.create.amount_help")),
-    direction: TransactionDirection = typer.Option(..., "--direction", help=tr("cli.ledger.create.direction_help")),
-    description: str = typer.Option(..., "--description", help=tr("cli.ledger.create.description_help")),
-    value_date: str | None = typer.Option(None, "--value-date", help=tr("cli.ledger.create.value_date_help")),
-    currency: str = typer.Option("EUR", "--currency", help=tr("cli.ledger.create.currency_help")),
-    counterparty: str | None = typer.Option(None, "--counterparty", help=tr("cli.ledger.create.counterparty_help")),
+    booked_date: str = typer.Option(..., "--date", help=tr("cli.ledger.add.date_help")),
+    amount: str = typer.Option(..., "--amount", help=tr("cli.ledger.add.amount_help")),
+    direction: TransactionDirection = typer.Option(..., "--direction", help=tr("cli.ledger.add.direction_help")),
+    description: str = typer.Option(..., "--description", help=tr("cli.ledger.add.description_help")),
+    value_date: str | None = typer.Option(None, "--value-date", help=tr("cli.ledger.add.value_date_help")),
+    currency: str = typer.Option("EUR", "--currency", help=tr("cli.ledger.add.currency_help")),
+    counterparty: str | None = typer.Option(None, "--counterparty", help=tr("cli.ledger.add.counterparty_help")),
     business_classification: BusinessClassification = typer.Option(
         BusinessClassification.NOT_YET_PROCESSED,
         "--classification",
-        help=tr("cli.ledger.create.classification_help"),
+        help=tr("cli.ledger.add.classification_help"),
     ),
-    business_pct: str | None = typer.Option(None, "--business-pct", help=tr("cli.ledger.create.business_pct_help")),
-    category_id: str | None = typer.Option(None, "--category-id", help=tr("cli.ledger.create.category_help")),
-    taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.create.taxable_base_help")),
-    iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.create.iva_rate_help")),
-    iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.create.iva_amount_help")),
-    irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.create.irpf_category_help")),
-    usage_ratio_id: str | None = typer.Option(None, "--usage-ratio-id", help=tr("cli.ledger.create.usage_ratio_help")),
+    business_pct: str | None = typer.Option(None, "--business-pct", help=tr("cli.ledger.add.business_pct_help")),
+    category_id: str | None = typer.Option(None, "--category-id", help=tr("cli.ledger.add.category_help")),
+    taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.add.taxable_base_help")),
+    iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.add.iva_rate_help")),
+    iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.add.iva_amount_help")),
+    irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.add.irpf_category_help")),
+    usage_ratio_id: str | None = typer.Option(None, "--usage-ratio-id", help=tr("cli.ledger.add.usage_ratio_help")),
     prorrata_reference: str | None = typer.Option(
         None,
         "--prorrata-reference",
-        help=tr("cli.ledger.create.prorrata_reference_help"),
+        help=tr("cli.ledger.add.prorrata_reference_help"),
     ),
     purchase_invoice_evidence_id: str | None = typer.Option(
         None,
         "--purchase-invoice-evidence-id",
-        help=tr("cli.ledger.create.purchase_invoice_evidence_help"),
+        help=tr("cli.ledger.add.purchase_invoice_evidence_help"),
     ),
     attachment_ids: list[str] = typer.Option(
         [],
         "--attachment-id",
-        help=tr("cli.ledger.create.attachment_help"),
+        help=tr("cli.ledger.add.attachment_help"),
     ),
-    notes: str = typer.Option("", "--notes", help=tr("cli.ledger.create.notes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.create.actor_help")),
+    notes: str = typer.Option("", "--notes", help=tr("cli.ledger.add.notes_help")),
+    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.add.actor_help")),
     idempotency_key: str | None = typer.Option(
         None,
         "--idempotency-key",
-        help=tr("cli.ledger.create.idempotency_key_help"),
+        help=tr("cli.ledger.add.idempotency_key_help"),
     ),
 ) -> None:
     """Create one manual ledger transaction through the bucket-scoped backend."""
@@ -196,7 +204,7 @@ def ledger_create(
         attachment_ids=tuple(attachment_ids),
         notes=notes,
         actor=actor or current_state.active_profile or "operator",
-        source_command="aeat app ledger create",
+        source_command="aeat app ledger add",
         idempotency_key=idempotency_key,
     )
     result = create_manual_transaction(
@@ -222,27 +230,27 @@ def ledger_create(
     )
 
 
-@app.command("edit", help=tr("cli.ledger.edit.help"))
-def ledger_edit(
+@app.command("update", help=tr("cli.ledger.update.help"))
+def ledger_update(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.edit.id_help")),
-    booked_date: str | None = typer.Option(None, "--date", help=tr("cli.ledger.edit.date_help")),
-    value_date: str | None = typer.Option(None, "--value-date", help=tr("cli.ledger.edit.value_date_help")),
-    amount: str | None = typer.Option(None, "--amount", help=tr("cli.ledger.edit.amount_help")),
+    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.update.id_help")),
+    booked_date: str | None = typer.Option(None, "--date", help=tr("cli.ledger.update.date_help")),
+    value_date: str | None = typer.Option(None, "--value-date", help=tr("cli.ledger.update.value_date_help")),
+    amount: str | None = typer.Option(None, "--amount", help=tr("cli.ledger.update.amount_help")),
     direction: TransactionDirection | None = typer.Option(
         None,
         "--direction",
-        help=tr("cli.ledger.edit.direction_help"),
+        help=tr("cli.ledger.update.direction_help"),
     ),
-    currency: str | None = typer.Option(None, "--currency", help=tr("cli.ledger.edit.currency_help")),
-    counterparty: str | None = typer.Option(None, "--counterparty", help=tr("cli.ledger.edit.counterparty_help")),
-    description: str | None = typer.Option(None, "--description", help=tr("cli.ledger.edit.description_help")),
-    taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.edit.taxable_base_help")),
-    iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.edit.iva_rate_help")),
-    iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.edit.iva_amount_help")),
-    irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.edit.irpf_category_help")),
-    notes: str | None = typer.Option(None, "--notes", help=tr("cli.ledger.edit.notes_help")),
-    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.edit.actor_help")),
+    currency: str | None = typer.Option(None, "--currency", help=tr("cli.ledger.update.currency_help")),
+    counterparty: str | None = typer.Option(None, "--counterparty", help=tr("cli.ledger.update.counterparty_help")),
+    description: str | None = typer.Option(None, "--description", help=tr("cli.ledger.update.description_help")),
+    taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.ledger.update.taxable_base_help")),
+    iva_rate: str | None = typer.Option(None, "--iva-rate", help=tr("cli.ledger.update.iva_rate_help")),
+    iva_amount: str | None = typer.Option(None, "--iva-amount", help=tr("cli.ledger.update.iva_amount_help")),
+    irpf_category: str | None = typer.Option(None, "--irpf-category", help=tr("cli.ledger.update.irpf_category_help")),
+    notes: str | None = typer.Option(None, "--notes", help=tr("cli.ledger.update.notes_help")),
+    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.update.actor_help")),
 ) -> None:
     """Correct editable transaction facts through the bucket-scoped backend."""
     state = _state()
@@ -266,7 +274,7 @@ def ledger_edit(
             notes=notes,
         ),
         actor=actor or state.active_profile or "operator",
-        source_command="aeat app ledger edit",
+        source_command="aeat app ledger update",
         transaction_repository=transaction_repository,
     )
     _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
@@ -390,9 +398,12 @@ def ledger_archive(
     ctx: typer.Context,
     transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.archive.id_help")),
     reason: str = typer.Option("", "--reason", help=tr("cli.ledger.archive.reason_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.archive.yes_help")),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.archive.actor_help")),
 ) -> None:
     """Archive one ledger transaction through the bucket-scoped backend."""
+    if not yes:
+        raise _bad(tr("cli.ledger.errors.confirm_required"))
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
@@ -412,9 +423,12 @@ def ledger_stash(
     ctx: typer.Context,
     transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.stash.id_help")),
     reason: str = typer.Option("", "--reason", help=tr("cli.ledger.stash.reason_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.stash.yes_help")),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.stash.actor_help")),
 ) -> None:
     """Stash one ledger transaction through the bucket-scoped backend."""
+    if not yes:
+        raise _bad(tr("cli.ledger.errors.confirm_required"))
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
@@ -500,6 +514,185 @@ def ledger_reset(
     )
 
 
+@app.command("split", help=tr("cli.ledger.split.help"))
+def ledger_split(
+    ctx: typer.Context,
+    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.split.id_help")),
+    child_amount: list[str] = typer.Option(
+        [],
+        "--child-amount",
+        help=tr("cli.ledger.split.child_amount_help"),
+    ),
+    child_description: list[str] = typer.Option(
+        [],
+        "--child-description",
+        help=tr("cli.ledger.split.child_description_help"),
+    ),
+    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.split.reason_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.split.yes_help")),
+    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.split.actor_help")),
+) -> None:
+    """Redistribute one parent transaction into N child transactions."""
+    if not yes:
+        raise _bad(tr("cli.ledger.errors.confirm_required"))
+    if len(child_amount) != len(child_description):
+        raise _bad(tr("cli.ledger.split.errors.child_args_mismatch"))
+    if len(child_amount) < 2:
+        raise _bad(tr("cli.ledger.split.errors.min_two_children"))
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    children = tuple(
+        SplitChildCommand(
+            amount=_parse_required_decimal(amount_raw, label="child-amount"),
+            description=description_raw,
+        )
+        for amount_raw, description_raw in zip(child_amount, child_description, strict=True)
+    )
+    result = split_transaction(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_id,
+        children=children,
+        actor=actor or state.active_profile or "operator",
+        source_command="aeat app ledger split",
+        reason=reason,
+        transaction_repository=transaction_repository,
+    )
+    payload = {
+        "bucket_id": result.bucket_id,
+        "parent_transaction_id": result.parent_transaction_id,
+        "split_group_id": result.split_group_id,
+        "child_transaction_ids": list(result.child_transaction_ids),
+        "bucket_event_id": result.bucket_event_id,
+    }
+    _emit(
+        ctx,
+        payload,
+        [
+            f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
+            f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
+            f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
+            f"{tr('cli.ledger.labels.children')}\t{len(result.child_transaction_ids)}",
+            f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}",
+        ],
+    )
+
+
+@app.command("merge", help=tr("cli.ledger.merge.help"))
+def ledger_merge(
+    ctx: typer.Context,
+    child_id: list[str] = typer.Option(
+        [],
+        "--child-id",
+        help=tr("cli.ledger.merge.child_id_help"),
+    ),
+    reason: str = typer.Option("", "--reason", help=tr("cli.ledger.merge.reason_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.merge.yes_help")),
+    actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.merge.actor_help")),
+) -> None:
+    """Re-merge a complete cohort of split children into a fresh transaction."""
+    if not yes:
+        raise _bad(tr("cli.ledger.errors.confirm_required"))
+    if len(child_id) < 2:
+        raise _bad(tr("cli.ledger.merge.errors.min_two_children"))
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_ids = tuple(_resolve_id(transaction_repository, raw) for raw in child_id)
+    result = merge_transactions(
+        bucket_id=transaction_repository.bucket_id,
+        child_transaction_ids=resolved_ids,
+        actor=actor or state.active_profile or "operator",
+        source_command="aeat app ledger merge",
+        reason=reason,
+        transaction_repository=transaction_repository,
+    )
+    payload = {
+        "bucket_id": result.bucket_id,
+        "split_group_id": result.split_group_id,
+        "parent_transaction_id": result.parent_transaction_id,
+        "merged_transaction_id": result.merged_transaction_id,
+        "source_child_ids": list(result.source_child_ids),
+        "bucket_event_id": result.bucket_event_id,
+    }
+    _emit(
+        ctx,
+        payload,
+        [
+            f"{tr('cli.ledger.labels.bucket')}\t{result.bucket_id}",
+            f"{tr('cli.ledger.labels.split_group_id')}\t{result.split_group_id}",
+            f"{tr('cli.ledger.labels.parent_id')}\t{result.parent_transaction_id}",
+            f"{tr('cli.ledger.labels.merged_id')}\t{result.merged_transaction_id}",
+            f"{tr('cli.ledger.labels.children')}\t{len(result.source_child_ids)}",
+            f"{tr('cli.ledger.labels.event_id')}\t{result.bucket_event_id}",
+        ],
+    )
+
+
+_LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
+    BucketEventType.LEDGER_TRANSACTION_CREATED,
+    BucketEventType.LEDGER_TRANSACTION_IMPORTED,
+    BucketEventType.LEDGER_TRANSACTION_UPDATED,
+    BucketEventType.LEDGER_TRANSACTION_CLASSIFIED,
+    BucketEventType.LEDGER_TRANSACTION_ALLOCATED,
+    BucketEventType.LEDGER_TRANSACTION_ARCHIVED,
+    BucketEventType.LEDGER_TRANSACTION_STASHED,
+    BucketEventType.LEDGER_TRANSACTION_REMOVED,
+    BucketEventType.LEDGER_TRANSACTION_EXPORTED,
+    BucketEventType.LEDGER_TRANSACTION_SPLIT,
+    BucketEventType.LEDGER_TRANSACTION_MERGED,
+)
+
+
+@app.command("history", help=tr("cli.ledger.history.help"))
+def ledger_history(
+    ctx: typer.Context,
+    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.history.id_help")),
+    include_split_siblings: bool = typer.Option(
+        False,
+        "--include-split-siblings",
+        help=tr("cli.ledger.history.include_split_siblings_help"),
+    ),
+) -> None:
+    """Emit the chronological event chain for one ledger transaction id."""
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    object_ids = [resolved_id]
+    if include_split_siblings:
+        catalogue = transaction_repository.load()
+        transaction = catalogue.get(resolved_id)
+        if transaction is not None and transaction.split_lineage is not None:
+            for sibling in transaction.split_lineage.sibling_transaction_ids:
+                if sibling not in object_ids:
+                    object_ids.append(sibling)
+    event_catalogue = BucketEventHistoryRepository().load()
+    matches: list = []
+    for object_id in object_ids:
+        for event in event_catalogue.for_object(
+            object_type=BucketEventObjectType.LEDGER_TRANSACTION,
+            object_id=object_id,
+        ):
+            if event.event_type in _LEDGER_HISTORY_EVENT_TYPES:
+                matches.append(event)
+    matches.sort(key=lambda event: event.occurred_at)
+    payload = {
+        "bucket_id": transaction_repository.bucket_id,
+        "transaction_id": resolved_id,
+        "event_count": len(matches),
+        "events": [event.model_dump(mode="json") for event in matches],
+    }
+    lines = [
+        f"{tr('cli.ledger.labels.bucket')}\t{transaction_repository.bucket_id}",
+        f"{tr('cli.ledger.labels.id')}\t{resolved_id}",
+        f"{tr('cli.ledger.labels.event_count')}\t{len(matches)}",
+    ]
+    for event in matches:
+        lines.append(
+            f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}"
+        )
+    _emit(ctx, payload, lines)
+
+
 @app.command("export", help=tr("cli.ledger.export.help"))
 def ledger_export(
     ctx: typer.Context,
@@ -576,10 +769,10 @@ def ledger_list(ctx: typer.Context) -> None:
     )
 
 
-@app.command("read", help=tr("cli.ledger.read.help"))
-def ledger_read(
+@app.command("view", help=tr("cli.ledger.view.help"))
+def ledger_view(
     ctx: typer.Context,
-    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.read.transaction_id_help")),
+    transaction_id: str = typer.Argument(..., help=tr("cli.ledger.view.transaction_id_help")),
 ) -> None:
     """Read one bucket-scoped ledger transaction through the backend read service."""
     transaction_repository = _tx_repo(_state())
@@ -649,9 +842,10 @@ def ledger_track(
     """Show audit lineage for one bucket-scoped ledger transaction."""
     state = _state()
     transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
     result = get_manual_transaction(
         bucket_id=transaction_repository.bucket_id,
-        transaction_id=transaction_id,
+        transaction_id=resolved_id,
         transaction_repository=transaction_repository,
     )
     payload = {

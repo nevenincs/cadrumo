@@ -219,7 +219,7 @@ def test_create_manual_transaction_persists_in_bucket_catalogue_and_emits_event(
         iva_amount=Decimal("21.00"),
         purchase_invoice_evidence_id=purchase_evidence.invoice_id,
         actor="operator-A",
-        source_command="aeat app ledger create",
+        source_command="aeat app ledger add",
         idempotency_key="cash-2026-05-02-001",
     )
 
@@ -246,7 +246,7 @@ def test_create_manual_transaction_persists_in_bucket_catalogue_and_emits_event(
     assert persisted.iva_amount == Decimal("21.00")
     assert persisted.purchase_invoice_evidence_id == purchase_evidence.invoice_id
     assert persisted.created_by == "operator-A"
-    assert persisted.source_command == "aeat app ledger create"
+    assert persisted.source_command == "aeat app ledger add"
     assert persisted.created_event_id == result.bucket_event_ids[0]
     assert persisted.evidence_provenance[0].evidence_id == purchase_evidence.invoice_id
     assert persisted.evidence_provenance[0].evidence_kind == "purchase_invoice_evidence"
@@ -259,7 +259,7 @@ def test_create_manual_transaction_persists_in_bucket_catalogue_and_emits_event(
     assert events[0].event_type is BucketEventType.LEDGER_TRANSACTION_CREATED
     assert events[0].object_type is BucketEventObjectType.LEDGER_TRANSACTION
     assert events[0].object_id == result.ref.transaction_id
-    assert events[0].payload["source_command"] == "aeat app ledger create"
+    assert events[0].payload["source_command"] == "aeat app ledger add"
 
 
 def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
@@ -984,7 +984,7 @@ def test_update_manual_transaction_replaces_catalogue_row_and_records_lineage(se
             business_pct=Decimal("0.50"),
             notes="corrected cash amount",
             actor="operator-B",
-            source_command="aeat app ledger edit",
+            source_command="aeat app ledger update",
         ),
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
@@ -1003,7 +1003,7 @@ def test_update_manual_transaction_replaces_catalogue_row_and_records_lineage(se
     assert updated.transaction.created_event_id == created.transaction.created_event_id
     assert updated.transaction.edit_lineage[-1].previous_transaction_id == created.ref.transaction_id
     assert updated.transaction.edit_lineage[-1].actor == "operator-B"
-    assert updated.transaction.edit_lineage[-1].source_command == "aeat app ledger edit"
+    assert updated.transaction.edit_lineage[-1].source_command == "aeat app ledger update"
     assert updated.transaction.edit_lineage[-1].bucket_event_id == updated.bucket_event_ids[0]
     events = event_repository.load().for_bucket("bucket-a")
     assert [event.event_type for event in events] == [
@@ -1339,7 +1339,7 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
                 direction=TransactionDirection.OUTGOING,
                 description="attempt to edit archived row",
                 actor="operator-B",
-                source_command="aeat app ledger edit",
+                source_command="aeat app ledger update",
             ),
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
