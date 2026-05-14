@@ -109,12 +109,13 @@ def _active_profile_output_language() -> str | None:
     """Return active profile language without mutating workflow state."""
 
     try:
+        from ...application.user_profile._orchestration import fact_value
         from ...application.workflow._persistence import workflow_state_repository
 
         record = workflow_state_repository().load().active_profile_record()
         if record is None:
             return None
-        raw = _normalise_supported_language(record.values.get("output.language", ""))
+        raw = _normalise_supported_language(fact_value(record, "preferences.output_language") or "")
     except Exception as exc:
         _log.debug(
             "i18n: unable to resolve active-profile output language; falling back to settings (%s)",

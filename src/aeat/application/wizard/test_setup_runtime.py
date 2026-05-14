@@ -130,11 +130,11 @@ def test_canonical_dict_only_carries_profile_bound_keys() -> None:
     prompter = ScriptedPrompter(_scripted_answers_for_individual_declaration())
     answers = run_flow(SETUP_FLOW, prompter)
     canonical = serialise_answers(SETUP_FLOW, answers)
-    assert "tax.id" in canonical
-    assert canonical["tax.id"] == "12345678Z"
-    assert canonical["output.language"] == "en"
-    assert "tax.residence.ccaa" in canonical
-    assert canonical["tax.residence.ccaa"] == "madrid"
+    assert "identity.tax_id" in canonical
+    assert canonical["identity.tax_id"] == "12345678Z"
+    assert canonical["preferences.output_language"] == "en"
+    assert "tax_residence.ccaa" in canonical
+    assert canonical["tax_residence.ccaa"] == "madrid"
     # Non-profile-bound questions don't surface in the canonical map
     non_profile_questions = {
         question.id.replace("-", "_")

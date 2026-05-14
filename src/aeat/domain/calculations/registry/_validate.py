@@ -80,8 +80,14 @@ def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     return {"record", "offset", "length", "data_type"}.issubset(binding.selector)
 
 
-@lru_cache(maxsize=16)
 def _extract_pdf_text(path: Path) -> str:
+    stat = path.stat()
+    return _extract_pdf_text_cached(str(path.expanduser().resolve()), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=256)
+def _extract_pdf_text_cached(path: str, byte_count: int, modified_ns: int) -> str:
+    del byte_count, modified_ns
     try:
         import pypdfium2 as pdfium
     except ImportError as exc:  # pragma: no cover - dependency is required by pyproject.
@@ -93,7 +99,11 @@ def _extract_pdf_text(path: Path) -> str:
             for index in range(len(pdf)):
                 page = pdf[index]
                 try:
-                    pages.append(page.get_textpage().get_text_range())
+                    text_page = page.get_textpage()
+                    try:
+                        pages.append(text_page.get_text_range())
+                    finally:
+                        text_page.close()
                 finally:
                     page.close()
         finally:

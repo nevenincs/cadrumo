@@ -52,6 +52,7 @@ _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)
 _CELL_REF_PATTERN = re.compile(r"(?<![A-Z0-9_])(?:'[^']+'!)?\$?[A-Z]{1,3}\$?\d+(?![A-Z0-9_])")
 _CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
 _LIBREOFFICE_EXECUTABLE_ENV = "AEAT_LIBREOFFICE_EXECUTABLE"
+_BINARY_XLS_CONVERSION_BYTES_CACHE: dict[tuple[str, int, str], bytes] = {}
 
 
 class _BinaryXlsConversionError(Exception):
@@ -600,6 +601,13 @@ def _converted_binary_xls_path(
         tmp_path = Path(tmp)
         output_dir = tmp_path / "output"
         output_dir.mkdir()
+        cache_key = (context.digest, context.byte_count, str(runner))
+        cached_bytes = _BINARY_XLS_CONVERSION_BYTES_CACHE.get(cache_key)
+        if cached_bytes is not None:
+            cached_path = output_dir / f"{context.resolved_path.stem}.xlsx"
+            cached_path.write_bytes(cached_bytes)
+            yield cached_path
+            return
         user_installation = (tmp_path / "lo-profile").resolve().as_uri()
         try:
             completed = subprocess.run(
@@ -630,7 +638,9 @@ def _converted_binary_xls_path(
         if len(outputs) != 1:
             detail = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
             raise _BinaryXlsConversionError(f"LibreOffice did not produce exactly one XLSX workbook: {detail}")
-        yield outputs[0]
+        converted_path = outputs[0]
+        _BINARY_XLS_CONVERSION_BYTES_CACHE[cache_key] = converted_path.read_bytes()
+        yield converted_path
 
 
 def run_registry_workbook_parity(

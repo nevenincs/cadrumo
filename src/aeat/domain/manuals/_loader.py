@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable, Iterator
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -86,9 +87,17 @@ _CHAPTERS_ADAPTER: TypeAdapter[tuple[Chapter, ...]] = TypeAdapter(tuple[Chapter,
 def _read_text(path: Path) -> str:
     """Read a UTF-8 text file, raising :exc:`ManualNotFoundError` on miss."""
     try:
-        return path.read_text(encoding="utf-8")
+        resolved = path.resolve()
+        stat = resolved.stat()
     except FileNotFoundError as exc:
         raise ManualNotFoundError(f"missing required file: {path}") from exc
+    return _read_text_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=1024)
+def _read_text_cached(path: str, byte_count: int, modified_ns: int) -> str:
+    del byte_count, modified_ns
+    return Path(path).read_text(encoding="utf-8")
 
 
 def _load_json(path: Path) -> Any:
@@ -170,6 +179,27 @@ def load_manual(
             f"missing structure for {manual_id.value}/{year}/{part.value} under {part_root}",
         )
     _logger.debug("loading manual %s/%s/%s from %s", manual_id.value, year, part.value, part_root)
+    resolved_root = part_root.resolve()
+    manual_fingerprint = _path_fingerprint(manual_path)
+    chapters_fingerprint = _path_fingerprint(chapters_path)
+    return _load_manual_cached(str(resolved_root), manual_fingerprint, chapters_fingerprint)
+
+
+def _path_fingerprint(path: Path) -> tuple[str, int, int]:
+    resolved = path.resolve()
+    stat = resolved.stat()
+    return (str(resolved), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=128)
+def _load_manual_cached(
+    part_root: str,
+    manual_fingerprint: tuple[str, int, int],
+    chapters_fingerprint: tuple[str, int, int],
+) -> Manual:
+    del part_root
+    manual_path = Path(manual_fingerprint[0])
+    chapters_path = Path(chapters_fingerprint[0])
     chapters = _load_chapters(chapters_path)
     return _load_manual_metadata(manual_path, chapters)
 
@@ -192,14 +222,21 @@ def load_section(part_root: Path, section_ref: SectionRef) -> Section:
         section_path = resolve_relative_subpath(part_root, section_ref.relative_path, context="manual section path")
     except ValueError as exc:
         raise ManualParseError(str(exc)) from exc
+    fingerprint = _path_fingerprint(section_path)
+    return _load_section_cached(fingerprint, section_ref.section_id)
+
+
+@lru_cache(maxsize=2048)
+def _load_section_cached(section_fingerprint: tuple[str, int, int], section_id: str) -> Section:
+    section_path = Path(section_fingerprint[0])
     raw = _read_text(section_path)
     try:
         section = Section.model_validate_json(raw)
     except (ValueError, ValidationError) as exc:
         raise ManualParseError(f"{section_path}: section validation failed: {exc}") from exc
-    if section.section_id != section_ref.section_id:
+    if section.section_id != section_id:
         raise ManualParseError(
-            f"{section_path}: section_id mismatch ({section.section_id!r} vs ref {section_ref.section_id!r})"
+            f"{section_path}: section_id mismatch ({section.section_id!r} vs ref {section_id!r})"
         )
     return section
 

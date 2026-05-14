@@ -152,15 +152,20 @@ class WorkflowState(BaseModel):
     updated_at: datetime = Field(default_factory=utc_now)
 
     def active_profile_record(self) -> Any | None:
-        """Return the active profile record from the profile's secure bucket."""
+        """Return the active :class:`UserProfileRecord` from its secure bucket."""
         if self.active_profile is None:
             return None
         pointer = self.profiles.get(self.active_profile)
         if pointer is None:
             return None
-        from ..profile._repository import profile_bucket_repository
+        from ...domain.user_profile import ProfileNotFoundError
+        from ..user_profile._orchestration import build_lifecycle_service
 
-        return profile_bucket_repository().load(pointer.bucket_id)
+        service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+        try:
+            return service.read(self.active_profile)
+        except ProfileNotFoundError:
+            return None
 
     def active_profile_bucket_id(self) -> str | None:
         """Return the active profile's secure bucket id."""
