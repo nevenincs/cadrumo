@@ -112,6 +112,14 @@ class BucketEventType(StrEnum):
     MODELO_AUDIT_VERIFIED = "modelo.audit.verified"
     MODELO_AUDIT_EXPORTED = "modelo.audit.exported"
     MODELO_AUDIT_REPLAYED = "modelo.audit.replayed"
+    # live AEAT read surface (W79A app-live-shape per apex ADR §4.4).
+    # Every event below records a READ-ONLY capture; submission is
+    # permanently forbidden per the live-AEAT charter.
+    LIVE_NOTIFICATIONS_SNAPSHOT_CAPTURED = "live.notifications.snapshot_captured"
+    LIVE_EXPEDIENTES_SNAPSHOT_CAPTURED = "live.expedientes.snapshot_captured"
+    LIVE_VERIFY_NIF_IVA_CHECKED = "live.verify.nif_iva_checked"
+    LIVE_VERIFY_TGVI_CHECKED = "live.verify.tgvi_checked"
+    LIVE_BORRADOR100_SNAPSHOT_CAPTURED = "live.borrador100.snapshot_captured"
     ATTACHMENT_LINKED = "attachment.linked"
     ATTACHMENT_REMOVED = "attachment.removed"
 
