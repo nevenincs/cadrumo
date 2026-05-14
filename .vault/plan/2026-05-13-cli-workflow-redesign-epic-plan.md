@@ -1464,56 +1464,56 @@ This Wave implements the `2026-04-30-inventory-management-cli-design-adr` decisi
 
 This Phase delivers backend implementation for inventory command migration as required by `2026-04-30-inventory-management-cli-design-adr`.
 
-- [ ] `W24.P116.S0691` - Map the `2026-04-30-inventory-management-cli-design-adr` decision into non-CLI service ownership for inventory command migration; `src/aeat/application/inventory`.
-- [ ] `W24.P116.S0692` - Implement Pydantic command and result contracts for inventory command migration; `src/aeat/application/inventory`.
-- [ ] `W24.P116.S0693` - Wire application or domain services required by inventory command migration; `src/aeat/application/inventory`.
-- [ ] `W24.P116.S0694` - Connect persistence, bucket events, registry data, or provider adapters required by inventory command migration; `src/aeat/application/inventory`.
-- [ ] `W24.P116.S0695` - Route existing backend functionality into the canonical service for inventory command migration; `src/aeat/application/inventory`.
-- [ ] `W24.P116.S0696` - Record service-level error codes and log fields for inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P116.S0691` - Map the `2026-04-30-inventory-management-cli-design-adr` decision into non-CLI service ownership for inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P116.S0692` - Implement Pydantic command and result contracts for inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P116.S0693` - Wire application or domain services required by inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P116.S0694` - Connect persistence, bucket events, registry data, or provider adapters required by inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P116.S0695` - Route existing backend functionality into the canonical service for inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P116.S0696` - Record service-level error codes and log fields for inventory command migration; `src/aeat/application/inventory`.
 
 ### Phase `W24.P117` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for inventory command migration as required by `2026-04-30-inventory-management-cli-design-adr`.
 
-- [ ] `W24.P117.S0697` - Audit duplicate implementations that overlap inventory command migration; `src/aeat/application/inventory`.
-- [ ] `W24.P117.S0698` - Delete duplicate backend branches that compete with inventory command migration; `src/aeat/application/inventory`.
-- [ ] `W24.P117.S0699` - Remove stale aliases that bypass the canonical service for inventory command migration; `src/aeat/entrypoints/cli`.
-- [ ] `W24.P117.S0700` - Migrate internal callers to the canonical service for inventory command migration; `src/aeat/application/inventory`.
-- [ ] `W24.P117.S0701` - Remove stale fixtures and tests that encode duplicate behavior for inventory command migration; `tests/application/inventory`.
-- [ ] `W24.P117.S0702` - Update boundary inventory entries that describe duplicate behavior for inventory command migration; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W24.P117.S0697` - Audit duplicate implementations that overlap inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P117.S0698` - Delete duplicate backend branches that compete with inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P117.S0699` - Remove stale aliases that bypass the canonical service for inventory command migration; `src/aeat/entrypoints/cli`.
+- [x] `W24.P117.S0700` - Migrate internal callers to the canonical service for inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P117.S0701` - Remove stale fixtures and tests that encode duplicate behavior for inventory command migration; `tests/application/inventory`.
+- [x] `W24.P117.S0702` - Update boundary inventory entries that describe duplicate behavior for inventory command migration; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W24.P118` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for inventory command migration as required by `2026-04-30-inventory-management-cli-design-adr`.
 
-- [ ] `W24.P118.S0703` - Delete compatibility shims that preserve rejected behavior for inventory command migration; `src/aeat/application/inventory`.
-- [ ] `W24.P118.S0704` - Delete placeholder stubs that claim support for inventory command migration; `src/aeat/application/inventory`.
-- [ ] `W24.P118.S0705` - Replace stubbed paths with real backend service calls for inventory command migration; `src/aeat/application/inventory`.
-- [ ] `W24.P118.S0706` - Remove deprecated command spelling and help text for inventory command migration; `src/aeat/entrypoints/cli`.
-- [ ] `W24.P118.S0707` - Remove tests that assert shim or stub behavior for inventory command migration; `tests/application/inventory`.
-- [ ] `W24.P118.S0708` - Record the removed shim and stub surfaces for inventory command migration; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W24.P118.S0703` - Delete compatibility shims that preserve rejected behavior for inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P118.S0704` - Delete placeholder stubs that claim support for inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P118.S0705` - Replace stubbed paths with real backend service calls for inventory command migration; `src/aeat/application/inventory`.
+- [x] `W24.P118.S0706` - Remove deprecated command spelling and help text for inventory command migration; `src/aeat/entrypoints/cli`.
+- [x] `W24.P118.S0707` - Remove tests that assert shim or stub behavior for inventory command migration; `tests/application/inventory`.
+- [x] `W24.P118.S0708` - Record the removed shim and stub surfaces for inventory command migration; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W24.P119` - real behavior verification
 
 This Phase delivers real behavior verification for inventory command migration as required by `2026-04-30-inventory-management-cli-design-adr`.
 
-- [ ] `W24.P119.S0709` - Add service contract tests for inventory command migration; `tests/application/inventory`.
-- [ ] `W24.P119.S0710` - Add persistence or registry integration tests for inventory command migration; `tests/application/inventory`.
-- [ ] `W24.P119.S0711` - Add negative tests proving rejected aliases do not reach inventory command migration; `tests/entrypoints/cli`.
-- [ ] `W24.P119.S0712` - Add command behavior tests that exercise inventory command migration through real services; `tests/entrypoints/cli`.
-- [ ] `W24.P119.S0713` - Add end-to-end workflow coverage for inventory command migration; `tests`.
-- [ ] `W24.P119.S0714` - Run the targeted test slice for inventory command migration without skips or xfails; `tests/application/inventory`.
+- [x] `W24.P119.S0709` - Add service contract tests for inventory command migration; `tests/application/inventory`.
+- [x] `W24.P119.S0710` - Add persistence or registry integration tests for inventory command migration; `tests/application/inventory`.
+- [x] `W24.P119.S0711` - Add negative tests proving rejected aliases do not reach inventory command migration; `tests/entrypoints/cli`.
+- [x] `W24.P119.S0712` - Add command behavior tests that exercise inventory command migration through real services; `tests/entrypoints/cli`.
+- [x] `W24.P119.S0713` - Add end-to-end workflow coverage for inventory command migration; `tests`.
+- [x] `W24.P119.S0714` - Run the targeted test slice for inventory command migration without skips or xfails; `tests/application/inventory`.
 
 ### Phase `W24.P120` - thin cli exposure
 
 This Phase delivers thin cli exposure for inventory command migration as required by `2026-04-30-inventory-management-cli-design-adr`.
 
-- [ ] `W24.P120.S0715` - Expose accepted command handlers for inventory command migration under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W24.P120.S0716` - Keep argument parsing for inventory command migration separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W24.P120.S0717` - Delegate inventory command migration execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W24.P120.S0718` - Render inventory command migration results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W24.P120.S0719` - Handle inventory command migration failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W24.P120.S0720` - Validate help text for inventory command migration uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W24.P120.S0715` - Expose accepted command handlers for inventory command migration under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W24.P120.S0716` - Keep argument parsing for inventory command migration separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W24.P120.S0717` - Delegate inventory command migration execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W24.P120.S0718` - Render inventory command migration results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W24.P120.S0719` - Handle inventory command migration failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W24.P120.S0720` - Validate help text for inventory command migration uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W25` - inventory placement
 
@@ -1523,56 +1523,56 @@ This Wave implements the `2026-05-12-cli-workflow-redesign-inventory-placement-a
 
 This Phase delivers backend implementation for inventory command placement and backend ownership as required by `2026-05-12-cli-workflow-redesign-inventory-placement-adr`.
 
-- [ ] `W25.P121.S0721` - Map the `2026-05-12-cli-workflow-redesign-inventory-placement-adr` decision into non-CLI service ownership for inventory command placement and backend ownership; `src/aeat/application/inventory`.
-- [ ] `W25.P121.S0722` - Implement Pydantic command and result contracts for inventory command placement and backend ownership; `src/aeat/application/inventory`.
-- [ ] `W25.P121.S0723` - Wire application or domain services required by inventory command placement and backend ownership; `src/aeat/application/inventory`.
-- [ ] `W25.P121.S0724` - Connect persistence, bucket events, registry data, or provider adapters required by inventory command placement and backend ownership; `src/aeat/application/inventory`.
-- [ ] `W25.P121.S0725` - Route existing backend functionality into the canonical service for inventory command placement and backend ownership; `src/aeat/application/inventory`.
-- [ ] `W25.P121.S0726` - Record service-level error codes and log fields for inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P121.S0721` - Map the `2026-05-12-cli-workflow-redesign-inventory-placement-adr` decision into non-CLI service ownership for inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P121.S0722` - Implement Pydantic command and result contracts for inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P121.S0723` - Wire application or domain services required by inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P121.S0724` - Connect persistence, bucket events, registry data, or provider adapters required by inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P121.S0725` - Route existing backend functionality into the canonical service for inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P121.S0726` - Record service-level error codes and log fields for inventory command placement and backend ownership; `src/aeat/application/inventory`.
 
 ### Phase `W25.P122` - shadow duplicate removal
 
 This Phase delivers shadow duplicate removal for inventory command placement and backend ownership as required by `2026-05-12-cli-workflow-redesign-inventory-placement-adr`.
 
-- [ ] `W25.P122.S0727` - Audit duplicate implementations that overlap inventory command placement and backend ownership; `src/aeat/application/inventory`.
-- [ ] `W25.P122.S0728` - Delete duplicate backend branches that compete with inventory command placement and backend ownership; `src/aeat/application/inventory`.
-- [ ] `W25.P122.S0729` - Remove stale aliases that bypass the canonical service for inventory command placement and backend ownership; `src/aeat/entrypoints/cli`.
-- [ ] `W25.P122.S0730` - Migrate internal callers to the canonical service for inventory command placement and backend ownership; `src/aeat/application/inventory`.
-- [ ] `W25.P122.S0731` - Remove stale fixtures and tests that encode duplicate behavior for inventory command placement and backend ownership; `tests/application/inventory`.
-- [ ] `W25.P122.S0732` - Update boundary inventory entries that describe duplicate behavior for inventory command placement and backend ownership; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W25.P122.S0727` - Audit duplicate implementations that overlap inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P122.S0728` - Delete duplicate backend branches that compete with inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P122.S0729` - Remove stale aliases that bypass the canonical service for inventory command placement and backend ownership; `src/aeat/entrypoints/cli`.
+- [x] `W25.P122.S0730` - Migrate internal callers to the canonical service for inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P122.S0731` - Remove stale fixtures and tests that encode duplicate behavior for inventory command placement and backend ownership; `tests/application/inventory`.
+- [x] `W25.P122.S0732` - Update boundary inventory entries that describe duplicate behavior for inventory command placement and backend ownership; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W25.P123` - de-shim and de-stub cleanup
 
 This Phase delivers de-shim and de-stub cleanup for inventory command placement and backend ownership as required by `2026-05-12-cli-workflow-redesign-inventory-placement-adr`.
 
-- [ ] `W25.P123.S0733` - Delete compatibility shims that preserve rejected behavior for inventory command placement and backend ownership; `src/aeat/application/inventory`.
-- [ ] `W25.P123.S0734` - Delete placeholder stubs that claim support for inventory command placement and backend ownership; `src/aeat/application/inventory`.
-- [ ] `W25.P123.S0735` - Replace stubbed paths with real backend service calls for inventory command placement and backend ownership; `src/aeat/application/inventory`.
-- [ ] `W25.P123.S0736` - Remove deprecated command spelling and help text for inventory command placement and backend ownership; `src/aeat/entrypoints/cli`.
-- [ ] `W25.P123.S0737` - Remove tests that assert shim or stub behavior for inventory command placement and backend ownership; `tests/application/inventory`.
-- [ ] `W25.P123.S0738` - Record the removed shim and stub surfaces for inventory command placement and backend ownership; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W25.P123.S0733` - Delete compatibility shims that preserve rejected behavior for inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P123.S0734` - Delete placeholder stubs that claim support for inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P123.S0735` - Replace stubbed paths with real backend service calls for inventory command placement and backend ownership; `src/aeat/application/inventory`.
+- [x] `W25.P123.S0736` - Remove deprecated command spelling and help text for inventory command placement and backend ownership; `src/aeat/entrypoints/cli`.
+- [x] `W25.P123.S0737` - Remove tests that assert shim or stub behavior for inventory command placement and backend ownership; `tests/application/inventory`.
+- [x] `W25.P123.S0738` - Record the removed shim and stub surfaces for inventory command placement and backend ownership; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W25.P124` - real behavior verification
 
 This Phase delivers real behavior verification for inventory command placement and backend ownership as required by `2026-05-12-cli-workflow-redesign-inventory-placement-adr`.
 
-- [ ] `W25.P124.S0739` - Add service contract tests for inventory command placement and backend ownership; `tests/application/inventory`.
-- [ ] `W25.P124.S0740` - Add persistence or registry integration tests for inventory command placement and backend ownership; `tests/application/inventory`.
-- [ ] `W25.P124.S0741` - Add negative tests proving rejected aliases do not reach inventory command placement and backend ownership; `tests/entrypoints/cli`.
-- [ ] `W25.P124.S0742` - Add command behavior tests that exercise inventory command placement and backend ownership through real services; `tests/entrypoints/cli`.
-- [ ] `W25.P124.S0743` - Add end-to-end workflow coverage for inventory command placement and backend ownership; `tests`.
-- [ ] `W25.P124.S0744` - Run the targeted test slice for inventory command placement and backend ownership without skips or xfails; `tests/application/inventory`.
+- [x] `W25.P124.S0739` - Add service contract tests for inventory command placement and backend ownership; `tests/application/inventory`.
+- [x] `W25.P124.S0740` - Add persistence or registry integration tests for inventory command placement and backend ownership; `tests/application/inventory`.
+- [x] `W25.P124.S0741` - Add negative tests proving rejected aliases do not reach inventory command placement and backend ownership; `tests/entrypoints/cli`.
+- [x] `W25.P124.S0742` - Add command behavior tests that exercise inventory command placement and backend ownership through real services; `tests/entrypoints/cli`.
+- [x] `W25.P124.S0743` - Add end-to-end workflow coverage for inventory command placement and backend ownership; `tests`.
+- [x] `W25.P124.S0744` - Run the targeted test slice for inventory command placement and backend ownership without skips or xfails; `tests/application/inventory`.
 
 ### Phase `W25.P125` - thin cli exposure
 
 This Phase delivers thin cli exposure for inventory command placement and backend ownership as required by `2026-05-12-cli-workflow-redesign-inventory-placement-adr`.
 
-- [ ] `W25.P125.S0745` - Expose accepted command handlers for inventory command placement and backend ownership under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [ ] `W25.P125.S0746` - Keep argument parsing for inventory command placement and backend ownership separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [ ] `W25.P125.S0747` - Delegate inventory command placement and backend ownership execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W25.P125.S0748` - Render inventory command placement and backend ownership results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [ ] `W25.P125.S0749` - Handle inventory command placement and backend ownership failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [ ] `W25.P125.S0750` - Validate help text for inventory command placement and backend ownership uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [x] `W25.P125.S0745` - Expose accepted command handlers for inventory command placement and backend ownership under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W25.P125.S0746` - Keep argument parsing for inventory command placement and backend ownership separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [x] `W25.P125.S0747` - Delegate inventory command placement and backend ownership execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [x] `W25.P125.S0748` - Render inventory command placement and backend ownership results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W25.P125.S0749` - Handle inventory command placement and backend ownership failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [x] `W25.P125.S0750` - Validate help text for inventory command placement and backend ownership uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W26` - app ledger ratios shape
 
@@ -3967,41 +3967,41 @@ not renumber any prior Wave; it appends.
 
 This Phase implements the `2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr` decision. It documents the canonical Windows interactive invocation, ships a pass-through launcher, and adds a stale-`uv sync` diagnostic to the repair surface.
 
-- [ ] `W70.P330.S1927` - Read the dev-environment-uv-windows ADR before editing; `.vault/adr`.
-- [ ] `W70.P330.S1928` - Add a Windows launcher script under the existing scripts location that shells out to `uv run --no-sync aeat` with full argv pass-through; `scripts`.
-- [ ] `W70.P330.S1929` - Add a stale-sync diagnostic row to the `aeat config repair` composite report with a `next: uv sync` action when Windows is detected and the last sync is older than `pyproject.toml`; `src/aeat/application/config`.
-- [ ] `W70.P330.S1930` - Update onboarding docs (README, dev environment notes) to document `uv run --no-sync aeat` as the canonical Windows interactive invocation; `README.md`.
-- [ ] `W70.P330.S1931` - Smoke: `aeat config repair` surfaces the stale-sync row on a stale Windows install and is absent on a fresh sync; `tests/application/config`.
+- [x] `W70.P330.S1927` - Read the dev-environment-uv-windows ADR before editing; `.vault/adr`.
+- [x] `W70.P330.S1928` - Add a Windows launcher script under the existing scripts location that shells out to `uv run --no-sync aeat` with full argv pass-through; `scripts`.
+- [x] `W70.P330.S1929` - Add a stale-sync diagnostic row to the `aeat config repair` composite report with a `next: uv sync` action when Windows is detected and the last sync is older than `pyproject.toml`; `src/aeat/application/config`.
+- [x] `W70.P330.S1930` - Update onboarding docs (README, dev environment notes) to document `uv run --no-sync aeat` as the canonical Windows interactive invocation; `README.md`.
+- [x] `W70.P330.S1931` - Smoke: `aeat config repair` surfaces the stale-sync row on a stale Windows install and is absent on a fresh sync; `tests/application/config`.
 
 ### Phase `W70.P331` - finding P0 #2: error registry exhaustiveness invariant
 
 This Phase implements the `2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr` decision. It adds the import-time invariant and a CI test, and registers every currently-missing `AeatError` subclass.
 
-- [ ] `W70.P331.S1932` - Read the error-registry-exhaustiveness-invariant ADR before editing; `.vault/adr`.
-- [ ] `W70.P331.S1933` - Walk `aeat.application` and every other package submodule, enumerate `AeatError` subclasses, and add the missing `ErrorCode` entries (including `AmendmentVerificationRefusedError`) in `ERROR_REGISTRY`; `src/aeat/core/errors`.
-- [ ] `W70.P331.S1934` - Add an import-time invariant inside the central errors module that raises `RuntimeError` when any imported `AeatError` subclass lacks a registry entry; `src/aeat/core/errors`.
-- [ ] `W70.P331.S1935` - Add a CI test that uses `pkgutil.walk_packages` to import every package submodule and asserts every reachable `AeatError` subclass has a registry entry; `tests/core/errors`.
-- [ ] `W70.P331.S1936` - Smoke: `aeat app overview status` runs to completion on a fresh profile without raising the registry `ValueError`; `tests/entrypoints/cli`.
+- [x] `W70.P331.S1932` - Read the error-registry-exhaustiveness-invariant ADR before editing; `.vault/adr`.
+- [x] `W70.P331.S1933` - Walk `aeat.application` and every other package submodule, enumerate `AeatError` subclasses, and add the missing `ErrorCode` entries (including `AmendmentVerificationRefusedError`) in `ERROR_REGISTRY`; `src/aeat/core/errors`.
+- [x] `W70.P331.S1934` - Add an import-time invariant inside the central errors module that raises `RuntimeError` when any imported `AeatError` subclass lacks a registry entry; `src/aeat/core/errors`.
+- [x] `W70.P331.S1935` - Add a CI test that uses `pkgutil.walk_packages` to import every package submodule and asserts every reachable `AeatError` subclass has a registry entry; `tests/core/errors`.
+- [x] `W70.P331.S1936` - Smoke: `aeat app overview status` runs to completion on a fresh profile without raising the registry `ValueError`; `tests/entrypoints/cli`.
 
 ### Phase `W70.P332` - finding P0 #3: ledger transaction full-id / display-id
 
 This Phase implements the ledger-transaction-management 2026-05-14 amendment. It splits transaction identity into `full_id` and `display_id` and teaches every ledger leaf to accept unambiguous prefixes.
 
-- [ ] `W70.P332.S1937` - Read the ledger-transaction-management ADR's 2026-05-14 amendment before editing; `.vault/adr`.
-- [ ] `W70.P332.S1938` - Add `full_id` and `display_id` properties to the ledger transaction Pydantic model with the bucket-derived display-prefix length policy; `src/aeat/domain/transactions`.
-- [ ] `W70.P332.S1939` - Update every ledger read leaf (`list`, `review`, `show`) to render both `full_id` and `display_id` in `--format text` and both keys in `--format json`; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P332.S1940` - Teach every mutating ledger leaf (`read`, `classify`, `edit`, `allocate`, `attach`, `archive`, `stash`, `remove`, evidence verbs) to accept either `full_id` or any unambiguous prefix; `resolve in the application service and refuse on collision with a typed validation error; `src/aeat/application/ledger`.
-- [ ] `W70.P332.S1941` - Smoke: piping `aeat app ledger list --format text | tail -n 1` into `xargs aeat app ledger classify` resolves; `an ambiguous prefix refuses with the matching `full_id` set; `tests/entrypoints/cli`.
+- [x] `W70.P332.S1937` - Read the ledger-transaction-management ADR's 2026-05-14 amendment before editing; `.vault/adr`.
+- [x] `W70.P332.S1938` - Add `full_id` and `display_id` properties to the ledger transaction Pydantic model with the bucket-derived display-prefix length policy; `src/aeat/domain/transactions`.
+- [x] `W70.P332.S1939` - Update every ledger read leaf (`list`, `review`, `show`) to render both `full_id` and `display_id` in `--format text` and both keys in `--format json`; `src/aeat/entrypoints/cli`.
+- [x] `W70.P332.S1940` - Teach every mutating ledger leaf (`read`, `classify`, `edit`, `allocate`, `attach`, `archive`, `stash`, `remove`, evidence verbs) to accept either `full_id` or any unambiguous prefix; `resolve in the application service and refuse on collision with a typed validation error; `src/aeat/application/ledger`.
+- [x] `W70.P332.S1941` - Smoke: piping `aeat app ledger list --format text | tail -n 1` into `xargs aeat app ledger classify` resolves; `an ambiguous prefix refuses with the matching `full_id` set; `tests/entrypoints/cli`.
 
 ### Phase `W70.P333` - finding P0 #4: evidence ingest surface (locked verb `aeat app ledger evidence`)
 
 This Phase implements the ledger-transaction-management and receipt-ocr-pdf-evidence 2026-05-14 amendments. The locked noun group is `aeat app ledger evidence` with exactly five CRUD subcommands: `add`, `remove`, `update`, `view`, `list`. File-type scope is restricted to PDF and image (OCR path); plaintext, email-body, and Drive-URL evidence sources are explicitly out of scope and deferred to a future `evidence-source-expansion` ADR (not authored in W70).
 
-- [ ] `W70.P333.S1942` - Read the receipt-ocr-pdf-evidence and ledger-transaction-management ADRs' 2026-05-14 amendments (locked verb + out-of-scope file-type fence) before editing; `.vault/adr`.
-- [ ] `W70.P333.S1943` - Implement a strict Pydantic application service that wraps the receipt OCR adapter, accepts only PDF and image source paths, refuses non-PDF/non-image inputs with a typed validation error pointing at the deferred `evidence-source-expansion` ADR, and returns a `purchase_invoice_evidence_id`; `src/aeat/application/ledger`.
-- [ ] `W70.P333.S1944` - Register the locked CRUD noun group `aeat app ledger evidence` with five subcommands wired to backend services and `_emit` rendering: `add <file>` consumes a PDF or image path, runs OCR, emits the `purchase_invoice_evidence` event, prints the new record's `full_id`; `remove --id <full|prefix>` retires a record and emits the matching event; `update --id <full|prefix>` updates manual-review fields; `view --id <full|prefix>` prints a single record; `list` lists records in the active bucket (bare invocation, list-vs-query contract); every verb supports `--format json|text` through `_emit`; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P333.S1945` - Update `aeat app ledger attach --help` to name `aeat app ledger evidence add` as the upstream producer of `--purchase-invoice-evidence-id`; `ensure `aeat app ledger evidence --help` enumerates all five CRUD verbs; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P333.S1946` - Smoke: `aeat app ledger evidence add ./some.pdf` returns an evidence id; `aeat app ledger attach --id <full> --purchase-invoice-evidence-id <evidence-id>` accepts that id end-to-end; the remaining four CRUD verbs are exercised against the produced record; a non-PDF/non-image source path is refused with a typed validation error naming the deferred `evidence-source-expansion` ADR; `tests/entrypoints/cli`.
+- [x] `W70.P333.S1942` - Read the receipt-ocr-pdf-evidence and ledger-transaction-management ADRs' 2026-05-14 amendments (locked verb + out-of-scope file-type fence) before editing; `.vault/adr`.
+- [x] `W70.P333.S1943` - Implement a strict Pydantic application service that wraps the receipt OCR adapter, accepts only PDF and image source paths, refuses non-PDF/non-image inputs with a typed validation error pointing at the deferred `evidence-source-expansion` ADR, and returns a `purchase_invoice_evidence_id`; `src/aeat/application/ledger`.
+- [x] `W70.P333.S1944` - Register the locked CRUD noun group `aeat app ledger evidence` with five subcommands wired to backend services and `_emit` rendering: `add <file>` consumes a PDF or image path, runs OCR, emits the `purchase_invoice_evidence` event, prints the new record's `full_id`; `remove --id <full|prefix>` retires a record and emits the matching event; `update --id <full|prefix>` updates manual-review fields; `view --id <full|prefix>` prints a single record; `list` lists records in the active bucket (bare invocation, list-vs-query contract); every verb supports `--format json|text` through `_emit`; `src/aeat/entrypoints/cli`.
+- [x] `W70.P333.S1945` - Update `aeat app ledger attach --help` to name `aeat app ledger evidence add` as the upstream producer of `--purchase-invoice-evidence-id`; `ensure `aeat app ledger evidence --help` enumerates all five CRUD verbs; `src/aeat/entrypoints/cli`.
+- [x] `W70.P333.S1946` - Smoke: `aeat app ledger evidence add ./some.pdf` returns an evidence id; `aeat app ledger attach --id <full> --purchase-invoice-evidence-id <evidence-id>` accepts that id end-to-end; the remaining four CRUD verbs are exercised against the produced record; a non-PDF/non-image source path is refused with a typed validation error naming the deferred `evidence-source-expansion` ADR; `tests/entrypoints/cli`.
 
 ### Phase `W70.P334` - finding P1 #5: retire `aeat config doctor` and verify `aeat config repair` next/report exhaustiveness
 
@@ -4009,63 +4009,63 @@ This Phase implements the config-doctor-shape ADR's retirement status (supersede
 
 Legacy retirement steps:
 
-- [ ] `W70.P334.S1947` - Read the config-doctor-shape ADR (retirement status), the config-repair-shape ADR's "absorbs from retired doctor" section, and the apex audit-amendment "doctor retirement enforced" bullet before editing; `.vault/adr`.
-- [ ] `W70.P334.S1948` - Remove the `aeat config doctor` Typer entrypoint, unregister every doctor subcommand (`connectivity`, `integrity`, `list`, `quarantine`, `logs`), and delete the legacy diagnostic emitters that do not ship a `next_action` or `dead_end` field; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P334.S1949` - Delete every help-text reference, every refusal-message reference, and every i18n-translated reference to `aeat config doctor` (replace with `aeat config repair` where the reference still points at a real recovery path); `src/aeat/core/i18n`.
-- [ ] `W70.P334.S1950` - Promote `DiagnosticCheck` to a discriminated union: every `fail`/`warn` row carries exactly one of `next_action` (a runnable leaf command string) or `dead_end` (non-recoverable guidance), enforced at construction by a Pydantic validator; `rows with neither or both raise `ValidationError`; `src/aeat/application/config`.
-- [ ] `W70.P334.S1951` - Backfill the four named failure classes from the repair-shape ADR's "failure classes covered" table - quarantinable rows (`next_action`), `secure_state.load` schema-shape mismatch (`next_action`), master-key handling failure (`dead_end`), unknown integrity-warning class (`dead_end`) - so every emitter site produces a row with the prescribed field populated; `src/aeat/application/config`.
-- [ ] `W70.P334.S1952` - Smoke per failure class: a CLI smoke test for each of the four classes (quarantinable rows, schema-shape mismatch, master-key failure, unknown integrity-warning class) asserts the rendered `--format text` row carries the literal `next:` or `report:` prefix and the `--format json` payload carries exactly one of `next_action` or `dead_end`; `tests/entrypoints/cli`.
-- [ ] `W70.P334.S1953` - Smoke: `aeat config init` on a clean profile followed immediately by `aeat config repair --format json` produces ZERO `fail` and ZERO `warn` rows. Any finding that fires on a clean profile is removed or suppressed at source - not annotated as "expected noise", not gated behind a flag, not allow-listed; `tests/entrypoints/cli`.
-- [ ] `W70.P334.S1954` - Smoke: `aeat config doctor --help` exits with the standard unknown-command exit code (no shim, no alias); `a regex test asserts no help text and no refusal message anywhere in the codebase names `aeat config doctor`; `tests/entrypoints/cli`.
+- [x] `W70.P334.S1947` - Read the config-doctor-shape ADR (retirement status), the config-repair-shape ADR's "absorbs from retired doctor" section, and the apex audit-amendment "doctor retirement enforced" bullet before editing; `.vault/adr`.
+- [x] `W70.P334.S1948` - Remove the `aeat config doctor` Typer entrypoint, unregister every doctor subcommand (`connectivity`, `integrity`, `list`, `quarantine`, `logs`), and delete the legacy diagnostic emitters that do not ship a `next_action` or `dead_end` field; `src/aeat/entrypoints/cli`.
+- [x] `W70.P334.S1949` - Delete every help-text reference, every refusal-message reference, and every i18n-translated reference to `aeat config doctor` (replace with `aeat config repair` where the reference still points at a real recovery path); `src/aeat/core/i18n`.
+- [x] `W70.P334.S1950` - Promote `DiagnosticCheck` to a discriminated union: every `fail`/`warn` row carries exactly one of `next_action` (a runnable leaf command string) or `dead_end` (non-recoverable guidance), enforced at construction by a Pydantic validator; `rows with neither or both raise `ValidationError`; `src/aeat/application/config`.
+- [x] `W70.P334.S1951` - Backfill the four named failure classes from the repair-shape ADR's "failure classes covered" table - quarantinable rows (`next_action`), `secure_state.load` schema-shape mismatch (`next_action`), master-key handling failure (`dead_end`), unknown integrity-warning class (`dead_end`) - so every emitter site produces a row with the prescribed field populated; `src/aeat/application/config`.
+- [x] `W70.P334.S1952` - Smoke per failure class: a CLI smoke test for each of the four classes (quarantinable rows, schema-shape mismatch, master-key failure, unknown integrity-warning class) asserts the rendered `--format text` row carries the literal `next:` or `report:` prefix and the `--format json` payload carries exactly one of `next_action` or `dead_end`; `tests/entrypoints/cli`.
+- [x] `W70.P334.S1953` - Smoke: `aeat config init` on a clean profile followed immediately by `aeat config repair --format json` produces ZERO `fail` and ZERO `warn` rows. Any finding that fires on a clean profile is removed or suppressed at source - not annotated as "expected noise", not gated behind a flag, not allow-listed; `tests/entrypoints/cli`.
+- [x] `W70.P334.S1954` - Smoke: `aeat config doctor --help` exits with the standard unknown-command exit code (no shim, no alias); `a regex test asserts no help text and no refusal message anywhere in the codebase names `aeat config doctor`; `tests/entrypoints/cli`.
 
 ### Phase `W70.P335` - finding P1 #6: post-init hint leaf target
 
 This Phase implements the config-init-shape 2026-05-14 amendment. It locks every "next step" hint to a leaf command and adds a graph-level guard.
 
-- [ ] `W70.P335.S1955` - Read the config-init-shape and root-help-shape ADRs (with 2026-05-14 amendment) before editing; `.vault/adr`.
-- [ ] `W70.P335.S1956` - Update the post-`init` hint string to `aeat app overview status` and update i18n translation tables to carry the full leaf-target command; `src/aeat/application/config`.
-- [ ] `W70.P335.S1957` - Add a construction-time guard (Pydantic validator on the hint model or equivalent assertion in the central hint emitter) that refuses to emit a hint whose target resolves to a group in the Typer app graph; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P335.S1958` - Smoke: a unit test enumerates every post-command hint string and asserts each resolves to a Typer leaf; `tests/entrypoints/cli`.
+- [x] `W70.P335.S1955` - Read the config-init-shape and root-help-shape ADRs (with 2026-05-14 amendment) before editing; `.vault/adr`.
+- [x] `W70.P335.S1956` - Update the post-`init` hint string to `aeat app overview status` and update i18n translation tables to carry the full leaf-target command; `src/aeat/application/config`.
+- [x] `W70.P335.S1957` - Add a construction-time guard (Pydantic validator on the hint model or equivalent assertion in the central hint emitter) that refuses to emit a hint whose target resolves to a group in the Typer app graph; `src/aeat/entrypoints/cli`.
+- [x] `W70.P335.S1958` - Smoke: a unit test enumerates every post-command hint string and asserts each resolves to a Typer leaf; `tests/entrypoints/cli`.
 
 ### Phase `W70.P336` - finding P1 #7: list-vs-query leaf semantics
 
 This Phase implements the `2026-05-14-cli-workflow-redesign-list-vs-query-leaf-semantics-adr` decision and the per-surface amendments to `app-modelo-bindings-shape` and `app-live-shape`.
 
-- [ ] `W70.P336.S1959` - Read the list-vs-query-leaf-semantics ADR and the affected shape ADRs' 2026-05-14 amendments before editing; `.vault/adr`.
-- [ ] `W70.P336.S1960` - Make `--modelo`, `--year`, `--period`, and `--missing` optional refining filters on `aeat app modelo bindings list`; `default to the full configured-binding set; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P336.S1961` - Make `--modelo` an optional refining filter on `aeat app live filed list`; `default to the full filed set the live read adapter exposes; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P336.S1962` - Surface the accepted `--modelo` enum in `--help` (Typer choice or inline help text) for both leaves, derived from the registry; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P336.S1963` - Add a Typer-graph traversal test that asserts every `list`-named leaf accepts bare invocation without required parameters; `tests/entrypoints/cli`.
+- [x] `W70.P336.S1959` - Read the list-vs-query-leaf-semantics ADR and the affected shape ADRs' 2026-05-14 amendments before editing; `.vault/adr`.
+- [x] `W70.P336.S1960` - Make `--modelo`, `--year`, `--period`, and `--missing` optional refining filters on `aeat app modelo bindings list`; `default to the full configured-binding set; `src/aeat/entrypoints/cli`.
+- [x] `W70.P336.S1961` - Make `--modelo` an optional refining filter on `aeat app live filed list`; `default to the full filed set the live read adapter exposes; `src/aeat/entrypoints/cli`.
+- [x] `W70.P336.S1962` - Surface the accepted `--modelo` enum in `--help` (Typer choice or inline help text) for both leaves, derived from the registry; `src/aeat/entrypoints/cli`.
+- [x] `W70.P336.S1963` - Add a Typer-graph traversal test that asserts every `list`-named leaf accepts bare invocation without required parameters; `tests/entrypoints/cli`.
 
 ### Phase `W70.P337` - finding P1 #8: refusal tone
 
 This Phase implements the output-rendering-normalization 2026-05-14 amendment. It removes the all-caps `REFUSED:` prefix from `--format text` refusals and rewrites stale `aeat config doctor` references.
 
-- [ ] `W70.P337.S1964` - Read the output-rendering-normalization ADR's 2026-05-14 amendment before editing; `.vault/adr`.
-- [ ] `W70.P337.S1965` - Update the boundary text renderer to emit `Refused:` (sentence case) and the i18n-translated sentence-case equivalents in place of `REFUSED:`; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P337.S1966` - Rewrite every refusal message that references `aeat config doctor` to point at `aeat config repair`; `src/aeat/core/i18n`.
-- [ ] `W70.P337.S1967` - Smoke: a regex test asserts no `--format text` refusal line starts with `REFUSED:` and no refusal message names `aeat config doctor`; `tests/entrypoints/cli`.
+- [x] `W70.P337.S1964` - Read the output-rendering-normalization ADR's 2026-05-14 amendment before editing; `.vault/adr`.
+- [x] `W70.P337.S1965` - Update the boundary text renderer to emit `Refused:` (sentence case) and the i18n-translated sentence-case equivalents in place of `REFUSED:`; `src/aeat/entrypoints/cli`.
+- [x] `W70.P337.S1966` - Rewrite every refusal message that references `aeat config doctor` to point at `aeat config repair`; `src/aeat/core/i18n`.
+- [x] `W70.P337.S1967` - Smoke: a regex test asserts no `--format text` refusal line starts with `REFUSED:` and no refusal message names `aeat config doctor`; `tests/entrypoints/cli`.
 
 ### Phase `W70.P338` - finding P2 #9: legacy borrador cohort demotion
 
 This Phase implements the app-review-queue-execution 2026-05-14 amendment. It auto-classifies pre-existing `borrador` records into a `legacy-borrador` cohort at profile init and demotes the cohort below `critical` severity.
 
-- [ ] `W70.P338.S1968` - Read the app-review-queue-execution ADR's 2026-05-14 amendment before editing; `.vault/adr`.
-- [ ] `W70.P338.S1969` - Add `legacy-borrador` cohort classification to the profile initialization service so `borrador` records present at init time are tagged at construction; `emit a bucket event; `src/aeat/application/config`.
-- [ ] `W70.P338.S1970` - Update the review-queue execution surface to demote the `legacy-borrador` cohort to `info` severity by default and surface a drill verb that lets the operator inspect, accept, or quarantine the cohort; `src/aeat/application/review`.
-- [ ] `W70.P338.S1971` - Add a migration step to `aeat config repair` (or equivalent already-approved migration path) that assigns the cohort on pre-existing profiles on next run; `src/aeat/application/config`.
-- [ ] `W70.P338.S1972` - Smoke: `aeat config init` followed by `aeat app review queue` on a fresh profile emits zero `critical` findings sourced from `legacy-borrador`; `the drill verb returns the legacy records and labels their cohort; `tests/application/review`.
+- [x] `W70.P338.S1968` - Read the app-review-queue-execution ADR's 2026-05-14 amendment before editing; `.vault/adr`.
+- [x] `W70.P338.S1969` - Add `legacy-borrador` cohort classification to the profile initialization service so `borrador` records present at init time are tagged at construction; `emit a bucket event; `src/aeat/application/config`.
+- [x] `W70.P338.S1970` - Update the review-queue execution surface to demote the `legacy-borrador` cohort to `info` severity by default and surface a drill verb that lets the operator inspect, accept, or quarantine the cohort; `src/aeat/application/review`.
+- [x] `W70.P338.S1971` - Add a migration step to `aeat config repair` (or equivalent already-approved migration path) that assigns the cohort on pre-existing profiles on next run; `src/aeat/application/config`.
+- [x] `W70.P338.S1972` - Smoke: `aeat config init` followed by `aeat app review queue` on a fresh profile emits zero `critical` findings sourced from `legacy-borrador`; `the drill verb returns the legacy records and labels their cohort; `tests/application/review`.
 
 ### Phase `W70.P339` - finding P2 #10: integrity-warning stability probes (confirm or falsify the concurrent-writer hypothesis first)
 
 This Phase implements the `2026-05-14-cli-workflow-redesign-integrity-warning-stability-adr` investigation step. The ADR carries a leading hypothesis: phantom `unreadable_rows` drift is caused by multiple agent processes (parallel Codex/Claude/Gemini sessions, parallel test runners, an interactive shell racing a background service) holding overlapping write handles to the same SQLite-backed secure-objects table during a single wallclock window. The hypothesis is NOT pre-committed: the probes confirm or falsify it BEFORE any fix is shaped. Probe outputs MUST log writer PIDs and ISO-8601 timestamps so the concurrent-writer pattern is detectable from captured data alone.
 
-- [ ] `W70.P339.S1973` - Read the integrity-warning-stability ADR (Hypothesis section + Implementation probes) before editing; `.vault/adr`.
-- [ ] `W70.P339.S1974` - Add a determinism probe script that runs the secure-objects integrity scan N times without mutation and records `(row_namespace, row_key, integrity_status, observing_pid, observed_at_iso8601)` tuples plus the PIDs of any peer processes holding write handles concurrently with each observation; `scripts`.
-- [ ] `W70.P339.S1975` - Add a schema-stability probe that snapshots the secure-objects table schema at process start and exit and reports drift, also logging the observing PID and ISO-8601 timestamps; `scripts`.
-- [ ] `W70.P339.S1976` - Confirm or falsify the concurrent-writer hypothesis: run both probes against a fresh install, AND re-run the determinism probe under a controlled multi-process scenario (two or more concurrent integrity scans + writer handles open against the same secure-objects table). Capture findings in a follow-up reference document linked from the ADR's frontmatter; `the reference document MUST state explicitly whether the captured PID + timestamp data confirms or falsifies the concurrent-writer hypothesis; `.vault/reference`.
-- [ ] `W70.P339.S1977` - Only after the prior step's reference document records a confirmed or falsified verdict, land the fix that matches the actual root cause: if confirmed, serialise integrity-scan writes against the secure-objects table; `if falsified, address whichever root cause the captured data points at (master-key derivation drift, scan-pass classification, schema mutation under normal use). The fix must make the integrity scan a pure function of secure-objects table state and master key, with no wallclock, PID, or ambient input mixed into the computation; `src/aeat/adapters/persistence/storage`.
-- [ ] `W70.P339.S1978` - Smoke: a deterministic-scan test asserts the integrity-warning count is identical across N consecutive runs without mutation; `an additional smoke runs two concurrent integrity scans and asserts the count remains stable under the controlled multi-process scenario; `tests/adapters/persistence`.
+- [x] `W70.P339.S1973` - Read the integrity-warning-stability ADR (Hypothesis section + Implementation probes) before editing; `.vault/adr`.
+- [x] `W70.P339.S1974` - Add a determinism probe script that runs the secure-objects integrity scan N times without mutation and records `(row_namespace, row_key, integrity_status, observing_pid, observed_at_iso8601)` tuples plus the PIDs of any peer processes holding write handles concurrently with each observation; `scripts`.
+- [x] `W70.P339.S1975` - Add a schema-stability probe that snapshots the secure-objects table schema at process start and exit and reports drift, also logging the observing PID and ISO-8601 timestamps; `scripts`.
+- [x] `W70.P339.S1976` - Confirm or falsify the concurrent-writer hypothesis: run both probes against a fresh install, AND re-run the determinism probe under a controlled multi-process scenario (two or more concurrent integrity scans + writer handles open against the same secure-objects table). Capture findings in a follow-up reference document linked from the ADR's frontmatter; `the reference document MUST state explicitly whether the captured PID + timestamp data confirms or falsifies the concurrent-writer hypothesis; `.vault/reference`.
+- [x] `W70.P339.S1977` - Only after the prior step's reference document records a confirmed or falsified verdict, land the fix that matches the actual root cause: if confirmed, serialise integrity-scan writes against the secure-objects table; `if falsified, address whichever root cause the captured data points at (master-key derivation drift, scan-pass classification, schema mutation under normal use). The fix must make the integrity scan a pure function of secure-objects table state and master key, with no wallclock, PID, or ambient input mixed into the computation; `src/aeat/adapters/persistence/storage`.
+- [x] `W70.P339.S1978` - Smoke: a deterministic-scan test asserts the integrity-warning count is identical across N consecutive runs without mutation; `an additional smoke runs two concurrent integrity scans and asserts the count remains stable under the controlled multi-process scenario; `tests/adapters/persistence`.
 
 ## Wave `W71` - Reconciliation: CRUD verb contract (cross-cutting lock)
 
