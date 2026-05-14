@@ -26,6 +26,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.live._verify.VerifyObservationNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_VERIFY_OBSERVATION_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_verify_observation_not_found",
+            default_suggestion="aeat app live verify nif-iva",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.justificante._errors.PdfFilingImportError",
         ErrorCode(
             code="ERROR_PDF_IMPORT_PDF_FILING_IMPORT",
