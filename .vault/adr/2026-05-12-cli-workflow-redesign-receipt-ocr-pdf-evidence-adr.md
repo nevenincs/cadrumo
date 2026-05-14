@@ -57,3 +57,50 @@ the evidence it actually needs.
 
 Ledger ingestion can be completed with traceable purchase evidence. Any OCR or
 LLM output remains reviewable evidence, not an unproven calculation input.
+
+## 2026-05-14 amendment — test-user audit finding P0 #4 (construction verb)
+
+The receipt OCR adapter is a backend capability. The audit established that
+no operator-visible verb exists to invoke it: `aeat app ledger attach
+--purchase-invoice-evidence-id` consumes an id the CLI provides no path to
+produce. This ADR closes that gap from the OCR side and the ledger-
+transaction-management ADR closes it from the ledger group side.
+
+Rule:
+
+- The locked construction verb is `aeat app ledger evidence add`. It is one
+  of the five CRUD verbs (`add`, `remove`, `update`, `view`, `list`) on the
+  `aeat app ledger evidence` noun group. The verb accepts a source
+  PDF/image path plus optional manual override fields, runs the OCR
+  pipeline through the existing backend service, stores the evidence record
+  in the active bucket, emits the documented `purchase_invoice_evidence`
+  event, and prints the new evidence record's `full_id` on success.
+- The adapter MUST NOT be exposed through a third CLI root, an `aeat
+  receipts` family, or a flag on `attach`. The two-root invariant holds.
+- The verb's `--format json` payload MUST surface the OCR confidence and
+  manual-review state already specified by this ADR's implementation
+  section, so downstream `review` and `classify` can act on them.
+
+### Out-of-scope file types (deferred)
+
+PDF and image inputs handled by the OCR path are the entire scope of this
+ADR and of the W70 evidence-ingest delivery. Plaintext receipts, email-body
+receipts, and Drive-URL evidence pointers are explicitly out of scope here
+and are NOT delivered by any W70 phase; their construction surface is
+deferred to a future `evidence-source-expansion` ADR. The
+`aeat app ledger evidence add` verb MUST refuse non-PDF/image sources at
+the construction boundary with a typed validation error that names the
+deferred ADR. This fencing protects the W70 delivery from scope creep and
+preserves the broader source set as a future decision rather than a lost
+requirement.
+
+Acceptance criteria:
+
+- The verb exists, is discoverable through `aeat app ledger --help` and
+  `aeat app ledger evidence --help`, and produces an evidence id that
+  `aeat app ledger attach` accepts in the same shell session.
+- A failure path (corrupt PDF, OCR refusal) raises through the central
+  AeatError facilities defined in the apex CLI Backend Boundary section.
+- A non-PDF/non-image source path (plaintext, email body, Drive URL) is
+  refused with a typed validation error pointing at the deferred
+  `evidence-source-expansion` ADR.

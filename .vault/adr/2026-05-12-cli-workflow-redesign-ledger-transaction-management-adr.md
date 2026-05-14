@@ -255,3 +255,98 @@ The implementation plan must include command migration, translation/help text
 updates, backend service wiring, and tests proving that ledger transaction
 management, purchase evidence, business-operation invoices, and modelo
 calculation inputs remain separate.
+
+## 2026-05-14 amendment — test-user audit finding P0 #3 (transaction identity)
+
+Audit observation: `aeat app ledger list` and `aeat app ledger review` print
+8-character transaction-id prefixes, while every mutating verb (`read`,
+`classify`, `edit`, `allocate`, `attach`, `archive`, `stash`, `remove`)
+demands the full 64-character hex hash. Operators have no in-CLI path from a
+listed row to an actionable identifier other than exporting CSV. This makes
+the ledger workflow unusable for its primary user-journey.
+
+Rule:
+
+- Transaction identity has two surfaces: a `full_id` (the canonical
+  64-character hex hash used by all backend services) and a `display_id` (a
+  short, ambiguity-checked prefix used solely for human-readable rendering).
+- `aeat app ledger list`, `review`, `show`, and any other read leaf MUST
+  render BOTH `display_id` AND `full_id` columns in `--format text` and BOTH
+  fields in `--format json`. The text rendering MUST NOT hide `full_id`
+  behind a flag; it is the default column set.
+- All mutating leaves (`read`, `classify`, `edit`, `allocate`, `attach`,
+  `archive`, `stash`, `remove`, and any future evidence verbs) MUST accept
+  either a `full_id` or any unambiguous prefix of one. The backend service
+  resolves the prefix; on collision the CLI MUST refuse with a validation
+  error that lists the matching `full_id` set.
+- The `display_id` width is a backend-decided property of the active bucket
+  (minimum length required to keep all current rows uniquely addressable).
+  It MUST NOT be a hardcoded constant of 8 characters; it grows automatically
+  as the bucket fills.
+- `--format json` payloads MUST always carry the canonical `full_id` field
+  name; `display_id` is presentation only and MUST NOT be the JSON key.
+- This is the target shape. No `--full-id` opt-in flag, no `--no-truncate`
+  flag, no "legacy short-only" mode.
+
+Acceptance criteria:
+
+- A user can pipe `aeat app ledger list --format text | tail -n 1` into
+  `xargs aeat app ledger classify --transaction-id ...` without re-querying.
+- A 10-character prefix that uniquely identifies one transaction resolves;
+  an 8-character prefix that matches two transactions refuses with a typed
+  validation error and lists the collisions.
+- JSON output for every ledger leaf has `full_id` keys, never `id` aliased
+  to a truncated prefix.
+
+## 2026-05-14 amendment — test-user audit finding P0 #4 (evidence ingest surface)
+
+Audit observation: `aeat app ledger attach --purchase-invoice-evidence-id`
+requires an evidence record id, but there is no CLI verb that constructs
+such a record. No `aeat app receipts`, no `aeat app invoices add`, no
+`aeat app evidence` exists. A user cannot attach a single supplier receipt
+to a single transaction with the redesigned CLI.
+
+Rule:
+
+- `aeat app ledger evidence` is the locked noun-group name. Its CRUD
+  subcommands are exactly `add`, `remove`, `update`, `view`, and `list`.
+  No alternate spelling is approved. `aeat app ledger evidence add` is the
+  construction verb; it consumes the PDF/image source described by the
+  receipt-ocr-pdf-evidence ADR and returns the
+  `purchase_invoice_evidence_id`.
+- File-type scope is restricted to PDF and image inputs handled by the OCR
+  path defined in the receipt-ocr-pdf-evidence ADR. Plaintext, email body,
+  and Drive-URL evidence sources are explicitly out of scope; their
+  expansion is deferred to a future `evidence-source-expansion` ADR.
+- `aeat app ledger attach --purchase-invoice-evidence-id <id>` continues to
+  consume the id produced by `aeat app ledger evidence add`. The flag name
+  is unchanged.
+- No third CLI root is created; the noun group is nested under
+  `aeat app ledger`, in keeping with the two-root invariant.
+- `aeat app ledger attach --help` MUST surface
+  `aeat app ledger evidence add` by name as the discoverable upstream of
+  `--purchase-invoice-evidence-id`. Help text is the discovery path; a user
+  reading `attach --help` must see how to produce the id it requires.
+- The previous `attachments` inspection group is subsumed by the locked
+  `evidence` group; its `view`, `list`, `remove`, and `update` verbs cover
+  the inspection and replacement surface.
+
+Acceptance criteria:
+
+- `aeat --help`, `aeat app --help`, `aeat app ledger --help` chain leads a
+  user from "I have a receipt PDF" to `aeat app ledger evidence add` as
+  the single visible verb that creates a `purchase_invoice_evidence`
+  record.
+- All five CRUD verbs (`aeat app ledger evidence add`,
+  `aeat app ledger evidence remove`, `aeat app ledger evidence update`,
+  `aeat app ledger evidence view`, `aeat app ledger evidence list`) are
+  registered, discoverable through `aeat app ledger evidence --help`, and
+  each accepts `--format json|text` through `_emit`.
+- A smoke run `aeat app ledger evidence add ./some.pdf` followed by
+  `aeat app ledger attach --id <full> --purchase-invoice-evidence-id
+  <evidence-id>` completes end-to-end.
+- Non-PDF/image evidence sources (plaintext, email body, Drive URL) refuse
+  at the construction boundary with a typed validation error that points
+  at the deferred `evidence-source-expansion` ADR.
+- No third CLI root is introduced; no `aeat receipts`, `aeat invoices`, or
+  `aeat evidence`.

@@ -121,3 +121,38 @@ Tests must assert command registration, absence of retired roots, absence of
 generic mutation verbs, root `--format` behavior, source-kind output, and
 updated drill commands. Replace tests that lock legacy `transaction` /
 `invoice` / `finding` kinds or old drill-command paths.
+
+## 2026-05-14 amendment — test-user audit finding P2 #9 (fresh-profile severity)
+
+Audit observation: on a freshly-installed profile, `aeat app review queue`
+surfaces ~20 `critical` findings sourced from 13 mystery `borradores` that
+exist in the bucket on first run. Treating those records as critical when
+the operator has not yet done any work misrepresents the system state on
+first contact.
+
+Rule:
+
+- Legacy `borrador` records present in the bucket at profile initialization
+  time MUST be auto-classified into a `legacy-borrador` cohort by the
+  initialization service. Cohort assignment is a backend property, not a
+  CLI flag.
+- The review-queue execution surface MUST demote the `legacy-borrador`
+  cohort below `critical` severity by default. The cohort surfaces as
+  `info` severity unless an operator explicitly bumps it.
+- A separate verb (the existing `app review` group's drill paths are
+  acceptable; the spelling is for the implementation step to pick) MUST
+  let the operator inspect, accept, or quarantine the cohort.
+- The cohort assignment is recorded as a bucket event so subsequent
+  reviews see the source of the demotion.
+- This is the target shape. No backward-compat path is preserved; profiles
+  that initialize after this change ship with the cohort already
+  classified. Pre-existing profiles see the cohort assigned on next
+  `aeat config repair` or equivalent migration step.
+
+Acceptance criteria:
+
+- A smoke run of `aeat config init` followed by `aeat app review queue` on
+  a fresh profile emits zero `critical` findings sourced from
+  `legacy-borrador` records.
+- The cohort drill verb returns the legacy records and labels their
+  cohort.

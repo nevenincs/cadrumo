@@ -70,6 +70,10 @@ related:
   - "[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-audit-research]]"
   - "[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-unexposed-backend-capability-wave-expansion-audit]]"
+  - "[[2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr]]"
+  - "[[2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr]]"
+  - "[[2026-05-14-cli-workflow-redesign-list-vs-query-leaf-semantics-adr]]"
+  - "[[2026-05-14-cli-workflow-redesign-integrity-warning-stability-adr]]"
   - "[[2026-05-12-cli-design-research]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
   - "[[2026-04-30-inventory-management-cli-design-adr]]"
@@ -1452,3 +1456,92 @@ the locations where work remains.
   redesigned CLI shape. §9 tracks implementation debt against this design;
   it does not defer the design's authority. Execution plans and exec records
   carry the remaining build work.
+
+## 2026-05-14 audit amendment — test-user findings
+
+A test-user audit on a fresh Windows install surfaced ten verified
+findings that fold into the redesigned CLI's authoritative shape. The
+findings are absorbed in place: existing shape ADRs are amended where
+they own the topic, three new ADRs cover gaps that no existing shape
+ADR addresses, and one cross-cutting ADR locks the `list`-leaf semantic
+contract.
+
+The amendment also tightens four apex-level concepts:
+
+- **Transaction identity (full-id vs display-id).** Every record-bearing
+  read leaf in the redesigned CLI exposes two identity surfaces: a
+  canonical `full_id` (the backend's stable, collision-free identifier)
+  and a `display_id` (a presentation-layer prefix sized by the active
+  bucket so all current rows remain uniquely addressable). Mutating
+  leaves accept either a `full_id` or any unambiguous prefix. The
+  apex's §4.2 ledger surface and any future record-bearing surface
+  inherit this contract; per-surface ADRs (starting with the
+  ledger-transaction-management amendment) lock the wiring.
+
+- **Diagnostic exhaustiveness (`next:` / `report:`).** Every diagnostic
+  finding emitted by any `doctor`-shaped, `repair`-shaped, or
+  `health`-shaped surface MUST carry exactly one of `next:` (a runnable
+  leaf invocation) or `report:` (non-recoverable guidance) at the
+  rendering layer, enforced by a Pydantic validator on the finding
+  model. Silent dead-end findings are unreachable by construction. The
+  config-doctor-shape amendment and the existing config-repair-shape
+  ADR's `DiagnosticCheck` discriminated union together cover this rule.
+
+- **Registry exhaustiveness as an import-time invariant.** Every
+  `AeatError` subclass MUST have a declared `ErrorCode` entry in
+  `ERROR_REGISTRY`. The invariant is enforced at package import time
+  AND by a CI test that walks the package subclass graph. Adding a new
+  subclass without a registry entry fails CI; running production code
+  with a registry gap raises `RuntimeError` synchronously rather than
+  later when a specific command's import path is exercised. See the
+  error-registry-exhaustiveness-invariant ADR.
+
+- **Hint targets resolve to leaves.** Every post-command "next step"
+  hint, every help-footer hint, and every i18n-translated variant MUST
+  point at a leaf in the Typer app graph. Group-target hints are a
+  programmer error and are refused at construction time. See the
+  config-init-shape amendment for the canonical case.
+
+- **Locked evidence verb shape.** The evidence-construction surface is
+  the noun group `aeat app ledger evidence` with exactly five CRUD
+  subcommands: `add`, `remove`, `update`, `view`, `list`. The earlier
+  open-question hedge on verb spelling is closed. The existing
+  `aeat app ledger attach --purchase-invoice-evidence-id` flag continues
+  to consume the id produced by `aeat app ledger evidence add`. W70
+  file-type scope is restricted to PDF and image (OCR path) per the
+  receipt-ocr-pdf-evidence ADR; plaintext, email-body, and Drive-URL
+  evidence sources are explicitly out of scope and deferred to a future
+  `evidence-source-expansion` ADR (not yet authored, referenced as a
+  deferred pointer only).
+
+- **Doctor retirement enforced.** The `aeat config doctor` surface is
+  retired, not patched. The config-doctor-shape ADR's status is
+  superseded by the config-repair-shape ADR; the `next:`/`report:`
+  exhaustiveness rule lives natively on `aeat config repair`'s
+  `DiagnosticCheck` discriminated union. W70.P334 covers BOTH the
+  legacy retirement (entrypoint removal, Typer unwiring, legacy
+  diagnostic emitter removal, help-reference removal) AND the
+  exhaustiveness verification on `aeat config repair`. No shim, no
+  alias, no half-and-half. See the doctor-shape ADR's superseded
+  status and the repair-shape ADR's "absorbs from retired doctor"
+  section.
+
+### Per-finding loci
+
+| # | Severity | Topic | Patched ADR(s) | New ADR(s) |
+|---|----------|-------|----------------|-----------|
+| 1 | P0 | `uv run aeat` Windows .exe lock | — | `2026-05-14-cli-workflow-redesign-dev-environment-uv-windows-adr` |
+| 2 | P0 | Unregistered `ErrorCode` crashes `app overview status` | — | `2026-05-14-cli-workflow-redesign-error-registry-exhaustiveness-invariant-adr` |
+| 3 | P0 | Truncated transaction IDs break ledger workflow | `ledger-transaction-management` | — |
+| 4 | P0 | No CLI verb constructs `purchase_invoice_evidence` | `ledger-transaction-management`, `receipt-ocr-pdf-evidence` | — |
+| 5 | P1 | `aeat config doctor` retired in favour of `aeat config repair`; `next:`/`report:` exhaustiveness lives natively on the repair surface | `config-doctor-shape` (now `superseded by config-repair-shape`), `config-repair-shape` (absorbs from retired doctor) | — |
+| 6 | P1 | Post-`init` hint targets a Typer group | `config-init-shape` | — |
+| 7 | P1 | `list` leaves require selectors | `app-modelo-bindings-shape`, `app-live-shape` | `2026-05-14-cli-workflow-redesign-list-vs-query-leaf-semantics-adr` |
+| 8 | P1 | All-caps `REFUSED:` tone | `output-rendering-normalization` | — |
+| 9 | P2 | Fresh-profile review queue surfaces 20 `critical` legacy borradores | `app-review-queue-execution` | — |
+| 10 | P2 | `integrity-warning: unreadable_rows` drifts | — | `2026-05-14-cli-workflow-redesign-integrity-warning-stability-adr` |
+
+Each row's acceptance criteria live in the named ADR's `2026-05-14
+amendment` section (for patches) or the ADR's `Acceptance` / `Implementation`
+section (for the three new ADRs). The apex plan's appended audit-closure
+wave wires the build work for every row.
