@@ -25,6 +25,7 @@ from aeat.adapters.persistence.storage.sql.engine import create_engine_from_sett
 from aeat.application.modelo import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
+    AmendmentVerificationRefusedError,
     AmendmentTargetStateError,
     CalculationRevisionStateError,
     amend_modelo_revision,
