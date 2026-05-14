@@ -72,6 +72,7 @@ def _registry_schema_version(*, modelo: str = "130", period: str = "2026Q1") -> 
     provider = build_runtime_schema_provider(
         filing_year=int(period[:4]),
         period=registry_period,
+        modelos=(modelo,),
     )
     return provider.get_subview(modelo).schema_version
 

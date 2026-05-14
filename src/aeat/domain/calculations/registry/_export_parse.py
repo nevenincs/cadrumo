@@ -6,6 +6,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
+from functools import lru_cache
 from pathlib import Path
 from xml.etree.ElementTree import Element
 
@@ -162,7 +163,14 @@ def _load_xml_dictionary_entries(
 
 
 def _read_dictionary_text(path: Path) -> str:
-    body = path.read_bytes()
+    stat = path.stat()
+    return _read_dictionary_text_cached(str(path.expanduser().resolve()), stat.st_size, stat.st_mtime_ns)
+
+
+@lru_cache(maxsize=256)
+def _read_dictionary_text_cached(path: str, byte_count: int, modified_ns: int) -> str:
+    del byte_count, modified_ns
+    body = Path(path).read_bytes()
     try:
         return body.decode("utf-8")
     except UnicodeDecodeError:

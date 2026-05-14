@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 import typer
 
-from ....application.auth._catalogue import implemented_auth_provider_ids, known_auth_provider_ids
+from ....application.auth._catalogue import known_auth_provider_ids
 from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES, parse_config_reset_scope
 from ....application.diagnostics import (
     build_config_repair_report,
@@ -191,11 +191,12 @@ def _profile_state():
 def config_list(ctx: typer.Context) -> None:
     """List every profile key with its current value (or ``<unset>``)."""
 
+    from ....application.user_profile._projections import record_to_path_values
     from ....domain.profile import PROFILE_KEYS
 
     state = _profile_state().load()
     record = state.active_profile_record()
-    values: dict[str, str] = dict(record.values) if record is not None else {}
+    values = record_to_path_values(record)
     payload = {
         "active_profile": state.active_profile,
         "keys": [
@@ -214,6 +215,7 @@ def config_list(ctx: typer.Context) -> None:
 def config_get(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.config.get.key_help"))) -> None:
     """Return one profile key's current value."""
 
+    from ....application.user_profile._orchestration import fact_value
     from ....domain.profile import get_profile_key
 
     try:
@@ -222,7 +224,7 @@ def config_get(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.c
         raise CliRefusedBoundaryError(tr("cli.config.errors.unknown_key", name=key)) from exc
     state = _profile_state().load()
     record = state.active_profile_record()
-    value = record.values.get(key, "") if record is not None else ""
+    value = fact_value(record, key) or ""
     payload = {"key": key, "value": value}
     _emit(ctx, payload, (f"{key}\t{value or '<unset>'}",))
 
@@ -248,10 +250,11 @@ def config_set(
 ) -> None:
     """Write one profile key value, validated through the wizard descriptor."""
 
-    from ....application.profile._actions import set_profile_values
+    from ....application.user_profile._orchestration import fact_value, set_active_field
     from ....application.wizard._errors import WizardValidationError
     from ....application.wizard._widgets import validate_widget_answer
     from ....domain.profile import get_profile_key
+    from ....domain.user_profile import UserProfileFact
 
     try:
         registered = get_profile_key(key)
@@ -270,12 +273,12 @@ def config_set(
 
     repository = _profile_state()
     state = repository.load()
-    profile_name = state.active_profile
-    if profile_name is None:
+    if state.active_profile is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    updated = repository.update(lambda current: set_profile_values(current, profile_name, {canonical_key: value}))
+    fact = UserProfileFact(path=canonical_key, value=value)
+    updated = repository.update(lambda current: set_active_field(current, fact))
     record = updated.active_profile_record()
-    stored_value = record.values.get(canonical_key, "") if record is not None else ""
+    stored_value = fact_value(record, canonical_key) or ""
     payload = {"key": canonical_key, "value": stored_value}
     _emit(ctx, payload, (f"{canonical_key}\t{stored_value}",))
 
@@ -284,8 +287,9 @@ def config_set(
 def config_unset(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli.config.unset.key_help"))) -> None:
     """Clear one profile key value through the shared application backend."""
 
-    from ....application.profile._actions import clear_profile_values
+    from ....application.user_profile._orchestration import set_active_field
     from ....domain.profile import get_profile_key
+    from ....domain.user_profile import UserProfileFact
 
     try:
         get_profile_key(key)
@@ -293,10 +297,10 @@ def config_unset(ctx: typer.Context, key: str = typer.Argument(..., help=tr("cli
         raise CliRefusedBoundaryError(tr("cli.config.errors.unknown_key", name=key)) from exc
     repository = _profile_state()
     state = repository.load()
-    profile_name = state.active_profile
-    if profile_name is None:
+    if state.active_profile is None:
         raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    repository.update(lambda current: clear_profile_values(current, profile_name, (key,)))
+    fact = UserProfileFact(path=key, value=None)
+    repository.update(lambda current: set_active_field(current, fact))
     _emit(ctx, {"key": key, "value": ""}, (f"{key}\t<unset>",))
 
 
@@ -349,18 +353,19 @@ def config_status(ctx: typer.Context) -> None:
 
     from pydantic import ValidationError
 
+    from ....application.user_profile._projections import record_to_path_values
     from ....application.wizard._catalogue import SETUP_FLOW
     from ....application.wizard._persistence import project_answers
     from ....application.workflow._persistence import workflow_state_repository
 
     state = workflow_state_repository().load()
     record = state.active_profile_record()
-    values: dict[str, str] = dict(record.values) if record is not None else {}
-    if not values.get("tax.id") or not values.get("activity"):
+    values = record_to_path_values(record)
+    if not values.get("identity.tax_id") or not values.get("activities.description"):
         payload = {
             "active_profile": state.active_profile,
-            "tax_id_present": bool(values.get("tax.id")),
-            "activity_present": bool(values.get("activity")),
+            "tax_id_present": bool(values.get("identity.tax_id")),
+            "activity_present": bool(values.get("activities.description")),
             "configured": False,
         }
         _emit(ctx, payload, (tr("cli.config.status.empty_profile"),))
@@ -370,18 +375,18 @@ def config_status(ctx: typer.Context) -> None:
     except ValidationError:
         payload = {
             "active_profile": state.active_profile,
-            "tax_id_present": bool(values.get("tax.id")),
-            "activity_present": bool(values.get("activity")),
+            "tax_id_present": bool(values.get("identity.tax_id")),
+            "activity_present": bool(values.get("activities.description")),
             "configured": False,
         }
         _emit(ctx, payload, (tr("cli.config.status.empty_profile"),))
         return
     payload = {
         "active_profile": state.active_profile,
-        "tax_id_present": bool(values.get("tax.id")),
-        "activity_present": bool(values.get("activity")),
+        "tax_id_present": bool(values.get("identity.tax_id")),
+        "activity_present": bool(values.get("activities.description")),
         "iva_regime": values.get("iva.regime", ""),
-        "tax_residence_ccaa": values.get("tax.residence.ccaa", ""),
+        "tax_residence_ccaa": values.get("tax_residence.ccaa", ""),
         "next_action": "aeat app overview status",
     }
     _emit(
@@ -389,10 +394,10 @@ def config_status(ctx: typer.Context) -> None:
         payload,
         (
             f"profile\t{state.active_profile or ''}",
-            f"tax.id\t{values.get('tax.id', '<unset>')}",
-            f"activity\t{values.get('activity', '<unset>')}",
+            f"identity.tax_id\t{values.get('identity.tax_id', '<unset>')}",
+            f"activities.description\t{values.get('activities.description', '<unset>')}",
             f"iva.regime\t{values.get('iva.regime', '<unset>')}",
-            f"tax.residence.ccaa\t{values.get('tax.residence.ccaa', '<unset>')}",
+            f"tax_residence.ccaa\t{values.get('tax_residence.ccaa', '<unset>')}",
             tr("cli.config.status.next_step"),
         ),
     )
@@ -453,7 +458,7 @@ def auth_configure(
     provider: str = typer.Option(
         ...,
         "--provider",
-        click_type=click.Choice(implemented_auth_provider_ids()),
+        click_type=click.Choice(known_auth_provider_ids()),
         help=tr("cli.config.auth.provider_help"),
     ),
     file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
@@ -491,16 +496,18 @@ def auth_status(
 @auth_app.command("test", help=tr("cli.config.auth.test_help"))
 def auth_test(
     ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(implemented_auth_provider_ids())),
+    provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(known_auth_provider_ids())),
 ) -> None:
     """Render auth readiness through the application-owned auth state."""
 
-    from ....application.auth import test_operator_auth
+    from ....application.auth import AuthProviderReservedError, test_operator_auth
 
     try:
         result = test_operator_auth(provider)
     except KeyError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+    except AuthProviderReservedError as exc:
+        raise CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
     payload = result.model_dump(mode="json")
     _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
 
@@ -508,7 +515,7 @@ def auth_test(
 @auth_app.command("clear", help=tr("cli.config.auth.clear_help"))
 def auth_clear(
     ctx: typer.Context,
-    provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(implemented_auth_provider_ids())),
+    provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(known_auth_provider_ids())),
     all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.clear_all_help")),
     sessions: bool = typer.Option(False, "--sessions", help=tr("cli.config.auth.clear_sessions_help")),
     locks: bool = typer.Option(False, "--locks", help=tr("cli.config.auth.clear_locks_help")),

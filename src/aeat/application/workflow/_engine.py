@@ -810,6 +810,7 @@ class WorkflowEngine:
         provider = build_runtime_schema_provider(
             filing_year=filing_year,
             period=registry_period,
+            modelos=(obligation.modelo,),
         )
         return provider.get_subview(obligation.modelo).schema_version
 
