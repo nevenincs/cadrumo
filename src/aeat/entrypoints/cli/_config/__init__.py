@@ -156,6 +156,77 @@ def repair_reset_state(
     _emit(ctx, payload, lines)
 
 
+@repair_app.command(
+    "integrity",
+    help=tr(
+        "cli.config.repair.integrity_help",
+        default="Probe AES-256-GCM tag verification across one namespace (or all).",
+    ),
+)
+def repair_integrity(
+    ctx: typer.Context,
+    namespace: str | None = typer.Option(
+        None,
+        "--namespace",
+        help=tr(
+            "cli.config.repair.integrity_namespace_help",
+            default="Restrict the integrity probe to one namespace.",
+        ),
+    ),
+) -> None:
+    """Wrap build_repair_integrity_report and render through _emit."""
+
+    from ....application.repair_integrity import build_repair_integrity_report
+
+    report = build_repair_integrity_report(namespace=namespace)
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"readable\t{report.readable_total}",
+        f"unreadable\t{report.unreadable_total}",
+        f"status\t{report.check.status}",
+        f"summary\t{report.check.summary}",
+    ]
+    for ns in report.namespaces:
+        lines.append(f"{ns.namespace}\treadable={ns.readable}\tunreadable={ns.unreadable}")
+    _emit(ctx, payload, lines)
+
+
+@repair_app.command(
+    "list",
+    help=tr(
+        "cli.config.repair.list_help",
+        default="List secure-object keys stored under one namespace.",
+    ),
+)
+def repair_list(
+    ctx: typer.Context,
+    namespace: str = typer.Argument(..., help=tr("cli.config.repair.list_namespace_help", default="Namespace to inventory.")),
+    include_all: bool = typer.Option(False, "--all", help=tr("cli.config.repair.list_all_help", default="Return every key, including unreadable.")),
+    only_unreadable: bool = typer.Option(False, "--unreadable", help=tr("cli.config.repair.list_unreadable_help", default="Restrict to undecryptable rows.")),
+) -> None:
+    """Wrap build_repair_list_report and render through _emit."""
+
+    from ....application.repair_integrity import build_repair_list_report
+
+    if include_all and only_unreadable:
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.repair.list_conflicting_flags",
+                default="--all and --unreadable cannot be combined; pass one or neither.",
+            )
+        )
+    report = build_repair_list_report(
+        namespace=namespace,
+        include_all=include_all,
+        only_unreadable=only_unreadable,
+    )
+    payload = report.model_dump(mode="json")
+    lines = [f"namespace\t{namespace}", f"count\t{len(report.rows)}"]
+    for row in report.rows:
+        lines.append(f"{row.namespace}\t{row.object_key_digest}")
+    _emit(ctx, payload, lines)
+
+
 @repair_app.command("connectivity", help=tr("cli.config.repair.connectivity_help"))
 def repair_connectivity(
     ctx: typer.Context,
