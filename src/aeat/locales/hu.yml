@@ -3,9 +3,6 @@ access_gate:
     default_translatable: az élő AEAT küldés véglegesen tiltott; használd a produce
       -> verify -> export folyamatot, és töltsd fel a fájlt magad az AEAT portálon
 aggregation:
-  counterpart:
-    errors:
-      unsupported_modelo: aggregation.counterpart.errors.unsupported_modelo
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciótár bucketje nem egyezik a kért aggregációs buckettel.
@@ -36,9 +33,6 @@ aggregation:
         buckettel.
       modelo_mismatch: Az adómodell nem egyezik a Renta nyilvántartás várt modeljével.
       period_mismatch: Az időszak nem egyezik a Renta nyilvántartás várt időszakával.
-  retenciones:
-    errors:
-      unsupported_modelo: aggregation.retenciones.errors.unsupported_modelo
 application:
   auth:
     provider_impact:
@@ -561,6 +555,29 @@ cli:
       key_help: A törlendő kulcs
     workflow_help: Konfigurációs munkafolyamat súgójának megjelenítése
   ledger:
+    add:
+      actor_help: cli.ledger.add.actor_help
+      amount_help: cli.ledger.add.amount_help
+      attachment_help: cli.ledger.add.attachment_help
+      business_pct_help: cli.ledger.add.business_pct_help
+      category_help: cli.ledger.add.category_help
+      classification_help: cli.ledger.add.classification_help
+      counterparty_help: cli.ledger.add.counterparty_help
+      currency_help: cli.ledger.add.currency_help
+      date_help: cli.ledger.add.date_help
+      description_help: cli.ledger.add.description_help
+      direction_help: cli.ledger.add.direction_help
+      help: cli.ledger.add.help
+      idempotency_key_help: cli.ledger.add.idempotency_key_help
+      irpf_category_help: cli.ledger.add.irpf_category_help
+      iva_amount_help: cli.ledger.add.iva_amount_help
+      iva_rate_help: cli.ledger.add.iva_rate_help
+      notes_help: cli.ledger.add.notes_help
+      prorrata_reference_help: cli.ledger.add.prorrata_reference_help
+      purchase_invoice_evidence_help: cli.ledger.add.purchase_invoice_evidence_help
+      taxable_base_help: cli.ledger.add.taxable_base_help
+      usage_ratio_help: cli.ledger.add.usage_ratio_help
+      value_date_help: cli.ledger.add.value_date_help
     allocate:
       actor_help: A bucket eseményen rögzített kezelő neve
       business_pct_help: Üzleti használati arány 0 és 1 között
@@ -575,6 +592,7 @@ cli:
       help: Egy főkönyvi tranzakció archiválása az aktív profil bucketjében
       id_help: Archiválandó főkönyvi tranzakcióazonosító
       reason_help: Az életciklus-előzményben rögzített ok
+      yes_help: cli.ledger.archive.yes_help
     attach:
       actor_help: A bucket eseményen rögzített kezelő neve
       attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször
@@ -593,59 +611,18 @@ cli:
       iva_amount_help: IVA összeg
       iva_rate_help: IVA kulcs tizedesként, például 0.21
       taxable_base_help: Adóalap összege
-    create:
-      actor_help: A bucket eseményen rögzített kezelő neve
-      amount_help: Előjeles tranzakciós összeg; a kimenő értékek negatívak
-      attachment_help: Biztonságos melléklet azonosítója a tranzakcióhoz; többször
-        is megadható
-      business_pct_help: Üzleti használati arány MIXED besoroláshoz, 0 és 1 között
-      category_help: Kiadási vagy bevételi kategória azonosítója
-      classification_help: A tranzakció üzleti besorolási állapota
-      counterparty_help: A naplóban megjelenő partner neve
-      currency_help: ISO 4217 pénznemkód
-      date_help: Könyvelési dátum (YYYY-MM-DD)
-      description_help: Naplótranzakció leírása
-      direction_help: Tranzakció iránya
-      help: Kézi naplótranzakció létrehozása az aktív profil bucketjében
-      idempotency_key_help: Stabil kulcs az ismételt kézi rögzítés idempotenssé tételéhez
-      irpf_category_help: IRPF kategória modell-számításokhoz
-      iva_amount_help: IVA összeg
-      iva_rate_help: IVA kulcs tizedesként, például 0.21
-      notes_help: A naplótranzakcióval tárolt kezelői jegyzetek
-      prorrata_reference_help: IVA prorrata hivatkozás ÁFA munkafolyamatokhoz
-      purchase_invoice_evidence_help: A tranzakciót alátámasztó beszerzési számlabizonylat
-        azonosítója
-      taxable_base_help: Adóalap összege
-      usage_ratio_help: Használati arány azonosítója arányos üzleti használathoz
-      value_date_help: Értéknap (YYYY-MM-DD)
-    edit:
-      actor_help: A bucket eseményen rögzített kezelő neve
-      amount_help: Előjeles tranzakciós összeg; a kimenő értékek negatívak
-      counterparty_help: A naplóban megjelenő partner neve
-      currency_help: ISO 4217 pénznemkód
-      date_help: Könyvelési dátum (YYYY-MM-DD)
-      description_help: Naplótranzakció leírása
-      direction_help: Tranzakció iránya
-      help: Szerkeszthető főkönyvi tranzakciós tények javítása az aktív profil bucketjében
-      id_help: Szerkesztendő főkönyvi tranzakcióazonosító
-      irpf_category_help: IRPF kategória modell-számításokhoz
-      iva_amount_help: IVA összeg
-      iva_rate_help: IVA kulcs tizedesként, például 0.21
-      notes_help: A naplótranzakcióval tárolt kezelői jegyzetek
-      taxable_base_help: Adóalap összege
-      value_date_help: Értéknap (YYYY-MM-DD)
     errors:
       confirm_required: Add meg a --yes kapcsolót a romboló főkönyvi művelet megerősítéséhez,
         vagy használd előbb a --dry-run kapcsolót
       filter_parse_error: A naplószűrő elemzése sikertelen
-      id_prefix_collision: "A %{prefix!r} tranzakció-azonosító előtag több tranzakcióra
-        is illeszkedik: %{candidates}. Egyértelműsíts az előtag bővítésével."
+      id_prefix_collision: 'A %{prefix!r} tranzakció-azonosító előtag több tranzakcióra
+        is illeszkedik: %{candidates}. Egyértelműsíts az előtag bővítésével.'
       id_prefix_empty: A tranzakció-azonosító előtag üres; adj meg legalább egy hex
         karaktert.
-      id_prefix_not_found: 'Nincs olyan tranzakció, amely a %{prefix!r} azonosító-előtagra
-        illeszkedik.'
-      id_prefix_not_hex: "A %{prefix!r} tranzakció-azonosító előtag nem-hex karaktert
-        tartalmaz (megengedett: 0-9, a-f)."
+      id_prefix_not_found: Nincs olyan tranzakció, amely a %{prefix!r} azonosító-előtagra
+        illeszkedik.
+      id_prefix_not_hex: 'A %{prefix!r} tranzakció-azonosító előtag nem-hex karaktert
+        tartalmaz (megengedett: 0-9, a-f).'
       id_prefix_too_long: A %{prefix!r} tranzakció-azonosító előtag hosszabb 64 karakternél
         (egy teljes SHA-256 digest).
       invalid_decimal: 'Érvénytelen tizedes érték ehhez: %{label}: %{raw}'
@@ -655,6 +632,10 @@ cli:
       help: Kanonikus főkönyvi sorok exportálása az aktív profil bucketjéből
       include_inactive_help: Archivált és félretett főkönyvi tranzakciók belefoglalása
       output_help: Az exportált főkönyvi fájl írási útvonala
+    history:
+      help: cli.ledger.history.help
+      id_help: cli.ledger.history.id_help
+      include_split_siblings_help: cli.ledger.history.include_split_siblings_help
     import:
       dry_run_help: Az importálás futtatása próba üzemmódban (mentés nélkül)
       help: Bankkivonatok vagy bejegyzések importálása a könyvelési naplóba
@@ -670,17 +651,22 @@ cli:
       archived: Archivált
       bucket: Bucket
       checked: Ellenőrzött tranzakciók
+      children: cli.ledger.labels.children
       created_event_id: Létrehozási bucket esemény
       date: Dátum
       description: Leírás
       dialect: Felismert formátum
       dry_run: PRÓBA ÜZEMMÓD (DRY RUN)
+      event_count: cli.ledger.labels.event_count
+      event_id: cli.ledger.labels.event_id
       export_id: Exportazonosító
       id: Azonosító
       imported: Bejegyzések importálva
       lifecycle_state: Életciklus állapot
+      merged_id: cli.ledger.labels.merged_id
       'no': Nem
       output: Kimenet
+      parent_id: cli.ledger.labels.parent_id
       pending: Felülvizsgálatra vár
       period: Időszak
       readiness_issues: Készenléti problémák
@@ -693,6 +679,7 @@ cli:
       sha256: SHA-256
       skipped: Kihagyva
       source: Forrás
+      split_group_id: cli.ledger.labels.split_group_id
       stashed: Félretéve
       valid: Érvényes
       warnings: Figyelmeztetések
@@ -700,9 +687,14 @@ cli:
     list:
       header: FŐKÖNYVI TRANZAKCIÓK
       help: Főkönyvi tranzakciók listázása az aktív profil bucketjében
-    read:
-      help: Egy főkönyvi tranzakció olvasása az aktív profil bucketjéből
-      transaction_id_help: Olvasandó főkönyvi tranzakcióazonosító
+    merge:
+      actor_help: cli.ledger.merge.actor_help
+      child_id_help: cli.ledger.merge.child_id_help
+      errors:
+        min_two_children: cli.ledger.merge.errors.min_two_children
+      help: cli.ledger.merge.help
+      reason_help: cli.ledger.merge.reason_help
+      yes_help: cli.ledger.merge.yes_help
     remove:
       actor_help: A bucket eseményen rögzített kezelő neve
       dry_run_help: Eltávolítási hatások jelentése a tranzakció törlése nélkül
@@ -724,11 +716,23 @@ cli:
       id_help: A felülvizsgálandó adott bejegyzés azonosítója
       no_rows: Nincsenek felülvizsgálatra váró naplóbejegyzések
       verbose_help: Részletes információk megjelenítése a felülvizsgálat során
+    split:
+      actor_help: cli.ledger.split.actor_help
+      child_amount_help: cli.ledger.split.child_amount_help
+      child_description_help: cli.ledger.split.child_description_help
+      errors:
+        child_args_mismatch: cli.ledger.split.errors.child_args_mismatch
+        min_two_children: cli.ledger.split.errors.min_two_children
+      help: cli.ledger.split.help
+      id_help: cli.ledger.split.id_help
+      reason_help: cli.ledger.split.reason_help
+      yes_help: cli.ledger.split.yes_help
     stash:
       actor_help: A bucket eseményen rögzített kezelő neve
       help: Egy főkönyvi tranzakció félretétele az aktív profil bucketjében
       id_help: Félreteendő főkönyvi tranzakcióazonosító
       reason_help: Az életciklus-előzményben rögzített ok
+      yes_help: cli.ledger.stash.yes_help
     status:
       help: A főkönyvi állapot és számítási készenlét összefoglalása az aktív profil
         bucketjében
@@ -736,6 +740,25 @@ cli:
     track:
       help: Egy főkönyvi tranzakció eseményláncának megjelenítése
       transaction_id_help: Vizsgálandó főkönyvi tranzakcióazonosító
+    update:
+      actor_help: cli.ledger.update.actor_help
+      amount_help: cli.ledger.update.amount_help
+      counterparty_help: cli.ledger.update.counterparty_help
+      currency_help: cli.ledger.update.currency_help
+      date_help: cli.ledger.update.date_help
+      description_help: cli.ledger.update.description_help
+      direction_help: cli.ledger.update.direction_help
+      help: cli.ledger.update.help
+      id_help: cli.ledger.update.id_help
+      irpf_category_help: cli.ledger.update.irpf_category_help
+      iva_amount_help: cli.ledger.update.iva_amount_help
+      iva_rate_help: cli.ledger.update.iva_rate_help
+      notes_help: cli.ledger.update.notes_help
+      taxable_base_help: cli.ledger.update.taxable_base_help
+      value_date_help: cli.ledger.update.value_date_help
+    view:
+      help: cli.ledger.view.help
+      transaction_id_help: cli.ledger.view.transaction_id_help
   locales:
     app_help: Fordítási katalógusok auditálása és generálása
     scaffold_check_help: Eltérések jelentése locale fájlok írása nélkül

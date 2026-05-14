@@ -4,9 +4,6 @@ access_gate:
       utilitza produce -> verify -> export i puja el fitxer tu mateix al portal de
       l'AEAT
 aggregation:
-  counterpart:
-    errors:
-      unsupported_modelo: aggregation.counterpart.errors.unsupported_modelo
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
@@ -39,9 +36,6 @@ aggregation:
         de Renda.
       period_mismatch: El període no coincideix amb el període esperat del llibre
         de Renda.
-  retenciones:
-    errors:
-      unsupported_modelo: aggregation.retenciones.errors.unsupported_modelo
 application:
   auth:
     provider_impact:
@@ -570,6 +564,29 @@ cli:
       key_help: Clau a netejar
     workflow_help: Mostrar ajuda del flux de configuració
   ledger:
+    add:
+      actor_help: cli.ledger.add.actor_help
+      amount_help: cli.ledger.add.amount_help
+      attachment_help: cli.ledger.add.attachment_help
+      business_pct_help: cli.ledger.add.business_pct_help
+      category_help: cli.ledger.add.category_help
+      classification_help: cli.ledger.add.classification_help
+      counterparty_help: cli.ledger.add.counterparty_help
+      currency_help: cli.ledger.add.currency_help
+      date_help: cli.ledger.add.date_help
+      description_help: cli.ledger.add.description_help
+      direction_help: cli.ledger.add.direction_help
+      help: cli.ledger.add.help
+      idempotency_key_help: cli.ledger.add.idempotency_key_help
+      irpf_category_help: cli.ledger.add.irpf_category_help
+      iva_amount_help: cli.ledger.add.iva_amount_help
+      iva_rate_help: cli.ledger.add.iva_rate_help
+      notes_help: cli.ledger.add.notes_help
+      prorrata_reference_help: cli.ledger.add.prorrata_reference_help
+      purchase_invoice_evidence_help: cli.ledger.add.purchase_invoice_evidence_help
+      taxable_base_help: cli.ledger.add.taxable_base_help
+      usage_ratio_help: cli.ledger.add.usage_ratio_help
+      value_date_help: cli.ledger.add.value_date_help
     allocate:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       business_pct_help: Proporció d'ús professional de 0 a 1
@@ -585,6 +602,7 @@ cli:
       help: Arxivar un moviment del llibre al bucket del perfil actiu
       id_help: Id del moviment del llibre a arxivar
       reason_help: Motiu registrat a l'historial de cicle de vida
+      yes_help: cli.ledger.archive.yes_help
     attach:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a
@@ -603,62 +621,19 @@ cli:
       iva_amount_help: Import d'IVA
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       taxable_base_help: Import de base imposable
-    create:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
-      amount_help: Import signat del moviment; les sortides són negatives
-      attachment_help: Id d'adjunt segur per enllaçar amb el moviment; repetiu per
-        a diversos adjunts
-      business_pct_help: Proporció d'ús professional per a classificació MIXED, de
-        0 a 1
-      category_help: Id de categoria de despesa o ingrés
-      classification_help: Estat de classificació professional del moviment
-      counterparty_help: Nom de la contrapart mostrat al llibre
-      currency_help: Codi de moneda ISO 4217
-      date_help: Data comptable (AAAA-MM-DD)
-      description_help: Descripció del moviment del llibre
-      direction_help: Direcció del moviment
-      help: Crear un moviment manual del llibre al bucket del perfil actiu
-      idempotency_key_help: Clau estable per fer idempotent l'entrada manual repetida
-      irpf_category_help: Categoria d'IRPF per a càlculs de models
-      iva_amount_help: Import d'IVA
-      iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
-      notes_help: Notes de l'operador desades amb el moviment del llibre
-      prorrata_reference_help: Referència de prorrata d'IVA per a fluxos d'IVA
-      purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta
-        el moviment
-      taxable_base_help: Import de base imposable
-      usage_ratio_help: Id de proporció d'ús per a ús professional proporcional
-      value_date_help: Data valor (AAAA-MM-DD)
-    edit:
-      actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
-      amount_help: Import signat del moviment; les sortides són negatives
-      counterparty_help: Nom de la contrapart mostrat al llibre
-      currency_help: Codi de moneda ISO 4217
-      date_help: Data comptable (AAAA-MM-DD)
-      description_help: Descripció del moviment del llibre
-      direction_help: Direcció del moviment
-      help: Corregir dades editables d'un moviment del llibre al bucket del perfil
-        actiu
-      id_help: Id del moviment del llibre a editar
-      irpf_category_help: Categoria d'IRPF per a càlculs de models
-      iva_amount_help: Import d'IVA
-      iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
-      notes_help: Notes de l'operador desades amb el moviment del llibre
-      taxable_base_help: Import de base imposable
-      value_date_help: Data valor (AAAA-MM-DD)
     errors:
       confirm_required: Passa --yes per confirmar aquesta operació destructiva del
         llibre, o usa --dry-run primer
       filter_parse_error: Fallada en analitzar el filtre del llibre
-      id_prefix_collision: "El prefix d'id de transacció %{prefix!r} coincideix amb
-        més d'una transacció: %{candidates}. Allarga el prefix per desambiguar."
+      id_prefix_collision: 'El prefix d''id de transacció %{prefix!r} coincideix amb
+        més d''una transacció: %{candidates}. Allarga el prefix per desambiguar.'
       id_prefix_empty: El prefix d'id de transacció és buit; passa almenys un caràcter
         hex.
-      id_prefix_not_found: 'Cap transacció coincideix amb el prefix d''id %{prefix!r}.'
-      id_prefix_not_hex: "El prefix d'id de transacció %{prefix!r} conté caràcters
-        no hex (permesos: 0-9, a-f)."
-      id_prefix_too_long: "El prefix d'id de transacció %{prefix!r} té més de 64 caràcters
-        (un digest SHA-256 complet)."
+      id_prefix_not_found: Cap transacció coincideix amb el prefix d'id %{prefix!r}.
+      id_prefix_not_hex: 'El prefix d''id de transacció %{prefix!r} conté caràcters
+        no hex (permesos: 0-9, a-f).'
+      id_prefix_too_long: El prefix d'id de transacció %{prefix!r} té més de 64 caràcters
+        (un digest SHA-256 complet).
       invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}'
     export:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -666,6 +641,10 @@ cli:
       help: Exportar moviments canònics del llibre des del bucket del perfil actiu
       include_inactive_help: Incloure moviments arxivats i apartats
       output_help: Ruta on escriure el fitxer exportat del llibre
+    history:
+      help: cli.ledger.history.help
+      id_help: cli.ledger.history.id_help
+      include_split_siblings_help: cli.ledger.history.include_split_siblings_help
     import:
       dry_run_help: Executar la importació en mode de prova (sense desar)
       help: Importar extractes bancaris o registres al llibre comptable
@@ -681,17 +660,22 @@ cli:
       archived: Arxivades
       bucket: Bucket
       checked: Moviments comprovats
+      children: cli.ledger.labels.children
       created_event_id: Esdeveniment bucket de creació
       date: Data
       description: Descripció
       dialect: Format detectat
       dry_run: MODE DE PROVA (DRY RUN)
+      event_count: cli.ledger.labels.event_count
+      event_id: cli.ledger.labels.event_id
       export_id: ID d'exportació
       id: ID
       imported: Entrades importades
       lifecycle_state: Estat del cicle de vida
+      merged_id: cli.ledger.labels.merged_id
       'no': 'No'
       output: Sortida
+      parent_id: cli.ledger.labels.parent_id
       pending: Pendents de revisió
       period: Període
       readiness_issues: Incidències de preparació
@@ -704,6 +688,7 @@ cli:
       sha256: SHA-256
       skipped: Omesos
       source: Origen
+      split_group_id: cli.ledger.labels.split_group_id
       stashed: Apartades
       valid: Vàlid
       warnings: Avisos
@@ -711,9 +696,14 @@ cli:
     list:
       header: MOVIMENTS DEL LLIBRE COMPTABLE
       help: Llistar moviments del llibre al bucket del perfil actiu
-    read:
-      help: Llegir un moviment del llibre des del bucket del perfil actiu
-      transaction_id_help: Id del moviment del llibre a llegir
+    merge:
+      actor_help: cli.ledger.merge.actor_help
+      child_id_help: cli.ledger.merge.child_id_help
+      errors:
+        min_two_children: cli.ledger.merge.errors.min_two_children
+      help: cli.ledger.merge.help
+      reason_help: cli.ledger.merge.reason_help
+      yes_help: cli.ledger.merge.yes_help
     remove:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       dry_run_help: Informar els efectes sense eliminar el moviment del llibre
@@ -734,11 +724,23 @@ cli:
       id_help: Identificador de l'entrada específica a revisar
       no_rows: No hi ha entrades del llibre pendents de revisió
       verbose_help: Mostrar informació detallada durant la revisió
+    split:
+      actor_help: cli.ledger.split.actor_help
+      child_amount_help: cli.ledger.split.child_amount_help
+      child_description_help: cli.ledger.split.child_description_help
+      errors:
+        child_args_mismatch: cli.ledger.split.errors.child_args_mismatch
+        min_two_children: cli.ledger.split.errors.min_two_children
+      help: cli.ledger.split.help
+      id_help: cli.ledger.split.id_help
+      reason_help: cli.ledger.split.reason_help
+      yes_help: cli.ledger.split.yes_help
     stash:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       help: Apartar un moviment del llibre al bucket del perfil actiu
       id_help: Id del moviment del llibre a apartar
       reason_help: Motiu registrat a l'historial de cicle de vida
+      yes_help: cli.ledger.stash.yes_help
     status:
       help: Resumir l'estat del llibre i la preparació de càlcul del bucket del perfil
         actiu
@@ -746,6 +748,25 @@ cli:
     track:
       help: Mostrar el llinatge d'esdeveniments d'un moviment del llibre
       transaction_id_help: Id del moviment del llibre a inspeccionar
+    update:
+      actor_help: cli.ledger.update.actor_help
+      amount_help: cli.ledger.update.amount_help
+      counterparty_help: cli.ledger.update.counterparty_help
+      currency_help: cli.ledger.update.currency_help
+      date_help: cli.ledger.update.date_help
+      description_help: cli.ledger.update.description_help
+      direction_help: cli.ledger.update.direction_help
+      help: cli.ledger.update.help
+      id_help: cli.ledger.update.id_help
+      irpf_category_help: cli.ledger.update.irpf_category_help
+      iva_amount_help: cli.ledger.update.iva_amount_help
+      iva_rate_help: cli.ledger.update.iva_rate_help
+      notes_help: cli.ledger.update.notes_help
+      taxable_base_help: cli.ledger.update.taxable_base_help
+      value_date_help: cli.ledger.update.value_date_help
+    view:
+      help: cli.ledger.view.help
+      transaction_id_help: cli.ledger.view.transaction_id_help
   locales:
     app_help: Auditar i generar catàlegs de traducció
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
