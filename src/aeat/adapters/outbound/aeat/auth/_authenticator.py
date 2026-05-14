@@ -33,14 +33,13 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 import time
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final, NoReturn, Protocol, cast, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError
@@ -333,7 +332,7 @@ class CertificateHealthCheck(Protocol):
         self,
         path: Path,
         *,
-        password_env_var: str,
+        password: SecretStr,
         warn_days: int,
         critical_days: int,
         backend: CertificateBackend = ...,
@@ -759,21 +758,15 @@ class AeatAuthenticator:
                 available=False,
                 health_summary="AEAT_CERTIFICATE_PASSWORD_SECRET not set",
             )
-        # The certificate-health stack still reads the passphrase from
-        # ``os.environ[bundle.password_env_var]``. Scope the env-var write
-        # to this function's duration only — restore the prior value on
-        # exit so the secret does not persist in the process environment
-        # after the health-check returns. (Subprocesses spawned during
-        # the call may still inherit the value; the full fix is to pass
-        # ``SecretStr`` through ``CertificateBundle`` directly.)
-        _password_env_key = "AEAT_CERTIFICATE_PASSWORD_SECRET"
-        _prior_env_value = os.environ.get(_password_env_key)
-        os.environ[_password_env_key] = self._settings.aeat_certificate_password_secret.get_secret_value()
+        # CertificateBundle now carries the passphrase as a SecretStr
+        # directly. The authenticator passes the settings-resolved
+        # secret straight through; the OpenSSL-binding env channel is
+        # gone, so the secret never enters os.environ.
         try:
             backend = CertificateBackend(self._settings.aeat_certificate_backend.name)
             health = self._certificate_health_check(
                 self._settings.aeat_certificate_path,
-                password_env_var=_password_env_key,
+                password=self._settings.aeat_certificate_password_secret,
                 warn_days=self._settings.aeat_cert_warn_days,
                 critical_days=self._settings.aeat_cert_critical_days,
                 backend=backend,
@@ -821,14 +814,6 @@ class AeatAuthenticator:
                 available=False,
                 health_summary=f"{type(exc).__name__}: {exc}",
             )
-        finally:
-            # Restore the prior env-var value so the certificate
-            # passphrase does not leak past the health-check call. If
-            # the env var was unset before, remove it entirely.
-            if _prior_env_value is None:
-                os.environ.pop(_password_env_key, None)
-            else:
-                os.environ[_password_env_key] = _prior_env_value
 
     async def close(self) -> None:
         """Release the browser context + session. Idempotent.

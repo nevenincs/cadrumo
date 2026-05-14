@@ -51,10 +51,10 @@ from . import (
 from . import _authenticator as authenticator_module
 from .certificate import CertificateBundle
 
+pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+
 if TYPE_CHECKING:
     from .....core.config import Settings
-
-pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
 
@@ -145,17 +145,16 @@ def _load_cert(
     not_valid_after: datetime | None = None,
 ) -> LoadedCertificate:
     """Build a bundle + load it under a deterministic env var name."""
-    import os
+    from pydantic import SecretStr
 
     bundle_path = _build_bundle(
         tmp_path,
         subject_attrs=subject_attrs,
         not_valid_after=not_valid_after,
     )
-    os.environ["AEAT_TEST_CERT_PW"] = SECRET_PASSPHRASE
     bundle = CertificateBundle(
         path=bundle_path,
-        password_env_var="AEAT_TEST_CERT_PW",
+        password=SecretStr(SECRET_PASSPHRASE),
         friendly_name=None,
         backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
@@ -810,6 +809,8 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
     monkeypatch.setenv("AEAT_CERTIFICATE_FRIENDLY_NAME", "operator cert")
+    from pydantic import SecretStr
+
     settings = _settings_for(bundle_path, monkeypatch)
 
     captured: dict[str, object] = {}
@@ -818,7 +819,7 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
     def _capture_certificate_health(
         path: Path,
         *,
-        password_env_var: str,
+        password: SecretStr,
         warn_days: int,
         critical_days: int,
         backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
@@ -826,14 +827,14 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
         now: datetime | None = None,
     ):
         captured["path"] = path
-        captured["password_env_var"] = password_env_var
+        captured["password"] = password
         captured["warn_days"] = warn_days
         captured["critical_days"] = critical_days
         captured["backend"] = backend
         captured["friendly_name"] = friendly_name
         return real_certificate_health(
             path,
-            password_env_var=password_env_var,
+            password=password,
             warn_days=warn_days,
             critical_days=critical_days,
             backend=backend,
@@ -848,59 +849,36 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
 
     assert description.available is True
     assert captured["path"] == bundle_path
-    assert captured["password_env_var"] == "AEAT_CERTIFICATE_PASSWORD_SECRET"
+    captured_password = captured["password"]
+    assert isinstance(captured_password, SecretStr)
+    assert captured_password.get_secret_value() == SECRET_PASSPHRASE
     assert captured["backend"] == CertificateBackend.HTTPX_FALLBACK
     assert captured["friendly_name"] == "operator cert"
 
 
-def test_describe_does_not_leak_password_to_environ_after_call(
+def test_describe_does_not_touch_os_environ(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Regression for the production env-leak fix.
-
-    ``AeatAuthenticator.describe()`` previously wrote
-    ``self._settings.aeat_certificate_password_secret`` into
-    ``os.environ["AEAT_CERTIFICATE_PASSWORD_SECRET"]`` and never
-    cleaned it up — the secret persisted across every subsequent
-    log dump, subprocess spawn, and diagnostic surface. The fix
-    bounds the env-var write to the function's duration and
-    restores the prior value on exit. This test pins that contract.
+    """``AeatAuthenticator.describe()`` carries the passphrase as a
+    SecretStr directly to ``certificate_health`` via the
+    :class:`CertificateBundle.password` field. It never writes the
+    secret into ``os.environ``, so a pre-call snapshot of the
+    relevant env vars must equal the post-call snapshot exactly.
     """
 
     import os as _os
 
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
-    # Clear the env var so the test starts from a known absent state.
     monkeypatch.delenv("AEAT_CERTIFICATE_PASSWORD_SECRET", raising=False)
-    assert _os.environ.get("AEAT_CERTIFICATE_PASSWORD_SECRET") is None
+    before = dict(_os.environ)
 
     description = AeatAuthenticator(settings).describe()
     assert description.available is True
 
-    assert _os.environ.get("AEAT_CERTIFICATE_PASSWORD_SECRET") is None, (
-        "describe() leaked the certificate passphrase into os.environ"
-    )
-
-
-def test_describe_restores_prior_env_value_when_already_set(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """When the env var is already set by the operator, ``describe()``
-    must restore the operator-supplied value on exit, not the value
-    derived from ``Settings``. Pins the save/restore contract."""
-
-    import os as _os
-
-    bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
-    monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", "operator-supplied-value")
-
-    AeatAuthenticator(settings).describe()
-
-    assert _os.environ.get("AEAT_CERTIFICATE_PASSWORD_SECRET") == "operator-supplied-value"
+    after = dict(_os.environ)
+    assert before == after, "describe() must not mutate os.environ"
 
 
 @pytest.mark.asyncio

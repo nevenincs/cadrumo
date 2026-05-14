@@ -21,7 +21,6 @@ Design constraints:
 
 from __future__ import annotations
 
-import os
 import re
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -147,14 +146,15 @@ class CertificateHealthSeverity(StrEnum):
 class CertificateBundle(BaseModel):
     """Operator-supplied pointer at a PKCS#12 bundle on disk.
 
-    The password is referenced by *env var name*, never as a literal.
-    The actual secret value is read at load time via :func:`os.environ`
-    and wrapped in :class:`pydantic.SecretStr` from that point forward.
+    The PKCS#12 passphrase is carried directly as a
+    :class:`pydantic.SecretStr` so callers no longer have to round-trip
+    the secret through ``os.environ``. The secret is materialised
+    only at the exact PKCS#12-decode boundary and is never logged,
+    persisted, or serialised by ``model_dump``.
 
     Attributes:
         path: Filesystem path to the ``.p12`` / ``.pfx`` bundle.
-        password_env_var: Name of the environment variable holding the
-            passphrase. Never the passphrase itself.
+        password: PKCS#12 passphrase as a :class:`SecretStr`.
         friendly_name: Optional human-readable label for logs.
         backend: Which backend should consume this bundle.
     """
@@ -162,7 +162,7 @@ class CertificateBundle(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     path: Path
-    password_env_var: str = Field(min_length=1)
+    password: SecretStr
     friendly_name: str | None = None
     backend: CertificateBackend
 
@@ -306,21 +306,6 @@ class _BrowserContextLike(Protocol):
 # ── Loader ──────────────────────────────────────────────────────────────────
 
 
-def _read_password_from_env(env_var: str) -> SecretStr:
-    """Read ``env_var`` and wrap its value in :class:`SecretStr`.
-
-    Raises :class:`CertificatePasswordError` if the variable is unset
-    or empty.
-    """
-    raw = os.environ.get(env_var)
-    if not raw:
-        raise CertificatePasswordError(
-            f"environment variable {env_var!r} is unset or empty; "
-            "set it to the PKCS#12 passphrase before calling load_certificate()"
-        )
-    return SecretStr(raw)
-
-
 def _ensure_utc(value: datetime) -> datetime:
     """Coerce a naive datetime to UTC-aware (PKCS#12 datetimes vary)."""
     if value.tzinfo is None:
@@ -331,12 +316,13 @@ def _ensure_utc(value: datetime) -> datetime:
 def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
     """Load and validate a PKCS#12 bundle from disk.
 
-    The passphrase is read from ``os.environ[bundle.password_env_var]``;
-    if the env var is unset or empty a :class:`CertificatePasswordError`
-    is raised *before* any file I/O. On a successful load the returned
-    :class:`LoadedCertificate` carries the raw PKCS#12 bytes and a
-    parsed private-key handle in :class:`PrivateAttr` fields so the
-    backends can consume them without a second on-disk round-trip.
+    The passphrase is unwrapped from ``bundle.password`` at the
+    PKCS#12-decode boundary only. An empty :class:`SecretStr` raises
+    :class:`CertificatePasswordError` *before* any file I/O. On a
+    successful load the returned :class:`LoadedCertificate` carries the
+    raw PKCS#12 bytes and a parsed private-key handle in
+    :class:`PrivateAttr` fields so the backends can consume them
+    without a second on-disk round-trip.
 
     Args:
         bundle: Operator-supplied :class:`CertificateBundle`.
@@ -346,11 +332,16 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         to log; secret material is never serialised.
 
     Raises:
-        CertificatePasswordError: Env var unset/empty or wrong password.
+        CertificatePasswordError: Empty passphrase or wrong passphrase.
         CertificateLoadError: PKCS#12 bytes cannot be parsed.
         CertificateExpiredError: Certificate's validity has elapsed.
     """
-    password = _read_password_from_env(bundle.password_env_var)
+    raw_password = bundle.password.get_secret_value()
+    if not raw_password:
+        raise CertificatePasswordError(
+            f"passphrase for PKCS#12 bundle at {bundle.path} is empty; "
+            "construct CertificateBundle with a non-empty SecretStr password.",
+        )
 
     try:
         raw_bytes = bundle.path.read_bytes()
@@ -358,12 +349,12 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         raise CertificateLoadError(f"could not read PKCS#12 bundle at {bundle.path}: {exc}") from exc
 
     try:
-        parsed = pkcs12.load_pkcs12(raw_bytes, password.get_secret_value().encode("utf-8"))
+        parsed = pkcs12.load_pkcs12(raw_bytes, raw_password.encode("utf-8"))
     except ValueError as exc:
         message = str(exc).lower()
         if "invalid password" in message or "mac verify" in message:
             raise CertificatePasswordError(
-                f"wrong passphrase for PKCS#12 bundle at {bundle.path} (env var {bundle.password_env_var!r})"
+                f"wrong passphrase for PKCS#12 bundle at {bundle.path}",
             ) from exc
         raise CertificateLoadError(f"could not parse PKCS#12 bundle at {bundle.path}: malformed bytes") from exc
 
@@ -394,7 +385,7 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
     )
 
     object.__setattr__(loaded, "_pkcs12_bytes", raw_bytes)
-    object.__setattr__(loaded, "_password", password)
+    object.__setattr__(loaded, "_password", bundle.password)
     object.__setattr__(loaded, "_private_key_handle", parsed.key)
 
     if loaded.is_expired():
@@ -504,7 +495,7 @@ def evaluate_loaded_certificate_health(
 def health(
     path: Path,
     *,
-    password_env_var: str,
+    password: SecretStr,
     warn_days: int,
     critical_days: int,
     backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
@@ -517,13 +508,13 @@ def health(
     an expired certificate — it returns a
     :class:`CertificateHealth` record with severity
     :attr:`CertificateHealthSeverity.EXPIRED` instead. Genuine load
-    failures (missing passphrase, corrupt bytes, I/O) still raise the
+    failures (empty passphrase, corrupt bytes, I/O) still raise the
     matching :class:`CertificateError` subclass, because those are not
     pre-expiry conditions.
 
     Args:
         path: Filesystem path to the PKCS#12 bundle.
-        password_env_var: Name of the env var holding the passphrase.
+        password: PKCS#12 passphrase as a :class:`SecretStr`.
         warn_days: Warning threshold in days (see
             :func:`evaluate_loaded_certificate_health`).
         critical_days: Critical threshold in days.
@@ -536,12 +527,12 @@ def health(
         A frozen :class:`CertificateHealth` record.
 
     Raises:
-        CertificatePasswordError: Env var unset/empty or wrong password.
+        CertificatePasswordError: Empty or wrong passphrase.
         CertificateLoadError: PKCS#12 bytes cannot be parsed.
     """
     bundle = CertificateBundle(
         path=path,
-        password_env_var=password_env_var,
+        password=password,
         friendly_name=friendly_name,
         backend=backend,
     )
@@ -554,7 +545,6 @@ def health(
         # minimal x509 decode here. A second decode failure is
         # surfaced as CertificateLoadError rather than swallowed, to
         # honour the "never-crash on pre-expiry path" contract.
-        password = _read_password_from_env(password_env_var)
         try:
             raw_bytes = path.read_bytes()
             parsed = pkcs12.load_pkcs12(raw_bytes, password.get_secret_value().encode("utf-8"))
