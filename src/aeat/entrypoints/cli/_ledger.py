@@ -810,7 +810,7 @@ def ledger_review(
 
 ratios_app = typer.Typer(
     name="ratios",
-    help="Per-category proportional-deduction overrides.",
+    help=tr("cli.app.ledger.ratios.group_help", default="Per-category proportional-deduction overrides."),
     no_args_is_help=True,
 )
 app.add_typer(ratios_app, name="ratios")
@@ -834,10 +834,10 @@ def _resolve_category(raw: str):
     try:
         return SpendingCategory(raw.strip())
     except ValueError as exc:
-        raise _bad(f"Unknown spending category: {raw!r}") from exc
+        raise _bad(tr("cli.app.ledger.ratios.unknown_category", default="Unknown spending category: {raw!r}").format(raw=raw)) from exc
 
 
-@ratios_app.command("list", help="List every per-category usage-ratio override on the active bucket.")
+@ratios_app.command("list", help=tr("cli.app.ledger.ratios.list_help", default="List every per-category usage-ratio override on the active bucket."))
 def ratios_list(ctx: typer.Context) -> None:
     from ...domain.usage_ratios import load_usage_ratios
 
@@ -853,11 +853,11 @@ def ratios_list(ctx: typer.Context) -> None:
     _emit(ctx, payload, lines)
 
 
-@ratios_app.command("set", help="Set or replace one per-category usage-ratio override.")
+@ratios_app.command("set", help=tr("cli.app.ledger.ratios.set_help", default="Set or replace one per-category usage-ratio override."))
 def ratios_set(
     ctx: typer.Context,
-    category: str = typer.Argument(..., help="Spending category id (e.g. USAGE_RATIO_VEHICLE)."),
-    ratio: str = typer.Argument(..., help="Override ratio in the closed interval [0, 1]."),
+    category: str = typer.Argument(..., help=tr("cli.app.ledger.ratios.category_help", default="Spending category id (e.g. USAGE_RATIO_VEHICLE).")),
+    ratio: str = typer.Argument(..., help=tr("cli.app.ledger.ratios.ratio_help", default="Override ratio in the closed interval [0, 1].")),
 ) -> None:
     from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
 
@@ -875,10 +875,10 @@ def ratios_set(
     )
 
 
-@ratios_app.command("unset", help="Clear one per-category usage-ratio override.")
+@ratios_app.command("unset", help=tr("cli.app.ledger.ratios.unset_help", default="Clear one per-category usage-ratio override."))
 def ratios_unset(
     ctx: typer.Context,
-    category: str = typer.Argument(..., help="Spending category id whose override to clear."),
+    category: str = typer.Argument(..., help=tr("cli.app.ledger.ratios.unset_category_help", default="Spending category id whose override to clear.")),
 ) -> None:
     from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
 
@@ -887,7 +887,10 @@ def ratios_unset(
     profile = load_usage_ratios(bucket_id=bucket_id)
     if category_enum not in profile.ratios:
         raise _bad(
-            f"No persisted override for category {category_enum.value!r} on bucket {bucket_id!r}"
+            tr(
+                "cli.app.ledger.ratios.no_override_error",
+                default="No persisted override for category {category!r} on bucket {bucket_id!r}",
+            ).format(category=category_enum.value, bucket_id=bucket_id)
         )
     updated = profile.without_ratio(category_enum)
     save_usage_ratios(updated, bucket_id=bucket_id)
@@ -895,7 +898,7 @@ def ratios_unset(
     _emit(ctx, payload, (f"bucket\t{bucket_id}", f"{category_enum.value}\t<unset>"))
 
 
-@ratios_app.command("eligible", help="List every category that may carry a per-category override.")
+@ratios_app.command("eligible", help=tr("cli.app.ledger.ratios.eligible_help", default="List every category that may carry a per-category override."))
 def ratios_eligible(ctx: typer.Context) -> None:
     from ...application.ledger._ratios import list_eligible_ratios_for_bucket
 
@@ -916,7 +919,7 @@ def ratios_eligible(ctx: typer.Context) -> None:
     _emit(ctx, payload, lines)
 
 
-@ratios_app.command("validate", help="Validate the per-category overrides against eligibility + bound rules.")
+@ratios_app.command("validate", help=tr("cli.app.ledger.ratios.validate_help", default="Validate the per-category overrides against eligibility + bound rules."))
 def ratios_validate(ctx: typer.Context) -> None:
     from ...application.ledger._ratios import validate_ratios_for_bucket
 
@@ -961,7 +964,7 @@ def _business_invoice_text_lines(record) -> list[str]:
 def _build_business_invoice_app(name: str, help_text: str, service_factory):
     sub_app = typer.Typer(name=name, help=help_text, no_args_is_help=True)
 
-    @sub_app.command("add", help=f"Register a new {name} record.")
+    @sub_app.command("add", help=tr(f"cli.app.ledger.{name}.add_help", default=f"Register a new {name} record."))
     def add(
         ctx: typer.Context,
         counterparty_nif: str = typer.Option(..., "--counterparty-nif"),
@@ -991,16 +994,16 @@ def _build_business_invoice_app(name: str, help_text: str, service_factory):
         )
         _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
 
-    @sub_app.command("view", help=f"Show one {name} record.")
+    @sub_app.command("view", help=tr(f"cli.app.ledger.{name}.view_help", default=f"Show one {name} record."))
     def view(
         ctx: typer.Context,
-        invoice_id: str = typer.Argument(..., help="Invoice id (or unambiguous prefix)."),
+        invoice_id: str = typer.Argument(..., help=tr(f"cli.app.ledger.{name}.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
     ) -> None:
         bucket_id = _ratios_bucket_id()
         record = service_factory().view(bucket_id=bucket_id, invoice_id=invoice_id)
         _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
 
-    @sub_app.command("list", help=f"List every {name} record on the active bucket.")
+    @sub_app.command("list", help=tr(f"cli.app.ledger.{name}.list_help", default=f"List every {name} record on the active bucket."))
     def list_(ctx: typer.Context) -> None:
         bucket_id = _ratios_bucket_id()
         rows = service_factory().list_all(bucket_id=bucket_id)
@@ -1016,10 +1019,10 @@ def _build_business_invoice_app(name: str, help_text: str, service_factory):
             )
         _emit(ctx, payload, lines)
 
-    @sub_app.command("update", help=f"Update mutable fields on one {name} record.")
+    @sub_app.command("update", help=tr(f"cli.app.ledger.{name}.update_help", default=f"Update mutable fields on one {name} record."))
     def update(
         ctx: typer.Context,
-        invoice_id: str = typer.Argument(..., help="Invoice id (or unambiguous prefix)."),
+        invoice_id: str = typer.Argument(..., help=tr(f"cli.app.ledger.{name}.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
         counterparty_nif: str | None = typer.Option(None, "--counterparty-nif"),
         counterparty_name: str | None = typer.Option(None, "--counterparty-name"),
         invoice_number: str | None = typer.Option(None, "--invoice-number"),
@@ -1049,14 +1052,14 @@ def _build_business_invoice_app(name: str, help_text: str, service_factory):
         record = service_factory().update(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
         _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
 
-    @sub_app.command("remove", help=f"Delete one {name} record.")
+    @sub_app.command("remove", help=tr(f"cli.app.ledger.{name}.remove_help", default=f"Delete one {name} record."))
     def remove(
         ctx: typer.Context,
-        invoice_id: str = typer.Argument(..., help="Invoice id (or unambiguous prefix)."),
-        yes: bool = typer.Option(False, "--yes", help="Confirm removal."),
+        invoice_id: str = typer.Argument(..., help=tr(f"cli.app.ledger.{name}.invoice_id_help", default="Invoice id (or unambiguous prefix).")),
+        yes: bool = typer.Option(False, "--yes", help=tr(f"cli.app.ledger.{name}.yes_help", default="Confirm removal.")),
     ) -> None:
         if not yes:
-            raise _bad(f"--yes is required to remove a {name} record")
+            raise _bad(tr(f"cli.app.ledger.{name}.yes_required", default=f"--yes is required to remove a {name} record"))
         bucket_id = _ratios_bucket_id()
         record = service_factory().remove(bucket_id=bucket_id, invoice_id=invoice_id)
         _emit(ctx, _business_invoice_payload(record), _business_invoice_text_lines(record))
@@ -1077,10 +1080,14 @@ def _collectible_invoice_service():
 
 
 payable_invoice_app = _build_business_invoice_app(
-    "payable-invoice", "Payable invoice records (we owe a vendor).", _payable_invoice_service
+    "payable-invoice",
+    tr("cli.app.ledger.payable_invoice.group_help", default="Payable invoice records (we owe a vendor)."),
+    _payable_invoice_service,
 )
 collectible_invoice_app = _build_business_invoice_app(
-    "collectible-invoice", "Collectible invoice records (a customer owes us).", _collectible_invoice_service
+    "collectible-invoice",
+    tr("cli.app.ledger.collectible_invoice.group_help", default="Collectible invoice records (a customer owes us)."),
+    _collectible_invoice_service,
 )
 app.add_typer(payable_invoice_app, name="payable-invoice")
 app.add_typer(collectible_invoice_app, name="collectible-invoice")
@@ -1088,13 +1095,13 @@ app.add_typer(collectible_invoice_app, name="collectible-invoice")
 
 inventory_app = typer.Typer(
     name="inventory",
-    help="Per-actividad inventory ledgers (stock, movements, valuation).",
+    help=tr("cli.app.ledger.inventory.group_help", default="Per-actividad inventory ledgers (stock, movements, valuation)."),
     no_args_is_help=True,
 )
 app.add_typer(inventory_app, name="inventory")
 
-inventory_movement_app = typer.Typer(name="movement", help="Inventory movement subcommands.", no_args_is_help=True)
-inventory_valuation_app = typer.Typer(name="valuation", help="Inventory valuation subcommands.", no_args_is_help=True)
+inventory_movement_app = typer.Typer(name="movement", help=tr("cli.app.ledger.inventory.movement_group_help", default="Inventory movement subcommands."), no_args_is_help=True)
+inventory_valuation_app = typer.Typer(name="valuation", help=tr("cli.app.ledger.inventory.valuation_group_help", default="Inventory valuation subcommands."), no_args_is_help=True)
 inventory_app.add_typer(inventory_movement_app, name="movement")
 inventory_app.add_typer(inventory_valuation_app, name="valuation")
 
@@ -1105,7 +1112,7 @@ def _inventory_service():
     return InventoryService()
 
 
-@inventory_app.command("list", help="List every per-actividad inventory ledger on the active bucket.")
+@inventory_app.command("list", help=tr("cli.app.ledger.inventory.list_help", default="List every per-actividad inventory ledger on the active bucket."))
 def inventory_list(ctx: typer.Context) -> None:
     bucket_id = _ratios_bucket_id()
     rows = _inventory_service().list_all(bucket_id=bucket_id)
@@ -1123,13 +1130,13 @@ def inventory_list(ctx: typer.Context) -> None:
     _emit(ctx, payload, lines)
 
 
-@inventory_app.command("create", help="Create a fresh inventory ledger for one actividad and year.")
+@inventory_app.command("create", help=tr("cli.app.ledger.inventory.create_help", default="Create a fresh inventory ledger for one actividad and year."))
 def inventory_create(
     ctx: typer.Context,
-    actividad_id: str = typer.Argument(..., help="Actividad identifier."),
-    year: int = typer.Option(..., "--year", help="Fiscal year."),
-    valuation_method: str = typer.Option(..., "--valuation-method", help="Valuation method (fifo or pmp)."),
-    opening_stock: str = typer.Option("0", "--opening-stock", help="Opening stock value."),
+    actividad_id: str = typer.Argument(..., help=tr("cli.app.ledger.inventory.actividad_id_help", default="Actividad identifier.")),
+    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
+    valuation_method: str = typer.Option(..., "--valuation-method", help=tr("cli.app.ledger.inventory.valuation_method_help", default="Valuation method (fifo or pmp).")),
+    opening_stock: str = typer.Option("0", "--opening-stock", help=tr("cli.app.ledger.inventory.opening_stock_help", default="Opening stock value.")),
 ) -> None:
     bucket_id = _ratios_bucket_id()
     ledger = _inventory_service().create(
@@ -1153,18 +1160,18 @@ def inventory_create(
     )
 
 
-@inventory_movement_app.command("add", help="Append one movement (purchase/sale/adjustment) to an actividad ledger.")
+@inventory_movement_app.command("add", help=tr("cli.app.ledger.inventory.movement_add_help", default="Append one movement (purchase/sale/adjustment) to an actividad ledger."))
 def inventory_movement_add(
     ctx: typer.Context,
-    actividad_id: str = typer.Option(..., "--actividad-id", help="Actividad identifier."),
-    year: int = typer.Option(..., "--year", help="Fiscal year."),
-    movement_id: str = typer.Option(..., "--movement-id", help="Movement identifier (unique per ledger)."),
-    movement_date: str = typer.Option(..., "--date", help="Movement date (YYYY-MM-DD)."),
-    kind: str = typer.Option(..., "--kind", help="Movement kind (purchase, sale, adjustment, ...)"),
-    quantity: str = typer.Option(..., "--quantity", help="Movement quantity (positive or negative)."),
-    unit_cost: str | None = typer.Option(None, "--unit-cost", help="Unit cost (purchase movements)."),
-    taxable_base: str | None = typer.Option(None, "--taxable-base", help="Taxable base (for VAT)."),
-    vat_rate: str = typer.Option("21.00", "--vat-rate", help="VAT rate in percent."),
+    actividad_id: str = typer.Option(..., "--actividad-id", help=tr("cli.app.ledger.inventory.actividad_id_help", default="Actividad identifier.")),
+    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
+    movement_id: str = typer.Option(..., "--movement-id", help=tr("cli.app.ledger.inventory.movement_id_help", default="Movement identifier (unique per ledger).")),
+    movement_date: str = typer.Option(..., "--date", help=tr("cli.app.ledger.inventory.movement_date_help", default="Movement date (YYYY-MM-DD).")),
+    kind: str = typer.Option(..., "--kind", help=tr("cli.app.ledger.inventory.movement_kind_help", default="Movement kind (purchase, sale, adjustment, ...)")),
+    quantity: str = typer.Option(..., "--quantity", help=tr("cli.app.ledger.inventory.quantity_help", default="Movement quantity (positive or negative).")),
+    unit_cost: str | None = typer.Option(None, "--unit-cost", help=tr("cli.app.ledger.inventory.unit_cost_help", default="Unit cost (purchase movements).")),
+    taxable_base: str | None = typer.Option(None, "--taxable-base", help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for VAT).")),
+    vat_rate: str = typer.Option("21.00", "--vat-rate", help=tr("cli.app.ledger.inventory.vat_rate_help", default="VAT rate in percent.")),
 ) -> None:
     from ...application.inventory import InventoryMovementCommand
     from ...domain.profile.inventory import MovementKind
@@ -1172,7 +1179,7 @@ def inventory_movement_add(
     try:
         kind_enum = MovementKind(kind)
     except ValueError as exc:
-        raise _bad(f"Unknown movement kind: {kind!r}") from exc
+        raise _bad(tr("cli.app.ledger.inventory.unknown_movement_kind", default="Unknown movement kind: {kind!r}").format(kind=kind)) from exc
 
     bucket_id = _ratios_bucket_id()
     command = InventoryMovementCommand(
@@ -1203,11 +1210,11 @@ def inventory_movement_add(
     )
 
 
-@inventory_valuation_app.command("preview", help="Preview closing stock and COGS for one actividad/year ledger.")
+@inventory_valuation_app.command("preview", help=tr("cli.app.ledger.inventory.valuation_preview_help", default="Preview closing stock and COGS for one actividad/year ledger."))
 def inventory_valuation_preview(
     ctx: typer.Context,
-    actividad_id: str = typer.Option(..., "--actividad-id", help="Actividad identifier."),
-    year: int = typer.Option(..., "--year", help="Fiscal year."),
+    actividad_id: str = typer.Option(..., "--actividad-id", help=tr("cli.app.ledger.inventory.actividad_id_help", default="Actividad identifier.")),
+    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
 ) -> None:
     bucket_id = _ratios_bucket_id()
     preview = _inventory_service().valuation_preview(
