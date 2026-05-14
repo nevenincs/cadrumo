@@ -4669,51 +4669,51 @@ Closes apex §12 ledger row R19. The locked integrity and list subverbs on aeat 
 
 Wire integrity and list subcommands to existing backend.
 
-- [ ] `W82.P395.S2254` - Read the config-repair-shape ADR §3.6 and confirm the AES-256-GCM integrity scan and namespace inventory functions exist; `.vault/adr`.
-- [ ] `W82.P395.S2255` - Wire aeat config repair integrity to the existing scan function and emit DiagnosticCheck rows with next_action or dead_end per the discriminated union; `src/aeat/application/config`.
-- [ ] `W82.P395.S2256` - Wire aeat config repair list to the existing namespace-inventory function and render rows via _emit; `src/aeat/application/config`.
-- [ ] `W82.P395.S2257` - Ensure both new subverbs participate in the bare aeat config repair composite report rollup per apex §3.6; `src/aeat/application/config`.
-- [ ] `W82.P395.S2258` - Confirm the DiagnosticCheck Pydantic validator covers the new subverb output rows; `src/aeat/application/config`.
+- [x] `W82.P395.S2254` - Read the config-repair-shape ADR §3.6 and confirm the AES-256-GCM integrity scan and namespace inventory functions exist; `.vault/adr`.
+- [x] `W82.P395.S2255` - Wire aeat config repair integrity to the existing scan function and emit DiagnosticCheck rows with next_action or dead_end per the discriminated union; `src/aeat/application/config`.
+- [x] `W82.P395.S2256` - Wire aeat config repair list to the existing namespace-inventory function and render rows via _emit; `src/aeat/application/config`.
+- [x] `W82.P395.S2257` - Ensure both new subverbs participate in the bare aeat config repair composite report rollup per apex §3.6; `src/aeat/application/config`.
+- [x] `W82.P395.S2258` - Confirm the DiagnosticCheck Pydantic validator covers the new subverb output rows; `src/aeat/application/config`.
 
 ### Phase `W82.P396` - shadow duplicate removal
 
 Confirm doctor retirement and consolidate scan paths.
 
-- [ ] `W82.P396.S2259` - Confirm aeat config doctor is fully retired per W70.P334 closeout with no doctor references resurrected; `src/aeat/entrypoints/cli`.
-- [ ] `W82.P396.S2260` - Audit _config for any duplicate integrity-scan or inventory paths and consolidate behind the canonical backend; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W82.P396.S2261` - Remove any legacy aeat doctor references; `src/aeat/core/i18n`.
-- [ ] `W82.P396.S2262` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
-- [ ] `W82.P396.S2263` - Remove stale tests; `tests/entrypoints/cli`.
+- [x] `W82.P396.S2259` - Confirm aeat config doctor is fully retired per W70.P334 closeout with no doctor references resurrected; `src/aeat/entrypoints/cli`.
+- [x] `W82.P396.S2260` - Audit _config for any duplicate integrity-scan or inventory paths and consolidate behind the canonical backend; `src/aeat/entrypoints/cli/_config`.
+- [x] `W82.P396.S2261` - Remove any legacy aeat doctor references; `src/aeat/core/i18n`.
+- [x] `W82.P396.S2262` - Update boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W82.P396.S2263` - Remove stale tests; `tests/entrypoints/cli`.
 
 ### Phase `W82.P397` - de-shim and de-stub cleanup
 
 Wire help, leaf-target guards, and refusal tone.
 
-- [ ] `W82.P397.S2264` - Wire help text and i18n for integrity and list; `src/aeat/core/i18n`.
-- [ ] `W82.P397.S2265` - Ensure next_action strings in diagnostic rows point at runnable leaves per W70.P335 leaf-target guard; `src/aeat/application/config`.
-- [ ] `W82.P397.S2266` - Remove deprecated repair command spellings; `src/aeat/core/i18n`.
-- [ ] `W82.P397.S2267` - Confirm sentence-case Refused prefix per W70.P337; `src/aeat/core/i18n`.
-- [ ] `W82.P397.S2268` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W82.P397.S2264` - Wire help text and i18n for integrity and list; `src/aeat/core/i18n`.
+- [x] `W82.P397.S2265` - Ensure next_action strings in diagnostic rows point at runnable leaves per W70.P335 leaf-target guard; `src/aeat/application/config`.
+- [x] `W82.P397.S2266` - Remove deprecated repair command spellings; `src/aeat/core/i18n`.
+- [x] `W82.P397.S2267` - Confirm sentence-case Refused prefix per W70.P337; `src/aeat/core/i18n`.
+- [x] `W82.P397.S2268` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W82.P398` - real behavior verification
 
 Test new subverbs, false-positive guard, doctor unknown command.
 
-- [ ] `W82.P398.S2269` - Add tests for aeat config repair integrity covering happy path and each diagnostic failure class; `tests/application/config`.
-- [ ] `W82.P398.S2270` - Add tests for aeat config repair list covering all and unreadable filters; `tests/application/config`.
-- [ ] `W82.P398.S2271` - Confirm zero fail and warn rows on clean profile per W70.P334 false-positive guard; `tests/entrypoints/cli`.
-- [ ] `W82.P398.S2272` - Add CLI surface tests; `tests/entrypoints/cli`.
-- [ ] `W82.P398.S2273` - Add negative tests asserting aeat config doctor is unknown; `tests/entrypoints/cli`.
+- [x] `W82.P398.S2269` - Add tests for aeat config repair integrity covering happy path and each diagnostic failure class; `tests/application/config`.
+- [x] `W82.P398.S2270` - Add tests for aeat config repair list covering all and unreadable filters; `tests/application/config`.
+- [x] `W82.P398.S2271` - Confirm zero fail and warn rows on clean profile per W70.P334 false-positive guard; `tests/entrypoints/cli`.
+- [x] `W82.P398.S2272` - Add CLI surface tests; `tests/entrypoints/cli`.
+- [x] `W82.P398.S2273` - Add negative tests asserting aeat config doctor is unknown; `tests/entrypoints/cli`.
 
 ### Phase `W82.P399` - thin cli exposure
 
 Register subcommands and update apex cross-references.
 
-- [ ] `W82.P399.S2274` - Register integrity and list subcommands under repair_app; `src/aeat/entrypoints/cli/_config`.
-- [ ] `W82.P399.S2275` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
-- [ ] `W82.P399.S2276` - Wire help text and i18n; `src/aeat/core/i18n`.
-- [ ] `W82.P399.S2277` - Update apex ADR §3.6 to ratify the shipped subverb set and mark R19 closed by W82; `.vault/adr`.
-- [ ] `W82.P399.S2278` - Amend config-repair-shape child ADR; `.vault/adr`.
+- [x] `W82.P399.S2274` - Register integrity and list subcommands under repair_app; `src/aeat/entrypoints/cli/_config`.
+- [x] `W82.P399.S2275` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
+- [x] `W82.P399.S2276` - Wire help text and i18n; `src/aeat/core/i18n`.
+- [x] `W82.P399.S2277` - Update apex ADR §3.6 to ratify the shipped subverb set and mark R19 closed by W82; `.vault/adr`.
+- [x] `W82.P399.S2278` - Amend config-repair-shape child ADR; `.vault/adr`.
 
 ## Wave `W83` - Reconciliation: config init backend service
 
