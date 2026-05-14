@@ -20,7 +20,7 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
-_PACKAGE_ROOT = Path(__file__).resolve().parents[3] / "src" / "aeat" / "adapters" / "outbound" / "google"
+_PACKAGE_ROOT = Path(__file__).resolve().parent
 
 _ALLOWED_MODULES: frozenset[str] = frozenset(
     {
@@ -31,6 +31,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_records.py",
         "_refresh.py",
         "_session_store.py",
+        "test_no_legacy_modules.py",
         "test_oauth_flow.py",
         "test_oauth_live.py",
         "test_profile_binding.py",
