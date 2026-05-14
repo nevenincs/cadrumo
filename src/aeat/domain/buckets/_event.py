@@ -93,6 +93,14 @@ class BucketEventType(StrEnum):
     PURCHASE_INVOICE_EVIDENCE_ATTACHED = "purchase_invoice_evidence.attached"
     PURCHASE_INVOICE_EVIDENCE_REPLACED = "purchase_invoice_evidence.replaced"
     PURCHASE_INVOICE_EVIDENCE_DETACHED = "purchase_invoice_evidence.detached"
+    # business-operation invoice noun-groups (W73A invoice-domain-decoupling
+    # CRUD mounts per apex ADR §12.b)
+    PAYABLE_INVOICE_CREATED = "payable_invoice.created"
+    PAYABLE_INVOICE_UPDATED = "payable_invoice.updated"
+    PAYABLE_INVOICE_REMOVED = "payable_invoice.removed"
+    COLLECTIBLE_INVOICE_CREATED = "collectible_invoice.created"
+    COLLECTIBLE_INVOICE_UPDATED = "collectible_invoice.updated"
+    COLLECTIBLE_INVOICE_REMOVED = "collectible_invoice.removed"
     ATTACHMENT_LINKED = "attachment.linked"
     ATTACHMENT_REMOVED = "attachment.removed"
 
