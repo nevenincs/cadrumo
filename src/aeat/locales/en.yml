@@ -632,6 +632,14 @@ cli:
       confirm_required: Pass --yes to confirm this destructive ledger operation, or
         use --dry-run first
       filter_parse_error: Failed to parse ledger filter
+      id_prefix_collision: "Transaction id prefix %{prefix!r} matches more than one transaction: %{candidates}.
+        Lengthen the prefix to disambiguate."
+      id_prefix_empty: Transaction id prefix is empty; pass at least one hex character.
+      id_prefix_not_found: 'No transaction matches id prefix %{prefix!r}.'
+      id_prefix_not_hex: 'Transaction id prefix %{prefix!r} contains non-hex characters
+        (allowed: 0-9, a-f).'
+      id_prefix_too_long: 'Transaction id prefix %{prefix!r} is longer than 64 characters
+        (a full SHA-256 digest).'
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
     export:
       actor_help: Operator name recorded on the bucket event

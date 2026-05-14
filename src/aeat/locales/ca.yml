@@ -650,6 +650,15 @@ cli:
       confirm_required: Passa --yes per confirmar aquesta operació destructiva del
         llibre, o usa --dry-run primer
       filter_parse_error: Fallada en analitzar el filtre del llibre
+      id_prefix_collision: "El prefix d'id de transacció %{prefix!r} coincideix amb
+        més d'una transacció: %{candidates}. Allarga el prefix per desambiguar."
+      id_prefix_empty: El prefix d'id de transacció és buit; passa almenys un caràcter
+        hex.
+      id_prefix_not_found: 'Cap transacció coincideix amb el prefix d''id %{prefix!r}.'
+      id_prefix_not_hex: "El prefix d'id de transacció %{prefix!r} conté caràcters
+        no hex (permesos: 0-9, a-f)."
+      id_prefix_too_long: "El prefix d'id de transacció %{prefix!r} té més de 64 caràcters
+        (un digest SHA-256 complet)."
       invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}'
     export:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
