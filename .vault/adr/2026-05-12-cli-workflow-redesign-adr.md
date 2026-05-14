@@ -1545,3 +1545,170 @@ Each row's acceptance criteria live in the named ADR's `2026-05-14
 amendment` section (for patches) or the ADR's `Acceptance` / `Implementation`
 section (for the three new ADRs). The apex plan's appended audit-closure
 wave wires the build work for every row.
+
+## 2026-05-14 reconciliation amendment — bi-directional ADR↔code audit
+
+A mechanical per-wave sweep over the W01–W70 implementation surface
+surfaced ~40 drift signals between the apex CLI design and the shipped
+codebase. Drift is not a defect list; it is a three-way adjudication:
+
+- **Improvement** — the shipped shape is better than the ADR specified.
+  The ADR is amended up to ratify the shipped shape; the code stays.
+- **Regression** — the shipped shape contradicts intent without
+  justification. The code is fixed; the ADR stands.
+- **Natural evolution** — the shipped shape is a small, sensible
+  refinement (renamed verb, optional flag, demoted axis). The ADR delta
+  is inline; both surfaces converge.
+
+This section is the reconciliation ledger. It records the
+adjudication per drift cluster and binds each verdict to a
+reconciliation wave (`W71A`–`W85A`) in the apex plan. Every wave/phase/
+step ID in the reconciliation track uses the `-A` suffix
+(`W71A.P###A.S####A`) so the audit lineage is greppable across both
+documents.
+
+### Standardized CRUD verb contract for mutating noun-groups
+
+The reconciliation sweep surfaces a cross-cutting pattern: every CLI
+domain that exposes an "edit work surface" over persisted records
+(ledger transactions, purchase invoice evidence, payable and
+collectible invoices, profile values, auth providers, apoderado
+configuration, inventory rows, bucket records, usage ratios) has
+drifted into a domain-specific verb vocabulary
+(`create/edit/archive/stash/reset/track/read` in ledger;
+`get/set/unset/status` in profile; `configure/clear` in auth; etc.).
+
+The locked W70.P333 verb shape for `aeat app ledger evidence` —
+exactly five verbs `add / remove / update / view / list` — is the
+canonical mutating-noun-group contract for the redesigned CLI. Every
+mutating noun-group MUST adopt this five-verb spine:
+
+- **`add`** — construction verb. Accepts the inputs needed to
+  materialise a new record; emits the matching `*.created` bucket event;
+  returns the new record's `full_id`.
+- **`remove`** — retirement verb. Accepts a `full_id` or any
+  unambiguous prefix per the 2026-05-14 transaction-identity
+  amendment; refuses on collision with the matching candidate set;
+  cascades evidence/link/review-item detachment per the noun-group's
+  retirement policy; emits the matching `*.removed` bucket event.
+- **`update`** — mutation verb. Updates user-editable fields on an
+  existing record by `full_id` or unambiguous prefix; rejects
+  attempts to mutate immutable fields with a typed validation error;
+  emits the matching `*.updated` bucket event.
+- **`view`** — single-record read verb. Returns the full record
+  payload for one `full_id` or unambiguous prefix; read-only; emits
+  no bucket event.
+- **`list`** — collection read verb. Bare invocation returns the
+  full set of records in the active bucket per the W70.P336
+  list-vs-query semantic contract; refining filters
+  (`--state`, `--kind`, `--year`, etc.) are optional; read-only;
+  emits no bucket event.
+
+**Orthogonal axes are sub-verbs, not CRUD substitutes.** Domain-
+specific operations that are not record-lifecycle operations
+(`classify`, `allocate`, `attach`, `link`, `check`, `preflight`,
+`reconcile`) remain as distinct verbs at the noun-group level; they
+are orthogonal axes over existing records, not parallel CRUD
+vocabularies. A noun-group that exposes `classify` and `allocate`
+still owns `add/remove/update/view/list`; the orthogonal verbs
+operate on records the CRUD spine materialised.
+
+**Lifecycle-state operations remain explicit.** Verbs that move a
+record between named states with distinct semantics (`archive`,
+`stash`, `reset`, `discard`) are not CRUD operations; they remain
+explicit lifecycle verbs at the noun-group level. They emit
+state-specific bucket events (`*.archived`, `*.discarded`, etc.) and
+do not collapse into `remove` or `update`.
+
+**Key-value-as-record exceptions.** Where a noun-group's records are
+*conceptually keyed scalars* rather than entities (the profile
+schema, usage ratios, configuration keys), the canonical CRUD shape
+adapts: `add` → `set KEY VALUE`, `remove` → `unset KEY`,
+`update` → `set KEY VALUE` (idempotent), `view` → `get KEY`,
+`list` → `list [--prefix PREFIX]`. The exception is documented
+explicitly per noun-group; default is the strict five-verb CRUD
+spine.
+
+**Lock.** The W71A wave inventories every mutating noun-group in the
+redesigned tree, adjudicates current verbs against the contract,
+and produces per-noun-group migration steps. Subsequent waves
+(`W72A`–`W77A`) close the per-domain reconciliation in priority
+order. The contract becomes immutable once W71A lands; future
+mutating noun-groups MUST conform without exception.
+
+### Reconciliation ledger — verdict table
+
+Each row records: the drift cluster surfaced by the audit, the
+adjudication (improvement / regression / evolution), and the
+reconciliation wave that closes it. Detail per row lives in the
+named wave's plan section and (for ratifications) in inline
+amendments to the affected child ADR.
+
+| # | Drift cluster | Affected waves/ADRs | Verdict | Closes via |
+|---|---------------|---------------------|---------|------------|
+| R01 | Cross-cutting CRUD verb soup across mutating noun-groups | apex §2, §4.2, §4.3, ledger-transaction-management ADR | Evolution (lock canonical 5-verb spine; document key-value exceptions) | `W71A` |
+| R02 | `aeat app modelo` uses nested sub-apps (`work/bindings/filing-record/verification-report`) instead of flat verb tree per apex §4.3 | apex §4.3, app-modelo-shape ADR, W46 | Adjudicate — likely Improvement (nested groups carry operator-mental-model grouping ADR did not anticipate); if ratified, amend apex §4.3 to declare nested grammar canonical | `W72A` |
+| R03 | `aeat app ledger` ships 16 verbs vs locked 11 (extras: `create/edit/archive/stash/reset/track/read`; missing: `link/check/preflight`) | ledger-transaction-management ADR, W23 | Mixed — adjudicate per verb: `create/edit` map onto CRUD `add/update` (Evolution); `archive/stash/reset` are lifecycle state verbs (Evolution, document explicitly); `track/read` likely redundant with `view`/event history (Regression — retire); `link/check/preflight` missing (Regression — add) | `W72A` |
+| R04 | `payable_invoice` and `collectible_invoice` source kinds have zero CLI noun-group mount despite being locked taxonomy citizens | invoice-domain-decoupling ADR, apex §2 | Regression — Add `aeat app ledger payable-invoice` and `aeat app ledger collectible-invoice` CRUD noun-groups | `W73A` |
+| R05 | `aeat config profile` ships 5 of 13 locked verbs (`list/get/set/unset/status`); missing `add/remove/edit/show/duplicate/export/import/validate/preflight` + `use` alias | config-cli-profile-surface ADR, config-profile-use-and-status ADR, W10, W19 | Evolution — adopt key-value-as-record exception for value editing (`set/get/unset` ratified); add profile-lifecycle CRUD (`add/remove/update/view/list` for profile *records*) and the `use` alias | `W74A` |
+| R06 | `aeat config auth apoderado` subgroup entirely absent; `--scope` catalogue absent | apoderamientos-surface ADR, apoderado-scope-vocabulary ADR, W20, W21 | Regression — ship full subgroup; ship `registry/aeat/apoderamientos/scopes.toml` | `W75A` |
+| R07 | `aeat app ledger inventory` Typer mount absent; `application/inventory` layer absent; domain layer exists | inventory-management-cli-design ADR, inventory-placement ADR, W24, W25 | Regression — wire application service + Typer mount; reconcile verbs to W71A contract | `W76A` |
+| R08 | `aeat app ledger ratios` and `aeat config bucket` ship partial verb sets vs locked grammar | app-ledger-ratios-shape ADR, bucket ADR, W13, W26 | Evolution — ratios are key-value records (apply exception); bucket maintenance verbs (`browse/search/export/import/rename/delete`) are lifecycle operations, not CRUD (document explicitly) | `W77A` |
+| R09 | `aeat app modelo file --by ACTOR` mandatory; ADR specifies optional with default = active profile display_name | actor-attribution ADR, W44 | Regression — change Typer Option to optional with default factory | `W78A` |
+| R10 | `aeat app modelo discard` exists but `modelo.work_unit.discarded` is not a `BucketEventType` enum member and is never emitted | app-modelo-discard ADR, bucket-event-history ADR, W45 | Regression — add enum entry; emit event in `discard_work_unit` action | `W78A` |
+| R11 | `aeat app modelo calculate --borrador SNAPSHOT_ID` flag absent | borrador-100-binding-integration ADR, W48 | Regression — wire borrador-100 binding integration per ADR | `W78A` |
+| R12 | `aeat app live` mounts only `filed` subgroup; ADR §4.4 locks 7 subgroups | app-live-shape ADR, W54 | Regression — mount 6 missing subgroups (notifications/expedientes/verify nif-iva+tgvi/borrador/portals) behind `require_live_read()` | `W79A` |
+| R13 | `aeat app live portals` mount absent; `application/portals/` wrapper missing | domain-portals-harvest ADR, W35 | Regression — close P174 (application wrapper + Typer mount) | `W79A` |
+| R14 | `WorkflowEngine.run_for_period` exists but is not invoked from `aeat app modelo file` | workflow-engine-harvest ADR, W58 | Regression — wire `run_for_period` into `file_modelo_revision` per apex §8 backend exit-cap mandate | `W80A` |
+| R15 | `SubmissionEngine.preflight` exists but is not invoked from `verify_modelo_revision`/`file_modelo_revision` | apex §8, W65 | Regression — invoke preflight inside both modelo actions (alternative: route everything through `WorkflowEngine`; adjudicate during wave) | `W80A` |
+| R16 | `aeat app modelo resume <workflow_run_id>` entirely absent | workflow-resumption-semantics ADR, W59 | Regression — ship verb per ADR with `resumed_from` tracking + idempotency | `W80A` |
+| R17 | `aeat app overview` ships only `status` verb; `calendar/agenda/backlog/explain` not exposed as discrete verbs (`--calendar` is a flag on `status`) | app-overview-shape ADR, W53 | Adjudicate — flag-on-status may be Improvement (single verb with axis switches) or Regression (loses discoverability); if Improvement, amend §4.1 | `W81A` |
+| R18 | `domain/deadlines/_festivos.shift_deadline` exists but is never called from `OverviewCalendarEntry`; `adjusted_closes_on` field absent | festivos-deadline-shift ADR, W37 | Regression — wire into overview calendar; add field; retire legacy `entrypoints/cli/deadlines/` package | `W81A` |
+| R19 | `aeat config repair` ships 4 of 6 locked subverbs (`connectivity/quarantine/reset-state/logs`); missing `integrity` and `list` | config-repair-shape ADR, W18 | Regression — add 2 subcommands wired to existing AES-256-GCM scan + namespace inventory functions | `W82A` |
+| R20 | `aeat config init` exists via wizard but no atomic init service; bucket.created/profile.created/profile.activated events not emitted | config-init-shape ADR, config-vs-setup-namespace ADR, W15, W11 | Regression — build `src/aeat/application/setup` service; close `aeat config auth setup` orphan reference in diagnostics | `W83A` |
+| R21 | Registry domain admits bare `invoice` source bindings for 347/349/720 despite four-source taxonomy lock | per-modelo-aggregation-pipeline ADR, invoice-domain-decoupling ADR, W52 | Regression — reject bare `invoice` at registry domain layer; ship retenciones (111/115/123/180/190/193), 347/349 counterpart, 720 aggregators using explicit source kinds | `W84A` |
+| R22 | Modelo 036/037 and 145 foundations absent (no registry TOML) | modelo-036-037-foundation ADR, modelo-145-foundation ADR, W50, W51 | Unstarted greenfield (not drift) — ship TOMLs + binding contracts | `W85A` |
+| R23 | `EvidenceBundle` class + `aeat app modelo audit show/check/export/replay` verbs absent | evidence-bundle-shape ADR, W57 | Unstarted greenfield — ship per ADR | `W85A` |
+| R24 | `application.ledger.classify_ledger_transaction` wrapper absent; `application/rental` + CLI absent; `aeat app modelo reconcile --justificante` CLI absent | domain-harvest-vat-classification ADR, domain-harvest-rental ADR, W32, W34, W64 | Regression — backend-done-CLI-deferred pattern; ship wrappers and CLI surfaces | `W85A` |
+| R25 | Plan rows out of sync with shipped code (`W22` invoice decoupling; `W34` rental domain; `W35` portals `_cli.py` deletion; `W44` actor flags; `W45` discard verb) | epic plan ledger, multiple waves | Bookkeeping — check [x] rows after wave-specific reconciliation lands; no ADR impact | Closed inline as each wave above lands |
+
+### Cross-reference index
+
+| Reconciliation wave | Apex section(s) amended | Child ADR(s) amended | Plan scope |
+|---|---|---|---|
+| `W71A` — CRUD verb contract | §12.b (new); §2 cross-cutting | None (cross-cutting amendment lives in apex) | New |
+| `W72A` — modelo grammar reconcile | §4.3 | `app-modelo-shape`, `ledger-transaction-management` | Closes R02, R03 |
+| `W73A` — invoice noun-groups | §4.2 | `invoice-domain-decoupling`, `ledger-transaction-management` | Closes R04 |
+| `W74A` — profile noun-group | §3.2 | `config-cli-profile-surface`, `config-profile-use-and-status` | Closes R05 |
+| `W75A` — apoderado noun-group | §3.3 | `apoderamientos-surface`, `apoderado-scope-vocabulary` | Closes R06 |
+| `W76A` — inventory noun-group | §4.2 | `inventory-management-cli-design`, `inventory-placement` | Closes R07 |
+| `W77A` — ratios + bucket noun-groups | §3.4, §4.2 | `app-ledger-ratios-shape`, `bucket` | Closes R08 |
+| `W78A` — modelo lifecycle drift fixes | §4.3 | `actor-attribution`, `app-modelo-discard`, `borrador-100-binding-integration` | Closes R09, R10, R11 |
+| `W79A` — app live shape completion | §4.4 | `app-live-shape`, `domain-portals-harvest` | Closes R12, R13 |
+| `W80A` — workflow + preflight + resume wiring | §4.3, §8 | `workflow-engine-harvest`, `workflow-resumption-semantics` | Closes R14, R15, R16 |
+| `W81A` — overview shape completion | §4.1 | `app-overview-shape`, `festivos-deadline-shift` | Closes R17, R18 |
+| `W82A` — config repair completion | §3.6 | `config-repair-shape` | Closes R19 |
+| `W83A` — config init backend service | §3.1 | `config-init-shape`, `aeat-cli-config-vs-setup-namespace` | Closes R20 |
+| `W84A` — aggregation taxonomy enforcement | §2 (source-kind taxonomy) | `per-modelo-aggregation-pipeline`, `invoice-domain-decoupling` | Closes R21 |
+| `W85A` — modelo foundations + harvest completions | §5, §7, §8 | `modelo-036-037-foundation`, `modelo-145-foundation`, `evidence-bundle-shape`, `domain-harvest-vat-classification`, `domain-harvest-rental` | Closes R22, R23, R24 |
+
+### Implementation discipline
+
+Each reconciliation wave follows the standard 5-phase template
+(backend implementation → shadow duplicate removal → de-shim and
+de-stub cleanup → real behavior verification → thin CLI exposure),
+matching the W01–W70 spine. The `-A` suffix on every ID
+(`W71A.P###A.S####A`) is the audit-lineage marker; any tooling that
+greps for `^W\d+A` will return exactly the reconciliation track.
+
+Per-wave ADR amendments are written inline into the affected child
+ADR's `2026-05-14 reconciliation amendment` section. The apex's
+`related:` frontmatter is updated to reflect any new child ADRs
+introduced by reconciliation (none anticipated; the lock lives in
+this apex amendment).
+
+The reconciliation ledger is closed when every R-row above is
+either marked `closed by W##A` or explicitly deferred with a named
+follow-up ADR. The 2026-05-14 audit amendment (above this section)
+remains the authoritative entry point for the test-user findings;
+this section extends it with the per-wave-sweep findings.
