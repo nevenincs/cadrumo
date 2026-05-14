@@ -1,4 +1,10 @@
+access_gate:
+  errors:
+    default_translatable: "l'enviament en viu a l'AEAT està permanentment prohibit; utilitza produce -> verify -> export i puja el fitxer tu mateix al portal de l'AEAT"
 aggregation:
+  counterpart:
+    errors:
+      unsupported_modelo: aggregation.counterpart.errors.unsupported_modelo
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
@@ -14,6 +20,13 @@ aggregation:
         o mes explícitament.
       quarter_required: El tipus de període trimestral requereix un valor de trimestre.
     t_944805: Format de període no vàlid. Useu YYYY, YYYY-Qn o YYYY-MM.
+  per_modelo:
+    errors:
+      unsupported_modelo: aggregation.per_modelo.errors.unsupported_modelo
+    registry:
+      errors:
+        invalid_accrued_on: aggregation.per_modelo.registry.errors.invalid_accrued_on
+        unsupported_provider: aggregation.per_modelo.registry.errors.unsupported_provider
   renta_ledger:
     errors:
       annual_period_required: Es requereix un període anual per a l'agregació del
@@ -24,6 +37,9 @@ aggregation:
         de Renda.
       period_mismatch: El període no coincideix amb el període esperat del llibre
         de Renda.
+  retenciones:
+    errors:
+      unsupported_modelo: aggregation.retenciones.errors.unsupported_modelo
 application:
   auth:
     provider_impact:
@@ -58,6 +74,61 @@ categories:
     display_label_851219: Etiqueta de visualització 851219
 cli:
   app:
+    ledger:
+      collectible_invoice:
+        group_help: cli.app.ledger.collectible_invoice.group_help
+      evidence:
+        add_help: cli.app.ledger.evidence.add_help
+        evidence_id_help: cli.app.ledger.evidence.evidence_id_help
+        group_help: cli.app.ledger.evidence.group_help
+        invoice_date_help: cli.app.ledger.evidence.invoice_date_help
+        invoice_number_help: cli.app.ledger.evidence.invoice_number_help
+        iva_amount_help: cli.app.ledger.evidence.iva_amount_help
+        iva_rate_help: cli.app.ledger.evidence.iva_rate_help
+        list_help: cli.app.ledger.evidence.list_help
+        notes_help: cli.app.ledger.evidence.notes_help
+        remove_help: cli.app.ledger.evidence.remove_help
+        source_path_help: cli.app.ledger.evidence.source_path_help
+        supplier_help: cli.app.ledger.evidence.supplier_help
+        taxable_base_help: cli.app.ledger.evidence.taxable_base_help
+        update_help: cli.app.ledger.evidence.update_help
+        view_help: cli.app.ledger.evidence.view_help
+        yes_help: cli.app.ledger.evidence.yes_help
+        yes_required: cli.app.ledger.evidence.yes_required
+      inventory:
+        actividad_id_help: cli.app.ledger.inventory.actividad_id_help
+        create_help: cli.app.ledger.inventory.create_help
+        group_help: cli.app.ledger.inventory.group_help
+        list_help: cli.app.ledger.inventory.list_help
+        movement_add_help: cli.app.ledger.inventory.movement_add_help
+        movement_date_help: cli.app.ledger.inventory.movement_date_help
+        movement_group_help: cli.app.ledger.inventory.movement_group_help
+        movement_id_help: cli.app.ledger.inventory.movement_id_help
+        movement_kind_help: cli.app.ledger.inventory.movement_kind_help
+        opening_stock_help: cli.app.ledger.inventory.opening_stock_help
+        quantity_help: cli.app.ledger.inventory.quantity_help
+        taxable_base_help: cli.app.ledger.inventory.taxable_base_help
+        unit_cost_help: cli.app.ledger.inventory.unit_cost_help
+        unknown_movement_kind: cli.app.ledger.inventory.unknown_movement_kind
+        valuation_group_help: cli.app.ledger.inventory.valuation_group_help
+        valuation_method_help: cli.app.ledger.inventory.valuation_method_help
+        valuation_preview_help: cli.app.ledger.inventory.valuation_preview_help
+        vat_rate_help: cli.app.ledger.inventory.vat_rate_help
+        year_help: cli.app.ledger.inventory.year_help
+      payable_invoice:
+        group_help: cli.app.ledger.payable_invoice.group_help
+      ratios:
+        category_help: cli.app.ledger.ratios.category_help
+        eligible_help: cli.app.ledger.ratios.eligible_help
+        group_help: cli.app.ledger.ratios.group_help
+        list_help: cli.app.ledger.ratios.list_help
+        no_override_error: cli.app.ledger.ratios.no_override_error
+        ratio_help: cli.app.ledger.ratios.ratio_help
+        set_help: cli.app.ledger.ratios.set_help
+        unknown_category: cli.app.ledger.ratios.unknown_category
+        unset_category_help: cli.app.ledger.ratios.unset_category_help
+        unset_help: cli.app.ledger.ratios.unset_help
+        validate_help: cli.app.ledger.ratios.validate_help
     live:
       app_help: Ordres d'observació AEAT en viu de només lectura
       borrador:
@@ -66,10 +137,18 @@ cli:
         latest_help: Mostrar el snapshot actiu més recent d'un exercici fiscal
         list_help: Llistar snapshots persistits del borrador del model 100
         modelo_100_help: Ordres de snapshots del borrador del model 100
-        view_help: Mostrar un snapshot del borrador del model 100
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
-        state_help: 'Filtre d''estat del snapshot: active, superseded, discarded o all'
+        state_help: 'Filtre d''estat del snapshot: active, superseded, discarded o
+          all'
+        view_help: Mostrar un snapshot del borrador del model 100
       expediente_help: Identificador d'expedient AEAT
+      expedientes:
+        app_help: cli.app.live.expedientes.app_help
+        capture_help: cli.app.live.expedientes.capture_help
+        latest_help: cli.app.live.expedientes.latest_help
+        list_help: cli.app.live.expedientes.list_help
+        snapshot_id_help: cli.app.live.expedientes.snapshot_id_help
+        view_help: cli.app.live.expedientes.view_help
       filed:
         capture_help: Capturar dades de declaracions presentades des d'AEAT
         capture_sources_help: Capturar observacions presentades requerides per una
@@ -79,14 +158,58 @@ cli:
       from_year_help: Primer exercici de presentació
       limit_help: Nombre màxim de files a capturar
       modelo_help: Codi de model
+      notifications:
+        app_help: cli.app.live.notifications.app_help
+        capture_help: cli.app.live.notifications.capture_help
+        list_help: cli.app.live.notifications.list_help
+        snapshot_id_help: cli.app.live.notifications.snapshot_id_help
+        view_help: cli.app.live.notifications.view_help
       output_root_help: Directori per a observacions capturades de declaracions presentades
       period_help: Període de presentació
+      portals:
+        app_help: cli.app.live.portals.app_help
+        category_help: cli.app.live.portals.category_help
+        list_help: cli.app.live.portals.list_help
+        modelo_help: cli.app.live.portals.modelo_help
+        portal_id_help: cli.app.live.portals.portal_id_help
+        view_help: cli.app.live.portals.view_help
       registry_root_help: Arrel del registre
       source_root_help: Arrel del projecte
       to_year_help: Últim exercici de presentació
+      verify:
+        app_help: cli.app.live.verify.app_help
+        expected_help: cli.app.live.verify.expected_help
+        latest_help: cli.app.live.verify.latest_help
+        latest_nif_help: cli.app.live.verify.latest_nif_help
+        latest_surface_help: cli.app.live.verify.latest_surface_help
+        list_help: cli.app.live.verify.list_help
+        nif_help: cli.app.live.verify.nif_help
+        nif_iva_arg_help: cli.app.live.verify.nif_iva_arg_help
+        nif_iva_help: cli.app.live.verify.nif_iva_help
+        observation_id_help: cli.app.live.verify.observation_id_help
+        surface_help: cli.app.live.verify.surface_help
+        tgvi_arg_help: cli.app.live.verify.tgvi_arg_help
+        tgvi_help: cli.app.live.verify.tgvi_help
+        view_help: cli.app.live.verify.view_help
       year_help: Exercici de presentació
     modelo:
+      aggregate:
+        counterpart_observation_help: cli.app.modelo.aggregate.counterpart_observation_help
+        foreign_asset_observation_help: cli.app.modelo.aggregate.foreign_asset_observation_help
+        modelo_help: cli.app.modelo.aggregate.modelo_help
+        period_help: cli.app.modelo.aggregate.period_help
+        retencion_observation_help: cli.app.modelo.aggregate.retencion_observation_help
+      aggregate_help: cli.app.modelo.aggregate_help
       app_help: Inspeccionar el catàleg de models tributaris AEAT al registre
+      audit:
+        bundle_id_help: cli.app.modelo.audit.bundle_id_help
+        check_help: cli.app.modelo.audit.check_help
+        export_help: cli.app.modelo.audit.export_help
+        force_incomplete_help: cli.app.modelo.audit.force_incomplete_help
+        group_help: cli.app.modelo.audit.group_help
+        output_help: cli.app.modelo.audit.output_help
+        replay_help: cli.app.modelo.audit.replay_help
+        view_help: cli.app.modelo.audit.view_help
       bindings:
         app_help: Inspeccionar i previsualitzar els bindings d'un model tributari
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
@@ -97,7 +220,8 @@ cli:
         missing_required_options: 'Falten opcions obligatòries: %{options}'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
-        period_help: Període fiscal per acotar els bindings (p. ex. 2026Q1, 2026-01)
+        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o
+          baja; exemples periodics inclouen 2026Q1 i 2026-01
         preview_help: Previsualitzar els bindings amb sobreescriptures temporals sense
           mutar l'estat
         year_help: Exercici fiscal del model (p. ex. 2026)
@@ -106,13 +230,15 @@ cli:
         input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
           computed, informational)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Període fiscal per acotar les caselles (p. ex. 2026Q1, 2026-01)
+        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o
+          baja; exemples periodics inclouen 2026Q1 i 2026-01
         required_help: Mostrar només les caselles marcades com a obligatòries
       describe:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Període fiscal per resoldre la revisió del model (p. ex. 2026Q1,
-          2026-01)
+        period_help: Token de periode per resoldre la revisio del model; per a Modelo
+          036 usa alta, modificacion o baja; exemples periodics inclouen 2026Q1
+          i 2026-01
       filing_record:
         app_help: Inspeccionar els filing records interns registrats
         bucket_id_help: Filtrar per bucket
@@ -132,16 +258,22 @@ cli:
       formulas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
-        period_help: Període fiscal per acotar les fórmules (p. ex. 2026Q1, 2026-01)
+        period_help: Token de periode; per a Modelo 036 usa alta, modificacion o
+          baja; exemples periodics inclouen 2026Q1 i 2026-01
+      history:
+        modelo_help: cli.app.modelo.history.modelo_help
+        period_help: cli.app.modelo.history.period_help
+        year_help: cli.app.modelo.history.year_help
+      history_help: cli.app.modelo.history_help
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
       verification_report:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per
           revisió de càlcul
-        view_help: Mostrar un informe de verificació per id
         verification_report_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'un informe de verificació
+        view_help: Mostrar un informe de verificació per id
       work:
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
         amend_help: Construir una declaració complementària sobre una declaració presentada
@@ -170,6 +302,8 @@ cli:
         from_filing_record_help: Identificador estable del filing record base a amendar.
           Ha de portar evidència externa importada (justificant / CSV / captura en
           viu)
+        history_help: cli.app.modelo.work.history_help
+        history_work_unit_id_help: cli.app.modelo.work.history_work_unit_id_help
         include_discarded_help: Incloure les unitats descartades en el llistat (excloses
           per defecte)
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
@@ -178,7 +312,8 @@ cli:
         name_help: Nom de visualització opcional de la unitat de treball
         notes_help: Notes opcionals associades al filing record
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
-        period_help: Període fiscal de la unitat (p. ex. Q1, 4T, 0A, 01)
+        period_help: Token de periode de la unitat; per a Modelo 036 usa alta, modificacion
+          o baja; exemples periodics inclouen Q1, 4T, 0A i 01
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
         revision_help: Identificador estable de la revisió registrada del model
@@ -210,7 +345,7 @@ cli:
         configure_help: Establir la configuració d'apoderat activa
         help: Gestionar la configuració d'apoderat
         scope:
-          censo: Cens (modelo 036, 037)
+          censo: Cens (modelo 036)
           exped: Expedients i tràmits
           generalnt: Tràmits tributaris (general)
           inform: Declaracions informatives (modelo 347, 349, 720)
@@ -280,6 +415,18 @@ cli:
       status_help: Mostrar l'estat actual de la sessió OAuth de Google per al perfil
         actiu
       sync:
+        calc:
+          export:
+            modelo_help: Identificador del model a exportar (p. ex. 130, 303, 100)
+            period_help: Codi de període (p. ex. 1T, 2T, 0A)
+            root_folder_required: No hi ha cap carpeta arrel de Drive configurada;
+              executeu `aeat config google folder set <id>` primer
+            unknown_modelo: Model desconegut {modelo!r}; els models disponibles són
+              {available}
+            year_help: Any de declaració (p. ex. 2025)
+          export_help: Exporta la superfície de càlcul del registre per a un model
+            i període a un full de Google Sheets dins de `aeat-vault/`
+          help: Superfície de càlcul esquema-a-full (exportar i recuperar)
         help: cli.config.google.sync.help
         probe_help: cli.config.google.sync.probe_help
         probe_read_only_help: cli.config.google.sync.probe_read_only_help
@@ -303,6 +450,7 @@ cli:
       non_interactive_help: Run without prompting for user input
       output_language_help: Primary language for CLI output (en, es, ca)
       profile_name_help: Unique identifier for this configuration profile
+      quiet_help: cli.config.init.quiet_help
       submissions_dir_help: Directory to store submitted filing receipts
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status`'
@@ -332,13 +480,13 @@ cli:
       remove_requires_yes: La retirada és destructiva. Torna a executar 'aeat config
         profile remove %{name} --yes' per confirmar.
       remove_yes_help: Confirma explícitament l''operació de retirada
-      view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
       show_name_help: Id del perfil a mostrar (per defecte el perfil actiu)
       unknown_profile: 'Perfil desconegut: %{name}. Executa ''aeat config profile
         list'' per veure els perfils registrats.'
       use_help: Seleccionar un perfil existent com a perfil actiu
       use_name_help: Id del perfil que s''activarà
       validate_help: Validate the active profile against the schema.
+      view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       connectivity_target_help: Objectiu de connectivitat que cal comprovar
@@ -626,9 +774,9 @@ cli:
       articulo_help: Article concret a mostrar (p. ex. 91.U.2.1r)
       list_help: Llistar les normatives registrades al corpus legal
       normative_id_help: Id estable de la normativa (p. ex. ley-37-1992)
-      view_help: Mostrar una normativa i, opcionalment, un dels seus articles
       tag_help: Filtrar per etiqueta de domini fiscal (p. ex. 'irpf', 'iva')
       verify_help: Verificar la integritat del corpus normatiu
+      view_help: Mostrar una normativa i, opcionalment, un dels seus articles
     inspect_help: Inspeccionar l'estat del registre i les referències
     inspect_registry_root_help: Ruta al directori arrel del registre
     manuals:
@@ -639,8 +787,8 @@ cli:
       part_help: Volum del manual (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: Llistar les regles codificades en un manual
       section_help: Identificador opcional de secció a mostrar
-      view_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
       verify_help: Verificar la integritat del manual contra el seu contracte
+      view_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
       year_help: Any fiscal del manual (p. ex. 2024)
     metrics:
       applicability_declaration_count: applicability_declaration_count

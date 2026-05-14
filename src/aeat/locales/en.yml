@@ -1,4 +1,10 @@
+access_gate:
+  errors:
+    default_translatable: "live AEAT submission is permanently forbidden; use produce -> verify -> export and upload the file yourself in the AEAT portal"
 aggregation:
+  counterpart:
+    errors:
+      unsupported_modelo: aggregation.counterpart.errors.unsupported_modelo
   iva_ledger:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
@@ -14,6 +20,13 @@ aggregation:
       period_type_ambiguous: Period type is ambiguous; specify quarter or month explicitly.
       quarter_required: Quarterly period type requires a quarter value.
     t_944805: Invalid period format. Use YYYY, YYYY-Qn, or YYYY-MM.
+  per_modelo:
+    errors:
+      unsupported_modelo: aggregation.per_modelo.errors.unsupported_modelo
+    registry:
+      errors:
+        invalid_accrued_on: aggregation.per_modelo.registry.errors.invalid_accrued_on
+        unsupported_provider: aggregation.per_modelo.registry.errors.unsupported_provider
   renta_ledger:
     errors:
       annual_period_required: Annual period is required for Renta ledger aggregation.
@@ -21,6 +34,9 @@ aggregation:
         Renta ledger bucket.
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
+  retenciones:
+    errors:
+      unsupported_modelo: aggregation.retenciones.errors.unsupported_modelo
 application:
   auth:
     provider_impact:
@@ -52,6 +68,61 @@ categories:
     display_label_851219: Display label 851219
 cli:
   app:
+    ledger:
+      collectible_invoice:
+        group_help: cli.app.ledger.collectible_invoice.group_help
+      evidence:
+        add_help: cli.app.ledger.evidence.add_help
+        evidence_id_help: cli.app.ledger.evidence.evidence_id_help
+        group_help: cli.app.ledger.evidence.group_help
+        invoice_date_help: cli.app.ledger.evidence.invoice_date_help
+        invoice_number_help: cli.app.ledger.evidence.invoice_number_help
+        iva_amount_help: cli.app.ledger.evidence.iva_amount_help
+        iva_rate_help: cli.app.ledger.evidence.iva_rate_help
+        list_help: cli.app.ledger.evidence.list_help
+        notes_help: cli.app.ledger.evidence.notes_help
+        remove_help: cli.app.ledger.evidence.remove_help
+        source_path_help: cli.app.ledger.evidence.source_path_help
+        supplier_help: cli.app.ledger.evidence.supplier_help
+        taxable_base_help: cli.app.ledger.evidence.taxable_base_help
+        update_help: cli.app.ledger.evidence.update_help
+        view_help: cli.app.ledger.evidence.view_help
+        yes_help: cli.app.ledger.evidence.yes_help
+        yes_required: cli.app.ledger.evidence.yes_required
+      inventory:
+        actividad_id_help: cli.app.ledger.inventory.actividad_id_help
+        create_help: cli.app.ledger.inventory.create_help
+        group_help: cli.app.ledger.inventory.group_help
+        list_help: cli.app.ledger.inventory.list_help
+        movement_add_help: cli.app.ledger.inventory.movement_add_help
+        movement_date_help: cli.app.ledger.inventory.movement_date_help
+        movement_group_help: cli.app.ledger.inventory.movement_group_help
+        movement_id_help: cli.app.ledger.inventory.movement_id_help
+        movement_kind_help: cli.app.ledger.inventory.movement_kind_help
+        opening_stock_help: cli.app.ledger.inventory.opening_stock_help
+        quantity_help: cli.app.ledger.inventory.quantity_help
+        taxable_base_help: cli.app.ledger.inventory.taxable_base_help
+        unit_cost_help: cli.app.ledger.inventory.unit_cost_help
+        unknown_movement_kind: cli.app.ledger.inventory.unknown_movement_kind
+        valuation_group_help: cli.app.ledger.inventory.valuation_group_help
+        valuation_method_help: cli.app.ledger.inventory.valuation_method_help
+        valuation_preview_help: cli.app.ledger.inventory.valuation_preview_help
+        vat_rate_help: cli.app.ledger.inventory.vat_rate_help
+        year_help: cli.app.ledger.inventory.year_help
+      payable_invoice:
+        group_help: cli.app.ledger.payable_invoice.group_help
+      ratios:
+        category_help: cli.app.ledger.ratios.category_help
+        eligible_help: cli.app.ledger.ratios.eligible_help
+        group_help: cli.app.ledger.ratios.group_help
+        list_help: cli.app.ledger.ratios.list_help
+        no_override_error: cli.app.ledger.ratios.no_override_error
+        ratio_help: cli.app.ledger.ratios.ratio_help
+        set_help: cli.app.ledger.ratios.set_help
+        unknown_category: cli.app.ledger.ratios.unknown_category
+        unset_category_help: cli.app.ledger.ratios.unset_category_help
+        unset_help: cli.app.ledger.ratios.unset_help
+        validate_help: cli.app.ledger.ratios.validate_help
     live:
       app_help: Read-only AEAT live observation commands
       borrador:
@@ -60,10 +131,17 @@ cli:
         latest_help: Show the most recent active snapshot for a filing year
         list_help: List persisted Modelo 100 borrador snapshots
         modelo_100_help: Modelo 100 borrador snapshot commands
-        view_help: Show one Modelo 100 borrador snapshot
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         state_help: 'Snapshot state filter: active, superseded, discarded, or all'
+        view_help: Show one Modelo 100 borrador snapshot
       expediente_help: AEAT expediente identifier
+      expedientes:
+        app_help: cli.app.live.expedientes.app_help
+        capture_help: cli.app.live.expedientes.capture_help
+        latest_help: cli.app.live.expedientes.latest_help
+        list_help: cli.app.live.expedientes.list_help
+        snapshot_id_help: cli.app.live.expedientes.snapshot_id_help
+        view_help: cli.app.live.expedientes.view_help
       filed:
         capture_help: Capture filed declaration data from AEAT
         capture_sources_help: Capture filed observations required by a target filing
@@ -72,11 +150,39 @@ cli:
       from_year_help: First filing year
       limit_help: Maximum rows to capture
       modelo_help: Modelo code
+      notifications:
+        app_help: cli.app.live.notifications.app_help
+        capture_help: cli.app.live.notifications.capture_help
+        list_help: cli.app.live.notifications.list_help
+        snapshot_id_help: cli.app.live.notifications.snapshot_id_help
+        view_help: cli.app.live.notifications.view_help
       output_root_help: Directory for captured filed-declaration observations
       period_help: Filing period
+      portals:
+        app_help: cli.app.live.portals.app_help
+        category_help: cli.app.live.portals.category_help
+        list_help: cli.app.live.portals.list_help
+        modelo_help: cli.app.live.portals.modelo_help
+        portal_id_help: cli.app.live.portals.portal_id_help
+        view_help: cli.app.live.portals.view_help
       registry_root_help: Registry root
       source_root_help: Project source root
       to_year_help: Last filing year
+      verify:
+        app_help: cli.app.live.verify.app_help
+        expected_help: cli.app.live.verify.expected_help
+        latest_help: cli.app.live.verify.latest_help
+        latest_nif_help: cli.app.live.verify.latest_nif_help
+        latest_surface_help: cli.app.live.verify.latest_surface_help
+        list_help: cli.app.live.verify.list_help
+        nif_help: cli.app.live.verify.nif_help
+        nif_iva_arg_help: cli.app.live.verify.nif_iva_arg_help
+        nif_iva_help: cli.app.live.verify.nif_iva_help
+        observation_id_help: cli.app.live.verify.observation_id_help
+        surface_help: cli.app.live.verify.surface_help
+        tgvi_arg_help: cli.app.live.verify.tgvi_arg_help
+        tgvi_help: cli.app.live.verify.tgvi_help
+        view_help: cli.app.live.verify.view_help
       year_help: Filing year
     modelo:
       aggregate:
@@ -96,6 +202,15 @@ cli:
         canonical observations. Accepted source_kind values are ledger_transaction,
         purchase_invoice_evidence, payable_invoice, and collectible_invoice.
       app_help: Inspect the registry catalogue of AEAT tax forms (modelos)
+      audit:
+        bundle_id_help: cli.app.modelo.audit.bundle_id_help
+        check_help: cli.app.modelo.audit.check_help
+        export_help: cli.app.modelo.audit.export_help
+        force_incomplete_help: cli.app.modelo.audit.force_incomplete_help
+        group_help: cli.app.modelo.audit.group_help
+        output_help: cli.app.modelo.audit.output_help
+        replay_help: cli.app.modelo.audit.replay_help
+        view_help: cli.app.modelo.audit.view_help
       bindings:
         app_help: Inspect and preview the bindings of an AEAT tax form
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -106,20 +221,23 @@ cli:
         missing_required_options: 'Missing required options: %{options}'
         modelo_help: Tax form code (e.g. 303, 130, 100)
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
-        period_help: Fiscal period to scope the bindings (e.g. 2026Q1, 2026-01)
+        period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
+          periodic examples include 2026Q1 and 2026-01
         preview_help: Preview bindings with temporary overrides without mutating state
         year_help: Tax year of the modelo (e.g. 2026)
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Fiscal period to scope the casillas (e.g. 2026Q1, 2026-01)
+        period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
+          periodic examples include 2026Q1 and 2026-01
         required_help: Show only casillas the modelo marks as required
       describe:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Fiscal period to resolve the modelo revision against (e.g. 2026Q1,
-          2026-01)
+        period_help: Period token used to resolve the modelo revision; for Modelo
+          036 use alta, modificacion, or baja; periodic examples include 2026Q1
+          and 2026-01
       filing_record:
         app_help: Inspect internal filing records
         bucket_id_help: Filter by bucket
@@ -138,16 +256,22 @@ cli:
       formulas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
-        period_help: Fiscal period to scope the formulas (e.g. 2026Q1, 2026-01)
+        period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
+          periodic examples include 2026Q1 and 2026-01
+      history:
+        modelo_help: cli.app.modelo.history.modelo_help
+        period_help: cli.app.modelo.history.period_help
+        year_help: cli.app.modelo.history.year_help
+      history_help: cli.app.modelo.history_help
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
       verification_report:
         app_help: Inspect recorded verification reports
         list_help: List verification reports, optionally filtered to one calculation
           revision
-        view_help: Show one verification report by id
         verification_report_id_help: Stable 64-character SHA-256 identifier of a verification
           report
+        view_help: Show one verification report by id
       work:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
         amend_help: Build a corrective amendment over an externally-filed return.
@@ -171,6 +295,8 @@ cli:
         from_filing_record_help: Stable id of the baseline filing record to amend.
           Must carry imported external evidence (justificante / CSV register / live
           capture)
+        history_help: cli.app.modelo.work.history_help
+        history_work_unit_id_help: cli.app.modelo.work.history_work_unit_id_help
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
         list_help: List registered work units, optionally filtered by bucket
@@ -178,7 +304,8 @@ cli:
         name_help: Optional display name for the work unit
         notes_help: Optional notes attached to the filing record
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
-        period_help: Filing period of the work unit (e.g. Q1, 4T, 0A, 01)
+        period_help: Work-unit period token; for Modelo 036 use alta, modificacion,
+          or baja; periodic examples include Q1, 4T, 0A, and 01
         reason_help: Optional free-text reason for the discard (up to 500 chars)
         rename_help: Update the display name of a work unit
         revision_help: Stable id of the targeted registry modelo revision
@@ -211,7 +338,7 @@ cli:
         help: Manage apoderado configuration
         scope:
           censo: Census declarations (registration, modification, deregistration)
-            (modelo 036, 037)
+            (modelo 036)
           exped: Files and procedures
           generalnt: General tax procedures
           inform: Informative declarations (modelo 347, 349, 720)
@@ -278,6 +405,17 @@ cli:
         profile
       status_help: Show the current Google OAuth session state for the active profile
       sync:
+        calc:
+          export:
+            modelo_help: Modelo id to export (e.g. 130, 303, 100)
+            period_help: Filing period code (e.g. 1T, 2T, 0A)
+            root_folder_required: No Drive root folder id is configured; run `aeat
+              config google folder set <id>` first
+            unknown_modelo: Unknown modelo {modelo!r}; available modelos are {available}
+            year_help: Filing year (e.g. 2025)
+          export_help: Export the registry calculation surface for a modelo+period
+            to a Google Sheets workbook in the operator's `aeat-vault/`
+          help: Schema-to-sheet calc surface (export and pull)
         help: cli.config.google.sync.help
         probe_help: cli.config.google.sync.probe_help
         probe_read_only_help: cli.config.google.sync.probe_read_only_help
@@ -301,6 +439,7 @@ cli:
       non_interactive_help: Run without prompting for user input
       output_language_help: Primary language for CLI output (en, es, ca)
       profile_name_help: Unique identifier for this configuration profile
+      quiet_help: Skip the success message after init
       submissions_dir_help: Directory to store submitted filing receipts
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status`'
@@ -329,13 +468,13 @@ cli:
       remove_requires_yes: Removal is destructive. Re-run 'aeat config profile remove
         %{name} --yes' to confirm.
       remove_yes_help: Explicitly confirm the tombstone operation
-      view_help: Show one profile's facts (defaults to the active profile)
       show_name_help: Profile id to show (defaults to the active profile)
       unknown_profile: 'Unknown profile: %{name}. Run ''aeat config profile list''
         to see registered profiles.'
       use_help: Select an existing profile as the active profile
       use_name_help: Profile id to make active
       validate_help: Validate the active profile against the schema.
+      view_help: Show one profile's facts (defaults to the active profile)
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       connectivity_target_help: Connectivity target to probe
@@ -614,9 +753,9 @@ cli:
       articulo_help: Specific article to show (e.g. 91.Uno.2.1º)
       list_help: List the normatives codified in the legal corpus
       normative_id_help: Stable normative id (e.g. ley-37-1992)
-      view_help: Show one normative and, optionally, one of its articles
       tag_help: Filter by tax-domain tag (e.g. 'irpf', 'iva')
       verify_help: Verify the legal-norm corpus integrity
+      view_help: Show one normative and, optionally, one of its articles
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:
@@ -627,8 +766,8 @@ cli:
       part_help: Manual volume (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: List the rules codified in a manual
       section_help: Optional section identifier to show
-      view_help: Show a manual structure and, optionally, one section
       verify_help: Verify the manual integrity against its contract
+      view_help: Show a manual structure and, optionally, one section
       year_help: Tax year of the manual (e.g. 2024)
     metrics:
       applicability_declaration_count: Applicability declaration count
