@@ -1,3 +1,8 @@
+access_gate:
+  errors:
+    default_translatable: el envío en vivo a la AEAT está permanentemente prohibido;
+      usa produce -> verify -> export y sube el fichero manualmente en el portal de
+      la AEAT
 aggregation:
   counterpart:
     errors:
@@ -346,6 +351,8 @@ cli:
           o baja; ejemplos periodicos incluyen Q1, 4T, 0A y 01
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
+        resume_help: cli.app.modelo.work.resume_help
+        resume_workflow_run_id_help: cli.app.modelo.work.resume_workflow_run_id_help
         revision_help: Identificador estable de la revisión registrada del modelo
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
@@ -974,6 +981,8 @@ cli:
         para listar los temas registrados.'
     opts:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
+dotted:
+  key: dotted.key
 filing:
   validation:
     deadline_missed: Plazo de presentación vencido

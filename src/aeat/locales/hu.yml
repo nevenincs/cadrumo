@@ -1,3 +1,7 @@
+access_gate:
+  errors:
+    default_translatable: az élő AEAT küldés véglegesen tiltott; használd a produce
+      -> verify -> export folyamatot, és töltsd fel a fájlt magad az AEAT portálon
 aggregation:
   counterpart:
     errors:
@@ -323,6 +327,8 @@ cli:
         reason_help: A megszakítás opcionális szabadszöveges indoklása (legfeljebb
           500 karakter)
         rename_help: Munkaegység megjelenítési nevének módosítása
+        resume_help: cli.app.modelo.work.resume_help
+        resume_workflow_run_id_help: cli.app.modelo.work.resume_workflow_run_id_help
         revision_help: A célzott regisztrációs modellrevízió stabil azonosítója
         revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
           szűrve
@@ -941,6 +947,8 @@ cli:
         a regisztrált témák listájához.'
     opts:
       slug: Téma azonosító (kebab-case, pl. iva-regime)
+dotted:
+  key: dotted.key
 filing:
   validation:
     deadline_missed: A benyújtási határidő lejárt

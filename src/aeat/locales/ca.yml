@@ -1,3 +1,8 @@
+access_gate:
+  errors:
+    default_translatable: l'enviament en viu a l'AEAT està permanentment prohibit;
+      utilitza produce -> verify -> export i puja el fitxer tu mateix al portal de
+      l'AEAT
 aggregation:
   counterpart:
     errors:
@@ -331,6 +336,8 @@ cli:
           o baja; exemples periodics inclouen Q1, 4T, 0A i 01
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
+        resume_help: cli.app.modelo.work.resume_help
+        resume_workflow_run_id_help: cli.app.modelo.work.resume_workflow_run_id_help
         revision_help: Identificador estable de la revisió registrada del model
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
@@ -951,6 +958,8 @@ cli:
         per llistar els temes registrats.'
     opts:
       slug: Identificador del tema (kebab-case, ex. iva-regime)
+dotted:
+  key: dotted.key
 filing:
   validation:
     deadline_missed: Termini de presentació vençut
