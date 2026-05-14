@@ -55,25 +55,23 @@ def test_suggestions_parse_as_valid_cli_commands() -> None:
 @pytest.mark.parametrize(
     ("error_factory", "expected_prefix"),
     [
-        (LiveSubmitForbiddenError, "LOCKED"),
-        (lambda: ReviewKindReservedError("queue", "tracked separately"), "REFUSED"),
-        (AeatSessionExpiredError, "AUTH"),
-        (PortalIntegrityError, "INTEGRITY"),
-        (BrowserError, "FAIL"),
-        (RunContextMissingError, "INTERNAL"),
+        (LiveSubmitForbiddenError, "Locked."),
+        (lambda: ReviewKindReservedError("queue", "tracked separately"), "Refused."),
+        (AeatSessionExpiredError, "Auth."),
+        (PortalIntegrityError, "Integrity."),
+        (BrowserError, "Failed."),
+        (RunContextMissingError, "Internal."),
     ],
 )
 def test_rendered_prefixes_are_grep_stable(
     error_factory: Callable[[], Exception],
     expected_prefix: str,
 ) -> None:
-    """Each representative exception renders with the documented operator-grep prefix."""
+    """Each representative exception renders with the sentence-case prefix
+    canonicalised by ``_category_text_prefix``."""
     rendered = render_error_text(error_factory())
     first_line = rendered.splitlines()[0]
-    if expected_prefix.startswith("["):
-        assert first_line.startswith(f"{expected_prefix} ")
-    else:
-        assert first_line.startswith(f"{expected_prefix}: ")
+    assert first_line.startswith(f"{expected_prefix} ")
 
 
 def test_every_error_category_has_a_cli_prefix_probe() -> None:

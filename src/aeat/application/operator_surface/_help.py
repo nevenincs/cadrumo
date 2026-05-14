@@ -189,7 +189,7 @@ def _app_help() -> HelpDocument:
             _section(
                 "Review and registry",
                 _entry("aeat app review queue", "List items needing attention"),
-                _entry("aeat app review show ID", "Show one review item"),
+                _entry("aeat app review view ID", "View one review item"),
                 _entry("aeat app registry inspect", "Inspect local registry data"),
                 _entry("aeat app registry verify", "Verify local registry data"),
             ),

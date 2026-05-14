@@ -199,8 +199,8 @@ def test_registry_workbook_verify_cli_reports_text_from_official_corpus() -> Non
     )
 
     assert result.exit_code == 0
-    assert "backend_exists=True" in result.output
-    assert "failed_count=0" in result.output
+    assert "Backend exists=True" in result.output
+    assert "Failed count=0" in result.output
 
 
 def test_registry_workbook_verify_cli_writes_json_report_from_official_corpus(tmp_path) -> None:
@@ -304,7 +304,7 @@ def test_registry_commands_refuse_unsupported_root_output_format() -> None:
     )
 
     assert result.exit_code == 2
-    assert "REFUSED" in result.output
+    assert "Refused." in result.output
     assert "unsupported output format" in result.output
     assert "unexpected internal error" not in result.output.lower()
 
