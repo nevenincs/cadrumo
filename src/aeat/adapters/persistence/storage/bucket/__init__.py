@@ -8,9 +8,11 @@ on-disk layout.
 
 from __future__ import annotations
 
+from ._export_header import ExportArchiveHeader
 from ._manifest import BucketManifest, KdfParams
 
 __all__ = [
     "BucketManifest",
+    "ExportArchiveHeader",
     "KdfParams",
 ]
