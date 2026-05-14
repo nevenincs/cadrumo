@@ -3735,9 +3735,9 @@ This Phase removes command collisions and shadow backend paths that compete with
 This Phase proves registry topic behavior through real services and exposes only approved registry commands.
 
 - [x] `W62.P308.S1839` - Add service tests for topic-backed citation and manual projections; `tests/application/registry`.
-- [ ] `W62.P308.S1840` - Add CLI behavior tests for `aeat app registry citations` and `aeat app registry manuals` output through `_emit`; `tests/entrypoints/cli`.
-- [ ] `W62.P308.S1841` - Expose topic-backed registry results without implementing lookup or formatting logic in CLI handlers; `src/aeat/entrypoints/cli/registry.py`.
-- [ ] `W62.P308.S1842` - Validate that rejected topic/help command vocabulary is absent from help text and command discovery; `tests/entrypoints/cli`.
+- [x] `W62.P308.S1840` - Add CLI behavior tests for `aeat app registry citations` and `aeat app registry manuals` output through `_emit`; `tests/entrypoints/cli`.
+- [x] `W62.P308.S1841` - Expose topic-backed registry results without implementing lookup or formatting logic in CLI handlers; `src/aeat/entrypoints/cli/registry.py`.
+- [x] `W62.P308.S1842` - Validate that rejected topic/help command vocabulary is absent from help text and command discovery; `tests/entrypoints/cli`.
 
 ## Wave `W63` - declaracion verification parser harvest
 
@@ -3999,13 +3999,7 @@ This Phase implements the ledger-transaction-management and receipt-ocr-pdf-evid
 
 - [ ] `W70.P333.S1942` - Read the receipt-ocr-pdf-evidence and ledger-transaction-management ADRs' 2026-05-14 amendments (locked verb + out-of-scope file-type fence) before editing; `.vault/adr`.
 - [ ] `W70.P333.S1943` - Implement a strict Pydantic application service that wraps the receipt OCR adapter, accepts only PDF and image source paths, refuses non-PDF/non-image inputs with a typed validation error pointing at the deferred `evidence-source-expansion` ADR, and returns a `purchase_invoice_evidence_id`; `src/aeat/application/ledger`.
-- [ ] `W70.P333.S1944` - Register the locked CRUD noun group `aeat app ledger evidence` with its five subcommands wired to backend services and `_emit` rendering:
-    - `aeat app ledger evidence add <file>` - construction verb; consumes a PDF or image path, runs the OCR pipeline, emits the `purchase_invoice_evidence` bucket event, prints the new evidence record's `full_id`;
-    - `aeat app ledger evidence remove --id <full|prefix>` - retires an evidence record and emits the matching bucket event;
-    - `aeat app ledger evidence update --id <full|prefix>` - updates manual-review fields on an existing evidence record;
-    - `aeat app ledger evidence view --id <full|prefix>` - prints a single evidence record;
-    - `aeat app ledger evidence list` - lists evidence records in the active bucket (bare invocation, list-vs-query contract);
-  every verb supports `--format json|text` through `_emit`; `src/aeat/entrypoints/cli`.
+- [ ] `W70.P333.S1944` - Register the locked CRUD noun group `aeat app ledger evidence` with five subcommands wired to backend services and `_emit` rendering: `add <file>` consumes a PDF or image path, runs OCR, emits the `purchase_invoice_evidence` event, prints the new record's `full_id`; `remove --id <full|prefix>` retires a record and emits the matching event; `update --id <full|prefix>` updates manual-review fields; `view --id <full|prefix>` prints a single record; `list` lists records in the active bucket (bare invocation, list-vs-query contract); every verb supports `--format json|text` through `_emit`; `src/aeat/entrypoints/cli`.
 - [ ] `W70.P333.S1945` - Update `aeat app ledger attach --help` to name `aeat app ledger evidence add` as the upstream producer of `--purchase-invoice-evidence-id`; ensure `aeat app ledger evidence --help` enumerates all five CRUD verbs; `src/aeat/entrypoints/cli`.
 - [ ] `W70.P333.S1946` - Smoke: `aeat app ledger evidence add ./some.pdf` returns an evidence id; `aeat app ledger attach --id <full> --purchase-invoice-evidence-id <evidence-id>` accepts that id end-to-end; the remaining four CRUD verbs are exercised against the produced record; a non-PDF/non-image source path is refused with a typed validation error naming the deferred `evidence-source-expansion` ADR; `tests/entrypoints/cli`.
 
@@ -4016,65 +4010,65 @@ This Phase implements the config-doctor-shape ADR's retirement status (supersede
 Legacy retirement steps:
 
 - [ ] `W70.P334.S1947` - Read the config-doctor-shape ADR (retirement status), the config-repair-shape ADR's "absorbs from retired doctor" section, and the apex audit-amendment "doctor retirement enforced" bullet before editing; `.vault/adr`.
-- [ ] `W70.P334.S1948` - Remove the `aeat config doctor` Typer entrypoint, unregister every doctor subcommand (`connectivity`, `integrity`, `list`, `quarantine`, `logs`), and delete the legacy diagnostic emitters that do not ship a `next_action` or `dead_end` field; `src/aeat/entrypoints/cli`, `src/aeat/application/config`.
-- [ ] `W70.P334.S1949` - Delete every help-text reference, every refusal-message reference, and every i18n-translated reference to `aeat config doctor` (replace with `aeat config repair` where the reference still points at a real recovery path); `src/aeat/application`, `src/aeat/core/i18n`.
+- [ ] `W70.P334.S1948` - Remove the `aeat config doctor` Typer entrypoint, unregister every doctor subcommand (`connectivity`, `integrity`, `list`, `quarantine`, `logs`), and delete the legacy diagnostic emitters that do not ship a `next_action` or `dead_end` field; `src/aeat/entrypoints/cli`.
+- [ ] `W70.P334.S1949` - Delete every help-text reference, every refusal-message reference, and every i18n-translated reference to `aeat config doctor` (replace with `aeat config repair` where the reference still points at a real recovery path); `src/aeat/core/i18n`.
 
 `config repair` exhaustiveness verification:
 
 - [ ] `W70.P334.S1950` - Promote `DiagnosticCheck` to a discriminated union: every `fail`/`warn` row carries exactly one of `next_action` (a runnable leaf command string) or `dead_end` (non-recoverable guidance), enforced at construction by a Pydantic validator; rows with neither or both raise `ValidationError`; `src/aeat/application/config`.
-- [ ] `W70.P334.S1951` - Backfill the four named failure classes from the repair-shape ADR's "failure classes covered" table — quarantinable rows (`next_action`), `secure_state.load` schema-shape mismatch (`next_action`), master-key handling failure (`dead_end`), unknown integrity-warning class (`dead_end`) — so every emitter site produces a row with the prescribed field populated; `src/aeat/application/config`.
-- [ ] `W70.P334.S1952` - Smoke per failure class: a CLI smoke test for each of the four classes (quarantinable rows, schema-shape mismatch, master-key failure, unknown integrity-warning class) asserts the rendered `--format text` row carries the literal `next:` or `report:` prefix and the `--format json` payload carries exactly one of `next_action` or `dead_end`; `tests/entrypoints/cli`, `tests/application/config`.
+- [ ] `W70.P334.S1951` - Backfill the four named failure classes from the repair-shape ADR's "failure classes covered" table - quarantinable rows (`next_action`), `secure_state.load` schema-shape mismatch (`next_action`), master-key handling failure (`dead_end`), unknown integrity-warning class (`dead_end`) - so every emitter site produces a row with the prescribed field populated; `src/aeat/application/config`.
+- [ ] `W70.P334.S1952` - Smoke per failure class: a CLI smoke test for each of the four classes (quarantinable rows, schema-shape mismatch, master-key failure, unknown integrity-warning class) asserts the rendered `--format text` row carries the literal `next:` or `report:` prefix and the `--format json` payload carries exactly one of `next_action` or `dead_end`; `tests/entrypoints/cli`.
 
 False-positive guard (non-negotiable acceptance criterion; mirrors finding #9 on `app review queue`):
 
-- [ ] `W70.P334.S1953` - Smoke: `aeat config init` on a clean profile followed immediately by `aeat config repair --format json` produces ZERO `fail` and ZERO `warn` rows. Any finding that fires on a clean profile is removed or suppressed at source — not annotated as "expected noise", not gated behind a flag, not allow-listed; `tests/entrypoints/cli`.
+- [ ] `W70.P334.S1953` - Smoke: `aeat config init` on a clean profile followed immediately by `aeat config repair --format json` produces ZERO `fail` and ZERO `warn` rows. Any finding that fires on a clean profile is removed or suppressed at source - not annotated as "expected noise", not gated behind a flag, not allow-listed; `tests/entrypoints/cli`.
 - [ ] `W70.P334.S1954` - Smoke: `aeat config doctor --help` exits with the standard unknown-command exit code (no shim, no alias); a regex test asserts no help text and no refusal message anywhere in the codebase names `aeat config doctor`; `tests/entrypoints/cli`.
 
 ### Phase `W70.P335` - finding P1 #6: post-init hint leaf target
 
 This Phase implements the config-init-shape 2026-05-14 amendment. It locks every "next step" hint to a leaf command and adds a graph-level guard.
 
-- [ ] `W70.P335.S1951` - Read the config-init-shape and root-help-shape ADRs (with 2026-05-14 amendment) before editing; `.vault/adr`.
-- [ ] `W70.P335.S1952` - Update the post-`init` hint string to `aeat app overview status` and update i18n translation tables to carry the full leaf-target command; `src/aeat/application/config`, `src/aeat/core/i18n`.
-- [ ] `W70.P335.S1953` - Add a construction-time guard (Pydantic validator on the hint model or equivalent assertion in the central hint emitter) that refuses to emit a hint whose target resolves to a group in the Typer app graph; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P335.S1954` - Smoke: a unit test enumerates every post-command hint string and asserts each resolves to a Typer leaf; `tests/entrypoints/cli`.
+- [ ] `W70.P335.S1955` - Read the config-init-shape and root-help-shape ADRs (with 2026-05-14 amendment) before editing; `.vault/adr`.
+- [ ] `W70.P335.S1956` - Update the post-`init` hint string to `aeat app overview status` and update i18n translation tables to carry the full leaf-target command; `src/aeat/application/config`.
+- [ ] `W70.P335.S1957` - Add a construction-time guard (Pydantic validator on the hint model or equivalent assertion in the central hint emitter) that refuses to emit a hint whose target resolves to a group in the Typer app graph; `src/aeat/entrypoints/cli`.
+- [ ] `W70.P335.S1958` - Smoke: a unit test enumerates every post-command hint string and asserts each resolves to a Typer leaf; `tests/entrypoints/cli`.
 
 ### Phase `W70.P336` - finding P1 #7: list-vs-query leaf semantics
 
 This Phase implements the `2026-05-14-cli-workflow-redesign-list-vs-query-leaf-semantics-adr` decision and the per-surface amendments to `app-modelo-bindings-shape` and `app-live-shape`.
 
-- [ ] `W70.P336.S1955` - Read the list-vs-query-leaf-semantics ADR and the affected shape ADRs' 2026-05-14 amendments before editing; `.vault/adr`.
-- [ ] `W70.P336.S1956` - Make `--modelo`, `--year`, `--period`, and `--missing` optional refining filters on `aeat app modelo bindings list`; default to the full configured-binding set; `src/aeat/entrypoints/cli`, `src/aeat/application/modelo`.
-- [ ] `W70.P336.S1957` - Make `--modelo` an optional refining filter on `aeat app live filed list`; default to the full filed set the live read adapter exposes; `src/aeat/entrypoints/cli`, `src/aeat/application/live`.
-- [ ] `W70.P336.S1958` - Surface the accepted `--modelo` enum in `--help` (Typer choice or inline help text) for both leaves, derived from the registry; `src/aeat/entrypoints/cli`.
-- [ ] `W70.P336.S1959` - Add a Typer-graph traversal test that asserts every `list`-named leaf accepts bare invocation without required parameters; `tests/entrypoints/cli`.
+- [ ] `W70.P336.S1959` - Read the list-vs-query-leaf-semantics ADR and the affected shape ADRs' 2026-05-14 amendments before editing; `.vault/adr`.
+- [ ] `W70.P336.S1960` - Make `--modelo`, `--year`, `--period`, and `--missing` optional refining filters on `aeat app modelo bindings list`; default to the full configured-binding set; `src/aeat/entrypoints/cli`.
+- [ ] `W70.P336.S1961` - Make `--modelo` an optional refining filter on `aeat app live filed list`; default to the full filed set the live read adapter exposes; `src/aeat/entrypoints/cli`.
+- [ ] `W70.P336.S1962` - Surface the accepted `--modelo` enum in `--help` (Typer choice or inline help text) for both leaves, derived from the registry; `src/aeat/entrypoints/cli`.
+- [ ] `W70.P336.S1963` - Add a Typer-graph traversal test that asserts every `list`-named leaf accepts bare invocation without required parameters; `tests/entrypoints/cli`.
 
 ### Phase `W70.P337` - finding P1 #8: refusal tone
 
 This Phase implements the output-rendering-normalization 2026-05-14 amendment. It removes the all-caps `REFUSED:` prefix from `--format text` refusals and rewrites stale `aeat config doctor` references.
 
-- [ ] `W70.P337.S1960` - Read the output-rendering-normalization ADR's 2026-05-14 amendment before editing; `.vault/adr`.
-- [ ] `W70.P337.S1961` - Update the boundary text renderer to emit `Refused:` (sentence case) and the i18n-translated sentence-case equivalents in place of `REFUSED:`; `src/aeat/entrypoints/cli`, `src/aeat/core/i18n`.
-- [ ] `W70.P337.S1962` - Rewrite every refusal message that references `aeat config doctor` to point at `aeat config repair`; `src/aeat/application`, `src/aeat/core/i18n`.
-- [ ] `W70.P337.S1963` - Smoke: a regex test asserts no `--format text` refusal line starts with `REFUSED:` and no refusal message names `aeat config doctor`; `tests/entrypoints/cli`.
+- [ ] `W70.P337.S1964` - Read the output-rendering-normalization ADR's 2026-05-14 amendment before editing; `.vault/adr`.
+- [ ] `W70.P337.S1965` - Update the boundary text renderer to emit `Refused:` (sentence case) and the i18n-translated sentence-case equivalents in place of `REFUSED:`; `src/aeat/entrypoints/cli`.
+- [ ] `W70.P337.S1966` - Rewrite every refusal message that references `aeat config doctor` to point at `aeat config repair`; `src/aeat/core/i18n`.
+- [ ] `W70.P337.S1967` - Smoke: a regex test asserts no `--format text` refusal line starts with `REFUSED:` and no refusal message names `aeat config doctor`; `tests/entrypoints/cli`.
 
 ### Phase `W70.P338` - finding P2 #9: legacy borrador cohort demotion
 
 This Phase implements the app-review-queue-execution 2026-05-14 amendment. It auto-classifies pre-existing `borrador` records into a `legacy-borrador` cohort at profile init and demotes the cohort below `critical` severity.
 
-- [ ] `W70.P338.S1964` - Read the app-review-queue-execution ADR's 2026-05-14 amendment before editing; `.vault/adr`.
-- [ ] `W70.P338.S1965` - Add `legacy-borrador` cohort classification to the profile initialization service so `borrador` records present at init time are tagged at construction; emit a bucket event; `src/aeat/application/config`, `src/aeat/domain/buckets`.
-- [ ] `W70.P338.S1966` - Update the review-queue execution surface to demote the `legacy-borrador` cohort to `info` severity by default and surface a drill verb that lets the operator inspect, accept, or quarantine the cohort; `src/aeat/application/review`, `src/aeat/entrypoints/cli`.
-- [ ] `W70.P338.S1967` - Add a migration step to `aeat config repair` (or equivalent already-approved migration path) that assigns the cohort on pre-existing profiles on next run; `src/aeat/application/config`.
-- [ ] `W70.P338.S1968` - Smoke: `aeat config init` followed by `aeat app review queue` on a fresh profile emits zero `critical` findings sourced from `legacy-borrador`; the drill verb returns the legacy records and labels their cohort; `tests/application/review`.
+- [ ] `W70.P338.S1968` - Read the app-review-queue-execution ADR's 2026-05-14 amendment before editing; `.vault/adr`.
+- [ ] `W70.P338.S1969` - Add `legacy-borrador` cohort classification to the profile initialization service so `borrador` records present at init time are tagged at construction; emit a bucket event; `src/aeat/application/config`.
+- [ ] `W70.P338.S1970` - Update the review-queue execution surface to demote the `legacy-borrador` cohort to `info` severity by default and surface a drill verb that lets the operator inspect, accept, or quarantine the cohort; `src/aeat/application/review`.
+- [ ] `W70.P338.S1971` - Add a migration step to `aeat config repair` (or equivalent already-approved migration path) that assigns the cohort on pre-existing profiles on next run; `src/aeat/application/config`.
+- [ ] `W70.P338.S1972` - Smoke: `aeat config init` followed by `aeat app review queue` on a fresh profile emits zero `critical` findings sourced from `legacy-borrador`; the drill verb returns the legacy records and labels their cohort; `tests/application/review`.
 
 ### Phase `W70.P339` - finding P2 #10: integrity-warning stability probes (confirm or falsify the concurrent-writer hypothesis first)
 
 This Phase implements the `2026-05-14-cli-workflow-redesign-integrity-warning-stability-adr` investigation step. The ADR carries a leading hypothesis: phantom `unreadable_rows` drift is caused by multiple agent processes (parallel Codex/Claude/Gemini sessions, parallel test runners, an interactive shell racing a background service) holding overlapping write handles to the same SQLite-backed secure-objects table during a single wallclock window. The hypothesis is NOT pre-committed: the probes confirm or falsify it BEFORE any fix is shaped. Probe outputs MUST log writer PIDs and ISO-8601 timestamps so the concurrent-writer pattern is detectable from captured data alone.
 
-- [ ] `W70.P339.S1969` - Read the integrity-warning-stability ADR (Hypothesis section + Implementation probes) before editing; `.vault/adr`.
-- [ ] `W70.P339.S1970` - Add a determinism probe script that runs the secure-objects integrity scan N times without mutation and records `(row_namespace, row_key, integrity_status, observing_pid, observed_at_iso8601)` tuples plus the PIDs of any peer processes holding write handles concurrently with each observation; `scripts`.
-- [ ] `W70.P339.S1971` - Add a schema-stability probe that snapshots the secure-objects table schema at process start and exit and reports drift, also logging the observing PID and ISO-8601 timestamps; `scripts`.
-- [ ] `W70.P339.S1972` - Confirm or falsify the concurrent-writer hypothesis: run both probes against a fresh install, AND re-run the determinism probe under a controlled multi-process scenario (two or more concurrent integrity scans + writer handles open against the same secure-objects table). Capture findings in a follow-up reference document linked from the ADR's frontmatter; the reference document MUST state explicitly whether the captured PID + timestamp data confirms or falsifies the concurrent-writer hypothesis; `.vault/reference`.
-- [ ] `W70.P339.S1973` - Only after the prior step's reference document records a confirmed or falsified verdict, land the fix that matches the actual root cause: if confirmed, serialise integrity-scan writes against the secure-objects table; if falsified, address whichever root cause the captured data points at (master-key derivation drift, scan-pass classification, schema mutation under normal use). The fix must make the integrity scan a pure function of secure-objects table state and master key, with no wallclock, PID, or ambient input mixed into the computation; `src/aeat/adapters/persistence/storage`.
-- [ ] `W70.P339.S1974` - Smoke: a deterministic-scan test asserts the integrity-warning count is identical across N consecutive runs without mutation; an additional smoke runs two concurrent integrity scans and asserts the count remains stable under the controlled multi-process scenario; `tests/adapters/persistence`.
+- [ ] `W70.P339.S1973` - Read the integrity-warning-stability ADR (Hypothesis section + Implementation probes) before editing; `.vault/adr`.
+- [ ] `W70.P339.S1974` - Add a determinism probe script that runs the secure-objects integrity scan N times without mutation and records `(row_namespace, row_key, integrity_status, observing_pid, observed_at_iso8601)` tuples plus the PIDs of any peer processes holding write handles concurrently with each observation; `scripts`.
+- [ ] `W70.P339.S1975` - Add a schema-stability probe that snapshots the secure-objects table schema at process start and exit and reports drift, also logging the observing PID and ISO-8601 timestamps; `scripts`.
+- [ ] `W70.P339.S1976` - Confirm or falsify the concurrent-writer hypothesis: run both probes against a fresh install, AND re-run the determinism probe under a controlled multi-process scenario (two or more concurrent integrity scans + writer handles open against the same secure-objects table). Capture findings in a follow-up reference document linked from the ADR's frontmatter; the reference document MUST state explicitly whether the captured PID + timestamp data confirms or falsifies the concurrent-writer hypothesis; `.vault/reference`.
+- [ ] `W70.P339.S1977` - Only after the prior step's reference document records a confirmed or falsified verdict, land the fix that matches the actual root cause: if confirmed, serialise integrity-scan writes against the secure-objects table; if falsified, address whichever root cause the captured data points at (master-key derivation drift, scan-pass classification, schema mutation under normal use). The fix must make the integrity scan a pure function of secure-objects table state and master key, with no wallclock, PID, or ambient input mixed into the computation; `src/aeat/adapters/persistence/storage`.
+- [ ] `W70.P339.S1978` - Smoke: a deterministic-scan test asserts the integrity-warning count is identical across N consecutive runs without mutation; an additional smoke runs two concurrent integrity scans and asserts the count remains stable under the controlled multi-process scenario; `tests/adapters/persistence`.

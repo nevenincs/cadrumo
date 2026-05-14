@@ -85,7 +85,11 @@ class XlsxProvider(FinancialProvider):
                 try:
                     workbook.close()
                 except Exception as close_exc:
-                    _logger.debug("xlsx provider: workbook.close() after validate_source failed (%s)", close_exc)
+                    _logger.debug(
+                        "xlsx provider: workbook.close() after validate_source failed (%s)",
+                        close_exc,
+                        exc_info=True,
+                    )
         warnings: list[str] = []
         if layout is None:
             return ProviderValidation(
@@ -223,7 +227,11 @@ class XlsxProvider(FinancialProvider):
             try:
                 workbook.close()
             except Exception as close_exc:
-                _logger.debug("xlsx provider: workbook.close() during parse-error teardown failed (%s)", close_exc)
+                _logger.debug(
+                    "xlsx provider: workbook.close() during parse-error teardown failed (%s)",
+                    close_exc,
+                    exc_info=True,
+                )
             raise
 
 

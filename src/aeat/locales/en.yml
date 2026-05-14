@@ -486,8 +486,6 @@ cli:
     inspect_registry_root_help: Path to the registry root directory
     manuals:
       app_help: Inspect AEAT Manual práctico records (Renta, IVA, Sociedades)
-      errors:
-        unknown_section: Section {section} was not found in the manual
       kind_help: Filter by manual rule kind
       list_help: List manual parts available locally
       manual_help: Manual identifier (renta, iva, sociedades)

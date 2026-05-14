@@ -93,6 +93,7 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
                 "env_io atomic_write: parent-dir fsync skipped for %s (%s)",
                 path,
                 fsync_exc,
+                exc_info=True,
             )
     finally:
         if tmp_path is not None:

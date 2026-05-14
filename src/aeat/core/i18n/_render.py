@@ -8,6 +8,7 @@ can render translatable keys without reaching into the CLI entrypoints.
 from __future__ import annotations
 
 import importlib.resources
+import os
 import re
 from collections.abc import Mapping
 from functools import lru_cache
@@ -16,13 +17,14 @@ from typing import Any
 import i18n
 import yaml
 
-from ..config import load_settings
+from ..config import PROJECT_ROOT, _settings_override, load_settings
 from ..logging import get_logger
 
 _log = get_logger(__name__)
 _INITIALISED = False
 SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu")
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
+_OUTPUT_LANGUAGE_CACHE_VERSION = 0
 
 
 def _ensure_initialised() -> None:
@@ -56,6 +58,39 @@ def output_language() -> str:
     Returns:
         The resolved ISO 639-1 language code.
     """
+    return _cached_output_language(_output_language_cache_key())
+
+
+def clear_output_language_cache() -> None:
+    """Invalidate cached language resolution after profile/config writes."""
+
+    global _OUTPUT_LANGUAGE_CACHE_VERSION
+    _OUTPUT_LANGUAGE_CACHE_VERSION += 1
+    _cached_output_language.cache_clear()
+
+
+def _output_language_cache_key() -> tuple[object, ...]:
+    override = _settings_override.get()
+    if override is not None:
+        return ("override", id(override), _OUTPUT_LANGUAGE_CACHE_VERSION)
+    env_file = PROJECT_ROOT / "env" / ".env"
+    try:
+        env_mtime_ns = env_file.stat().st_mtime_ns
+    except OSError:
+        env_mtime_ns = None
+    return (
+        "env",
+        os.environ.get("AEAT_OUTPUT_LANGUAGE"),
+        os.environ.get("AEAT_DATABASE_URL"),
+        os.environ.get("AEAT_SECRET_STORE_BACKEND"),
+        os.environ.get("AEAT_ALLOW_UNENCRYPTED"),
+        env_mtime_ns,
+        _OUTPUT_LANGUAGE_CACHE_VERSION,
+    )
+
+
+@lru_cache(maxsize=128)
+def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
     try:
         settings = load_settings()
     except (KeyError, ValueError, AttributeError):
@@ -84,6 +119,7 @@ def _active_profile_output_language() -> str | None:
         _log.debug(
             "i18n: unable to resolve active-profile output language; falling back to settings (%s)",
             exc,
+            exc_info=True,
         )
         return None
     return raw

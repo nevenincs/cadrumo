@@ -20,10 +20,11 @@ import os
 from pathlib import Path
 
 import pytest
+from click import Group
 from click.testing import Result
 
 from aeat.core.paths import PROJECT_ROOT
-from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.cli_runner import aeat_click_command, invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -255,6 +256,56 @@ def test_no_top_level_normatives_or_manual_root_verb_is_registered() -> None:
     assert offenders == {}, "CLI tree registers a forbidden top-level normatives/manual verb: " + ", ".join(
         f"{p.relative_to(cli_root)} ({hits})" for p, hits in offenders.items()
     )
+
+
+def test_rejected_topic_and_help_commands_are_absent_from_discovery() -> None:
+    """Command discovery exposes registry corpus commands, not topic/help commands."""
+
+    root = aeat_click_command()
+    assert isinstance(root, Group)
+    app_group = root.commands["app"]
+    assert isinstance(app_group, Group)
+    registry_group = app_group.commands["registry"]
+    assert isinstance(registry_group, Group)
+    citations_group = registry_group.commands["citations"]
+    manuals_group = registry_group.commands["manuals"]
+    assert isinstance(citations_group, Group)
+    assert isinstance(manuals_group, Group)
+
+    assert set(root.commands) == {"config", "app"}
+    assert {"citations", "manuals"} <= set(registry_group.commands)
+    for commands in (
+        set(root.commands),
+        set(app_group.commands),
+        set(registry_group.commands),
+        set(citations_group.commands),
+        set(manuals_group.commands),
+    ):
+        assert commands.isdisjoint({"topic", "topics", "help"})
+
+
+def test_rejected_topic_and_help_command_vocabulary_is_absent_from_help_text() -> None:
+    """Accepted help surfaces must not advertise rejected topic/help commands."""
+
+    forbidden_phrases = (
+        "aeat help",
+        "aeat topic",
+        "aeat topics",
+        "aeat app help",
+        "aeat app topic",
+        "aeat app topics",
+    )
+    for args in (
+        ["--help"],
+        ["app", "--help"],
+        ["app", "registry", "--help"],
+        ["app", "registry", "citations", "--help"],
+        ["app", "registry", "manuals", "--help"],
+    ):
+        result = invoke_cached_cli(args)
+        assert result.exit_code == 0, result.output
+        lowered = result.output.lower()
+        assert [phrase for phrase in forbidden_phrases if phrase in lowered] == []
 
 
 def test_no_aeat_normatives_or_manual_fetch_verb_under_app_registry() -> None:

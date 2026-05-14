@@ -351,7 +351,7 @@ async def _try_probe_verified_session(
     try:
         session, assertion = await _probe_existing_session(provider)
     except Exception as exc:
-        _logger.debug("ensure_authenticated_aeat_session: persisted probe failed: %s", exc)
+        _logger.debug("ensure_authenticated_aeat_session: persisted probe failed: %s", exc, exc_info=True)
         return None
     finally:
         await _close_provider(provider)

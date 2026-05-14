@@ -1021,6 +1021,7 @@ def _formula_references(sheet: str, formula: str, remaining: int) -> tuple[Workb
             "workbook parity: openpyxl Tokenizer failed on formula %r; falling back to regex (%s)",
             formula[:80],
             exc,
+            exc_info=True,
         )
         token_values = (match.group(0) for match in _CELL_REF_PATTERN.finditer(formula))
     for value in token_values:

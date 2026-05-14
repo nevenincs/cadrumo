@@ -114,6 +114,7 @@ def parse_resumen_tree(html: str, *, base_url: str) -> tuple[Expediente, ...]:
                 expediente_id,
                 href,
                 exc,
+                exc_info=True,
             )
             continue
         results.append(expediente)

@@ -299,7 +299,7 @@ def _row_from_cells(
             source_url=AnyHttpUrl(source_url),
         )
     except Exception as exc:  # pragma: no cover — schema drift guard
-        log.debug("notifications: skipped row id=%r: %s", certificado_id, exc)
+        log.debug("notifications: skipped row id=%r: %s", certificado_id, exc, exc_info=True)
         return None
 
 
@@ -453,6 +453,7 @@ async def _fetch_and_parse(
                     "fetch_notifications: warm-up navigation to %s suppressed: %s",
                     _RESUMEN_URL,
                     exc,
+                    exc_info=True,
                 )
             try:
                 await page.goto(url, wait_until="domcontentloaded")
@@ -470,7 +471,7 @@ async def _fetch_and_parse(
             try:
                 await context.close()
             except Exception as _exc:
-                log.debug("fetch_notifications: context.close suppressed: %s", _exc)
+                log.debug("fetch_notifications: context.close suppressed: %s", _exc, exc_info=True)
     finally:
         await browser_session.close()
 
