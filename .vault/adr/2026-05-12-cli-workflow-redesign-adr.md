@@ -1729,9 +1729,9 @@ sweep.
 | R08 | W77 | ✅ closed |
 | R09, R10, R11 | W78 | ✅ closed |
 | R12, R13 | W79 | ✅ closed |
-| R14 | W80 | ⏳ open — `run_for_period`-inside-`file_modelo_revision` wiring is adjudication-bound by the live-AEAT charter (live submit is permanently forbidden). Decision pending |
-| R15 | W80 | ⏳ open — preflight invocation routing is adjudication-bound (direct call vs `WorkflowEngine`-only); awaits the same charter-aware decision as R14 |
-| R16 | W80 | ✅ closed — `resume_modelo_workflow` local action shipped; CLI mount `aeat app modelo work resume WORKFLOW_RUN_ID` shipped; W59 plan rows ticked |
+| R14 | W80 | ⏳ open — `run_for_period`-inside-`file_modelo_revision` wiring is adjudication-bound by the live-AEAT charter (live submit is permanently forbidden). Decision pending. Plan rows kept open: `W80.P385.S2205`, `W80.P388.S2219`, `W80.P389.S2227` |
+| R15 | W80 | ⏳ open — preflight invocation routing is adjudication-bound (direct call vs `WorkflowEngine`-only); awaits the same charter-aware decision as R14. Plan rows kept open: `W80.P385.S2206`, `W80.P385.S2207`, `W80.P386.S2209`, `W80.P388.S2220`, `W80.P389.S2228` |
+| R16 | W80 | ✅ closed — `resume_modelo_workflow` local action shipped; CLI mount `aeat app modelo work resume WORKFLOW_RUN_ID` shipped; 17 of 25 W80 plan rows ticked (the 8 remaining are R14/R15 adjudication-bound) |
 | R17, R18 | W81 | ✅ closed (`shift_deadline` wired into `OverviewCalendarEntry`; calendar adjudication ratified) |
 | R19 | W82 | ✅ closed |
 | R20 | W83 | ✅ closed |

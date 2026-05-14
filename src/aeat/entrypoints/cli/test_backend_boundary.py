@@ -1,7 +1,7 @@
-"""Audit the CLI/backend boundary rollout inventory.
+"""Audit the CLI/backend boundary inventory.
 
 These tests do not bless CLI-owned business logic. They make every tracked
-boundary row explicit so each rollout wave can remove or downgrade one row at
+boundary row explicit so each update can remove or downgrade one row at
 a time without losing the backend API that owns the behavior.
 """
 
@@ -284,6 +284,194 @@ def test_removed_workflow_shim_modules_stay_absent() -> None:
         "src/aeat/entrypoints/cli/filing/test_filing_cli.py",
     )
     assert [path for path in removed if (PROJECT_ROOT / path).exists()] == []
+
+
+def test_aeat_workflow_root_command_is_unknown() -> None:
+    """`aeat workflow ...` is not a registered root: workflow orchestration is
+    folded under `aeat app modelo` per apex §4.3 + §8."""
+    result = invoke_cached_cli(["workflow", "--help"])
+    assert result.exit_code != 0
+
+
+def test_aeat_run_root_command_is_unknown() -> None:
+    """`aeat run ...` is not a registered root: the redesigned CLI exposes
+    exactly two roots — `aeat config` and `aeat app`."""
+    result = invoke_cached_cli(["run", "--help"])
+    assert result.exit_code != 0
+
+
+def test_app_modelo_preflight_verb_is_unknown() -> None:
+    """No standalone `aeat app modelo preflight` verb exists. Preflight runs
+    inside `verify` / `file` actions per apex §8 backend exit-cap mandate."""
+    result = invoke_cached_cli(["app", "modelo", "preflight", "--help"])
+    assert result.exit_code != 0
+
+
+def test_app_modelo_work_resume_help_exposes_documented_argument() -> None:
+    """The resume verb advertises WORKFLOW_RUN_ID as its sole positional."""
+    result = invoke_cached_cli(["app", "modelo", "work", "resume", "--help"])
+    assert result.exit_code == 0
+    assert "WORKFLOW_RUN_ID" in result.output
+
+
+def test_profile_backend_schema_duplicate_branch_stays_removed() -> None:
+    """Retired application-profile branch files must stay absent."""
+
+    removed = (
+        "src/aeat/application/profile/__init__.py",
+        "src/aeat/application/profile/_actions.py",
+        "src/aeat/application/profile/_models.py",
+        "src/aeat/application/profile/_repository.py",
+        "src/aeat/application/profile/test_actions.py",
+        "src/aeat/application/profile/test_validate.py",
+    )
+    assert [path for path in removed if (PROJECT_ROOT / path).exists()] == []
+
+
+def test_profile_backend_schema_deleted_package_has_no_surviving_imports() -> None:
+    """Callers must use canonical user-profile services only."""
+
+    forbidden_tokens = (
+        "aeat.application.profile",
+        "from .profile",
+        "profile_bucket_repository",
+        "set_active_profile",
+        "set_profile_values",
+    )
+    search_roots = (
+        PROJECT_ROOT / "src" / "aeat" / "application",
+        PROJECT_ROOT / "src" / "aeat" / "entrypoints",
+    )
+    offenders: list[str] = []
+    for root in search_roots:
+        for path in sorted(root.rglob("*.py")):
+            if path == Path(__file__):
+                continue
+            text = path.read_text(encoding="utf-8")
+            for token in forbidden_tokens:
+                if token in text:
+                    offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+    assert offenders == [], "retired application-profile references survive:\n  " + "\n  ".join(offenders)
+
+
+def test_per_modelo_aggregation_placeholder_paths_stay_removed() -> None:
+    """Per-modelo aggregation must fail through registered backend errors."""
+
+    scoped_files = (
+        "src/aeat/application/aggregation/_retenciones.py",
+        "src/aeat/application/aggregation/_counterpart.py",
+        "src/aeat/application/aggregation/test_retenciones.py",
+        "src/aeat/application/aggregation/test_counterpart.py",
+    )
+    forbidden_tokens = ("NotImplementedError", "not implemented")
+    offenders: list[str] = []
+    for relative_path in scoped_files:
+        text = (PROJECT_ROOT / relative_path).read_text(encoding="utf-8")
+        for token in forbidden_tokens:
+            if token in text:
+                offenders.append(f"{relative_path}: {token}")
+    assert offenders == [], "per-modelo aggregation placeholder paths survive:\n  " + "\n  ".join(offenders)
+
+
+def test_per_modelo_aggregation_duplicate_cli_surfaces_stay_absent() -> None:
+    """The CLI may expose aggregation only through the central service command."""
+
+    canonical_cli = _CLI_ROOT / "_modelo.py"
+    forbidden_family_calls = (
+        "aggregate_retenciones_",
+        "aggregate_counterpart_",
+        "aggregate_foreign_assets_720",
+    )
+    offenders: list[str] = []
+    for path in sorted(_CLI_ROOT.rglob("*.py")):
+        if path.name.startswith("test_"):
+            continue
+        text = path.read_text(encoding="utf-8")
+        if path != canonical_cli and "aggregate_per_modelo" in text:
+            offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: aggregate_per_modelo")
+        for token in forbidden_family_calls:
+            if token in text:
+                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+    assert offenders == [], "parallel per-modelo aggregation CLI surfaces survive:\n  " + "\n  ".join(offenders)
+
+
+def test_census_modelo_foundation_stays_backend_owned() -> None:
+    """CLI must not reimplement Modelo 036/037 census foundation routing."""
+
+    forbidden_cli_tokens = (
+        "CensusModeloFoundationCommand",
+        "resolve_census_modelo_foundation",
+        "resolve_census_modelo_work_unit_foundation",
+        "is_active_census_modelo",
+        "CensusModeloRole",
+        "active_work_unit_allowed",
+        "historical_metadata_only",
+    )
+    offenders: list[str] = []
+    for path in sorted(_CLI_ROOT.rglob("*.py")):
+        if path.name.startswith("test_"):
+            continue
+        text = path.read_text(encoding="utf-8")
+        for token in forbidden_cli_tokens:
+            if token in text:
+                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+    assert offenders == [], "census modelo foundation logic leaked into CLI:\n  " + "\n  ".join(offenders)
+
+
+def test_census_modelo_removed_shims_and_stubs_stay_removed() -> None:
+    """Removed census-foundation aliases and placeholder support must not return."""
+
+    scanned_files = (
+        _CLI_ROOT / "_modelo.py",
+        _CLI_ROOT / "test_modelo.py",
+        PROJECT_ROOT / "src" / "aeat" / "locales" / "en.yml",
+        PROJECT_ROOT / "src" / "aeat" / "locales" / "es.yml",
+        PROJECT_ROOT / "src" / "aeat" / "locales" / "ca.yml",
+        PROJECT_ROOT / "src" / "aeat" / "locales" / "hu.yml",
+        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "_census_modelos.py",
+        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "_queries.py",
+        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_census_modelo_foundation.py",
+        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_census_modelo_registry_data.py",
+        PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_queries.py",
+        PROJECT_ROOT / "registry" / "aeat" / "modelos" / "036.toml",
+        PROJECT_ROOT / "registry" / "aeat" / "apoderamientos" / "scopes.toml",
+    )
+    forbidden_tokens = (
+        "036, 037",
+        "modelo 037)",
+        "modelos 036/037",
+        "2025-alta",
+        "2025-modificacion",
+        "2025-baja",
+        "aeat-justificante-pdf",
+        "aeat-csv-register",
+        "aliases also accepted",
+        'replace("-", "_")',
+        ".zfill(",
+        ".lstrip(",
+        'strip("0")',
+        "_CENSUS_MODELO_OWNERSHIP",
+        "NotImplementedError",
+        "not implemented",
+        "fake active",
+        "synthetic 037",
+        'source_modelo = "037"',
+        'modelo_codes = ["036", "037"]',
+    )
+    offenders: list[str] = []
+    for path in scanned_files:
+        text = path.read_text(encoding="utf-8")
+        for token in forbidden_tokens:
+            if token in text:
+                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token}")
+    assert offenders == [], "removed census modelo shim/stub surfaces returned:\n  " + "\n  ".join(offenders)
+
+
+def test_legacy_application_aggregation_test_tree_stays_absent() -> None:
+    """Retired top-level aggregation tests must not shadow package-owned tests."""
+
+    legacy_tree = PROJECT_ROOT / "tests" / "application" / "aggregation"
+    assert not legacy_tree.exists()
 
 
 def test_registry_corpus_cli_ownership_is_registry_only() -> None:
