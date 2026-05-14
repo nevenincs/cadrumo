@@ -629,8 +629,8 @@ def config_init(
     ctx: typer.Context,
     profile_name: str = typer.Option("default", "--profile", help=tr("cli.config.init.profile_name_help")),
     tax_id: str | None = typer.Option(None, "--tax-id", help=tr("cli.config.init.tax_id_help")),
-    activity: str | None = typer.Option(None, "--activity", help=tr("cli.config.init.activity_help")),
-    iva_regime: str | None = typer.Option(None, "--iva-regime", help=tr("cli.config.init.iva_regime_help")),
+    activity: str = typer.Option("Servicios", "--activity", help=tr("cli.config.init.activity_help")),
+    iva_regime: str = typer.Option("general", "--iva-regime", help=tr("cli.config.init.iva_regime_help")),
     tax_residence_ccaa: str | None = typer.Option(
         None,
         "--tax-residence-ccaa",
@@ -664,7 +664,7 @@ def config_init(
         _emit(ctx, payload, ("dry_run\ttrue", f"profile_name\t{profile_name}"))
         return
 
-    if tax_id is None or activity is None or iva_regime is None:
+    if tax_id is None:
         raise WizardUnsupportedConsoleError(tr("wizard.errors.unsupported_console"))
 
     command = InitializeWorkspaceCommand(

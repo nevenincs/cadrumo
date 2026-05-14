@@ -106,10 +106,10 @@ effective_dated = true
 [[sections.fields]]
 key = "ccaa"
 type = "enum"
-required = true
+required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Common-regime autonomous community for Modelo 100 jurisdiction."
+description = "Common-regime autonomous community for Modelo 100 jurisdiction (collected later by the wizard)."
 enum_values = [
   "andalucia",
   "aragon",
