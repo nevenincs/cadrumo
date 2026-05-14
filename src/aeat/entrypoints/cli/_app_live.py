@@ -688,6 +688,94 @@ def verify_latest(
     _emit(ctx, payload, lines)
 
 
+@verify_app.command(
+    "nif-iva",
+    help=tr(
+        "cli.app.live.verify.nif_iva_help",
+        default="Live-check one intra-community NIF-IVA via AEAT IXVI and persist the observation.",
+    ),
+)
+def verify_nif_iva(
+    ctx: typer.Context,
+    nif: Annotated[str, typer.Argument(help=tr("cli.app.live.verify.nif_iva_arg_help", default="NIF-IVA value (e.g. ESB12345678)."))],
+    expected: Annotated[
+        str | None,
+        typer.Option("--expected", help=tr("cli.app.live.verify.expected_help", default="Optional expected verdict (valid|invalid|unknown).")),
+    ] = None,
+) -> None:
+    from datetime import UTC, datetime
+    from ...adapters.outbound.aeat.sede._nif_iva_check import NifIvaCheckSedeDriver
+    from ...application.live._verify import VerifySurface, VerifyService
+    from ...core.access_gate import AeatAccessGate
+    from ...core.config import load_settings
+
+    settings = load_settings()
+    AeatAccessGate(settings).require_live_read()
+    nif_key = nif.strip().upper()
+    driver = NifIvaCheckSedeDriver(settings=settings)
+    result = driver.collect(b"", expected={nif_key: (expected or "unknown")})
+    if not result.observations:
+        raise typer.BadParameter(f"no observation returned for NIF {nif!r}")
+    observation = result.observations[0]
+    bucket_id = _active_bucket_id()
+    record = VerifyService(settings=settings).record(
+        bucket_id=bucket_id,
+        surface=VerifySurface.NIF_IVA,
+        nif=observation.nif,
+        verdict=observation.verdict,
+        checked_at=datetime.now(tz=UTC),
+        expected=expected,
+        raw_evidence_locator=observation.raw_evidence_locator,
+    )
+    payload = {"bucket_id": bucket_id, **_verify_row(record)}
+    lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
+    _emit(ctx, payload, lines)
+
+
+@verify_app.command(
+    "tgvi",
+    help=tr(
+        "cli.app.live.verify.tgvi_help",
+        default="Live-check one Spanish NIF's ROI/VIES (GROI) registration and persist the observation.",
+    ),
+)
+def verify_tgvi(
+    ctx: typer.Context,
+    nif: Annotated[str, typer.Argument(help=tr("cli.app.live.verify.tgvi_arg_help", default="Spanish NIF/NIE to check."))],
+    expected: Annotated[
+        str | None,
+        typer.Option("--expected", help=tr("cli.app.live.verify.expected_help", default="Optional expected verdict (valid|invalid|unknown).")),
+    ] = None,
+) -> None:
+    from datetime import UTC, datetime
+    from ...adapters.outbound.aeat.sede._groi_check import GroiSedeDriver
+    from ...application.live._verify import VerifySurface, VerifyService
+    from ...core.access_gate import AeatAccessGate
+    from ...core.config import load_settings
+
+    settings = load_settings()
+    AeatAccessGate(settings).require_live_read()
+    nif_key = nif.strip().upper()
+    driver = GroiSedeDriver(settings=settings)
+    result = driver.collect(b"", expected={nif_key: (expected or "unknown")})
+    if not result.observations:
+        raise typer.BadParameter(f"no observation returned for NIF {nif!r}")
+    observation = result.observations[0]
+    bucket_id = _active_bucket_id()
+    record = VerifyService(settings=settings).record(
+        bucket_id=bucket_id,
+        surface=VerifySurface.TGVI,
+        nif=observation.nif,
+        verdict=observation.verdict,
+        checked_at=datetime.now(tz=UTC),
+        expected=expected,
+        raw_evidence_locator=observation.raw_evidence_locator,
+    )
+    payload = {"bucket_id": bucket_id, **_verify_row(record)}
+    lines = [f"bucket\t{bucket_id}"] + [f"{k}\t{v}" for k, v in _verify_row(record).items()]
+    _emit(ctx, payload, lines)
+
+
 # ─────────────────────────────────────────────────────────────────────────
 # Borrador 100 subgroup
 # ─────────────────────────────────────────────────────────────────────────
