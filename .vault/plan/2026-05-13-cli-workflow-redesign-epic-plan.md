@@ -4129,51 +4129,51 @@ Closes apex §12 ledger rows R02 (modelo nested sub-apps vs flat tree) and R03 (
 
 Adjudicate surfaced verbs and declare backend service signatures for missing locked verbs.
 
-- [ ] `W72.P345.S2004` - Read the app-modelo-shape and ledger-transaction-management ADRs and identify each shipped verb that is not in the locked grammar; `.vault/adr`.
-- [ ] `W72.P345.S2005` - Adjudicate the nested-sub-app grammar against the apex §4.3 flat-tree spec and produce a verdict; `.vault/adr`.
-- [ ] `W72.P345.S2006` - Adjudicate each non-canonical ledger verb (create, edit, archive, stash, reset, track, read) per W71 contract; `.vault/adr`.
-- [ ] `W72.P345.S2007` - Declare backend service signatures for missing locked verbs (link, check, preflight, reconcile, history); `src/aeat/application`.
-- [ ] `W72.P345.S2008` - Draft apex §4.3 amendment and affected child-ADR amendment text for ratify-shipped-shape verdicts; `.vault/adr`.
+- [x] `W72.P345.S2004` - Read the app-modelo-shape and ledger-transaction-management ADRs and identify each shipped verb that is not in the locked grammar; `.vault/adr`.
+- [x] `W72.P345.S2005` - Adjudicate the nested-sub-app grammar against the apex §4.3 flat-tree spec and produce a verdict; `.vault/adr`.
+- [x] `W72.P345.S2006` - Adjudicate each non-canonical ledger verb (create, edit, archive, stash, reset, track, read) per W71 contract; `.vault/adr`.
+- [x] `W72.P345.S2007` - Declare backend service signatures for missing locked verbs (link, check, preflight, reconcile, history); `src/aeat/application`.
+- [x] `W72.P345.S2008` - Draft apex §4.3 amendment and affected child-ADR amendment text for ratify-shipped-shape verdicts; `.vault/adr`.
 
 ### Phase `W72.P346` - shadow duplicate removal
 
 Retire legacy verbs and migrate internal callers.
 
-- [ ] `W72.P346.S2009` - Remove retired-verdict legacy verb registrations from the modelo and ledger CLI modules; `src/aeat/entrypoints/cli`.
-- [ ] `W72.P346.S2010` - Migrate internal callers of retired backend functions to the canonical CRUD service; `src/aeat/application`.
-- [ ] `W72.P346.S2011` - Amend affected child ADRs with the ratified grammar in their 2026-05-14 reconciliation amendment section; `.vault/adr`.
-- [ ] `W72.P346.S2012` - Remove stale tests that locked the retired verb behavior; `tests`.
-- [ ] `W72.P346.S2013` - Update boundary inventory to reflect the reconciled verb set; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W72.P346.S2009` - Remove retired-verdict legacy verb registrations from the modelo and ledger CLI modules; `src/aeat/entrypoints/cli`.
+- [x] `W72.P346.S2010` - Migrate internal callers of retired backend functions to the canonical CRUD service; `src/aeat/application`.
+- [x] `W72.P346.S2011` - Amend affected child ADRs with the ratified grammar in their 2026-05-14 reconciliation amendment section; `.vault/adr`.
+- [x] `W72.P346.S2012` - Remove stale tests that locked the retired verb behavior; `tests`.
+- [x] `W72.P346.S2013` - Update boundary inventory to reflect the reconciled verb set; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W72.P347` - de-shim and de-stub cleanup
 
 Ship missing locked verbs and clean help/i18n surfaces.
 
-- [ ] `W72.P347.S2014` - Ship link, check, preflight verbs in aeat app ledger wired to existing backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W72.P347.S2015` - Ship reconcile and history verbs in aeat app modelo wired to existing application services; `src/aeat/entrypoints/cli`.
-- [ ] `W72.P347.S2016` - Remove legacy verb spellings from help text and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
-- [ ] `W72.P347.S2017` - Remove legacy verb references from refusal-message strings; `src/aeat/core/i18n`.
-- [ ] `W72.P347.S2018` - Record the removed shim surfaces in the boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [x] `W72.P347.S2014` - Ship link, check, preflight verbs in aeat app ledger wired to existing backend services; `src/aeat/entrypoints/cli`.
+- [x] `W72.P347.S2015` - Ship reconcile and history verbs in aeat app modelo wired to existing application services; `src/aeat/entrypoints/cli`.
+- [x] `W72.P347.S2016` - Remove legacy verb spellings from help text and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
+- [x] `W72.P347.S2017` - Remove legacy verb references from refusal-message strings; `src/aeat/core/i18n`.
+- [x] `W72.P347.S2018` - Record the removed shim surfaces in the boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W72.P348` - real behavior verification
 
 Add CLI surface and end-to-end tests for the reconciled grammar.
 
-- [ ] `W72.P348.S2019` - Add CLI surface tests for link, check, preflight, reconcile, history exercising real backend services; `tests/entrypoints/cli`.
-- [ ] `W72.P348.S2020` - Add negative tests proving retired verbs are unknown commands; `tests/entrypoints/cli`.
-- [ ] `W72.P348.S2021` - Add an end-to-end test exercising the full modelo lifecycle through the reconciled verb tree; `tests`.
-- [ ] `W72.P348.S2022` - Add a regression test asserting the reconciled aeat app ledger verb count matches the W71 canonical spine plus ratified axes; `tests/entrypoints/cli`.
-- [ ] `W72.P348.S2023` - Run the W71 contract-conformance harness and assert app modelo and app ledger noun-groups pass; `tests/entrypoints/cli`.
+- [x] `W72.P348.S2019` - Add CLI surface tests for link, check, preflight, reconcile, history exercising real backend services; `tests/entrypoints/cli`.
+- [x] `W72.P348.S2020` - Add negative tests proving retired verbs are unknown commands; `tests/entrypoints/cli`.
+- [x] `W72.P348.S2021` - Add an end-to-end test exercising the full modelo lifecycle through the reconciled verb tree; `tests`.
+- [x] `W72.P348.S2022` - Add a regression test asserting the reconciled aeat app ledger verb count matches the W71 canonical spine plus ratified axes; `tests/entrypoints/cli`.
+- [x] `W72.P348.S2023` - Run the W71 contract-conformance harness and assert app modelo and app ledger noun-groups pass; `tests/entrypoints/cli`.
 
 ### Phase `W72.P349` - thin cli exposure
 
 Validate help vocabulary and update apex cross-references.
 
-- [ ] `W72.P349.S2024` - Validate aeat app modelo help and aeat app ledger help enumerate canonical CRUD plus ratified axes; `src/aeat/entrypoints/cli`.
-- [ ] `W72.P349.S2025` - Validate i18n translations align across es/en/ca/hu; `src/aeat/core/i18n`.
-- [ ] `W72.P349.S2026` - Update apex ADR §4.3 to ratify the reconciled grammar and mark R02 and R03 closed by W72; `.vault/adr`.
-- [ ] `W72.P349.S2027` - Update plan rows for W23, W46, W58 with cross-references where prior rows are now superseded by W72; `.vault/plan`.
-- [ ] `W72.P349.S2028` - Run vault check to confirm no broken wiki-links from the apex amendment; `.vault`.
+- [x] `W72.P349.S2024` - Validate aeat app modelo help and aeat app ledger help enumerate canonical CRUD plus ratified axes; `src/aeat/entrypoints/cli`.
+- [x] `W72.P349.S2025` - Validate i18n translations align across es/en/ca/hu; `src/aeat/core/i18n`.
+- [x] `W72.P349.S2026` - Update apex ADR §4.3 to ratify the reconciled grammar and mark R02 and R03 closed by W72; `.vault/adr`.
+- [x] `W72.P349.S2027` - Update plan rows for W23, W46, W58 with cross-references where prior rows are now superseded by W72; `.vault/plan`.
+- [x] `W72.P349.S2028` - Run vault check to confirm no broken wiki-links from the apex amendment; `.vault`.
 
 ## Wave `W73` - Reconciliation: invoice noun-group CRUD mounts
 
