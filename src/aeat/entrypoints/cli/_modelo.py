@@ -821,10 +821,28 @@ def work_calculate(
             help=tr("cli.app.modelo.work.override_help"),
         ),
     ] = None,
+    borrador_snapshot_id: Annotated[
+        str | None,
+        typer.Option(
+            "--borrador-snapshot-id",
+            help=tr(
+                "cli.app.modelo.work.borrador_snapshot_id_help",
+                default=(
+                    "Modelo 100 borrador snapshot id (full or unambiguous "
+                    "prefix). Snapshot binding values flow into the calculation "
+                    "for registry bindings marked aeat_prefilled; caller --binding "
+                    "overrides always take precedence."
+                ),
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Persist a new draft calculation revision for the work unit."""
 
-    from ...application.modelo import CalculationRegistryUnavailableError
+    from ...application.modelo import (
+        CalculationRegistryUnavailableError,
+        Modelo100BorradorBindingError,
+    )
 
     casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
     casilla_inputs: dict[str, Decimal] = {}
@@ -850,11 +868,13 @@ def work_calculate(
             casilla_inputs=casilla_inputs,
             binding_values=binding_values or None,
             enum_binding_values=enum_binding_values or None,
+            borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
         )
     except (
         WorkUnitNotFoundError,
         WorkUnitMutationRefusedError,
         CalculationRegistryUnavailableError,
+        Modelo100BorradorBindingError,
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
@@ -1556,6 +1576,81 @@ def audit_replay(
         f"verification_state\t{report.verification_state.value}",
         f"records_replayed\t{report.records_verified}",
     ]
+    _emit(ctx, payload, lines)
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# History verb (W72 modelo-grammar-reconcile, apex §4.3)
+# ─────────────────────────────────────────────────────────────────────────
+
+
+@app.command(
+    "history",
+    help=tr(
+        "cli.app.modelo.history_help",
+        default="Chronological modelo lifecycle audit (calculate/verify/file/amend/...) for one modelo.",
+    ),
+)
+def modelo_history(
+    ctx: typer.Context,
+    modelo: Annotated[str, typer.Option("--modelo", help="Modelo code (e.g. 100, 303).")],
+    year: Annotated[int | None, typer.Option("--year", help="Optional filing year filter.")] = None,
+    period: Annotated[str | None, typer.Option("--period", help="Optional period filter (e.g. Q1, annual).")] = None,
+) -> None:
+    """Stream the bucket-event history for one modelo across all lifecycle stages."""
+
+    from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    repo = BucketEventHistoryRepository()
+    catalogue = repo.load()
+    modelo_event_types = {
+        BucketEventType.MODELO_CALCULATION_CREATED,
+        BucketEventType.MODELO_VERIFICATION_PASSED,
+        BucketEventType.MODELO_VERIFICATION_REFUSED,
+        BucketEventType.MODELO_FILED,
+        BucketEventType.MODELO_FILED_SUPERSEDED,
+        BucketEventType.MODELO_AMENDED,
+        BucketEventType.MODELO_FILING_IMPORTED,
+        BucketEventType.MODELO_WORK_UNIT_DISCARDED,
+        BucketEventType.MODELO_AUDIT_VERIFIED,
+        BucketEventType.MODELO_AUDIT_EXPORTED,
+    }
+    matches: list = []
+    for event in catalogue.events.values():
+        if event.event_type not in modelo_event_types:
+            continue
+        payload_map = dict(event.payload)
+        if payload_map.get("modelo", "").strip() != modelo.strip():
+            continue
+        if year is not None and payload_map.get("year", "").strip() != str(year):
+            continue
+        if period is not None and payload_map.get("period", "").strip() != period.strip():
+            continue
+        matches.append(event)
+    matches.sort(key=lambda e: e.occurred_at)
+    payload = {
+        "modelo": modelo,
+        "year": year,
+        "period": period,
+        "count": len(matches),
+        "events": [
+            {
+                "event_id": e.event_id,
+                "event_type": e.event_type.value,
+                "occurred_at": e.occurred_at.isoformat(),
+                "actor": e.actor,
+                "object_type": e.object_type.value,
+                "object_id": e.object_id,
+                "payload": dict(e.payload),
+            }
+            for e in matches
+        ],
+    }
+    lines = [f"modelo\t{modelo}", f"count\t{len(matches)}"]
+    for e in matches:
+        lines.append(
+            f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_id}\t{e.actor}"
+        )
     _emit(ctx, payload, lines)
 
 
