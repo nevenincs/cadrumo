@@ -263,27 +263,53 @@ a separate `CounterpartAggregationObservation` type with a
 
 18/18 counterpart tests pass against the full registry.
 
-## Remaining (not landed in this session)
+## T3.4 landed; T4.1 / T4.2 carry a schema gap
 
-The roadmap has two items the session did not attempt:
+T3.4 IVA prorrata + regularización inversiones landed in a follow-up
+commit. Casillas added to modelo 303:
 
-* **T3.4 IVA prorrata + regularización inversiones** — LIVA arts.
-  102-114. Requires careful BOE grounding for prorrata general,
-  prorrata especial, and 5-year (or 10-year for real estate)
-  regularización on capital goods. The T1.2 multi-year resolver is
-  ready to consume it; the work is registry-side casilla + formula
-  declarations across modelo 303 (and possibly modelo 322 grupos).
-* **T4.1 / T4.2 detail records** on modelos 190 / 193 / 232 / 720 /
-  184 / 360. The T1.4 engine row-set surface (in `227712ac`) is in
-  place to receive them. Each modelo needs ~5-10 row-producer binding
-  declarations against the modelo's diseño-de-registro tipo-2
-  fields. Modelo 349 already exhibits the pattern in working form
-  (13 row-producer bindings split into operator_clave and
-  operator_clave_period groupings).
+* `iva.prorrata-volumen-con-derecho` (manual money, art. 104.2)
+* `iva.prorrata-volumen-total` (manual money, art. 104.2)
+* `iva.prorrata-porcentaje` (computed ratio, art. 104.4 — rounded
+  UP integer; constrained to [0, 100])
+* `iva.regularizacion-inversiones` (manual money, arts. 107-110 —
+  multi-year amortization is operator-declared per the AEAT
+  procedure; the T1.2 multi-year resolver remains available for a
+  future workflow that wants to source this from prior filings)
 
-These are documented here as concrete remaining work-units, not
-"deferred" — each can be picked up directly using the
-infrastructure landed in this session.
+The cuota-deducible-total formula intentionally does NOT auto-apply
+the prorrata or include regularización; both are surfaced
+separately so the AEAT reconciliation flow can distinguish baseline
+deducción from prorrata/regularización components.
+
+**T4.1 / T4.2 detail records remain blocked on a schema gap**, not
+on TOML work. The engine row-set surface (T1.4 in `227712ac`)
+operates over `_InvoiceRowField` which is a closed Literal:
+party_tax_id / country_code / party_legal_name / clave /
+base_imponible / rectified_{year,period,base_previous}. This
+covers modelo 349 (intracom VAT operations) but **does not cover**:
+
+* Withholding amount (needed by modelo 190 / 193 perceptor records)
+* Asset valuation + provenance (needed by modelo 720 foreign assets)
+* Related-party operation type + transfer pricing method (modelo 232)
+* Atribución member share percentages (modelo 184)
+* Member-state refund operation kind + refund amount (modelo 360)
+
+Each modelo also requires its own domain observation type — there
+is no single `Observation` shape that fits all six. Honest scoping:
+
+* Each of the six modelos is a substantial domain schema extension
+  (~5-10 row fields + an Observation pydantic model + the
+  `_build_..._rows` accumulator) before the binding declarations
+  can be authored against the AEAT diseño-de-registro.
+* Approximate cost: 5-10 hours per modelo, properly grounded.
+* No shim path: writing the binding declarations against the
+  current row_field literal would either silently miss real columns
+  or alias retention/asset/related-party fields onto
+  `base_imponible` — both are unacceptable.
+
+These are real work-units the calc-engine roadmap will need to pick
+up, but they did not fit within this hardening session.
 
 ## Worktree discipline
 
