@@ -32,7 +32,7 @@ from ...domain.deadlines import AutonomoProfile, FilingObligation, Schedule, nex
 from ...domain.filing import FilingBuilderError
 from ...domain.submission import SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
-from ._errors import WorkflowAbortSignal, WorkflowComponentError, WorkflowError
+from ._errors import WorkflowAbortSignalError, WorkflowComponentError, WorkflowError
 from ._models import (
     DeclarationPointer,
     SiteHealthAlert,
@@ -344,7 +344,7 @@ class WorkflowEngine:
                 steps=steps,
             )
             final_stage = WorkflowStage.DONE
-        except WorkflowAbortSignal as abort:
+        except WorkflowAbortSignalError as abort:
             aborted_reason = abort.reason
             abort_summary = abort.summary
             _abort_stage = steps[-1].stage if steps else "?"
@@ -487,7 +487,7 @@ class WorkflowEngine:
                     summary=no_summary,
                 )
             )
-            raise WorkflowAbortSignal(
+            raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.NO_PENDING_OBLIGATION,
                 summary=no_summary,
             )
@@ -511,7 +511,7 @@ class WorkflowEngine:
                     },
                 )
             )
-            raise WorkflowAbortSignal(
+            raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.DEADLINE_PASSED,
                 summary=closed_summary,
             )
@@ -598,7 +598,7 @@ class WorkflowEngine:
                     },
                 )
             )
-            raise WorkflowAbortSignal(
+            raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.INBOX_BLOCKING_REQUERIMIENTO,
                 summary=blocked_summary,
             )
@@ -675,7 +675,7 @@ class WorkflowEngine:
                         },
                     )
                 )
-                raise WorkflowAbortSignal(
+                raise WorkflowAbortSignalError(
                     reason=WorkflowAbortReason.ALREADY_FILED,
                     summary=already_summary,
                 )
@@ -746,7 +746,7 @@ class WorkflowEngine:
                     details={"draft_id": draft.draft_id, "status": status_value},
                 )
             )
-            raise WorkflowAbortSignal(
+            raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
                 summary=status_summary,
             )
@@ -800,7 +800,7 @@ class WorkflowEngine:
                 details={"draft_id": draft.draft_id, **mismatches},
             )
         )
-        raise WorkflowAbortSignal(
+        raise WorkflowAbortSignalError(
             reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
             summary=summary,
         )
@@ -837,7 +837,7 @@ class WorkflowEngine:
                     details={"error_count": str(len(error_findings))},
                 )
             )
-            raise WorkflowAbortSignal(
+            raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
                 summary=errors_summary,
             )
@@ -884,7 +884,7 @@ class WorkflowEngine:
                         },
                     )
                 )
-                raise WorkflowAbortSignal(
+                raise WorkflowAbortSignalError(
                     reason=WorkflowAbortReason.CERT_INVALID,
                     summary=cert_summary,
                 ) from exc
@@ -908,7 +908,7 @@ class WorkflowEngine:
                         details=cert_details,
                     )
                 )
-                raise WorkflowAbortSignal(
+                raise WorkflowAbortSignalError(
                     reason=WorkflowAbortReason.CERT_INVALID,
                     summary=provider_summary,
                 )
@@ -944,7 +944,7 @@ class WorkflowEngine:
                         details=cert_details,
                     )
                 )
-                raise WorkflowAbortSignal(
+                raise WorkflowAbortSignalError(
                     reason=WorkflowAbortReason.CERT_INVALID,
                     summary=expiry_summary,
                 )
@@ -978,7 +978,7 @@ class WorkflowEngine:
                     details={**cert_details, "error_message": str(exc)},
                 )
             )
-            raise WorkflowAbortSignal(
+            raise WorkflowAbortSignalError(
                 reason=WorkflowAbortReason.PREFLIGHT_FAILED,
                 summary=preflight_summary,
             ) from exc
@@ -1032,7 +1032,7 @@ class WorkflowEngine:
         exc: BaseException,
         steps: list[WorkflowStep],
     ) -> NoReturn:
-        """Record a failed step and raise ``WorkflowAbortSignal(UNHANDLED_EXCEPTION)``.
+        """Record a failed step and raise ``WorkflowAbortSignalError(UNHANDLED_EXCEPTION)``.
 
         Centralises the wrap-and-record ritual so every stage method
         surfaces an unexpected exception identically.
@@ -1058,7 +1058,7 @@ class WorkflowEngine:
         )
         wrapped = WorkflowComponentError(f"{stage.value} component raised {type(exc).__name__}: {exc}")
         wrapped.__cause__ = exc
-        raise WorkflowAbortSignal(
+        raise WorkflowAbortSignalError(
             reason=WorkflowAbortReason.UNHANDLED_EXCEPTION,
             summary=unhandled_summary,
         ) from wrapped
@@ -1089,7 +1089,7 @@ class WorkflowEngine:
                 ),
             )
         )
-        raise WorkflowAbortSignal(
+        raise WorkflowAbortSignalError(
             reason=WorkflowAbortReason.SITE_UNAVAILABLE,
             summary=summary,
         ) from exc

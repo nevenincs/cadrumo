@@ -330,12 +330,12 @@ def _build_grid_resize_requests(
     operator has manually expanded keeps its operator-set bound.
     """
 
-    _DEFAULT_ROWS = 1000
-    _DEFAULT_COLUMNS = 26
+    default_rows = 1000
+    default_columns = 26
     # Generous headroom in case the operator pastes additional notes
     # below the engine's emitted rows; one extra row per 10 keeps
     # the grid from looking visually full.
-    _ROW_HEADROOM = 50
+    row_headroom = 50
 
     max_row: dict[str, int] = {}
     max_col: dict[str, int] = {}
@@ -359,8 +359,8 @@ def _build_grid_resize_requests(
         sheet_id = sheet_id_by_tab.get(tab_value)
         if sheet_id is None:
             continue
-        target_rows = max(max_r + _ROW_HEADROOM, _DEFAULT_ROWS)
-        target_cols = max(max_col.get(tab_value, 1), _DEFAULT_COLUMNS)
+        target_rows = max(max_r + row_headroom, default_rows)
+        target_cols = max(max_col.get(tab_value, 1), default_columns)
         requests.append(
             {
                 "updateSheetProperties": {
@@ -750,7 +750,7 @@ def apply_export_plan(
             sheet_id_by_tab[str(added.get("title", ""))] = int(added.get("sheetId", 0))
 
     # Resize each tab so the plan fits inside the grid. Sheets'
-    # default grid is 1000 rows × 26 columns; large modelos (e.g.
+    # default grid is 1000 rows x 26 columns; large modelos (e.g.
     # 100 with 2235 casillas in Entradas) overflow that bound on
     # the first cell write. We compute the maximum row + column
     # each tab will receive in the upcoming batchUpdate and grow

@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
-from ._errors import RegistryValidationError
+from ._errors import CasillaConstraintViolationError, RegistryValidationError
 from ._loader import load_registry_tree
 from ._runtime_graph import formula_evaluation_order
 from ._schema import DatedValue, FormulaExpression, ModeloRevision, ParameterDefinition, RegistrySnapshot
@@ -86,6 +86,7 @@ def calculate_registry_snapshot(
     values = _initial_values(revision, inputs)
     formulas = {formula.target: formula for formula in revision.formulas}
     parameters = {parameter.id: parameter for parameter in revision.parameters}
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
     entries: list[RegistryCalculationEntry] = []
 
     with localcontext() as ctx:
@@ -106,6 +107,23 @@ def calculate_registry_snapshot(
                 enum_binding_values=resolved_enum_bindings,
             )
             value = _apply_rounding(value, formula.rounding)
+            target_casilla = casillas_by_id.get(target)
+            if target_casilla is not None and target_casilla.constraints is not None:
+                violation = target_casilla.constraints.violates(value)
+                if violation is not None:
+                    raise CasillaConstraintViolationError(
+                        f"casilla {target_casilla.number!r} ({target_casilla.label}) "
+                        f"violates declared constraint: {violation}",
+                        translated_message="errors.calc.casilla_constraint_violation",
+                        context={
+                            "casilla_id": target,
+                            "casilla_number": target_casilla.number,
+                            "value": str(value),
+                            "formula_id": formula.id,
+                            "legal_refs": ",".join(target_casilla.constraints.legal_refs),
+                            "source_refs": ",".join(target_casilla.constraints.source_refs),
+                        },
+                    )
             values[target] = value
             entries.append(
                 RegistryCalculationEntry(
@@ -132,7 +150,11 @@ def _initial_values(revision: ModeloRevision, inputs: Mapping[str, Decimal]) -> 
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     unknown = sorted(set(inputs).difference(casillas))
     if unknown:
-        raise RegistryValidationError(f"unknown registry input casilla ids: {unknown!r}")
+        raise RegistryValidationError(
+            f"unknown registry input casilla ids: {unknown!r}",
+            translated_message="errors.calc.unknown_input_casillas",
+            context={"casilla_ids": ",".join(unknown)},
+        )
     formula_targets = {formula.target for formula in revision.formulas}
     computed = sorted(
         casilla_id
@@ -140,7 +162,11 @@ def _initial_values(revision: ModeloRevision, inputs: Mapping[str, Decimal]) -> 
         if casillas[casilla_id].input_kind == "computed" or casilla_id in formula_targets
     )
     if computed:
-        raise RegistryValidationError(f"computed registry casillas cannot be supplied as inputs: {computed!r}")
+        raise RegistryValidationError(
+            f"computed registry casillas cannot be supplied as inputs: {computed!r}",
+            translated_message="errors.calc.computed_supplied_as_input",
+            context={"casilla_ids": ",".join(computed)},
+        )
     values: dict[str, Decimal] = {}
     for casilla in revision.casillas:
         if casilla.input_kind == "computed":
@@ -250,6 +276,74 @@ def _evaluate_expression(
         result = _resolve_bracket(bracket_param, base, date_context)
         operand_values.append(result)
         return result
+    if op == "lookup_parameter_by_entity_type":
+        # Dispatch a scalar parameter lookup by an enum binding (e.g.
+        # entity_type → tipo gravamen for IS modelo 200). Three args:
+        # args[0] is unused (placeholder for symmetry with the bracket
+        # variant); args[1] is the binding leaf carrying the enum
+        # value; args[2] is the dispatch_table mapping enum keys to
+        # parameter ids.
+        if len(expression.args) != 3:
+            raise RegistryValidationError(
+                "formula op 'lookup_parameter_by_entity_type' expects 3 args",
+                translated_message="errors.calc.lookup_dispatch_arg_count",
+                context={"op": op, "expected": "3"},
+            )
+        binding_arg = expression.args[1]
+        dispatch_arg = expression.args[2]
+        if binding_arg.binding is None:
+            raise RegistryValidationError(
+                "formula op 'lookup_parameter_by_entity_type' requires args[1] to be a binding leaf",
+                translated_message="errors.calc.lookup_dispatch_arg_kind",
+                context={"op": op, "position": "args[1]", "expected_kind": "binding"},
+            )
+        if dispatch_arg.dispatch_table is None:
+            raise RegistryValidationError(
+                "formula op 'lookup_parameter_by_entity_type' requires args[2] to be a dispatch_table leaf",
+                translated_message="errors.calc.lookup_dispatch_arg_kind",
+                context={"op": op, "position": "args[2]", "expected_kind": "dispatch_table"},
+            )
+        if binding_arg.binding not in resolved_enum_bindings:
+            raise RegistryValidationError(
+                f"enum binding {binding_arg.binding!r} has no supplied value;"
+                " required by lookup_parameter_by_entity_type",
+                translated_message="errors.calc.enum_binding_value_missing",
+                context={"binding_id": binding_arg.binding, "op": op},
+            )
+        dispatch_key = resolved_enum_bindings[binding_arg.binding]
+        dispatch_table = dispatch_arg.dispatch_table
+        if dispatch_key not in dispatch_table:
+            raise RegistryValidationError(
+                f"lookup_parameter_by_entity_type dispatch_table is missing key {dispatch_key!r} "
+                f"(declared keys: {sorted(dispatch_table)})",
+                translated_message="errors.calc.dispatch_key_unknown",
+                context={
+                    "op": op,
+                    "binding_id": binding_arg.binding,
+                    "dispatch_key": dispatch_key,
+                    "available_keys": ",".join(sorted(dispatch_table)),
+                },
+            )
+        scalar_param_id = dispatch_table[dispatch_key]
+        scalar_param = parameters.get(scalar_param_id)
+        if scalar_param is None:
+            raise RegistryValidationError(
+                f"parameter {scalar_param_id!r} not registered",
+                translated_message="errors.calc.parameter_unknown",
+                context={"parameter_id": scalar_param_id},
+            )
+        if scalar_param.data_type == "bracket_table":
+            raise RegistryValidationError(
+                f"parameter {scalar_param_id!r} declares data_type='bracket_table'; "
+                f"lookup_parameter_by_entity_type requires a scalar parameter (decimal / money / integer / ratio)",
+                translated_message="errors.calc.dispatch_parameter_kind",
+                context={"parameter_id": scalar_param_id, "op": op},
+            )
+        result = _resolve_parameter(scalar_param, date_context)
+        operand_refs.append(binding_arg.binding)
+        operand_refs.append(scalar_param_id)
+        operand_values.append(result)
+        return result
     args = [
         _evaluate_expression(
             arg,
@@ -277,7 +371,10 @@ def _evaluate_expression(
     if op == "divide":
         _require_arg_count(op, args, 2)
         if args[1] == _ZERO:
-            raise RegistryValidationError("formula expression divides by zero")
+            raise RegistryValidationError(
+                "formula expression divides by zero",
+                translated_message="errors.calc.divide_by_zero",
+            )
         return args[0] / args[1]
     if op == "percent":
         _require_arg_count(op, args, 2)
@@ -324,14 +421,22 @@ def _evaluate_leaf(
         return expression.literal
     if expression.casilla is not None:
         if expression.casilla not in values:
-            raise RegistryValidationError(f"casilla {expression.casilla!r} referenced before evaluation")
+            raise RegistryValidationError(
+                f"casilla {expression.casilla!r} referenced before evaluation",
+                translated_message="errors.calc.casilla_referenced_before_evaluation",
+                context={"casilla_id": expression.casilla},
+            )
         value = values[expression.casilla]
         operand_refs.append(expression.casilla)
         operand_values.append(value)
         return value
     if expression.binding is not None:
         if expression.binding not in binding_values:
-            raise RegistryValidationError(f"binding {expression.binding!r} has no supplied value")
+            raise RegistryValidationError(
+                f"binding {expression.binding!r} has no supplied value",
+                translated_message="errors.calc.binding_value_missing",
+                context={"binding_id": expression.binding},
+            )
         value = binding_values[expression.binding]
         operand_refs.append(expression.binding)
         operand_values.append(value)
@@ -344,12 +449,19 @@ def _evaluate_leaf(
         return value
     if expression.relation is not None:
         if expression.relation not in relation_values:
-            raise RegistryValidationError(f"relation {expression.relation!r} has no supplied value")
+            raise RegistryValidationError(
+                f"relation {expression.relation!r} has no supplied value",
+                translated_message="errors.calc.relation_value_missing",
+                context={"relation_id": expression.relation},
+            )
         value = relation_values[expression.relation]
         operand_refs.append(expression.relation)
         operand_values.append(value)
         return value
-    raise RegistryValidationError("empty formula expression")
+    raise RegistryValidationError(
+        "empty formula expression",
+        translated_message="errors.calc.empty_expression",
+    )
 
 
 def _compare(op: str, left: Decimal, right: Decimal) -> bool:
@@ -385,10 +497,18 @@ def _resolve_bracket(
         b for b in parameter.brackets if b.valid_from <= selected and (b.valid_to is None or selected <= b.valid_to)
     ]
     if not candidates:
-        raise RegistryValidationError(f"parameter {parameter.id!r} has no bracket valid for {selected.isoformat()}")
+        raise RegistryValidationError(
+            f"parameter {parameter.id!r} has no bracket valid for {selected.isoformat()}",
+            translated_message="errors.calc.bracket_no_window",
+            context={"parameter_id": parameter.id, "filing_date": selected.isoformat()},
+        )
     base = Decimal(base)
     if base < Decimal("0"):
-        raise RegistryValidationError(f"parameter {parameter.id!r} lookup_bracket received negative base {base}")
+        raise RegistryValidationError(
+            f"parameter {parameter.id!r} lookup_bracket received negative base {base}",
+            translated_message="errors.calc.bracket_negative_base",
+            context={"parameter_id": parameter.id, "base": str(base)},
+        )
     sorted_brackets = sorted(candidates, key=lambda b: b.lower_bound)
     selected_entry = None
     for entry in sorted_brackets:
@@ -396,7 +516,11 @@ def _resolve_bracket(
             selected_entry = entry
             break
     if selected_entry is None:
-        raise RegistryValidationError(f"parameter {parameter.id!r} has no bracket covering base {base}")
+        raise RegistryValidationError(
+            f"parameter {parameter.id!r} has no bracket covering base {base}",
+            translated_message="errors.calc.bracket_no_coverage",
+            context={"parameter_id": parameter.id, "base": str(base)},
+        )
     return selected_entry.fixed_addition + selected_entry.marginal_rate * (base - selected_entry.lower_bound)
 
 

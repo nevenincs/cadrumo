@@ -96,11 +96,17 @@ class TestAggregate111:
 
     def test_multiple_observations_same_perceptor_and_scheme_sum(self) -> None:
         obs_a = _obs(
-            nif="B1", scheme=RetencionScheme.WORK_INCOME, base="500.00", retencion="75.00",
+            nif="B1",
+            scheme=RetencionScheme.WORK_INCOME,
+            base="500.00",
+            retencion="75.00",
             source_id="tx-1",
         )
         obs_b = _obs(
-            nif="B1", scheme=RetencionScheme.WORK_INCOME, base="700.00", retencion="105.00",
+            nif="B1",
+            scheme=RetencionScheme.WORK_INCOME,
+            base="700.00",
+            retencion="105.00",
             source_id="tx-2",
         )
         result = aggregate_retenciones_111((obs_a, obs_b), period="2025-Q1")
@@ -111,11 +117,17 @@ class TestAggregate111:
 
     def test_same_perceptor_different_schemes_yield_separate_rollups(self) -> None:
         obs_work = _obs(
-            nif="B1", scheme=RetencionScheme.WORK_INCOME, base="500.00", retencion="75.00",
+            nif="B1",
+            scheme=RetencionScheme.WORK_INCOME,
+            base="500.00",
+            retencion="75.00",
             source_id="tx-1",
         )
         obs_econ = _obs(
-            nif="B1", scheme=RetencionScheme.ECONOMIC_ACTIVITY, base="700.00", retencion="105.00",
+            nif="B1",
+            scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+            base="700.00",
+            retencion="105.00",
             source_id="tx-2",
         )
         result = aggregate_retenciones_111((obs_work, obs_econ), period="2025-Q1")
@@ -186,7 +198,7 @@ class TestAggregate123:
         assert result.rollups[0].scheme is RetencionScheme.CAPITAL_OTHER
 
 
-class TestAggregate180_190_193:
+class TestAggregate180190193:
     def test_180_widens_115_observations_to_annual_period(self) -> None:
         observations = (
             _obs(nif="L1", scheme=RetencionScheme.URBAN_RENTAL, base="2000", retencion="380", source_id="r1"),
@@ -270,9 +282,7 @@ class TestAggregationInvariants:
         from pydantic import ValidationError
 
         row = aggregate_retenciones_111(
-            (
-                _obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="t1"),
-            ),
+            (_obs(nif="A1", scheme=RetencionScheme.WORK_INCOME, base="100", retencion="15", source_id="t1"),),
             period="2025-Q1",
         ).rollups[0]
         with pytest.raises(ValidationError, match="distinct perceptor"):
