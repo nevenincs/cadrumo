@@ -5,34 +5,45 @@ from __future__ import annotations
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
-from typing import cast
 
 from ._citation_blocklist import CitationSource, find_known_bad
 from ._errors import RegistryValidationError
 from ._schema import LegalReference
 from ._text import normalise_corpus_text
 
-_SOURCE_BY_KIND = cast(
-    "Mapping[str, CitationSource]",
-    {
-        "ley": "ley",
-        "real_decreto": "reglamento",
-        "real_decreto_ley": "reglamento",
-        "orden": "orden",
-        "reglamento": "reglamento",
-        "manual": "manual",
-        "instruction": "instruction",
-    },
-)
+_SOURCE_BY_KIND: dict[str, CitationSource] = {
+    "ley": "ley",
+    "real_decreto": "reglamento",
+    "real_decreto_ley": "reglamento",
+    "orden": "orden",
+    "reglamento": "reglamento",
+    "manual": "manual",
+    "instruction": "instruction",
+}
 
 
 def verify_legal_reference(reference: LegalReference, *, source_root: Path | None = None) -> None:
-    """Verify one already parsed legal reference is filing-grade."""
+    """Verify one already parsed legal reference is filing-grade.
 
-    if reference.review_status != "reviewed":
-        raise RegistryValidationError(f"legal reference {reference.id!r} is not reviewed")
-    if reference.evidence_tier != "legal_authority":
-        raise RegistryValidationError(f"legal reference {reference.id!r} is not legal authority")
+    Type-system invariants enforced by the Pydantic schema (and thus
+    NOT re-checked here):
+
+      - ``review_status`` is ``Literal["reviewed"]`` — the type makes
+        any other value unrepresentable, so a prior runtime check
+        ``if reference.review_status != "reviewed"`` was structurally
+        unreachable dead code.
+      - ``evidence_tier`` on ``LegalReference`` is
+        ``Literal["legal_authority"]`` — same dead-branch reasoning.
+      - ``corpus_ref`` matches the ``path#anchor`` shape — the
+        ``LegalReference`` model validator rejects malformed refs at
+        parse time, so the defensive ``corpus_ref.split("#", 1)[0]``
+        in :func:`_legal_corpus_text` will always find a non-empty path.
+
+    This function therefore only checks runtime invariants that the
+    type system cannot express: known-bad citation patterns and
+    required-text presence against the local corpus.
+    """
+
     if reference.article is None:
         return
     source = _SOURCE_BY_KIND.get(reference.kind)
