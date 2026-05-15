@@ -1,19 +1,21 @@
 # Semgrep regression rules
 
-Rules in `.semgrep/rules/` enforce the type-uniformity discipline established
-in Wave 1 of the linkage-design epic. They prevent reintroduction of the
-suppression patterns eradicated during Phases P03 through P10.
+Rules in `.semgrep/rules/` enforce type-system and architectural discipline
+across the codebase. They prevent reintroduction of patterns that bypass
+the strict pydantic / typed-ID contracts established in `src/aeat/domain/`
+and `src/aeat/application/`.
 
 ## Rules
 
-| File | Defect class | Surface | Severity |
-|------|--------------|---------|----------|
-| `no-any-annotation.yml` | T-11 | `src/aeat/domain/`, `src/aeat/application/` | ERROR |
-| `no-dict-str-any.yml` | T-01 | `src/aeat/domain/`, `src/aeat/application/` | ERROR |
-| `no-cast-in-domain.yml` | T-11 | `src/aeat/domain/`, `src/aeat/application/` | ERROR |
-| `justify-ty-ignore.yml` | T-11 | `src/aeat/` (excludes tests) | ERROR |
-
-Defect-class references point at the Issue Taxonomy v1 reference document.
+| File | Surface | Severity |
+|------|---------|----------|
+| `no-any-annotation.yml` | `src/aeat/domain/`, `src/aeat/application/` | ERROR |
+| `no-dict-str-any.yml` | `src/aeat/domain/`, `src/aeat/application/` | ERROR |
+| `no-cast-in-domain.yml` | `src/aeat/domain/`, `src/aeat/application/` | ERROR |
+| `justify-ty-ignore.yml` | `src/aeat/` (excludes tests) | ERROR |
+| `no-mapping-str-decimal-on-registry.yml` | Registry-tier models | ERROR |
+| `no-duplicate-ccaa-enum.yml` | Outside `domain/profile/_ccaa.py` | WARNING |
+| `no-duplicate-concept-models.yml` | `src/aeat/` (excludes tests) | WARNING |
 
 ## CI invocation
 
@@ -35,8 +37,9 @@ CI on Ubuntu/macOS runners executes the full semgrep rule set.
 
 Each rule should:
 
-1. Cite a defect class from the Issue Taxonomy v1 reference document in its
-   `message` body.
+1. Describe the violation pattern and its harm in self-contained prose in
+   the `message` body. The rule should be readable as-is, without external
+   project documents.
 2. Scope to the smallest applicable path set under `paths.include`.
 3. Use `paths.exclude` for legitimate exemptions (tests, adapter boundaries
    bridging external untyped APIs).

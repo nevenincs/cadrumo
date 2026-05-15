@@ -5,7 +5,9 @@ rules:
       src/aeat/application/. Define a typed pydantic model or `TypedDict` for
       the structured shape, or narrow at the consumption boundary
       (e.g. `Model.model_validate(parsed)` and use the model thereafter).
-      See defect-class T-01 in the linkage-design-audit reference document.
+      Untyped string-keyed envelopes erase provenance at cross-boundary
+      transitions and bypass the strict pydantic contracts the registry
+      enforces elsewhere.
     severity: ERROR
     languages:
       - python
