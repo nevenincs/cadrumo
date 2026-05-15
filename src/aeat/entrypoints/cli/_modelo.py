@@ -22,6 +22,7 @@ from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     FilingRecordNotFoundError,
+    ModeloWorkflowGateError,
     VerificationReportNotFoundError,
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
@@ -43,12 +44,13 @@ from ...application.modelo import (
 )
 from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
-from ...domain.calculations.registry._errors import RegistrySnapshotError
+from ...domain.calculations.registry._errors import RegistryValidationError, RegistrySnapshotError
+from ...domain.calculations.registry._queries import parse_modelo_period
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import FilingRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
-from ._common import _emit, _parse_iso_date
+from ._common import _emit, _parse_iso_date, _profile_to_autonomo
 from ._i18n import tr
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
@@ -239,6 +241,39 @@ def _parse_kv_spec[T](
     return key, transform(value)
 
 
+def _resolve_year_period(year: int, period: str) -> tuple[int, str]:
+    """Normalise CLI ``--year/--period`` into ``(filing_year, registry_period)``.
+
+    Operators pass user-facing tokens (``Q1``, ``annual``, ``01``); the
+    registry expects ``1T``/``0A``/``01``. Bridge that by reconstructing
+    the canonical ``YYYY[Qn|-MM]`` string and delegating to the
+    registry parser.
+    """
+
+    token = period.strip()
+    if not token:
+        raise typer.BadParameter(tr("cli.common.errors.period_empty"))
+    lowered = token.lower()
+    if lowered in {"annual", "anual", "0a"}:
+        composed = f"{year}"
+    elif lowered in {"q1", "1t", "1"}:
+        composed = f"{year}Q1"
+    elif lowered in {"q2", "2t", "2"}:
+        composed = f"{year}Q2"
+    elif lowered in {"q3", "3t", "3"}:
+        composed = f"{year}Q3"
+    elif lowered in {"q4", "4t", "4"}:
+        composed = f"{year}Q4"
+    elif lowered.isdigit() and len(lowered) == 2:
+        composed = f"{year}-{lowered}"
+    else:
+        composed = f"{year}{token}" if token.upper().startswith("Q") else f"{year}-{token}"
+    try:
+        return parse_modelo_period(composed)
+    except RegistryValidationError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
 def _parse_binding_override(spec: str) -> tuple[str, str]:
     """Parse a ``--binding KEY=VALUE`` spec into a ``(key, value)`` pair.
 
@@ -289,11 +324,12 @@ def bindings_list(
     for target in targets:
         try:
             if year is not None and period is not None:
+                resolved_year, resolved_period = _resolve_year_period(year, period)
                 report = _run_query(
-                    lambda code=target: service.bindings_for_scope(
+                    lambda code=target, fy=resolved_year, rp=resolved_period: service.bindings_for_scope(
                         code,
-                        filing_year=year,
-                        period=period,
+                        filing_year=fy,
+                        period=rp,
                         as_of=_as_of(as_of),
                     )
                 )
@@ -392,8 +428,11 @@ def bindings_preview(
     assert year is not None
     assert period is not None
     overrides = dict(_parse_binding_override(spec) for spec in (binding or ()))
+    resolved_year, resolved_period = _resolve_year_period(year, period)
     report = _run_query(
-        lambda: _service().bindings_for_scope(modelo, filing_year=year, period=period, as_of=_as_of(as_of))
+        lambda: _service().bindings_for_scope(
+            modelo, filing_year=resolved_year, period=resolved_period, as_of=_as_of(as_of)
+        )
     )
     known_ids = {row.binding_id for row in report.rows}
     unknown_keys = sorted(set(overrides) - known_ids)
@@ -1159,10 +1198,18 @@ def work_verify(
     """
 
     try:
-        report = verify_modelo_revision(calculation_revision_id, actor=actor or _resolve_default_actor())
+        from ...application.workflow._persistence import workflow_state_repository
+
+        workflow_profile = _profile_to_autonomo(workflow_state_repository().load())
+        report = verify_modelo_revision(
+            calculation_revision_id,
+            actor=actor or _resolve_default_actor(),
+            workflow_profile=workflow_profile,
+        )
     except (
         CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
+        ModeloWorkflowGateError,
         WorkUnitNotFoundError,
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
@@ -1197,14 +1244,19 @@ def work_file(
     """Mark a verified modelo revision as internally filed. Does NOT submit to AEAT."""
 
     try:
+        from ...application.workflow._persistence import workflow_state_repository
+
+        workflow_profile = _profile_to_autonomo(workflow_state_repository().load())
         record = file_modelo_revision(
             calculation_revision_id,
             actor=actor or _resolve_default_actor(),
+            workflow_profile=workflow_profile,
             notes=notes,
         )
     except (
         CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
+        ModeloWorkflowGateError,
         WorkUnitNotFoundError,
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
@@ -1245,21 +1297,18 @@ def work_resume(
 
     from ...application.workflow import (
         WorkflowError,
-        WorkflowResumeCommand,
         WorkflowResumeRefusedError,
         resume_modelo_workflow,
     )
 
     try:
-        result = resume_modelo_workflow(
-            WorkflowResumeCommand(workflow_run_id=workflow_run_id),
-        )
+        result = resume_modelo_workflow(workflow_run_id)
     except (WorkflowResumeRefusedError, WorkflowError) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
     payload = {
         "operation": "modelo.work.resume",
-        "prior_workflow_run_id": result.prior_workflow_run_id,
+        "prior_workflow_run_id": result.resumed_from_run_id,
         "modelo": result.modelo,
         "period": result.period,
         "aborted_reason": result.aborted_reason.value,
@@ -1267,7 +1316,7 @@ def work_resume(
     }
     lines = [
         "operation\tmodelo.work.resume",
-        f"prior_workflow_run_id\t{result.prior_workflow_run_id}",
+        f"prior_workflow_run_id\t{result.resumed_from_run_id}",
         f"modelo\t{result.modelo}",
         f"period\t{result.period}",
         f"aborted_reason\t{result.aborted_reason.value}",

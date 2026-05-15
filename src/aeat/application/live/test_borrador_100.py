@@ -1,0 +1,252 @@
+"""Live borrador 100 snapshot persistence contract tests."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from datetime import UTC, datetime
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from aeat.adapters.persistence.storage import (
+    Envelope,
+    EphemeralMasterKeyProvider,
+    SensitivityClass,
+    override_master_key_provider,
+)
+from aeat.adapters.persistence.storage.sql import SecureObjectRepository
+from aeat.adapters.persistence.storage.sql._orm import Base
+from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
+from aeat.application.live import (
+    BORRADOR_100_SNAPSHOT_NAMESPACE,
+    Borrador100Snapshot,
+    Borrador100SnapshotRepository,
+    Borrador100SnapshotService,
+    Borrador100SnapshotState,
+    LiveApplicationInputError,
+    borrador_100_snapshot_object_key,
+    derive_borrador_100_snapshot_id,
+)
+from aeat.core.config import Settings
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_BUCKET_ID = "bucket-renta"
+_SOURCE = "https://www2.agenciatributaria.gob.es/wlpl/PRET-R210/SimuladorOpenAjax"
+_CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
+
+
+@pytest.fixture
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "borrador_100_live.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine)
+    try:
+        yield SecureObjectRepository(engine=engine)
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
+
+
+def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    snapshot = Borrador100Snapshot(
+        snapshot_id="borrador-100-2025-active",
+        bucket_id=_BUCKET_ID,
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        captured_at=_CAPTURED_AT,
+        source_url=_SOURCE,
+        state=Borrador100SnapshotState.ACTIVE,
+        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
+    )
+
+    repository.save(snapshot)
+
+    assert repository.load(snapshot.snapshot_id) == snapshot
+
+
+def test_borrador_100_snapshot_repository_rejects_payload_id_mismatch(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    payload = Borrador100Snapshot(
+        snapshot_id="payload-id",
+        bucket_id=_BUCKET_ID,
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        captured_at=_CAPTURED_AT,
+        source_url=_SOURCE,
+        state=Borrador100SnapshotState.ACTIVE,
+        binding_values={},
+    )
+    envelope = Envelope[Borrador100Snapshot](
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        classification=SensitivityClass.FINANCIAL,
+        payload=payload,
+    )
+    secure_objects.save(
+        namespace=BORRADOR_100_SNAPSHOT_NAMESPACE,
+        object_key=borrador_100_snapshot_object_key(_BUCKET_ID, "requested-id"),
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=envelope.written_at,
+        payload=envelope.model_dump_json().encode("utf-8"),
+    )
+
+    with pytest.raises(LiveApplicationInputError, match="does not match requested snapshot"):
+        repository.load("requested-id")
+
+
+def test_borrador_100_snapshot_repository_lists_bucket_scoped_records(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    first = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    second = Borrador100SnapshotRepository(bucket_id="other-bucket", objects=secure_objects)
+    first_snapshot = Borrador100Snapshot(
+        snapshot_id="first",
+        bucket_id=_BUCKET_ID,
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        captured_at=_CAPTURED_AT,
+        source_url=_SOURCE,
+        state=Borrador100SnapshotState.ACTIVE,
+        binding_values={},
+    )
+    second_snapshot = first_snapshot.model_copy(update={"snapshot_id": "second", "bucket_id": "other-bucket"})
+
+    first.save(first_snapshot)
+    second.save(second_snapshot)
+
+    assert first.list_snapshots() == (first_snapshot,)
+    assert second.list_snapshots() == (second_snapshot,)
+
+
+def test_borrador_100_snapshot_repository_resolves_unambiguous_prefix(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    snapshot = Borrador100Snapshot(
+        snapshot_id="abcdef123456",
+        bucket_id=_BUCKET_ID,
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        captured_at=_CAPTURED_AT,
+        source_url=_SOURCE,
+        state=Borrador100SnapshotState.ACTIVE,
+        binding_values={},
+    )
+    repository.save(snapshot)
+
+    assert repository.resolve("abcdef") == snapshot
+
+
+def test_borrador_100_snapshot_service_captures_content_addressed_snapshot(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
+    values = {"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")}
+
+    snapshot = service.capture(
+        filing_year=2025,
+        period="0A",
+        captured_at=_CAPTURED_AT,
+        source_url=_SOURCE,
+        binding_values=values,
+    )
+
+    assert snapshot.snapshot_id == derive_borrador_100_snapshot_id(
+        filing_year=2025,
+        period="0A",
+        captured_at=_CAPTURED_AT,
+        source_url=_SOURCE,
+        binding_values=values,
+    )
+    assert repository.load(snapshot.snapshot_id) == snapshot
+
+
+def test_borrador_100_snapshot_service_deduplicates_identical_captures(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    service = Borrador100SnapshotService(
+        bucket_id=_BUCKET_ID,
+        repository=Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+    )
+    kwargs = {
+        "filing_year": 2025,
+        "period": "0A",
+        "captured_at": _CAPTURED_AT,
+        "source_url": _SOURCE,
+        "binding_values": {"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
+    }
+
+    first = service.capture(**kwargs)
+    second = service.capture(**kwargs)
+
+    assert first == second
+    assert service.list_snapshots() == (first,)
+
+
+def test_borrador_100_snapshot_service_supersedes_prior_current_snapshot(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
+    older = service.capture(
+        filing_year=2025,
+        period="0A",
+        captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
+        source_url=_SOURCE,
+        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
+    )
+    newer = service.capture(
+        filing_year=2025,
+        period="0A",
+        captured_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC),
+        source_url=_SOURCE,
+        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("16.25")},
+    )
+
+    assert repository.load(older.snapshot_id).state is Borrador100SnapshotState.SUPERSEDED
+    assert repository.load(older.snapshot_id).superseded_by_snapshot_id == newer.snapshot_id
+    assert service.list_snapshots() == (newer,)
+    assert service.list_snapshots(state=None) == (older.model_copy(
+        update={"state": Borrador100SnapshotState.SUPERSEDED, "superseded_by_snapshot_id": newer.snapshot_id}
+    ), newer)
+
+
+def test_borrador_100_snapshot_service_preserves_newer_current_for_out_of_order_capture(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
+    newer = service.capture(
+        filing_year=2025,
+        period="0A",
+        captured_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC),
+        source_url=_SOURCE,
+        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("16.25")},
+    )
+    older = service.capture(
+        filing_year=2025,
+        period="0A",
+        captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
+        source_url=_SOURCE,
+        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
+    )
+
+    assert repository.load(newer.snapshot_id).state is Borrador100SnapshotState.ACTIVE
+    assert repository.load(older.snapshot_id).state is Borrador100SnapshotState.SUPERSEDED
+    assert repository.load(older.snapshot_id).superseded_by_snapshot_id == newer.snapshot_id
+    assert service.list_snapshots() == (newer,)

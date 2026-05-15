@@ -28,9 +28,12 @@ Coverage:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -41,10 +44,18 @@ from aeat.adapters.persistence.storage import (
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
+from aeat.application.auth import AuthProviderDescription, AuthProviderKind
+from aeat.application.filing import (
+    approve_draft,
+    build_draft,
+    build_runtime_schema_provider,
+    filing_profile_from_autonomo,
+)
 from aeat.application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     FilingRecordNotFoundError,
+    ModeloWorkflowGateError,
     VerificationReportNotFoundError,
     calculate_modelo_revision,
     create_work_unit,
@@ -59,6 +70,12 @@ from aeat.application.modelo import (
     mark_revision_verified_complete,
     verify_modelo_revision,
 )
+from aeat.application.workflow import (
+    DeadlineEngineAdapter,
+    FilingInputsProviderProtocol,
+    SubmissionEngineProtocol,
+    WorkflowEngine,
+)
 from aeat.core.config import Settings
 from aeat.domain.buckets import (
     BucketEventHistoryRepository,
@@ -66,8 +83,9 @@ from aeat.domain.buckets import (
     BucketEventType,
 )
 from aeat.domain.calculations.registry import ValidatedRegistryAuthority
+from aeat.domain.deadlines import AutonomoProfile, DeadlineEngine, IVARegime
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
-from aeat.domain.modelos._calculation_revision import CalculationRevisionState
+from aeat.domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from aeat.domain.modelos._filing_record import FilingRecordStatus
 from aeat.domain.modelos._filing_repository import FilingRecordCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
@@ -79,16 +97,20 @@ from aeat.domain.modelos._verification_report import (
 from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
+from aeat.domain.modelos._work_unit import WorkUnit
+from aeat.domain.period import parse_canonical_period
+from aeat.domain.submission import SubmissionEngine
+from aeat.domain.transactions import TransactionCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
-_T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
-_T3 = datetime(2026, 1, 15, 15, 0, 0, tzinfo=UTC)
-_T4 = datetime(2026, 1, 16, 12, 0, 0, tzinfo=UTC)
-_T5 = datetime(2026, 1, 16, 13, 0, 0, tzinfo=UTC)
+_T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
+_T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
+_T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+_T5 = datetime(2026, 4, 17, 13, 0, 0, tzinfo=UTC)
 
 _VERIFY_MODELO = "180"
 _VERIFY_REVISION = "2023-y-siguientes"
@@ -103,6 +125,12 @@ def _registry_required_manual_casillas() -> tuple[str, ...]:
 
     authority = ValidatedRegistryAuthority.load(Path("registry/aeat"), source_root=Path("."))
     snapshot = authority.snapshot(_VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD)
+    return tuple(str(c.id) for c in snapshot.revision.casillas if c.required and c.input_kind == "manual")
+
+
+def _registry_required_manual_casillas_for(*, modelo: str, filing_year: int, period: str) -> tuple[str, ...]:
+    authority = ValidatedRegistryAuthority.load(Path("registry/aeat"), source_root=Path("."))
+    snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
     return tuple(str(c.id) for c in snapshot.revision.casillas if c.required and c.input_kind == "manual")
 
 
@@ -181,6 +209,234 @@ _DEFAULT_130_BASELINE_INPUTS: dict[str, Decimal] = {
     "16": Decimal("0"),
     "18": Decimal("0"),
 }
+
+
+def _workflow_profile() -> AutonomoProfile:
+    return AutonomoProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+    )
+
+
+def _canonical_work_unit_period(work_unit: WorkUnit) -> str:
+    if work_unit.period.endswith("T") and len(work_unit.period) == 2:
+        return f"{work_unit.filing_year}Q{work_unit.period[0]}"
+    if work_unit.period == "0A":
+        return str(work_unit.filing_year)
+    if len(work_unit.period) == 2 and work_unit.period.isdigit():
+        return f"{work_unit.filing_year}-{work_unit.period}"
+    parse_canonical_period(work_unit.period)
+    return work_unit.period
+
+
+class _RevisionInputsProvider:
+    def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
+        self._revision = revision
+        self._modelo = str(work_unit.modelo)
+        self._period = _canonical_work_unit_period(work_unit)
+
+    def load_inputs(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+    ) -> dict[str, object]:
+        del profile
+        assert modelo == self._modelo
+        assert period == self._period
+        return {
+            **dict(self._revision.inputs_snapshot),
+            **dict(self._revision.binding_overrides),
+        }
+
+
+class _RevisionDraftBuilder:
+    def __init__(self, *, work_unit: WorkUnit, actor: str, clock: datetime) -> None:
+        self._work_unit = work_unit
+        self._actor = actor
+        self._clock = clock
+        self._schema_provider = build_runtime_schema_provider(
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            modelos=(str(work_unit.modelo),),
+        )
+
+    def build(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+        inputs: Mapping[str, object],
+        fail_on_warning: bool = False,
+    ):
+        draft = build_draft(
+            modelo=modelo,
+            period=period,
+            profile=filing_profile_from_autonomo(profile),
+            inputs=inputs,
+            schema_provider=self._schema_provider,
+            fail_on_warning=fail_on_warning,
+        )
+        return approve_draft(
+            draft,
+            bucket_id=self._work_unit.bucket_id,
+            approved_by=self._actor,
+            schema_provider=self._schema_provider,
+            transaction_catalogue=TransactionCatalogue(),
+            approved_at=self._clock,
+        )
+
+
+class _DeadlineWindowChecker:
+    def __init__(self, *, profile: AutonomoProfile, engine: DeadlineEngine) -> None:
+        self._profile = profile
+        self._engine = engine
+
+    def is_window_open(self, modelo: str, period: str, today: date) -> bool:
+        year, _ = parse_canonical_period(period)
+        schedule = self._engine.compute(self._profile, year, today=today)
+        return any(
+            obligation.modelo == modelo
+            and obligation.period == period
+            and obligation.opens_on <= today <= obligation.closes_on
+            for obligation in schedule.obligations
+        )
+
+
+@dataclass
+class _AuthProvider:
+    available: bool = True
+    kind: AuthProviderKind = AuthProviderKind.CERTIFICATE
+    describe_calls: int = 0
+
+    def describe(self) -> AuthProviderDescription:
+        self.describe_calls += 1
+        return AuthProviderDescription(
+            kind=self.kind,
+            label="Workflow test certificate",
+            configured=True,
+            available=self.available,
+            identity_nif="X1234567L",
+            subject="CN=Workflow Test",
+            expires_on=date(2027, 1, 15),
+            health_severity="OK" if self.available else "ERROR",
+        )
+
+
+@dataclass
+class _WorkflowGate:
+    engine: WorkflowEngine
+    profile: AutonomoProfile
+    auth_provider: _AuthProvider = field(default_factory=_AuthProvider)
+
+
+def _workflow_gate(
+    *,
+    revision: CalculationRevision,
+    work_unit: WorkUnit,
+    clock: datetime,
+    auth_provider: _AuthProvider | None = None,
+) -> _WorkflowGate:
+    profile = _workflow_profile()
+    deadline_engine = DeadlineEngine()
+    provider = auth_provider or _AuthProvider()
+    submission_engine = SubmissionEngine(
+        auth_provider=provider,
+        deadline_checker=_DeadlineWindowChecker(profile=profile, engine=deadline_engine),
+        settings=Settings(),
+    )
+    return _WorkflowGate(
+        profile=profile,
+        auth_provider=provider,
+        engine=WorkflowEngine(
+            deadline_engine=DeadlineEngineAdapter(deadline_engine),
+            filing_draft_builder=_RevisionDraftBuilder(
+                work_unit=work_unit,
+                actor="operator-A",
+                clock=clock,
+            ),
+            submission_engine=cast(SubmissionEngineProtocol, submission_engine),
+            session=None,
+            certificate_bundle=None,
+            inputs_provider=cast(
+                FilingInputsProviderProtocol,
+                _RevisionInputsProvider(revision=revision, work_unit=work_unit),
+            ),
+            settings=Settings(),
+        ),
+    )
+
+
+def _file_revision(
+    calculation_revision_id: str,
+    *,
+    revision: CalculationRevision,
+    work_unit: WorkUnit,
+    actor: str = "operator-A",
+    notes: str | None = None,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    calculation_repository: CalculationRevisionCatalogueRepository,
+    filing_repository: FilingRecordCatalogueRepository,
+    bucket_event_repository: BucketEventHistoryRepository,
+    clock: datetime,
+    auth_provider: _AuthProvider | None = None,
+):
+    gate = _workflow_gate(
+        revision=revision,
+        work_unit=work_unit,
+        clock=clock,
+        auth_provider=auth_provider,
+    )
+    return file_modelo_revision(
+        calculation_revision_id,
+        actor=actor,
+        workflow_profile=gate.profile,
+        notes=notes,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
+        bucket_event_repository=bucket_event_repository,
+        workflow_engine=gate.engine,
+        clock=clock,
+    )
+
+
+def _verify_revision(
+    calculation_revision_id: str,
+    *,
+    revision: CalculationRevision,
+    work_unit: WorkUnit,
+    actor: str = "operator-A",
+    work_unit_repository: WorkUnitCatalogueRepository,
+    calculation_repository: CalculationRevisionCatalogueRepository,
+    verification_repository: VerificationReportCatalogueRepository,
+    bucket_event_repository: BucketEventHistoryRepository,
+    clock: datetime,
+    auth_provider: _AuthProvider | None = None,
+):
+    gate = _workflow_gate(
+        revision=revision,
+        work_unit=work_unit,
+        clock=clock,
+        auth_provider=auth_provider,
+    )
+    return verify_modelo_revision(
+        calculation_revision_id,
+        actor=actor,
+        workflow_profile=gate.profile,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=verification_repository,
+        bucket_event_repository=bucket_event_repository,
+        workflow_engine=gate.engine,
+        clock=clock,
+    )
 
 
 def _seed_modelo_180_work_unit(wu_repo):
@@ -333,6 +589,7 @@ def test_file_requires_verified_complete_state(repos) -> None:
         file_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-A",
+            workflow_profile=_workflow_profile(),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             filing_repository=fr_repo,
@@ -366,8 +623,10 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
         calculation_repository=cr_repo,
         clock=_T2,
     )
-    filing = file_modelo_revision(
+    filing = _file_revision(
         revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
         actor="operator-A",
         notes="Q1 IVA",
         work_unit_repository=wu_repo,
@@ -413,6 +672,115 @@ def test_file_creates_filing_record_and_advances_pointers(repos) -> None:
     assert current.filing_record_id == filing.filing_record_id
 
 
+def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_blocks(repos) -> None:
+    """The file transition is gated by WorkflowEngine.run_for_period.
+
+    When submission preflight refuses, the calculation revision remains
+    verified-complete and no filing record or filed bucket event is
+    persisted.
+    """
+
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={"01": Decimal("1000")},
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    mark_revision_verified_complete(
+        revision.calculation_revision_id,
+        actor="operator-A",
+        calculation_repository=cr_repo,
+        clock=_T2,
+    )
+
+    unavailable_provider = _AuthProvider(available=False)
+    with pytest.raises(ModeloWorkflowGateError, match="workflow gate aborted"):
+        _file_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T3,
+            auth_provider=unavailable_provider,
+        )
+
+    assert unavailable_provider.describe_calls == 1
+    refreshed_revision = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed_revision.state is CalculationRevisionState.VERIFIED_COMPLETE
+    assert list_filing_records(filing_repository=fr_repo) == ()
+    filed_events = bv_repo.load().for_bucket(
+        work_unit.bucket_id,
+        event_types=(BucketEventType.MODELO_FILED,),
+    )
+    assert filed_events == ()
+
+
+def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos) -> None:
+    """A granted verification must still pass the WorkflowEngine gate.
+
+    Auth/preflight blockers abort before the verified-complete state,
+    verification report, or verification bucket event is persisted.
+    """
+
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    work_unit = _seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
+        binding_values=_DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+
+    unavailable_provider = _AuthProvider(available=False)
+    with pytest.raises(ModeloWorkflowGateError, match="workflow gate aborted"):
+        _verify_revision(
+            revision.calculation_revision_id,
+            revision=revision,
+            work_unit=work_unit,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T2,
+            auth_provider=unavailable_provider,
+        )
+
+    assert unavailable_provider.describe_calls == 1
+    refreshed_revision = get_calculation_revision(
+        revision.calculation_revision_id,
+        calculation_repository=cr_repo,
+    )
+    assert refreshed_revision.state is CalculationRevisionState.DRAFT
+    assert list_verification_reports(
+        calculation_revision_id=revision.calculation_revision_id,
+        verification_repository=vr_repo,
+    ) == ()
+    verification_events = bv_repo.load().for_bucket(
+        work_unit.bucket_id,
+        event_types=(
+            BucketEventType.MODELO_VERIFICATION_PASSED,
+            BucketEventType.MODELO_VERIFICATION_REFUSED,
+        ),
+    )
+    assert verification_events == ()
+
+
 def test_filing_record_supersession_preserves_audit_history(repos) -> None:
     """Re-filing a later verified revision supersedes the prior
     filing. The prior filing record moves to SUPERSEDED with the
@@ -440,8 +808,10 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
         calculation_repository=cr_repo,
         clock=_T2,
     )
-    filing_one = file_modelo_revision(
+    filing_one = _file_revision(
         revision_one.calculation_revision_id,
+        revision=revision_one,
+        work_unit=work_unit,
         actor="operator-A",
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -466,8 +836,10 @@ def test_filing_record_supersession_preserves_audit_history(repos) -> None:
         calculation_repository=cr_repo,
         clock=_T4,
     )
-    filing_two = file_modelo_revision(
+    filing_two = _file_revision(
         revision_two.calculation_revision_id,
+        revision=revision_two,
+        work_unit=work_unit,
         actor="operator-A",
         notes="corrected after audit",
         work_unit_repository=wu_repo,
@@ -555,8 +927,10 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
         calculation_repository=cr_repo,
         clock=_T2,
     )
-    file_modelo_revision(
+    _file_revision(
         revision_one.calculation_revision_id,
+        revision=revision_one,
+        work_unit=work_unit,
         actor="operator-A",
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -580,8 +954,10 @@ def test_list_filing_records_excludes_superseded_by_default(repos) -> None:
         calculation_repository=cr_repo,
         clock=_T4,
     )
-    file_modelo_revision(
+    _file_revision(
         revision_two.calculation_revision_id,
+        revision=revision_two,
+        work_unit=work_unit,
         actor="operator-A",
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -698,24 +1074,27 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     SQL repository encrypts on save and decrypts on load."""
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    required = _registry_required_manual_casillas()
-    assert required, "registry must declare at least one required manual casilla"
+    work_unit = _seed_work_unit(wu_repo)
+    required = _registry_required_manual_casillas_for(
+        modelo=str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
 
-    work_unit = _seed_modelo_180_work_unit(wu_repo)
-    casilla_values = {cid: Decimal("1") for cid in required}
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs=casilla_values,
-        binding_values=_DEFAULT_180_BINDING_VALUES,
-        relation_values=_DEFAULT_180_RELATION_VALUES,
+        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
 
-    report = verify_modelo_revision(
+    report = _verify_revision(
         revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
         actor="operator-A",
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -777,6 +1156,7 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-A",
+        workflow_profile=_workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
@@ -864,6 +1244,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-A",
+        workflow_profile=_workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
@@ -888,20 +1269,20 @@ def test_verify_rejects_non_draft_revision_real_registry(repos) -> None:
     to verify again."""
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    required = _registry_required_manual_casillas()
-    work_unit = _seed_modelo_180_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={cid: Decimal("1") for cid in required},
-        binding_values=_DEFAULT_180_BINDING_VALUES,
-        relation_values=_DEFAULT_180_RELATION_VALUES,
+        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    verify_modelo_revision(
+    _verify_revision(
         revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
         actor="operator-A",
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -914,6 +1295,7 @@ def test_verify_rejects_non_draft_revision_real_registry(repos) -> None:
         verify_modelo_revision(
             revision.calculation_revision_id,
             actor="operator-A",
+            workflow_profile=_workflow_profile(),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             verification_repository=vr_repo,
@@ -927,20 +1309,20 @@ def test_list_and_get_verification_reports_real_registry(repos) -> None:
     are indexable by id and by calculation_revision_id."""
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    required = _registry_required_manual_casillas()
-    work_unit = _seed_modelo_180_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
-        casilla_inputs={cid: Decimal("1") for cid in required},
-        binding_values=_DEFAULT_180_BINDING_VALUES,
-        relation_values=_DEFAULT_180_RELATION_VALUES,
+        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    report = verify_modelo_revision(
+    report = _verify_revision(
         revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
         actor="operator-A",
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -1022,21 +1404,21 @@ def test_verify_emits_passed_event_on_success(repos) -> None:
     the persisted verification report."""
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
-    required = _registry_required_manual_casillas()
-    work_unit = _seed_modelo_180_work_unit(wu_repo)
+    work_unit = _seed_work_unit(wu_repo)
     revision = calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator-A",
-        casilla_inputs={cid: Decimal("1") for cid in required},
-        binding_values=_DEFAULT_180_BINDING_VALUES,
-        relation_values=_DEFAULT_180_RELATION_VALUES,
+        casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
+        binding_values=_DEFAULT_130_BINDING_VALUES,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    report = verify_modelo_revision(
+    report = _verify_revision(
         revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
         actor="operator-A",
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -1087,6 +1469,7 @@ def test_verify_emits_refused_event_on_missing_casilla(repos) -> None:
     report = verify_modelo_revision(
         revision.calculation_revision_id,
         actor="operator-A",
+        workflow_profile=_workflow_profile(),
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
@@ -1131,8 +1514,10 @@ def test_file_emits_modelo_filed_event(repos) -> None:
         calculation_repository=cr_repo,
         clock=_T2,
     )
-    filing = file_modelo_revision(
+    filing = _file_revision(
         revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
         actor="operator-A",
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -1181,8 +1566,10 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None
         calculation_repository=cr_repo,
         clock=_T2,
     )
-    filing_one = file_modelo_revision(
+    filing_one = _file_revision(
         revision_one.calculation_revision_id,
+        revision=revision_one,
+        work_unit=work_unit,
         actor="operator-A",
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -1207,8 +1594,10 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None
         calculation_repository=cr_repo,
         clock=_T4,
     )
-    filing_two = file_modelo_revision(
+    filing_two = _file_revision(
         revision_two.calculation_revision_id,
+        revision=revision_two,
+        work_unit=work_unit,
         actor="operator-A",
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
