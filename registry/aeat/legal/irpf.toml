@@ -72,6 +72,26 @@ required_text = [
     "amortización",
 ]
 
+[legal."rd-439-2007:art-86"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-86.html#a86"
+document_id = "BOE-A-2007-6820"
+article = "86"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a86"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIRPF art 86: tipo de retencion. Heart of the personalized retention scheme for trabajo rendimientos. Define el tipo como cuota de retencion / cuantia total de retribuciones (art-83.2) expresado con dos decimales. Aplica tipo cero cuando la base menos el minimo personal-familiar es no positiva, reduccion de 2 puntos para contribuyentes con vivienda-habitual DT-18 (cifra inferior a 33.007,2 EUR), y un suelo del 2 por ciento para contratos de duracion inferior al anio. Base reglamentaria del calculo del tipo personalizado de retencion del trabajo, citado por art-80 RIRPF."
+required_text = [
+    "Tipo de retención",
+    "cociente obtenido de dividir la cuota de retención",
+    "mínimo personal y familiar",
+]
+
 [legal."rd-439-2007:art-80"]
 evidence_tier = "legal_authority"
 authority = "boe"
