@@ -1,0 +1,319 @@
+"""Contract tests for the five detail-record observation types.
+
+Validates pydantic field constraints, validator semantics, and the
+deterministic row-builder helpers for the new observation surfaces
+landed in T4.1 (modelo 190 / 193 perceptors) and T4.2 (modelo 232
+related-party operations, 720 foreign assets, 184 atribución
+members, 360 refund operations).
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+
+import pytest
+from pydantic import ValidationError
+
+from ._bindings import (
+    AtributionMemberObservation,
+    ForeignAssetObservation,
+    RefundOperationObservation,
+    RelatedPartyOperationObservation,
+    WithholdingObservation,
+    _build_related_party_rows,
+    _build_withholding_rows,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
+
+
+# ---------------------------------------------------------------------------
+# WithholdingObservation
+# ---------------------------------------------------------------------------
+
+
+def test_withholding_observation_country_code_must_be_uppercase_alphabetic() -> None:
+    with pytest.raises(ValidationError, match="country_code must be uppercase alphabetic"):
+        WithholdingObservation(
+            source_id="p1",
+            perceptor_tax_id="12345678A",
+            country_code="es",
+            transaction_date=date(2025, 3, 15),
+            clave="A",
+        )
+    with pytest.raises(ValidationError, match="country_code must be uppercase alphabetic"):
+        WithholdingObservation(
+            source_id="p1",
+            perceptor_tax_id="12345678A",
+            country_code="E1",
+            transaction_date=date(2025, 3, 15),
+            clave="A",
+        )
+
+
+def test_withholding_observation_clave_must_be_uppercase() -> None:
+    with pytest.raises(ValidationError, match="clave must be uppercase"):
+        WithholdingObservation(
+            source_id="p1",
+            perceptor_tax_id="12345678A",
+            transaction_date=date(2025, 3, 15),
+            clave="a",
+        )
+
+
+def test_withholding_observation_amounts_reject_negative() -> None:
+    with pytest.raises(ValidationError, match="amounts must be non-negative"):
+        WithholdingObservation(
+            source_id="p1",
+            perceptor_tax_id="12345678A",
+            transaction_date=date(2025, 3, 15),
+            clave="A",
+            retencion_practicada=Decimal("-1"),
+        )
+
+
+def test_withholding_observation_amounts_must_be_decimal_not_bool() -> None:
+    with pytest.raises(ValidationError):
+        WithholdingObservation(
+            source_id="p1",
+            perceptor_tax_id="12345678A",
+            transaction_date=date(2025, 3, 15),
+            clave="A",
+            retencion_practicada=True,  # type: ignore[arg-type]
+        )
+
+
+def test_build_withholding_rows_per_perceptor_sums_amounts() -> None:
+    obs = (
+        WithholdingObservation(
+            source_id="p1a",
+            perceptor_tax_id="12345678A",
+            perceptor_legal_name="P One",
+            transaction_date=date(2025, 3, 15),
+            clave="A",
+            percibido_dinerario=Decimal("10000"),
+            retencion_practicada=Decimal("1500"),
+        ),
+        WithholdingObservation(
+            source_id="p1b",
+            perceptor_tax_id="12345678A",
+            perceptor_legal_name="P One",
+            transaction_date=date(2025, 6, 15),
+            clave="A",
+            percibido_dinerario=Decimal("5000"),
+            retencion_practicada=Decimal("750"),
+        ),
+        WithholdingObservation(
+            source_id="p2",
+            perceptor_tax_id="87654321Z",
+            perceptor_legal_name="P Two",
+            transaction_date=date(2025, 4, 1),
+            clave="G",
+            percibido_dinerario=Decimal("30000"),
+            retencion_practicada=Decimal("5500"),
+        ),
+    )
+
+    rows = _build_withholding_rows("per_perceptor", obs)
+
+    assert len(rows) == 2
+    by_nif = {row["perceptor_tax_id"]: row for row in rows}
+    assert by_nif["12345678A"]["percibido_dinerario"] == Decimal("15000")
+    assert by_nif["12345678A"]["retencion_practicada"] == Decimal("2250")
+    assert by_nif["87654321Z"]["percibido_dinerario"] == Decimal("30000")
+
+
+def test_build_withholding_rows_per_perceptor_clave_distinguishes_clave_tuples() -> None:
+    obs = (
+        WithholdingObservation(
+            source_id="p1a",
+            perceptor_tax_id="12345678A",
+            transaction_date=date(2025, 3, 15),
+            clave="A",
+            percibido_dinerario=Decimal("100"),
+        ),
+        WithholdingObservation(
+            source_id="p1b",
+            perceptor_tax_id="12345678A",
+            transaction_date=date(2025, 4, 15),
+            clave="G",
+            percibido_dinerario=Decimal("200"),
+        ),
+    )
+
+    rows = _build_withholding_rows("per_perceptor_clave", obs)
+
+    assert len(rows) == 2
+    keys = {(row["perceptor_tax_id"], row["clave"]) for row in rows}
+    assert keys == {("12345678A", "A"), ("12345678A", "G")}
+
+
+# ---------------------------------------------------------------------------
+# RelatedPartyOperationObservation
+# ---------------------------------------------------------------------------
+
+
+def test_related_party_observation_country_code_must_be_uppercase_alphabetic() -> None:
+    with pytest.raises(ValidationError, match="country_code must be uppercase alphabetic"):
+        RelatedPartyOperationObservation(
+            source_id="op1",
+            counterparty_tax_id="A12345678",
+            country_code="es",
+            transaction_date=date(2025, 3, 15),
+            operation_kind_code="01",
+            amount=Decimal("100"),
+        )
+
+
+def test_related_party_observation_amount_must_be_decimal() -> None:
+    with pytest.raises(ValidationError):
+        RelatedPartyOperationObservation(
+            source_id="op1",
+            counterparty_tax_id="A12345678",
+            transaction_date=date(2025, 3, 15),
+            operation_kind_code="01",
+            amount=True,  # type: ignore[arg-type]
+        )
+
+
+def test_build_related_party_rows_groups_by_party_country_kind_method() -> None:
+    obs = (
+        RelatedPartyOperationObservation(
+            source_id="op1",
+            counterparty_tax_id="A12345678",
+            country_code="ES",
+            transaction_date=date(2025, 3, 15),
+            operation_kind_code="01",
+            transfer_pricing_method_code="CUP",
+            amount=Decimal("1000"),
+        ),
+        RelatedPartyOperationObservation(
+            source_id="op2",
+            counterparty_tax_id="A12345678",
+            country_code="ES",
+            transaction_date=date(2025, 6, 15),
+            operation_kind_code="01",
+            transfer_pricing_method_code="CUP",
+            amount=Decimal("500"),
+        ),
+        RelatedPartyOperationObservation(
+            source_id="op3",
+            counterparty_tax_id="DE12345678",
+            country_code="DE",
+            transaction_date=date(2025, 4, 1),
+            operation_kind_code="02",
+            transfer_pricing_method_code="TNMM",
+            amount=Decimal("2000"),
+        ),
+    )
+
+    rows = _build_related_party_rows(obs)
+
+    assert len(rows) == 2
+    es_row = next(row for row in rows if row["country_code"] == "ES")
+    de_row = next(row for row in rows if row["country_code"] == "DE")
+    assert es_row["amount"] == Decimal("1500")
+    assert de_row["amount"] == Decimal("2000")
+
+
+# ---------------------------------------------------------------------------
+# ForeignAssetObservation
+# ---------------------------------------------------------------------------
+
+
+def test_foreign_asset_observation_iso_codes_must_be_uppercase_alphabetic() -> None:
+    with pytest.raises(ValidationError, match="ISO code must be uppercase alphabetic"):
+        ForeignAssetObservation(
+            source_id="a1",
+            asset_class_code="C",
+            country_code="ch",
+            currency_code="CHF",
+            acquisition_date=date(2024, 1, 1),
+            valuation_amount=Decimal("60000"),
+        )
+    with pytest.raises(ValidationError, match="ISO code must be uppercase alphabetic"):
+        ForeignAssetObservation(
+            source_id="a1",
+            asset_class_code="C",
+            country_code="CH",
+            currency_code="ch1",
+            acquisition_date=date(2024, 1, 1),
+            valuation_amount=Decimal("60000"),
+        )
+
+
+def test_foreign_asset_observation_valuation_must_be_non_negative() -> None:
+    with pytest.raises(ValidationError, match="valuation must be non-negative"):
+        ForeignAssetObservation(
+            source_id="a1",
+            asset_class_code="C",
+            country_code="CH",
+            acquisition_date=date(2024, 1, 1),
+            valuation_amount=Decimal("-1"),
+        )
+
+
+# ---------------------------------------------------------------------------
+# AtributionMemberObservation
+# ---------------------------------------------------------------------------
+
+
+def test_atribucion_member_share_percentage_must_be_in_range() -> None:
+    with pytest.raises(ValidationError, match=r"share_percentage must be within \[0, 100\]"):
+        AtributionMemberObservation(
+            source_id="m1",
+            member_tax_id="12345678A",
+            transaction_date=date(2025, 1, 1),
+            share_percentage=Decimal("150"),
+            base_imponible_assigned=Decimal("0"),
+        )
+    with pytest.raises(ValidationError, match=r"share_percentage must be within \[0, 100\]"):
+        AtributionMemberObservation(
+            source_id="m1",
+            member_tax_id="12345678A",
+            transaction_date=date(2025, 1, 1),
+            share_percentage=Decimal("-1"),
+            base_imponible_assigned=Decimal("0"),
+        )
+
+
+def test_atribucion_member_country_code_must_be_uppercase_alphabetic() -> None:
+    with pytest.raises(ValidationError, match="country_code must be uppercase alphabetic"):
+        AtributionMemberObservation(
+            source_id="m1",
+            member_tax_id="12345678A",
+            country_code="es",
+            transaction_date=date(2025, 1, 1),
+            share_percentage=Decimal("50"),
+            base_imponible_assigned=Decimal("1000"),
+        )
+
+
+# ---------------------------------------------------------------------------
+# RefundOperationObservation
+# ---------------------------------------------------------------------------
+
+
+def test_refund_operation_member_state_must_be_uppercase_alphabetic() -> None:
+    with pytest.raises(ValidationError, match="member_state_code must be uppercase alphabetic"):
+        RefundOperationObservation(
+            source_id="r1",
+            member_state_code="fr",
+            operation_kind_code="01",
+            operation_date=date(2025, 3, 15),
+            supplier_tax_id="FR12345678",
+            refund_amount=Decimal("100"),
+        )
+
+
+def test_refund_operation_amount_must_be_non_negative() -> None:
+    with pytest.raises(ValidationError, match="refund_amount must be non-negative"):
+        RefundOperationObservation(
+            source_id="r1",
+            member_state_code="FR",
+            operation_kind_code="01",
+            operation_date=date(2025, 3, 15),
+            supplier_tax_id="FR12345678",
+            refund_amount=Decimal("-1"),
+        )

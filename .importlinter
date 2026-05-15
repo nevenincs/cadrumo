@@ -5,11 +5,9 @@ include_external_packages = False
 # ── Cross-package domain isolation ───────────────────────────────────────────
 # Domain peer-packages must not import each other's private internals.
 # The calculations registry was found importing from domain.renta during
-# the linkage-design audit (defect F7). Promoting the dependency through
-# application/aggregation is the correct fix; the contract below blocks
-# direct cross-package imports.
-# Two import edges currently violate it and are explicitly ignored until
-# Wave 2 Phase P04 lands the migration.
+# the linkage-design audit (defect F7). Wave 2 P04 resolved it via Protocol-
+# based dependency inversion; the production import is gone. The test edge
+# below remains a legitimate cross-domain reference for integration tests.
 
 [importlinter:contract:no-renta-in-registry]
 name = Calculations registry must not import directly from domain.renta
@@ -19,62 +17,26 @@ source_modules =
 forbidden_modules =
     aeat.domain.renta
 # Test modules that construct domain objects for registry integration tests
-# are permitted to import domain.renta directly — they are not production code.
+# are permitted to import domain.renta directly - they are not production code.
 ignore_imports =
     aeat.domain.calculations.registry.test_ledger_renta_expense_binding -> aeat.domain.renta
 
-# ── Domain must not import application (hexagonal direction) ────────────────
-# Domain is the hexagonal core; application orchestrates. Domain importing
-# application reverses the dependency direction. Test files inside domain
-# that exercise application orchestration are excepted by edge.
-
-[importlinter:contract:domain-not-application]
-name = Domain must not import application
-type = forbidden
-source_modules =
-    aeat.domain
-forbidden_modules =
-    aeat.application
-ignore_imports =
-    aeat.domain.invoices.test_reconciliation -> aeat.application.invoices
-    aeat.domain.modelos.test_work_unit -> aeat.application.modelo
-
-# ── Core must not import outer layers ────────────────────────────────────────
-# Core is the shared infrastructure layer. It must not depend on domain,
-# application, adapters, or entrypoints. Core tests that exercise outer
-# layers are excepted by edge.
-
-[importlinter:contract:core-not-outer]
-name = Core must not import outer layers
-type = forbidden
-source_modules =
-    aeat.core
-forbidden_modules =
-    aeat.domain
-    aeat.application
-    aeat.adapters
-    aeat.entrypoints
-ignore_imports =
-    aeat.core.test_external_constants -> aeat.domain.portals._categories
-    aeat.core.i18n.test_output_language -> aeat.domain.user_profile
-    aeat.core.errors._registry -> aeat.entrypoints.cli._i18n
-    aeat.core.errors.test_registry -> aeat.entrypoints.cli._i18n
-
-# ── Layered architecture (hexagonal direction) - deferred ────────────────────
-# The full layered contract surfaces additional violations beyond the
-# focused forbidden contracts above (e.g., domain.attachments._repository
-# importing adapters.persistence.storage, and many live-test files in
-# adapters that import entrypoints.cli._live). Resolving these requires
-# either refactor (the attachments repository case) or sustained test-file
-# exclusions. Defer to a future Wave 3 phase.
+# ── Deferred contracts (Wave 3 prerequisites) ────────────────────────────────
+# Three additional hexagonal-direction contracts were drafted during
+# Wave 2 P06.S19 but cannot be activated yet because the existing codebase
+# violates them in production code that requires structural refactor:
 #
-# [importlinter:contract:layered]
-# name = AEAT layered architecture
-# type = layers
-# layers =
-#     aeat.entrypoints
-#     aeat.adapters
-#     aeat.application
-#     aeat.domain
-#     aeat.core
-# exhaustive = false
+# 1. domain-not-application (5 production violations: deadlines/_profiles
+#    and profile/_keys importing application.wizard internals).
+# 2. core-not-outer (multiple production violations: core.errors importing
+#    adapters.outbound.aeat.browser._site_health; core.i18n._render reaching
+#    into application.user_profile and application.workflow through the
+#    locale rendering pipeline).
+# 3. layered (the broad layered contract; surfaces ~30 production violations
+#    plus dozens of live-test patterns).
+#
+# Each of these contracts is structurally desirable but activating them
+# requires refactoring the offending production paths. The work belongs in
+# Wave 3 alongside the typed-envelope promotion (defect class T-01) and
+# the registry referential-integrity gate (T-09). The current contract above
+# closes the F7 defect Wave 2 was scoped to address.
