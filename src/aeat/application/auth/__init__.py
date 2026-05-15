@@ -9,7 +9,12 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth import AeatLoginAssertion, AeatSession, BrowserSessionFactory
+    from ...adapters.outbound.aeat.auth import (
+        AeatLoginAssertion,
+        AeatSession,
+        BrowserSessionFactory,
+        BrowserSessionLike,
+    )
     from ...core.config import Settings
 
 from ._catalogue import (
@@ -79,7 +84,7 @@ class AuthProvider(Protocol):
     async def authenticate(
         self,
         *,
-        browser_session: BrowserSessionFactory | None = None,
+        browser_session: BrowserSessionLike | None = None,
         target_url: str | None = None,
     ) -> AeatSession:
         """Establish an authenticated session and return the provider's session record."""
