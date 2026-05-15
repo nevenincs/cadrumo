@@ -17,7 +17,7 @@ from .._errors import LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
-_OLLAMA_API_URL = Settings.external_constants().online_services.llm_endpoints.ollama_chat
+_OLLAMA_API_URL = Settings().aeat_llm_ollama_chat_url
 """Ollama ``/api/chat`` endpoint targeted by :class:`LocalAdapter`."""
 
 

@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_CLAVE_IDP_ROOT,
-    url="https://clave.gob.es/",
+    path="/",
     subdomain=Subdomain.CLAVE_GOB,
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.ANONYMOUS,),

@@ -37,20 +37,8 @@ nif_iva_verification = "https://www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/Con
 groi_check = "https://www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet"
 renta_web_open_app_template = "https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER={year}&TACCESO=COLAB"
 
-[aeat.timeouts_ms]
-navigation = 30000
-form_interaction = 10000
-ver_click = 15000
-buscar_settle = 3000
-selector_probe = 2500
-
 [online_services.google.oauth_scopes]
 openid = "openid"
 email = "https://www.googleapis.com/auth/userinfo.email"
 drive_file = "https://www.googleapis.com/auth/drive.file"
 spreadsheets = "https://www.googleapis.com/auth/spreadsheets"
-
-[online_services.llm_endpoints]
-openai_chat_completions = "https://api.openai.com/v1/chat/completions"
-gemini_generate_content_template = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-ollama_chat = "http://127.0.0.1:11434/api/chat"

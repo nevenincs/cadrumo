@@ -13,6 +13,7 @@ from collections.abc import Iterable
 
 from pydantic import HttpUrl, TypeAdapter
 
+from ....core.config import Settings
 from ....core.i18n import Translatable as tr
 from .._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from .._codes import Portal
@@ -26,31 +27,58 @@ def _to_httpurl(value: str) -> HttpUrl:
     return _URL_ADAPTER.validate_python(value)
 
 
+def _resolve_host(subdomain: Subdomain) -> str:
+    """Return the absolute origin (``https://host``) for a portal subdomain."""
+
+    domains = Settings.external_constants().aeat.domains
+    if subdomain is Subdomain.SEDE:
+        return domains.sede
+    if subdomain is Subdomain.WWW1:
+        return domains.www1
+    if subdomain is Subdomain.WWW2:
+        return domains.www2
+    if subdomain is Subdomain.CLAVE_GOB:
+        return domains.clave
+    # Subdomain.WWW3 / AGENCIATRIBUTARIA_GOB / AGENCIATRIBUTARIA_ES are
+    # not represented as host fields in external_constants.toml; fall
+    # back to the enum value so callers can still build entries against
+    # those subdomains until the registry catches up.
+    return f"https://{subdomain.value}"
+
+
 def build_entry(
     *,
     portal: Portal,
-    url: str,
     subdomain: Subdomain,
     category: PortalCategory,
     auth_methods: Iterable[AuthMethod],
     url_stability: UrlStability,
     label: str,
     purpose: str,
+    url: str | None = None,
+    path: str | None = None,
     active: bool = True,
     replaced_by: Portal | None = None,
     notes: Iterable[str] = (),
 ) -> PortalMetadata:
     """Assemble a :class:`PortalMetadata` entry for a single portal.
 
+    Exactly one of ``url`` or ``path`` must be supplied. When ``path``
+    is given, the absolute origin is resolved from the external
+    constants registry against ``subdomain``; this keeps per-portal
+    files free of host duplication.
+
     Args:
         portal: The :class:`Portal` member this entry describes.
-        url: Canonical HTTPS URL as a plain string.
         subdomain: The :class:`Subdomain` the URL is hosted on.
         category: The :class:`PortalCategory` classification.
         auth_methods: Iterable of accepted :class:`AuthMethod` values.
         url_stability: The :class:`UrlStability` tier.
         label: Multilingual display label key.
         purpose: Multilingual purpose description key.
+        url: Canonical absolute HTTPS URL. Mutually exclusive with ``path``.
+        path: Path component (must start with ``/``). The host is
+            resolved from the registry via ``subdomain``.
         active: Whether the portal is currently in service.
         replaced_by: When retired, optionally the :class:`Portal`
             member that supersedes this one.
@@ -59,6 +87,13 @@ def build_entry(
     Returns:
         A validated, frozen :class:`PortalMetadata`.
     """
+    if (url is None) == (path is None):
+        raise ValueError("build_entry: pass exactly one of `url=` or `path=`")
+    if path is not None:
+        if not path.startswith("/"):
+            raise ValueError("build_entry: `path` must start with '/'")
+        url = f"{_resolve_host(subdomain)}{path}"
+    assert url is not None
     return PortalMetadata(
         portal=portal,
         url=_to_httpurl(url),

@@ -31,12 +31,14 @@ from typing import Any, Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....application.storage.calc_sheets import (
+    SheetCellConstraint,
     SheetExportPlan,
     SheetFormulaCell,
     SheetProtectedRange,
     SheetValueCell,
     TabName,
 )
+from ....core.config import Settings as _Settings
 from ...outbound.storage._errors import (
     StorageConflictError,
     StorageError,
@@ -48,7 +50,7 @@ from ...outbound.storage._errors import (
 
 _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME: Final[str] = "application/vnd.google-apps.spreadsheet"
-_VAULT_FOLDER_NAME: Final[str] = "aeat-vault"
+_VAULT_FOLDER_NAME: Final[str] = _Settings().aeat_google_drive_vault_folder_name
 _CALC_SHEETS_FOLDER_NAME: Final[str] = "calc-sheets"
 _OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "aeat"
@@ -407,11 +409,122 @@ def _build_protected_range_requests(
     return requests
 
 
+def _build_cell_constraint_requests(
+    constraints: Iterable[SheetCellConstraint],
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    """Translate `SheetCellConstraint` records into Sheets API requests.
+
+    Emits two requests per constrained cell:
+
+    1. A `setDataValidation` request with a `condition` block that
+       enforces the sign / min / max bounds. Sheets shows its own
+       validation banner when an operator types an out-of-range
+       value, and (with `strict = True`) refuses the input.
+    2. An `updateCells` request that writes a `note` to the cell
+       describing the constraint and the legal references that
+       justify it. Operators see the grounding even before they
+       attempt invalid input.
+    """
+
+    requests: list[dict[str, Any]] = []
+    for constraint in constraints:
+        sheet_id = sheet_id_by_tab.get(constraint.address.tab.value)
+        if sheet_id is None:
+            continue
+        condition = _condition_for_constraint(constraint)
+        if condition is None:
+            continue
+        cell_range = {
+            "sheetId": sheet_id,
+            "startRowIndex": constraint.address.row - 1,
+            "endRowIndex": constraint.address.row,
+            "startColumnIndex": constraint.address.column - 1,
+            "endColumnIndex": constraint.address.column,
+        }
+        requests.append(
+            {
+                "setDataValidation": {
+                    "range": cell_range,
+                    "rule": {
+                        "condition": condition,
+                        "inputMessage": _input_message_for_constraint(constraint),
+                        "strict": True,
+                        "showCustomUi": True,
+                    },
+                }
+            }
+        )
+        requests.append(
+            {
+                "updateCells": {
+                    "range": cell_range,
+                    "rows": [{"values": [{"note": _input_message_for_constraint(constraint)}]}],
+                    "fields": "note",
+                }
+            }
+        )
+    return requests
+
+
+def _condition_for_constraint(constraint: SheetCellConstraint) -> dict[str, Any] | None:
+    """Resolve the tightest Sheets `BooleanCondition` for a constraint.
+
+    Sheets supports `NUMBER_BETWEEN`, `NUMBER_GREATER_THAN_EQ`,
+    `NUMBER_LESS_THAN_EQ`. We pick the strictest combination that
+    matches the constraint's sign + range bounds.
+    """
+
+    lower = constraint.min_value
+    upper = constraint.max_value
+    if constraint.sign == "non_negative":
+        floor = Decimal("0")
+        lower = floor if lower is None else max(lower, floor)
+    elif constraint.sign == "non_positive":
+        ceiling = Decimal("0")
+        upper = ceiling if upper is None else min(upper, ceiling)
+    if lower is not None and upper is not None:
+        return {
+            "type": "NUMBER_BETWEEN",
+            "values": [
+                {"userEnteredValue": format(lower, "f")},
+                {"userEnteredValue": format(upper, "f")},
+            ],
+        }
+    if lower is not None:
+        return {
+            "type": "NUMBER_GREATER_THAN_EQ",
+            "values": [{"userEnteredValue": format(lower, "f")}],
+        }
+    if upper is not None:
+        return {
+            "type": "NUMBER_LESS_THAN_EQ",
+            "values": [{"userEnteredValue": format(upper, "f")}],
+        }
+    return None
+
+
+def _input_message_for_constraint(constraint: SheetCellConstraint) -> str:
+    parts: list[str] = []
+    if constraint.sign == "non_negative":
+        parts.append("≥ 0")
+    elif constraint.sign == "non_positive":
+        parts.append("≤ 0")
+    if constraint.min_value is not None:
+        parts.append(f"≥ {format(constraint.min_value, 'f')}")
+    if constraint.max_value is not None:
+        parts.append(f"≤ {format(constraint.max_value, 'f')}")
+    bounds = " ∧ ".join(parts) if parts else "any"
+    refs = ", ".join(constraint.legal_refs)
+    return f"Casilla {constraint.casilla}: {bounds}. Refs: {refs}."
+
+
 def _build_developer_metadata_requests(
     plan: SheetExportPlan,
 ) -> list[dict[str, Any]]:
     metadata = plan.metadata
-    pairs = (
+    pairs: list[tuple[str, str]] = [
         ("aeat_engine_version", metadata.engine_version),
         ("aeat_registry_sha", metadata.registry_sha),
         ("aeat_modelo_id", metadata.modelo_id),
@@ -419,7 +532,26 @@ def _build_developer_metadata_requests(
         ("aeat_filing_year", str(metadata.filing_year)),
         ("aeat_period", metadata.period),
         ("aeat_exported_at", metadata.exported_at.isoformat()),
-    )
+    ]
+    if plan.relation_provenance is not None:
+        for relation in plan.relation_provenance.values:
+            if relation.value is None and relation.provenance == "operator_manual":
+                continue
+            payload = {
+                "value": str(relation.value) if relation.value is not None else "",
+                "provenance": relation.provenance,
+                "source_filing_year": str(relation.source_filing_year)
+                if relation.source_filing_year is not None
+                else "",
+                "source_periods": "+".join(relation.source_periods),
+                "resolved_at": relation.resolved_at.isoformat() if relation.resolved_at is not None else "",
+            }
+            pairs.append(
+                (
+                    f"aeat_relation:{relation.relation}",
+                    "; ".join(f"{k}={v}" for k, v in payload.items() if v),
+                )
+            )
     return [
         {
             "createDeveloperMetadata": {
@@ -433,6 +565,38 @@ def _build_developer_metadata_requests(
         }
         for key, value in pairs
     ]
+
+
+def _build_cell_note_requests(
+    value_cells: Iterable[SheetValueCell],
+    *,
+    sheet_id_by_tab: Mapping[str, int],
+) -> list[dict[str, Any]]:
+    """Emit `updateCells` requests with cell notes for any value cell that has one."""
+
+    requests: list[dict[str, Any]] = []
+    for cell in value_cells:
+        if cell.note is None:
+            continue
+        sheet_id = sheet_id_by_tab.get(cell.address.tab.value)
+        if sheet_id is None:
+            continue
+        requests.append(
+            {
+                "updateCells": {
+                    "range": {
+                        "sheetId": sheet_id,
+                        "startRowIndex": cell.address.row - 1,
+                        "endRowIndex": cell.address.row,
+                        "startColumnIndex": cell.address.column - 1,
+                        "endColumnIndex": cell.address.column,
+                    },
+                    "rows": [{"values": [{"note": cell.note}]}],
+                    "fields": "note",
+                }
+            }
+        )
+    return requests
 
 
 def _build_guide_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
@@ -633,13 +797,23 @@ def apply_export_plan(
     )
 
     # Apply structural metadata: protected ranges + developer
-    # metadata for engine + registry identity.
+    # metadata for engine + registry identity + cell-level
+    # constraint validation rules + cell notes carrying the
+    # constraint and its legal grounding.
     metadata_requests = _build_developer_metadata_requests(plan)
     protected_requests = _build_protected_range_requests(
         plan.protected_ranges,
         sheet_id_by_tab=sheet_id_by_tab,
     )
-    structural_requests = metadata_requests + protected_requests
+    constraint_requests = _build_cell_constraint_requests(
+        plan.cell_constraints,
+        sheet_id_by_tab=sheet_id_by_tab,
+    )
+    note_requests = _build_cell_note_requests(
+        plan.value_cells,
+        sheet_id_by_tab=sheet_id_by_tab,
+    )
+    structural_requests = metadata_requests + protected_requests + constraint_requests + note_requests
     if structural_requests:
         _execute(
             sheets.spreadsheets().batchUpdate(

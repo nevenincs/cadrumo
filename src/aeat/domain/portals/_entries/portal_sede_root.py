@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_SEDE_ROOT,
-    url="https://sede.agenciatributaria.gob.es/",
+    path="/",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.ANONYMOUS,),

@@ -43,10 +43,11 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 _EXTERNAL = Settings.external_constants()
+_DEFAULTS = Settings()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
-_EXPAND_TIMEOUT_MS = _EXTERNAL.aeat.timeouts_ms.form_interaction
-_NAVIGATION_TIMEOUT_MS = _EXTERNAL.aeat.timeouts_ms.navigation
+_EXPAND_TIMEOUT_MS = _DEFAULTS.aeat_browser_form_interaction_timeout_ms
+_NAVIGATION_TIMEOUT_MS = _DEFAULTS.aeat_browser_navigation_timeout_ms
 
 
 @asynccontextmanager

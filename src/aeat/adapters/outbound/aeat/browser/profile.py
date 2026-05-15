@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+
+from .....core.config import Settings as _Settings
+
+_BROWSER_DEFAULTS = _Settings()
 
 
 @dataclass
@@ -14,15 +18,16 @@ class Profile:
         name: A unique identifier for this profile.
         storage_state_path: Path to the JSON file containing cookies and localStorage.
         user_agent: Optional custom User-Agent string.
-        locale: Optional locale (e.g., 'es-ES').
-        timezone_id: Optional timezone (e.g., 'Europe/Madrid').
+        locale: Optional locale (e.g., 'es-ES'); defaults to ``Settings.aeat_browser_locale``.
+        timezone_id: Optional timezone (e.g., 'Europe/Madrid'); defaults to
+            ``Settings.aeat_browser_timezone``.
     """
 
     name: str
     storage_state_path: Path
     user_agent: str | None = None
-    locale: str | None = "es-ES"
-    timezone_id: str | None = "Europe/Madrid"
+    locale: str | None = field(default_factory=lambda: _BROWSER_DEFAULTS.aeat_browser_locale)
+    timezone_id: str | None = field(default_factory=lambda: _BROWSER_DEFAULTS.aeat_browser_timezone)
 
     def ensure_storage_dir(self) -> None:
         """Create the parent directory for the storage state if it doesn't exist."""

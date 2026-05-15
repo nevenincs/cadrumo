@@ -41,6 +41,7 @@ from typing import TYPE_CHECKING, Any, Final, NoReturn, Protocol, cast, runtime_
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 
+from .....core.config import Settings as _Settings
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError
 from . import _session_store
@@ -88,7 +89,7 @@ env-var change — the operator surface stays narrow.
 """
 
 
-AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = 30_000
+AEAT_LOGIN_NAVIGATION_TIMEOUT_MS: Final[int] = _Settings().aeat_browser_navigation_timeout_ms
 """Playwright navigation timeout for post-auth verification probes."""
 
 

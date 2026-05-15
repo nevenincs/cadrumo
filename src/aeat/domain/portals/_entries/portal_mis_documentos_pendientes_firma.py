@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_MIS_DOCUMENTOS_PENDIENTES_FIRMA,
-    url="https://sede.agenciatributaria.gob.es/Sede/gestiones/presentacion-portafirmas.html",
+    path="/Sede/gestiones/presentacion-portafirmas.html",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.CONSULTATION,
     auth_methods=(

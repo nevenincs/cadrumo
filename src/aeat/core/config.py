@@ -114,6 +114,160 @@ class Settings(BaseSettings):
         default="",
         description="Optional default CLI log level override: quiet, default, verbose, or debug",
     )
+    # ── Browser automation timeouts (Playwright) ───────────────────────────
+    aeat_browser_navigation_timeout_ms: int = Field(
+        default=30_000,
+        gt=0,
+        description="Default Playwright navigation timeout (milliseconds) for AEAT sede pages",
+    )
+    aeat_browser_form_interaction_timeout_ms: int = Field(
+        default=10_000,
+        gt=0,
+        description="Timeout for individual form interactions (fill/click/wait) in milliseconds",
+    )
+    aeat_browser_ver_click_timeout_ms: int = Field(
+        default=15_000,
+        gt=0,
+        description="Timeout (ms) for the AEAT declarations 'Ver' button click and navigation",
+    )
+    aeat_browser_buscar_settle_ms: int = Field(
+        default=3_000,
+        gt=0,
+        description="Settle delay (ms) after the AEAT 'Buscar' button before reading the results table",
+    )
+    aeat_browser_selector_probe_timeout_ms: int = Field(
+        default=2_500,
+        gt=0,
+        description="Selector visibility probe timeout (ms) used by GROI/NIF-IVA check stages",
+    )
+    # ── LLM provider endpoints ────────────────────────────────────────────
+    aeat_llm_openai_chat_completions_url: str = Field(
+        default="https://api.openai.com/v1/chat/completions",
+        description="OpenAI Chat Completions endpoint; override for OpenAI-compatible proxies",
+    )
+    aeat_llm_gemini_generate_content_template: str = Field(
+        default="https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+        description="Google Gemini generateContent endpoint template (``{model}`` is substituted)",
+    )
+    aeat_llm_ollama_chat_url: str = Field(
+        default="http://127.0.0.1:11434/api/chat",
+        description="Local Ollama /api/chat endpoint; override for non-localhost Ollama deployments",
+    )
+    aeat_llm_default_max_tokens: int = Field(
+        default=1024,
+        gt=0,
+        description="Default maximum output tokens when an LLM request omits ``max_tokens``",
+    )
+    aeat_llm_default_temperature: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=2.0,
+        description="Default sampling temperature when an LLM request omits ``temperature``",
+    )
+    # ── Browser context defaults ───────────────────────────────────────────
+    aeat_browser_locale: str = Field(
+        default="es-ES",
+        min_length=2,
+        description="Default browser locale passed to Playwright context (BCP-47 tag)",
+    )
+    aeat_browser_timezone: str = Field(
+        default="Europe/Madrid",
+        min_length=1,
+        description="Default IANA timezone string passed to Playwright context",
+    )
+    aeat_browser_viewport_width: int = Field(
+        default=1366,
+        gt=0,
+        description="Default Playwright viewport width (px) for AEAT sede sessions",
+    )
+    aeat_browser_viewport_height: int = Field(
+        default=900,
+        gt=0,
+        description="Default Playwright viewport height (px) for AEAT sede sessions",
+    )
+    # ── File-lock acquisition ─────────────────────────────────────────────
+    aeat_file_lock_timeout_s: float = Field(
+        default=30.0,
+        gt=0,
+        description="Default exclusive file-lock acquisition timeout (seconds)",
+    )
+    aeat_file_lock_retry_backoff_s: float = Field(
+        default=0.05,
+        gt=0,
+        description="Sleep interval (seconds) between non-blocking file-lock acquire attempts",
+    )
+    aeat_bucket_lock_poll_interval_s: float = Field(
+        default=0.1,
+        gt=0,
+        description="Polling interval (seconds) for bucket lockfile acquisition retries",
+    )
+    aeat_bucket_default_idle_lock_minutes: int = Field(
+        default=15,
+        gt=0,
+        description="Fallback idle-lock window (minutes) when a bucket manifest omits the value",
+    )
+    # ── Auth provider acquisition locks ──────────────────────────────────
+    aeat_auth_clave_movil_lock_buffer_s: int = Field(
+        default=90,
+        gt=0,
+        description="Headroom (seconds) added to ``aeat_clave_movil_timeout_ms`` for the acquisition lock TTL",
+    )
+    aeat_auth_certificate_lock_ttl_s: int = Field(
+        default=180,
+        gt=0,
+        description="Acquisition lock TTL (seconds) for certificate-backed AEAT auth flows",
+    )
+    # ── Logging ───────────────────────────────────────────────────────────
+    aeat_log_stderr_level: str = Field(
+        default="ERROR",
+        description="Log level for the stderr handler installed by ``aeat.core.logging``",
+    )
+    aeat_log_file_level: str = Field(
+        default="DEBUG",
+        description="Log level for the file handler installed by ``aeat.core.logging``",
+    )
+    aeat_log_root_level: str = Field(
+        default="DEBUG",
+        description="Root logger level installed by ``aeat.core.logging``",
+    )
+    # ── External downloads ──────────────────────────────────────────────
+    aeat_manuals_http_timeout_s: float = Field(
+        default=60.0,
+        gt=0,
+        description="HTTP timeout (seconds) for AEAT manual PDF downloads",
+    )
+    # ── Google integration ───────────────────────────────────────────────
+    aeat_google_drive_vault_folder_name: str = Field(
+        default="aeat-vault",
+        min_length=1,
+        description="Folder name created under the Google Drive root for the AEAT vault",
+    )
+    aeat_google_oauth_access_refresh_buffer_s: int = Field(
+        default=300,
+        gt=0,
+        description="Clock-skew buffer (seconds) before nominal expiry when refreshing Google access tokens",
+    )
+    # ── Workbook parity / Sheets ─────────────────────────────────────────
+    aeat_workbook_parity_per_file_timeout_s: float = Field(
+        default=15.0,
+        gt=0,
+        description="Default per-file timeout (seconds) for workbook-parity scans",
+    )
+    aeat_workbook_parity_recalc_timeout_s: int = Field(
+        default=60,
+        gt=0,
+        description="Subprocess timeout (seconds) when forcing workbook recalculation",
+    )
+    aeat_workbook_parity_libreoffice_timeout_s: int = Field(
+        default=120,
+        gt=0,
+        description="Subprocess timeout (seconds) for the LibreOffice binary XLS conversion fall-back",
+    )
+    aeat_calc_sheets_recalc_delay_s: float = Field(
+        default=2.0,
+        gt=0,
+        description="Delay (seconds) waiting for Google Sheets server-side recalculation between parity polls",
+    )
     # ── Financial ingest ───────────────────────────────────────────────────
     financial_base_currency: str = Field(
         default="EUR",

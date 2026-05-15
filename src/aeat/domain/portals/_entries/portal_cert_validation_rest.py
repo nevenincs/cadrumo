@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_CERT_VALIDATION_REST,
-    url="https://sede.agenciatributaria.gob.es/Sede/certificados.html",
+    path="/Sede/certificados.html",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.CERTIFICATE,),

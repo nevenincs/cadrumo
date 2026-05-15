@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_MIS_NOTIFICACIONES,
-    url="https://sede.agenciatributaria.gob.es/Sede/notificaciones-comunicaciones/buzon-electronico.html",
+    path="/Sede/notificaciones-comunicaciones/buzon-electronico.html",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.CONSULTATION,
     auth_methods=(

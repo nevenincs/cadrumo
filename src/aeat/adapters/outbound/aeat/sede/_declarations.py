@@ -86,15 +86,16 @@ log = get_logger(__name__)
 
 
 _EXTERNAL = Settings.external_constants()
+_DEFAULTS = Settings()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
 _LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
 _COTEJO_VIEW = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_query}"
 _COTEJO_DOC = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_document}"
 _COTEJO_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.cotejo_query
-_NAVIGATION_TIMEOUT_MS = _EXTERNAL.aeat.timeouts_ms.navigation
-_FORM_INTERACTION_TIMEOUT_MS = _EXTERNAL.aeat.timeouts_ms.form_interaction
-_BUSCAR_SETTLE_MS = _EXTERNAL.aeat.timeouts_ms.buscar_settle
-_VER_CLICK_TIMEOUT_MS = _EXTERNAL.aeat.timeouts_ms.ver_click
+_NAVIGATION_TIMEOUT_MS = _DEFAULTS.aeat_browser_navigation_timeout_ms
+_FORM_INTERACTION_TIMEOUT_MS = _DEFAULTS.aeat_browser_form_interaction_timeout_ms
+_BUSCAR_SETTLE_MS = _DEFAULTS.aeat_browser_buscar_settle_ms
+_VER_CLICK_TIMEOUT_MS = _DEFAULTS.aeat_browser_ver_click_timeout_ms
 _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-declarations-read",
     evidence_tier="official_source_guidance",

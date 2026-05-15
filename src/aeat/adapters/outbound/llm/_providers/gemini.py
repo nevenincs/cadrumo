@@ -17,7 +17,7 @@ from .._errors import LLMConfigError, LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
-_GEMINI_GENERATE_TEMPLATE = Settings.external_constants().online_services.llm_endpoints.gemini_generate_content_template
+_GEMINI_GENERATE_TEMPLATE = Settings().aeat_llm_gemini_generate_content_template
 
 _logger = get_logger(__name__)
 

@@ -66,16 +66,6 @@ class AeatOracles(_Frozen):
     renta_web_open_app_template: str
 
 
-class AeatTimeoutsMs(_Frozen):
-    """Default browser-automation timeouts in milliseconds."""
-
-    navigation: int = Field(gt=0)
-    form_interaction: int = Field(gt=0)
-    ver_click: int = Field(gt=0)
-    buscar_settle: int = Field(gt=0)
-    selector_probe: int = Field(gt=0)
-
-
 class AeatSection(_Frozen):
     """Aggregates every AEAT-flavoured constant subsection."""
 
@@ -83,7 +73,6 @@ class AeatSection(_Frozen):
     sede_paths: AeatSedePaths
     help_pages: AeatHelpPages
     oracles: AeatOracles
-    timeouts_ms: AeatTimeoutsMs
 
 
 class GoogleOAuthScopes(_Frozen):
@@ -101,19 +90,10 @@ class GoogleServices(_Frozen):
     oauth_scopes: GoogleOAuthScopes
 
 
-class LlmEndpoints(_Frozen):
-    """Third-party LLM provider endpoints."""
-
-    openai_chat_completions: str
-    gemini_generate_content_template: str
-    ollama_chat: str
-
-
 class OnlineServicesSection(_Frozen):
     """Aggregates non-AEAT online service constants."""
 
     google: GoogleServices
-    llm_endpoints: LlmEndpoints
 
 
 class ExternalConstants(_Frozen):
