@@ -393,6 +393,7 @@ def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: Work
     renamed = rename_work_unit(
         original.work_unit_id,
         "renta-q1-2026-final",
+        actor="test-operator",
         repository=repo,
         clock=later,
     )
@@ -404,7 +405,7 @@ def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: Work
 
 def test_rename_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepository) -> None:
     with pytest.raises(WorkUnitNotFoundError, match=r"missing|work_unit"):
-        rename_work_unit("missing", "ignored", repository=repo)
+        rename_work_unit("missing", "ignored", actor="test-operator", repository=repo)
 
 
 # ---------------------------------------------------------------------------
@@ -491,7 +492,7 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
         clock=datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC),
     )
     with pytest.raises(WorkUnitMutationRefusedError, match=r"discard|DISCARDED|state|mutation"):
-        rename_work_unit(unit.work_unit_id, "new-name", repository=repo)
+        rename_work_unit(unit.work_unit_id, "new-name", actor="test-operator", repository=repo)
 
 
 def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRepository) -> None:

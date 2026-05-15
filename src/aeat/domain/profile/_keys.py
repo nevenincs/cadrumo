@@ -105,6 +105,25 @@ _PROFILE_KEYS_CACHE: list[tuple[ProfileKey, ...]] = []
 _BY_KEY_CACHE: list[dict[str, ProfileKey]] = []
 
 
+def register_profile_keys(keys: tuple[ProfileKey, ...]) -> None:
+    """Seed the domain profile-key registry from outside the domain layer.
+
+    The compiled tuple normally lives behind a lazy import inside
+    :func:`_build_profile_keys`. Outer layers (the wizard compiler) can
+    call this function at their own import time to seed the cache
+    directly, so the lazy import is never triggered. Calling this
+    function twice with different tuples raises a :class:`RuntimeError`
+    so the registration stays single-writer.
+    """
+
+    if _PROFILE_KEYS_CACHE:
+        if _PROFILE_KEYS_CACHE[0] == keys:
+            return
+        raise RuntimeError("profile keys already registered with a different tuple")
+    _PROFILE_KEYS_CACHE.append(keys)
+    _BY_KEY_CACHE.append({entry.key: entry for entry in keys})
+
+
 def _build_profile_keys() -> tuple[ProfileKey, ...]:
     """Compile ``PROFILE_KEYS`` from the wizard descriptor catalogue.
 

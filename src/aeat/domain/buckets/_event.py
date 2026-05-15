@@ -70,6 +70,7 @@ class BucketEventType(StrEnum):
     MODELO_FILING_IMPORTED = "modelo.filing.imported"
     # Work-unit lifecycle
     MODELO_WORK_UNIT_DISCARDED = "modelo.work_unit.discarded"
+    MODELO_WORK_UNIT_RENAMED = "modelo.work_unit.renamed"
 
     # profile lifecycle
     PROFILE_BUCKET_CREATED = "profile.bucket.created"
