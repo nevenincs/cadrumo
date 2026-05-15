@@ -5,6 +5,7 @@ official_name = "Modelo 303. Impuesto sobre el Valor Anadido. Autoliquidacion."
 tax_domain = "iva"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
 legal_refs = [
     "rd-1624-1992:art-71",
     "orden-eha-3786-2008:art-1",
@@ -743,6 +744,13 @@ legal_refs = [
     "ley-37-1992:art-91",
     "ley-37-1992:art-92",
     "rd-1624-1992:art-71",
+    "ley-37-1992:art-99",
+    "ley-37-1992:art-102",
+    "ley-37-1992:art-104",
+    "ley-37-1992:art-107",
+    "ley-37-1992:art-108",
+    "ley-37-1992:art-109",
+    "ley-37-1992:art-110",
 ]
 source_refs = [
     "aeat-dr-303-2025",

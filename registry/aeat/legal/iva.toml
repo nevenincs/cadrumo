@@ -817,3 +817,140 @@ published_at = 2021-06-18
 applies_from = 2021-07-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161"
 review_status = "reviewed"
+
+[legal."ley-37-1992:art-99"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-99.html#a99"
+document_id = "BOE-A-1992-28740"
+article = "99"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a99"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 99 LIVA: ejercicio del derecho a la deduccion. Regula la deduccion de cuotas soportadas, el periodo en que se ejerce el derecho, la compensacion del exceso de cuotas a deducir cuando sobrepasa el de las devengadas en periodos sucesivos hasta cuatro anos, y la caducidad del derecho."
+required_text = [
+    "Uno. En las declaraciones-liquidaciones correspondientes a cada uno de los períodos de liquidación, los sujetos pasivos ",
+    "Dos. Las deducciones deberán efectuarse en función del destino previsible de los bienes y servicios adquiridos, sin perj",
+    "No obstante, en los supuestos de destrucción o pérdida de los bienes adquiridos o importados, por causa no imputable al ",
+]
+
+[legal."ley-37-1992:art-102"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-102.html#a102"
+document_id = "BOE-A-1992-28740"
+article = "102"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a102"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 102 LIVA: regla de prorrata. Define cuando sera de aplicacion la regla de prorrata - cuando el sujeto pasivo realice conjuntamente entregas de bienes o prestaciones de servicios que originen el derecho a la deduccion y otras operaciones de analoga naturaleza que no habiliten para el ejercicio del citado derecho."
+required_text = [
+    "Uno. La regla de prorrata será de aplicación cuando el sujeto pasivo, en el ejercicio de su actividad empresarial o prof",
+    "Dos. No obstante lo dispuesto en el apartado anterior, los sujetos pasivos podrán deducir íntegramente las cuotas soport",
+]
+
+[legal."ley-37-1992:art-104"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-104.html#a104"
+document_id = "BOE-A-1992-28740"
+article = "104"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a104"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 104 LIVA: la prorrata general. Define el calculo del porcentaje de deduccion como cociente entre el importe total de las operaciones que originan el derecho a la deduccion (numerador) y el importe total de todas las operaciones realizadas en el ejercicio (denominador), redondeado por exceso a la unidad superior."
+required_text = [
+    "La prorrata de deducción resultante de la aplicación de los criterios anteriores se redondeará en la unidad superior.",
+    "Tres. Para la determinación del porcentaje de deducción no se computarán en ninguno de los términos de la relación:",
+    "En todo caso se reputará actividad empresarial o profesional habitual del sujeto pasivo la de arrendamiento.",
+]
+
+[legal."ley-37-1992:art-107"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-107.html#a107"
+document_id = "BOE-A-1992-28740"
+article = "107"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a107"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 107 LIVA: regularizacion de deducciones por bienes de inversion. Las cuotas deducibles por la adquisicion o importacion de bienes de inversion se regularizan durante los cuatro anos naturales siguientes a aquel en que los sujetos pasivos inicien su utilizacion (o nueve anos si son terrenos o edificaciones)."
+required_text = [
+    "Uno. Las cuotas deducibles por la adquisición o importación de bienes de inversión deberán regularizarse durante los cua",
+    "No obstante, cuando la utilización efectiva o entrada en funcionamiento de los bienes se inicien con posterioridad a su ",
+    "Las regularizaciones indicadas en este apartado sólo se practicarán cuando, entre el porcentaje de deducción definitivo ",
+]
+
+[legal."ley-37-1992:art-108"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-108.html#a108"
+document_id = "BOE-A-1992-28740"
+article = "108"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a108"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 108 LIVA: concepto de bienes de inversion. Son bienes de inversion los bienes corporales, muebles, semovientes o inmuebles que, por su naturaleza y funcion, esten normalmente destinados a ser utilizados por un periodo de tiempo superior a un ano como instrumentos de trabajo o medios de explotacion, con umbrales de exclusion para bienes de escaso valor."
+required_text = [
+    "Dos. No tendrán la consideración de bienes de inversión:",
+    "2.º Las ejecuciones de obra para la reparación de otros bienes de inversión.",
+    "3.º Los envases y embalajes, aunque sean susceptibles de reutilización.",
+]
+
+[legal."ley-37-1992:art-109"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-109.html#a109"
+document_id = "BOE-A-1992-28740"
+article = "109"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a109"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 109 LIVA: procedimiento para practicar la regularizacion de deducciones por bienes de inversion. Establece la formula de regularizacion comparando el porcentaje de deduccion del ano de adquisicion con el del ano de la regularizacion, dividiendo la diferencia entre cinco (o diez para terrenos y edificaciones)."
+required_text = [
+    "La regularización de las deducciones a que se refiere el artículo 107 de esta Ley se realizará del siguiente modo:",
+    "2.º Dicho importe se restará del de la deducción efectuada en el año en que tuvo lugar la repercusión.",
+]
+
+[legal."ley-37-1992:art-110"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-110.html#a110"
+document_id = "BOE-A-1992-28740"
+article = "110"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a110"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 110 LIVA: entregas de bienes de inversion durante el periodo de regularizacion. Si los bienes de inversion se entregan antes de la finalizacion del periodo de regularizacion, se efectuara una regularizacion unica por el tiempo que reste, considerando si la entrega esta sujeta y no exenta o exenta/no sujeta."
+required_text = [
+    "A tal efecto, se aplicarán las siguientes reglas:",
+    "Uno. En los casos de entregas de bienes de inversión durante el período de regularización se efectuará una regularizació",
+]
