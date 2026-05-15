@@ -92,5 +92,5 @@ existing canonical concept across packages. Add import-linter
 `forbidden` contracts preventing reconstruction of deprecated shapes.
 
 - [x] `P06.S18` - add semgrep rule flagging duplicate-name candidates; `.semgrep/rules/no-duplicate-concept-models.yml`.
-- [ ] `P06.S19` - extend import-linter contracts to prevent regression; `.importlinter`.
-- [ ] `P06.S20` - close out Wave 2 by re-running pydantic audit; `scratch/out/pydantic_audit/`.
+- [x] `P06.S19` - extend import-linter contracts to prevent regression; `.importlinter`.
+- [x] `P06.S20` - close out Wave 2 by re-running pydantic audit; `scratch/out/pydantic_audit/`.

@@ -1405,10 +1405,17 @@ valid_from = 2025-01-01
 valid_to = 2025-12-31
 
 # -----------------------------------------------------------------------------
-# Minimo del contribuyente parameters (LIRPF arts. 56 + 57). Estatal baseline
-# is the statutory 5,550 EUR per LIRPF art. 57. Autonomica per LIRPF art. 73
-# allows CCAAs to vary; Madrid, Canarias and Galicia apply documented uplifts
-# for ejercicio 2025 — other CCAAs default to the estatal baseline.
+# Mínimo del contribuyente (LIRPF arts. 56 + 57 + 73).
+# The statutory baseline is 5,550 EUR per LIRPF art. 57. Autonomous
+# communities may modify the autonómica portion per LIRPF art. 73.
+# CCAA-specific 2025 uplifts (Madrid / Canarias / Galicia were
+# observed but not verifiable against the AEAT
+# part2-deducciones-autonomicas PDF — the corpus stores only the
+# binary, no plaintext for `required_text` corpus-checks). Until
+# those uplifts are extracted from the manual and properly grounded,
+# the dispatch table routes every CCAA to the statutory baseline.
+# Operators in CCAAs that legislate an uplift can override casilla
+# 0512 manually for now.
 # -----------------------------------------------------------------------------
 
 [[revisions."2025".parameters]]
@@ -1424,57 +1431,6 @@ required_text = ["Mínimo del contribuyente"]
 
 [[revisions."2025".parameters.values]]
 value = "5550"
-date_axis = "filing_period"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
-
-[[revisions."2025".parameters]]
-id = "renta-2025-minimo-contribuyente-autonomica-madrid-2025"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-73"]
-source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas"]
-
-[[revisions."2025".parameters.source_citations]]
-source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
-required_text = ["Madrid"]
-
-[[revisions."2025".parameters.values]]
-value = "5956.65"
-date_axis = "filing_period"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
-
-[[revisions."2025".parameters]]
-id = "renta-2025-minimo-contribuyente-autonomica-canarias-2025"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-73"]
-source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas"]
-
-[[revisions."2025".parameters.source_citations]]
-source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
-required_text = ["Canarias"]
-
-[[revisions."2025".parameters.values]]
-value = "5606"
-date_axis = "filing_period"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
-
-[[revisions."2025".parameters]]
-id = "renta-2025-minimo-contribuyente-autonomica-galicia-2025"
-data_type = "money"
-unit = "EUR"
-legal_refs = ["ley-35-2006:art-73"]
-source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas"]
-
-[[revisions."2025".parameters.source_citations]]
-source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
-required_text = ["Galicia"]
-
-[[revisions."2025".parameters.values]]
-value = "5789"
 date_axis = "filing_period"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
@@ -6273,7 +6229,7 @@ target = "0512"
 expression = { op = "lookup_parameter_by_entity_type", args = [
     { literal = "0" },
     { binding = "renta-2025-profile-tax-residence-ccaa" },
-    { dispatch_table = { andalucia = "renta-2025-minimo-contribuyente-base-2025", aragon = "renta-2025-minimo-contribuyente-base-2025", asturias = "renta-2025-minimo-contribuyente-base-2025", baleares = "renta-2025-minimo-contribuyente-base-2025", canarias = "renta-2025-minimo-contribuyente-autonomica-canarias-2025", cantabria = "renta-2025-minimo-contribuyente-base-2025", castilla_la_mancha = "renta-2025-minimo-contribuyente-base-2025", castilla_y_leon = "renta-2025-minimo-contribuyente-base-2025", cataluna = "renta-2025-minimo-contribuyente-base-2025", comunidad_valenciana = "renta-2025-minimo-contribuyente-base-2025", extremadura = "renta-2025-minimo-contribuyente-base-2025", galicia = "renta-2025-minimo-contribuyente-autonomica-galicia-2025", la_rioja = "renta-2025-minimo-contribuyente-base-2025", madrid = "renta-2025-minimo-contribuyente-autonomica-madrid-2025", murcia = "renta-2025-minimo-contribuyente-base-2025" } },
+    { dispatch_table = { andalucia = "renta-2025-minimo-contribuyente-base-2025", aragon = "renta-2025-minimo-contribuyente-base-2025", asturias = "renta-2025-minimo-contribuyente-base-2025", baleares = "renta-2025-minimo-contribuyente-base-2025", canarias = "renta-2025-minimo-contribuyente-base-2025", cantabria = "renta-2025-minimo-contribuyente-base-2025", castilla_la_mancha = "renta-2025-minimo-contribuyente-base-2025", castilla_y_leon = "renta-2025-minimo-contribuyente-base-2025", cataluna = "renta-2025-minimo-contribuyente-base-2025", comunidad_valenciana = "renta-2025-minimo-contribuyente-base-2025", extremadura = "renta-2025-minimo-contribuyente-base-2025", galicia = "renta-2025-minimo-contribuyente-base-2025", la_rioja = "renta-2025-minimo-contribuyente-base-2025", madrid = "renta-2025-minimo-contribuyente-base-2025", murcia = "renta-2025-minimo-contribuyente-base-2025" } },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-73", "orden-hac-277-2026:art-3"]
