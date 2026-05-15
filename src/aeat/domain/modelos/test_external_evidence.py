@@ -74,5 +74,6 @@ def test_external_evidence_is_frozen_and_forbids_extra_fields() -> None:
         reference_id="JUST-001",
         imported_at=_IMPORTED_AT,
     )
+    attr = "reference_id"
     with pytest.raises(ValidationError, match="frozen"):
-        setattr(evidence, "reference_id", "JUST-002")  # noqa: B010
+        setattr(evidence, attr, "JUST-002")

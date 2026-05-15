@@ -1404,6 +1404,81 @@ date_axis = "filing_period"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
 
+# -----------------------------------------------------------------------------
+# Minimo del contribuyente parameters (LIRPF arts. 56 + 57). Estatal baseline
+# is the statutory 5,550 EUR per LIRPF art. 57. Autonomica per LIRPF art. 73
+# allows CCAAs to vary; Madrid, Canarias and Galicia apply documented uplifts
+# for ejercicio 2025 — other CCAAs default to the estatal baseline.
+# -----------------------------------------------------------------------------
+
+[[revisions."2025".parameters]]
+id = "renta-2025-minimo-contribuyente-base-2025"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-57"]
+source_refs = ["aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Mínimo del contribuyente"]
+
+[[revisions."2025".parameters.values]]
+value = "5550"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters]]
+id = "renta-2025-minimo-contribuyente-autonomica-madrid-2025"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-73"]
+source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
+required_text = ["Madrid"]
+
+[[revisions."2025".parameters.values]]
+value = "5956.65"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters]]
+id = "renta-2025-minimo-contribuyente-autonomica-canarias-2025"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-73"]
+source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
+required_text = ["Canarias"]
+
+[[revisions."2025".parameters.values]]
+value = "5606"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters]]
+id = "renta-2025-minimo-contribuyente-autonomica-galicia-2025"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-73"]
+source_refs = ["aeat-renta-2025-manual-deducciones-autonomicas"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
+required_text = ["Galicia"]
+
+[[revisions."2025".parameters.values]]
+value = "5789"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
 [[revisions."2025".casillas]]
 id = "DPNIF_D"
 number = "*01"
@@ -6172,6 +6247,41 @@ source_refs = ["boe-modelo-100-2025-form"]
 [[revisions."2025".formulas.source_citations]]
 source_ref = "boe-modelo-100-2025-form"
 required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2025"]
+
+# -----------------------------------------------------------------------------
+# Minimo del contribuyente formulas (LIRPF arts. 56 + 57 + 73).
+# Casilla 0511 (estatal) is the statutory 5,550 EUR per art. 57. Casilla 0512
+# (autonomica) is CCAA-dispatched per art. 73 — Madrid / Canarias / Galicia
+# apply documented uplifts; other CCAAs default to the estatal baseline.
+# -----------------------------------------------------------------------------
+
+[[revisions."2025".formulas]]
+id = "renta-2025-minimo-contribuyente-estatal"
+target = "0511"
+expression = { op = "lookup_parameter", args = [{ parameter = "renta-2025-minimo-contribuyente-base-2025" }] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-57", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Mínimo del contribuyente"]
+
+[[revisions."2025".formulas]]
+id = "renta-2025-minimo-contribuyente-autonomica"
+target = "0512"
+expression = { op = "lookup_parameter_by_entity_type", args = [
+    { literal = "0" },
+    { binding = "renta-2025-profile-tax-residence-ccaa" },
+    { dispatch_table = { andalucia = "renta-2025-minimo-contribuyente-base-2025", aragon = "renta-2025-minimo-contribuyente-base-2025", asturias = "renta-2025-minimo-contribuyente-base-2025", baleares = "renta-2025-minimo-contribuyente-base-2025", canarias = "renta-2025-minimo-contribuyente-autonomica-canarias-2025", cantabria = "renta-2025-minimo-contribuyente-base-2025", castilla_la_mancha = "renta-2025-minimo-contribuyente-base-2025", castilla_y_leon = "renta-2025-minimo-contribuyente-base-2025", cataluna = "renta-2025-minimo-contribuyente-base-2025", comunidad_valenciana = "renta-2025-minimo-contribuyente-base-2025", extremadura = "renta-2025-minimo-contribuyente-base-2025", galicia = "renta-2025-minimo-contribuyente-autonomica-galicia-2025", la_rioja = "renta-2025-minimo-contribuyente-base-2025", madrid = "renta-2025-minimo-contribuyente-autonomica-madrid-2025", murcia = "renta-2025-minimo-contribuyente-base-2025" } },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-73", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-deducciones-autonomicas"
+required_text = ["Mínimo del contribuyente"]
 
 [[revisions."2025".formulas]]
 id = "renta-2025-minimo-personal-y-familiar-estatal"
@@ -11445,7 +11555,9 @@ id = "0511"
 number = "0511"
 label = "Parte estatal: Mínimo del contribuyente. Importe"
 section = ["resultados", "minimo_per_fam_res"]
-legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+input_kind = "computed"
+formula = "renta-2025-minimo-contribuyente-estatal"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -11453,7 +11565,9 @@ id = "0512"
 number = "0512"
 label = "Parte autonómica: Mínimo del contribuyente. Importe"
 section = ["resultados", "minimo_per_fam_res"]
-legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+input_kind = "computed"
+formula = "renta-2025-minimo-contribuyente-autonomica"
+legal_refs = ["ley-35-2006:art-56", "ley-35-2006:art-57", "ley-35-2006:art-73", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
