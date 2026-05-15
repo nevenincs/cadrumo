@@ -9,16 +9,16 @@ from typing import Literal, Protocol
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
 
+from ....core.config import Settings
 from ._errors import RegistryValidationError
 from ._live_parity import OracleSurfaceKind, ParityFieldComparison, ParityResult, assert_oracle_operations_allowed
 from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
+_EXTERNAL = Settings.external_constants()
 RENTA_WEB_OPEN_LANDING_URL = AnyUrl(
-    "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/renta-ayuda-tecnica/renta-web-open.html"
+    f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.renta_web_open_landing}"
 )
-RENTA_WEB_OPEN_APP_URL = AnyUrl(
-    "https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER=2025&TACCESO=COLAB"
-)
+RENTA_WEB_OPEN_APP_URL = AnyUrl(_EXTERNAL.aeat.oracles.renta_web_open_app_template.format(year=2025))
 
 
 class RentaWebOpenModel(BaseModel):

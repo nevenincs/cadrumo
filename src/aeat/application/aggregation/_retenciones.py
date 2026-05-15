@@ -21,6 +21,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ._errors import AggregationUnsupportedModeloError, t
+
 
 class RetencionScheme(StrEnum):
     """Closed catalogue of retenciones schemes across the retenciones family.
@@ -181,8 +183,9 @@ def _filter_observations_for_modelo(
     quarterly scheme catalogue over an annual period.
     """
     if modelo not in _MODELO_SCHEME_CATALOGUE:
-        msg = f"retenciones aggregator for modelo {modelo!r} is not implemented"
-        raise NotImplementedError(msg)
+        raise AggregationUnsupportedModeloError(
+            t(f"retenciones aggregator for modelo {modelo!r} is not registered"),
+        )
     eligible = _MODELO_SCHEME_CATALOGUE[modelo]
     return tuple(o for o in observations if o.scheme in eligible)
 

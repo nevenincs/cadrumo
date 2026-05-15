@@ -27,6 +27,7 @@ from typing import Literal, Protocol
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
 
+from ....core.config import Settings
 from ._errors import RegistryValidationError
 from ._live_parity import (
     LiveParityCatalogue,
@@ -40,16 +41,14 @@ from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
 ORACLE_ID = "aeat-nif-iva-checker"
 
-AEAT_NIF_IVA_VERIFICATION_URL = AnyUrl("https://www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/ConsultaIntracomunitarios")
+_EXTERNAL = Settings.external_constants()
+AEAT_NIF_IVA_VERIFICATION_URL = AnyUrl(_EXTERNAL.aeat.oracles.nif_iva_verification)
 # AEAT's public sede entry point for the verification flow. The form servlet
 # above redirects to a sede error page when reached cold; the live Playwright
 # driver must navigate to the entry point first to acquire the session
 # cookies the servlet requires. The sede gestiones page lists the form among
 # the VIES management actions.
-AEAT_NIF_IVA_ENTRY_URL = AnyUrl(
-    "https://sede.agenciatributaria.gob.es/Sede/iva/iva-operaciones-comercio-exterior/"
-    "identificacion-realizar-operaciones-otros-empresarios-ue/vies.html"
-)
+AEAT_NIF_IVA_ENTRY_URL = AnyUrl(f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.nif_iva_landing}")
 
 
 class AeatNifIvaModel(BaseModel):

@@ -472,6 +472,8 @@ class ApplicationLinkDefinition(RegistryModel):
         "portal",
         "extractor",
         "workflow",
+        "communication",
+        "payer_delivery",
     ]
     consumer: str
     requires_snapshot: Literal[True]
