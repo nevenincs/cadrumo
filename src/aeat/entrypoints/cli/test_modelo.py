@@ -55,11 +55,32 @@ def test_bindings_list_emits_readiness_category_for_every_row() -> None:
     )
     assert result.exit_code == 0, result.output
     assert "operation\tregistry.modelo.bindings.list" in result.output
-    assert "binding_id\tsource\treadiness\ttyped_enum" in result.output
+    assert "binding_id\tsource\treadiness\ttyped_enum\tborrador_capable" in result.output
     # Every modelo-303 binding currently sources from
     # ``ledger_iva_aggregation`` so every row's readiness column is
     # "ledger source".
     assert "ledger source" in result.output
+
+
+def test_bindings_list_emits_borrador_capable_column_per_row() -> None:
+    """``bindings list`` reports the ``borrador_capable`` flag per
+    binding so callers can tell at a glance which casillas the AEAT
+    borrador prefills versus those the operator must supply."""
+
+    result = invoke_cached_cli(
+        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1"],
+    )
+    assert result.exit_code == 0, result.output
+    # The text-mode header carries the new column.
+    assert "borrador_capable" in result.output
+    # Every binding row ends in either ``True`` or ``False`` for the
+    # new column. Detect by matching the binding-id prefix on at
+    # least one row.
+    binding_lines = [line for line in result.output.splitlines() if line.startswith("303\t")]
+    assert binding_lines, result.output
+    for line in binding_lines:
+        last_column = line.rsplit("\t", 1)[-1]
+        assert last_column in {"True", "False"}, line
 
 
 def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None:

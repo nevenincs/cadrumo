@@ -411,11 +411,13 @@ def bindings_list(
                     "source": row.source,
                     "readiness": _readiness_for_source(row.source),
                     "typed_enum": row.typed_enum,
+                    "borrador_capable": row.borrador_capable,
                 }
             )
             text_rows.append(
                 f"{report.code}\t{report.revision}\t{report.period or '-'}\t"
-                f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}"
+                f"{row.binding_id}\t{row.source}\t{_readiness_for_source(row.source)}\t{row.typed_enum or '-'}\t"
+                f"{row.borrador_capable}"
             )
     payload = {
         "operation": "registry.modelo.bindings.list",
@@ -433,7 +435,7 @@ def bindings_list(
         f"period_filter\t{period or '-'}",
         f"missing_filter\t{missing}",
         f"binding_count\t{len(merged_rows)}",
-        "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum",
+        "modelo\trevision\tperiod\tbinding_id\tsource\treadiness\ttyped_enum\tborrador_capable",
     ]
     lines.extend(text_rows)
     _emit(ctx, payload, lines)
