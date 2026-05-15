@@ -143,7 +143,7 @@ class Period(BaseModel):
             raise AggregationPeriodError(tr("aggregation.models.errors.period_type_ambiguous"))
         return self
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def start(self) -> date:
         """Return the first :class:`~datetime.date` included in the period."""
@@ -157,7 +157,7 @@ class Period(BaseModel):
             return date(self.year, self.month, 1)
         return date(self.year, 1, 1)
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def end(self) -> date:
         """Return the last :class:`~datetime.date` included in the period."""
@@ -171,7 +171,7 @@ class Period(BaseModel):
             return date(self.year, self.month, calendar.monthrange(self.year, self.month)[1])
         return date(self.year, 12, 31)
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def period_type(self) -> PeriodType:
         """Return the matching aggregation period cadence."""

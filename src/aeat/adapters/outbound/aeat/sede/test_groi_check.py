@@ -103,7 +103,7 @@ def test_observation_model_rejects_empty_nif() -> None:
 def test_observation_model_is_frozen() -> None:
     observation = GroiNifVerdict(nif="A28015865", verdict="valid")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        observation.nif = "B12345678"  # type: ignore[misc]
+        observation.nif = "B12345678"
 
 
 def test_result_model_defaults_to_empty_observations() -> None:

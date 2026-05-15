@@ -338,7 +338,7 @@ def test_registry_topic_projection_is_strict_and_frozen() -> None:
     )
 
     with pytest.raises(ValidationError, match=r"frozen"):
-        topic.title = "changed"  # type: ignore[misc]
+        topic.title = "changed"
 
     with pytest.raises(ValidationError, match=r"Extra inputs"):
         RegistryTopicProjection.model_validate(

@@ -430,9 +430,7 @@ class SplitLineage(BaseModel):
         try:
             int(value, 16)
         except ValueError as exc:
-            raise TransactionValidationError(
-                "split_group_id must be a 64-character lowercase hex digest"
-            ) from exc
+            raise TransactionValidationError("split_group_id must be a 64-character lowercase hex digest") from exc
         if value != value.lower():
             raise TransactionValidationError("split_group_id must be lowercase")
         return value
@@ -455,9 +453,7 @@ class SplitLineage(BaseModel):
             if not trimmed:
                 raise TransactionValidationError("sibling_transaction_ids entries must not be blank")
             if len(trimmed) != 64:
-                raise TransactionValidationError(
-                    "sibling_transaction_ids entries must be 64-character SHA-256 digests"
-                )
+                raise TransactionValidationError("sibling_transaction_ids entries must be 64-character SHA-256 digests")
             try:
                 int(trimmed, 16)
             except ValueError as exc:
@@ -474,9 +470,7 @@ class SplitLineage(BaseModel):
     @model_validator(mode="after")
     def _require_siblings_for_lineage(self) -> Self:
         if not self.sibling_transaction_ids:
-            raise TransactionValidationError(
-                "split_lineage must reference at least one sibling transaction id"
-            )
+            raise TransactionValidationError("split_lineage must reference at least one sibling transaction id")
         return self
 
 
@@ -807,7 +801,7 @@ class TransactionCatalogue(BaseModel):
         """
         return cls.model_validate(tuple(transactions))
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self):
         """Iterate over catalogue transactions."""
         return iter(self.transactions.values())
 

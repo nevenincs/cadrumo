@@ -120,7 +120,7 @@ def test_range_is_frozen() -> None:
 
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 4, 20))
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        rng.from_date = date(2025, 12, 31)  # type: ignore[misc]
+        rng.from_date = date(2025, 12, 31)
 
 
 # ---------------------------------------------------------------------
@@ -173,7 +173,7 @@ def test_entry_is_frozen() -> None:
 
     entry = _entry()
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        entry.modelo = "303"  # type: ignore[misc]
+        entry.modelo = "303"
 
 
 # ---------------------------------------------------------------------

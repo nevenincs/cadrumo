@@ -158,7 +158,7 @@ def _counterpart_registry_observations(
             ) from exc
         observations.append(
             RegistryCounterpartObservation(
-                source_kind=observation.source_kind,  # type: ignore[arg-type]
+                source_kind=observation.source_kind,
                 source_id=observation.source_object_id,
                 party_tax_id=observation.counterparty_nif,
                 country_code=observation.counterparty_country,

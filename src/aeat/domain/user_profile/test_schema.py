@@ -76,7 +76,7 @@ def test_user_profile_schema_models_are_strict_frozen_and_forbid_extras() -> Non
     assert field.sensitivity is SensitivityClass.IDENTITY
 
     with pytest.raises(ValidationError, match="frozen_instance"):
-        field.required = True  # type: ignore[misc]
+        field.required = True
 
     with pytest.raises(ValidationError, match="extra_forbidden"):
         ProfileFieldDefinition.model_validate(

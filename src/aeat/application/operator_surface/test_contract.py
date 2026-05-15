@@ -133,15 +133,15 @@ def test_contract_models_are_strict_and_immutable() -> None:
             }
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        root.purpose = "mutated"  # type: ignore[misc]
+        root.purpose = "mutated"
 
 
 def test_operator_surface_application_package_has_no_typer_dependency() -> None:
     module_sources = [
         inspect.getsource(operator_surface),
-        inspect.getsource(operator_surface._contract),  # type: ignore[attr-defined]
-        inspect.getsource(operator_surface._help),  # type: ignore[attr-defined]
-        inspect.getsource(operator_surface._models),  # type: ignore[attr-defined]
+        inspect.getsource(operator_surface._contract),
+        inspect.getsource(operator_surface._help),
+        inspect.getsource(operator_surface._models),
     ]
     joined = "\n".join(module_sources)
 

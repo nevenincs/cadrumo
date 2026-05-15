@@ -26,10 +26,8 @@ def test_external_evidence_accepts_every_declared_kind() -> None:
 
 def test_external_evidence_rejects_unknown_kind() -> None:
     with pytest.raises(ValidationError, match="kind"):
-        ExternalEvidence(
-            kind="aeat_unknown_kind",  # type: ignore[arg-type]
-            reference_id="JUST-001",
-            imported_at=_IMPORTED_AT,
+        ExternalEvidence.model_validate(
+            {"kind": "aeat_unknown_kind", "reference_id": "JUST-001", "imported_at": _IMPORTED_AT}
         )
 
 
@@ -62,11 +60,13 @@ def test_external_evidence_rejects_reference_id_above_max_length() -> None:
 
 def test_external_evidence_is_frozen_and_forbids_extra_fields() -> None:
     with pytest.raises(ValidationError, match="extra_forbidden|Extra inputs"):
-        ExternalEvidence(
-            kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-            reference_id="JUST-001",
-            imported_at=_IMPORTED_AT,
-            extra="not allowed",  # type: ignore[call-arg]
+        ExternalEvidence.model_validate(
+            {
+                "kind": ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                "reference_id": "JUST-001",
+                "imported_at": _IMPORTED_AT,
+                "extra": "not allowed",
+            }
         )
 
     evidence = ExternalEvidence(
@@ -75,4 +75,4 @@ def test_external_evidence_is_frozen_and_forbids_extra_fields() -> None:
         imported_at=_IMPORTED_AT,
     )
     with pytest.raises(ValidationError, match="frozen"):
-        evidence.reference_id = "JUST-002"  # type: ignore[misc]
+        setattr(evidence, "reference_id", "JUST-002")  # noqa: B010

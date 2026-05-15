@@ -536,7 +536,7 @@ class InvoiceCatalogue(BaseModel):
         """
         return cls.model_validate(tuple(invoices))
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self):
         """Iterate over catalogue invoices."""
         return iter(self.invoices.values())
 

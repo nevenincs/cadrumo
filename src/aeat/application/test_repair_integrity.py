@@ -10,8 +10,6 @@ from aeat.adapters.persistence.storage.sql.secure_objects import (
     SecureObjectNamespaceIntegrity,
 )
 from aeat.application.repair_integrity import (
-    RepairIntegrityReport,
-    RepairListReport,
     build_repair_integrity_report,
     build_repair_list_report,
 )
@@ -97,7 +95,9 @@ class TestBuildListReport:
         assert report.namespace == "aeat.workflow"
         assert report.rows_total == 3
         assert tuple(r.object_key_digest for r in report.rows) == (
-            "digest-a", "digest-b", "digest-c",
+            "digest-a",
+            "digest-b",
+            "digest-c",
         )
         assert report.integrity.readable == 3
 
@@ -106,11 +106,15 @@ class TestBuildListReport:
         default = build_repair_list_report(namespace="aeat.workflow", repository=repo)
         assert default.filter_mode == "default"
         all_mode = build_repair_list_report(
-            namespace="aeat.workflow", include_all=True, repository=repo,
+            namespace="aeat.workflow",
+            include_all=True,
+            repository=repo,
         )
         assert all_mode.filter_mode == "all"
         unreadable_mode = build_repair_list_report(
-            namespace="aeat.workflow", only_unreadable=True, repository=repo,
+            namespace="aeat.workflow",
+            only_unreadable=True,
+            repository=repo,
         )
         assert unreadable_mode.filter_mode == "unreadable"
 
@@ -138,4 +142,4 @@ class TestReportInvariants:
         repo = _StubRepository({"aeat.workflow": {"readable": 1, "unreadable": 0, "keys": []}})
         report = build_repair_integrity_report(repository=repo)
         with pytest.raises(ValidationError):
-            report.readable_total = 99  # type: ignore[misc]
+            report.readable_total = 99

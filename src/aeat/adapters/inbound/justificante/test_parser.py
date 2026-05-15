@@ -257,7 +257,7 @@ class TestJustificanteModel:
     def test_model_is_frozen(self, tmp_path: Path) -> None:
         record = self._build(tmp_path)
         with pytest.raises(ValidationError):
-            record.csv = "OTHER"  # type: ignore[misc]
+            record.csv = "OTHER"
 
     def test_extra_fields_rejected(self, tmp_path: Path) -> None:
         record = self._build(tmp_path)
