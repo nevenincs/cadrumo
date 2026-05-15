@@ -52,6 +52,26 @@ reviewed_at = 2026-05-06
 reviewed_by = "wgergely"
 notes = "LIRPF art 85: ventana 'en los diez periodos impositivos anteriores' que delimita la aplicacion del tipo reducido del 1,1 por ciento sobre el valor catastral revisado."
 
+[legal."rd-439-2007:art-108"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-108.html#a108"
+document_id = "BOE-A-2007-6820"
+article = "108"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a108"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIRPF art 108: obligaciones formales del retenedor y del obligado a ingresar a cuenta. Establece la obligacion de presentar declaracion-liquidacion trimestral de las cantidades retenidas e ingresadas (M111, M115, M123, art-71 RIVA enlaza mensual cuando aplica), la declaracion negativa, y la declaracion anual resumen (M180, M190, M193). Base reglamentaria comun de los modelos de retencion IRPF."
+required_text = [
+    "Obligaciones formales del retenedor y del obligado a ingresar a cuenta",
+    "declaración de las cantidades retenidas y de los ingresos a cuenta",
+    "declaración anual de las retenciones e ingresos a cuenta",
+]
+
 [legal."rd-439-2007:art-110"]
 evidence_tier = "legal_authority"
 authority = "boe"
