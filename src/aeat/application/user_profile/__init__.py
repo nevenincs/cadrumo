@@ -27,6 +27,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...domain.user_profile import (
     ProfileFactValue,
     UserProfileFact,
+    UserProfilePortableExport,
     UserProfileRecord,
     UserProfileStatus,
 )
@@ -247,15 +248,9 @@ class ProfileStaleCheckReport(BaseModel):
 # Portable export / import
 # ---------------------------------------------------------------------------
 
-
-class ProfileExportBundle(BaseModel):
-    """Portable, user-directed export bundle. Not retained by the backend."""
-
-    model_config = _STRICT_FROZEN
-
-    bundle_schema_version: int = Field(ge=1)
-    profile: UserProfileRecord
-    exported_at: datetime
+# ProfileExportBundle consolidated onto UserProfilePortableExport (domain).
+# Callers should import UserProfilePortableExport from aeat.domain.user_profile
+# or from this module; the canonical definition lives in domain/_values.py.
 
 
 class ProfileImportResult(BaseModel):
@@ -307,8 +302,8 @@ __all__ = [
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
-    "ProfileExportBundle",
     "ProfileImportResult",
+    "UserProfilePortableExport",
     "ProfileLifecycleResult",
     "ProfileLifecycleService",
     "ProfileListResult",

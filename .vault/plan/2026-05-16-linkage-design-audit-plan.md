@@ -33,7 +33,7 @@ family, its canonical-target shape, and its migration cost estimate.
 
 - [x] `P01.S01` - extend pydantic audit tool to dedupe by file-line and emit a refined catalogue; `scratch/pydantic_audit.py`.
 - [x] `P01.S02` - dispatch Sonnet agent to triage 253 similarity pairs into duplicate families; `scratch/out/wave2_consolidation_catalogue.md`.
-- [ ] `P01.S03` - validate the catalogue against the research record's three known duplicate families; `scratch/out/wave2_consolidation_catalogue.md`.
+- [x] `P01.S03` - validate the catalogue against the research record's three known duplicate families; `scratch/out/wave2_consolidation_catalogue.md`.
 
 ### Phase `P02` - CCAA canonicalisation
 
@@ -41,11 +41,11 @@ Pick one canonical CCAA enum and migrate. Likely target: a new typed
 alias `CCAA` declared once in `domain/profile/_ccaa.py` with both ISO
 short codes and Spanish names as aliases. Delete the other two.
 
-- [ ] `P02.S04` - draft canonical CCAA pydantic / enum shape; `src/aeat/domain/profile/_ccaa.py`.
-- [ ] `P02.S05` - migrate RentaCCAA call sites with libcst codemod; `src/aeat/domain/renta/_substrate.py`.
-- [ ] `P02.S06` - migrate dispatch-table call sites in the registry TOML; `registry/aeat/modelos/100/revisions/2025.toml`.
-- [ ] `P02.S07` - remove the obsolete RentaCCAA enum; `src/aeat/domain/renta/_substrate.py`.
-- [ ] `P02.S08` - add import-linter forbidden contract preventing reintroduction of duplicate CCAA shapes; `.importlinter`.
+- [x] `P02.S04` - draft canonical CCAA pydantic / enum shape; `src/aeat/domain/profile/_ccaa.py`.
+- [x] `P02.S05` - migrate RentaCCAA call sites with libcst codemod; `src/aeat/domain/renta/_substrate.py`.
+- [x] `P02.S06` - migrate dispatch-table call sites in the registry TOML; `registry/aeat/modelos/100/revisions/2025.toml`.
+- [x] `P02.S07` - remove the obsolete RentaCCAA enum; `src/aeat/domain/renta/_substrate.py`.
+- [x] `P02.S08` - add import-linter forbidden contract preventing reintroduction of duplicate CCAA shapes; `.importlinter`.
 
 ### Phase `P03` - Casilla schema unification
 
@@ -54,10 +54,10 @@ Adopt `CasillaDefinition` as canonical. Replace
 Decimal bounds, and legal_refs. Either keep the `CasillaSchema`
 Protocol but tighten its contract or remove it.
 
-- [ ] `P03.S09` - upgrade RegistryCasillaSchema to preserve typed IDs and legal_refs; `src/aeat/application/filing/runtime.py`.
-- [ ] `P03.S10` - tighten CasillaSchema Protocol contract; `src/aeat/domain/filing/_protocols.py`.
-- [ ] `P03.S11` - migrate filing consumers to read legal_refs from the projection; `src/aeat/application/filing/`.
-- [ ] `P03.S12` - add structural test asserting legal_refs survive projection; `src/aeat/application/filing/test_runtime.py`.
+- [x] `P03.S09` - upgrade RegistryCasillaSchema to preserve typed IDs and legal_refs; `src/aeat/application/filing/runtime.py`.
+- [x] `P03.S10` - tighten CasillaSchema Protocol contract; `src/aeat/domain/filing/_protocols.py`.
+- [x] `P03.S11` - migrate filing consumers to read legal_refs from the projection; `src/aeat/application/filing/`.
+- [x] `P03.S12` - add structural test asserting legal_refs survive projection; `src/aeat/application/filing/test_runtime.py`.
 
 ### Phase `P04` - observation type layering fix
 
@@ -66,10 +66,10 @@ Move `RentaDeductibleExpenseObservation` from `domain/renta/` to
 imports across domain packages. Resolves F7 architectural-boundary
 violation flagged in the research record.
 
-- [ ] `P04.S13` - move RentaDeductibleExpenseObservation into the aggregation layer; `src/aeat/application/aggregation/_renta_ledger.py`.
-- [ ] `P04.S14` - replace registry binding import with the new location; `src/aeat/domain/calculations/registry/_bindings.py`.
-- [ ] `P04.S15` - add import-linter forbidden contract for domain.calculations to domain.renta; `.importlinter`.
-- [ ] `P04.S16` - eliminate RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS constant and move mapping to registry TOML; `src/aeat/domain/renta/_ledger_expenses.py`.
+- [x] `P04.S13` - move RentaDeductibleExpenseObservation into the aggregation layer; `src/aeat/application/aggregation/_renta_ledger.py`.
+- [x] `P04.S14` - replace registry binding import with the new location; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `P04.S15` - add import-linter forbidden contract for domain.calculations to domain.renta; `.importlinter`.
+- [x] `P04.S16` - eliminate RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS constant and move mapping to registry TOML; `src/aeat/domain/renta/_ledger_expenses.py`.
 
 ### Phase `P05` - similarity-matrix consolidations
 
@@ -78,7 +78,9 @@ Step list is added dynamically by `vault plan step add` as each family
 is triaged. Expect roughly 5-15 additional duplicate families with
 varying consolidation cost.
 
-- [ ] `P05.S17` - placeholder for first triaged duplicate family; `scratch/out/wave2_consolidation_catalogue.md`.
+- [x] `P05.S17` - placeholder for first triaged duplicate family; `scratch/out/wave2_consolidation_catalogue.md`.
+- [x] `P05.S21` - consolidate ProfileExportBundle onto UserProfilePortableExport (domain); `src/aeat/domain/user_profile/_values.py`.
+- [x] `P05.S22` - rename VerificationFinding name collision: modelos -> ModeloVerificationFinding, evidence -> EvidenceBundleCheckResult; `src/aeat/domain/modelos/_verification_report.py`.
 
 ### Phase `P06` - regression gates for shape duplication
 

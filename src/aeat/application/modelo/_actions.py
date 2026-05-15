@@ -61,10 +61,10 @@ from ...domain.modelos._repository import (
     upsert_work_unit,
 )
 from ...domain.modelos._verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
-    VerificationFinding,
-    VerificationFindingKind,
-    VerificationFindingSeverity,
     VerificationReport,
     derive_verification_report_id,
 )
@@ -1369,7 +1369,7 @@ def verify_modelo_revision(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
         )
 
-    findings: list[VerificationFinding] = []
+    findings: list[ModeloVerificationFinding] = []
     resolved_casillas: list[str] = []
     missing_required: list[str] = []
 
@@ -1380,9 +1380,9 @@ def verify_modelo_revision(
     )
     if registry_lookup is None:
         findings.append(
-            VerificationFinding(
-                kind=VerificationFindingKind.BLOCKING_RULE,
-                severity=VerificationFindingSeverity.BLOCKING,
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
                 message=(
                     f"registry snapshot for modelo={work_unit.modelo!r} "
                     f"year={work_unit.filing_year} period={work_unit.period!r} "
@@ -1406,9 +1406,9 @@ def verify_modelo_revision(
             else:
                 missing_required.append(casilla_id)
                 findings.append(
-                    VerificationFinding(
-                        kind=VerificationFindingKind.MISSING_REQUIRED_CASILLA,
-                        severity=VerificationFindingSeverity.BLOCKING,
+                    ModeloVerificationFinding(
+                        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+                        severity=ModeloVerificationFindingSeverity.BLOCKING,
                         casilla_id=casilla_id,
                         message=(
                             f"required casilla {casilla_id!r} is not present in "
@@ -1420,11 +1420,11 @@ def verify_modelo_revision(
                     )
                 )
 
-    has_blocking = any(f.severity is VerificationFindingSeverity.BLOCKING for f in findings)
+    has_blocking = any(f.severity is ModeloVerificationFindingSeverity.BLOCKING for f in findings)
     if has_blocking:
         completeness = (
             VerificationCompletenessStatus.INCOMPLETE
-            if missing_required and not any(f.kind is VerificationFindingKind.BLOCKING_RULE for f in findings)
+            if missing_required and not any(f.kind is ModeloVerificationFindingKind.BLOCKING_RULE for f in findings)
             else VerificationCompletenessStatus.BLOCKED
         )
         granted = False

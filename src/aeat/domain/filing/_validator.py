@@ -130,9 +130,9 @@ class FilingValidator:
             if not isinstance(value.value, Decimal | int):
                 continue
             numeric = Decimal(value.value) if isinstance(value.value, int) else value.value
-            if casilla.min_value is not None and numeric < Decimal(str(casilla.min_value)):
+            if casilla.min_value is not None and numeric < casilla.min_value:
                 out.append(self._range_finding(value.casilla_id, "below"))
-            if casilla.max_value is not None and numeric > Decimal(str(casilla.max_value)):
+            if casilla.max_value is not None and numeric > casilla.max_value:
                 out.append(self._range_finding(value.casilla_id, "above"))
         return out
 

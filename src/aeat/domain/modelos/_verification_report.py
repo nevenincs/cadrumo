@@ -67,7 +67,7 @@ class VerificationCompletenessStatus(StrEnum):
     BLOCKED = "blocked"
 
 
-class VerificationFindingKind(StrEnum):
+class ModeloVerificationFindingKind(StrEnum):
     """Closed catalogue of verification-finding kinds.
 
     Maps to the readiness vocabulary mandated by the verify ADR:
@@ -82,14 +82,14 @@ class VerificationFindingKind(StrEnum):
     BLOCKING_RULE = "blocking_rule"
 
 
-class VerificationFindingSeverity(StrEnum):
+class ModeloVerificationFindingSeverity(StrEnum):
     """Severity of one verification finding."""
 
     BLOCKING = "blocking"
     WARNING = "warning"
 
 
-class VerificationFinding(BaseModel):
+class ModeloVerificationFinding(BaseModel):
     """One verification finding.
 
     Findings of ``BLOCKING`` severity force ``BLOCKED`` completeness
@@ -99,8 +99,8 @@ class VerificationFinding(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    kind: VerificationFindingKind
-    severity: VerificationFindingSeverity
+    kind: ModeloVerificationFindingKind
+    severity: ModeloVerificationFindingSeverity
     casilla_id: _CasillaRef | None = None
     expectation_id: _CasillaRef | None = None
     message: _FindingMessage
@@ -132,7 +132,7 @@ class VerificationReport(BaseModel):
     verification_report_id: _ReportId
     calculation_revision_id: _CalculationRevisionId
     completeness_status: VerificationCompletenessStatus
-    findings: tuple[VerificationFinding, ...] = Field(default_factory=tuple)
+    findings: tuple[ModeloVerificationFinding, ...] = Field(default_factory=tuple)
     resolved_casillas: tuple[_CasillaRef, ...] = Field(default_factory=tuple)
     missing_required_casillas: tuple[_CasillaRef, ...] = Field(default_factory=tuple)
     run_at: datetime
@@ -152,7 +152,7 @@ class VerificationReport(BaseModel):
             )
         # granted_verified_complete is a True iff completeness_status is COMPLETE
         # AND no blocking findings exist.
-        has_blocking = any(finding.severity is VerificationFindingSeverity.BLOCKING for finding in self.findings)
+        has_blocking = any(finding.severity is ModeloVerificationFindingSeverity.BLOCKING for finding in self.findings)
         if self.granted_verified_complete:
             if self.completeness_status is not VerificationCompletenessStatus.COMPLETE:
                 raise ModeloValidationError("granted_verified_complete=True requires completeness_status=COMPLETE")
@@ -207,9 +207,9 @@ class VerificationReportCatalogue(BaseModel):
 
 __all__ = [
     "VerificationCompletenessStatus",
-    "VerificationFinding",
-    "VerificationFindingKind",
-    "VerificationFindingSeverity",
+    "ModeloVerificationFinding",
+    "ModeloVerificationFindingKind",
+    "ModeloVerificationFindingSeverity",
     "VerificationReport",
     "VerificationReportCatalogue",
     "derive_verification_report_id",

@@ -39,7 +39,7 @@ class VerificationCheck(StrEnum):
     OBJECT_REACHABILITY = "object_reachability"
 
 
-class VerificationFinding(BaseModel):
+class EvidenceBundleCheckResult(BaseModel):
     """One check's outcome from a bundle verification pass."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -125,7 +125,7 @@ __all__ = [
     "EvidenceBundleVerificationError",
     "EvidenceRecordRef",
     "VerificationCheck",
-    "VerificationFinding",
+    "EvidenceBundleCheckResult",
     "derive_bundle_id",
     "utcnow",
 ]

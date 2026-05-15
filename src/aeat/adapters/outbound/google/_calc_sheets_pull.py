@@ -28,7 +28,7 @@ The pull adapter does NOT mutate any local state; it returns a
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any, Final, Literal
 
@@ -36,6 +36,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ....application.storage.calc_sheets import collect_row_sets
 from ....application.storage.calc_sheets._layout import plan_layout
+from ....application.storage.calc_sheets._records import OperatorInput, SheetExportMetadata
 from ....domain.calculations.registry._formula_runtime import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
@@ -57,7 +58,13 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class OperatorEdit(BaseModel):
-    """One operator-edited cell value."""
+    """One operator-edited cell value.
+
+    ``casilla_number`` and ``label`` are display-only fields added by the
+    pull adapter from the workbook's column metadata. They are not part of
+    the canonical :class:`OperatorInput` contract; use
+    :meth:`to_operator_input` to project this shape onto the canonical one.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -65,6 +72,10 @@ class OperatorEdit(BaseModel):
     casilla_number: str
     label: str
     value: Decimal | str | bool | None = None
+
+    def to_operator_input(self) -> OperatorInput:
+        """Project onto the canonical OperatorInput shape, dropping display fields."""
+        return OperatorInput(casilla=self.casilla, value=self.value)
 
 
 class BindingEdit(BaseModel):
