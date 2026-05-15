@@ -544,6 +544,62 @@ formulas = [
     "renta-2020-trabajo-total-ingresos-integros-computables",
 ]
 
+[[revisions."2020".constructs]]
+id = "renta-2020-dependent-modelos"
+title = "Modelo 100 2020 retenciones and withholding cross-modelo inputs"
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-eha-3435-2007:anexo-ii",
+]
+source_refs = [
+    "aeat-renta-2020-manual-parte1",
+    "boe-modelo-100-2020-form",
+]
+bindings = [
+    "renta-2020-modelo-111-retenciones-periodicas",
+    "renta-2020-modelo-115-retenciones-periodicas",
+    "renta-2020-modelo-123-retenciones-periodicas",
+]
+relations = [
+    "renta-2020-rel-111-retenciones-trimestrales",
+    "renta-2020-rel-111-retenciones-mensuales",
+    "renta-2020-rel-115-retenciones-trimestrales",
+    "renta-2020-rel-123-retenciones-trimestrales",
+]
+dependency_classifications = [
+    "renta-2020-dep-111",
+    "renta-2020-dep-115",
+    "renta-2020-dep-123",
+]
+
+[[revisions."2020".dependency_classifications]]
+id = "renta-2020-dep-111"
+source_modelo = "111"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-2020-dependent-modelos"]
+relation_refs = ["renta-2020-rel-111-retenciones-trimestrales", "renta-2020-rel-111-retenciones-mensuales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+
+[[revisions."2020".dependency_classifications]]
+id = "renta-2020-dep-115"
+source_modelo = "115"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-2020-dependent-modelos"]
+relation_refs = ["renta-2020-rel-115-retenciones-trimestrales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+
+[[revisions."2020".dependency_classifications]]
+id = "renta-2020-dep-123"
+source_modelo = "123"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-2020-dependent-modelos"]
+relation_refs = ["renta-2020-rel-123-retenciones-trimestrales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+
 [[revisions."2020".formulas]]
 id = "renta-2020-deduccion-cultural-estatal-50-porciento"
 target = "0550"
@@ -1509,6 +1565,103 @@ source_refs = ["aeat-dr-100-2020-dictionary", "boe-modelo-100-2020-form"]
 [[revisions."2020".bindings.source_citations]]
 source_ref = "boe-modelo-100-2020-form"
 required_text = ["Modelo 100", "ejercicio 2020"]
+
+[[revisions."2020".bindings]]
+id = "renta-2020-modelo-111-retenciones-periodicas"
+source = "previous_filing"
+selector = { source_modelo = "111", source_output = "28", relation = "retenciones-trabajo-actividades-premios" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+aeat_prefilled = true
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "boe-modelo-100-2020-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2020"]
+
+[[revisions."2020".bindings]]
+id = "renta-2020-modelo-115-retenciones-periodicas"
+source = "previous_filing"
+selector = { source_modelo = "115", source_output = "03", relation = "retenciones-arrendamientos-urbanos" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "boe-modelo-100-2020-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2020"]
+
+[[revisions."2020".bindings]]
+id = "renta-2020-modelo-123-retenciones-periodicas"
+source = "previous_filing"
+selector = { source_modelo = "123", source_output = "03", relation = "retenciones-capital-mobiliario" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+
+[[revisions."2020".bindings.source_citations]]
+source_ref = "boe-modelo-100-2020-form"
+required_text = ["retenciones, ingresos a cuenta y pagos fraccionados", "ejercicio 2020"]
+
+[[revisions."2020".relations]]
+id = "renta-2020-rel-111-retenciones-trimestrales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "111"
+source_revision_selector = { year = 2020 }
+source_output = "28"
+target_binding = "renta-2020-modelo-111-retenciones-periodicas"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+
+[[revisions."2020".relations]]
+id = "renta-2020-rel-111-retenciones-mensuales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "111"
+source_revision_selector = { year = 2020 }
+source_output = "28"
+target_binding = "renta-2020-modelo-111-retenciones-periodicas"
+period_alignment = { source_periods = "months", target_period = "0A" }
+source_periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+
+[[revisions."2020".relations]]
+id = "renta-2020-rel-115-retenciones-trimestrales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "115"
+source_revision_selector = { year = 2020 }
+source_output = "03"
+target_binding = "renta-2020-modelo-115-retenciones-periodicas"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
+
+[[revisions."2020".relations]]
+id = "renta-2020-rel-123-retenciones-trimestrales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "123"
+source_revision_selector = { year = 2020 }
+source_output = "03"
+target_binding = "renta-2020-modelo-123-retenciones-periodicas"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii"]
+source_refs = ["aeat-renta-2020-manual-parte1", "boe-modelo-100-2020-form"]
 
 [[revisions."2020".parameters]]
 id = "renta-2020-escala-autonomica-andalucia-base-general"

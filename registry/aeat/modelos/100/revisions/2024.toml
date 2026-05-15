@@ -602,6 +602,77 @@ formulas = [
     "renta-2024-trabajo-total-ingresos-integros-computables",
 ]
 
+[[revisions."2024".constructs]]
+id = "renta-2024-dependent-modelos"
+title = "Modelo 100 2024 retenciones and withholding cross-modelo inputs"
+legal_refs = [
+    "ley-35-2006:art-99",
+    "rd-439-2007:art-109",
+    "orden-eha-3435-2007:anexo-ii",
+    "orden-hac-56-2024:art-1",
+    "orden-eha-3377-2011:art-1",
+]
+source_refs = [
+    "aeat-renta-2024-manual-parte1",
+    "boe-modelo-100-2024-form",
+    "boe-modelo-193-2011-form",
+]
+bindings = [
+    "renta-2024-modelo-111-retenciones-periodicas",
+    "renta-2024-modelo-115-retenciones-periodicas",
+    "renta-2024-modelo-123-retenciones-periodicas",
+    "renta-2024-modelo-193-retenciones-anuales",
+]
+relations = [
+    "renta-2024-rel-111-retenciones-trimestrales",
+    "renta-2024-rel-111-retenciones-mensuales",
+    "renta-2024-rel-115-retenciones-trimestrales",
+    "renta-2024-rel-123-retenciones-trimestrales",
+    "renta-2024-rel-193-retenciones-anuales",
+]
+dependency_classifications = [
+    "renta-2024-dep-111",
+    "renta-2024-dep-115",
+    "renta-2024-dep-123",
+    "renta-2024-dep-193",
+]
+
+[[revisions."2024".dependency_classifications]]
+id = "renta-2024-dep-111"
+source_modelo = "111"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-2024-dependent-modelos"]
+relation_refs = ["renta-2024-rel-111-retenciones-trimestrales", "renta-2024-rel-111-retenciones-mensuales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".dependency_classifications]]
+id = "renta-2024-dep-115"
+source_modelo = "115"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-2024-dependent-modelos"]
+relation_refs = ["renta-2024-rel-115-retenciones-trimestrales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".dependency_classifications]]
+id = "renta-2024-dep-123"
+source_modelo = "123"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-2024-dependent-modelos"]
+relation_refs = ["renta-2024-rel-123-retenciones-trimestrales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".dependency_classifications]]
+id = "renta-2024-dep-193"
+source_modelo = "193"
+treatment = "factual_evidence"
+target_constructs = ["renta-2024-dependent-modelos"]
+relation_refs = ["renta-2024-rel-193-retenciones-anuales"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1"]
+source_refs = ["boe-modelo-193-2011-form"]
+
 [[revisions."2024".formulas]]
 id = "renta-2024-deduccion-cultural-estatal-50-porciento"
 target = "0550"
@@ -1748,6 +1819,130 @@ source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-model
 [[revisions."2024".bindings.source_citations]]
 source_ref = "boe-modelo-100-2024-form"
 required_text = ["Modelo 100", "ejercicio 2024"]
+
+[[revisions."2024".bindings]]
+id = "renta-2024-modelo-111-retenciones-periodicas"
+source = "previous_filing"
+selector = { source_modelo = "111", source_output = "28", relation = "retenciones-trabajo-actividades-premios" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+aeat_prefilled = true
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "boe-modelo-100-2024-form"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[[revisions."2024".bindings]]
+id = "renta-2024-modelo-115-retenciones-periodicas"
+source = "previous_filing"
+selector = { source_modelo = "115", source_output = "03", relation = "retenciones-arrendamientos-urbanos" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "boe-modelo-100-2024-form"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[[revisions."2024".bindings]]
+id = "renta-2024-modelo-123-retenciones-periodicas"
+source = "previous_filing"
+selector = { source_modelo = "123", source_output = "09", relation = "retenciones-capital-mobiliario" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "boe-modelo-100-2024-form"
+required_text = ["Modelo 100", "ejercicio 2024"]
+
+[[revisions."2024".bindings]]
+id = "renta-2024-modelo-193-retenciones-anuales"
+source = "previous_filing"
+selector = { source_modelo = "193", source_output = "decl.retenciones-total", relation = "resumen-anual-capital-mobiliario" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1"]
+source_refs = ["boe-modelo-193-2011-form"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "boe-modelo-193-2011-form"
+required_text = ["RETENCIONES E INGRESOS A CUENTA", "posiciones 169 a 181"]
+
+[[revisions."2024".relations]]
+id = "renta-2024-rel-111-retenciones-trimestrales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "111"
+source_revision_selector = { year = 2024 }
+source_output = "28"
+target_binding = "renta-2024-modelo-111-retenciones-periodicas"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".relations]]
+id = "renta-2024-rel-111-retenciones-mensuales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "111"
+source_revision_selector = { year = 2024 }
+source_output = "28"
+target_binding = "renta-2024-modelo-111-retenciones-periodicas"
+period_alignment = { source_periods = "months", target_period = "0A" }
+source_periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".relations]]
+id = "renta-2024-rel-115-retenciones-trimestrales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "115"
+source_revision_selector = { year = 2024 }
+source_output = "03"
+target_binding = "renta-2024-modelo-115-retenciones-periodicas"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".relations]]
+id = "renta-2024-rel-123-retenciones-trimestrales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "123"
+source_revision_selector = { year = 2024 }
+source_output = "09"
+target_binding = "renta-2024-modelo-123-retenciones-periodicas"
+period_alignment = { source_periods = "quarters", target_period = "0A" }
+source_periods = ["1T", "2T", "3T", "4T"]
+target_periods = ["0A"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "orden-hac-56-2024:art-1"]
+source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]
+
+[[revisions."2024".relations]]
+id = "renta-2024-rel-193-retenciones-anuales"
+kind = "cross_model_output"
+dependency_role = "factual_evidence"
+source_modelo = "193"
+source_revision_selector = { year = 2024 }
+source_output = "decl.retenciones-total"
+target_binding = "renta-2024-modelo-193-retenciones-anuales"
+period_alignment = { source_periods = "annual_summary", target_period = "0A" }
+source_periods = ["0A"]
+target_periods = ["0A"]
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1"]
+source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024".parameters]]
 id = "renta-2024-escala-autonomica-andalucia-base-general"
