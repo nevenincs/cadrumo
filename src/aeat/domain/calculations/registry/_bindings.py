@@ -7,7 +7,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 from ...vat import (
     EUMemberState,
@@ -22,6 +22,7 @@ from ._schema import DataBindingDefinition, ModeloRevision
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
 
 __all__ = [
+    "CasillaObservation",
     "DataBindingDefinition",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
@@ -58,25 +59,59 @@ _InvoiceRowField = Literal[
 ]
 
 
+class CasillaObservation(BaseModel):
+    """One typed casilla observation emitted by the formula runtime.
+
+    Carries the casilla id + final Decimal value plus optional formula
+    provenance: when ``formula_id`` is set, the runtime computed this
+    casilla and ``operand_refs`` / ``operand_values`` trace its inputs;
+    when ``formula_id`` is ``None`` the casilla was supplied as input
+    (manual / bound) and the trace fields are empty.
+
+    Used as the primary storage for :class:`RegistryCalculationResult`;
+    legacy ``values`` and ``entries`` views derive from it.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    casilla_id: str = Field(min_length=1)
+    value: Decimal
+    formula_id: str | None = None
+    operand_refs: tuple[str, ...] = ()
+    operand_values: tuple[Decimal, ...] = ()
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
+
+    @field_validator("value")
+    @classmethod
+    def _decimal_value(cls, value: Decimal) -> Decimal:
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError("casilla observation value must be Decimal")
+        return value
+
+
 class RegistryFilingObservation(BaseModel):
-    """Observed casilla values from a filed declaration."""
+    """Observed casilla values from a filed declaration.
+
+    Primary storage is ``observations`` — a typed tuple of
+    :class:`CasillaObservation` carrying full formula provenance
+    (defect T-01 fix). The legacy ``casilla_values`` mapping is
+    derived on demand via a computed field so existing read-callers
+    continue to work without modification.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=8)
-    casilla_values: Mapping[str, Decimal]
+    observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
 
-    @field_validator("casilla_values")
-    @classmethod
-    def _values_are_decimal(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
-        for casilla_id, casilla_value in value.items():
-            if not casilla_id:
-                raise RegistryValidationError("observed casilla id must be non-empty")
-            if isinstance(casilla_value, bool) or not isinstance(casilla_value, Decimal):
-                raise RegistryValidationError(f"observed casilla {casilla_id!r} must be a Decimal")
-        return value
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def casilla_values(self) -> Mapping[str, Decimal]:
+        """Compat view: casilla_id → Decimal derived from typed observations."""
+        return {obs.casilla_id: obs.value for obs in self.observations}
 
 
 class RegistryFilingObservationRequirement(BaseModel):
@@ -211,6 +246,19 @@ def resolve_previous_filing_binding_values(
     return resolved
 
 
+def _selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
+    """Return the binding selector as a plain dict, stripping the injected `source` key.
+
+    Handles two cases:
+    - TOML-loaded bindings: selector is already a typed pydantic model; use model_dump().
+    - Test-constructed bindings via model_copy(update=...): selector may be a raw dict.
+    """
+    selector = binding.selector
+    if isinstance(selector, dict):
+        return {k: v for k, v in selector.items() if k != "source"}
+    return selector.model_dump(exclude={"source"}, exclude_none=True)
+
+
 class _PreviousFilingSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -258,7 +306,7 @@ class _PreviousFilingSelector(BaseModel):
 
 def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousFilingSelector:
     try:
-        return _PreviousFilingSelector.model_validate(binding.selector)
+        return _PreviousFilingSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed previous-filing selector") from exc
 
@@ -276,7 +324,10 @@ def _is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
     resolver skips these to avoid spurious malformed-selector errors.
     """
 
-    return "source_casillas" in binding.selector
+    selector = binding.selector
+    if isinstance(selector, dict):
+        return "source_casillas" in selector
+    return getattr(selector, "source_casillas", None) is not None
 
 
 def _aggregate_previous_filing_binding(binding: DataBindingDefinition, values: list[Decimal]) -> Decimal:
@@ -419,7 +470,7 @@ class _InvoiceSelector(BaseModel):
 
 def _invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
     try:
-        return _InvoiceSelector.model_validate(binding.selector)
+        return _InvoiceSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed invoice selector") from exc
 
@@ -903,7 +954,7 @@ class _OssIossLedgerSelector(BaseModel):
 def _ledger_oss_selector(binding: DataBindingDefinition) -> _OssIossLedgerSelector:
     """Validate and parse a binding selector into a typed OSS / IOSS selector."""
     try:
-        return _OssIossLedgerSelector.model_validate(dict(binding.selector))
+        return _OssIossLedgerSelector.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_oss_aggregation selector") from exc
 
@@ -1066,7 +1117,7 @@ class _IvaLedgerSelector(BaseModel):
 def _iva_ledger_selector(binding: DataBindingDefinition) -> _IvaLedgerSelector:
     """Validate and parse a binding selector into a typed IVA selector."""
     try:
-        return _IvaLedgerSelector.model_validate(dict(binding.selector))
+        return _IvaLedgerSelector.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_iva_aggregation selector") from exc
 
@@ -1201,7 +1252,7 @@ class _RentaLedgerExpenseSelector(BaseModel):
 
 def _renta_ledger_expense_selector(binding: DataBindingDefinition) -> _RentaLedgerExpenseSelector:
     try:
-        return _RentaLedgerExpenseSelector.model_validate(dict(binding.selector))
+        return _RentaLedgerExpenseSelector.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_renta_expense_aggregation selector"

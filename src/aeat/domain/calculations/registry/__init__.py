@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ._authority import ValidatedRegistryAuthority, default_registry_authority
 from ._bindings import (
+    CasillaObservation,
     CounterpartAggregationObservation,
     CounterpartObservationRequirement,
     InvoiceObservation,
@@ -236,6 +237,7 @@ __all__ = [
     "ApplicationLinkDefinition",
     "BracketEntry",
     "CasillaDefinition",
+    "CasillaObservation",
     "CensusModeloEventKind",
     "CensusModeloFoundationCommand",
     "CensusModeloFoundationContract",
