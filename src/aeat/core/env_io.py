@@ -59,16 +59,15 @@ def _atomic_write_text(path: Path, text: str, *, encoding: str = "utf-8") -> Non
     # would leak the tempfile on non-OSError exceptions.
     tmp_path: Path | None = None
     try:
-        handle = tempfile.NamedTemporaryFile(
+        with tempfile.NamedTemporaryFile(
             mode="w",
             encoding=encoding,
             dir=path.parent,
             prefix=f"{path.name}.",
             suffix=".tmp",
             delete=False,
-        )
-        tmp_path = Path(handle.name)
-        with handle:
+        ) as handle:
+            tmp_path = Path(handle.name)
             handle.write(text)
             handle.flush()
             os.fsync(handle.fileno())

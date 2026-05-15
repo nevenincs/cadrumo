@@ -314,7 +314,8 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
                 _log.debug("explore DOM input inventory metadata unreadable index=%d", idx, exc_info=True)
                 title = placeholder = input_type = name = value = "?"
             button_inventory_lines.append(
-                f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}"  # noqa: E501
+                f"  [{idx}] type={input_type!r} title={title!r}"
+                f" placeholder={placeholder!r} name={name!r} value={value!r}"
             )
         button_inventory_lines.append("\n=== visible dialogs / modals ===")
         for cls in (".z-window", ".z-window-modal", "[role='dialog']"):

@@ -49,13 +49,13 @@ class NoActiveProfileError(WorkflowError):
     """
 
 
-class WorkflowAbortSignal(WorkflowError):  # noqa: N818  # internal control-flow signal, not a public error type
+class WorkflowAbortSignalError(WorkflowError):  # internal control-flow signal, not a public error type
     """Internal control-flow signal raised by stage methods to bail out.
 
-    Named ``WorkflowAbortSignal`` deliberately (rather than
-    ``WorkflowAbortSignalError``) because the engine treats it as an
-    internal control-flow vehicle, not as a public error type — it
-    never propagates outside :class:`aeat.application.workflow.WorkflowEngine`.
+    Named ``WorkflowAbortSignalError`` because it subclasses ``WorkflowError``
+    and the project-wide naming convention requires the ``Error`` suffix on all
+    exception classes. The engine treats it as an internal control-flow vehicle
+    — it never propagates outside :class:`aeat.application.workflow.WorkflowEngine`.
     :meth:`WorkflowEngine._drive` always catches it and materialises the
     :class:`aeat.application.workflow.WorkflowResult`. Subclasses
     :class:`WorkflowError` so the project-wide error-hierarchy rule

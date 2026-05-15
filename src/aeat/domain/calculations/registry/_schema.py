@@ -839,7 +839,7 @@ class CasillaConstraints(RegistryModel):
     Each constraint declares its own legal grounding so the engine
     can surface a BOE permalink in the violation envelope when a
     computed value falls outside the declared bounds. The runtime
-    raises a typed `CasillaConstraintViolation`; the Sheets apply
+    raises a typed `CasillaConstraintViolationError`; the Sheets apply
     adapter renders the same record as a `setDataValidation` rule
     on the corresponding cell so the operator sees the constraint
     directly in the workbook UI.
@@ -950,6 +950,7 @@ class RelationDefinition(RegistryModel):
     period_alignment: Mapping[str, str | int]
     source_periods: tuple[str, ...] = ()
     target_periods: tuple[str, ...] = ()
+    source_period_offset_from_target: int | None = None
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -967,6 +968,16 @@ class RelationDefinition(RegistryModel):
             raise RegistryValidationError(
                 f"annual summary relation {self.id!r} must use periodic_to_annual_summary role"
             )
+        if self.source_period_offset_from_target is not None:
+            # The offset declares "for each target_period, derive source_period
+            # by adding the offset to the target's ordinal". It is incompatible
+            # with explicit source_periods which fixes a single static source set.
+            if self.source_periods:
+                raise RegistryValidationError(
+                    f"relation {self.id!r} cannot declare source_periods together with source_period_offset_from_target"
+                )
+            if self.source_period_offset_from_target == 0:
+                raise RegistryValidationError(f"relation {self.id!r} source_period_offset_from_target must be non-zero")
         return self
 
 

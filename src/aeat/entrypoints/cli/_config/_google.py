@@ -553,6 +553,8 @@ def google_sync_push(
     except (GoogleAuthError, StorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
+    resolved_root_folder_id = getattr(provider, "root_folder_id", "")
+
     repository = SecureObjectRepository()
     pushed_by_ns: dict[str, int] = {}
     skipped_by_ns: dict[str, int] = {}
@@ -667,6 +669,11 @@ def google_sync_calc_export(
     year: int = typer.Option(
         ..., "--year", help=tr("cli.config.google.sync.calc.export.year_help"), min=2000, max=2099
     ),
+    prefill_relations: bool = typer.Option(
+        False,
+        "--prefill-relations/--no-prefill-relations",
+        help=tr("cli.config.google.sync.calc.export.prefill_relations_help"),
+    ),
     profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Export the registry calculation surface for a modelo + period to a real
@@ -676,7 +683,18 @@ def google_sync_calc_export(
     per-casilla ROUND-wrapped Decimal parity), Procedencia (audit trail),
     Tarifas (parameter + relation mirrors), and Guía (engine version +
     registry SHA stamps the pull adapter validates against).
+
+    When `--prefill-relations` is set, the engine consults the local
+    `CalculationObservationRepository` for prior filings of the
+    relations' source modelos, pre-resolves the relation values via
+    `resolve_relations_from_local_store`, and stamps each prefilled
+    Tarifas cell with provenance metadata (source modelo + filing year
+    + periods + resolution timestamp). Without prior filings in the
+    local store the flag is a no-op and the workbook ships with blank
+    relation cells the operator fills by hand.
     """
+
+    from ....application.calculations import resolve_relations_from_local_store
 
     try:
         active = resolve_active_profile(profile)
@@ -689,11 +707,18 @@ def google_sync_calc_export(
         raise CliRefusedBoundaryError(str(exc)) from exc
 
     snapshot = _load_snapshot(modelo, period, year)
-    plan = build_export_plan(
-        snapshot,
-        operator_inputs=OperatorInputs(),
-        relation_values=RelationValues(),
-    )
+    if prefill_relations:
+        plan = build_export_plan(
+            snapshot,
+            operator_inputs=OperatorInputs(),
+            relation_resolver=resolve_relations_from_local_store,
+        )
+    else:
+        plan = build_export_plan(
+            snapshot,
+            operator_inputs=OperatorInputs(),
+            relation_values=RelationValues(),
+        )
 
     try:
         result: CalcSheetsApplyResult = apply_export_plan(
@@ -773,7 +798,7 @@ def google_sync_calc_verify(
     `inconclusive` in that case.
     """
 
-    from decimal import Decimal as _D
+    from decimal import Decimal
 
     from ....application.storage.calc_sheets._parity_harness import (
         OperatorInputScenario,
@@ -797,10 +822,10 @@ def google_sync_calc_verify(
     else:
         raw = json.loads(scenario_path.read_text(encoding="utf-8"))
 
-        def _to_decimal_map(node: object) -> dict[str, _D]:
+        def _to_decimal_map(node: object) -> dict[str, Decimal]:
             if not isinstance(node, dict):
                 return {}
-            return {str(k): _D(str(v)) for k, v in node.items()}
+            return {str(k): Decimal(str(v)) for k, v in node.items()}
 
         scenario = OperatorInputScenario(
             inputs_by_number=_to_decimal_map(raw.get("inputs_by_number")),

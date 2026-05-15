@@ -523,28 +523,26 @@ class EncryptedBlobStore:
     @staticmethod
     def _atomic_write_bytes(target: Path, payload: bytes) -> None:
         target.parent.mkdir(parents=True, exist_ok=True)
-        # Capture the tempfile path BEFORE the ``with`` so cleanup works
-        # even when context entry raises (rare but possible on some
-        # filesystems / antivirus hooks). NamedTemporaryFile itself
-        # raising means no file was created; the ``except OSError``
-        # below re-raises cleanly.
-        handle = tempfile.NamedTemporaryFile(
-            mode="wb",
-            dir=target.parent,
-            prefix=f"{target.stem}.",
-            suffix=".tmp",
-            delete=False,
-        )
-        tmp_path = Path(handle.name)
+        # NamedTemporaryFile raising means no file was created; the
+        # ``except OSError`` below re-raises cleanly.
+        tmp_path: Path | None = None
         try:
-            with handle:
+            with tempfile.NamedTemporaryFile(
+                mode="wb",
+                dir=target.parent,
+                prefix=f"{target.stem}.",
+                suffix=".tmp",
+                delete=False,
+            ) as handle:
+                tmp_path = Path(handle.name)
                 handle.write(payload)
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(tmp_path, target)
             fsync_parent_dir(target)
         except OSError:
-            tmp_path.unlink(missing_ok=True)
+            if tmp_path is not None:
+                tmp_path.unlink(missing_ok=True)
             _log.error(
                 "blob_store: atomic write failed target=%s",
                 target,

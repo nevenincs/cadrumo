@@ -329,20 +329,19 @@ def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
     resolved = target.resolve()
     resolved.parent.mkdir(parents=True, exist_ok=True)
     payload = manifest.model_dump_json()
-    # Capture tmp_path BEFORE the ``with`` so cleanup works when
-    # context entry raises. NamedTemporaryFile raising means no file
-    # was created; the outer except re-raises cleanly.
-    handle = tempfile.NamedTemporaryFile(
-        mode="w",
-        encoding="utf-8",
-        dir=resolved.parent,
-        prefix=f"{resolved.stem}.",
-        suffix=".tmp",
-        delete=False,
-    )
-    tmp_path = Path(handle.name)
+    # NamedTemporaryFile raising means no file was created; the outer
+    # except re-raises cleanly.
+    tmp_path: Path | None = None
     try:
-        with handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=resolved.parent,
+            prefix=f"{resolved.stem}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
             handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
@@ -352,7 +351,8 @@ def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
         fsync_parent_dir(resolved)
         _logger.debug("save_corpus_manifest: wrote manifest to %s", resolved)
     except OSError:
-        tmp_path.unlink(missing_ok=True)
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
         _logger.error("save_corpus_manifest: failed to write manifest to %s", resolved, exc_info=True)
         raise
 
