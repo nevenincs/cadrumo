@@ -398,9 +398,14 @@ class Settings(BaseSettings):
     )
 
     # ── Live tests ──────────────────────────────────────────────────────────
-    aeat_live_tests_enabled: bool = Field(
-        default=False,
-        description="Opt-in flag to run @pytest.mark.live_read tests against real external services",
+    # Typed as ``str`` (not ``bool``) so the strict-match safety property is
+    # preserved: only the literal "1" enables live reads. Pydantic's bool
+    # coercion would accept "true"/"yes"/"on" — a wider opt-in surface than
+    # the kill-switch intent allows. The AeatAccessGate consumer checks
+    # ``settings.aeat_live_tests_enabled == "1"`` rather than truth-testing.
+    aeat_live_tests_enabled: str = Field(
+        default="",
+        description="Opt-in flag (set to '1') to run @pytest.mark.live_read tests against real external services",
     )
 
     # ── Diagnostic logging ──────────────────────────────────────────────────

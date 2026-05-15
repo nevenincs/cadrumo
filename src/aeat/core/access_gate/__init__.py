@@ -89,20 +89,23 @@ class AeatAccessGate:
     settings: Settings
 
     def require_live_read(self) -> None:
-        """Refuse live AEAT reads when the env-var precondition is off.
+        """Refuse live AEAT reads when the Settings precondition is off.
 
-        Checks ``AEAT_LIVE_TESTS_ENABLED`` directly against
-        ``os.environ`` rather than via :class:`aeat.core.config.Settings`,
-        matching the per-test
-        ``if os.environ[...] != "1": pytest.skip(...)`` sites.
+        Routes the check through :class:`aeat.core.config.Settings`
+        (specifically the ``aeat_live_tests_enabled: bool`` field) so
+        every config read in the codebase flows through a single
+        validated surface — no direct ``os.environ.get`` access for
+        AEAT-prefixed variables.
 
         Raises:
             :exc:`aeat.core.access_gate._errors.AeatLiveReadNotEnabledError`:
-                When ``AEAT_LIVE_TESTS_ENABLED`` is not exactly ``"1"``.
+                When ``Settings.aeat_live_tests_enabled`` is not True.
         """
-        value = os.environ.get(_LIVE_TESTS_ENV)
-        if value != "1":
-            raise AeatLiveReadNotEnabledError(f"live AEAT reads require {_LIVE_TESTS_ENV}=1; current value: {value!r}")
+        if self.settings.aeat_live_tests_enabled != "1":
+            raise AeatLiveReadNotEnabledError(
+                f"live AEAT reads require {_LIVE_TESTS_ENV}=1; current value: "
+                f"{self.settings.aeat_live_tests_enabled!r}"
+            )
 
     def require_live_write(self) -> None:
         """Always refuse live AEAT writes.
@@ -118,14 +121,21 @@ class AeatAccessGate:
         raise LiveSubmitForbiddenError()
 
     def snapshot_env(self) -> AeatGateEnvSnapshot:
-        """Return a frozen snapshot of the gate environment variables.
+        """Return a frozen snapshot of the gate-relevant variables.
+
+        The AEAT-prefixed variable is read from the validated Settings
+        surface (single config-read invariant). ``PYTEST_CURRENT_TEST``
+        is pytest infrastructure, set by the pytest runner itself for
+        each test; it is not AEAT configuration and has no Settings
+        field, so it is read directly from ``os.environ`` as the only
+        legitimate exception in this surface.
 
         Returns:
             A :class:`AeatGateEnvSnapshot` capturing the current
-            ``os.environ`` values for the gate-relevant variables.
+            gate-relevant variables.
         """
         return AeatGateEnvSnapshot(
-            aeat_live_tests_enabled=os.environ.get(_LIVE_TESTS_ENV, ""),
+            aeat_live_tests_enabled=self.settings.aeat_live_tests_enabled,
             pytest_current_test=os.environ.get(_PYTEST_CURRENT_TEST_ENV, ""),
         )
 

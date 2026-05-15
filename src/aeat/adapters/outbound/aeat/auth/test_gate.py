@@ -36,12 +36,16 @@ def test_snapshot_env_reports_present_values(monkeypatch: pytest.MonkeyPatch) ->
     assert snapshot.pytest_current_test == ""
 
 
-def test_snapshot_env_reports_absent_vars_as_empty(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
+def test_snapshot_env_reflects_settings_field_value(monkeypatch: pytest.MonkeyPatch) -> None:
+    # snapshot_env reports `settings.aeat_live_tests_enabled` (Settings
+    # surface) and `os.environ[PYTEST_CURRENT_TEST]` (pytest infrastructure
+    # only — not AEAT config, no Settings mirror). Settings sources both
+    # os.environ AND env/.env, so the snapshot captures whichever wins
+    # under Pydantic-settings precedence, not the raw shell state.
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
     settings = _fresh_settings(monkeypatch)
     snapshot = AeatAccessGate(settings).snapshot_env()
-    assert snapshot.aeat_live_tests_enabled == ""
+    assert snapshot.aeat_live_tests_enabled == settings.aeat_live_tests_enabled
     assert snapshot.pytest_current_test == ""
 
 
