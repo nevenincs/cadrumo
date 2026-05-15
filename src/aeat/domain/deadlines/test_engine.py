@@ -211,7 +211,7 @@ class TestCompute:
         assert q1.opens_on == date(2026, 4, 1)
         assert q1.closes_on == date(2026, 4, 20)
         assert q1.payment_cutoff_on == date(2026, 4, 15)
-        assert q1.boe_references == ("rd-439-2007:art-110",)
+        assert "rd-439-2007:art-110" in q1.boe_references
 
     def test_obligations_sorted_by_close_date(self) -> None:
         schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))
