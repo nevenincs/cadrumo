@@ -100,6 +100,7 @@ class ModeloBindingRow(BaseModel):
     aggregation: Mapping[str, object] | None
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
+    borrador_capable: bool = False
 
 
 class ModeloBindingsReport(BaseModel):
@@ -254,6 +255,7 @@ class RegistryQueryService:
                 aggregation=_public_mapping(binding.aggregation) if binding.aggregation is not None else None,
                 legal_refs=tuple(str(ref) for ref in binding.legal_refs),
                 source_refs=tuple(str(ref) for ref in binding.source_refs),
+                borrador_capable=binding.aeat_prefilled is True,
             )
             for binding in snapshot.revision.bindings
         )
@@ -282,6 +284,7 @@ class RegistryQueryService:
                 aggregation=_public_mapping(binding.aggregation) if binding.aggregation is not None else None,
                 legal_refs=tuple(str(ref) for ref in binding.legal_refs),
                 source_refs=tuple(str(ref) for ref in binding.source_refs),
+                borrador_capable=binding.aeat_prefilled is True,
             )
             for binding in revision.bindings
         )
