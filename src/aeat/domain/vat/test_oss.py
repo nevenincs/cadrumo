@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import cast
 
 import pytest
 
@@ -56,8 +57,9 @@ def test_regime_periodicity_quarterly_for_exterior_and_union_monthly_for_ioss() 
 
 
 def test_regime_periodicity_mapping_is_immutable() -> None:
+    mutable_view = cast("dict[OssIossRegime, RegimePeriodicity]", REGIME_PERIODICITY)
     with pytest.raises(TypeError, match=r"item assignment|MappingProxyType|does not support"):
-        REGIME_PERIODICITY[OssIossRegime.EXTERNAL_SCHEME] = RegimePeriodicity.MONTHLY  # ty: ignore[invalid-assignment]
+        mutable_view[OssIossRegime.EXTERNAL_SCHEME] = RegimePeriodicity.MONTHLY
 
 
 def test_regime_allows_deduction_is_false_within_modelo_369_for_every_regime() -> None:

@@ -51,20 +51,20 @@ test files exist to construct invalid pydantic input or bypass lint
 on test helpers. Rewrite using `pytest.raises`, named functions in
 place of lambdas, or proper pydantic error-construction patterns.
 
-- [ ] `P03.S10` - rewrite ty-ignore in master-key kdf-params test; `src/aeat/adapters/persistence/storage/master_key/test_kdf_params.py`.
-- [ ] `P03.S11` - rewrite ty-ignore in bucket-manifest test; `src/aeat/adapters/persistence/storage/bucket/test_manifest.py`.
-- [ ] `P03.S12` - rewrite ty-ignore in bucket-export-header test; `src/aeat/adapters/persistence/storage/bucket/test_export_header.py`.
-- [ ] `P03.S13` - rewrite ty-ignore in master-key recovery-record test; `src/aeat/adapters/persistence/storage/master_key/test_recovery_record.py`.
-- [ ] `P03.S14` - rewrite ty-ignore in workflow bucket-pointer test; `src/aeat/application/workflow/test_bucket_pointer.py`.
-- [ ] `P03.S15` - rewrite ty-ignore in aggregation oss-ioss test; `src/aeat/application/aggregation/test_oss_ioss.py`.
-- [ ] `P03.S16` - rewrite ty-ignore in vat oss test; `src/aeat/domain/vat/test_oss.py`.
-- [ ] `P03.S17` - rewrite ty-ignore in pdf label-regex test; `src/aeat/adapters/inbound/pdf/test_label_regex.py`.
-- [ ] `P03.S18` - rewrite ty-ignore in browser evasion test; `src/aeat/adapters/outbound/aeat/browser/test_evasion.py`.
-- [ ] `P03.S19` - replace lambda noqa in aggregation grouping test; `src/aeat/application/aggregation/test_grouping.py`.
-- [ ] `P03.S20` - replace setattr noqa in transactions import test; `src/aeat/application/transactions/test_import.py`.
-- [ ] `P03.S21` - replace setattr noqa in auth sessions-storage test; `src/aeat/application/auth/test_sessions_storage_state_paths.py`.
-- [ ] `P03.S22` - replace setattr noqa in modelos external-evidence test; `src/aeat/domain/modelos/test_external_evidence.py`.
-- [ ] `P03.S23` - replace setattr noqa in sanitizer records test; `src/aeat/adapters/inbound/sanitizer/test_records.py`.
+- [x] `P03.S10` - rewrite ty-ignore in master-key kdf-params test; `src/aeat/adapters/persistence/storage/master_key/test_kdf_params.py`.
+- [x] `P03.S11` - rewrite ty-ignore in bucket-manifest test; `src/aeat/adapters/persistence/storage/bucket/test_manifest.py`.
+- [x] `P03.S12` - rewrite ty-ignore in bucket-export-header test; `src/aeat/adapters/persistence/storage/bucket/test_export_header.py`.
+- [x] `P03.S13` - rewrite ty-ignore in master-key recovery-record test; `src/aeat/adapters/persistence/storage/master_key/test_recovery_record.py`.
+- [x] `P03.S14` - rewrite ty-ignore in workflow bucket-pointer test; `src/aeat/application/workflow/test_bucket_pointer.py`.
+- [x] `P03.S15` - rewrite ty-ignore in aggregation oss-ioss test; `src/aeat/application/aggregation/test_oss_ioss.py`.
+- [x] `P03.S16` - rewrite ty-ignore in vat oss test; `src/aeat/domain/vat/test_oss.py`.
+- [x] `P03.S17` - rewrite ty-ignore in pdf label-regex test; `src/aeat/adapters/inbound/pdf/test_label_regex.py`.
+- [x] `P03.S18` - rewrite ty-ignore in browser evasion test; `src/aeat/adapters/outbound/aeat/browser/test_evasion.py`.
+- [x] `P03.S19` - replace lambda noqa in aggregation grouping test; `src/aeat/application/aggregation/test_grouping.py`.
+- [x] `P03.S20` - replace setattr noqa in transactions import test; `src/aeat/application/transactions/test_import.py`.
+- [x] `P03.S21` - replace setattr noqa in auth sessions-storage test; `src/aeat/application/auth/test_sessions_storage_state_paths.py`.
+- [x] `P03.S22` - replace setattr noqa in modelos external-evidence test; `src/aeat/domain/modelos/test_external_evidence.py`.
+- [x] `P03.S23` - replace setattr noqa in sanitizer records test; `src/aeat/adapters/inbound/sanitizer/test_records.py`.
 
 ### Phase `P04` - domain/ suppression eradication
 

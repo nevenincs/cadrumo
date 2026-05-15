@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
 
 import pytest
 
@@ -22,9 +21,16 @@ class _Obs:
     name: str | None
 
 
-_NAME: Final = lambda obs: obs.name  # noqa: E731
-_GROUP_KEY: Final = lambda obs: (obs.source_kind, obs.nif, obs.kind)  # noqa: E731
-_IDENTITY_KEY: Final = lambda obs: (obs.source_kind, obs.nif)  # noqa: E731
+def _NAME(obs: _Obs) -> str | None:
+    return obs.name
+
+
+def _GROUP_KEY(obs: _Obs) -> tuple[str, str, str]:
+    return (obs.source_kind, obs.nif, obs.kind)
+
+
+def _IDENTITY_KEY(obs: _Obs) -> tuple[str, str]:
+    return (obs.source_kind, obs.nif)
 
 
 def test_group_and_collect_names_buckets_by_composite_key() -> None:

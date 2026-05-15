@@ -100,5 +100,6 @@ def test_storage_state_paths_returns_strict_frozen_model(tmp_path: Path) -> None
 
     result = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
 
+    attr = "storage_state"
     with pytest.raises(Exception, match="frozen"):
-        setattr(result, "storage_state", tmp_path / "other.json")  # noqa: B010
+        setattr(result, attr, tmp_path / "other.json")
