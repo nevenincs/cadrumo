@@ -1,0 +1,330 @@
+"""Reassemble pull-side `RowSetEdit` records into typed observations.
+
+The pull adapter captures Detalle-tab detail rows as a flat tuple of
+``RowSetCellEdit(binding, row_index, value)`` records grouped by the
+row-set's grouping key. To consume those rows in the local-store
+ingest path the codebase needs typed observations of the matching
+domain shape (``WithholdingObservation`` for modelo 190 / 193,
+``ForeignAssetObservation`` for modelo 720, etc.).
+
+The assemblers in this module bridge the two: they walk a row-set's
+cells, group them by ``row_index``, look up each cell's binding in
+the snapshot's revision to derive its ``row_field`` selector key,
+and construct the matching observation type from the per-row field
+mapping plus a small set of synthesized defaults (``source_id``,
+``transaction_date``) that the Detalle layout doesn't carry.
+
+Each assembler is self-contained per source kind so the per-modelo
+field mapping is explicit at the call site rather than threaded
+through a generic abstraction. Adding a new detail-record source
+adds a new assembler here; nothing else in the calling code has
+to change.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterable, Mapping
+from datetime import date
+from decimal import Decimal, InvalidOperation
+from typing import Protocol
+
+from pydantic import ValidationError
+
+from ...domain.calculations.registry._bindings import (
+    AtributionMemberObservation,
+    ForeignAssetObservation,
+    RefundOperationObservation,
+    RelatedPartyOperationObservation,
+    WithholdingObservation,
+)
+from ...domain.calculations.registry._errors import RegistryValidationError
+from ...domain.calculations.registry._schema import ModeloRevision
+
+__all__ = [
+    "assemble_atribucion_observations",
+    "assemble_foreign_asset_observations",
+    "assemble_refund_observations",
+    "assemble_related_party_observations",
+    "assemble_withholding_observations",
+]
+
+
+class _RowCellShape(Protocol):
+    """Structural protocol for the pull adapter's `RowSetCellEdit`.
+
+    Kept here as a Protocol so the assembler module never imports the
+    outbound adapter package — preserving the application→adapter
+    direction of the hexagonal contract.
+    """
+
+    binding: str
+    row_index: int
+    value: Decimal | str | None
+
+
+def _cells_by_row(cells: Iterable[_RowCellShape]) -> dict[int, dict[str, Decimal | str | None]]:
+    """Group cell edits by row_index → {binding_id: value}.
+
+    Accepts any object with ``binding`` / ``row_index`` / ``value``
+    attributes (including the pull adapter's frozen ``RowSetCellEdit``).
+    """
+
+    grouped: dict[int, dict[str, Decimal | str | None]] = {}
+    for cell in cells:
+        binding = str(cell.binding)
+        row_index_raw = cell.row_index
+        if not isinstance(row_index_raw, int) or row_index_raw < 1:
+            raise RegistryValidationError(f"row-set cell row_index must be a positive int, got {row_index_raw!r}")
+        value = cell.value
+        grouped.setdefault(row_index_raw, {})[binding] = value
+    return grouped
+
+
+def _row_field_lookup(revision: ModeloRevision) -> Mapping[str, str]:
+    """Return ``binding_id → selector.row_field`` for every row-producer binding."""
+
+    lookup: dict[str, str] = {}
+    for binding in revision.bindings:
+        if (binding.aggregation or {}).get("op") != "rows":
+            continue
+        row_field = binding.selector.get("row_field")
+        if isinstance(row_field, str) and row_field:
+            lookup[binding.id] = row_field
+    return lookup
+
+
+def _coerce_decimal(value: Decimal | str | None, *, default: Decimal) -> Decimal:
+    if value is None:
+        return default
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, str):
+        try:
+            return Decimal(value)
+        except (InvalidOperation, ValueError):
+            return default
+    return default
+
+
+def _coerce_text(value: Decimal | str | None, *, default: str = "") -> str:
+    if value is None:
+        return default
+    if isinstance(value, Decimal):
+        return format(value, "f")
+    return str(value)
+
+
+def _coerce_iso_date(value: Decimal | str | None, *, default: date) -> date:
+    if value is None or value == "":
+        return default
+    if isinstance(value, str):
+        try:
+            return date.fromisoformat(value)
+        except ValueError:
+            return default
+    return default
+
+
+def assemble_withholding_observations(
+    cells: Iterable[_RowCellShape],
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+) -> tuple[WithholdingObservation, ...]:
+    """Reassemble per-perceptor withholding observations from row-set cells.
+
+    Synthesised fields (not carried by the Detalle tab):
+      * ``source_id`` — derived from the row index for traceability.
+      * ``transaction_date`` — defaults to the filing-year end since
+        modelo 190 / 193 are annual summaries.
+      * ``country_code`` — defaults to ``ES`` per the AEAT diseño de
+        registro convention for unspecified perceptors.
+    """
+
+    by_row = _cells_by_row(cells)
+    row_field = _row_field_lookup(revision)
+    default_date = date(filing_year, 12, 31)
+
+    observations: list[WithholdingObservation] = []
+    for row_index in sorted(by_row):
+        row = by_row[row_index]
+        fields: dict[str, Decimal | str] = {}
+        for binding_id, value in row.items():
+            field = row_field.get(binding_id)
+            if field is None:
+                continue
+            fields[field] = value if value is not None else ""
+
+        try:
+            observations.append(
+                WithholdingObservation(
+                    source_id=f"detalle:per_perceptor_clave:row-{row_index}",
+                    perceptor_tax_id=_coerce_text(fields.get("perceptor_tax_id")),
+                    perceptor_legal_name=_coerce_text(fields.get("perceptor_legal_name")),
+                    country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
+                    transaction_date=default_date,
+                    clave=_coerce_text(fields.get("clave"), default="A") or "A",
+                    subclave=_coerce_text(fields.get("subclave")),
+                    percibido_dinerario=_coerce_decimal(fields.get("percibido_dinerario"), default=Decimal("0")),
+                    percibido_especie=_coerce_decimal(fields.get("percibido_especie"), default=Decimal("0")),
+                    retencion_practicada=_coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
+                    ingreso_a_cuenta=_coerce_decimal(fields.get("ingreso_a_cuenta"), default=Decimal("0")),
+                )
+            )
+        except ValidationError as exc:
+            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+    return tuple(observations)
+
+
+def assemble_related_party_observations(
+    cells: Iterable[_RowCellShape],
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+) -> tuple[RelatedPartyOperationObservation, ...]:
+    """Reassemble per-operation related-party observations from row-set cells."""
+
+    by_row = _cells_by_row(cells)
+    row_field = _row_field_lookup(revision)
+    default_date = date(filing_year, 12, 31)
+
+    observations: list[RelatedPartyOperationObservation] = []
+    for row_index in sorted(by_row):
+        row = by_row[row_index]
+        fields: dict[str, Decimal | str] = {}
+        for binding_id, value in row.items():
+            field = row_field.get(binding_id)
+            if field is None:
+                continue
+            fields[field] = value if value is not None else ""
+        try:
+            observations.append(
+                RelatedPartyOperationObservation(
+                    source_id=f"detalle:per_related_party_operation:row-{row_index}",
+                    counterparty_tax_id=_coerce_text(fields.get("counterparty_tax_id")),
+                    counterparty_legal_name=_coerce_text(fields.get("counterparty_legal_name")),
+                    country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
+                    transaction_date=default_date,
+                    operation_kind_code=_coerce_text(fields.get("operation_kind_code"), default="01") or "01",
+                    transfer_pricing_method_code=_coerce_text(fields.get("transfer_pricing_method_code")),
+                    amount=_coerce_decimal(fields.get("amount"), default=Decimal("0")),
+                )
+            )
+        except ValidationError as exc:
+            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+    return tuple(observations)
+
+
+def assemble_foreign_asset_observations(
+    cells: Iterable[_RowCellShape],
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+) -> tuple[ForeignAssetObservation, ...]:
+    """Reassemble per-asset observations from row-set cells (modelo 720)."""
+
+    by_row = _cells_by_row(cells)
+    row_field = _row_field_lookup(revision)
+    default_acquisition_date = date(filing_year, 12, 31)
+
+    observations: list[ForeignAssetObservation] = []
+    for row_index in sorted(by_row):
+        row = by_row[row_index]
+        fields: dict[str, Decimal | str] = {}
+        for binding_id, value in row.items():
+            field = row_field.get(binding_id)
+            if field is None:
+                continue
+            fields[field] = value if value is not None else ""
+        try:
+            observations.append(
+                ForeignAssetObservation(
+                    source_id=f"detalle:per_foreign_asset:row-{row_index}",
+                    asset_class_code=_coerce_text(fields.get("asset_class_code"), default="C") or "C",
+                    country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
+                    currency_code=_coerce_text(fields.get("currency_code"), default="EUR") or "EUR",
+                    asset_identifier=_coerce_text(fields.get("asset_identifier")),
+                    acquisition_date=_coerce_iso_date(fields.get("acquisition_date"), default=default_acquisition_date),
+                    valuation_amount=_coerce_decimal(fields.get("valuation_amount"), default=Decimal("0")),
+                )
+            )
+        except ValidationError as exc:
+            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+    return tuple(observations)
+
+
+def assemble_atribucion_observations(
+    cells: Iterable[_RowCellShape],
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+) -> tuple[AtributionMemberObservation, ...]:
+    """Reassemble per-member atribución observations from row-set cells (modelo 184)."""
+
+    by_row = _cells_by_row(cells)
+    row_field = _row_field_lookup(revision)
+    default_date = date(filing_year, 12, 31)
+
+    observations: list[AtributionMemberObservation] = []
+    for row_index in sorted(by_row):
+        row = by_row[row_index]
+        fields: dict[str, Decimal | str] = {}
+        for binding_id, value in row.items():
+            field = row_field.get(binding_id)
+            if field is None:
+                continue
+            fields[field] = value if value is not None else ""
+        try:
+            observations.append(
+                AtributionMemberObservation(
+                    source_id=f"detalle:per_atribucion_member:row-{row_index}",
+                    member_tax_id=_coerce_text(fields.get("member_tax_id")),
+                    member_legal_name=_coerce_text(fields.get("member_legal_name")),
+                    country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
+                    transaction_date=default_date,
+                    share_percentage=_coerce_decimal(fields.get("share_percentage"), default=Decimal("0")),
+                    base_imponible_assigned=_coerce_decimal(
+                        fields.get("base_imponible_assigned"), default=Decimal("0")
+                    ),
+                )
+            )
+        except ValidationError as exc:
+            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+    return tuple(observations)
+
+
+def assemble_refund_observations(
+    cells: Iterable[_RowCellShape],
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+) -> tuple[RefundOperationObservation, ...]:
+    """Reassemble per-operation refund observations from row-set cells (modelo 360)."""
+
+    by_row = _cells_by_row(cells)
+    row_field = _row_field_lookup(revision)
+    default_operation_date = date(filing_year, 12, 31)
+
+    observations: list[RefundOperationObservation] = []
+    for row_index in sorted(by_row):
+        row = by_row[row_index]
+        fields: dict[str, Decimal | str] = {}
+        for binding_id, value in row.items():
+            field = row_field.get(binding_id)
+            if field is None:
+                continue
+            fields[field] = value if value is not None else ""
+        try:
+            observations.append(
+                RefundOperationObservation(
+                    source_id=f"detalle:per_refund_operation:row-{row_index}",
+                    member_state_code=_coerce_text(fields.get("member_state_code"), default="ES") or "ES",
+                    operation_kind_code=_coerce_text(fields.get("operation_kind_code"), default="01") or "01",
+                    operation_date=_coerce_iso_date(fields.get("operation_date"), default=default_operation_date),
+                    supplier_tax_id=_coerce_text(fields.get("supplier_tax_id"), default="UNKNOWN") or "UNKNOWN",
+                    refund_amount=_coerce_decimal(fields.get("refund_amount"), default=Decimal("0")),
+                )
+            )
+        except ValidationError as exc:
+            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+    return tuple(observations)
