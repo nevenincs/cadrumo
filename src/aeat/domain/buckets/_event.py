@@ -129,9 +129,7 @@ class BucketEventType(StrEnum):
 
     # reverse-merge corrections
     LEDGER_TRANSACTION_CORRECTION_APPLIED = "ledger.transaction.correction.applied"
-    LEDGER_PURCHASE_INVOICE_EVIDENCE_CORRECTION_APPLIED = (
-        "ledger.purchase_invoice_evidence.correction.applied"
-    )
+    LEDGER_PURCHASE_INVOICE_EVIDENCE_CORRECTION_APPLIED = "ledger.purchase_invoice_evidence.correction.applied"
     LEDGER_PAYABLE_INVOICE_CORRECTION_APPLIED = "ledger.payable_invoice.correction.applied"
     LEDGER_COLLECTIBLE_INVOICE_CORRECTION_APPLIED = "ledger.collectible_invoice.correction.applied"
     LEDGER_RENTAL_INCOME_CORRECTION_APPLIED = "ledger.rental_income.correction.applied"
@@ -283,7 +281,7 @@ class BucketEventHistoryCatalogue(BaseModel):
     def values(self) -> Any:
         return self.events.values()
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self):
         return iter(self.events.values())
 
     def __len__(self) -> int:

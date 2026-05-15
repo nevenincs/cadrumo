@@ -50,8 +50,8 @@ def test_open_round_trip_exposes_kek_and_dek() -> None:
 
 def test_close_zeroises_kek_and_dek_buffers() -> None:
     session = _open_session()
-    kek_buffer = session._kek_buffer  # type: ignore[attr-defined]
-    dek_buffer = session._dek_buffer  # type: ignore[attr-defined]
+    kek_buffer = session._kek_buffer
+    dek_buffer = session._dek_buffer
 
     session.close()
 
@@ -85,8 +85,8 @@ def test_two_sessions_do_not_alias_buffers() -> None:
     session_a = _open_session(bucket_id="bucket-a", kek=b"a" * 32, dek=b"A" * 32)
     session_b = _open_session(bucket_id="bucket-b", kek=b"b" * 32, dek=b"B" * 32)
 
-    buffer_a = session_a._kek_buffer  # type: ignore[attr-defined]
-    buffer_b = session_b._kek_buffer  # type: ignore[attr-defined]
+    buffer_a = session_a._kek_buffer
+    buffer_b = session_b._kek_buffer
     assert id(buffer_a) != id(buffer_b)
 
     # Mutating one buffer does not bleed into the other.

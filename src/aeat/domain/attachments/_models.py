@@ -298,7 +298,7 @@ class AttachmentCatalogue(BaseModel):
         """
         return cls.model_validate(tuple(attachments))
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self):
         """Iterate over catalogue attachments."""
         return iter(self.attachments.values())
 

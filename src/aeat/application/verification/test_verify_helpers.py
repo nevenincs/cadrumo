@@ -291,7 +291,7 @@ def test_compute_coverage_is_monotonic_in_provided_set() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _classified(*causes: DiscrepancyCause) -> tuple:  # type: ignore[type-arg]
+def _classified(*causes: DiscrepancyCause) -> tuple:
     from ._schema import ClassifiedDiscrepancy
 
     return tuple(

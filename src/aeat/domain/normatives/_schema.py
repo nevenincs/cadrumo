@@ -229,7 +229,7 @@ class NormativeCatalogue(_NormativeStrictMutable):
                 )
         return self
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self):
         """Iterate over every loaded :class:`NormativeReference`."""
         return iter(self.references.values())
 

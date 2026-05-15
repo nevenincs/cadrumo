@@ -32,7 +32,7 @@ def test_profile_record_is_strict_frozen_and_tombstones_live_root() -> None:
     assert profile.status is UserProfileStatus.ACTIVE
 
     with pytest.raises(ValidationError, match="frozen_instance"):
-        profile.display_name = "Changed"  # type: ignore[misc]
+        profile.display_name = "Changed"
 
 
 def test_profile_record_rejects_invalid_lifecycle_state() -> None:

@@ -154,7 +154,7 @@ def test_summary_is_frozen() -> None:
     draft = _make_draft(status=FilingDraftStatus.VALIDATED)
     summary = summarise_calculation(draft)
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        summary.blocker_count = 99  # type: ignore[misc]
+        summary.blocker_count = 99
 
 
 def test_calculated_at_defaults_to_draft_updated_at() -> None:

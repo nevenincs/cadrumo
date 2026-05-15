@@ -129,9 +129,9 @@ class PerModeloAggregationContract(BaseModel):
 
     @field_validator("providers")
     @classmethod
-    def _providers_are_unique(cls, value: tuple[PerModeloAggregationProviderContract, ...]) -> tuple[
-        PerModeloAggregationProviderContract, ...
-    ]:
+    def _providers_are_unique(
+        cls, value: tuple[PerModeloAggregationProviderContract, ...]
+    ) -> tuple[PerModeloAggregationProviderContract, ...]:
         providers = tuple(provider.provider for provider in value)
         if len(providers) != len(set(providers)):
             raise ValueError("per-modelo aggregation providers must be unique")
@@ -175,7 +175,7 @@ class PerModeloAggregationCommand(BaseModel):
             raise ValueError(f"observations for {names} cannot be supplied for modelo {self.modelo}")
         return self
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def provider(self) -> PerModeloAggregationProvider:
         """Return the provider family selected by ``modelo``."""

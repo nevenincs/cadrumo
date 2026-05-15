@@ -21,30 +21,28 @@ append-only friendly so concurrent agents do not corrupt previous rows.
 from __future__ import annotations
 
 import hashlib
-import json
 import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.config import Settings
 from ...core.errors import AeatError
 from ...domain.buckets import (
+    BucketEvent,
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
+    derive_bucket_event_id,
 )
 
 _PDF_EXTENSIONS = frozenset({".pdf"})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
 
-_DEFERRED_ADR_REF = (
-    "evidence-source-expansion (deferred; only PDF and image inputs are accepted)"
-)
+_DEFERRED_ADR_REF = "evidence-source-expansion (deferred; only PDF and image inputs are accepted)"
 
 
 class PurchaseInvoiceEvidenceInputError(AeatError):
@@ -165,9 +163,7 @@ def _build_evidence_event(
     actor: str,
     occurred_at: datetime,
     payload: dict[str, str],
-) -> object:
-    from ...domain.buckets._event import BucketEvent, derive_bucket_event_id
-
+) -> BucketEvent:
     return BucketEvent(
         event_id=derive_bucket_event_id(
             bucket_id=bucket_id,
@@ -207,8 +203,8 @@ def _emit_evidence_event(
         occurred_at=occurred_at,
         payload=payload,
     )
-    event_repository.save(append_bucket_event(event_repository.load(), event))  # type: ignore[arg-type]
-    return event.event_id  # type: ignore[attr-defined]
+    event_repository.save(append_bucket_event(event_repository.load(), event))
+    return event.event_id
 
 
 class PurchaseInvoiceEvidenceService:

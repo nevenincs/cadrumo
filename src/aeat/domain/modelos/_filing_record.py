@@ -279,7 +279,7 @@ class FilingRecordCatalogue(BaseModel):
     def values(self):
         return self.records.values()
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self):
         return iter(self.records.values())
 
     def __len__(self) -> int:

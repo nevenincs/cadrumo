@@ -343,7 +343,7 @@ def _evidence(**overrides: object) -> SiteHealthEvidence:
         "detected_markers": ("marker",),
     }
     base.update(overrides)
-    return SiteHealthEvidence(**base)  # type: ignore[arg-type]
+    return SiteHealthEvidence(**base)
 
 
 class TestSiteHealthModels:

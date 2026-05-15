@@ -78,7 +78,7 @@ def test_edit_clause_is_frozen() -> None:
 
     clause = EditClause(key="category", raw_value="software")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        clause.raw_value = "changed"  # type: ignore[misc]
+        clause.raw_value = "changed"
 
 
 # ---------------------------------------------------------------------
@@ -304,7 +304,7 @@ def test_ledger_spec_is_frozen() -> None:
 
     spec = LedgerEditSpec.from_strings([])
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        spec.category = "changed"  # type: ignore[misc]
+        spec.category = "changed"
 
 
 def test_ledger_spec_rejects_inconsistent_construction() -> None:

@@ -356,7 +356,7 @@ class VATCatalogue(_VatStrictMutable):
                 )
         return self
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self):
         """Iterate over every loaded :class:`VATRegulation`."""
         return iter(self.regulations.values())
 

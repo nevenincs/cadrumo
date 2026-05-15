@@ -274,7 +274,7 @@ class WorkUnitCatalogue(BaseModel):
             mapping[unit.work_unit_id] = unit
         return cls(work_units=mapping)
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self):
         """Iterate the loaded work units (not the keys)."""
         return iter(self.work_units.values())
 

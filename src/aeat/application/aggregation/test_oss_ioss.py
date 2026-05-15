@@ -124,7 +124,7 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
             unknown_axis="extra-value",  # ty: ignore[unknown-argument]
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        candidate.base_amount = Decimal("200")  # type: ignore[misc]
+        candidate.base_amount = Decimal("200")
 
 
 def test_candidate_rejects_negative_amounts() -> None:

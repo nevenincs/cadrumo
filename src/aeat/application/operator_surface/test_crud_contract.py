@@ -194,4 +194,4 @@ class TestImmutability:
             cli_path="aeat app ledger payable-invoice",
         )
         with pytest.raises(ValidationError):
-            contract.noun = "other"  # type: ignore[misc]
+            contract.noun = "other"

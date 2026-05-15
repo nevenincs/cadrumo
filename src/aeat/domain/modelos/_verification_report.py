@@ -198,7 +198,7 @@ class VerificationReportCatalogue(BaseModel):
     def values(self):
         return self.reports.values()
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self):
         return iter(self.reports.values())
 
     def __len__(self) -> int:

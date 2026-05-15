@@ -81,9 +81,7 @@ def test_active_036_work_unit_periods_resolve_from_committed_registry_revision()
         assert result is not None
         assert result.modelo == "036"
         assert result.event_kind is CensusModeloEventKind(period)
-        expected_event_kinds = tuple(
-            CensusModeloEventKind(kind) for kind in snapshot.revision.period_selector.periods
-        )
+        expected_event_kinds = tuple(CensusModeloEventKind(kind) for kind in snapshot.revision.period_selector.periods)
         assert result.event_kinds == expected_event_kinds
 
 
@@ -128,7 +126,7 @@ def test_census_foundation_command_accepts_active_036_event_kind() -> None:
     assert command.modelo == "036"
     assert command.event_kind is CensusModeloEventKind.ALTA
     with pytest.raises(ValidationError, match="frozen"):
-        command.modelo = "037"  # type: ignore[misc]
+        command.modelo = "037"
 
 
 def test_census_foundation_command_rejects_missing_event_for_036() -> None:
@@ -302,7 +300,7 @@ def test_census_foundation_log_fields_are_strict_and_immutable() -> None:
             }
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        log_fields.modelo = "037"  # type: ignore[misc]
+        log_fields.modelo = "037"
 
 
 def test_resolve_census_modelo_foundation_emits_structured_debug_log(

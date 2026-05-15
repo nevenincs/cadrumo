@@ -67,7 +67,7 @@ class TestAutonomoProfile:
     def test_frozen(self) -> None:
         profile = _profile()
         with pytest.raises(ValidationError, match=r"frozen"):
-            profile.tax_id = "Y9876543K"  # type: ignore[misc]
+            profile.tax_id = "Y9876543K"
 
     def test_strict_rejects_int_for_bool(self) -> None:
         with pytest.raises(ValidationError, match=r"valid boolean"):

@@ -334,7 +334,7 @@ class CalculationRevisionCatalogue(BaseModel):
         """Return every revision attached to one work unit."""
         return tuple(rev for rev in self.revisions.values() if rev.work_unit_id == work_unit_id)
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self):
         return iter(self.revisions.values())
 
     def __len__(self) -> int:
