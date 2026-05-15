@@ -554,6 +554,102 @@ work in the unstaged tree.
     - `pytest src/aeat/ -q` overall green (concurrent-agent pre-existing failures flagged but not fixed)
   - Acceptance gate: every check above passes; record the closure in `.vault/exec/2026-05-13-audits-resolution/`
 
+### Group G — ruff lint backlog closure (restore prek gate)
+
+Group F left `prek run --all-files` failing on ~85 pre-existing
+ruff diagnostics. Until they close, every commit needs
+`--no-verify`, which defeats the gate's purpose. Group G closes
+the lint backlog by partitioning the diagnostics into two
+buckets: structural patterns that warrant per-file-ignore
+declarations (false positives, idiomatic deferred imports, test-
+fixture synthetic secrets) and legitimate defects that need
+real fixes.
+
+Baseline at amendment time: 85 diagnostics under
+`uv run --no-sync ruff check src/`. Breakdown:
+
+- E402 (26): module-level imports placed mid-file as
+  circular-import workarounds inside package `__init__.py`s and
+  the registry error-registry merge points.
+- S603 (11): subprocess-without-shell-equals-true on legitimate
+  AEAT-CLI / subprocess invocations.
+- S105 (8): hardcoded-password-string on env-var NAME literals.
+- S108 (8): hardcoded-temp-file inside test fixtures.
+- SIM115 (6): open-file-with-context-handler real defects.
+- N811 (5): constant-imported-as-non-constant alias renames.
+- RUF001 / RUF003 (5): ambiguous-unicode in Spanish content.
+- N806 / N801 / N814 / N818 (7): naming convention strays.
+- RUF043 (3): pytest.raises without a `match=`.
+- E501 (2): line-too-long.
+- SIM117 (1): nested-with-statements.
+- S106 (2): hardcoded-password-func-arg in test fixtures.
+- S311 (1): non-cryptographic-random in PDF scrubbing.
+
+- G1 — Codify per-file-ignores for the structural / domain-
+  justified buckets in `pyproject.toml`
+  - Files owned: `pyproject.toml`
+  - For each of the following clusters, add a `[tool.ruff.lint.per-file-ignores]`
+    entry that excludes the rule against the precise file pattern.
+    Do NOT add a project-wide `ignore` entry unless the rule is
+    universally inappropriate.
+    - `E402` on `src/aeat/application/auth/__init__.py`,
+      `src/aeat/application/workflow/_models.py`,
+      `src/aeat/core/errors/__init__.py`,
+      `src/aeat/core/errors/_registry.py`,
+      `src/aeat/entrypoints/cli/__init__.py`,
+      `src/aeat/entrypoints/cli/_config/__init__.py`,
+      `src/aeat/domain/calculations/registry/_bindings.py`,
+      `src/aeat/domain/currency/test_service.py`,
+      `src/aeat/adapters/outbound/aeat/sede/test_groi_check.py` —
+      the deferred-import positions are deliberate; document via
+      the per-file-ignore comment.
+    - `S603` / `S105` / `S106` / `S108` test-fixture clusters —
+      extend existing patterns under `[tool.ruff.lint.per-file-ignores]`
+      to cover any new files surfaced post-restructure.
+    - `RUF001` / `RUF003` on locale source files
+      (`src/aeat/locales/*.yml`-driven Python carrying Spanish
+      strings) and on legal-text label parsing in
+      `src/aeat/adapters/inbound/pdf/_label_regex.py` — these are
+      Spanish-language string-content patterns, not bugs.
+    - `S311` on `src/aeat/adapters/inbound/pdf/_scrub.py` —
+      synthetic-replacement random is non-cryptographic by
+      design (scrubber is local-only, never used for keying).
+  - Acceptance gates:
+    - `uv run --no-sync ruff check src/ 2>&1 | grep -E "^E402|^S603|^S10[568]|^S311|^RUF00[13]"` returns nothing
+    - `uv run --no-sync ty check src/ 2>&1 | tail -3` still clean
+  - Does NOT: add a project-wide `ignore` entry; relax any
+    boundary-crossing security check
+
+- G2 — Mechanically fix the legitimate-defect bucket
+  - Files owned: every file flagged by SIM115, SIM117, RUF043,
+    N801, N806, N811, N814, N818, E501
+  - For each rule:
+    - `SIM115` → wrap `open(...)` calls in `with open(...) as f:`
+    - `SIM117` → collapse nested `with` into a single multi-context `with`
+    - `RUF043` → add a `match=` regex to `pytest.raises(...)`
+    - `N81x` / `N806` → rename aliases to match the constant /
+      function-naming convention; if the alias is a domain pattern
+      (e.g. `Translatable as tr`) use the existing project-wide
+      ignore in `pyproject.toml`
+    - `E501` → run `ruff format` on the offending file
+  - Acceptance gates:
+    - `uv run --no-sync ruff check src/ 2>&1 | tail -3` shows zero diagnostics
+    - `uv run --no-sync ty check src/ 2>&1 | tail -3` still clean
+    - `pytest src/aeat/ -q --collect-only 2>&1 | tail -3` collects without import errors
+  - Does NOT: introduce new `# noqa: <rule>` comments; per-line
+    noqa is only acceptable when documented in a 2-line code
+    comment explaining the domain reason
+
+- G3 — Restore prek gate; confirm green commit possible
+  - Files owned: none (verification only)
+  - Run:
+    - `uv run --no-sync ruff check src/` — zero diagnostics
+    - `uv run --no-sync prek run --all-files` — every hook passes
+    - A trivial test commit (touch a comment, commit, revert) lands
+      without `--no-verify`
+  - Acceptance gate: prek gate green; document closure in
+    `.vault/exec/2026-05-13-audits-resolution/`
+
 ## Off-limits worktree state
 
 Concurrent agents are working on the renta-pipeline and CLI-
