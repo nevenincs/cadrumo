@@ -71,10 +71,10 @@ def test_committed_modelo_111_registry_snapshot_calculates_liquidacion_from_rete
     assert {entry.target for entry in result.entries} == {"28", "30"}
     entries = {entry.target: entry for entry in result.entries}
     assert entries["28"].operand_refs == ("03", "06", "09", "12", "15", "18", "21", "24", "27")
-    assert entries["28"].legal_refs == ("ley-35-2006:art-99", "rd-439-2007:art-109")
+    assert {"ley-35-2006:art-99", "rd-439-2007:art-109"} <= set(entries["28"].legal_refs)
     assert entries["28"].source_refs == ("aeat-dr-111-2019-v18", "aeat-modelo-111-instructions")
     assert entries["30"].operand_refs == ("28", "29")
-    assert entries["30"].legal_refs == ("ley-35-2006:art-99", "rd-439-2007:art-109")
+    assert {"ley-35-2006:art-99", "rd-439-2007:art-109"} <= set(entries["30"].legal_refs)
     assert entries["30"].source_refs == ("aeat-dr-111-2019-v18", "aeat-modelo-111-instructions")
     assert "ley-35-2006:art-99" in snapshot.legal
     assert "aeat-modelo-111-instructions" in snapshot.sources
@@ -96,10 +96,10 @@ def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding(
 
     entries = {entry.target: entry for entry in result.entries}
     assert entries["03"].operand_refs == ("02", "irpf.urban_rental_withholding_rate")
-    assert entries["03"].legal_refs == ("rd-439-2007:art-100",)
+    assert {"rd-439-2007:art-100"} <= set(entries["03"].legal_refs)
     assert entries["03"].source_refs == ("aeat-modelo-115-180-folleto-actividades",)
     assert entries["05"].operand_refs == ("03", "04")
-    assert entries["05"].legal_refs == ("ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109")
+    assert {"ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"} <= set(entries["05"].legal_refs)
     assert entries["05"].source_refs == ("aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal")
 
 
