@@ -42,10 +42,11 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_SEDE_BASE = "https://www6.agenciatributaria.gob.es"
-_RESUMEN_URL = f"{_SEDE_BASE}/wlpl/TEWV-CORE/ResumenVlt"
-_EXPAND_TIMEOUT_MS = 10_000
-_NAVIGATION_TIMEOUT_MS = 30_000
+_EXTERNAL = Settings.external_constants()
+_SEDE_BASE = _EXTERNAL.aeat.domains.www6
+_RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
+_EXPAND_TIMEOUT_MS = _EXTERNAL.aeat.timeouts_ms.form_interaction
+_NAVIGATION_TIMEOUT_MS = _EXTERNAL.aeat.timeouts_ms.navigation
 
 
 @asynccontextmanager

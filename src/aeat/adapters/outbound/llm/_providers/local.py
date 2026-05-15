@@ -12,11 +12,12 @@ from __future__ import annotations
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
+from .....core.config import Settings
 from .._errors import LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
-_OLLAMA_API_URL = "http://127.0.0.1:11434/api/chat"
+_OLLAMA_API_URL = Settings.external_constants().online_services.llm_endpoints.ollama_chat
 """Ollama ``/api/chat`` endpoint targeted by :class:`LocalAdapter`."""
 
 

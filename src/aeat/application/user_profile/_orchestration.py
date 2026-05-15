@@ -91,14 +91,19 @@ def register_active_profile(
     """
 
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
-    service.register(
-        RegisterProfileCommand(profile_id=profile_id, display_name=display_name, facts=facts)
-    )
+    service.register(RegisterProfileCommand(profile_id=profile_id, display_name=display_name, facts=facts))
     profiles = dict(state.profiles)
     profiles[profile_id] = ProfileBucketPointer(bucket_id=profile_id)
     updated = state.model_copy(update={"active_profile": profile_id, "profiles": profiles, "updated_at": utc_now()})
     updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
-    return _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
+    updated = _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
+    if facts:
+        keys_id = "keys:" + ",".join(sorted(f.path for f in facts if f.value is not None))
+        if keys_id != "keys:":
+            updated = _append_workflow_event(
+                updated, action="profile.values.updated", bucket_id=profile_id, object_id=keys_id
+            )
+    return updated
 
 
 def select_profile(

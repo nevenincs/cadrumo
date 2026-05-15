@@ -1,0 +1,56 @@
+## External constants registry.
+##
+## Single source of truth for third-party hostnames, AEAT service paths,
+## OAuth scopes, and remote API endpoints that the codebase consumes. Values
+## here are externally-defined identifiers that may change with AEAT portal
+## redesigns, OAuth-scope reorganisations, or LLM-vendor URL renames.
+##
+## Loaded by `aeat.core.external_constants.load_external_constants`. Bound
+## to `Settings.external` via `Settings.external_constants()`.
+
+[aeat.domains]
+sede = "https://sede.agenciatributaria.gob.es"
+www1 = "https://www1.agenciatributaria.gob.es"
+www2 = "https://www2.agenciatributaria.gob.es"
+www6 = "https://www6.agenciatributaria.gob.es"
+clave = "https://clave.gob.es"
+boe = "https://www.boe.es"
+
+[aeat.sede_paths]
+expedientes_resumen = "/wlpl/TEWV-CORE/ResumenVlt"
+declarations_listing = "/wlpl/SCEJ-MANT/CONSUL/index.zul"
+cotejo_query = "/wlpl/KATA-APLI/cotejo/CotejoIdSv"
+cotejo_document = "/wlpl/KATA-APLI/cotejo/CotejoDocIdSv"
+notifications_summary = "/wlpl/GNNO-JDIT/ResumenInteresados"
+notifications_query = "/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
+certificate_selector = "/wlpl/BUCV-JDIT/SelectorCertificado"
+expediente_detail_template = "/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}"
+notificaciones = "/wlpl/TC-UTIL/NOT-L/Notificacion"
+
+[aeat.help_pages]
+csv_verification = "/Sede/ayuda/consultas-practicas-manuales/verificacion-integridad-documentos.html"
+renta_web_open_landing = "/Sede/ayuda/consultas-informaticas/renta-ayuda-tecnica/renta-web-open.html"
+nif_iva_landing = "/Sede/iva/iva-operaciones-comercio-exterior/identificacion-realizar-operaciones-otros-empresarios-ue/vies.html"
+
+[aeat.oracles]
+nif_iva_verification = "https://www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/ConsultaIntracomunitarios"
+groi_check = "https://www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet"
+renta_web_open_app_template = "https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER={year}&TACCESO=COLAB"
+
+[aeat.timeouts_ms]
+navigation = 30000
+form_interaction = 10000
+ver_click = 15000
+buscar_settle = 3000
+selector_probe = 2500
+
+[online_services.google.oauth_scopes]
+openid = "openid"
+email = "https://www.googleapis.com/auth/userinfo.email"
+drive_file = "https://www.googleapis.com/auth/drive.file"
+spreadsheets = "https://www.googleapis.com/auth/spreadsheets"
+
+[online_services.llm_endpoints]
+openai_chat_completions = "https://api.openai.com/v1/chat/completions"
+gemini_generate_content_template = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+ollama_chat = "http://127.0.0.1:11434/api/chat"

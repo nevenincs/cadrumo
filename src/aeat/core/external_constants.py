@@ -1,0 +1,137 @@
+"""External constants registry loaded from `external_constants.toml`.
+
+Centralises third-party hostnames, AEAT service paths, OAuth scopes, and
+remote API endpoints. The TOML file sits beside this module and is parsed
+once per process via :func:`load_external_constants`. Every section is
+modelled as a frozen, strict pydantic v2 model so callers see typed,
+immutable values and any drift between the TOML and the schema fails fast
+at import time.
+"""
+
+from __future__ import annotations
+
+import tomllib
+from functools import lru_cache
+from pathlib import Path
+
+from pydantic import BaseModel, ConfigDict, Field
+
+_DEFAULT_TOML_PATH = Path(__file__).resolve().parent / "external_constants.toml"
+
+
+class _Frozen(BaseModel):
+    """Strict, frozen base for external-constant submodels."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class AeatDomains(_Frozen):
+    """AEAT and related government hostnames."""
+
+    sede: str = Field(min_length=1)
+    www1: str = Field(min_length=1)
+    www2: str = Field(min_length=1)
+    www6: str = Field(min_length=1)
+    clave: str = Field(min_length=1)
+    boe: str = Field(min_length=1)
+
+
+class AeatSedePaths(_Frozen):
+    """Relative path templates against the sede / www6 origins."""
+
+    expedientes_resumen: str
+    declarations_listing: str
+    cotejo_query: str
+    cotejo_document: str
+    notifications_summary: str
+    notifications_query: str
+    certificate_selector: str
+    expediente_detail_template: str
+    notificaciones: str
+
+
+class AeatHelpPages(_Frozen):
+    """Static help/landing pages rooted under the sede origin."""
+
+    csv_verification: str
+    renta_web_open_landing: str
+    nif_iva_landing: str
+
+
+class AeatOracles(_Frozen):
+    """Absolute URLs of AEAT parity oracles."""
+
+    nif_iva_verification: str
+    groi_check: str
+    renta_web_open_app_template: str
+
+
+class AeatTimeoutsMs(_Frozen):
+    """Default browser-automation timeouts in milliseconds."""
+
+    navigation: int = Field(gt=0)
+    form_interaction: int = Field(gt=0)
+    ver_click: int = Field(gt=0)
+    buscar_settle: int = Field(gt=0)
+    selector_probe: int = Field(gt=0)
+
+
+class AeatSection(_Frozen):
+    """Aggregates every AEAT-flavoured constant subsection."""
+
+    domains: AeatDomains
+    sede_paths: AeatSedePaths
+    help_pages: AeatHelpPages
+    oracles: AeatOracles
+    timeouts_ms: AeatTimeoutsMs
+
+
+class GoogleOAuthScopes(_Frozen):
+    """OAuth scope strings the Google integration requests."""
+
+    openid: str
+    email: str
+    drive_file: str
+    spreadsheets: str
+
+
+class GoogleServices(_Frozen):
+    """Google-hosted service surfaces."""
+
+    oauth_scopes: GoogleOAuthScopes
+
+
+class LlmEndpoints(_Frozen):
+    """Third-party LLM provider endpoints."""
+
+    openai_chat_completions: str
+    gemini_generate_content_template: str
+    ollama_chat: str
+
+
+class OnlineServicesSection(_Frozen):
+    """Aggregates non-AEAT online service constants."""
+
+    google: GoogleServices
+    llm_endpoints: LlmEndpoints
+
+
+class ExternalConstants(_Frozen):
+    """Top-level registry model mirroring the TOML root."""
+
+    aeat: AeatSection
+    online_services: OnlineServicesSection
+
+
+@lru_cache(maxsize=1)
+def load_external_constants(path: Path | None = None) -> ExternalConstants:
+    """Return the parsed external-constants registry.
+
+    Cached per-process; the first call reads and validates
+    ``external_constants.toml`` from the package directory.
+    """
+
+    target = path or _DEFAULT_TOML_PATH
+    with target.open("rb") as handle:
+        payload = tomllib.load(handle)
+    return ExternalConstants.model_validate(payload)

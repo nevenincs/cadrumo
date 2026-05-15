@@ -16,7 +16,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ...core.config import Settings
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.invoices import (
     Invoice,
@@ -52,36 +52,36 @@ _SUMMARY_MAX = 80
 _LANGS: tuple[str, ...] = ("es", "en", "ca", "hu")
 
 
-def t(message: str) -> Translatable:
+def t(message: str) -> tr:
     """Build a multilingual :class:`aeat.core.i18n.tr` message payload."""
-    return Translatable(message)
+    return tr(message)
 
 
-_DIRECTION_LABELS: dict[TransactionDirection, Translatable] = {
-    TransactionDirection.INCOMING: Translatable("review.adapters.t_968325"),
-    TransactionDirection.OUTGOING: Translatable("review.adapters.t_629803"),
-    TransactionDirection.INTERNAL_TRANSFER: Translatable("review.adapters.t_135562"),
+_DIRECTION_LABELS: dict[TransactionDirection, tr] = {
+    TransactionDirection.INCOMING: tr("review.adapters.t_968325"),
+    TransactionDirection.OUTGOING: tr("review.adapters.t_629803"),
+    TransactionDirection.INTERNAL_TRANSFER: tr("review.adapters.t_135562"),
 }
-_CLASSIFICATION_LABELS: dict[BusinessClassification, Translatable] = {
-    BusinessClassification.BUSINESS: Translatable("review.adapters.t_142007"),
-    BusinessClassification.PERSONAL: Translatable("review.adapters.t_870243"),
-    BusinessClassification.MIXED: Translatable("review.adapters.t_619063"),
-    BusinessClassification.NOT_YET_PROCESSED: Translatable("review.adapters.t_754183"),
-    BusinessClassification.PROCESSED_UNCLASSIFIED: Translatable("review.adapters.t_791512"),
-    BusinessClassification.SKIPPED_BY_RULE: Translatable("review.adapters.t_607122"),
-    BusinessClassification.FAILED_VALIDATION: Translatable("review.adapters.t_352338"),
+_CLASSIFICATION_LABELS: dict[BusinessClassification, tr] = {
+    BusinessClassification.BUSINESS: tr("review.adapters.t_142007"),
+    BusinessClassification.PERSONAL: tr("review.adapters.t_870243"),
+    BusinessClassification.MIXED: tr("review.adapters.t_619063"),
+    BusinessClassification.NOT_YET_PROCESSED: tr("review.adapters.t_754183"),
+    BusinessClassification.PROCESSED_UNCLASSIFIED: tr("review.adapters.t_791512"),
+    BusinessClassification.SKIPPED_BY_RULE: tr("review.adapters.t_607122"),
+    BusinessClassification.FAILED_VALIDATION: tr("review.adapters.t_352338"),
 }
-_INVOICE_REASON_LABELS: dict[str, Translatable] = {
-    "unmatched": Translatable("review.adapters.t_551826"),
-    "overdue": Translatable("review.adapters.t_167733"),
-    "payment-pending": Translatable("review.adapters.t_298389"),
-    "partially-paid": Translatable("review.adapters.t_352928"),
+_INVOICE_REASON_LABELS: dict[str, tr] = {
+    "unmatched": tr("review.adapters.t_551826"),
+    "overdue": tr("review.adapters.t_167733"),
+    "payment-pending": tr("review.adapters.t_298389"),
+    "partially-paid": tr("review.adapters.t_352928"),
 }
 
 
-def _per_lang_summary(template: str, **fields: str | Translatable) -> Translatable:
+def _per_lang_summary(template: str, **fields: str | tr) -> tr:
     """Return the abstract translation key."""
-    return Translatable(template)
+    return tr(template)
 
 
 # ── transactions ──────────────────────────────────────────────────
@@ -261,7 +261,7 @@ def _to_invoice_item(invoice: Invoice, *, severity: ReviewSeverity, reason: str)
     grand_total = format(invoice.grand_total.normalize(), "f") if not invoice.grand_total.is_zero() else "0"
     reason_label = _INVOICE_REASON_LABELS.get(
         reason,
-        Translatable("review.adapters.t_189155"),
+        tr("review.adapters.t_189155"),
     )
     summary = _per_lang_summary(
         "review.adapters.t_122028",
@@ -349,18 +349,18 @@ def _resolve_active_tax_id(settings: Settings) -> str | None:
     """Return the active profile's tax id, or ``None`` when unknown."""
     del settings
     try:
-        from ..wizard._status import build_wizard_status
+        from ..user_profile._orchestration import fact_value
         from ..workflow import workflow_state_repository
     except Exception:
         _LOGGER.debug("review adapters could not import workflow status helpers", exc_info=True)
         return None
     try:
         state = workflow_state_repository().load()
-        status = build_wizard_status(state)
+        record = state.active_profile_record()
     except Exception:
         _LOGGER.debug("review adapters could not resolve active workflow status", exc_info=True)
         return None
-    return status.tax_id or None
+    return fact_value(record, "identity.tax_id") or None
 
 
 def _is_legacy_borrador(draft: FilingDraft, active_tax_id: str | None) -> bool:
@@ -412,7 +412,7 @@ def _to_finding_item(
 ) -> FindingReviewItem:
     casilla = finding.casilla_id or "-"
     _first_translation(finding.message) or finding.code
-    summary = Translatable("review.adapters.t_145612")
+    summary = tr("review.adapters.t_145612")
     severity = ReviewSeverity.INFO if legacy else _classify_finding(finding.severity)
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:{finding.code}:{casilla}",
@@ -447,7 +447,7 @@ def _to_placeholder_item(*, draft: FilingDraft, path_str: str, legacy: bool = Fa
 
 def _to_stale_approval_item(*, draft: FilingDraft, path_str: str) -> FindingReviewItem:
     """Emit a high-severity item for drafts whose stored approval is stale."""
-    summary = Translatable("review.adapters.t_787894")
+    summary = tr("review.adapters.t_787894")
     return FindingReviewItem(
         item_id=f"{draft.draft_id}:_status:APPROVAL_STALE",
         modelo=draft.modelo,

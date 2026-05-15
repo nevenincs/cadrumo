@@ -10,8 +10,10 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage.sql import dispose_engine
+from ...application.user_profile._testing import register_minimal_profile
+from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import Settings
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -63,8 +65,8 @@ def _secure_object_backend(tmp_path: Path):
         dispose_engine()
 
 
-def _summary(text: str = "demo") -> Translatable:
-    return Translatable("translation")
+def _summary(text: str = "demo") -> tr:
+    return tr("translation")
 
 
 def _schema_version(modelo: str = "130") -> str:
@@ -85,6 +87,7 @@ def _build_settings(tmp_path: Path) -> Settings:
 def _seed_all_sources(tmp_path: Path) -> Settings:
     """Materialise one pending item in every source under tmp_path."""
     settings = _build_settings(tmp_path)
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
 
     raw = RawTransaction(
         transaction_id="prov-1",

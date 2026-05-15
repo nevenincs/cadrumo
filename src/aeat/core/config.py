@@ -16,12 +16,16 @@ from contextlib import contextmanager
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .errors import CoreValidationError
 from .paths import normalize_project_relative_path
+
+if TYPE_CHECKING:
+    from .external_constants import ExternalConstants
 
 
 class SecretStoreBackend(StrEnum):
@@ -704,6 +708,19 @@ class Settings(BaseSettings):
     def env_var_names(cls) -> set[str]:
         """Return the set of environment variable names this model reads."""
         return {name.upper() for name in cls.model_fields}
+
+    @staticmethod
+    def external_constants() -> ExternalConstants:
+        """Return the parsed external-constants registry.
+
+        Bridges :mod:`aeat.core.external_constants` to the settings facade
+        so callers reach third-party hostnames, AEAT service paths, OAuth
+        scopes, and LLM endpoints through a single accessor.
+        """
+
+        from .external_constants import load_external_constants
+
+        return load_external_constants()
 
     @field_validator(
         "aeat_token_dir",

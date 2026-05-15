@@ -16,6 +16,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ....core.config import Settings
+
 # Scopes the desktop app requests at first login. Per Google's
 # Identity Platform "Sign in with Google" guidance, an OAuth flow that
 # needs to display *which* Google account is linked must request the
@@ -26,10 +28,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 # app creates or the operator explicitly picks); `spreadsheets` is
 # sensitive (full read/write) and surfaces on the consent screen.
 # Reference: https://developers.google.com/identity/openid-connect/openid-connect
-OPENID_SCOPE: str = "openid"
-EMAIL_SCOPE: str = "https://www.googleapis.com/auth/userinfo.email"
-DRIVE_FILE_SCOPE: str = "https://www.googleapis.com/auth/drive.file"
-SHEETS_SCOPE: str = "https://www.googleapis.com/auth/spreadsheets"
+_SCOPES = Settings.external_constants().online_services.google.oauth_scopes
+OPENID_SCOPE: str = _SCOPES.openid
+EMAIL_SCOPE: str = _SCOPES.email
+DRIVE_FILE_SCOPE: str = _SCOPES.drive_file
+SHEETS_SCOPE: str = _SCOPES.spreadsheets
 REQUIRED_SCOPES: tuple[str, ...] = (OPENID_SCOPE, EMAIL_SCOPE, DRIVE_FILE_SCOPE, SHEETS_SCOPE)
 
 

@@ -431,6 +431,21 @@ cli:
           export_help: Export the registry calculation surface for a modelo+period
             to a Google Sheets workbook in the operator's `aeat-vault/`
           help: Schema-to-sheet calc surface (export and pull)
+          pull:
+            compute_help: After pulling, run the local Decimal runtime against the
+              pulled inputs and emit the computed casilla values
+            compute_refused_stale: 'refusing to compute against a workbook whose
+              metadata stamps do not match the supplied snapshot
+              (metadata_match={metadata_match}); re-export, then re-pull'
+            spreadsheet_id_help: Drive file id of the workbook to read operator edits
+              from (must be app-owned and bound to the supplied snapshot)
+          pull_help: Read operator-edited cells back from a calc-sheets workbook into
+            typed records (after validating the workbook's registry-SHA stamp)
+          verify:
+            scenario_help: Path to a JSON scenario file with operator inputs and an
+              optional AEAT-published expected-output map
+          verify_help: Three-way parity check of a modelo's calculation surface (AEAT
+            oracle vs local Decimal runtime vs Sheets workbook)
         help: Push and probe local data against the configured Google Drive folder
         probe_help: Probe the configured Google Drive folder for read/write access
         probe_read_only_help: Probe Google Drive in read-only mode (no writes attempted)
@@ -992,6 +1007,25 @@ profile:
     description: Profile configuration keys and their descriptions
     tax:
       id: Tax identifier (NIF/NIE/CIF)
+review:
+  adapters:
+    t_135562: review.adapters.t_135562
+    t_142007: review.adapters.t_142007
+    t_145612: review.adapters.t_145612
+    t_167733: review.adapters.t_167733
+    t_189155: review.adapters.t_189155
+    t_298389: review.adapters.t_298389
+    t_352338: review.adapters.t_352338
+    t_352928: review.adapters.t_352928
+    t_551826: review.adapters.t_551826
+    t_607122: review.adapters.t_607122
+    t_619063: review.adapters.t_619063
+    t_629803: review.adapters.t_629803
+    t_754183: review.adapters.t_754183
+    t_787894: review.adapters.t_787894
+    t_791512: review.adapters.t_791512
+    t_870243: review.adapters.t_870243
+    t_968325: review.adapters.t_968325
 topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
