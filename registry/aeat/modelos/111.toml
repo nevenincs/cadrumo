@@ -96,6 +96,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-111-casilla-03"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
@@ -132,6 +133,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-111-casilla-06"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
@@ -168,6 +170,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-111-casilla-09"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
@@ -204,6 +207,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-111-casilla-12"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
@@ -240,6 +244,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-111-casilla-15"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
@@ -276,6 +281,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-111-casilla-18"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
@@ -312,6 +318,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-111-casilla-21"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
@@ -348,6 +355,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-111-casilla-24"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
@@ -384,6 +392,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-111-casilla-27"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-80"], source_refs = ["aeat-modelo-111-instructions"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 
@@ -1548,7 +1557,7 @@ source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]
 [[revisions."2019-y-siguientes".application_links]]
 id = "modelo-111-export"
 surface = "export"
-consumer = "aeat.application.filing.export"
+consumer = "aeat.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-111-2019-v18", "aeat-modelo-111-instructions"]

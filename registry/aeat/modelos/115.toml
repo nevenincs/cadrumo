@@ -75,6 +75,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-115-retenciones"
 export_refs = ["modelo-115-casilla-03"]
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-100", "orden-2000-11-20:apartado-primero"], source_refs = ["aeat-modelo-115-guia-censal"] }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
@@ -787,7 +788,7 @@ source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 [[revisions."2019-y-siguientes".application_links]]
 id = "modelo-115-export"
 surface = "export"
-consumer = "aeat.application.filing.export"
+consumer = "aeat.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-115-2019-v13"]

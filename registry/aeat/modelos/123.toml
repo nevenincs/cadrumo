@@ -108,6 +108,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-123-casilla-07"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90"], source_refs = ["aeat-dr-123-2024-v20"] }
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
@@ -120,6 +121,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-123-casilla-08"]
+constraints = { sign = "non_negative", legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-90"], source_refs = ["aeat-dr-123-2024-v20"] }
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20", "aeat-dr-123-2024-v20-form-text"]
 
@@ -1021,7 +1023,7 @@ source_refs = ["aeat-dr-123-2024-v20", "aeat-modelo-123-procedure"]
 [[revisions."2024-y-siguientes".application_links]]
 id = "modelo-123-export"
 surface = "export"
-consumer = "aeat.application.filing.export"
+consumer = "aeat.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-56-2024:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2024-v20"]
@@ -2011,7 +2013,7 @@ source_refs = ["aeat-dr-123-2019-2023-v13", "aeat-modelo-123-procedure"]
 [[revisions."2019-2023".application_links]]
 id = "modelo-123-2019-export"
 surface = "export"
-consumer = "aeat.application.filing.export"
+consumer = "aeat.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-dr-123-2019-2023-v13"]
