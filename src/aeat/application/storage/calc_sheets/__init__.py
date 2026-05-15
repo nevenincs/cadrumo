@@ -20,7 +20,7 @@ Operator-facing CLI surface lives under
 domain and application logic only.
 """
 
-from ._engine import build_export_plan
+from ._engine import build_export_plan, collect_row_sets
 from ._layout import BracketRanges, SheetLayout, plan_layout
 from ._records import (
     OperatorInput,
@@ -69,6 +69,7 @@ __all__ = [
     "TabName",
     "TranslationError",
     "build_export_plan",
+    "collect_row_sets",
     "plan_layout",
     "translate_formula",
 ]

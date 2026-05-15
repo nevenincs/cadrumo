@@ -742,7 +742,7 @@ def build_export_plan(
     provenance_values = _provenance_value_cells(provenance)
     protected = _protected_ranges(layout)
     cell_constraints = _collect_cell_constraints(revision, layout)
-    row_sets = _collect_row_sets(revision)
+    row_sets = collect_row_sets(revision)
 
     metadata = _stamp_registry_metadata(snapshot)
     guide = SheetGuideContent(
@@ -766,7 +766,7 @@ def build_export_plan(
     )
 
 
-def _collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
+def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
     """Collect row-producer bindings into per-grouping `SheetRowSet` blocks.
 
     Walks `revision.bindings` for invoice / counterpart bindings with
