@@ -93,6 +93,26 @@ required_text = [
     "Rendimientos del trabajo y de actividades económicas",
 ]
 
+[legal."orden-2000-11-20:apartado-primero"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-2000-11-20-modelo-115-apartado-primero.html#apartado-primero"
+document_id = "BOE-A-2000-21430"
+article = "primero"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2000-21430"
+published_at = 2000-11-28
+effective_from = 2001-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Aprobacion del modelo 115 — declaracion-documento de ingreso de retenciones e ingresos a cuenta sobre rentas o rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos. Foundational orden for the Modelo 115 quarterly return."
+required_text = [
+    "Se aprueban los modelos 115",
+    "Retenciones e ingresos a cuenta sobre determinadas rentas o rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos",
+    "Declaración-documento de ingreso",
+]
+
 [legal."orden-eha-672-2007:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
