@@ -5,9 +5,16 @@ tags:
   - '#linkage-design-audit'
 date: '2026-05-15'
 related:
+  - '[[2026-05-15-linkage-design-audit-audit]]'
   - '[[2026-05-15-linkage-design-audit-plan]]'
   - '[[2026-05-15-linkage-design-audit-reference]]'
   - '[[2026-05-15-linkage-design-audit-research]]'
+  - '[[2026-05-16-linkage-design-audit-audit]]'
+  - '[[2026-05-16-linkage-design-audit-plan]]'
+  - '[[2026-05-17-linkage-design-audit-audit]]'
+  - '[[2026-05-17-linkage-design-audit-plan]]'
+  - '[[2026-05-18-linkage-design-audit-audit]]'
+  - '[[2026-05-18-linkage-design-audit-plan]]'
 ---
 
 # `linkage-design-audit` feature index
@@ -16,9 +23,19 @@ Auto-generated index of all documents tagged with `#linkage-design-audit`.
 
 ## Documents
 
+### audit
+
+- `2026-05-15-linkage-design-audit-audit` - `linkage-design-audit` audit: `Wave 1 close-out: type-system uniformity`
+- `2026-05-16-linkage-design-audit-audit` - `linkage-design-audit` audit: `Wave 2 close-out: model consolidation`
+- `2026-05-17-linkage-design-audit-audit` - `linkage-design-audit` audit: `Wave 3 close-out: referential integrity + envelope + hexagonal contracts`
+- `2026-05-18-linkage-design-audit-audit` - `linkage-design-audit` audit: `Wave 4 close-out`
+
 ### plan
 
 - `2026-05-15-linkage-design-audit-plan` - `linkage-design-audit` `Wave 1: type-system uniformity (Phase 1 of linkage epic)` plan
+- `2026-05-16-linkage-design-audit-plan` - `linkage-design-audit` `Wave 2: model consolidation (Phase 2 of linkage epic)` plan
+- `2026-05-17-linkage-design-audit-plan` - `linkage-design-audit` `Wave 3: referential integrity and typed envelope (Phase 3 of linkage epic)` plan
+- `2026-05-18-linkage-design-audit-plan` - `linkage-design-audit` `Wave 4: operator surfaces, identity, registry data backfill (Phase 4 of linkage epic)` plan
 
 ### reference
 

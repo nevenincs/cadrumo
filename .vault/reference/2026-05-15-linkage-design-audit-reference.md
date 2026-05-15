@@ -680,3 +680,43 @@ against authoritative documentation.
 
 The tool inventory makes adoption decisions explicit. The "Status" column
 becomes the operational tracker once an ADR commits to a subset.
+
+---
+
+## Post-execution closure update
+
+This appendix records the final coverage state after the four-wave
+execution closed 98 of the 102 inventory rows (96%). Numerators below
+update the `Coverage summary` table earlier in this document; the
+denominators are unchanged. Class-level numerators count the
+inventory rows in the taxonomy class whose underlying defect has
+been structurally remediated (not just spot-fixed).
+
+| Class | Inventory rows closed | Mechanical surface coverage | Closure mechanism |
+|-------|-----------------------|-----------------------------|--------------------|
+| T-01 | 11 / 11 | 25 / ~25 cross-boundary subset | `CasillaObservation` typed envelope + `RegistryFilingObservation.observations`; backward-compat coercion validator; `no-mapping-str-decimal-on-registry.yml` semgrep guard |
+| T-02 | 6 / 6 | 3 / 3 selector fields | `BindingSelector` discriminated `Union` over eight per-source models |
+| T-03 | 14 / 15 | 21 / 21 ID types; 51 / 51 extra-forbid | `_check_all_id_references(snapshot)` plus tightened `model_config` defaults; one extra-forbid gap deferred |
+| T-04 | 13 / 16 | ~22 / ~30 estimated name-pattern pairs | Canonical envelope migrations; remaining three rows tracked as wontfix-document |
+| T-05 | 4 / 4 | 4 / 4 | `ModeloDefinition.capabilities` flagset migration removed all four hard-coded application gates |
+| T-06 | 1 / 1 | 1 / 1 | `import-linter` contracts wired (`no-renta-in-registry`, `core-not-outer`); two pre-existing contracts left documented as architectural debt |
+| T-07 | 11 / 11 | 25 / 25 emit sites | `SchemaEnvelope` adoption (`_modelo_payloads.py` — 15 typed payload classes); `reference: list[LegalRef]` surfaced via `--explain` |
+| T-08 | 6 / 6 | 3 / 3 | All previously unused JSON-contract symbols are now wired to CLI emit sites |
+| T-09 | 9 / 9 | 21 / 21 | Single `_check_all_id_references` validator wired into `build_snapshot`; every typed-ID reference field walked |
+| T-10 | 4 / 4 | 3 / 3 application-level gates | `capabilities = ["borrador", "renta_ledger_default"]` migrated all three application gates |
+| T-11 | 22 / 28 | ~140 / 268 raw surface | Suppression-inventory drove targeted ty:ignore removal; remaining 76 internal suppressions tracked in the linkage-health dashboard |
+| T-12 | 7 / 8 | 7 / 8 | `row_field_casillas` declarations on per-modelo TOMLs; `form_number` bridge on `CasillaDefinition`; one row deferred to corpus-registry packaging plan |
+
+Audit posture has flipped: agents are still the discovery layer, but
+mechanical checks now cover the canonical surface. The four open
+inventory rows are tracked in the research record as follow-up work
+(corpus-registry packaging, two import-linter contracts deferred for
+deeper refactor, and one extra-forbid gap in a single legacy model).
+The five rows marked `wontfix-document` are recorded as deliberate
+non-fixes with rationale in the research inventory.
+
+Mechanical gates now live alongside the suppression-inventory and
+pydantic-audit scratch dashboards. The unified `scratch/linkage_health.py`
+runner aggregates ty, pyright, import-linter, suppression-count, and
+pydantic-duplicate signals into a single JSON report that succeeds the
+agent-driven discovery phase.
