@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
@@ -48,6 +49,18 @@ def _coerce_decimal(value: object) -> object:
 
 
 DecimalValue = Annotated[Decimal, BeforeValidator(_coerce_decimal)]
+
+_WORKBOOK_CELL_REF_RE = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
+
+
+def _validate_workbook_cell_ref_str(value: object) -> object:
+    if isinstance(value, str):
+        if not _WORKBOOK_CELL_REF_RE.match(value):
+            raise RegistryValidationError(f"invalid workbook cell reference {value!r}")
+    return value
+
+
+WorkbookCellRefStr = Annotated[str, BeforeValidator(_validate_workbook_cell_ref_str)]
 
 
 def _coerce_sensitivity_class(value: object) -> object:
@@ -475,7 +488,7 @@ class WorkbookParityReference(RegistryModel):
     fixture_id: str
     formula_coverage: Literal["formula_form", "static_layout", "record_design_layout", "unsupported_binary_xls"]
     runner_required: bool
-    output_cells: Mapping[str, str] = Field(default_factory=dict)
+    output_cells: Mapping[str, WorkbookCellRefStr] = Field(default_factory=dict)
     tolerance: DecimalValue = Decimal("0.00")
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -1105,6 +1118,7 @@ class ExportRecordDefinition(RegistryModel):
     required: bool = True
     repeat: Literal["binding_rows"] | None = None
     binding_record: str | None = None
+    row_field_casillas: Mapping[str, CasillaId] = Field(default_factory=dict)
     discriminator: RecordDiscriminator | None = None
     requires_positive_casilla: CasillaId | None = None
     fields: tuple[ExportFieldDefinition, ...] = Field(default_factory=tuple)
