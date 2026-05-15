@@ -78,6 +78,26 @@ required_text = [
     "inferior al 75 por ciento",
 ]
 
+[legal."rd-634-2015:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-634-2015-art-3.html#a3"
+document_id = "BOE-A-2015-7771"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-7771#a3"
+published_at = 2015-07-11
+effective_from = 2015-07-12
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIS art 3: amortizacion de elementos patrimoniales del inmovilizado material, intangible e inversiones inmobiliarias - normas comunes. Define los metodos de depreciacion efectiva (LIS art-12), la base amortizable (precio de adquisicion o coste de produccion, exclusion del valor del suelo en edificaciones, prorrateo catastral), el inicio de la amortizacion (puesta en funcionamiento / capacidad de producir ingresos) y el tratamiento de renovaciones, ampliaciones y mejoras. Base reglamentaria de las casillas de amortizacion de M200."
+required_text = [
+    "Amortización de elementos patrimoniales",
+    "métodos previstos en el apartado 1 del artículo 12",
+    "vida útil",
+]
+
 [legal."ley-27-2014:art-25"]
 evidence_tier = "legal_authority"
 authority = "boe"
