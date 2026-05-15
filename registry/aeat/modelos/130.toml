@@ -5,21 +5,21 @@ official_name = "Impuesto sobre la Renta de las Personas Fisicas. Actividades ec
 tax_domain = "irpf"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [revisions."2019-y-siguientes"]
 label = "Orden HAP/258/2015, ejercicios 2019 y siguientes"
 valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".parameters]]
 id = "irpf.direct_estimation_fractional_payment_rate"
 data_type = "ratio"
 unit = "percent"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".parameters.source_citations]]
@@ -35,7 +35,7 @@ valid_from = 2019-01-01
 id = "irpf.agriculture_fractional_payment_rate"
 data_type = "ratio"
 unit = "percent"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".parameters.source_citations]]
@@ -56,7 +56,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-130-casilla-01"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -68,7 +68,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-130-casilla-02"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -81,7 +81,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-rendimiento-neto"
 export_refs = ["modelo-130-casilla-03"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -94,7 +94,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-pago-fraccionado-directa"
 export_refs = ["modelo-130-casilla-04"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -106,7 +106,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-130-casilla-05"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -118,7 +118,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-130-casilla-06"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -131,7 +131,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-resultado-apartado-i"
 export_refs = ["modelo-130-casilla-07"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -143,7 +143,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-130-casilla-08"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -156,7 +156,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-pago-fraccionado-agrario"
 export_refs = ["modelo-130-casilla-09"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -168,7 +168,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-130-casilla-10"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -181,7 +181,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-resultado-apartado-ii"
 export_refs = ["modelo-130-casilla-11"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -194,7 +194,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-suma-parciales"
 export_refs = ["modelo-130-casilla-12"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -207,7 +207,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-minoracion-rendimientos-netos"
 export_refs = ["modelo-130-casilla-13"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -220,7 +220,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-neto-tras-minoracion"
 export_refs = ["modelo-130-casilla-14"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -232,7 +232,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-130-casilla-15"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -244,7 +244,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-130-casilla-16"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -257,7 +257,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-diferencia"
 export_refs = ["modelo-130-casilla-17"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -269,7 +269,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-130-casilla-18"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -282,7 +282,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-130-resultado-final"
 export_refs = ["modelo-130-casilla-19"]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas]]
@@ -290,7 +290,7 @@ id = "modelo-130-rendimiento-neto"
 target = "03"
 expression = { op = "subtract", args = [{ casilla = "01" }, { casilla = "02" }] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -308,7 +308,7 @@ expression = { op = "max", args = [
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -323,7 +323,7 @@ expression = { op = "subtract", args = [
     { casilla = "06" },
 ] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -338,7 +338,7 @@ expression = { op = "percent", args = [
     { parameter = "irpf.agriculture_fractional_payment_rate" },
 ] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -350,7 +350,7 @@ id = "modelo-130-resultado-apartado-ii"
 target = "11"
 expression = { op = "subtract", args = [{ casilla = "09" }, { casilla = "10" }] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -365,7 +365,7 @@ expression = { op = "max", args = [
     { op = "add", args = [{ casilla = "07" }, { casilla = "11" }] },
 ] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -377,7 +377,7 @@ id = "modelo-130-neto-tras-minoracion"
 target = "14"
 expression = { op = "subtract", args = [{ casilla = "12" }, { casilla = "13" }] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -392,7 +392,7 @@ expression = { op = "subtract", args = [
     { casilla = "16" },
 ] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -404,7 +404,7 @@ id = "modelo-130-resultado-final"
 target = "19"
 expression = { op = "subtract", args = [{ casilla = "17" }, { casilla = "18" }] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -416,7 +416,7 @@ id = "irpf.previous_year_economic_activity_net_income"
 source = "previous_filing"
 selector = { source_modelo = "100", filing_year_delta = -1, period = "0A", source_casillas = ["0224", "1479", "1553", "1577"] }
 aggregation = { op = "sum" }
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
@@ -456,7 +456,7 @@ expression = { op = "if_then_else", args = [
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -465,7 +465,7 @@ required_text = ["Casilla 13.", "igual o inferior a 12.000 euros", "Importe de l
 
 [[revisions."2019-y-siguientes".export_layouts]]
 id = "modelo-130-fichero-boe"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records]]
@@ -486,7 +486,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -500,7 +500,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -514,7 +514,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -528,7 +528,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -542,7 +542,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -556,7 +556,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -570,7 +570,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -583,7 +583,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -597,7 +597,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -610,7 +610,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -624,7 +624,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -637,7 +637,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -651,7 +651,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records]]
@@ -672,7 +672,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -686,7 +686,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -700,7 +700,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -714,7 +714,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -728,7 +728,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -742,7 +742,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -756,7 +756,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -770,7 +770,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -784,7 +784,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -798,7 +798,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -812,7 +812,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -826,7 +826,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -840,7 +840,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -854,7 +854,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -868,7 +868,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -882,7 +882,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -896,7 +896,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -910,7 +910,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -924,7 +924,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -938,7 +938,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -952,7 +952,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -966,7 +966,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -980,7 +980,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -994,7 +994,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -1008,7 +1008,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -1022,7 +1022,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -1036,7 +1036,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -1050,7 +1050,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -1064,7 +1064,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -1078,7 +1078,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -1092,7 +1092,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -1106,7 +1106,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -1119,7 +1119,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -1132,7 +1132,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -1146,7 +1146,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".export_layouts.records]]
@@ -1167,7 +1167,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".extraction_profiles]]
@@ -1200,7 +1200,7 @@ target_casillas = [
 confidence = "strict"
 min_coverage = "1"
 failure_semantics = "fail_hard"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".live_cross_references]]
@@ -1220,7 +1220,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = false
 requires_aeat_authorization = false
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".live_cross_references]]
@@ -1243,7 +1243,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = true
 requires_aeat_authorization = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".workbook_parity_refs]]
@@ -1253,7 +1253,7 @@ fixture_id = "modelo-130-2019-direct-estimation"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.01"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".verification_expectations]]
@@ -1268,13 +1268,13 @@ discrepancy_causes = [
     "rounding",
     "correctness_divergence",
 ]
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".constructs]]
 id = "modelo-130-direct-estimation-instalment"
 title = "Modelo 130 direct-estimation instalment filing"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
 formulas = [
@@ -1317,7 +1317,7 @@ id = "modelo-130-calculation"
 surface = "calculation"
 consumer = "aeat.domain.calculations.registry"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -1325,7 +1325,7 @@ id = "modelo-130-filing"
 surface = "filing"
 consumer = "aeat.application.filing"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -1333,7 +1333,7 @@ id = "modelo-130-export"
 surface = "export"
 consumer = "aeat.application.filing.export"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -1341,7 +1341,7 @@ id = "modelo-130-verification"
 surface = "verification"
 consumer = "aeat.application.verification"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -1349,7 +1349,7 @@ id = "modelo-130-review"
 surface = "review"
 consumer = "aeat.application.filing.review"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -1357,7 +1357,7 @@ id = "modelo-130-approval"
 surface = "approval"
 consumer = "aeat.application.workflow.approval"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -1365,7 +1365,7 @@ id = "modelo-130-reconciliation"
 surface = "reconciliation"
 consumer = "aeat.application.reconciliation"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -1373,7 +1373,7 @@ id = "modelo-130-extractor"
 surface = "extractor"
 consumer = "aeat.adapters.inbound.declaracion"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -1381,7 +1381,7 @@ id = "modelo-130-portal-cross-reference"
 surface = "portal"
 consumer = "portal_m130_pago_fraccionado_ed"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -1389,7 +1389,7 @@ id = "modelo-130-filed-declarations-observation"
 surface = "portal"
 consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -1397,7 +1397,7 @@ id = "modelo-130-deadline"
 surface = "deadline"
 consumer = "aeat.domain.deadlines"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -1405,7 +1405,7 @@ id = "modelo-130-workflow"
 surface = "workflow"
 consumer = "aeat.application.workflow"
 requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".deadline_windows]]
@@ -1416,7 +1416,7 @@ period_kind = "quarterly"
 opens_on = 2026-04-01
 closes_on = 2026-04-20
 payment_cutoff_on = 2026-04-15
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
@@ -1424,7 +1424,7 @@ field = "professional_income_withholding_ge_70pct"
 op = "equals"
 value = false
 explanation = "Autonomo en estimacion directa salvo la excepcion de ingresos profesionales ya retenidos."
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".deadline_windows]]
@@ -1435,7 +1435,7 @@ period_kind = "quarterly"
 opens_on = 2026-07-01
 closes_on = 2026-07-20
 payment_cutoff_on = 2026-07-15
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
@@ -1443,7 +1443,7 @@ field = "professional_income_withholding_ge_70pct"
 op = "equals"
 value = false
 explanation = "Autonomo en estimacion directa salvo la excepcion de ingresos profesionales ya retenidos."
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".deadline_windows]]
@@ -1454,7 +1454,7 @@ period_kind = "quarterly"
 opens_on = 2026-10-01
 closes_on = 2026-10-20
 payment_cutoff_on = 2026-10-15
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
@@ -1462,7 +1462,7 @@ field = "professional_income_withholding_ge_70pct"
 op = "equals"
 value = false
 explanation = "Autonomo en estimacion directa salvo la excepcion de ingresos profesionales ya retenidos."
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".deadline_windows]]
@@ -1473,7 +1473,7 @@ period_kind = "quarterly"
 opens_on = 2027-01-01
 closes_on = 2027-01-30
 payment_cutoff_on = 2027-01-25
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
@@ -1481,5 +1481,5 @@ field = "professional_income_withholding_ge_70pct"
 op = "equals"
 value = false
 explanation = "Autonomo en estimacion directa salvo la excepcion de ingresos profesionales ya retenidos."
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12"]
