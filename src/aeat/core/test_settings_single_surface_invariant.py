@@ -82,59 +82,116 @@ def _aeat_key_from_arg(node: ast.expr, constants: dict[str, str]) -> str | None:
     return None
 
 
-def _collect_aeat_constants(tree: ast.Module) -> dict[str, str]:
-    """Map module-level NAME bindings whose value is an AEAT_* string literal."""
+def _collect_aeat_string_bindings(tree: ast.Module) -> dict[str, str]:
+    """Map every NAME (module-level OR function-local) bound to an AEAT_* literal.
+
+    Walks the whole tree (not just module-top) so locally-bound aliases like
+    ``def f():\\n    key = "AEAT_FOO"\\n    return os.environ[key]`` are
+    resolvable. The map is name -> last-bound literal; assignments later in
+    source order win, which matches Python's actual binding semantics
+    closely enough for the structural check this scanner performs.
+    """
     constants: dict[str, str] = {}
-    for stmt in tree.body:
-        if isinstance(stmt, ast.Assign) and isinstance(stmt.value, ast.Constant):
-            value = stmt.value.value
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant):
+            value = node.value.value
             if isinstance(value, str) and _AEAT_KEY_PATTERN.fullmatch(value):
-                for target in stmt.targets:
+                for target in node.targets:
                     if isinstance(target, ast.Name):
                         constants[target.id] = value
-        elif isinstance(stmt, ast.AnnAssign) and stmt.value is not None and isinstance(stmt.value, ast.Constant):
-            value = stmt.value.value
+        elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.value, ast.Constant):
+            value = node.value.value
             if isinstance(value, str) and _AEAT_KEY_PATTERN.fullmatch(value):
-                if isinstance(stmt.target, ast.Name):
-                    constants[stmt.target.id] = value
+                if isinstance(node.target, ast.Name):
+                    constants[node.target.id] = value
     return constants
+
+
+def _collect_environ_aliases(tree: ast.Module) -> set[str]:
+    """Find names bound to ``os.environ`` directly so aliased access is caught.
+
+    Handles two patterns:
+      - ``environ = os.environ`` (regular assignment)
+      - ``from os import environ`` (import-from)
+
+    Returns the set of NAME identifiers that — anywhere in the module —
+    refer to ``os.environ``. The scanner treats reads on these aliases
+    the same as direct ``os.environ`` reads. False-positives are
+    acceptable here; missed bypasses are not.
+    """
+    aliases: set[str] = {"environ"}  # any "environ" name is suspect; the AEAT_* key gate filters noise
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and _is_os_environ(node.value):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    aliases.add(target.id)
+        elif isinstance(node, ast.ImportFrom) and node.module == "os":
+            for alias in node.names:
+                if alias.name == "environ":
+                    aliases.add(alias.asname or "environ")
+    return aliases
+
+
+def _is_string_with_aeat_format_template(node: ast.expr) -> bool:
+    """Return True if a JoinedStr / Constant starts with the AEAT_ prefix.
+
+    f-strings with dynamic suffixes are detectable when the static head
+    is ``"AEAT_..."`` — those still count as AEAT-prefixed reads even
+    though the full key is computed at runtime. Pure-dynamic keys with
+    no static prefix escape this check (acceptable: such constructs are
+    rare and audit-conspicuous).
+    """
+    if isinstance(node, ast.JoinedStr):
+        for value in node.values:
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                if value.value.startswith("AEAT_"):
+                    return True
+            return False
+    return False
 
 
 def _violations_in(path: Path) -> list[tuple[int, str, str]]:
     """Return (lineno, key, snippet) tuples for AEAT-prefixed env reads."""
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-    constants = _collect_aeat_constants(tree)
+    constants = _collect_aeat_string_bindings(tree)
+    aliases = _collect_environ_aliases(tree)
     violations: list[tuple[int, str, str]] = []
     for node in ast.walk(tree):
-        # os.environ[KEY] or os.environ.get(KEY, ...)
+        # ENVIRON[KEY] — including aliased environ names
         if isinstance(node, ast.Subscript):
-            if _is_os_environ(node.value):
+            target = node.value
+            if _is_os_environ(target) or (isinstance(target, ast.Name) and target.id in aliases):
                 key = _aeat_key_from_arg(node.slice, constants)
                 if key is not None:
-                    violations.append((node.lineno, key, "os.environ[...]"))
+                    violations.append((node.lineno, key, f"{_target_label(target)}[...]"))
+                elif _is_string_with_aeat_format_template(node.slice):
+                    violations.append((node.lineno, "AEAT_<dynamic>", f"{_target_label(target)}[f-string]"))
         elif isinstance(node, ast.Call):
             func = node.func
-            # os.environ.{get,pop,setdefault}(KEY, ...) — read or read+mutate
-            if (
-                isinstance(func, ast.Attribute)
-                and func.attr in {"get", "pop", "setdefault"}
-                and _is_os_environ(func.value)
-                and node.args
-            ):
+            # ENVIRON.{get,pop,setdefault}(KEY, ...) — including aliased environ
+            if isinstance(func, ast.Attribute) and func.attr in {"get", "pop", "setdefault"} and node.args:
+                target = func.value
+                if _is_os_environ(target) or (isinstance(target, ast.Name) and target.id in aliases):
+                    key = _aeat_key_from_arg(node.args[0], constants)
+                    if key is not None:
+                        violations.append((node.lineno, key, f"{_target_label(target)}.{func.attr}(...)"))
+                    elif _is_string_with_aeat_format_template(node.args[0]):
+                        violations.append(
+                            (node.lineno, "AEAT_<dynamic>", f"{_target_label(target)}.{func.attr}(f-string)")
+                        )
+            # os.getenv(KEY, ...) or getenv(KEY, ...) when from os import getenv
+            elif isinstance(func, ast.Attribute) and func.attr == "getenv" and node.args:
+                if isinstance(func.value, ast.Name) and func.value.id == "os":
+                    key = _aeat_key_from_arg(node.args[0], constants)
+                    if key is not None:
+                        violations.append((node.lineno, key, "os.getenv(...)"))
+                    elif _is_string_with_aeat_format_template(node.args[0]):
+                        violations.append((node.lineno, "AEAT_<dynamic>", "os.getenv(f-string)"))
+            elif isinstance(func, ast.Name) and func.id == "getenv" and node.args:
+                # from os import getenv -> bare getenv("AEAT_FOO")
                 key = _aeat_key_from_arg(node.args[0], constants)
                 if key is not None:
-                    violations.append((node.lineno, key, f"os.environ.{func.attr}(...)"))
-            # os.getenv(KEY, ...)
-            elif (
-                isinstance(func, ast.Attribute)
-                and func.attr == "getenv"
-                and isinstance(func.value, ast.Name)
-                and func.value.id == "os"
-                and node.args
-            ):
-                key = _aeat_key_from_arg(node.args[0], constants)
-                if key is not None:
-                    violations.append((node.lineno, key, "os.getenv(...)"))
+                    violations.append((node.lineno, key, "getenv(...)"))
     return violations
 
 
@@ -145,6 +202,14 @@ def _is_os_environ(node: ast.expr) -> bool:
         and isinstance(node.value, ast.Name)
         and node.value.id == "os"
     )
+
+
+def _target_label(node: ast.expr) -> str:
+    if _is_os_environ(node):
+        return "os.environ"
+    if isinstance(node, ast.Name):
+        return node.id
+    return "<environ-alias>"
 
 
 def test_no_direct_aeat_env_reads_outside_allowlist() -> None:
