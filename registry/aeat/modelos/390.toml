@@ -6,6 +6,7 @@ tax_domain = "iva"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
 legal_refs = [
+    "rd-1624-1992:art-71",
     "orden-eha-3111-2009:art-1",
     "orden-eha-3111-2009:art-8",
 ]
@@ -20,6 +21,7 @@ label = "Modelo 390 ejercicios 2010 y siguientes (Orden EHA/3111/2009, modificad
 valid_from = 2010-01-01
 period_selector = { year_from = 2010, periods = ["0A"] }
 legal_refs = [
+    "rd-1624-1992:art-71",
     "orden-eha-3111-2009:art-1",
     "orden-eha-3111-2009:art-8",
 ]
@@ -36,7 +38,7 @@ fixture_id = "modelo-390-2025-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".verification_expectations]]
@@ -51,7 +53,7 @@ discrepancy_causes = [
     "rounding",
     "correctness_divergence",
 ]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 # Ledger IVA aggregation bindings for the annual resumen over the full
@@ -63,7 +65,7 @@ id = "modelo-390-iva-repercutido-general-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["domestic_general_21"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
@@ -75,7 +77,7 @@ id = "modelo-390-iva-repercutido-reducido-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["domestic_reduced_10"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
@@ -87,7 +89,7 @@ id = "modelo-390-iva-repercutido-super-reducido-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["domestic_super_reduced_4"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
@@ -99,7 +101,7 @@ id = "modelo-390-iva-soportado-interiores-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
@@ -111,7 +113,7 @@ id = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "autorepercutido", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-84", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
@@ -130,7 +132,7 @@ id = "modelo-390-prev-303-cuota-devengada-total"
 source = "previous_filing"
 selector = { source_modelo = "303", filing_year_delta = 0, source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["iva.cuota-devengada-total"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
@@ -142,7 +144,7 @@ id = "modelo-390-prev-303-cuota-deducible-total"
 source = "previous_filing"
 selector = { source_modelo = "303", filing_year_delta = 0, source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["iva.cuota-deducible-total"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
@@ -154,7 +156,7 @@ id = "modelo-390-prev-303-resultado-regimen-general"
 source = "previous_filing"
 selector = { source_modelo = "303", filing_year_delta = 0, source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["iva.resultado-regimen-general"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".bindings.source_citations]]
@@ -177,7 +179,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-general-cuota"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".casillas]]
@@ -189,7 +191,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-reducido-cuota"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".casillas]]
@@ -201,7 +203,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-repercutido-super-reducido-cuota"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".casillas]]
@@ -213,7 +215,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-soportado-interiores-cuota"
-legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".casillas]]
@@ -225,7 +227,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-390-iva-autorepercutido-intracomunitaria-cuota"
-legal_refs = ["ley-37-1992:art-84", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 # Reconciliation casillas — pulled from the four 303 quarters via previous_filing.
@@ -239,7 +241,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-390-prev-303-cuota-devengada-total"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".casillas]]
@@ -251,7 +253,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-390-prev-303-cuota-deducible-total"
-legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".casillas]]
@@ -263,7 +265,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-390-prev-303-resultado-regimen-general"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 # -----------------------------------------------------------------------------
@@ -280,7 +282,7 @@ data_type = "money"
 required = false
 input_kind = "computed"
 formula = "modelo-390-iva-anual-cuota-devengada-total"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".casillas]]
@@ -292,7 +294,7 @@ data_type = "money"
 required = false
 input_kind = "computed"
 formula = "modelo-390-iva-anual-cuota-deducible-total"
-legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 [[revisions."2010-y-siguientes".casillas]]
@@ -304,7 +306,7 @@ data_type = "money"
 required = false
 input_kind = "computed"
 formula = "modelo-390-iva-anual-resultado-regimen-general"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
 
 # -----------------------------------------------------------------------------
@@ -321,7 +323,7 @@ expression = { op = "add", args = [
     { casilla = "iva.anual.autorepercutido.intracomunitaria" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".formulas.source_citations]]
@@ -336,7 +338,7 @@ expression = { op = "add", args = [
     { casilla = "iva.anual.autorepercutido.intracomunitaria" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".formulas.source_citations]]
@@ -351,7 +353,7 @@ expression = { op = "subtract", args = [
     { casilla = "iva.anual.cuota-deducible-total" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3111-2009:art-1"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".formulas.source_citations]]
@@ -366,7 +368,7 @@ section = ["declarante"]
 data_type = "integer"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".casillas]]
@@ -377,7 +379,7 @@ section = ["declarante"]
 data_type = "text"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".live_cross_references]]
@@ -398,7 +400,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = false
 requires_aeat_authorization = false
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".live_cross_references]]
@@ -421,7 +423,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = true
 requires_aeat_authorization = true
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2010-y-siguientes".application_links]]
@@ -429,7 +431,7 @@ id = "modelo-390-portal"
 surface = "portal"
 consumer = "portal_m390_iva_resumen_anual"
 requires_snapshot = true
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2010-y-siguientes".application_links]]
@@ -437,7 +439,7 @@ id = "modelo-390-filing"
 surface = "filing"
 consumer = "aeat.application.filing"
 requires_snapshot = true
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2010-y-siguientes".application_links]]
@@ -445,7 +447,7 @@ id = "modelo-390-extractor"
 surface = "extractor"
 consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
 requires_snapshot = true
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2010-y-siguientes".application_links]]
@@ -453,7 +455,7 @@ id = "modelo-390-verification"
 surface = "verification"
 consumer = "aeat.application.verification"
 requires_snapshot = true
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2010-y-siguientes".application_links]]
@@ -461,7 +463,7 @@ id = "modelo-390-review"
 surface = "review"
 consumer = "aeat.application.filing.review"
 requires_snapshot = true
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2010-y-siguientes".application_links]]
@@ -469,7 +471,7 @@ id = "modelo-390-approval"
 surface = "approval"
 consumer = "aeat.application.filing.approval"
 requires_snapshot = true
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2010-y-siguientes".application_links]]
@@ -477,7 +479,7 @@ id = "modelo-390-reconciliation"
 surface = "reconciliation"
 consumer = "aeat.application.reconciliation"
 requires_snapshot = true
-legal_refs = ["orden-eha-3111-2009:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92"]
+legal_refs = ["orden-eha-3111-2009:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".application_links]]
@@ -485,7 +487,7 @@ id = "modelo-390-workflow"
 surface = "workflow"
 consumer = "aeat.application.workflow"
 requires_snapshot = true
-legal_refs = ["orden-eha-3111-2009:art-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-modelo-390-procedure"]
 
 [[revisions."2010-y-siguientes".application_links]]
@@ -493,7 +495,7 @@ id = "modelo-390-deadline"
 surface = "deadline"
 consumer = "aeat.domain.deadlines"
 requires_snapshot = true
-legal_refs = ["orden-eha-3111-2009:art-8"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
 source_refs = ["boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".application_links]]
@@ -501,7 +503,7 @@ id = "modelo-390-calculation"
 surface = "calculation"
 consumer = "aeat.domain.calculations.registry"
 requires_snapshot = true
-legal_refs = ["orden-eha-3111-2009:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92"]
+legal_refs = ["orden-eha-3111-2009:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-390-2025", "boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".filing_schedules]]
@@ -509,7 +511,7 @@ id = "modelo-390-anual"
 period_kind = "annual"
 periods = ["0A"]
 profile_condition_mode = "all"
-legal_refs = ["orden-eha-3111-2009:art-8"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
 source_refs = ["boe-modelo-390-2009-form", "aeat-modelo-390-procedure"]
 
 [[revisions."2010-y-siguientes".deadline_windows]]
@@ -519,7 +521,7 @@ period = "2020-0A"
 period_kind = "annual"
 opens_on = 2021-01-01
 closes_on = 2021-01-30
-legal_refs = ["orden-eha-3111-2009:art-8"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
 source_refs = ["boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".deadline_windows]]
@@ -529,7 +531,7 @@ period = "2021-0A"
 period_kind = "annual"
 opens_on = 2022-01-01
 closes_on = 2022-01-30
-legal_refs = ["orden-eha-3111-2009:art-8"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
 source_refs = ["boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".deadline_windows]]
@@ -539,7 +541,7 @@ period = "2022-0A"
 period_kind = "annual"
 opens_on = 2023-01-01
 closes_on = 2023-01-30
-legal_refs = ["orden-eha-3111-2009:art-8"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
 source_refs = ["boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".deadline_windows]]
@@ -549,7 +551,7 @@ period = "2023-0A"
 period_kind = "annual"
 opens_on = 2024-01-01
 closes_on = 2024-01-30
-legal_refs = ["orden-eha-3111-2009:art-8"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
 source_refs = ["boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".deadline_windows]]
@@ -559,7 +561,7 @@ period = "2024-0A"
 period_kind = "annual"
 opens_on = 2025-01-01
 closes_on = 2025-01-30
-legal_refs = ["orden-eha-3111-2009:art-8"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
 source_refs = ["boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".deadline_windows]]
@@ -569,7 +571,7 @@ period = "2025-0A"
 period_kind = "annual"
 opens_on = 2026-01-01
 closes_on = 2026-01-30
-legal_refs = ["orden-eha-3111-2009:art-8"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
 source_refs = ["boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".deadline_windows]]
@@ -579,7 +581,7 @@ period = "2026-0A"
 period_kind = "annual"
 opens_on = 2027-01-01
 closes_on = 2027-01-30
-legal_refs = ["orden-eha-3111-2009:art-8"]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
 source_refs = ["boe-modelo-390-2009-form"]
 
 [[revisions."2010-y-siguientes".constructs]]

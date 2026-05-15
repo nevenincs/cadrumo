@@ -36,7 +36,7 @@ fixture_id = "modelo-309-2023-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2004-y-siguientes".verification_expectations]]
@@ -51,7 +51,7 @@ discrepancy_causes = [
     "rounding",
     "correctness_divergence",
 ]
-legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1"]
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023"]
 
 # Ledger IVA aggregation bindings for the non-periodic IVA triggers covered by
@@ -65,7 +65,7 @@ id = "modelo-309-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "autorepercutido", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-84", "orden-hac-3625-2003:apartado-1"]
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 
 [[revisions."2004-y-siguientes".bindings.source_citations]]
@@ -77,7 +77,7 @@ id = "modelo-309-iva-soportado-recargo-equivalencia-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["recargo_equivalencia"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1"]
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 
 [[revisions."2004-y-siguientes".bindings.source_citations]]
@@ -93,7 +93,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-309-iva-autorepercutido-intracomunitaria-cuota"
-legal_refs = ["ley-37-1992:art-84", "orden-hac-3625-2003:apartado-1"]
+legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2004-y-siguientes".casillas]]
@@ -105,7 +105,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-309-iva-soportado-recargo-equivalencia-cuota"
-legal_refs = ["ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1"]
+legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2004-y-siguientes".casillas]]
@@ -117,7 +117,7 @@ data_type = "money"
 required = false
 input_kind = "computed"
 formula = "modelo-309-iva-cuota-no-periodica-total"
-legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1"]
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2004-y-siguientes".formulas]]
@@ -128,7 +128,7 @@ expression = { op = "add", args = [
     { casilla = "iva.soportado.recargo-equivalencia" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "orden-hac-3625-2003:apartado-1"]
+legal_refs = ["ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023", "boe-modelo-309-2003-form"]
 
 [[revisions."2004-y-siguientes".formulas.source_citations]]
@@ -143,7 +143,7 @@ section = ["declarante"]
 data_type = "integer"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2004-y-siguientes".casillas]]
@@ -154,7 +154,7 @@ section = ["declarante"]
 data_type = "text"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2004-y-siguientes".live_cross_references]]
@@ -175,7 +175,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = false
 requires_aeat_authorization = false
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 
 [[revisions."2004-y-siguientes".live_cross_references]]
@@ -198,7 +198,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = true
 requires_aeat_authorization = true
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-modelo-309-procedure"]
 
 [[revisions."2004-y-siguientes".application_links]]
@@ -206,7 +206,7 @@ id = "modelo-309-portal"
 surface = "portal"
 consumer = "portal_m309_iva_no_periodica"
 requires_snapshot = true
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-modelo-309-procedure"]
 
 [[revisions."2004-y-siguientes".application_links]]
@@ -214,7 +214,7 @@ id = "modelo-309-filing"
 surface = "filing"
 consumer = "aeat.application.filing"
 requires_snapshot = true
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-modelo-309-procedure"]
 
 [[revisions."2004-y-siguientes".application_links]]
@@ -222,7 +222,7 @@ id = "modelo-309-extractor"
 surface = "extractor"
 consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
 requires_snapshot = true
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2004-y-siguientes".application_links]]
@@ -230,7 +230,7 @@ id = "modelo-309-verification"
 surface = "verification"
 consumer = "aeat.application.verification"
 requires_snapshot = true
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-modelo-309-procedure"]
 
 [[revisions."2004-y-siguientes".application_links]]
@@ -238,7 +238,7 @@ id = "modelo-309-review"
 surface = "review"
 consumer = "aeat.application.filing.review"
 requires_snapshot = true
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-modelo-309-procedure"]
 
 [[revisions."2004-y-siguientes".application_links]]
@@ -246,7 +246,7 @@ id = "modelo-309-approval"
 surface = "approval"
 consumer = "aeat.application.filing.approval"
 requires_snapshot = true
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-modelo-309-procedure"]
 
 [[revisions."2004-y-siguientes".application_links]]
@@ -254,7 +254,7 @@ id = "modelo-309-reconciliation"
 surface = "reconciliation"
 consumer = "aeat.application.reconciliation"
 requires_snapshot = true
-legal_refs = ["orden-hac-3625-2003:apartado-1", "ley-37-1992:art-84", "ley-37-1992:art-92"]
+legal_refs = ["orden-hac-3625-2003:apartado-1", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-309-2023", "aeat-modelo-309-procedure", "boe-modelo-309-2003-form"]
 
 [[revisions."2004-y-siguientes".application_links]]
@@ -262,7 +262,7 @@ id = "modelo-309-workflow"
 surface = "workflow"
 consumer = "aeat.application.workflow"
 requires_snapshot = true
-legal_refs = ["orden-hac-3625-2003:apartado-1"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-modelo-309-procedure"]
 
 [[revisions."2004-y-siguientes".application_links]]
@@ -270,7 +270,7 @@ id = "modelo-309-deadline"
 surface = "deadline"
 consumer = "aeat.domain.deadlines"
 requires_snapshot = true
-legal_refs = ["orden-hac-3625-2003:apartado-3"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["boe-modelo-309-2003-form"]
 
 [[revisions."2004-y-siguientes".application_links]]
@@ -278,7 +278,7 @@ id = "modelo-309-calculation"
 surface = "calculation"
 consumer = "aeat.domain.calculations.registry"
 requires_snapshot = true
-legal_refs = ["orden-hac-3625-2003:apartado-1", "ley-37-1992:art-84", "ley-37-1992:art-92"]
+legal_refs = ["orden-hac-3625-2003:apartado-1", "ley-37-1992:art-84", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-309-2023", "boe-modelo-309-2003-form"]
 
 [[revisions."2004-y-siguientes".filing_schedules]]
@@ -286,7 +286,7 @@ id = "modelo-309-ad-hoc"
 period_kind = "ad_hoc"
 periods = ["AD-HOC"]
 profile_condition_mode = "all"
-legal_refs = ["orden-hac-3625-2003:apartado-3"]
+legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-3"]
 source_refs = ["boe-modelo-309-2003-form", "aeat-modelo-309-procedure"]
 
 [[revisions."2004-y-siguientes".constructs]]
