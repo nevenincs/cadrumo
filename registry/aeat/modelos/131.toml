@@ -224,7 +224,9 @@ label = "Resultados negativos de trimestres anteriores"
 section = ["total_liquidacion"]
 data_type = "money"
 required = false
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-131-2019-2023-resultados-negativos-anteriores"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
 export_refs = ["modelo-131-2019-2023-casilla-11"]
@@ -785,6 +787,75 @@ requires_aeat_authorization = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 
+# -----------------------------------------------------------------------------
+# Prior-quarter negative-result carry-forward (RD 439/2007 art. 110.5)
+# revision 2019-2023.
+# -----------------------------------------------------------------------------
+
+[[revisions."2019-2023".casillas]]
+id = "saldo-negativo-fin-periodo"
+number = "saldo-negativo-fin-periodo"
+label = "Saldo negativo trasladable a periodos posteriores (max 0, -casilla 10)"
+section = ["computed_carry_forward"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-saldo-negativo-fin-periodo"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".bindings]]
+id = "modelo-131-2019-2023-resultados-negativos-anteriores"
+source = "previous_filing"
+selector = { source_modelo = "131", source_output = "saldo-negativo-fin-periodo" }
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".bindings.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]
+
+[[revisions."2019-2023".formulas]]
+id = "modelo-131-2019-2023-saldo-negativo-fin-periodo"
+target = "saldo-negativo-fin-periodo"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "negate", args = [{ casilla = "10" }] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+
+[[revisions."2019-2023".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]
+
+[[revisions."2019-2023".relations]]
+id = "modelo-131-2019-2023-rel-self-prior-quarter-negative"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "131"
+source_revision_selector = { filing_year_delta = 0 }
+source_output = "saldo-negativo-fin-periodo"
+target_binding = "modelo-131-2019-2023-resultados-negativos-anteriores"
+period_alignment = { mode = "previous_quarter" }
+source_period_offset_from_target = -1
+target_periods = ["2T", "3T", "4T"]
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2019-2023".dependency_classifications]]
+id = "modelo-131-2019-2023-dep-self-prior-quarter"
+source_modelo = "131"
+treatment = "factual_evidence"
+target_constructs = ["modelo-131-2019-2023-objective-estimation-instalment"]
+relation_refs = ["modelo-131-2019-2023-rel-self-prior-quarter-negative"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
 [[revisions."2019-2023".constructs]]
 id = "modelo-131-2019-2023-objective-estimation-instalment"
 title = "Modelo 131 objective-estimation instalment filing for 2019 to 2023"
@@ -805,7 +876,7 @@ source_refs = [
     "aeat-modelo-131-recuperacion-declaraciones",
     "boe-modelo-131-2007-form",
 ]
-casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "saldo-negativo-fin-periodo"]
 formulas = [
     "modelo-131-2019-2023-pago-fraccionado-sin-datos-base",
     "modelo-131-2019-2023-pago-fraccionado-agrario",
@@ -813,8 +884,12 @@ formulas = [
     "modelo-131-2019-2023-diferencia",
     "modelo-131-2019-2023-total",
     "modelo-131-2019-2023-resultado",
+    "modelo-131-2019-2023-saldo-negativo-fin-periodo",
 ]
 parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate"]
+bindings = ["modelo-131-2019-2023-resultados-negativos-anteriores"]
+relations = ["modelo-131-2019-2023-rel-self-prior-quarter-negative"]
+dependency_classifications = ["modelo-131-2019-2023-dep-self-prior-quarter"]
 export_layouts = ["modelo-131-2019-2023-fichero-boe"]
 extraction_profiles = ["modelo-131-2019-2023-submitted-file"]
 live_cross_references = ["modelo-131-2019-2023-filed-declarations-read"]
@@ -1092,7 +1167,9 @@ label = "Resultados negativos de trimestres anteriores"
 section = ["total_liquidacion"]
 data_type = "money"
 required = false
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-131-2024-resultados-negativos-anteriores"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
 export_refs = ["modelo-131-2024-casilla-11"]
@@ -2487,6 +2564,75 @@ requires_aeat_authorization = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 
+# -----------------------------------------------------------------------------
+# Prior-quarter negative-result carry-forward (RD 439/2007 art. 110.5)
+# revision 2024.
+# -----------------------------------------------------------------------------
+
+[[revisions."2024".casillas]]
+id = "saldo-negativo-fin-periodo"
+number = "saldo-negativo-fin-periodo"
+label = "Saldo negativo trasladable a periodos posteriores (max 0, -casilla 10)"
+section = ["computed_carry_forward"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2024-saldo-negativo-fin-periodo"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024-v101"]
+
+[[revisions."2024".bindings]]
+id = "modelo-131-2024-resultados-negativos-anteriores"
+source = "previous_filing"
+selector = { source_modelo = "131", source_output = "saldo-negativo-fin-periodo" }
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]
+
+[[revisions."2024".formulas]]
+id = "modelo-131-2024-saldo-negativo-fin-periodo"
+target = "saldo-negativo-fin-periodo"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "negate", args = [{ casilla = "10" }] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024-v101"]
+
+[[revisions."2024".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]
+
+[[revisions."2024".relations]]
+id = "modelo-131-2024-rel-self-prior-quarter-negative"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "131"
+source_revision_selector = { filing_year_delta = 0 }
+source_output = "saldo-negativo-fin-periodo"
+target_binding = "modelo-131-2024-resultados-negativos-anteriores"
+period_alignment = { mode = "previous_quarter" }
+source_period_offset_from_target = -1
+target_periods = ["2T", "3T", "4T"]
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2024".dependency_classifications]]
+id = "modelo-131-2024-dep-self-prior-quarter"
+source_modelo = "131"
+treatment = "factual_evidence"
+target_constructs = ["modelo-131-2024-objective-estimation-instalment"]
+relation_refs = ["modelo-131-2024-rel-self-prior-quarter-negative"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
 [[revisions."2024".constructs]]
 id = "modelo-131-2024-objective-estimation-instalment"
 title = "Modelo 131 objective-estimation instalment filing for 2024"
@@ -2498,7 +2644,7 @@ source_refs = [
     "aeat-modelo-131-recuperacion-declaraciones",
     "boe-modelo-131-2007-form",
 ]
-casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "saldo-negativo-fin-periodo"]
 formulas = [
     "modelo-131-2024-pago-fraccionado-sin-datos-base",
     "modelo-131-2024-pago-fraccionado-agrario",
@@ -2506,8 +2652,12 @@ formulas = [
     "modelo-131-2024-diferencia",
     "modelo-131-2024-total",
     "modelo-131-2024-resultado",
+    "modelo-131-2024-saldo-negativo-fin-periodo",
 ]
 parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate"]
+bindings = ["modelo-131-2024-resultados-negativos-anteriores"]
+relations = ["modelo-131-2024-rel-self-prior-quarter-negative"]
+dependency_classifications = ["modelo-131-2024-dep-self-prior-quarter"]
 export_layouts = ["modelo-131-2024-fichero-boe"]
 extraction_profiles = ["modelo-131-2024-submitted-file"]
 live_cross_references = ["modelo-131-2024-filed-declarations-read"]
@@ -2785,7 +2935,9 @@ label = "Resultados negativos de trimestres anteriores"
 section = ["total_liquidacion"]
 data_type = "money"
 required = false
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-131-2025-resultados-negativos-anteriores"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
 export_refs = ["modelo-131-2025-casilla-11"]
@@ -4117,6 +4269,75 @@ requires_aeat_authorization = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]
 
+# -----------------------------------------------------------------------------
+# Prior-quarter negative-result carry-forward (RD 439/2007 art. 110.5)
+# revision 2025.
+# -----------------------------------------------------------------------------
+
+[[revisions."2025".casillas]]
+id = "saldo-negativo-fin-periodo"
+number = "saldo-negativo-fin-periodo"
+label = "Saldo negativo trasladable a periodos posteriores (max 0, -casilla 10)"
+section = ["computed_carry_forward"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2025-saldo-negativo-fin-periodo"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025-v101"]
+
+[[revisions."2025".bindings]]
+id = "modelo-131-2025-resultados-negativos-anteriores"
+source = "previous_filing"
+selector = { source_modelo = "131", source_output = "saldo-negativo-fin-periodo" }
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".bindings.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]
+
+[[revisions."2025".formulas]]
+id = "modelo-131-2025-saldo-negativo-fin-periodo"
+target = "saldo-negativo-fin-periodo"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "negate", args = [{ casilla = "10" }] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025-v101"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]
+
+[[revisions."2025".relations]]
+id = "modelo-131-2025-rel-self-prior-quarter-negative"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "131"
+source_revision_selector = { filing_year_delta = 0 }
+source_output = "saldo-negativo-fin-periodo"
+target_binding = "modelo-131-2025-resultados-negativos-anteriores"
+period_alignment = { mode = "previous_quarter" }
+source_period_offset_from_target = -1
+target_periods = ["2T", "3T", "4T"]
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2025".dependency_classifications]]
+id = "modelo-131-2025-dep-self-prior-quarter"
+source_modelo = "131"
+treatment = "factual_evidence"
+target_constructs = ["modelo-131-2025-objective-estimation-instalment"]
+relation_refs = ["modelo-131-2025-rel-self-prior-quarter-negative"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
 [[revisions."2025".constructs]]
 id = "modelo-131-2025-objective-estimation-instalment"
 title = "Modelo 131 objective-estimation instalment filing for 2025"
@@ -4128,7 +4349,7 @@ source_refs = [
     "aeat-modelo-131-recuperacion-declaraciones",
     "boe-modelo-131-2007-form",
 ]
-casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "saldo-negativo-fin-periodo"]
 formulas = [
     "modelo-131-2025-pago-fraccionado-sin-datos-base",
     "modelo-131-2025-pago-fraccionado-agrario",
@@ -4136,8 +4357,12 @@ formulas = [
     "modelo-131-2025-diferencia",
     "modelo-131-2025-total",
     "modelo-131-2025-resultado",
+    "modelo-131-2025-saldo-negativo-fin-periodo",
 ]
 parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate"]
+bindings = ["modelo-131-2025-resultados-negativos-anteriores"]
+relations = ["modelo-131-2025-rel-self-prior-quarter-negative"]
+dependency_classifications = ["modelo-131-2025-dep-self-prior-quarter"]
 export_layouts = ["modelo-131-2025-fichero-boe"]
 extraction_profiles = ["modelo-131-2025-submitted-file"]
 live_cross_references = ["modelo-131-2025-filed-declarations-read"]
@@ -4414,7 +4639,9 @@ label = "Resultados negativos de trimestres anteriores"
 section = ["total_liquidacion"]
 data_type = "money"
 required = false
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-131-2026-resultados-negativos-anteriores"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
 export_refs = ["modelo-131-casilla-11"]
@@ -5792,6 +6019,75 @@ discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "c
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
 
+# -----------------------------------------------------------------------------
+# Prior-quarter negative-result carry-forward (RD 439/2007 art. 110.5)
+# revision 2026.
+# -----------------------------------------------------------------------------
+
+[[revisions."2026".casillas]]
+id = "saldo-negativo-fin-periodo"
+number = "saldo-negativo-fin-periodo"
+label = "Saldo negativo trasladable a periodos posteriores (max 0, -casilla 10)"
+section = ["computed_carry_forward"]
+data_type = "money"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2026-saldo-negativo-fin-periodo"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026-v101"]
+
+[[revisions."2026".bindings]]
+id = "modelo-131-2026-resultados-negativos-anteriores"
+source = "previous_filing"
+selector = { source_modelo = "131", source_output = "saldo-negativo-fin-periodo" }
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".bindings.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]
+
+[[revisions."2026".formulas]]
+id = "modelo-131-2026-saldo-negativo-fin-periodo"
+target = "saldo-negativo-fin-periodo"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "negate", args = [{ casilla = "10" }] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026-v101"]
+
+[[revisions."2026".formulas.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = ["Resultados negativos"]
+
+[[revisions."2026".relations]]
+id = "modelo-131-2026-rel-self-prior-quarter-negative"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "131"
+source_revision_selector = { filing_year_delta = 0 }
+source_output = "saldo-negativo-fin-periodo"
+target_binding = "modelo-131-2026-resultados-negativos-anteriores"
+period_alignment = { mode = "previous_quarter" }
+source_period_offset_from_target = -1
+target_periods = ["2T", "3T", "4T"]
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
+[[revisions."2026".dependency_classifications]]
+id = "modelo-131-2026-dep-self-prior-quarter"
+source_modelo = "131"
+treatment = "factual_evidence"
+target_constructs = ["modelo-131-2026-objective-estimation-instalment"]
+relation_refs = ["modelo-131-2026-rel-self-prior-quarter-negative"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions"]
+
 [[revisions."2026".constructs]]
 id = "modelo-131-2026-objective-estimation-instalment"
 title = "Modelo 131 objective-estimation instalment filing for 2026"
@@ -5804,7 +6100,7 @@ source_refs = [
     "aeat-modelo-131-recuperacion-declaraciones",
     "boe-modelo-131-2007-form",
 ]
-casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"]
+casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "saldo-negativo-fin-periodo"]
 formulas = [
     "modelo-131-2026-pago-fraccionado-sin-datos-base",
     "modelo-131-2026-pago-fraccionado-agrario",
@@ -5812,8 +6108,12 @@ formulas = [
     "modelo-131-2026-diferencia",
     "modelo-131-2026-total",
     "modelo-131-2026-resultado",
+    "modelo-131-2026-saldo-negativo-fin-periodo",
 ]
 parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate"]
+bindings = ["modelo-131-2026-resultados-negativos-anteriores"]
+relations = ["modelo-131-2026-rel-self-prior-quarter-negative"]
+dependency_classifications = ["modelo-131-2026-dep-self-prior-quarter"]
 export_layouts = ["modelo-131-fichero-boe"]
 extraction_profiles = ["modelo-131-declaracion-pdf", "modelo-131-submitted-file"]
 live_cross_references = ["modelo-131-static-official", "modelo-131-filed-declarations-read"]

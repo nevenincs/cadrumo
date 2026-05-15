@@ -68,6 +68,7 @@ workbook-windows = [
 [package.dev-dependencies]
 dev = [
     { name = "furo" },
+    { name = "google-api-python-client-stubs" },
     { name = "import-linter" },
     { name = "myst-parser" },
     { name = "playwright" },
@@ -137,6 +138,7 @@ provides-extras = ["workbook-windows"]
 [package.metadata.requires-dev]
 dev = [
     { name = "furo", specifier = ">=2024.8" },
+    { name = "google-api-python-client-stubs", specifier = ">=1.36" },
     { name = "import-linter", specifier = ">=2.0" },
     { name = "myst-parser", specifier = ">=4.0" },
     { name = "playwright", specifier = ">=1.58.0" },
@@ -783,6 +785,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/6d/f3/34ef8aca7909675fe327f96c1ed927f0520e7acf68af19157e96acc05e76/google_api_python_client-2.196.0.tar.gz", hash = "sha256:9f335d38f6caaa2747bcf64335ed1a9a19047d53e86538eda6a1b17d37f1743d", size = 14628129, upload-time = "2026-05-06T23:47:35.655Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/99/c7/1817b4edf966d5afcac1c0781ca36d621bc0cb58104c4e7c2a475ab185f7/google_api_python_client-2.196.0-py3-none-any.whl", hash = "sha256:2591e9b47dcb17e4e62a09370aaee3bcf323af8f28ccecdabcd0a42a23ca4db5", size = 15206663, upload-time = "2026-05-06T23:47:32.886Z" },
+]
+
+[[package]]
+name = "google-api-python-client-stubs"
+version = "1.36.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "google-api-python-client" },
+    { name = "types-httplib2" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2f/8a/62bdada81ca93969f5c436c789021fae7934a2c0d2cffa5bd5fbcf885ab0/google_api_python_client_stubs-1.36.0.tar.gz", hash = "sha256:abbe9584564993f754c7367258239f6ba7080847288d91d9cad75ffccce19fa3", size = 2642973, upload-time = "2026-05-04T17:17:58.388Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/01/d8/3933060f381ab9bdc614f7191584980b40f2239bf0599a4d3e2e2deedd38/google_api_python_client_stubs-1.36.0-py3-none-any.whl", hash = "sha256:e03fbcabc3d25cdb276de0aa4677012f544b1eaabd8b48f6dfd08095976c6a05", size = 3637680, upload-time = "2026-05-04T17:17:56.531Z" },
 ]
 
 [[package]]
@@ -3461,6 +3477,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/da/d2/4553c8fa9cdebfe1e84b950cf790a4d2376a97fa016e43f7c65323fa6c7d/types_defusedxml-0.7.0.20260504.tar.gz", hash = "sha256:2ab2828a3f97111ba1c16cee273ad4124a831fc9198c41bf8368ff6ea48ad300", size = 10729, upload-time = "2026-05-04T05:22:50.192Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bf/2d/8a4b5ba1d732b8bc691f0efbb1c6f77cb5f6f473b2afe181d83d910773c5/types_defusedxml-0.7.0.20260504-py3-none-any.whl", hash = "sha256:a959e3a0a43b93e464bd625d91ec9193a2703ddc10443bdd627792485fae0b10", size = 13467, upload-time = "2026-05-04T05:22:49.319Z" },
+]
+
+[[package]]
+name = "types-httplib2"
+version = "0.31.2.20260408"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6d/04/7237d9b368f67866165244e68bac2332b3c8e3eff2a459c000e887c9f41d/types_httplib2-0.31.2.20260408.tar.gz", hash = "sha256:ebf7ba1b5910500762df8bbafcad8f6e5813403442dc0439d86788d81327f1fe", size = 10670, upload-time = "2026-04-08T04:26:47.038Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ed/30/66440785ca0193e9e5e8126c7ee9f9fd8b9411f675f16b8fa5697cdceeb5/types_httplib2-0.31.2.20260408-py3-none-any.whl", hash = "sha256:a6ef6deea469e71fbde4226c2a79c5ed8f40f201171d9bcd2ba20752dbf3766e", size = 10645, upload-time = "2026-04-08T04:26:46.022Z" },
 ]
 
 [[package]]
