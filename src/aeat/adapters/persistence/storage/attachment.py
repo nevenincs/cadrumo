@@ -5,6 +5,14 @@ Concrete adapter-layer implementation of the
 domain declares the protocol; this module provides the implementation that
 reads/writes encrypted attachment blobs and manifests through the secure-
 object persistence substrate.
+
+Sensitivity rationale: attachment blobs and manifests are content-addressed
+byte objects (invoice PDFs, bank statements, supporting documents) that are
+FINANCIAL regardless of the modelo that triggered the upload. Attachments are
+not modelo-scoped — a single blob may be referenced from multiple modelos and
+filing revisions. The ``ModeloDefinition.output_sensitivity`` field governs
+model *output* artefacts; attachment storage is an independent content-
+addressed substrate and its sensitivity class is irreducibly FINANCIAL.
 """
 
 from __future__ import annotations
@@ -102,6 +110,7 @@ class AttachmentStore(BaseModel):
         objects.save(
             namespace=_ATTACHMENT_BLOB_NAMESPACE,
             object_key=digest,
+            # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
             classification=SensitivityClass.FINANCIAL,
             schema_version=_ATTACHMENT_BLOB_VERSION,
             written_at=datetime.now(UTC),
@@ -131,6 +140,7 @@ class AttachmentStore(BaseModel):
         self._objects_repo().save(
             namespace=_ATTACHMENT_BLOB_NAMESPACE,
             object_key=digest,
+            # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
             classification=SensitivityClass.FINANCIAL,
             schema_version=_ATTACHMENT_BLOB_VERSION,
             written_at=datetime.now(UTC),
@@ -146,6 +156,7 @@ class AttachmentStore(BaseModel):
         record = self._objects_repo().load(
             _ATTACHMENT_BLOB_NAMESPACE,
             digest,
+            # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
             expected_class=SensitivityClass.FINANCIAL,
             max_supported_version=_ATTACHMENT_BLOB_VERSION,
         )
@@ -169,6 +180,7 @@ class AttachmentStore(BaseModel):
     def write_manifest(self, attachment: Attachment) -> None:
         """Persist ``attachment`` as an encrypted database object."""
 
+        # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
         envelope = Envelope[Attachment](
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
             written_at=datetime.now(UTC),
@@ -192,6 +204,7 @@ class AttachmentStore(BaseModel):
         record = self._objects_repo().load(
             _ATTACHMENT_MANIFEST_NAMESPACE,
             digest,
+            # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
             expected_class=SensitivityClass.FINANCIAL,
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
         )
@@ -216,6 +229,7 @@ class AttachmentStore(BaseModel):
         manifests: list[Attachment] = []
         for record in self._objects_repo().list_records(
             _ATTACHMENT_MANIFEST_NAMESPACE,
+            # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
             expected_class=SensitivityClass.FINANCIAL,
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
         ):
