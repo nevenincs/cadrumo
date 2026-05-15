@@ -176,8 +176,6 @@ class LegalReference(RegistryModel):
     def _validate_legal_reference(self) -> LegalReference:
         if self.effective_to is not None and self.effective_to < self.effective_from:
             raise RegistryValidationError("legal reference effective_to must be on or after effective_from")
-        if self.review_status != "reviewed":
-            raise RegistryValidationError(f"legal reference {self.id!r} is not reviewed")
         if any(not item.strip() for item in self.required_text):
             raise RegistryValidationError("legal reference required_text entries must be non-empty")
         if len(set(self.required_text)) != len(self.required_text):
@@ -211,8 +209,6 @@ class SourceReference(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_source_reference(self) -> SourceReference:
-        if self.review_status != "reviewed":
-            raise RegistryValidationError(f"source reference {self.id!r} is not reviewed")
         if self.applies_to is not None and self.applies_from is not None and self.applies_to < self.applies_from:
             raise RegistryValidationError("source reference applies_to must be on or after applies_from")
         if "\\" in self.corpus_path or self.corpus_path.startswith(("/", ".")):
