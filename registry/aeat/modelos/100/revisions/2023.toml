@@ -10314,7 +10314,7 @@ id = "0706"
 number = "0706"
 label = "\"Andalucía Valderrama Masters 2022/2024\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10322,7 +10322,7 @@ id = "0707"
 number = "0707"
 label = "\"Bicentenario de la Policia Nacional\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10695,7 +10695,7 @@ id = "0752"
 number = "0752"
 label = "Deducciones acogidas al régimen general de la Ley del Impuesto sobre Sociedades: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10703,7 +10703,7 @@ id = "0753"
 number = "0753"
 label = "Regímenes especiales de apoyo a acontecimientos de excepcional interés público: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10711,7 +10711,7 @@ id = "0754"
 number = "0754"
 label = "Por actividades de investigación y desarrollo (art. 35.1 de la LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10719,7 +10719,7 @@ id = "0755"
 number = "0755"
 label = "Por inversiones en producciones cinematográficas y series audiovisuales españolas (art. 36.1 de la LIS). Deducción para el productor: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10727,7 +10727,7 @@ id = "0756"
 number = "0756"
 label = "Creación de empleo para trabajadores con discapacidad (art. 38º de la LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10735,7 +10735,7 @@ id = "0757"
 number = "0757"
 label = "\"Gran Premio de España de Fórmula 1\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10743,7 +10743,7 @@ id = "0758"
 number = "0758"
 label = "Por inversión en beneficios (art. 37º del TRLIS, D.T. 24ª LIS) (solo si existe un plan especial de inversión aprobado por la Administración que permita invertir en este ejercicio): Aplicado en esta..."
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10751,7 +10751,7 @@ id = "0759"
 number = "0759"
 label = "Deducción por inversiones en territorios de África Occidental (art.º 27.1.a) bis de la Ley 19/1994): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10759,7 +10759,7 @@ id = "0760"
 number = "0760"
 label = "\"Centenario Federación Aragonesa de Fútbol\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10767,7 +10767,7 @@ id = "0761"
 number = "0761"
 label = "\"Plan 2030 de Apoyo al Deporte de Base\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10775,7 +10775,7 @@ id = "0762"
 number = "0762"
 label = "\"Universo Mujer III\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10791,7 +10791,7 @@ id = "0764"
 number = "0764"
 label = "Por contribuciones empresariales a sistemas de previsión social (D.A. tercera Real Decreto-ley13/2022): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10799,7 +10799,7 @@ id = "0765"
 number = "0765"
 label = "\"175 Aniversario de la construcción del Gran Teatre del Liceu\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10807,7 +10807,7 @@ id = "0766"
 number = "0766"
 label = "\"Programa de preparación de los deportistas españoles de los Juegos de París 2024\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10815,7 +10815,7 @@ id = "0767"
 number = "0767"
 label = "\"4ª Edición de la Barcelona World Race\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10823,7 +10823,7 @@ id = "0768"
 number = "0768"
 label = "\"100 años del fallecimiento de Joaquín Sorolla\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10847,7 +10847,7 @@ id = "0773"
 number = "0773"
 label = "\"20 Aniversario de Primavera Sound\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10887,7 +10887,7 @@ id = "0779"
 number = "0779"
 label = "\"Centenario del nacimiento de Victoria de los Ángeles\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10895,7 +10895,7 @@ id = "0780"
 number = "0780"
 label = "\"Plan Decenio Milliarium Montserrat 1025-2025\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10903,7 +10903,7 @@ id = "0781"
 number = "0781"
 label = "\"Conmemoración del 50 aniversario de la muerte del artista español Pablo Picasso\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10911,7 +10911,7 @@ id = "0782"
 number = "0782"
 label = "\"Todos contra el cáncer\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10919,7 +10919,7 @@ id = "0783"
 number = "0783"
 label = "\"Año de Investigación Santiago Ramón y Cajal 2022\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10927,7 +10927,7 @@ id = "0784"
 number = "0784"
 label = "\"Año Jubilar Lebaniego 2023-2024\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10935,7 +10935,7 @@ id = "0785"
 number = "0785"
 label = "\"Mundo Voluntario 2030/35º Aniversario Plataforma del Voluntariado de España\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10943,7 +10943,7 @@ id = "0786"
 number = "0786"
 label = "\"7ª Conferencia Mundial sobre Turismo Enológico de la OMT 2023\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10951,7 +10951,7 @@ id = "0787"
 number = "0787"
 label = "\"Caravaca de la Cruz 2024. Año Jubilar\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10959,7 +10959,7 @@ id = "0788"
 number = "0788"
 label = "\"Bicentenario del Ateneo de Madrid\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -10984,7 +10984,7 @@ id = "0791"
 number = "0791"
 label = "\"Barcelona Equestrian Challenge (4ª Edición)\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11001,7 +11001,7 @@ id = "0793"
 number = "0793"
 label = "\"200 ANIVERSARIO DEL PASSEIG DE GRÁCIA\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11018,7 +11018,7 @@ id = "0796"
 number = "0796"
 label = "\"Reconstucción de la Piscina Histórica cubierta de saltos del Club Natació Barcelona (CNB)\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11026,7 +11026,7 @@ id = "0797"
 number = "0797"
 label = "\"ALIMENTARIA 2022\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11165,7 +11165,7 @@ id = "0815"
 number = "0815"
 label = "\"Plan Berlanga\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11181,7 +11181,7 @@ id = "0817"
 number = "0817"
 label = "\"Plan de Fomento de la ópera en la Calle del Teatro Real\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11287,7 +11287,7 @@ id = "0830"
 number = "0830"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2022 que se invierten en elementos nuevos afectos"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11295,7 +11295,7 @@ id = "0831"
 number = "0831"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2022 que se invierten en elementos nuevos afectos: Importe con derecho a deducción(*)"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11303,7 +11303,7 @@ id = "0832"
 number = "0832"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2022 que se invierten en elementos nuevos afectos: Importe de la deducción (**)"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11311,7 +11311,7 @@ id = "0833"
 number = "0833"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2023 que se invierten en elementos nuevos afectos"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11319,7 +11319,7 @@ id = "0834"
 number = "0834"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2023 que se invierten en elementos nuevos afectos: Importe con derecho a deducción(*)"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11327,7 +11327,7 @@ id = "0835"
 number = "0835"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2023 que se invierten en elementos nuevos afectos: Importe de la deducción (**)"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11335,7 +11335,7 @@ id = "0836"
 number = "0836"
 label = "Deducción por inversión en elementos nuevos del inmovilizado material o inversiones inmobiliarias afectas a actividades económicas: Importe de la deducción (**)"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11343,7 +11343,7 @@ id = "0837"
 number = "0837"
 label = "Inversiones en la adquisición de activos fijos: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11351,7 +11351,7 @@ id = "0838"
 number = "0838"
 label = "Restantes modalidades: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11359,7 +11359,7 @@ id = "0839"
 number = "0839"
 label = "Por actividades de investigación y desarrollo (art. 35.1 de la LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11367,7 +11367,7 @@ id = "0840"
 number = "0840"
 label = "Por inversiones en producciones cinematográficas y series audiovisuales españolas (art. 36.1 de la LIS). Deducción para el productor: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11375,7 +11375,7 @@ id = "0841"
 number = "0841"
 label = "Creación de empleo para trabajadores con discapacidad (art.º 38 de la LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11383,7 +11383,7 @@ id = "0842"
 number = "0842"
 label = "Por contribuciones empresariales a sistemas de previsión social (D.A. tercera Real Decreto-ley13/2022): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11391,7 +11391,7 @@ id = "0843"
 number = "0843"
 label = "Deducción por gastos de propaganda y publicidad (art.º 27.1.b) bis de la Ley 19/1994): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -11399,7 +11399,7 @@ id = "0844"
 number = "0844"
 label = "Ejercicio 2023. Inversiones en la adquisición de activos fijos: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -17692,7 +17692,7 @@ id = "1623"
 number = "1623"
 label = "\"HOSTELCO 2022\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -17727,7 +17727,7 @@ id = "1627"
 number = "1627"
 label = "\"Barcelona Music Lab. El futuro de la música\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -17735,7 +17735,7 @@ id = "1629"
 number = "1629"
 label = "\"South Summit 2022-2024\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -17743,7 +17743,7 @@ id = "1630"
 number = "1630"
 label = "\"Año Santo Jubilar San Isidro Labrador\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18205,7 +18205,7 @@ id = "1686"
 number = "1686"
 label = "Por actividades de innovación tecnológica (art. 35.2 LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18213,7 +18213,7 @@ id = "1687"
 number = "1687"
 label = "Por inversiones en producciones cinematográficas extranjeras en España (art. 36.2 de la LIS) (**): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18221,7 +18221,7 @@ id = "1688"
 number = "1688"
 label = "Por inversiones en producciones de espectáculos en vivo de artes escénicas y musicales (art. 36.3 LIS). Deducción para el productor: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18229,7 +18229,7 @@ id = "1689"
 number = "1689"
 label = "\"Alicante 2021. Salida Vuelta al Mundo a Vela\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18237,7 +18237,7 @@ id = "1690"
 number = "1690"
 label = "\"Bicentenarios de la independencia de las Republicas lberoamericanas\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18245,7 +18245,7 @@ id = "1691"
 number = "1691"
 label = "\"150 Aniversario de creación de la Academia de España en Roma\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18253,7 +18253,7 @@ id = "1692"
 number = "1692"
 label = "\"Torneo Davis Cup Madrid\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18261,7 +18261,7 @@ id = "1693"
 number = "1693"
 label = "Celebración del Summit \"MADBLUE\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18269,7 +18269,7 @@ id = "1694"
 number = "1694"
 label = "\"30 Aniversario de la Escuela Superior de Música Reina Sofía\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18301,7 +18301,7 @@ id = "1698"
 number = "1698"
 label = "\"MADRID HORSE WEEK 21/23\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18309,7 +18309,7 @@ id = "1699"
 number = "1699"
 label = "\"Centenario del Rugby en España y de la Unió Esportiva Santboiana\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18317,7 +18317,7 @@ id = "1700"
 number = "1700"
 label = "\"Solheim Cup 2023\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18325,7 +18325,7 @@ id = "1701"
 number = "1701"
 label = "\"IX Centenario de la Reconquista de Sigüenza\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18333,7 +18333,7 @@ id = "1702"
 number = "1702"
 label = "\"Barcelona Mobile World Capital\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18341,7 +18341,7 @@ id = "1703"
 number = "1703"
 label = "\"Valencia, Capital Mundial del Diseño 2022 / Valencia World Design Capital 2022\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18349,7 +18349,7 @@ id = "1705"
 number = "1705"
 label = "\"Centenario de Revista de Occidente\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18357,7 +18357,7 @@ id = "1706"
 number = "1706"
 label = "\"50 aniversario del fallecimiento de Clara Campoamor. 90 años del inicio de una democracia plena\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18365,7 +18365,7 @@ id = "1707"
 number = "1707"
 label = "\"V Centenario del fallecimiento de Elio Antonio de Nebrija\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18373,7 +18373,7 @@ id = "1708"
 number = "1708"
 label = "\"Nuevas Metas II\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18389,7 +18389,7 @@ id = "1710"
 number = "1710"
 label = "\"Andalucía Región Europea del Deporte 2021\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18397,7 +18397,7 @@ id = "1711"
 number = "1711"
 label = "\"75 aniversario de la Ópera en Oviedo\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18405,7 +18405,7 @@ id = "1712"
 number = "1712"
 label = "Hábitos Saludables para el control del riesgo Cardiovascular \"Aprender a cuidarnos\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18413,7 +18413,7 @@ id = "1713"
 number = "1713"
 label = "\"Mundiales Bádminton España\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18421,7 +18421,7 @@ id = "1714"
 number = "1714"
 label = "\"Centenario de la Batalla de Covadonga-Cuadonga\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18429,7 +18429,7 @@ id = "1715"
 number = "1715"
 label = "\"VII Centenario de la Catedral de Palencia 2021-2022\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18437,7 +18437,7 @@ id = "1716"
 number = "1716"
 label = "\"FITUR especial: recuperación turismo\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18445,7 +18445,7 @@ id = "1717"
 number = "1717"
 label = "\"Programa Deporte lnclusivo II\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18469,7 +18469,7 @@ id = "1720"
 number = "1720"
 label = "\"50 aniversario del Hospital Sant Joan de Deu\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18485,7 +18485,7 @@ id = "1722"
 number = "1722"
 label = "Por inversiones en producciones cinematográficas y series audiovisuales españolas (art. 36.1 de la LIS). Deducción para el financiador (*): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18493,7 +18493,7 @@ id = "1723"
 number = "1723"
 label = "Por inversiones en producciones de espectáculos en vivo de artes escénicas y musicales (art. 36.3 LIS). Deducción para el financiador (*): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18502,7 +18502,7 @@ number = "1724"
 label = "NIF del productor 1"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18511,7 +18511,7 @@ number = "1725"
 label = "NIF del productor 2"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18520,7 +18520,7 @@ number = "1726"
 label = "NIF del productor 3"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18528,7 +18528,7 @@ id = "1727"
 number = "1727"
 label = "Por actividades de innovación tecnológica (art. 35.2 LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18536,7 +18536,7 @@ id = "1728"
 number = "1728"
 label = "Por inversiones en producciones cinematográficas extranjeras en España (art. 36.2 de la LIS) (*): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18544,7 +18544,7 @@ id = "1729"
 number = "1729"
 label = "Por inversiones en producciones de espectáculos en vivo de artes escénicas y musicales (art. 36.3 LIS). Deducción para el productor: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18552,7 +18552,7 @@ id = "1730"
 number = "1730"
 label = "Por inversiones en producciones cinematográficas y series audiovisuales españolas (art. 36.1 de la LIS). Deducción para el financiador(**): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18560,7 +18560,7 @@ id = "1731"
 number = "1731"
 label = "Por inversiones en producciones de espectáculos en vivo de artes escénicas y musicales (art. 36.3 LIS). Deducción para el productor: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18569,7 +18569,7 @@ number = "1732"
 label = "NIF del productor 1"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18578,7 +18578,7 @@ number = "1733"
 label = "NIF del productor 2"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -18587,7 +18587,7 @@ number = "1734"
 label = "NIF del productor 3"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20354,7 +20354,7 @@ id = "1944"
 number = "1944"
 label = "\"Inauguración de la Galería de las Colecciones Reales\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20362,7 +20362,7 @@ id = "1945"
 number = "1945"
 label = "\"Centenario del Hockey 1923-2023\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20370,7 +20370,7 @@ id = "1946"
 number = "1946"
 label = "\"60 Aniversario Rally Blendio Princesa de Asturias Ciudad de Oviedo\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20378,7 +20378,7 @@ id = "1947"
 number = "1947"
 label = "\"60 aniversario del Festival Porta Ferrada\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20386,7 +20386,7 @@ id = "1948"
 number = "1948"
 label = "\"Programa EN PLAN BIEN\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20394,7 +20394,7 @@ id = "1949"
 number = "1949"
 label = "\"125 aniversario del Athletic Club 1898-2023\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20402,7 +20402,7 @@ id = "1950"
 number = "1950"
 label = "\"Ryder Cup 2031\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20410,7 +20410,7 @@ id = "1951"
 number = "1951"
 label = "\"Open Barcelona-Trofeo Conde de Godó\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20418,7 +20418,7 @@ id = "1952"
 number = "1952"
 label = "\"125 aniversario del Real Club de Tenis Barcelona\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20426,7 +20426,7 @@ id = "1953"
 number = "1953"
 label = "\"750 aniversario del Consolat del Mar\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20434,7 +20434,7 @@ id = "1954"
 number = "1954"
 label = "\"Congreso de la Unión Internacional de Arquitectos\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20442,7 +20442,7 @@ id = "1955"
 number = "1955"
 label = "\"Festival Internacional Sónar de Música, Creativitat i Tecnologia\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20450,7 +20450,7 @@ id = "1956"
 number = "1956"
 label = "\"XXXVII Copa América Barcelona\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20458,7 +20458,7 @@ id = "1957"
 number = "1957"
 label = "\"Programa deportivo 'RETO DE'\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -20466,7 +20466,7 @@ id = "1958"
 number = "1958"
 label = "\"Celebración de la Bienal Manifesta 15 Barcelona\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
