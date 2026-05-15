@@ -345,3 +345,42 @@ def test_bucket_event_type_includes_workspace_bootstrap_kinds() -> None:
     assert BucketEventType.AUTH_PROVIDER_CONFIGURED.value == "auth.provider.configured"
     assert BucketEventType.CONFIG_ENV_UPDATED.value == "config.env.updated"
     assert BucketEventType.SETUP_STATE_MIGRATED.value == "setup.state.migrated"
+
+
+def test_bucket_event_type_includes_profile_lifecycle_extensions() -> None:
+    """Profile export / import / activation have dedicated canonical
+    enum slots distinct from PROFILE_SELECTED so callers can record
+    archive-aware lifecycle transitions in the bucket-event-history
+    catalogue."""
+
+    from aeat.domain.buckets._event import BucketEventType
+
+    assert BucketEventType.PROFILE_EXPORTED.value == "profile.exported"
+    assert BucketEventType.PROFILE_IMPORTED.value == "profile.imported"
+    assert BucketEventType.PROFILE_ACTIVATED.value == "profile.activated"
+
+
+def test_bucket_event_type_includes_bucket_maintenance_kinds() -> None:
+    """Bucket maintenance verbs (export / import / rename / delete)
+    operate on the container itself rather than its contents and
+    have dedicated canonical enum slots so the maintenance audit
+    trail does not collide with content-mutation events."""
+
+    from aeat.domain.buckets._event import BucketEventType
+
+    assert BucketEventType.BUCKET_EXPORTED.value == "bucket.exported"
+    assert BucketEventType.BUCKET_IMPORTED.value == "bucket.imported"
+    assert BucketEventType.BUCKET_RENAMED.value == "bucket.renamed"
+    assert BucketEventType.BUCKET_DELETED.value == "bucket.deleted"
+
+
+def test_bucket_event_type_includes_ledger_ratios_mutation_kinds() -> None:
+    """Usage-ratio set / unset mutations have canonical enum slots
+    so the ratios CLI handlers can route emissions through the
+    bucket-event-history catalogue rather than skipping the audit
+    trail entirely."""
+
+    from aeat.domain.buckets._event import BucketEventType
+
+    assert BucketEventType.LEDGER_RATIOS_SET.value == "ledger.ratios.set"
+    assert BucketEventType.LEDGER_RATIOS_UNSET.value == "ledger.ratios.unset"
