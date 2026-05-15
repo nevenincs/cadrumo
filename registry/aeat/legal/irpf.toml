@@ -72,6 +72,26 @@ required_text = [
     "amortización",
 ]
 
+[legal."rd-439-2007:art-95"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-95.html#a95"
+document_id = "BOE-A-2007-6820"
+article = "95"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a95"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIRPF art 95: importe de las retenciones sobre rendimientos de actividades economicas. Establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, actividades artisticas IAE grupos 851-869). Base reglamentaria de la retencion sobre rendimientos de actividades economicas profesionales en Modelo 111."
+required_text = [
+    "Importe de las retenciones sobre rendimientos de actividades económicas",
+    "15 por ciento sobre los ingresos íntegros",
+    "7 por ciento",
+]
+
 [legal."rd-439-2007:art-108"]
 evidence_tier = "legal_authority"
 authority = "boe"
