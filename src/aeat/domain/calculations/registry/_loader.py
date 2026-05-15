@@ -6,15 +6,21 @@ import tomllib
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
 
 from pydantic import ValidationError
 
 from ._errors import RegistryLoadError
-from ._schema import LegalReference, ModeloDefinition, ModeloRevision, RegistryCatalogues, SourceReference
+from ._schema import (
+    LegalParameter,
+    LegalReference,
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+    SourceReference,
+)
 
 
-def _read_toml(path: Path) -> dict[str, Any]:
+def _read_toml(path: Path) -> dict[str, object]:
     try:
         with path.open("rb") as fh:
             return tomllib.load(fh)
@@ -24,15 +30,19 @@ def _read_toml(path: Path) -> dict[str, Any]:
         raise RegistryLoadError(f"{path}: cannot read TOML: {exc}") from exc
 
 
-def _freeze_toml(value: Any) -> Any:
+def _freeze_toml_value(value: object) -> object:
     if isinstance(value, list):
-        return tuple(_freeze_toml(item) for item in value)
+        return tuple(_freeze_toml_value(item) for item in value)
     if isinstance(value, dict):
-        return {key: _freeze_toml(item) for key, item in value.items()}
+        return {key: _freeze_toml_value(item) for key, item in value.items()}
     return value
 
 
-def _reject_local_catalogues(path: Path, data: Mapping[str, Any]) -> None:
+def _freeze_toml(data: dict[str, object]) -> dict[str, object]:
+    return {key: _freeze_toml_value(value) for key, value in data.items()}
+
+
+def _reject_local_catalogues(path: Path, data: Mapping[str, object]) -> None:
     forbidden = {"source", "sources", "legal", "legal_refs_catalogue"}
     present = sorted(forbidden.intersection(data))
     if present:
@@ -55,7 +65,7 @@ def _load_modelo_file_cached(path: str, byte_count: int, modified_ns: int) -> Mo
     return _build_modelo_definition_from_data(source_path, data)
 
 
-def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, Any]) -> ModeloDefinition:
+def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, object]) -> ModeloDefinition:
     """Validate a merged modelo TOML payload into a ModeloDefinition."""
 
     _reject_local_catalogues(source_path, data)
@@ -66,6 +76,8 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, Any
         raise RegistryLoadError(f"{source_path}: missing [revisions.<id>] tables")
     revisions: dict[str, ModeloRevision] = {}
     for revision_id, raw_revision in raw_revisions.items():
+        if not isinstance(revision_id, str):
+            raise RegistryLoadError(f"{source_path}: revision key must be a string")
         if not isinstance(raw_revision, dict):
             raise RegistryLoadError(f"{source_path}: revision {revision_id!r} must be a table")
         payload = {"id": revision_id, **raw_revision}
@@ -73,8 +85,11 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, Any
             revisions[revision_id] = ModeloRevision.model_validate(payload)
         except ValidationError as exc:
             raise RegistryLoadError(f"{source_path}: invalid revision {revision_id!r}: {exc}") from exc
+    modelo_table = data["modelo"]
+    if not isinstance(modelo_table, dict):
+        raise RegistryLoadError(f"{source_path}: [modelo] must be a table")
     try:
-        return ModeloDefinition.model_validate({**data["modelo"], "revisions": revisions})
+        return ModeloDefinition.model_validate({**modelo_table, "revisions": revisions})
     except ValidationError as exc:
         raise RegistryLoadError(f"{source_path}: invalid modelo definition: {exc}") from exc
 
@@ -124,7 +139,7 @@ def _load_modelo_directory_cached(
             f"{manifest_path}: directory-mode manifest must not declare [revisions]; "
             f"revision data lives in revisions/<id>.toml"
         )
-    merged_revisions: dict[str, Any] = {}
+    merged_revisions: dict[str, object] = {}
     revisions_dir = resolved / "revisions"
     if revisions_dir.is_dir():
         for path in sorted(revisions_dir.glob("*.toml")):
@@ -136,6 +151,8 @@ def _load_modelo_directory_cached(
             if not isinstance(file_revisions, dict) or not file_revisions:
                 raise RegistryLoadError(f"{path}: revision file must declare [revisions.<id>]")
             for revision_id, raw_revision in file_revisions.items():
+                if not isinstance(revision_id, str):
+                    raise RegistryLoadError(f"{path}: revision key must be a string")
                 if revision_id in merged_revisions:
                     raise RegistryLoadError(
                         f"{path}: revision {revision_id!r} already declared in another revisions/*.toml file"
@@ -143,7 +160,7 @@ def _load_modelo_directory_cached(
                 merged_revisions[revision_id] = raw_revision
     if not merged_revisions:
         raise RegistryLoadError(f"{resolved}: no revisions found in revisions/")
-    merged: dict[str, Any] = {**manifest_data, "revisions": merged_revisions}
+    merged: dict[str, object] = {**manifest_data, "revisions": merged_revisions}
     return _build_modelo_definition_from_data(resolved, merged)
 
 
@@ -162,17 +179,37 @@ def _load_catalogue_file_cached(path: str, byte_count: int, modified_ns: int) ->
     data = _freeze_toml(_read_toml(source_path))
     legal: dict[str, LegalReference] = {}
     sources: dict[str, SourceReference] = {}
-    for ref_id, payload in data.get("legal", {}).items():
-        try:
-            legal[ref_id] = LegalReference.model_validate({"id": ref_id, **payload})
-        except ValidationError as exc:
-            raise RegistryLoadError(f"{source_path}: invalid legal reference {ref_id!r}: {exc}") from exc
-    for ref_id, payload in data.get("sources", data.get("source", {})).items():
-        try:
-            sources[ref_id] = SourceReference.model_validate({"id": ref_id, **payload})
-        except ValidationError as exc:
-            raise RegistryLoadError(f"{source_path}: invalid source reference {ref_id!r}: {exc}") from exc
-    return RegistryCatalogues(legal=legal, sources=sources)
+    raw_legal = data.get("legal")
+    if isinstance(raw_legal, dict):
+        for ref_id, payload in raw_legal.items():
+            if not isinstance(ref_id, str) or not isinstance(payload, dict):
+                raise RegistryLoadError(f"{source_path}: malformed legal reference entry")
+            try:
+                legal[ref_id] = LegalReference.model_validate({"id": ref_id, **payload})
+            except ValidationError as exc:
+                raise RegistryLoadError(f"{source_path}: invalid legal reference {ref_id!r}: {exc}") from exc
+    raw_sources = data.get("sources") or data.get("source")
+    if isinstance(raw_sources, dict):
+        for ref_id, payload in raw_sources.items():
+            if not isinstance(ref_id, str) or not isinstance(payload, dict):
+                raise RegistryLoadError(f"{source_path}: malformed source reference entry")
+            try:
+                sources[ref_id] = SourceReference.model_validate({"id": ref_id, **payload})
+            except ValidationError as exc:
+                raise RegistryLoadError(f"{source_path}: invalid source reference {ref_id!r}: {exc}") from exc
+    parameters: dict[str, LegalParameter] = {}
+    raw_parameters = data.get("parameters")
+    if isinstance(raw_parameters, dict):
+        for param_id, payload in raw_parameters.items():
+            if not isinstance(param_id, str) or not isinstance(payload, dict):
+                raise RegistryLoadError(f"{source_path}: malformed legal parameter entry")
+            try:
+                parameters[param_id] = LegalParameter.model_validate({"id": param_id, **payload})
+            except ValidationError as exc:
+                raise RegistryLoadError(
+                    f"{source_path}: invalid legal parameter {param_id!r}: {exc}"
+                ) from exc
+    return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
 
 
 def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
@@ -216,17 +253,21 @@ def _load_registry_tree_cached(
     modelos_dir = resolved / "modelos"
     legal: dict[str, LegalReference] = {}
     sources: dict[str, SourceReference] = {}
+    parameters: dict[str, LegalParameter] = {}
     modelos: list[ModeloDefinition] = []
     for path in sorted(legal_dir.glob("*.toml")):
         catalogue = load_catalogue_file(path)
         overlap_legal = set(legal).intersection(catalogue.legal)
         overlap_sources = set(sources).intersection(catalogue.sources)
-        if overlap_legal or overlap_sources:
+        overlap_parameters = set(parameters).intersection(catalogue.parameters)
+        if overlap_legal or overlap_sources or overlap_parameters:
             raise RegistryLoadError(
-                f"{path}: duplicate catalogue ids legal={sorted(overlap_legal)!r} sources={sorted(overlap_sources)!r}"
+                f"{path}: duplicate catalogue ids legal={sorted(overlap_legal)!r} "
+                f"sources={sorted(overlap_sources)!r} parameters={sorted(overlap_parameters)!r}"
             )
         legal.update(catalogue.legal)
         sources.update(catalogue.sources)
+        parameters.update(catalogue.parameters)
     seen_modelo_ids: set[str] = set()
     for path in sorted(modelos_dir.glob("*.toml")):
         modelo = load_modelo_file(path)
@@ -245,7 +286,7 @@ def _load_registry_tree_cached(
                     )
                 seen_modelo_ids.add(modelo.id)
                 modelos.append(modelo)
-    return tuple(modelos), RegistryCatalogues(legal=legal, sources=sources)
+    return tuple(modelos), RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
 
 
 def _toml_fingerprint(path: Path) -> tuple[str, int, int]:

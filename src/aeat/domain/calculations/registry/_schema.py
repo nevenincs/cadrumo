@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from itertools import pairwise
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
@@ -36,7 +36,7 @@ from ._ids import (
 )
 
 
-def _coerce_decimal(value: Any) -> Any:
+def _coerce_decimal(value: object) -> object:
     if isinstance(value, Decimal):
         return value
     if isinstance(value, bool | float):
@@ -220,6 +220,35 @@ class SourceReference(RegistryModel):
         if lowered != value or any(char not in "0123456789abcdef" for char in value):
             raise RegistryValidationError("sha256 must be lowercase hexadecimal")
         return value
+
+
+class LegalParameter(RegistryModel):
+    """Authoritative numeric/categorical constant grounded in BOE law.
+
+    Distinct from :class:`LegalReference` (which catalogues articles) and
+    from per-modelo ``[[revisions.parameters]]`` blocks (which carry
+    revision-scoped parameter values). A ``LegalParameter`` is a global
+    constant tied to a specific legal article — e.g., the 19 percent
+    urban-rental retention rate, the 1.1 percent imputación rate, the
+    €400 8th-Directive refund threshold.
+
+    Lives in ``registry/aeat/legal/*.toml`` under top-level
+    ``[parameters."slug"]`` tables and is loaded into
+    :class:`RegistryCatalogues.parameters` so consumers go through the
+    single validated registry-load surface instead of opening the TOML
+    file directly.
+    """
+
+    id: str
+    evidence_tier: Literal["legal_authority"]
+    value: str
+    unit: str
+    applies_to: str
+    legal_refs: LegalRefs
+    review_status: ReviewStatus
+    reviewed_at: date | None = None
+    reviewed_by: str | None = None
+    notes: str | None = None
 
 
 class SourceCitation(RegistryModel):
@@ -1135,6 +1164,7 @@ class ModeloDefinition(RegistryModel):
 class RegistryCatalogues(RegistryModel):
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
+    parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
 
 
 class RegistrySnapshot(RegistryModel):
