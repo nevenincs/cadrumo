@@ -116,7 +116,14 @@ class RowSetEdit(BaseModel):
 
 
 class PullMetadata(BaseModel):
-    """Workbook identity metadata recovered from developer metadata."""
+    """Workbook identity metadata recovered from developer metadata.
+
+    This is a loose parsing shape: ``exported_at`` is ``str | None`` because
+    the developer-metadata round-trip may yield a raw ISO string or nothing.
+    Use :meth:`to_sheet_export_metadata` to project onto the strict canonical
+    :class:`~aeat.application.storage.calc_sheets._records.SheetExportMetadata`
+    shape when the workbook is known to carry a valid export stamp.
+    """
 
     model_config = _STRICT_FROZEN
 
@@ -127,6 +134,30 @@ class PullMetadata(BaseModel):
     engine_version: str
     registry_sha: str
     exported_at: str | None = None
+
+    def to_sheet_export_metadata(self) -> SheetExportMetadata | None:
+        """Project onto SheetExportMetadata, parsing exported_at from ISO string.
+
+        Returns ``None`` when ``exported_at`` is absent or unparseable rather
+        than raising, so callers can treat a missing stamp as ``metadata_match="missing"``.
+        """
+        if not self.exported_at:
+            return None
+        try:
+            dt = datetime.fromisoformat(self.exported_at)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=UTC)
+        except ValueError:
+            return None
+        return SheetExportMetadata(
+            modelo_id=self.modelo_id,
+            revision_id=self.revision_id,
+            filing_year=self.filing_year,
+            period=self.period,
+            engine_version=self.engine_version,
+            registry_sha=self.registry_sha,
+            exported_at=dt,
+        )
 
 
 class PullResult(BaseModel):

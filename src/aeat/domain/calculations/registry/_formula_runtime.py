@@ -344,6 +344,36 @@ def _evaluate_expression(
         operand_refs.append(scalar_param_id)
         operand_values.append(result)
         return result
+    if op == "if_then_else":
+        # Short-circuit: evaluate the predicate first, then only the
+        # selected branch. Eager evaluation of both branches would
+        # surface false-branch errors (e.g. divide-by-zero) even when
+        # the predicate routes around them — defeating the conditional.
+        if len(expression.args) != 3:
+            raise RegistryValidationError("formula op 'if_then_else' expects 3 args")
+        predicate_value = _evaluate_expression(
+            expression.args[0],
+            values=values,
+            binding_values=binding_values,
+            parameters=parameters,
+            date_context=date_context,
+            relation_values=relation_values,
+            operand_refs=operand_refs,
+            operand_values=operand_values,
+            enum_binding_values=resolved_enum_bindings,
+        )
+        selected_branch = expression.args[1] if predicate_value != _ZERO else expression.args[2]
+        return _evaluate_expression(
+            selected_branch,
+            values=values,
+            binding_values=binding_values,
+            parameters=parameters,
+            date_context=date_context,
+            relation_values=relation_values,
+            operand_refs=operand_refs,
+            operand_values=operand_values,
+            enum_binding_values=resolved_enum_bindings,
+        )
     args = [
         _evaluate_expression(
             arg,
@@ -400,9 +430,6 @@ def _evaluate_expression(
     if op == "previous_period_sum":
         _require_non_empty(op, args)
         return sum(args, _ZERO)
-    if op == "if_then_else":
-        _require_arg_count(op, args, 3)
-        return args[1] if args[0] != _ZERO else args[2]
     raise RegistryValidationError(f"formula expression uses unsupported op {op!r}")
 
 
