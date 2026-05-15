@@ -96,9 +96,9 @@ Replace WorkflowStep.details: str with a typed union per step kind.
 Add a form_number field alongside semantic CasillaId so operators and
 machine consumers can reference BOE form numbers.
 
-- [ ] `P08.S27` - add optional form_number field to CasillaDefinition; `src/aeat/domain/calculations/registry/_schema.py`.
-- [ ] `P08.S28` - backfill form_number values for every BOE-printed casilla; `registry/aeat/modelos/`.
-- [ ] `P08.S29` - add CLI lookup --form-number on modelo casillas; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `P08.S27` - add optional form_number field to CasillaDefinition; `src/aeat/domain/calculations/registry/_schema.py`.
+- [x] `P08.S28` - backfill form_number values for every BOE-printed casilla; `registry/aeat/modelos/`.
+- [x] `P08.S29` - add CLI lookup --form-number on modelo casillas; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `P09` - cross-modelo dependency mechanism unification
 

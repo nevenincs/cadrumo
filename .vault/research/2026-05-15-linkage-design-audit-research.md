@@ -209,108 +209,108 @@ Status legend: `open`, `check-written`, `fixed`, `wontfix-document`.
 
 | Row | Site | Symbol / concept | Class | Witnesses | Status |
 |-----|------|------------------|-------|-----------|--------|
-| R001 | `src/aeat/application/modelo/_actions.py:817` | `dict(engine_result.values)` discards `engine_result.entries` | A | F1, F12, F14 | open |
-| R002 | `domain/calculations/registry/_bindings.py:66-90` | `RegistryFilingObservation.casilla_values: Mapping[str, Decimal]` | A | F1 (6) | open |
-| R003 | `domain/calculations/registry/_formula_runtime.py:36-47` | `RegistryCalculationResult.values: Mapping[str, Decimal]` | A | F1 | open |
-| R004 | `domain/calculations/registry/_formula_runtime.py:43` | `values` map merges bound/computed/informational casillas | A | F1 | open |
-| R005 | `domain/modelos/_calculation_revision.py:148,202` | `CalculationRevision.casilla_values` keys `str` | A | F1 | open |
-| R006 | `entrypoints/cli/_modelo.py:851-892` | `_calculation_revision_payload` serialises `dict[str, str]` | A,G | F1, F6 | open |
-| R007 | `domain/calculations/registry/_schema.py:817` | `DataBindingDefinition.selector: Mapping[str, str\|int\|...]` | B | F3 | open |
-| R008 | `domain/calculations/registry/_schema.py:954` | `RelationDefinition.source_revision_selector: Mapping[str, str\|int]` | B | F3 | open |
-| R009 | `domain/calculations/registry/_schema.py:957` | `period_alignment: Mapping[str, str\|int]` | B | F3 | open |
-| R010 | `domain/calculations/registry/_bindings.py:884,1047,1147` | `model_validate(dict(binding.selector))` at handler call only | B,C | F3 | open |
-| R011 | `domain/calculations/registry/_schema.py:946,955` | `RelationDefinition.source_output: CasillaId \| str` | I | F1 | open |
-| R012 | `domain/calculations/registry/_schema.py:923-929` | `AlgorithmBindingDefinition.target/inputs/outputs` accept bare `str` | I | F3, F5 | open |
-| R013 | `domain/calculations/registry/_relations.py:23-31` | `RegistryRelationSourceRequirement.source_modelo/source_output: str` | A | F1 | open |
-| R014 | `domain/calculations/registry/_relations.py:65-66` | `str(relation.source_output)` strips `CasillaId` discriminant | A,D | F1 | open |
-| R015 | `domain/calculations/registry/_relations.py:97,168-178,199` | `selector.get("year")` / `.get("filing_year_delta")` raw dict | B,C | F3 | open |
-| R016 | `domain/calculations/registry/_validate.py:1093` | `binding.selector.get("source_modelo")` raw lookup | B,C | F3 | open |
-| R017 | `domain/calculations/registry/_validate.py:215` | `_validate_relation_closure` runs only on full-tree validation | C | F2, F5 | open |
-| R018 | `domain/calculations/registry/_validate.py:993-1001` | `_missing_refs` for legal_refs runs only at validate_modelo | C | F2, F5 | open |
-| R019 | `domain/calculations/registry/_schema.py:831` | `CasillaDefinition.validation_refs` has no `_missing_refs` call | C,I | F5 | open |
-| R020 | `domain/calculations/registry/_schema.py:426` | `WorkbookParityReference.fixture_id: str` opaque | I | F5 | open |
-| R021 | `domain/calculations/registry/_ids.py:14-34` | All 21 ID types — regex only, no existence check | I | F5 | open |
-| R022 | `application/filing/runtime.py:78` | `RegistryCasillaSchema` dataclass — `str` IDs, `float\|int\|None` bounds | D | schema↔registry | open |
-| R023 | `domain/filing/_protocols.py:38,103` | `CasillaSchema` Protocol — duck-typed, no legal_refs | D,G | schema↔registry, F6 | open |
-| R024 | `domain/calculations/registry/_schema.py:882` vs `application/filing/runtime.py:78` vs `domain/filing/_protocols.py:38` | Three shapes of "casilla schema" | D | schema↔registry | open |
-| R025 | `domain/renta/_ledger_expenses.py:27` | `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` hardcoded mapping | E | F8 | open |
-| R026 | `domain/renta/_ledger_expenses.py:228` | Validator against the same hardcoded constant | E | F8 | open |
-| R027 | `domain/calculations/registry/_bindings.py:1160` | Re-validates `target_casilla` against the constant | E | F8 | open |
-| R028 | `domain/calculations/registry/_bindings.py:12` | Registry imports from `domain/renta/` | F | F7 | open |
-| R029 | `domain/renta/_substrate.py:49-83` | `RentaCCAA` 3-letter codes | D | F13 | open |
-| R030 | `domain/profile/_ccaa.py:13` | `CCAA` full names | D | F13 | open |
-| R031 | `registry/aeat/modelos/100/revisions/2025.toml:6430` | Dispatch table uses `madrid`/`andalucia`/`cataluna` lowercase | D | F13 | open |
+| R001 | `src/aeat/application/modelo/_actions.py:817` | `dict(engine_result.values)` discards `engine_result.entries` | A | F1, F12, F14 | fixed (Wave 3) |
+| R002 | `domain/calculations/registry/_bindings.py:66-90` | `RegistryFilingObservation.casilla_values: Mapping[str, Decimal]` | A | F1 (6) | fixed (Wave 3) |
+| R003 | `domain/calculations/registry/_formula_runtime.py:36-47` | `RegistryCalculationResult.values: Mapping[str, Decimal]` | A | F1 | fixed (Wave 3) |
+| R004 | `domain/calculations/registry/_formula_runtime.py:43` | `values` map merges bound/computed/informational casillas | A | F1 | fixed (Wave 3) |
+| R005 | `domain/modelos/_calculation_revision.py:148,202` | `CalculationRevision.casilla_values` keys `str` | A | F1 | fixed (Wave 3) |
+| R006 | `entrypoints/cli/_modelo.py:851-892` | `_calculation_revision_payload` serialises `dict[str, str]` | A,G | F1, F6 | fixed (Wave 3) |
+| R007 | `domain/calculations/registry/_schema.py:817` | `DataBindingDefinition.selector: Mapping[str, str\|int\|...]` | B | F3 | fixed (Wave 1) |
+| R008 | `domain/calculations/registry/_schema.py:954` | `RelationDefinition.source_revision_selector: Mapping[str, str\|int]` | B | F3 | fixed (Wave 1) |
+| R009 | `domain/calculations/registry/_schema.py:957` | `period_alignment: Mapping[str, str\|int]` | B | F3 | fixed (Wave 1) |
+| R010 | `domain/calculations/registry/_bindings.py:884,1047,1147` | `model_validate(dict(binding.selector))` at handler call only | B,C | F3 | fixed (Wave 1) |
+| R011 | `domain/calculations/registry/_schema.py:946,955` | `RelationDefinition.source_output: CasillaId \| str` | I | F1 | fixed (Wave 1) |
+| R012 | `domain/calculations/registry/_schema.py:923-929` | `AlgorithmBindingDefinition.target/inputs/outputs` accept bare `str` | I | F3, F5 | fixed (Wave 1) |
+| R013 | `domain/calculations/registry/_relations.py:23-31` | `RegistryRelationSourceRequirement.source_modelo/source_output: str` | A | F1 | fixed (Wave 3) |
+| R014 | `domain/calculations/registry/_relations.py:65-66` | `str(relation.source_output)` strips `CasillaId` discriminant | A,D | F1 | fixed (Wave 3) |
+| R015 | `domain/calculations/registry/_relations.py:97,168-178,199` | `selector.get("year")` / `.get("filing_year_delta")` raw dict | B,C | F3 | fixed (Wave 1) |
+| R016 | `domain/calculations/registry/_validate.py:1093` | `binding.selector.get("source_modelo")` raw lookup | B,C | F3 | fixed (Wave 1) |
+| R017 | `domain/calculations/registry/_validate.py:215` | `_validate_relation_closure` runs only on full-tree validation | C | F2, F5 | fixed (Wave 1) |
+| R018 | `domain/calculations/registry/_validate.py:993-1001` | `_missing_refs` for legal_refs runs only at validate_modelo | C | F2, F5 | fixed (Wave 1) |
+| R019 | `domain/calculations/registry/_schema.py:831` | `CasillaDefinition.validation_refs` has no `_missing_refs` call | C,I | F5 | fixed (Wave 1) |
+| R020 | `domain/calculations/registry/_schema.py:426` | `WorkbookParityReference.fixture_id: str` opaque | I | F5 | fixed (Wave 1) |
+| R021 | `domain/calculations/registry/_ids.py:14-34` | All 21 ID types — regex only, no existence check | I | F5 | fixed (Wave 1) |
+| R022 | `application/filing/runtime.py:78` | `RegistryCasillaSchema` dataclass — `str` IDs, `float\|int\|None` bounds | D | schema↔registry | fixed (Wave 2) |
+| R023 | `domain/filing/_protocols.py:38,103` | `CasillaSchema` Protocol — duck-typed, no legal_refs | D,G | schema↔registry, F6 | fixed (Wave 2) |
+| R024 | `domain/calculations/registry/_schema.py:882` vs `application/filing/runtime.py:78` vs `domain/filing/_protocols.py:38` | Three shapes of "casilla schema" | D | schema↔registry | fixed (Wave 2) |
+| R025 | `domain/renta/_ledger_expenses.py:27` | `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` hardcoded mapping | E | F8 | fixed (Wave 2) |
+| R026 | `domain/renta/_ledger_expenses.py:228` | Validator against the same hardcoded constant | E | F8 | fixed (Wave 2) |
+| R027 | `domain/calculations/registry/_bindings.py:1160` | Re-validates `target_casilla` against the constant | E | F8 | fixed (Wave 2) |
+| R028 | `domain/calculations/registry/_bindings.py:12` | Registry imports from `domain/renta/` | F | F7 | fixed (Wave 2) |
+| R029 | `domain/renta/_substrate.py:49-83` | `RentaCCAA` 3-letter codes | D | F13 | fixed (Wave 2) |
+| R030 | `domain/profile/_ccaa.py:13` | `CCAA` full names | D | F13 | fixed (Wave 2) |
+| R031 | `registry/aeat/modelos/100/revisions/2025.toml:6430` | Dispatch table uses `madrid`/`andalucia`/`cataluna` lowercase | D | F13 | fixed (Wave 2) |
 | R032 | `registry/aeat/modelos/100/revisions/2025.toml` | Zero per-casilla `export_refs`; XML dictionary only | L | F15 | open |
-| R033 | `registry/aeat/modelos/100/revisions/2025.toml:8249-8386` vs `2020-2024.toml` | `cross_model_output` relations only in 2025 | L | F16 | open |
-| R034 | `application/modelo/_borrador_binding.py:27,79,98,179` | `_MODELO_100 = "100"` exclusive gate | J | F19 | open |
-| R035 | `application/aggregation/_renta_ledger.py:91` | `modelo: str = Field(default="100", ...)` | J | export | open |
-| R036 | `core/classification/__init__.py:30` | `SensitivityClass` enum, no schema-side attachment | C | F4 | open |
-| R037 | `domain/justificante/_repository.py:82` | `SensitivityClass.AUDIT` hardcoded | C,J | F4 | open |
-| R038 | `domain/attachments/_repository.py:90` | `SensitivityClass.FINANCIAL` hardcoded | C,J | F4 | open |
-| R039 | `domain/justificante/_schema.py:30` | `Justificante` — no link to `FilingDraft` | D | F20 | open |
-| R040 | `domain/attachments/_models.py:69,114` | `Attachment` — no link to `FilingDraft` or `Justificante` | D | F20 | open |
-| R041 | `domain/filing/_schema.py:136,158` | `FilingDraft.schema_version: str` bare string | A,I | F20 | open |
-| R042 | `domain/calculations/registry/_filed_state.py:22,33` | `RegistryFiledStateComparison`/`Drift` — no artifact key | D | secure storage | open |
-| R043 | `core/json_contract.py:75,167,259-274` | `SchemaEnvelope` / `emit_json_success` — zero callers | H | F9 | open |
-| R044 | `entrypoints/cli/_modelo.py` (all `_emit` sites) | Ad-hoc `dict` payloads bypass `SchemaEnvelope` | G,H | F9 | open |
-| R045 | `domain/calculations/registry/_errors.py` | `RegistryValidationError` / `RegistrySnapshotError` — no typed `context` | G | F14 | open |
-| R046 | `entrypoints/cli/_modelo.py:500-518` | `aeat app modelo formulas` text omits `legal_refs` | G | F6 | open |
-| R047 | `entrypoints/cli/_review.py:16-37,40-63` and `_operator.py:126-182` | `review queue/view` strips `FilingValidationFinding.source` | G | F6 | open |
+| R033 | `registry/aeat/modelos/100/revisions/2025.toml:8249-8386` vs `2020-2024.toml` | `cross_model_output` relations only in 2025 | L | F16 | fixed (Wave 4) |
+| R034 | `application/modelo/_borrador_binding.py:27,79,98,179` | `_MODELO_100 = "100"` exclusive gate | J | F19 | fixed (Wave 4) |
+| R035 | `application/aggregation/_renta_ledger.py:91` | `modelo: str = Field(default="100", ...)` | J | export | fixed (Wave 4) |
+| R036 | `core/classification/__init__.py:30` | `SensitivityClass` enum, no schema-side attachment | C | F4 | fixed (Wave 4) |
+| R037 | `domain/justificante/_repository.py:82` | `SensitivityClass.AUDIT` hardcoded | C,J | F4 | fixed (Wave 4) |
+| R038 | `domain/attachments/_repository.py:90` | `SensitivityClass.FINANCIAL` hardcoded | C,J | F4 | wontfix-document |
+| R039 | `domain/justificante/_schema.py:30` | `Justificante` — no link to `FilingDraft` | D | F20 | wontfix-document |
+| R040 | `domain/attachments/_models.py:69,114` | `Attachment` — no link to `FilingDraft` or `Justificante` | D | F20 | wontfix-document |
+| R041 | `domain/filing/_schema.py:136,158` | `FilingDraft.schema_version: str` bare string | A,I | F20 | wontfix-document |
+| R042 | `domain/calculations/registry/_filed_state.py:22,33` | `RegistryFiledStateComparison`/`Drift` — no artifact key | D | secure storage | wontfix-document |
+| R043 | `core/json_contract.py:75,167,259-274` | `SchemaEnvelope` / `emit_json_success` — zero callers | H | F9 | fixed (Wave 3) |
+| R044 | `entrypoints/cli/_modelo.py` (all `_emit` sites) | Ad-hoc `dict` payloads bypass `SchemaEnvelope` | G,H | F9 | fixed (Wave 3) |
+| R045 | `domain/calculations/registry/_errors.py` | `RegistryValidationError` / `RegistrySnapshotError` — no typed `context` | G | F14 | fixed (Wave 3) |
+| R046 | `entrypoints/cli/_modelo.py:500-518` | `aeat app modelo formulas` text omits `legal_refs` | G | F6 | fixed (Wave 3) |
+| R047 | `entrypoints/cli/_review.py:16-37,40-63` and `_operator.py:126-182` | `review queue/view` strips `FilingValidationFinding.source` | G | F6 | fixed (Wave 3) |
 | R048 | `application/diagnostics.py:144-217` | `aeat config repair` five checks, zero cross-domain | C,G | F2 | fixed (Wave 3) |
 | R049 | `application/repair_integrity.py:1-180` | Repairs only `secure_objects` decryptability; no linkage repair | C,H | F2 | open |
-| R050 | `entrypoints/cli/_modelo.py:937-1020` | CLI work calculate accepts no `--relation` flag | H | F11 | open |
-| R051 | `entrypoints/cli/_modelo.py:1000` and `application/modelo/_actions.py:785` | `relation_values` defaults to empty dict | H | F11 | open |
-| R052 | `entrypoints/cli/_config/_google.py:664-740` | Export CLI docstring documents `--prefill-relations`; flag absent in code | H | F11 | open |
-| R053 | `entrypoints/cli/_config/_google.py:643-661` | `_load_snapshot` does not catch `RegistrySnapshotError` | C | CLI trace | open |
-| R054 | `application/modelo/_actions.py:752` | `str(work_unit.modelo)` coercion required at registry boundary | D | F21 | open |
-| R055 | `entrypoints/cli/_modelo.py:933-940` | `work_unit_id` and `--casilla` parsed as bare `str` | A | F21 | open |
-| R056 | `domain/calculations/registry/_loader.py:73,77,167,172` | `model_validate` over raw TOML `dict[str, Any]` | K | type escapes | open |
-| R057 | `adapters/persistence/storage/bucket/_manifest_io.py:115,120` | `tomllib.loads()` → `dict[str, Any]` before `model_validate` | K | type escapes | open |
-| R058 | `adapters/outbound/aeat/auth/_session_store.py:26-27,43` | `storage_state: dict[str, Any]` | K | type escapes | open |
-| R059 | `adapters/outbound/aeat/auth/_authenticator.py:317,920` | Same storage_state cast | K | type escapes | open |
-| R060 | `adapters/outbound/aeat/browser/session.py:69`, `_factory.py:76,176` | Browser context storage_state untyped | K | type escapes | open |
-| R061 | `adapters/outbound/aeat/auth/_providers.py:135,147` | `build_context_kwargs() -> Mapping[str, Any]` | K | type escapes | open |
-| R062 | `application/aggregation/_iva_ledger.py:165` | `issue_common: dict[str, Any]` spread into pydantic ctor | K | type escapes | open |
-| R063 | `application/aggregation/_renta_ledger.py:199` | Same spread pattern | K | type escapes | open |
-| R064 | `adapters/outbound/google/_calc_sheets_apply.py:292-606` | Google Sheets API request bodies raw dicts | K | type escapes | open |
-| R065 | `adapters/outbound/google/_calc_sheets_pull.py:221-231` | 9 magic-key extractions from spreadsheet metadata | K,L | type escapes | open |
-| R066 | `adapters/outbound/storage/_local.py:252-337` | Sidecar TOML navigated by magic keys; defaults empty silently | K,L | type escapes | open |
-| R067 | `adapters/outbound/storage/_google_drive.py:229-680` | Drive file metadata navigated as raw dicts | K | type escapes | open |
-| R068 | `adapters/outbound/aeat/sede/_declarations.py:621-623` | `action_indexes.get("justificante")` / `submitted_file` / `declaration_pdf` magic keys | K,L | type escapes | open |
-| R069 | `adapters/outbound/llm/_cache.py:148,264,277,288` | LLM cache payload cast + magic-key navigation | K | type escapes | open |
-| R070 | `adapters/persistence/storage/master_key/_master_key.py:586` | `preview.get("version")` magic key | K | type escapes | open |
-| R071 | `domain/calculations/registry/_schedules.py:71` | `_resolve_profile_fact` dotted-string traversal | C | type escapes top-10 | open |
-| R072 | `application/aggregation/_registry_provider.py:161` | `# type: ignore[arg-type]` on `source_kind: str` | K | type escapes | open |
-| R073 | `domain/calculations/registry/_bindings.py:1242` | `CounterpartAggregationObservation.source_kind: str`, no Literal | I | type escapes | open |
-| R074 | `domain/calculations/registry/_queries.py:368,378` | `_public_mapping` recursive type erasure | K,G | type escapes | open |
-| R075 | `domain/calculations/registry/_queries.py:99` | Public query exposes `selector: Mapping[str, object]` | G | type escapes | open |
-| R076 | `domain/calculations/registry/_legal.py:15` | Module-level `cast(...)` on legal source table | K | type escapes | open |
-| R077 | `application/registry/_corpus.py:846` | `cast(RuleKind, kind)` after manual membership check | K | type escapes | open |
-| R078 | `adapters/outbound/aeat/sede/_renta_web_open.py:106,363` | Playwright result `cast(Any, ...)` | K | type escapes | open |
-| R079 | `domain/modelos/_calculation_revision.py:337,346` | `# type: ignore[override]` on `__iter__` + `isinstance(key, str)` discrimination | K | type escapes | open |
-| R080 | `domain/modelos/_work_unit.py:198,268,277` | Coerce validator + cast + type: ignore[override] | K | type escapes | open |
-| R081 | `domain/modelos/_filing_record.py:169,282` | Same pattern | K | type escapes | open |
-| R082 | `domain/modelos/_verification_report.py:201` | Same pattern | K | type escapes | open |
-| R083 | `application/aggregation/_models.py:88,127,129,146,160,174` | Period parse isinstance + computed_field type: ignore | K | type escapes | open |
-| R084 | `application/aggregation/_service.py:178` | computed_field type: ignore | K | type escapes | open |
-| R085 | `adapters/persistence/storage/_rotation.py:333,446` | `settings: Any` parameter | K | type escapes | open |
-| R086 | `adapters/outbound/google/_calc_sheets_pull.py:202,261,468,491,504` | `isinstance(value, str)` discrimination on sheet cells | K | type escapes | open |
-| R087 | `application/storage/calc_sheets/_layout.py:105-136` | `SheetCellAddress` — workbook coords for Google sheet path | L | export | open |
+| R050 | `entrypoints/cli/_modelo.py:937-1020` | CLI work calculate accepts no `--relation` flag | H | F11 | fixed (Wave 4) |
+| R051 | `entrypoints/cli/_modelo.py:1000` and `application/modelo/_actions.py:785` | `relation_values` defaults to empty dict | H | F11 | fixed (Wave 4) |
+| R052 | `entrypoints/cli/_config/_google.py:664-740` | Export CLI docstring documents `--prefill-relations`; flag absent in code | H | F11 | fixed (Wave 4) |
+| R053 | `entrypoints/cli/_config/_google.py:643-661` | `_load_snapshot` does not catch `RegistrySnapshotError` | C | CLI trace | fixed (Wave 4) |
+| R054 | `application/modelo/_actions.py:752` | `str(work_unit.modelo)` coercion required at registry boundary | D | F21 | fixed (Wave 4) |
+| R055 | `entrypoints/cli/_modelo.py:933-940` | `work_unit_id` and `--casilla` parsed as bare `str` | A | F21 | fixed (Wave 4) |
+| R056 | `domain/calculations/registry/_loader.py:73,77,167,172` | `model_validate` over raw TOML `dict[str, Any]` | K | type escapes | fixed (Wave 1) |
+| R057 | `adapters/persistence/storage/bucket/_manifest_io.py:115,120` | `tomllib.loads()` → `dict[str, Any]` before `model_validate` | K | type escapes | fixed (Wave 1) |
+| R058 | `adapters/outbound/aeat/auth/_session_store.py:26-27,43` | `storage_state: dict[str, Any]` | K | type escapes | fixed (Wave 1) |
+| R059 | `adapters/outbound/aeat/auth/_authenticator.py:317,920` | Same storage_state cast | K | type escapes | fixed (Wave 1) |
+| R060 | `adapters/outbound/aeat/browser/session.py:69`, `_factory.py:76,176` | Browser context storage_state untyped | K | type escapes | fixed (Wave 1) |
+| R061 | `adapters/outbound/aeat/auth/_providers.py:135,147` | `build_context_kwargs() -> Mapping[str, Any]` | K | type escapes | fixed (Wave 1) |
+| R062 | `application/aggregation/_iva_ledger.py:165` | `issue_common: dict[str, Any]` spread into pydantic ctor | K | type escapes | fixed (Wave 1) |
+| R063 | `application/aggregation/_renta_ledger.py:199` | Same spread pattern | K | type escapes | fixed (Wave 1) |
+| R064 | `adapters/outbound/google/_calc_sheets_apply.py:292-606` | Google Sheets API request bodies raw dicts | K | type escapes | fixed (Wave 1) |
+| R065 | `adapters/outbound/google/_calc_sheets_pull.py:221-231` | 9 magic-key extractions from spreadsheet metadata | K,L | type escapes | fixed (Wave 1) |
+| R066 | `adapters/outbound/storage/_local.py:252-337` | Sidecar TOML navigated by magic keys; defaults empty silently | K,L | type escapes | fixed (Wave 1) |
+| R067 | `adapters/outbound/storage/_google_drive.py:229-680` | Drive file metadata navigated as raw dicts | K | type escapes | fixed (Wave 1) |
+| R068 | `adapters/outbound/aeat/sede/_declarations.py:621-623` | `action_indexes.get("justificante")` / `submitted_file` / `declaration_pdf` magic keys | K,L | type escapes | fixed (Wave 1) |
+| R069 | `adapters/outbound/llm/_cache.py:148,264,277,288` | LLM cache payload cast + magic-key navigation | K | type escapes | fixed (Wave 1) |
+| R070 | `adapters/persistence/storage/master_key/_master_key.py:586` | `preview.get("version")` magic key | K | type escapes | fixed (Wave 1) |
+| R071 | `domain/calculations/registry/_schedules.py:71` | `_resolve_profile_fact` dotted-string traversal | C | type escapes top-10 | fixed (Wave 1) |
+| R072 | `application/aggregation/_registry_provider.py:161` | `# type: ignore[arg-type]` on `source_kind: str` | K | type escapes | fixed (Wave 1) |
+| R073 | `domain/calculations/registry/_bindings.py:1242` | `CounterpartAggregationObservation.source_kind: str`, no Literal | I | type escapes | fixed (Wave 1) |
+| R074 | `domain/calculations/registry/_queries.py:368,378` | `_public_mapping` recursive type erasure | K,G | type escapes | fixed (Wave 1) |
+| R075 | `domain/calculations/registry/_queries.py:99` | Public query exposes `selector: Mapping[str, object]` | G | type escapes | fixed (Wave 1) |
+| R076 | `domain/calculations/registry/_legal.py:15` | Module-level `cast(...)` on legal source table | K | type escapes | fixed (Wave 1) |
+| R077 | `application/registry/_corpus.py:846` | `cast(RuleKind, kind)` after manual membership check | K | type escapes | fixed (Wave 1) |
+| R078 | `adapters/outbound/aeat/sede/_renta_web_open.py:106,363` | Playwright result `cast(Any, ...)` | K | type escapes | fixed (Wave 1) |
+| R079 | `domain/modelos/_calculation_revision.py:337,346` | `# type: ignore[override]` on `__iter__` + `isinstance(key, str)` discrimination | K | type escapes | fixed (Wave 1) |
+| R080 | `domain/modelos/_work_unit.py:198,268,277` | Coerce validator + cast + type: ignore[override] | K | type escapes | fixed (Wave 1) |
+| R081 | `domain/modelos/_filing_record.py:169,282` | Same pattern | K | type escapes | fixed (Wave 1) |
+| R082 | `domain/modelos/_verification_report.py:201` | Same pattern | K | type escapes | fixed (Wave 1) |
+| R083 | `application/aggregation/_models.py:88,127,129,146,160,174` | Period parse isinstance + computed_field type: ignore | K | type escapes | fixed (Wave 1) |
+| R084 | `application/aggregation/_service.py:178` | computed_field type: ignore | K | type escapes | fixed (Wave 1) |
+| R085 | `adapters/persistence/storage/_rotation.py:333,446` | `settings: Any` parameter | K | type escapes | fixed (Wave 1) |
+| R086 | `adapters/outbound/google/_calc_sheets_pull.py:202,261,468,491,504` | `isinstance(value, str)` discrimination on sheet cells | K | type escapes | fixed (Wave 1) |
+| R087 | `application/storage/calc_sheets/_layout.py:105-136` | `SheetCellAddress` — workbook coords for Google sheet path | L | export | fixed (Wave 3) |
 | R088 | `adapters/outbound/aeat/export/_formats/_record_spec.py` (all per-modelo modules) | `_RECORD_SPECS` hand-authored from BOE PDFs | L | F18 | open |
-| R089 | `domain/calculations/registry/_export.py:31` | `fields_by_casilla: Mapping[str, ...]` — str key | A,I | F17 | open |
-| R090 | `domain/calculations/registry/_export.py:130-148` | `_ROW_FIELD_CASILLA_BY_RECORD` static dict, returns None silently | E,L | export | open |
-| R091 | `domain/calculations/registry/_export.py:163-166` | `_export_field_from_row_binding()` returns None on missing | C | export | open |
-| R092 | `domain/calculations/registry/_schema.py:429` | `WorkbookParityReference.output_cells: Mapping[str, str]` | A,I | F17 | open |
-| R093 | `application/storage/calc_sheets/_parity_tapes.py:34-65` | `ParityScenario` manually curated; cell refs hand-typed | L | export | open |
-| R094 | `core/identity/` | Identity is validation primitive only — no propagation into filing records | D,G | CLI JSON | open |
-| R095 | `domain/filing/_schema.py:136-166` | `FilingDraft` has no `subject_tax_id` field | D | F14 | open |
-| R096 | `domain/calculations/registry/_schema.py:158,166` | `FilingDraft.schema_version` participates in `draft_id` hash as bare string | A | F20 | open |
-| R097 | `application/workflow/_engine.py` | `WorkflowStep.details: str` — typed linkage objects not threaded | G | operator | open |
+| R089 | `domain/calculations/registry/_export.py:31` | `fields_by_casilla: Mapping[str, ...]` — str key | A,I | F17 | fixed (Wave 3) |
+| R090 | `domain/calculations/registry/_export.py:130-148` | `_ROW_FIELD_CASILLA_BY_RECORD` static dict, returns None silently | E,L | export | fixed (Wave 4) |
+| R091 | `domain/calculations/registry/_export.py:163-166` | `_export_field_from_row_binding()` returns None on missing | C | export | fixed (Wave 3) |
+| R092 | `domain/calculations/registry/_schema.py:429` | `WorkbookParityReference.output_cells: Mapping[str, str]` | A,I | F17 | fixed (Wave 3) |
+| R093 | `application/storage/calc_sheets/_parity_tapes.py:34-65` | `ParityScenario` manually curated; cell refs hand-typed | L | export | fixed (Wave 3) |
+| R094 | `core/identity/` | Identity is validation primitive only — no propagation into filing records | D,G | CLI JSON | fixed (Wave 4) |
+| R095 | `domain/filing/_schema.py:136-166` | `FilingDraft` has no `subject_tax_id` field | D | F14 | fixed (Wave 4) |
+| R096 | `domain/calculations/registry/_schema.py:158,166` | `FilingDraft.schema_version` participates in `draft_id` hash as bare string | A | F20 | fixed (Wave 4) |
+| R097 | `application/workflow/_engine.py` | `WorkflowStep.details: str` — typed linkage objects not threaded | G | operator | fixed (Wave 4) |
 | R098 | Form numeric casilla numbers (e.g. M303 "46") | Not present in any registry data — only semantic IDs | D,H | F10 | open |
-| R099 | `domain/calculations/registry/_snapshot.py:110-112,140-142` | `LiveCrossReferenceDecision` policy metadata vs `DependencyClassificationDefinition` treatment | D | F12 | open |
-| R100 | `registry/aeat/modelos/232.toml` + `test_modelo_232_registry.py:62-67` | Per-modelo test enforces `relations == ()`; not a registry-wide invariant | C | F12 | open |
-| R101 | `domain/calculations/registry/_schema.py:281-420` | `LiveCrossReferenceDecision.oracle_id: str \| None` — not `OracleId` typed | I | cross-modelo | open |
-| R102 | (no file) | No `OracleFilingObservation` subtype to mark oracle-originated vs locally computed values | D | cross-modelo | open |
+| R099 | `domain/calculations/registry/_snapshot.py:110-112,140-142` | `LiveCrossReferenceDecision` policy metadata vs `DependencyClassificationDefinition` treatment | D | F12 | fixed (Wave 2) |
+| R100 | `registry/aeat/modelos/232.toml` + `test_modelo_232_registry.py:62-67` | Per-modelo test enforces `relations == ()`; not a registry-wide invariant | C | F12 | fixed (Wave 2) |
+| R101 | `domain/calculations/registry/_schema.py:281-420` | `LiveCrossReferenceDecision.oracle_id: str \| None` — not `OracleId` typed | I | cross-modelo | fixed (Wave 2) |
+| R102 | (no file) | No `OracleFilingObservation` subtype to mark oracle-originated vs locally computed values | D | cross-modelo | fixed (Wave 2) |
 
 Inventory will expand row-by-row as additional audits land. New rows
 append to the end; the `Row` column is stable once issued. Status
