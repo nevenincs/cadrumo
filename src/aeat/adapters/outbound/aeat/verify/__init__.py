@@ -28,6 +28,7 @@ from typing import Protocol, cast
 
 from pydantic import AnyUrl
 
+from .....core.config import Settings
 from .....core.errors import AeatError
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
@@ -36,10 +37,8 @@ from .._playwright import PlaywrightError
 
 _logger = get_logger(__name__)
 
-_VERIFY_URL = (
-    "https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-practicas-manuales/"
-    "verificacion-integridad-documentos.html"
-)
+_VERIFY_EXTERNAL = Settings.external_constants()
+_VERIFY_URL = f"{_VERIFY_EXTERNAL.aeat.domains.sede}{_VERIFY_EXTERNAL.aeat.help_pages.csv_verification}"
 _VERIFY_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-csv-verifier-read",
     evidence_tier="official_source_guidance",

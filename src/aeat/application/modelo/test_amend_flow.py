@@ -25,13 +25,11 @@ from aeat.adapters.persistence.storage.sql.engine import create_engine_from_sett
 from aeat.application.modelo import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
-    AmendmentVerificationRefusedError,
     AmendmentTargetStateError,
     CalculationRevisionStateError,
     amend_modelo_revision,
     calculate_modelo_revision,
     create_work_unit,
-    file_modelo_revision,
     get_calculation_revision,
     get_filing_record,
     get_work_unit,
@@ -68,14 +66,16 @@ from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
 
+from .test_file_flow import _file_revision
+
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 _T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
 _T2 = datetime(2026, 1, 15, 14, 0, 0, tzinfo=UTC)
-_T3 = datetime(2026, 1, 15, 15, 0, 0, tzinfo=UTC)
-_T4 = datetime(2026, 1, 16, 12, 0, 0, tzinfo=UTC)
+_T3 = datetime(2026, 4, 15, 15, 0, 0, tzinfo=UTC)
+_T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 
 
 @pytest.fixture
@@ -202,8 +202,10 @@ def test_amend_refuses_without_external_evidence(repos) -> None:
         calculation_repository=cr_repo,
         clock=_T2,
     )
-    locally_filed = file_modelo_revision(
+    locally_filed = _file_revision(
         revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
         actor="operator-A",
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,

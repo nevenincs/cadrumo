@@ -73,7 +73,7 @@ def test_register_active_profile_threads_state_and_emits_events(secure_objects, 
     assert updated.active_profile == "default"
     assert "default" in updated.profiles
     actions = tuple(event.action for event in updated.bucket_events)
-    assert actions == ("profile.created", "profile.selected")
+    assert actions == ("profile.created", "profile.selected", "profile.values.updated")
 
 
 def test_select_profile_refuses_when_missing(secure_objects, schema) -> None:

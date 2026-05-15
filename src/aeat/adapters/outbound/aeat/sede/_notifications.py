@@ -47,10 +47,11 @@ if TYPE_CHECKING:
 
 log = get_logger(__name__)
 
-_SEDE_BASE = "https://www6.agenciatributaria.gob.es"
-_RESUMEN_URL = f"{_SEDE_BASE}/wlpl/TEWV-CORE/ResumenVlt"
-_NOTIF_SUMMARY_URL = f"{_SEDE_BASE}/wlpl/GNNO-JDIT/ResumenInteresados"
-_NOTIF_QUERY_URL = f"{_SEDE_BASE}/wlpl/GNNO-JDIT/SvInteresadosQuery?VEZ=BUSCAR1"
+_EXTERNAL = Settings.external_constants()
+_SEDE_BASE = _EXTERNAL.aeat.domains.www6
+_RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
+_NOTIF_SUMMARY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_summary}"
+_NOTIF_QUERY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_query}"
 
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
     strict=True,

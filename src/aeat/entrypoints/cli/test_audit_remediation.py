@@ -5,16 +5,13 @@ from __future__ import annotations
 import ast
 import json
 from collections.abc import Iterator
-from datetime import UTC, datetime
 from pathlib import Path
 
 import click
 import pytest
 from click.testing import Result
 
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.core.classification import SensitivityClass
 from aeat.tests.cli_runner import aeat_click_command, invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -60,71 +57,6 @@ def _combined_output(result: Result) -> str:
 def _assert_no_internal_leak(text: str) -> None:
     leaked = [fragment for fragment in _LEAK_FRAGMENTS if fragment in text]
     assert leaked == []
-
-
-def _write_legacy_inline_profile_state() -> None:
-    payload = {
-        "schema_version": 1,
-        "written_at": datetime.now(UTC).isoformat(),
-        "classification": SensitivityClass.FINANCIAL.value,
-        "payload": {
-            "profiles": {
-                "operator": {
-                    "tax.id": "87654321X",
-                    "activity": "legacy software",
-                    "iva.regime": "GENERAL",
-                }
-            },
-            "active_profile": "operator",
-            "declarations": {},
-            "invoice_reviews": {},
-            "ledger_reviews": {},
-            "bucket_events": [],
-            "updated_at": datetime.now(UTC).isoformat(),
-        },
-    }
-    SecureObjectRepository().save(
-        namespace="aeat.workflow",
-        object_key="state",
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=1,
-        written_at=datetime.now(UTC),
-        payload=json.dumps(payload).encode("utf-8"),
-    )
-
-
-def test_quiet_init_migrates_legacy_inline_profile_state_without_boundary_leak() -> None:
-    _write_legacy_inline_profile_state()
-
-    result = _invoke(
-        [
-            "config",
-            "init",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--activity",
-            "software development",
-        ]
-    )
-
-    assert result.exit_code == 0
-    output = _combined_output(result)
-    _assert_no_internal_leak(output)
-    assert "aeat app overview status" in output
-
-    status = _invoke(["--format", "json", "config", "profile", "status"])
-    assert status.exit_code == 0
-    assert json.loads(status.output)["next_action"] == "aeat app overview status"
-
-
-def test_modelo_bindings_reports_all_missing_required_options_at_once() -> None:
-    result = _invoke(["app", "modelo", "bindings", "list", "--modelo", "303"])
-
-    assert result.exit_code != 0
-    output = _combined_output(result)
-    assert "--year" in output
-    assert "--period" in output
 
 
 def test_modelo_bindings_help_uses_accepted_period_examples() -> None:

@@ -13,7 +13,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_CALENDARIO_CONTRIBUYENTE,
-    url="https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/calendario-contribuyente.html",
+    path="/Sede/ayuda/manuales-videos-folletos/calendario-contribuyente.html",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.CALENDAR_REFERENCE,
     auth_methods=(AuthMethod.ANONYMOUS,),

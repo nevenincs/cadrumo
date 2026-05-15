@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+from ....core.config import Settings as _Settings
 from ._errors import (
     GoogleAuthError,
     GoogleAuthExpiredError,
@@ -32,7 +33,7 @@ from ._records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata, OAuthToken
 # as already expired. Mirrors `google.auth.credentials._helpers`'s
 # default. Picking the same buffer keeps our retry semantics aligned
 # with the upstream library's own internal refresh trigger.
-ACCESS_TOKEN_REFRESH_BUFFER: timedelta = timedelta(minutes=5)
+ACCESS_TOKEN_REFRESH_BUFFER: timedelta = timedelta(seconds=_Settings().aeat_google_oauth_access_refresh_buffer_s)
 
 # Google's Testing-project consent screens cap refresh tokens at 7 days.
 # We surface a one-time warning when the elapsed window crosses 6 days

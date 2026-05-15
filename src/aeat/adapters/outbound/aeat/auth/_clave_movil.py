@@ -36,6 +36,7 @@ from urllib.parse import quote
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.classification import SensitivityClass
+from .....core.config import Settings as _Settings
 from .....core.logging import get_logger
 from ....persistence.storage.sql import SecureObjectRepository
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
@@ -62,6 +63,8 @@ if TYPE_CHECKING:
 
 
 log = get_logger(__name__)
+
+_NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = _Settings().aeat_browser_navigation_timeout_ms
 
 
 AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
@@ -227,7 +230,7 @@ class ClaveMovilAuthProvider:
         settings: Settings,
         *,
         browser_session_factory: BrowserSessionFactory | None = None,
-        navigation_timeout_ms: int = 30_000,
+        navigation_timeout_ms: int = _NAVIGATION_TIMEOUT_MS_DEFAULT,
     ) -> None:
         self._settings = settings
         self._browser_session_factory = browser_session_factory
@@ -531,8 +534,7 @@ class ClaveMovilAuthProvider:
         return raw.strip().upper()
 
     def _default_target_url(self) -> str:
-        base = "https://sede.agenciatributaria.gob.es"
-        return base + self._settings.aeat_sede_expedientes_path
+        return self._settings.aeat_base_url + self._settings.aeat_sede_expedientes_path
 
     def _selector_url(self, target_path: str) -> str:
         template = self._settings.aeat_clave_sede_access_url_template
@@ -857,7 +859,7 @@ class ClaveMovilAuthProvider:
         if wait_for is None or text_content is None:
             return None
         try:
-            await wait_for("#spanCodigoVerificacion", timeout=30_000)
+            await wait_for("#spanCodigoVerificacion", timeout=_NAVIGATION_TIMEOUT_MS_DEFAULT)
             raw = await text_content("#spanCodigoVerificacion")
         except (PlaywrightTimeoutError, PlaywrightError):
             return None

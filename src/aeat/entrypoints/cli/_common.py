@@ -135,7 +135,8 @@ def _profile_to_autonomo(state: WorkflowState) -> AutonomoProfile:
     from ...application.user_profile._projections import record_to_values
 
     record = state.active_profile_record()
-    return autonomo_profile_from_mapping(record_to_values(record), tax_id_default="00000000T")
+    raw = record_to_values(record) if record is not None else {}
+    return autonomo_profile_from_mapping(raw, tax_id_default="00000000T")
 
 
 # ---------------------------------------------------------------------

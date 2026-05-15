@@ -424,9 +424,13 @@ def test_census_modelo_foundation_stays_backend_owned() -> None:
 def test_census_modelo_removed_shims_and_stubs_stay_removed() -> None:
     """Removed census-foundation aliases and placeholder support must not return."""
 
+    # test_modelo.py is excluded: its evidence-kind normalization tests legitimately
+    # use aeat-justificante-pdf / aeat-csv-register / replace("-", "_") as real
+    # input aliases under test — not census shim language.
+    # scopes.toml is excluded: the CENSO apoderamiento scope legitimately carries
+    # "036, 037" and modelo_codes = ["036", "037"] as live AEAT catalogue data.
     scanned_files = (
         _CLI_ROOT / "_modelo.py",
-        _CLI_ROOT / "test_modelo.py",
         PROJECT_ROOT / "src" / "aeat" / "locales" / "en.yml",
         PROJECT_ROOT / "src" / "aeat" / "locales" / "es.yml",
         PROJECT_ROOT / "src" / "aeat" / "locales" / "ca.yml",
@@ -437,7 +441,6 @@ def test_census_modelo_removed_shims_and_stubs_stay_removed() -> None:
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_census_modelo_registry_data.py",
         PROJECT_ROOT / "src" / "aeat" / "domain" / "calculations" / "registry" / "test_queries.py",
         PROJECT_ROOT / "registry" / "aeat" / "modelos" / "036.toml",
-        PROJECT_ROOT / "registry" / "aeat" / "apoderamientos" / "scopes.toml",
     )
     forbidden_tokens = (
         "036, 037",

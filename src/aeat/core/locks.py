@@ -32,15 +32,18 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Final
 
+from .config import Settings as _Settings
 from .locks_errors import LockAcquisitionError
 from .logging import get_logger
 
 _log = get_logger(__name__)
 
-DEFAULT_LOCK_TIMEOUT: Final[float] = 30.0
+_LOCK_DEFAULTS = _Settings()
+
+DEFAULT_LOCK_TIMEOUT: Final[float] = _LOCK_DEFAULTS.aeat_file_lock_timeout_s
 """Default timeout for :func:`exclusive_file_lock` in seconds."""
 
-_RETRY_BACKOFF: Final[float] = 0.05
+_RETRY_BACKOFF: Final[float] = _LOCK_DEFAULTS.aeat_file_lock_retry_backoff_s
 """Sleep interval between non-blocking lock-acquire attempts."""
 
 

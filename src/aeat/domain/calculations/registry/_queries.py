@@ -223,6 +223,48 @@ class RegistryQueryService:
             rows=tuple(rows),
         )
 
+    def bindings_for_scope(
+        self,
+        modelo: str,
+        *,
+        filing_year: int,
+        period: str,
+        as_of: date | None = None,
+    ) -> ModeloBindingsReport:
+        """Return bindings for a specific filing scope (already-parsed year + period).
+
+        Unlike `bindings`, this method accepts the already-parsed ``filing_year``
+        integer and registry ``period`` string (e.g. ``"1T"``, ``"01"``) produced
+        by the CLI's period-parsing step. This avoids re-parsing a user-facing
+        period string when the caller already holds the decomposed values.
+        """
+        definition = self._authority.validate_modelo(modelo.strip())
+        snapshot = self._authority.snapshot(
+            str(definition.id),
+            filing_year=filing_year,
+            period=period,
+            on=as_of,
+        )
+        rows = tuple(
+            ModeloBindingRow(
+                binding_id=str(binding.id),
+                source=binding.source,
+                typed_enum=binding.typed_enum,
+                selector=_public_mapping(binding.selector),
+                aggregation=_public_mapping(binding.aggregation) if binding.aggregation is not None else None,
+                legal_refs=tuple(str(ref) for ref in binding.legal_refs),
+                source_refs=tuple(str(ref) for ref in binding.source_refs),
+            )
+            for binding in snapshot.revision.bindings
+        )
+        return ModeloBindingsReport(
+            code=str(definition.id),
+            revision=str(snapshot.revision.id),
+            filing_year=filing_year,
+            period=period,
+            rows=rows,
+        )
+
     def bindings(
         self,
         modelo: str,

@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M036_CENSAL,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G322.shtml",
+    path="/Sede/procedimientoini/G322.shtml",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.CENSUS,
     auth_methods=(

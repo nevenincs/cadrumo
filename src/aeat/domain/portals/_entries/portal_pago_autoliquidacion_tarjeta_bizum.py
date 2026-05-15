@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_PAGO_AUTOLIQUIDACION_TARJETA_BIZUM,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/ES18.shtml",
+    path="/Sede/procedimientoini/ES18.shtml",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.PAYMENT,
     auth_methods=(

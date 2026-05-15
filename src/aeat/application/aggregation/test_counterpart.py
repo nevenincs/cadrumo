@@ -136,10 +136,11 @@ class TestAggregate349:
 
 
 class TestInvariants:
-    def test_unknown_modelo_raises(self) -> None:
+    def test_unregistered_modelo_raises_domain_error(self) -> None:
+        from aeat.application.aggregation._errors import AggregationUnsupportedModeloError
         from aeat.application.aggregation._counterpart import _filter_observations_for_modelo
 
-        with pytest.raises(NotImplementedError, match="modelo '720'"):
+        with pytest.raises(AggregationUnsupportedModeloError, match="modelo '720'"):
             _filter_observations_for_modelo((), modelo="720")
 
     def test_totals_must_match_rollups(self) -> None:

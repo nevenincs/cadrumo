@@ -434,6 +434,16 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
         accept_defaults = kwargs.pop("accept_defaults", False)
         canonical = _collect_flag_values(flow, kwargs)
 
+        if accept_defaults:
+            seeded: dict[str, str] = {
+                question.id: question.default or ""
+                for section in flow.sections
+                for question in section.questions
+                if question.default is not None
+            }
+            seeded.update(canonical)
+            canonical = seeded
+
         if quiet:
             missing = _missing_required_flags(flow, canonical)
             if missing:
@@ -444,14 +454,7 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
             scripted = _scripted_from_canonical(flow, canonical)
             answers = run_flow(flow, scripted)
         elif accept_defaults:
-            seeded: dict[str, str] = {
-                question.id: question.default or ""
-                for section in flow.sections
-                for question in section.questions
-                if question.default is not None
-            }
-            seeded.update(canonical)
-            scripted = _scripted_from_canonical(flow, seeded)
+            scripted = _scripted_from_canonical(flow, canonical)
             answers = run_flow(flow, scripted)
         else:
             active = _prompter if _prompter is not None else QuestionaryPrompter()

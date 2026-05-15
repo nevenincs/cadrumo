@@ -20,10 +20,13 @@ from openpyxl import load_workbook
 from openpyxl.formula import Tokenizer
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ....core.config import Settings as _Settings
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
 from ._schema import RegistrySnapshot
+
+_PARITY_DEFAULTS = _Settings()
 
 _log = get_logger(__name__)
 
@@ -243,7 +246,7 @@ class WorkbookBackendVerificationReport(WorkbookParityModel):
 class WorkbookScanOptions:
     """Controls for bounded workbook discovery."""
 
-    per_file_timeout_seconds: float = 15.0
+    per_file_timeout_seconds: float = _PARITY_DEFAULTS.aeat_workbook_parity_per_file_timeout_s
     max_formula_refs: int = 500
 
 
@@ -476,7 +479,7 @@ def run_workbook_with_libreoffice(
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=_PARITY_DEFAULTS.aeat_workbook_parity_recalc_timeout_s,
             )
         except subprocess.TimeoutExpired as exc:
             raise RegistryValidationError("LibreOffice workbook recalculation timed out") from exc
@@ -627,7 +630,7 @@ def _converted_binary_xls_path(
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=120,
+                timeout=_PARITY_DEFAULTS.aeat_workbook_parity_libreoffice_timeout_s,
             )
         except subprocess.TimeoutExpired as exc:
             raise _BinaryXlsConversionError("LibreOffice binary XLS conversion timed out") from exc
@@ -747,9 +750,7 @@ def _resolve_libreoffice_runner(executable: str | None) -> Path:
         from ....core.config import load_settings
 
         configured = load_settings().aeat_libreoffice_executable
-        found = (
-            str(configured) if configured is not None else (shutil.which("soffice") or shutil.which("libreoffice"))
-        )
+        found = str(configured) if configured is not None else (shutil.which("soffice") or shutil.which("libreoffice"))
         if not found:
             raise RegistryValidationError(
                 "LibreOffice or soffice executable is not available on PATH. "

@@ -1,0 +1,387 @@
+"""Central per-modelo aggregation service contracts.
+
+This module owns the non-CLI aggregation boundary required by the CLI
+workflow redesign. It routes strict Pydantic command payloads to the
+implemented family aggregators without adding CLI-local conversion logic.
+"""
+
+from __future__ import annotations
+
+from enum import StrEnum
+from functools import lru_cache
+
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
+
+from ...core.logging import get_logger
+from ._counterpart import (
+    CounterpartAggregation,
+    CounterpartObservation,
+    aggregate_counterpart_347,
+    aggregate_counterpart_349,
+)
+from ._errors import AggregationUnsupportedModeloError, t
+from ._foreign_assets import ForeignAssetObservation, ForeignAssetsAggregation, aggregate_foreign_assets_720
+from ._retenciones import (
+    RetencionesAggregation,
+    RetencionObservation,
+    aggregate_retenciones_111,
+    aggregate_retenciones_115,
+    aggregate_retenciones_123,
+    aggregate_retenciones_180,
+    aggregate_retenciones_190,
+    aggregate_retenciones_193,
+)
+
+LOGGER = get_logger(__name__)
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class AggregationSourceKind(StrEnum):
+    """Accepted source-kind taxonomy for per-modelo aggregation providers."""
+
+    LEDGER_TRANSACTION = "ledger_transaction"
+    PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
+    PAYABLE_INVOICE = "payable_invoice"
+    COLLECTIBLE_INVOICE = "collectible_invoice"
+
+
+class PerModeloAggregationProvider(StrEnum):
+    """Implemented provider families owned by ``aeat.application.aggregation``."""
+
+    RETENCIONES = "retenciones"
+    COUNTERPART = "counterpart"
+    FOREIGN_ASSETS = "foreign_assets"
+
+
+ACCEPTED_SOURCE_KINDS: tuple[AggregationSourceKind, ...] = (
+    AggregationSourceKind.LEDGER_TRANSACTION,
+    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    AggregationSourceKind.PAYABLE_INVOICE,
+    AggregationSourceKind.COLLECTIBLE_INVOICE,
+)
+
+ERROR_CODES: tuple[str, ...] = (
+    "ERROR_FINANCIAL_AGGREGATION",
+    "REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO",
+    "ERROR_FINANCIAL_AGGREGATION_VALIDATION",
+)
+
+_RETENCIONES_MODELOS: tuple[str, ...] = ("111", "115", "123", "180", "190", "193")
+_COUNTERPART_MODELOS: tuple[str, ...] = ("347", "349")
+_FOREIGN_ASSET_MODELOS: tuple[str, ...] = ("720",)
+
+
+class PerModeloAggregationProviderContract(BaseModel):
+    """Backend-owned contract for one aggregation provider family."""
+
+    model_config = _STRICT_FROZEN
+
+    provider: PerModeloAggregationProvider
+    modelos: tuple[str, ...] = Field(min_length=1)
+    service_owner: str = Field(pattern=r"^aeat\.application\.aggregation$")
+    accepted_source_kinds: tuple[AggregationSourceKind, ...] = Field(min_length=1)
+
+    @field_validator("modelos")
+    @classmethod
+    def _modelos_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(value) != len(set(value)):
+            raise ValueError("provider modelos must be unique")
+        return value
+
+
+class PerModeloAggregationLogFields(BaseModel):
+    """Stable, non-secret log fields emitted by the aggregation service."""
+
+    model_config = _STRICT_FROZEN
+
+    service_name: str = "per_modelo_aggregation"
+    modelo: str = Field(min_length=1)
+    period: str = Field(min_length=1)
+    provider: PerModeloAggregationProvider
+    observation_count: int = Field(ge=0)
+    source_kind_count: int = Field(ge=0)
+    result_row_count: int = Field(ge=0)
+
+    def as_extra(self) -> dict[str, object]:
+        """Return a logging ``extra`` payload with stable field names."""
+
+        return {
+            "service_name": self.service_name,
+            "modelo": self.modelo,
+            "period": self.period,
+            "provider": self.provider.value,
+            "observation_count": self.observation_count,
+            "source_kind_count": self.source_kind_count,
+            "result_row_count": self.result_row_count,
+        }
+
+
+class PerModeloAggregationContract(BaseModel):
+    """Complete backend contract consumed by current and future adapters."""
+
+    model_config = _STRICT_FROZEN
+
+    schema_version: str = "1"
+    service_owner: str = "aeat.application.aggregation"
+    providers: tuple[PerModeloAggregationProviderContract, ...]
+    accepted_source_kinds: tuple[AggregationSourceKind, ...]
+    error_codes: tuple[str, ...]
+
+    @field_validator("providers")
+    @classmethod
+    def _providers_are_unique(cls, value: tuple[PerModeloAggregationProviderContract, ...]) -> tuple[
+        PerModeloAggregationProviderContract, ...
+    ]:
+        providers = tuple(provider.provider for provider in value)
+        if len(providers) != len(set(providers)):
+            raise ValueError("per-modelo aggregation providers must be unique")
+        modelos = tuple(modelo for provider in value for modelo in provider.modelos)
+        if len(modelos) != len(set(modelos)):
+            raise ValueError("per-modelo aggregation modelos must be owned by exactly one provider")
+        return value
+
+    @field_validator("accepted_source_kinds")
+    @classmethod
+    def _source_kinds_are_exact(cls, value: tuple[AggregationSourceKind, ...]) -> tuple[AggregationSourceKind, ...]:
+        if value != ACCEPTED_SOURCE_KINDS:
+            raise ValueError("source kinds must match the accepted four-kind taxonomy")
+        return value
+
+
+class PerModeloAggregationCommand(BaseModel):
+    """Command payload for a per-modelo aggregation run."""
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=16)
+    period: str = Field(min_length=1, max_length=16)
+    retencion_observations: tuple[RetencionObservation, ...] = Field(default_factory=tuple)
+    counterpart_observations: tuple[CounterpartObservation, ...] = Field(default_factory=tuple)
+    foreign_asset_observations: tuple[ForeignAssetObservation, ...] = Field(default_factory=tuple)
+
+    @model_validator(mode="after")
+    def _only_matching_observation_family_is_populated(self) -> PerModeloAggregationCommand:
+        provider = provider_for_modelo(self.modelo)
+        populated = {
+            PerModeloAggregationProvider.RETENCIONES: bool(self.retencion_observations),
+            PerModeloAggregationProvider.COUNTERPART: bool(self.counterpart_observations),
+            PerModeloAggregationProvider.FOREIGN_ASSETS: bool(self.foreign_asset_observations),
+        }
+        invalid = tuple(
+            candidate for candidate, has_rows in populated.items() if candidate is not provider and has_rows
+        )
+        if invalid:
+            names = ", ".join(candidate.value for candidate in invalid)
+            raise ValueError(f"observations for {names} cannot be supplied for modelo {self.modelo}")
+        return self
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def provider(self) -> PerModeloAggregationProvider:
+        """Return the provider family selected by ``modelo``."""
+
+        return provider_for_modelo(self.modelo)
+
+
+PerModeloAggregationPayload = RetencionesAggregation | CounterpartAggregation | ForeignAssetsAggregation
+
+
+class PerModeloAggregationResult(BaseModel):
+    """Result envelope returned by the central per-modelo aggregation service."""
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=16)
+    period: str = Field(min_length=1, max_length=16)
+    provider: PerModeloAggregationProvider
+    aggregation: PerModeloAggregationPayload
+    source_kinds: tuple[AggregationSourceKind, ...]
+    log_fields: PerModeloAggregationLogFields
+
+    @field_validator("source_kinds")
+    @classmethod
+    def _source_kinds_are_unique(cls, value: tuple[AggregationSourceKind, ...]) -> tuple[AggregationSourceKind, ...]:
+        if len(value) != len(set(value)):
+            raise ValueError("result source_kinds must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def _envelope_matches_payload(self) -> PerModeloAggregationResult:
+        if self.aggregation.modelo != self.modelo:
+            raise ValueError(
+                f"aggregation modelo {self.aggregation.modelo!r} does not match result modelo {self.modelo!r}",
+            )
+        if self.aggregation.period != self.period:
+            raise ValueError(
+                f"aggregation period {self.aggregation.period!r} does not match result period {self.period!r}",
+            )
+        expected_payload_types = {
+            PerModeloAggregationProvider.RETENCIONES: RetencionesAggregation,
+            PerModeloAggregationProvider.COUNTERPART: CounterpartAggregation,
+            PerModeloAggregationProvider.FOREIGN_ASSETS: ForeignAssetsAggregation,
+        }
+        expected_type = expected_payload_types[self.provider]
+        if not isinstance(self.aggregation, expected_type):
+            raise ValueError(
+                f"provider {self.provider.value!r} does not match aggregation payload "
+                f"{type(self.aggregation).__name__!r}",
+            )
+        return self
+
+
+def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
+    """Build the immutable backend-owned aggregation contract."""
+
+    providers = (
+        PerModeloAggregationProviderContract(
+            provider=PerModeloAggregationProvider.RETENCIONES,
+            modelos=_RETENCIONES_MODELOS,
+            service_owner="aeat.application.aggregation",
+            accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        ),
+        PerModeloAggregationProviderContract(
+            provider=PerModeloAggregationProvider.COUNTERPART,
+            modelos=_COUNTERPART_MODELOS,
+            service_owner="aeat.application.aggregation",
+            accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        ),
+        PerModeloAggregationProviderContract(
+            provider=PerModeloAggregationProvider.FOREIGN_ASSETS,
+            modelos=_FOREIGN_ASSET_MODELOS,
+            service_owner="aeat.application.aggregation",
+            accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        ),
+    )
+    contract = PerModeloAggregationContract(
+        providers=providers,
+        accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
+        error_codes=ERROR_CODES,
+    )
+    LOGGER.debug(
+        "built per-modelo aggregation contract",
+        extra={
+            "service_name": "per_modelo_aggregation",
+            "provider_count": len(contract.providers),
+            "source_kind_count": len(contract.accepted_source_kinds),
+        },
+    )
+    return contract
+
+
+@lru_cache(maxsize=1)
+def get_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
+    """Return the cached backend-owned aggregation contract."""
+
+    return build_per_modelo_aggregation_contract()
+
+
+def provider_for_modelo(modelo: str) -> PerModeloAggregationProvider:
+    """Return the provider family for a supported modelo."""
+
+    if modelo != modelo.strip():
+        raise AggregationUnsupportedModeloError(
+            t("aggregation.per_modelo.errors.unsupported_modelo"),
+            context={"modelo": modelo},
+            suggestion="use one of 111, 115, 123, 180, 190, 193, 347, 349, 720",
+        )
+    if modelo in _RETENCIONES_MODELOS:
+        return PerModeloAggregationProvider.RETENCIONES
+    if modelo in _COUNTERPART_MODELOS:
+        return PerModeloAggregationProvider.COUNTERPART
+    if modelo in _FOREIGN_ASSET_MODELOS:
+        return PerModeloAggregationProvider.FOREIGN_ASSETS
+    raise AggregationUnsupportedModeloError(
+        t("aggregation.per_modelo.errors.unsupported_modelo"),
+        context={"modelo": modelo},
+        suggestion="use one of 111, 115, 123, 180, 190, 193, 347, 349, 720",
+    )
+
+
+def aggregate_per_modelo(command: PerModeloAggregationCommand) -> PerModeloAggregationResult:
+    """Run the central application aggregation service for one modelo."""
+
+    provider = provider_for_modelo(command.modelo)
+    if provider is PerModeloAggregationProvider.RETENCIONES:
+        aggregation = _aggregate_retenciones(command.modelo, command.period, command.retencion_observations)
+    elif provider is PerModeloAggregationProvider.COUNTERPART:
+        aggregation = _aggregate_counterpart(command.modelo, command.period, command.counterpart_observations)
+    else:
+        aggregation = aggregate_foreign_assets_720(command.foreign_asset_observations, period=command.period)
+
+    result = PerModeloAggregationResult(
+        modelo=command.modelo,
+        period=command.period,
+        provider=provider,
+        aggregation=aggregation,
+        source_kinds=_source_kinds_for_payload(aggregation),
+        log_fields=PerModeloAggregationLogFields(
+            modelo=command.modelo,
+            period=command.period,
+            provider=provider,
+            observation_count=_observation_count_for_command(command, provider),
+            source_kind_count=len(_source_kinds_for_payload(aggregation)),
+            result_row_count=len(aggregation.rollups),
+        ),
+    )
+    LOGGER.debug("ran per-modelo aggregation", extra=result.log_fields.as_extra())
+    return result
+
+
+def _aggregate_retenciones(
+    modelo: str,
+    period: str,
+    observations: tuple[RetencionObservation, ...],
+) -> RetencionesAggregation:
+    dispatch = {
+        "111": aggregate_retenciones_111,
+        "115": aggregate_retenciones_115,
+        "123": aggregate_retenciones_123,
+        "180": aggregate_retenciones_180,
+        "190": aggregate_retenciones_190,
+        "193": aggregate_retenciones_193,
+    }
+    return dispatch[modelo](observations, period=period)
+
+
+def _aggregate_counterpart(
+    modelo: str,
+    period: str,
+    observations: tuple[CounterpartObservation, ...],
+) -> CounterpartAggregation:
+    if modelo == "347":
+        return aggregate_counterpart_347(observations, period=period)
+    return aggregate_counterpart_349(observations, period=period)
+
+
+def _source_kinds_for_payload(payload: PerModeloAggregationPayload) -> tuple[AggregationSourceKind, ...]:
+    source_kind_values = sorted({row.source_kind for row in payload.rollups})
+    return tuple(AggregationSourceKind(value) for value in source_kind_values)
+
+
+def _observation_count_for_command(
+    command: PerModeloAggregationCommand,
+    provider: PerModeloAggregationProvider,
+) -> int:
+    if provider is PerModeloAggregationProvider.RETENCIONES:
+        return len(command.retencion_observations)
+    if provider is PerModeloAggregationProvider.COUNTERPART:
+        return len(command.counterpart_observations)
+    return len(command.foreign_asset_observations)
+
+
+__all__ = [
+    "ACCEPTED_SOURCE_KINDS",
+    "ERROR_CODES",
+    "AggregationSourceKind",
+    "PerModeloAggregationCommand",
+    "PerModeloAggregationContract",
+    "PerModeloAggregationLogFields",
+    "PerModeloAggregationPayload",
+    "PerModeloAggregationProvider",
+    "PerModeloAggregationProviderContract",
+    "PerModeloAggregationResult",
+    "aggregate_per_modelo",
+    "build_per_modelo_aggregation_contract",
+    "get_per_modelo_aggregation_contract",
+    "provider_for_modelo",
+]

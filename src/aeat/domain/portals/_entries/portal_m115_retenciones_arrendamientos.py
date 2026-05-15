@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_M115_RETENCIONES_ARRENDAMIENTOS,
-    url="https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GH02.shtml",
+    path="/Sede/procedimientoini/GH02.shtml",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.FILING,
     auth_methods=(

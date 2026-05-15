@@ -1,0 +1,538 @@
+"""Read operator-edited Sheets cells back into structured records.
+
+Pairs with `_calc_sheets_apply.py`. The push side materialises a
+`SheetExportPlan` as a real Google Sheets workbook; this module
+reads the operator's edits back out, validates the workbook is
+still bound to the registry snapshot the engine compiled it from,
+and returns typed records the caller can apply to its ledger /
+filing flow.
+
+Two safety gates fire before any value is read:
+
+1. **Drive ownership marker** — the spreadsheet must carry the
+   `appProperties.aeat_vault_app=aeat` marker. Reading values from a
+   spreadsheet that lacks the marker would mix operator content with
+   foreign Drive files and break the `aeat-vault/` isolation contract.
+2. **Registry-SHA metadata match** — the spreadsheet's developer
+   metadata must declare `aeat_registry_sha = <snapshot.registry_sha>`
+   and `aeat_modelo_id` / `aeat_revision_id` / `aeat_filing_year` /
+   `aeat_period` matching the caller's snapshot. A mismatch means
+   the workbook was compiled against a different registry slice —
+   casilla numbering, formula chains, and bracket tables may have
+   shifted. The pull is refused with a typed error.
+
+The pull adapter does NOT mutate any local state; it returns a
+`PullResult` and leaves applying the edits to the caller.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from datetime import date
+from decimal import Decimal, InvalidOperation
+from typing import Any, Final, Literal
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from ....application.storage.calc_sheets._layout import plan_layout
+from ....domain.calculations.registry._formula_runtime import (
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
+)
+from ....domain.calculations.registry._ids import BindingId, CasillaId, RelationId
+from ....domain.calculations.registry._schema import RegistrySnapshot
+from ...outbound.storage._errors import (
+    StorageConflictError,
+    StorageNetworkError,
+    StorageNotFoundError,
+    StoragePermissionError,
+    StorageValidationError,
+)
+
+_OWNERSHIP_KEY: Final[str] = "aeat_vault_app"
+_OWNERSHIP_VALUE: Final[str] = "aeat"
+
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class OperatorEdit(BaseModel):
+    """One operator-edited cell value."""
+
+    model_config = _STRICT_FROZEN
+
+    casilla: CasillaId
+    casilla_number: str
+    label: str
+    value: Decimal | str | bool | None = None
+
+
+class BindingEdit(BaseModel):
+    """One operator-edited binding cell value (numeric or enum)."""
+
+    model_config = _STRICT_FROZEN
+
+    binding: BindingId
+    value: Decimal | str | None = None
+
+
+class RelationEdit(BaseModel):
+    """One pre-resolved cross-revision relation value mirrored in Tarifas."""
+
+    model_config = _STRICT_FROZEN
+
+    relation: RelationId
+    value: Decimal | None = None
+
+
+class PullMetadata(BaseModel):
+    """Workbook identity metadata recovered from developer metadata."""
+
+    model_config = _STRICT_FROZEN
+
+    modelo_id: str
+    revision_id: str
+    filing_year: int
+    period: str
+    engine_version: str
+    registry_sha: str
+    exported_at: str | None = None
+
+
+class PullResult(BaseModel):
+    """Outcome of one pull cycle."""
+
+    model_config = _STRICT_FROZEN
+
+    spreadsheet_id: str
+    operator_edits: tuple[OperatorEdit, ...]
+    binding_edits: tuple[BindingEdit, ...]
+    relation_edits: tuple[RelationEdit, ...]
+    metadata: PullMetadata
+    metadata_match: Literal["matches", "stale", "missing"]
+    cells_read: int = Field(ge=0)
+
+
+def _drive_service(credentials: object) -> Any:
+    try:
+        from googleapiclient.discovery import build
+    except ImportError as exc:
+        raise StorageNetworkError(
+            f"googleapiclient not importable: {exc}",
+            suggestion="uv sync",
+        ) from exc
+    return build("drive", "v3", credentials=credentials, cache_discovery=False)
+
+
+def _sheets_service(credentials: object) -> Any:
+    try:
+        from googleapiclient.discovery import build
+    except ImportError as exc:
+        raise StorageNetworkError(
+            f"googleapiclient not importable: {exc}",
+            suggestion="uv sync",
+        ) from exc
+    return build("sheets", "v4", credentials=credentials, cache_discovery=False)
+
+
+def _execute(request: Any, *, action: str) -> Any:
+    try:
+        return request.execute()
+    except Exception as exc:
+        from googleapiclient.errors import HttpError
+
+        if isinstance(exc, HttpError):
+            status = getattr(exc, "status_code", None) or getattr(getattr(exc, "resp", None), "status", None)
+            if status in (401, 403):
+                raise StoragePermissionError(
+                    f"Google {action} refused (HTTP {status}): {exc}",
+                    suggestion="aeat config google login",
+                    context={"action": action},
+                ) from exc
+            if status == 404:
+                raise StorageNotFoundError(
+                    f"Google {action} target not found (HTTP 404): {exc}",
+                    context={"action": action},
+                ) from exc
+        raise StorageNetworkError(
+            f"Google {action} failed: {exc}",
+            context={"action": action},
+        ) from exc
+
+
+def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
+    """Refuse to read from a spreadsheet that lacks the ownership marker."""
+
+    file_meta = _execute(
+        drive_service.files().get(
+            fileId=spreadsheet_id,
+            fields="id,name,appProperties",
+        ),
+        action="drive.files.get.appProperties",
+    )
+    app_properties = file_meta.get("appProperties") or {}
+    if app_properties.get(_OWNERSHIP_KEY) != _OWNERSHIP_VALUE:
+        raise StorageConflictError(
+            f"spreadsheet {spreadsheet_id!r} is not marked as app-owned; refusing "
+            f"to read operator edits from a foreign Drive file",
+            context={"spreadsheet_id": spreadsheet_id, "name": file_meta.get("name", "")},
+            suggestion=(
+                "verify the spreadsheet was originally created by "
+                "`aeat config google sync calc export` against this profile"
+            ),
+        )
+
+
+def _read_developer_metadata(
+    sheets_service: Any,
+    spreadsheet_id: str,
+) -> dict[str, str]:
+    """Recover the engine-stamped developer metadata pairs."""
+
+    spreadsheet = _execute(
+        sheets_service.spreadsheets().get(
+            spreadsheetId=spreadsheet_id,
+            fields="developerMetadata(metadataKey,metadataValue,location)",
+        ),
+        action="sheets.spreadsheets.get.developerMetadata",
+    )
+    pairs: dict[str, str] = {}
+    for entry in spreadsheet.get("developerMetadata", []) or []:
+        key = entry.get("metadataKey")
+        value = entry.get("metadataValue")
+        if isinstance(key, str) and isinstance(value, str):
+            pairs[key] = value
+    return pairs
+
+
+def _classify_metadata_match(
+    pairs: Mapping[str, str],
+    snapshot: RegistrySnapshot,
+) -> tuple[Literal["matches", "stale", "missing"], PullMetadata]:
+    if not pairs:
+        return "missing", PullMetadata(
+            modelo_id="",
+            revision_id="",
+            filing_year=0,
+            period="",
+            engine_version="",
+            registry_sha="",
+        )
+    try:
+        filing_year = int(pairs.get("aeat_filing_year", "0"))
+    except ValueError:
+        filing_year = 0
+    metadata = PullMetadata(
+        modelo_id=pairs.get("aeat_modelo_id", ""),
+        revision_id=pairs.get("aeat_revision_id", ""),
+        filing_year=filing_year,
+        period=pairs.get("aeat_period", ""),
+        engine_version=pairs.get("aeat_engine_version", ""),
+        registry_sha=pairs.get("aeat_registry_sha", ""),
+        exported_at=pairs.get("aeat_exported_at"),
+    )
+    matches = (
+        metadata.modelo_id == snapshot.modelo.id
+        and metadata.revision_id == snapshot.revision.id
+        and metadata.filing_year == snapshot.filing_year
+        and metadata.period == snapshot.period
+    )
+    return ("matches" if matches else "stale"), metadata
+
+
+def _coerce_decimal(raw: Any) -> Decimal | None:
+    if raw is None or raw == "":
+        return None
+    try:
+        return Decimal(str(raw))
+    except (InvalidOperation, ValueError):
+        return None
+
+
+def _coerce_value(raw: Any) -> Decimal | str | bool | None:
+    if raw is None or raw == "":
+        return None
+    if isinstance(raw, bool):
+        return raw
+    if isinstance(raw, (int, float)):
+        try:
+            return Decimal(str(raw))
+        except (InvalidOperation, ValueError):
+            return None
+    if isinstance(raw, str):
+        as_decimal = _coerce_decimal(raw)
+        if as_decimal is not None:
+            return as_decimal
+        return raw
+    return None
+
+
+def pull_operator_edits(
+    snapshot: RegistrySnapshot,
+    *,
+    spreadsheet_id: str,
+    credentials: object,
+) -> PullResult:
+    """Read operator-edited cells back from a workbook into typed records.
+
+    Args:
+        snapshot: The registry snapshot the workbook was compiled
+            against. Used to derive the layout (cell addresses for
+            every casilla / binding / relation) and to validate the
+            workbook's developer-metadata stamps.
+        spreadsheet_id: The Drive file id of the workbook to read.
+            Must already exist and carry the
+            `appProperties.aeat_vault_app=aeat` ownership marker.
+        credentials: A `google.oauth2.credentials.Credentials`-shaped
+            object carrying a refresh + access token with at least
+            the `drive.file` + `spreadsheets` scopes.
+
+    Returns:
+        A `PullResult` carrying the operator edits, binding edits,
+        relation edits, and the metadata-match verdict. A
+        `metadata_match="stale"` result still includes the edits but
+        signals to the caller that the workbook's identity does not
+        match the supplied snapshot — applying these edits to the
+        local store may corrupt data.
+
+    Raises:
+        StorageConflictError: The spreadsheet is not marked as app-owned.
+        StoragePermissionError: The Drive scope grant is insufficient.
+        StorageNotFoundError: The supplied spreadsheet id is unknown.
+        StorageValidationError: `spreadsheet_id` is blank.
+        StorageNetworkError: A transport or unmapped HTTP failure.
+    """
+
+    if not spreadsheet_id.strip():
+        raise StorageValidationError(
+            "spreadsheet_id must not be blank",
+            context={"spreadsheet_id": spreadsheet_id},
+        )
+
+    drive = _drive_service(credentials)
+    sheets = _sheets_service(credentials)
+
+    _verify_ownership(drive, spreadsheet_id)
+    metadata_pairs = _read_developer_metadata(sheets, spreadsheet_id)
+    metadata_match, metadata = _classify_metadata_match(metadata_pairs, snapshot)
+
+    filing_anchor = date(snapshot.filing_year, 12, 31)
+    layout = plan_layout(snapshot.revision, bracket_filter_date=filing_anchor)
+
+    # Build one batchGet covering every operator-input casilla cell,
+    # every binding cell, and every relation mirror cell. The order
+    # is preserved so we can map the response rows back to ids.
+    operator_input_ids: list[CasillaId] = []
+    operator_input_ranges: list[str] = []
+    casilla_by_id = {casilla.id: casilla for casilla in snapshot.revision.casillas}
+    for casilla in snapshot.revision.casillas:
+        if casilla.input_kind not in ("manual", "bound"):
+            continue
+        address = layout.entradas_cells.get(casilla.id)
+        if address is None:
+            continue
+        operator_input_ids.append(casilla.id)
+        operator_input_ranges.append(address.qualified())
+
+    binding_ids: list[BindingId] = list(layout.binding_cells)
+    binding_ranges: list[str] = [layout.binding_cells[bid].qualified() for bid in binding_ids]
+
+    relation_ids: list[RelationId] = list(layout.relation_cells)
+    relation_ranges: list[str] = [layout.relation_cells[rid].qualified() for rid in relation_ids]
+
+    all_ranges = operator_input_ranges + binding_ranges + relation_ranges
+    if all_ranges:
+        response = _execute(
+            sheets.spreadsheets()
+            .values()
+            .batchGet(
+                spreadsheetId=spreadsheet_id,
+                ranges=all_ranges,
+                valueRenderOption="UNFORMATTED_VALUE",
+            ),
+            action="sheets.spreadsheets.values.batchGet",
+        )
+        value_ranges = response.get("valueRanges", []) or []
+    else:
+        value_ranges = []
+
+    cells_read = 0
+    operator_edits: list[OperatorEdit] = []
+    binding_edits: list[BindingEdit] = []
+    relation_edits: list[RelationEdit] = []
+
+    cursor = 0
+    for casilla_id in operator_input_ids:
+        vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
+        cursor += 1
+        rows = vr.get("values", []) or []
+        raw = rows[0][0] if rows and rows[0] else None
+        coerced = _coerce_value(raw)
+        if coerced is not None:
+            cells_read += 1
+        casilla = casilla_by_id[casilla_id]
+        operator_edits.append(
+            OperatorEdit(
+                casilla=casilla_id,
+                casilla_number=casilla.number,
+                label=casilla.label,
+                value=coerced,
+            )
+        )
+
+    for binding_id in binding_ids:
+        vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
+        cursor += 1
+        rows = vr.get("values", []) or []
+        raw = rows[0][0] if rows and rows[0] else None
+        coerced = _coerce_value(raw)
+        if coerced is not None:
+            cells_read += 1
+        binding_edits.append(BindingEdit(binding=binding_id, value=coerced))
+
+    for relation_id in relation_ids:
+        vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
+        cursor += 1
+        rows = vr.get("values", []) or []
+        raw = rows[0][0] if rows and rows[0] else None
+        coerced = _coerce_decimal(raw)
+        if coerced is not None:
+            cells_read += 1
+        relation_edits.append(RelationEdit(relation=relation_id, value=coerced))
+
+    return PullResult(
+        spreadsheet_id=spreadsheet_id,
+        operator_edits=tuple(operator_edits),
+        binding_edits=tuple(binding_edits),
+        relation_edits=tuple(relation_edits),
+        metadata=metadata,
+        metadata_match=metadata_match,
+        cells_read=cells_read,
+    )
+
+
+def compute_from_pull(
+    snapshot: RegistrySnapshot,
+    pull: PullResult,
+) -> RegistryCalculationResult:
+    """Run the local Decimal runtime against a `PullResult`'s edits.
+
+    Maps each edit family back to the runtime contract:
+
+    - `OperatorEdit.value` (Decimal | str | bool | None) → `inputs`
+      with `Decimal('0')` substituted for `None` so the runtime's
+      "every non-computed casilla has a value" precondition holds.
+    - `BindingEdit.value` is routed by the binding's `typed_enum`
+      declaration: numeric bindings flow into `binding_values` as
+      Decimals; enum bindings (e.g. CCAA) flow into
+      `enum_binding_values` as plain strings.
+    - `RelationEdit.value` flows into `relation_values` as Decimals,
+      with `Decimal('0')` substituted for `None`.
+
+    Refuses to compute when the workbook's metadata stamps do not
+    match the supplied snapshot (`pull.metadata_match != "matches"`).
+    The caller is responsible for handling stale workbooks before
+    invoking this helper.
+    """
+
+    if pull.metadata_match != "matches":
+        raise StorageConflictError(
+            f"refusing to compute: workbook metadata_match={pull.metadata_match!r} "
+            f"does not bind to the supplied snapshot",
+            context={
+                "spreadsheet_id": pull.spreadsheet_id,
+                "metadata_match": pull.metadata_match,
+                "workbook_modelo": pull.metadata.modelo_id,
+                "snapshot_modelo": snapshot.modelo.id,
+            },
+            suggestion=(
+                "re-export the workbook against the current snapshot via "
+                "`aeat config google sync calc export`, then re-pull"
+            ),
+        )
+
+    edits_by_casilla = {edit.casilla: edit for edit in pull.operator_edits}
+
+    inputs: dict[CasillaId, Decimal] = {}
+    for casilla in snapshot.revision.casillas:
+        if casilla.input_kind == "computed" or casilla.input_kind == "informational":
+            continue
+        edit = edits_by_casilla.get(casilla.id)
+        if edit is None or edit.value is None:
+            inputs[casilla.id] = Decimal("0")
+            continue
+        if isinstance(edit.value, Decimal):
+            inputs[casilla.id] = edit.value
+        elif isinstance(edit.value, bool):
+            inputs[casilla.id] = Decimal("1") if edit.value else Decimal("0")
+        elif isinstance(edit.value, str):
+            try:
+                inputs[casilla.id] = Decimal(edit.value)
+            except (InvalidOperation, ValueError):
+                inputs[casilla.id] = Decimal("0")
+        else:
+            inputs[casilla.id] = Decimal("0")
+
+    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
+    edits_by_binding = {edit.binding: edit for edit in pull.binding_edits}
+
+    binding_values: dict[BindingId, Decimal] = {}
+    enum_binding_values: dict[BindingId, str] = {}
+    for binding_id, definition in bindings_by_id.items():
+        edit = edits_by_binding.get(binding_id)
+        if definition.typed_enum:
+            # Enum binding: route the cell's text value into the
+            # enum-binding map; default to empty string when blank
+            # (the runtime will surface a clear validation error if
+            # the formula actually consults this binding without a
+            # supplied value).
+            if edit is None or edit.value is None:
+                continue
+            if isinstance(edit.value, str) and edit.value:
+                enum_binding_values[binding_id] = edit.value
+            elif isinstance(edit.value, Decimal):
+                # Operator typed a number into an enum binding cell
+                # — pass through as text so the runtime can decide.
+                enum_binding_values[binding_id] = format(edit.value, "f")
+        else:
+            # Numeric binding: default missing to zero so the runtime
+            # contract holds for every declared binding.
+            if edit is None or edit.value is None:
+                binding_values[binding_id] = Decimal("0")
+            elif isinstance(edit.value, Decimal):
+                binding_values[binding_id] = edit.value
+            elif isinstance(edit.value, str):
+                try:
+                    binding_values[binding_id] = Decimal(edit.value)
+                except (InvalidOperation, ValueError):
+                    binding_values[binding_id] = Decimal("0")
+            else:
+                binding_values[binding_id] = Decimal("0")
+
+    edits_by_relation = {edit.relation: edit for edit in pull.relation_edits}
+    relation_values: dict[RelationId, Decimal] = {}
+    for relation in snapshot.revision.relations:
+        edit = edits_by_relation.get(relation.id)
+        if edit is None or edit.value is None:
+            relation_values[relation.id] = Decimal("0")
+        else:
+            relation_values[relation.id] = edit.value
+
+    return calculate_registry_snapshot(
+        snapshot,
+        inputs=inputs,
+        date_context={"filing_period": date(snapshot.filing_year, 12, 31)},
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
+    )
+
+
+__all__ = [
+    "BindingEdit",
+    "OperatorEdit",
+    "PullMetadata",
+    "PullResult",
+    "RelationEdit",
+    "compute_from_pull",
+    "pull_operator_edits",
+]

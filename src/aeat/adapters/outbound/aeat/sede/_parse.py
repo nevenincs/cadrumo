@@ -19,9 +19,12 @@ from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl
 
+from .....core.config import Settings
 from .....core.logging import get_logger
 from ._errors import SedeParseError
 from ._schema import Expediente, JustificanteRef
+
+_SEDE_PATHS = Settings.external_constants().aeat.sede_paths
 
 _log = get_logger(__name__)
 
@@ -155,8 +158,8 @@ def parse_expediente_detail(
             "session may have expired or the modelo exposes a different verifier"
         )
     csv = match.group("csv")
-    cotejo_url = urljoin(base_url, f"/wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV={csv}")
-    pdf_url = urljoin(base_url, f"/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV={csv}")
+    cotejo_url = urljoin(base_url, f"{_SEDE_PATHS.cotejo_query}?CSV={csv}")
+    pdf_url = urljoin(base_url, f"{_SEDE_PATHS.cotejo_document}?CSV={csv}")
     return JustificanteRef(
         csv=csv,
         expediente_id=expediente_id,

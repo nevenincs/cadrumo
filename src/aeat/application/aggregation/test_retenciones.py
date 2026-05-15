@@ -155,10 +155,11 @@ class TestAggregate111:
         reverse = aggregate_retenciones_111(tuple(reversed(observations)), period="2025-Q1")
         assert forward.model_dump_json() == reverse.model_dump_json()
 
-    def test_unimplemented_modelo_raises(self) -> None:
+    def test_unregistered_modelo_raises_domain_error(self) -> None:
+        from aeat.application.aggregation._errors import AggregationUnsupportedModeloError
         from aeat.application.aggregation._retenciones import _filter_observations_for_modelo
 
-        with pytest.raises(NotImplementedError, match="modelo '347'"):
+        with pytest.raises(AggregationUnsupportedModeloError, match="modelo '347'"):
             _filter_observations_for_modelo((), modelo="347")
 
 

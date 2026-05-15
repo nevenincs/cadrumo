@@ -248,9 +248,13 @@ def configure_logging() -> None:
     global _CONFIGURED
     if _CONFIGURED:
         return
+
+    from .config import load_settings
+
     log_file = default_log_file_path()
     log_file.parent.mkdir(parents=True, exist_ok=True)
 
+    settings = load_settings()
     logging.config.dictConfig(
         {
             "version": 1,
@@ -263,14 +267,14 @@ def configure_logging() -> None:
             },
             "handlers": {
                 "stderr": {
-                    "level": "ERROR",
+                    "level": settings.aeat_log_stderr_level,
                     "formatter": "standard",
                     "class": "logging.StreamHandler",
                     "stream": "ext://sys.stderr",
                     "filters": ["drop_run_event"],
                 },
                 "file": {
-                    "level": "DEBUG",
+                    "level": settings.aeat_log_file_level,
                     "formatter": "standard",
                     "class": "logging.FileHandler",
                     "filename": str(log_file),
@@ -280,7 +284,7 @@ def configure_logging() -> None:
             },
             "root": {
                 "handlers": ["stderr", "file"],
-                "level": "DEBUG",
+                "level": settings.aeat_log_root_level,
             },
             "loggers": {
                 "alembic.runtime.plugins": {

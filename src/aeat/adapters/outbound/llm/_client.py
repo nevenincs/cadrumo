@@ -85,8 +85,10 @@ class LLMClient:
             model=model,
             prompt=request.prompt,
             system=request.system,
-            max_tokens=request.max_tokens or 1024,
-            temperature=request.temperature if request.temperature is not None else 0.0,
+            max_tokens=request.max_tokens or self.settings.aeat_llm_default_max_tokens,
+            temperature=(
+                request.temperature if request.temperature is not None else self.settings.aeat_llm_default_temperature
+            ),
             timeout_s=self.settings.aeat_llm_default_timeout_s,
         )
         try:

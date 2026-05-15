@@ -13,11 +13,14 @@ service layer is unit-testable without a workflow-state fixture.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
+from ...application.auth import AuthProviderKind, select_provider
+from ...core.config import Settings, load_settings
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -27,6 +30,8 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
+from ...domain.deadlines import AutonomoProfile, DeadlineEngine
+from ...domain.filing import FilingDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
@@ -73,9 +78,23 @@ from ...domain.modelos._work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
-from ...domain.period import period_end_date
-from ...domain.transactions import TransactionCatalogueRepository
+from ...domain.period import parse_canonical_period, period_end_date
+from ...domain.submission import SubmissionEngine
+from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
+from ..filing import (
+    approve_draft,
+    build_draft,
+    build_runtime_schema_provider,
+    filing_profile_from_autonomo,
+)
 from ..live import Borrador100SnapshotRepository
+from ..workflow import (
+    DeadlineEngineAdapter,
+    WorkflowEngine,
+    WorkflowResult,
+    WorkflowStage,
+    save_run,
+)
 from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingResult,
@@ -182,6 +201,47 @@ class ExternalFilingImportError(ModeloError):
     reference)."""
 
 
+#: Legal anchors for the modelo workflow gate. The gate enforces
+#: that a Modelo declaration only transitions to VERIFIED_COMPLETE
+#: or FILED after the workflow engine ran auth + deadline-window +
+#: draft + preflight stages. The grounding spans:
+#:
+#:   - ``ley-58-2003:art-119`` (declaracion tributaria — what a tax
+#:     declaration is, the locked semantics of FilingRecord
+#:     persistence)
+#:   - ``ley-58-2003:art-120`` (autoliquidaciones — the
+#:     self-assessment regime modelo file_modelo_revision performs,
+#:     and the rectificacion procedure that flows through
+#:     amend_modelo_revision)
+#:   - ``ley-58-2003:art-122`` (complementarias / sustitutivas — the
+#:     supersession transition that file_modelo_revision applies when
+#:     a prior CURRENT filing exists)
+_WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
+    "ley-58-2003:art-119",
+    "ley-58-2003:art-120",
+    "ley-58-2003:art-122",
+)
+
+
+class ModeloWorkflowGateError(ModeloError):
+    """Raised when the workflow gate refuses an internal file transition.
+
+    The gate is grounded in the procedural articles of the Ley General
+    Tributaria (Ley 58/2003) named in
+    :data:`_WORKFLOW_GATE_LEGAL_REFS`. A refusal here means the
+    declaration cannot be considered legally filed under those
+    articles' regime.
+    """
+
+    def __init__(self, result: WorkflowResult) -> None:
+        self.result = result
+        reason = result.aborted_reason.value if result.aborted_reason is not None else "unknown"
+        super().__init__(
+            f"workflow gate aborted run_id={result.run_id!r} final_stage={result.final_stage.value!r} "
+            f"reason={reason!r}: {result.summary}"
+        )
+
+
 class AmendmentOverrideCasillaError(ModeloError):
     """Raised when an amendment override targets a casilla id the
     registry does not declare for the baseline's modelo / filing
@@ -210,6 +270,161 @@ def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
     care to name the unit.
     """
     return f"{modelo}-{filing_year}-{period}"
+
+
+def _workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
+    """Return the canonical period token consumed by WorkflowEngine."""
+
+    if work_unit.period.endswith("T") and len(work_unit.period) == 2:
+        quarter = work_unit.period[0]
+        return f"{work_unit.filing_year}Q{quarter}"
+    if work_unit.period == "0A":
+        return str(work_unit.filing_year)
+    if len(work_unit.period) == 2 and work_unit.period.isdigit():
+        return f"{work_unit.filing_year}-{work_unit.period}"
+    parse_canonical_period(work_unit.period)
+    return work_unit.period
+
+
+class _RevisionInputsProvider:
+    """Loads immutable calculation-revision inputs for the workflow gate."""
+
+    def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
+        self._revision = revision
+        self._modelo = str(work_unit.modelo)
+        self._period = _workflow_period_for_work_unit(work_unit)
+
+    def load_inputs(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+    ) -> Mapping[str, object]:
+        del profile
+        if modelo != self._modelo or period != self._period:
+            raise ValueError("workflow input request does not match calculation revision")
+        return {
+            **dict(self._revision.inputs_snapshot),
+            **dict(self._revision.binding_overrides),
+        }
+
+
+class _RevisionDraftBuilder:
+    """Builds and locally approves the draft backed by the target revision."""
+
+    def __init__(self, *, work_unit: WorkUnit, actor: str, clock: datetime) -> None:
+        self._work_unit = work_unit
+        self._actor = actor
+        self._clock = clock
+        self._schema_provider = build_runtime_schema_provider(
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            modelos=(str(work_unit.modelo),),
+        )
+
+    def build(
+        self,
+        *,
+        modelo: str,
+        period: str,
+        profile: AutonomoProfile,
+        inputs: Mapping[str, object],
+        fail_on_warning: bool = False,
+    ):
+        draft = build_draft(
+            modelo=modelo,
+            period=period,
+            profile=filing_profile_from_autonomo(profile),
+            inputs=inputs,
+            schema_provider=self._schema_provider,
+            fail_on_warning=fail_on_warning,
+        )
+        if draft.status is not FilingDraftStatus.READY_TO_SUBMIT:
+            return draft
+        return approve_draft(
+            draft,
+            bucket_id=self._work_unit.bucket_id,
+            approved_by=self._actor,
+            schema_provider=self._schema_provider,
+            transaction_catalogue=TransactionCatalogue(),
+            approved_at=self._clock,
+        )
+
+
+class _RevisionDeadlineWindowChecker:
+    """Checks the same deadline schedule the workflow gate already computed."""
+
+    def __init__(self, *, profile: AutonomoProfile, engine: DeadlineEngine) -> None:
+        self._profile = profile
+        self._engine = engine
+
+    def is_window_open(self, modelo: str, period: str, today: date) -> bool:
+        year, _ = parse_canonical_period(period)
+        schedule = self._engine.compute(self._profile, year, today=today)
+        return any(
+            obligation.modelo == modelo
+            and obligation.period == period
+            and obligation.opens_on <= today <= obligation.closes_on
+            for obligation in schedule.obligations
+        )
+
+
+def _build_revision_workflow_engine(
+    *,
+    revision: CalculationRevision,
+    work_unit: WorkUnit,
+    profile: AutonomoProfile,
+    actor: str,
+    clock: datetime,
+    settings: Settings | None,
+) -> WorkflowEngine:
+    cfg = settings or load_settings()
+    deadline_engine = DeadlineEngine()
+    provider_kind = (
+        AuthProviderKind(cfg.aeat_auth_provider.value)
+        if cfg.aeat_auth_provider is not None
+        else AuthProviderKind.CERTIFICATE
+    )
+    submission_engine = SubmissionEngine(
+        auth_provider=select_provider(provider_kind, settings=cfg),
+        deadline_checker=_RevisionDeadlineWindowChecker(profile=profile, engine=deadline_engine),
+        settings=cfg,
+    )
+    return WorkflowEngine(
+        deadline_engine=DeadlineEngineAdapter(deadline_engine),
+        filing_draft_builder=_RevisionDraftBuilder(work_unit=work_unit, actor=actor, clock=clock),
+        submission_engine=submission_engine,
+        session=None,
+        certificate_bundle=None,
+        inputs_provider=_RevisionInputsProvider(
+            revision=revision,
+            work_unit=work_unit,
+        ),
+        settings=cfg,
+    )
+
+
+def _run_revision_workflow_gate(
+    *,
+    engine: WorkflowEngine,
+    profile: AutonomoProfile,
+    work_unit: WorkUnit,
+    today: date,
+    runs_dir: Path | None,
+) -> WorkflowResult:
+    result = asyncio.run(
+        engine.run_for_period(
+            profile,
+            str(work_unit.modelo),
+            _workflow_period_for_work_unit(work_unit),
+            today=today,
+        )
+    )
+    save_run(result, runs_dir=runs_dir)
+    if result.final_stage is WorkflowStage.ABORTED:
+        raise ModeloWorkflowGateError(result)
+    return result
 
 
 def create_work_unit(
@@ -1089,10 +1304,14 @@ def verify_modelo_revision(
     calculation_revision_id: str,
     *,
     actor: str,
+    workflow_profile: AutonomoProfile,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
+    workflow_engine: WorkflowEngine | None = None,
+    workflow_runs_dir: Path | None = None,
+    settings: Settings | None = None,
     clock: datetime | None = None,
 ) -> VerificationReport:
     """Evaluate a draft revision against the verified-complete contract.
@@ -1112,7 +1331,9 @@ def verify_modelo_revision(
        ``COMPLETE``, ``granted_verified_complete`` is ``True`` and
        the calculation revision transitions DRAFT →
        VERIFIED_COMPLETE.
-    5. Persist the report in the verification-report catalogue.
+    5. If the report would grant ``VERIFIED_COMPLETE``, run the
+       WorkflowEngine-owned gate before mutating state.
+    6. Persist the report in the verification-report catalogue.
        Failed attempts persist so the audit trail explains why a
        transition was refused.
 
@@ -1125,6 +1346,8 @@ def verify_modelo_revision(
             from those points; the operator must produce a new
             calculation revision (which lands as a fresh draft) to
             verify again.
+        ModeloWorkflowGateError: When the workflow/preflight gate
+            aborts before the verified-complete transition.
     """
 
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -1230,6 +1453,23 @@ def verify_modelo_revision(
         granted_verified_complete=granted,
     )
 
+    if granted:
+        gate_engine = workflow_engine or _build_revision_workflow_engine(
+            revision=target,
+            work_unit=work_unit,
+            profile=workflow_profile,
+            actor=actor.strip(),
+            clock=now,
+            settings=settings,
+        )
+        _run_revision_workflow_gate(
+            engine=gate_engine,
+            profile=workflow_profile,
+            work_unit=work_unit,
+            today=now.date(),
+            runs_dir=workflow_runs_dir,
+        )
+
     # Persist the report regardless of outcome — failed attempts
     # are part of the audit trail.
     vr_repo.save(upsert_verification_report(vr_repo.load(), report))
@@ -1274,11 +1514,15 @@ def file_modelo_revision(
     calculation_revision_id: str,
     *,
     actor: str,
+    workflow_profile: AutonomoProfile,
     notes: str | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     filing_repository: FilingRecordCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
+    workflow_engine: WorkflowEngine | None = None,
+    workflow_runs_dir: Path | None = None,
+    settings: Settings | None = None,
     clock: datetime | None = None,
 ) -> FilingRecord:
     """File a verified-complete revision as the current filed answer.
@@ -1287,17 +1531,18 @@ def file_modelo_revision(
     perspective — each repository save is sequenced):
 
     1. Verify the revision is in ``VERIFIED_COMPLETE`` state.
-    2. Look up any existing current filing record for the same
+    2. Run the workflow gate for the revision's modelo and period.
+    3. Look up any existing current filing record for the same
        (bucket, modelo, year, period) tuple.
-    3. If a prior current filing exists:
+    4. If a prior current filing exists:
         * mark the prior filing record ``SUPERSEDED`` with
           ``superseded_at`` and ``superseded_by_filing_record_id``;
         * transition the prior filed calculation revision from
           ``FILED`` to ``FILED_SUPERSEDED``.
-    4. Create the new filing record with status ``CURRENT``.
-    5. Transition the target calculation revision from
+    5. Create the new filing record with status ``CURRENT``.
+    6. Transition the target calculation revision from
        ``VERIFIED_COMPLETE`` to ``FILED``.
-    6. Advance the work unit's ``filed_calculation_revision_id``
+    7. Advance the work unit's ``filed_calculation_revision_id``
        and ``current_filing_record_id`` pointers.
 
     Raises:
@@ -1307,6 +1552,8 @@ def file_modelo_revision(
             ``VERIFIED_COMPLETE`` state.
         WorkUnitNotFoundError: When the revision's parent work
             unit cannot be loaded.
+        ModeloWorkflowGateError: When the workflow/preflight gate
+            aborts before filing-state mutation.
     """
 
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
@@ -1332,6 +1579,21 @@ def file_modelo_revision(
         )
 
     now = clock or datetime.now(UTC)
+    gate_engine = workflow_engine or _build_revision_workflow_engine(
+        revision=target,
+        work_unit=work_unit,
+        profile=workflow_profile,
+        actor=actor.strip(),
+        clock=now,
+        settings=settings,
+    )
+    _run_revision_workflow_gate(
+        engine=gate_engine,
+        profile=workflow_profile,
+        work_unit=work_unit,
+        today=now.date(),
+        runs_dir=workflow_runs_dir,
+    )
 
     new_filing_id = derive_filing_record_id(
         work_unit_id=target.work_unit_id,
@@ -1984,6 +2246,7 @@ __all__ = [
     "ExternalFilingImportError",
     "FilingRecordNotFoundError",
     "ModeloAggregationBindingError",
+    "ModeloWorkflowGateError",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitMutationRefusedError",

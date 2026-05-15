@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_RENTA_WEB_BORRADOR,
-    url="https://www2.agenciatributaria.gob.es/wlpl/OVCT-CXEW/SesionHTML",
+    path="/wlpl/OVCT-CXEW/SesionHTML",
     subdomain=Subdomain.WWW2,
     category=PortalCategory.BORRADOR,
     auth_methods=(

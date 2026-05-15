@@ -80,6 +80,9 @@ def _is_layout_binding(binding: DataBindingDefinition) -> bool:
     return {"record", "offset", "length", "data_type"}.issubset(binding.selector)
 
 
+_COMMUNICATION_SURFACES = {"communication", "payer_delivery"}
+
+
 def _extract_pdf_text(path: Path) -> str:
     stat = path.stat()
     return _extract_pdf_text_cached(str(path.expanduser().resolve()), stat.st_size, stat.st_mtime_ns)
@@ -964,7 +967,7 @@ class RegistryValidator:
                 filing_schedule_ids=filing_schedule_ids,
             )
         )
-        failures.extend(self._validate_application_link_closure(prefix, revision))
+        failures.extend(self._validate_application_link_closure(prefix, revision, modelo_id=modelo.id))
         failures.extend(self._validate_reconciliation_total_closure(prefix, revision))
         failures.extend(
             self._validate_construct_closure(
@@ -1357,9 +1360,16 @@ class RegistryValidator:
         return []
 
     @staticmethod
-    def _validate_application_link_closure(scope: str, revision: ModeloRevision) -> list[str]:
+    def _validate_application_link_closure(
+        scope: str,
+        revision: ModeloRevision,
+        *,
+        modelo_id: str,
+    ) -> list[str]:
         failures: list[str] = []
         surfaces = {link.surface for link in revision.application_links}
+        communication_surfaces = surfaces.intersection(_COMMUNICATION_SURFACES)
+        modelo_requires_communication = modelo_id == "145"
         if revision.formulas and "calculation" not in surfaces:
             failures.append(f"{scope}: formulas require a calculation application link")
         if revision.extraction_profiles and "extractor" not in surfaces:
@@ -1368,12 +1378,28 @@ class RegistryValidator:
             failures.append(f"{scope}: export layouts require an export application link")
         if revision.verification_expectations and "verification" not in surfaces:
             failures.append(f"{scope}: verification expectations require a verification application link")
-        if revision.casillas and "filing" not in surfaces:
-            failures.append(f"{scope}: filing-grade casillas require a filing application link")
+        casillas_have_lifecycle_link = "filing" in surfaces or (
+            modelo_requires_communication and bool(communication_surfaces)
+        )
+        if revision.casillas and not casillas_have_lifecycle_link:
+            failures.append(f"{scope}: casillas require a filing or communication application link")
+        if communication_surfaces and not modelo_requires_communication:
+            failures.append(f"{scope}: communication application links are only valid for Modelo 145")
         if revision.live_cross_references and "portal" not in surfaces:
             failures.append(f"{scope}: live/static cross-references require a portal application link")
         if revision.deadline_windows and "deadline" not in surfaces:
             failures.append(f"{scope}: deadline windows require a deadline application link")
+        if modelo_requires_communication and not communication_surfaces:
+            failures.append(f"{scope}: Modelo 145 requires a communication application link")
+        if communication_surfaces or modelo_requires_communication:
+            if "filing" in surfaces:
+                failures.append(f"{scope}: communication application links must not be combined with filing")
+            if "deadline" in surfaces or revision.deadline_windows:
+                failures.append(f"{scope}: communication application links must not declare deadline surfaces")
+            if "portal" in surfaces or revision.live_cross_references:
+                failures.append(f"{scope}: communication application links must not declare live or portal surfaces")
+            if revision.filing_schedules:
+                failures.append(f"{scope}: communication application links must not declare filing schedules")
         return failures
 
     @staticmethod

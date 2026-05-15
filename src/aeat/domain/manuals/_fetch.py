@@ -55,34 +55,29 @@ class PartSpec(BaseModel):
     source_pdf_url: str
 
 
+_SEDE_HOST = Settings.external_constants().aeat.domains.sede
+_MANUAL_BIBLIOTECA_ROOT = f"{_SEDE_HOST}/static_files/Sede/Biblioteca/Manual/Practicos"
+
 PART_SPECS: tuple[PartSpec, ...] = (
     PartSpec(
         manual_id=ManualId.RENTA,
         year=2025,
         part=ManualPart.PARTE_1,
-        source_pdf_url=(
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/"
-            "Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"
-        ),
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf",
     ),
     PartSpec(
         manual_id=ManualId.RENTA,
         year=2025,
         part=ManualPart.PARTE_2_DEDUCCIONES_AUTONOMICAS,
         source_pdf_url=(
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/"
-            "Manual/Practicos/IRPF/IRPF-2025-Deducciones-autonomicas/"
-            "ManualRenta2025Parte2_es_es.pdf"
+            f"{_MANUAL_BIBLIOTECA_ROOT}/IRPF/IRPF-2025-Deducciones-autonomicas/ManualRenta2025Parte2_es_es.pdf"
         ),
     ),
     PartSpec(
         manual_id=ManualId.IVA,
         year=2025,
         part=ManualPart.SINGLE,
-        source_pdf_url=(
-            "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/"
-            "Manual/Practicos/IVA/Manual_IVA_2025.pdf"
-        ),
+        source_pdf_url=f"{_MANUAL_BIBLIOTECA_ROOT}/IVA/Manual_IVA_2025.pdf",
     ),
 )
 
@@ -139,7 +134,12 @@ def _stream_to_file(url: str, destination: Path) -> tuple[str, int]:
     destination.parent.mkdir(parents=True, exist_ok=True)
     sha = hashlib.sha256()
     length = 0
-    with httpx.stream("GET", url, follow_redirects=True, timeout=60.0) as response:
+    with httpx.stream(
+        "GET",
+        url,
+        follow_redirects=True,
+        timeout=load_settings().aeat_manuals_http_timeout_s,
+    ) as response:
         response.raise_for_status()
         with destination.open("wb") as out:
             for chunk in response.iter_bytes(_CHUNK_SIZE):

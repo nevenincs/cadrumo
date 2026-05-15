@@ -114,6 +114,8 @@ def derive_calculation_revision_id(
     binding_overrides: Mapping[str, str],
     casilla_values: Mapping[str, Decimal],
     source_transaction_ids: Sequence[str] = (),
+    borrador_snapshot_id: str | None = None,
+    bindings_sourced_from_borrador: Sequence[str] = (),
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt.
 
@@ -133,6 +135,12 @@ def derive_calculation_revision_id(
         "outputs": dict(sorted((k.strip(), _canonical_decimal(v)) for k, v in casilla_values.items())),
         "source_transaction_ids": tuple(sorted(item.strip() for item in source_transaction_ids)),
     }
+    normalized_borrador_snapshot_id = borrador_snapshot_id.strip() if borrador_snapshot_id else None
+    normalized_borrador_bindings = tuple(sorted(item.strip() for item in bindings_sourced_from_borrador))
+    if normalized_borrador_snapshot_id is not None:
+        payload["borrador_snapshot_id"] = normalized_borrador_snapshot_id
+    if normalized_borrador_bindings:
+        payload["bindings_sourced_from_borrador"] = normalized_borrador_bindings
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
@@ -189,6 +197,8 @@ class CalculationRevision(BaseModel):
     inputs_snapshot: Mapping[str, str] = Field(default_factory=dict)
     binding_overrides: Mapping[str, str] = Field(default_factory=dict)
     source_transaction_ids: tuple[_CalculationRevisionId, ...] = Field(default_factory=tuple)
+    borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    bindings_sourced_from_borrador: tuple[str, ...] = Field(default_factory=tuple)
     casilla_values: Mapping[str, Decimal] = Field(default_factory=dict)
     created_at: datetime
     updated_at: datetime
@@ -212,6 +222,8 @@ class CalculationRevision(BaseModel):
             binding_overrides=self.binding_overrides,
             casilla_values=self.casilla_values,
             source_transaction_ids=self.source_transaction_ids,
+            borrador_snapshot_id=self.borrador_snapshot_id,
+            bindings_sourced_from_borrador=self.bindings_sourced_from_borrador,
         )
         if derived != self.calculation_revision_id:
             raise ModeloValidationError(

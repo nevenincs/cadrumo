@@ -10,11 +10,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def test_work_calculate_help_exposes_borrador_snapshot_id_flag() -> None:
-    """The `--borrador-snapshot-id` flag is part of the command's
-    advertised surface so operators can discover it via `--help`."""
+    """The `--borrador` flag is part of the command's advertised surface
+    so operators can discover it via `--help`. The canonical ADR name
+    for this option is ``--borrador``."""
     result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
     assert result.exit_code == 0
-    assert "--borrador-snapshot-id" in result.output
+    assert "--borrador" in result.output
 
 
 def test_work_calculate_refuses_unknown_work_unit_with_borrador_flag() -> None:
