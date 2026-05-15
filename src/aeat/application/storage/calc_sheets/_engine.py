@@ -786,7 +786,11 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
         aggregation = binding.aggregation or {}
         if str(aggregation.get("op")) != "rows":
             continue
-        grouping = str(getattr(binding.selector, "grouping", "") or "")
+        # `binding.selector` is a Mapping; getattr returns the default
+        # for every Mapping regardless of key, so the lookup must go
+        # through `.get`. The previous getattr-form silently dropped
+        # every row-producer binding (entire Detalle tab empty).
+        grouping = str(binding.selector.get("grouping", "") or "")
         if not grouping:
             continue
         cohorts.setdefault(grouping, []).append(binding)
