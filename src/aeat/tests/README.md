@@ -163,7 +163,7 @@ Test modules (`test_*.py`, `_test_*.py`, `src/aeat/tests/`) are omitted from
 coverage.
 
 Ratchet policy: the threshold only moves up. Lowering it requires a
-new ADR with the rationale (e.g. temporary dip during a refactor); the
+documented rationale (e.g. temporary dip during a refactor); the
 default posture is to delete dead code or add tests rather than relax
 the floor.
 

@@ -5,7 +5,7 @@ Every mutating noun-group in the operator-facing CLI registers a
 **single source of truth** consumed by cross-cutting conformance
 tests.
 
-Entries shipped in this registry:
+Registered entries:
 
   - ``aeat app ledger evidence``             (locked CRUD reference shape)
   - ``aeat app ledger payable-invoice``      (link-orthogonal CRUD)
@@ -59,10 +59,11 @@ USAGE_RATIOS = MutatingNounGroupContract(
     exception=NounGroupExceptionKind.KEY_VALUE_AS_RECORD,
     crud_verbs=frozenset(),
     key_value_verbs=frozenset({KeyValueVerb.SET, KeyValueVerb.GET, KeyValueVerb.UNSET, KeyValueVerb.LIST}),
-    # The 2026-05-13 ledger-ratios-eligible-and-validate ADR adds two
-    # orthogonal read-only verbs (eligible, validate). They're not in
+    # Two orthogonal read-only verbs (eligible, validate) sit outside
     # the OrthogonalAxis enum; documented inline as a noun-group
-    # specific extension.
+    # specific extension because they apply only to usage-ratio
+    # records (eligibility check + parity validation against the
+    # registry contract).
 )
 
 INVENTORY = MutatingNounGroupContract(
@@ -70,7 +71,8 @@ INVENTORY = MutatingNounGroupContract(
     cli_path="aeat app ledger inventory",
     # Lifecycle-only exception: create + movement add + valuation
     # preview are distinct named operations rather than CRUD-shaped
-    # CRUD per the inventory-placement ADR.
+    # surfaces — inventory entries do not behave as mutable records
+    # the operator can edit field-by-field.
     exception=NounGroupExceptionKind.LIFECYCLE_OPERATIONS_ONLY,
     crud_verbs=frozenset(),
     lifecycle_state_verbs=frozenset({LifecycleStateVerb.RESET}),
@@ -79,9 +81,10 @@ INVENTORY = MutatingNounGroupContract(
 APODERADO = MutatingNounGroupContract(
     noun="apoderado",
     cli_path="aeat config auth apoderado",
-    # Lifecycle-only exception per apoderamientos-surface ADR §3.3:
-    # configure + clear are state transitions, status + check are
-    # read-only.
+    # Lifecycle-only exception: an apoderado is configured or cleared
+    # as a whole; configure + clear are state transitions and
+    # status + check are read-only — there are no per-field CRUD
+    # edits for an authorisation grant.
     exception=NounGroupExceptionKind.LIFECYCLE_OPERATIONS_ONLY,
     crud_verbs=frozenset(),
     lifecycle_state_verbs=frozenset({LifecycleStateVerb.RESET}),

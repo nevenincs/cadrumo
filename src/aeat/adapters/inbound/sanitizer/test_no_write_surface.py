@@ -132,12 +132,12 @@ class TestForbiddenVerbInBodyIsAuditable:
     """Every body-mention of a forbidden verb must be in a documented context.
 
     The sanitiser explicitly documents the forbidden verbs as part
-    of its threat model (FORBIDDEN_FLAGS list, ADR references in
+    of its threat model (FORBIDDEN_FLAGS list, threat-model
     docstrings). This test ensures every occurrence in the body
     text is either:
       * in a docstring describing the threat model, or
       * in the explicit FORBIDDEN_FLAGS guard, or
-      * in a comment referencing the parent ADR.
+      * in a comment justifying the appearance.
 
     The test fails on body-mentions that look like real call
     sites (e.g. ``pdf.submit(...)``).

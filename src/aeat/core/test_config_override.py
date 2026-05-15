@@ -2,7 +2,7 @@
 
 The override mechanism is the foundation that lets call sites stop
 reading os.environ directly. These tests pin the four behavioural
-guarantees the ADR makes about the helper:
+guarantees the helper provides:
 
 - Scalar overrides take effect inside the with-block.
 - The prior Settings value is restored on normal exit.
