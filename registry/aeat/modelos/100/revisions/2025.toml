@@ -3392,7 +3392,13 @@ casillas = [
 id = "renta-final-settlement"
 title = "Modelo 100 final settlement result"
 legal_refs = [
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-79",
+    "ley-35-2006:art-80",
+    "ley-35-2006:art-81",
+    "ley-35-2006:art-81-bis",
     "ley-35-2006:art-99",
+    "ley-35-2006:art-103",
     "rd-439-2007:art-100",
     "rd-439-2007:art-109",
     "rd-439-2007:art-110",
@@ -4125,7 +4131,7 @@ label = "Cuota liquida estatal incrementada"
 section = ["resultado_declaracion"]
 input_kind = "computed"
 formula = "renta-2025-cuota-liquida-estatal-incrementada"
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-50", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4135,7 +4141,7 @@ label = "Cuota liquida autonomica incrementada"
 section = ["resultado_declaracion"]
 input_kind = "computed"
 formula = "renta-2025-cuota-liquida-autonomica-incrementada"
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-50", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4145,7 +4151,7 @@ label = "Cuota liquida incrementada total"
 section = ["resultado_declaracion"]
 input_kind = "computed"
 formula = "renta-2025-cuota-liquida-incrementada-total"
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-50", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4153,7 +4159,7 @@ id = "0588"
 number = "0588"
 label = "Deduccion por doble imposicion internacional"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-80", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4169,7 +4175,7 @@ id = "0589"
 number = "0589"
 label = "Deduccion por doble imposicion internacional en transparencia fiscal internacional"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-80", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4177,7 +4183,7 @@ id = "0590"
 number = "0590"
 label = "Deduccion por doble imposicion por imputacion de rentas de derechos de imagen"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-80", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4195,7 +4201,7 @@ label = "Cuota resultante de la autoliquidacion"
 section = ["resultado_declaracion"]
 input_kind = "computed"
 formula = "renta-2025-cuota-resultante-autoliquidacion"
-legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-79", "ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4331,7 +4337,7 @@ label = "Cuota diferencial"
 section = ["resultado_declaracion"]
 input_kind = "computed"
 formula = "renta-2025-cuota-diferencial"
-legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-79", "ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4339,7 +4345,7 @@ id = "0611"
 number = "0611"
 label = "Deduccion por maternidad. Importe de la deduccion"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4347,7 +4353,7 @@ id = "0612"
 number = "0612"
 label = "Deduccion por maternidad. Abono anticipado"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4355,7 +4361,7 @@ id = "0613"
 number = "0613"
 label = "Incremento por gastos en guarderias"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4363,7 +4369,7 @@ id = "0623"
 number = "0623"
 label = "Deduccion por descendiente con discapacidad"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4371,7 +4377,7 @@ id = "0624"
 number = "0624"
 label = "Abono anticipado por descendiente con discapacidad"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4379,7 +4385,7 @@ id = "0636"
 number = "0636"
 label = "Deduccion por ascendiente con discapacidad"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4387,7 +4393,7 @@ id = "0637"
 number = "0637"
 label = "Abono anticipado por ascendiente con discapacidad"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4395,7 +4401,7 @@ id = "0248"
 number = "0248"
 label = "Deduccion por conyuge con discapacidad"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4403,7 +4409,7 @@ id = "0249"
 number = "0249"
 label = "Abono anticipado por conyuge con discapacidad"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4411,7 +4417,7 @@ id = "0660"
 number = "0660"
 label = "Deduccion por familia numerosa"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4419,7 +4425,7 @@ id = "0661"
 number = "0661"
 label = "Abono anticipado por familia numerosa"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4427,7 +4433,7 @@ id = "0662"
 number = "0662"
 label = "Deduccion por ascendiente separado legalmente o sin vinculo matrimonial"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4435,7 +4441,7 @@ id = "0663"
 number = "0663"
 label = "Abono anticipado por ascendiente separado legalmente o sin vinculo matrimonial"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4443,7 +4449,7 @@ id = "0664"
 number = "0664"
 label = "Regularizacion de abono anticipado de descendiente con discapacidad"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4451,7 +4457,7 @@ id = "0666"
 number = "0666"
 label = "Regularizacion de abono anticipado de ascendiente con discapacidad"
 section = ["resultado_declaracion"]
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-81-bis", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -4469,7 +4475,7 @@ label = "Resultado de la declaracion"
 section = ["resultado_declaracion"]
 input_kind = "computed"
 formula = "renta-2025-resultado-declaracion"
-legal_refs = ["orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-103", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".constructs]]

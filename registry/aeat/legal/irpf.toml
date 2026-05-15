@@ -1835,6 +1835,86 @@ required_text = [
     "base liquidable del ahorro",
 ]
 
+[legal."ley-35-2006:art-79"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-79.html#a79"
+document_id = "BOE-A-2006-20764"
+article = "79"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a79"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 79: cuota diferencial. Define el resultado de minorar la suma estatal + autonomica por las deducciones siguientes: doble imposicion internacional (art 80), deducciones art 91.10 y 92.4, retenciones art 99.11 y 99.8, cuotas IRNR por cambio de residencia, retenciones y pagos fraccionados. Base sustantiva del Modelo 100 casilla 0610 (cuota diferencial) y 0595 (cuota resultante de la autoliquidacion)."
+required_text = [
+    "Cuota diferencial",
+    "resultado de minorar",
+    "retenciones, los ingresos a cuenta y los pagos fraccionados",
+]
+
+[legal."ley-35-2006:art-81"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-81.html#a81"
+document_id = "BOE-A-2006-20764"
+article = "81"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a81"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 81: deduccion por maternidad. Establece la deduccion de hasta 1.200 euros anuales por cada hijo menor de tres anios para madres trabajadoras, con incremento de hasta 1.000 euros por gastos en guarderias. Base sustantiva del Modelo 100 casillas 0611 (deduccion), 0612 (abono anticipado), 0613 (incremento guarderias)."
+required_text = [
+    "Deducción por maternidad",
+    "hijos menores de tres años",
+    "1.200 euros anuales",
+]
+
+[legal."ley-35-2006:art-81-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-81-bis.html#a81bis"
+document_id = "BOE-A-2006-20764"
+article = "81 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a81bis"
+published_at = 2006-11-29
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con dos hijos (c), conyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas 0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (conyuge), 0660/0661 (familia numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularizacion)."
+required_text = [
+    "Deducciones por familia numerosa o personas con discapacidad a cargo",
+    "descendiente con discapacidad",
+    "1.200 euros anuales",
+]
+
+[legal."ley-35-2006:art-103"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-103.html#a103"
+document_id = "BOE-A-2006-20764"
+article = "103"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a103"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 103: devolucion derivada de la normativa del tributo. Establece que cuando la suma de retenciones, ingresos a cuenta, pagos fraccionados y deducciones art 81 / 81 bis supera la cuota resultante de la autoliquidacion, la Administracion practica liquidacion provisional en seis meses y devuelve de oficio el exceso. Base sustantiva del Modelo 100 casilla 0670 (resultado de la declaracion) cuando es a devolver."
+required_text = [
+    "Devolución derivada de la normativa del tributo",
+    "superior al importe de la cuota resultante de la autoliquidación",
+    "devolver de oficio el exceso",
+]
+
 [legal."orden-hac-277-2026:art-3"]
 evidence_tier = "legal_authority"
 authority = "boe"
