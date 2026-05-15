@@ -1821,6 +1821,50 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.user_profile._errors.ProfileExportError",
+        ErrorCode(
+            code="FAIL_PROFILE_EXPORT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.profile_export",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileImportError",
+        ErrorCode(
+            code="FAIL_PROFILE_IMPORT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.profile_import",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileImportSignatureError",
+        ErrorCode(
+            code="INTEGRITY_PROFILE_IMPORT_SIGNATURE",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.profile_import_signature",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.user_profile._errors.ProfileImportCollisionError",
+        ErrorCode(
+            code="REFUSED_PROFILE_IMPORT_COLLISION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.profile_import_collision",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.currency._errors.CurrencyError",
         ErrorCode(
             code="FAIL_CURRENCY_ERROR",
