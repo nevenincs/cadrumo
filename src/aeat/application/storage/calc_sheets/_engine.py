@@ -801,11 +801,7 @@ def _collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
         columns = tuple(
             SheetRowSetColumn(
                 binding=binding.id,
-                header_address=SheetCellAddress(
-                    tab=TabName.DETALLE,
-                    column=_column_index_to_letters_engine(column_index),
-                    row=header_row,
-                ),
+                header_address=SheetCellAddress.at(TabName.DETALLE, header_row, column_index),
                 header_label=_row_set_column_label(binding),
                 legal_refs=tuple(sorted(str(ref) for ref in binding.legal_refs)),
             )
