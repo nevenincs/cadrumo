@@ -79,6 +79,19 @@ class BucketEventType(StrEnum):
     PROFILE_VALUES_CLEARED = "profile.values.cleared"
     PROFILE_TOMBSTONED = "profile.tombstoned"
     PROFILE_DUPLICATED = "profile.duplicated"
+    PROFILE_EXPORTED = "profile.exported"
+    PROFILE_IMPORTED = "profile.imported"
+    PROFILE_ACTIVATED = "profile.activated"
+
+    # bucket maintenance lifecycle
+    BUCKET_EXPORTED = "bucket.exported"
+    BUCKET_IMPORTED = "bucket.imported"
+    BUCKET_RENAMED = "bucket.renamed"
+    BUCKET_DELETED = "bucket.deleted"
+
+    # ledger usage-ratio mutations
+    LEDGER_RATIOS_SET = "ledger.ratios.set"
+    LEDGER_RATIOS_UNSET = "ledger.ratios.unset"
 
     # operator authentication + workspace bootstrap
     AUTH_PROVIDER_CONFIGURED = "auth.provider.configured"
