@@ -229,7 +229,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-page-01-casilla-44"]
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-25", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
 
 [[revisions."2025-y-siguientes".casillas]]
@@ -1583,7 +1583,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-2023-2024-page-01-casilla-44"]
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-25", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
 
 [[revisions."2023-2024".casillas]]
@@ -2578,7 +2578,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-202-2019-2022-page-01-casilla-44"]
-legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-25", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]
 
 [[revisions."2019-2022".casillas]]
