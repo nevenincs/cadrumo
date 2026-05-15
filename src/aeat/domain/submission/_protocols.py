@@ -171,15 +171,32 @@ class FilingDraftLike(Protocol):
     :class:`aeat.application.filing.FilingDraft` structurally conforms to
     this Protocol so the engine can accept either the real draft or any
     Protocol-conforming hand-rolled class in tests.
+
+    Attributes are declared as read-only properties so pyright treats them
+    covariantly and frozen pydantic models satisfy the protocol without
+    invariance errors.
     """
 
-    draft_id: str
-    modelo: str
-    period: str
-    profile_tax_id: str
-    status: object
-    values: Mapping[str, str] | Iterable[object]
-    findings: tuple[object, ...]
+    @property
+    def draft_id(self) -> str: ...
+
+    @property
+    def modelo(self) -> str: ...
+
+    @property
+    def period(self) -> str: ...
+
+    @property
+    def profile_tax_id(self) -> str: ...
+
+    @property
+    def status(self) -> object: ...
+
+    @property
+    def values(self) -> Mapping[str, str] | Iterable[object]: ...
+
+    @property
+    def findings(self) -> tuple[object, ...]: ...
 
 
 @runtime_checkable

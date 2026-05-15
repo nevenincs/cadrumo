@@ -723,6 +723,86 @@ closes_on = 2027-03-31
 legal_refs = ["orden-hap-72-2013:art-7", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-720-2013-form"]
 
+# -----------------------------------------------------------------------------
+# Aggregated foreign-asset row-producer bindings (Orden HAP/72/2013 Anexo
+# tipo 2 records). Each tipo-2 record carries: asset_class, country, NIF/ID,
+# valuation, currency, acquisition date. Subject to the 50,000 EUR
+# per-asset-class threshold (encoded as parameter
+# modelo-720-asset-declaration-threshold-eur).
+# -----------------------------------------------------------------------------
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-class"
+source = "foreign_asset"
+selector = { fact = "row_field", row_field = "asset_class_code", record = "bien" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-country"
+source = "foreign_asset"
+selector = { fact = "row_field", row_field = "country_code", record = "bien" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-currency"
+source = "foreign_asset"
+selector = { fact = "row_field", row_field = "currency_code", record = "bien" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-identifier"
+source = "foreign_asset"
+selector = { fact = "row_field", row_field = "asset_identifier", record = "bien" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-valuation"
+source = "foreign_asset"
+selector = { fact = "row_field", row_field = "valuation_amount", record = "bien" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".bindings]]
+id = "modelo-720-asset-row-acquisition-date"
+source = "foreign_asset"
+selector = { fact = "row_field", row_field = "acquisition_date", record = "bien" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
 [[revisions."2013-y-siguientes".constructs]]
 id = "modelo-720-informative"
 title = "Modelo 720 informative declaration of foreign assets and rights"
@@ -786,6 +866,12 @@ bindings = [
     "modelo-720-2013.type_2.463-474.numero-de-valores",
     "modelo-720-2013.type_2.475-475.clave-tipo-de-bien-inmueble",
     "modelo-720-2013.type_2.476-480.porcentaje-de-participacion",
+    "modelo-720-asset-row-class",
+    "modelo-720-asset-row-country",
+    "modelo-720-asset-row-currency",
+    "modelo-720-asset-row-identifier",
+    "modelo-720-asset-row-valuation",
+    "modelo-720-asset-row-acquisition-date",
 ]
 export_layouts = ["modelo-720-fichero-aeat"]
 extraction_profiles = ["modelo-720-declaracion-pdf"]

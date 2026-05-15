@@ -837,6 +837,10 @@ class DataBindingDefinition(RegistryModel):
         "ledger_transaction",
         "purchase_invoice_evidence",
         "withholding",
+        "related_party_operation",
+        "foreign_asset",
+        "atribucion_member",
+        "refund_operation",
     ]
     selector: Mapping[str, str | int | DecimalValue | bool | tuple[str, ...]]
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
