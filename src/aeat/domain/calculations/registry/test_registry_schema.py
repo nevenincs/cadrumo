@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -208,12 +209,15 @@ def test_modelo_file_rejects_local_source_catalogue(tmp_path: Path) -> None:
 def test_modelo_file_rejects_empty_filing_grade_evidence(tmp_path: Path) -> None:
     path = tmp_path / "130.toml"
     _copy_committed_modelo(path)
-    text = path.read_text(encoding="utf-8").replace(
-        'legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]',
+    text = path.read_text(encoding="utf-8")
+    mutated, replacements = re.subn(
+        r"legal_refs = \[[^\]]+\]",
         "legal_refs = []",
-        1,
+        text,
+        count=1,
     )
-    path.write_text(text, encoding="utf-8")
+    assert replacements == 1, "M130 fixture must contain at least one legal_refs list"
+    path.write_text(mutated, encoding="utf-8")
 
     with pytest.raises(RegistryLoadError, match="too_short"):
         load_modelo_file(path)
