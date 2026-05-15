@@ -145,7 +145,7 @@ source_refs = ["aeat-modelo-100-procedure"]
 [[revisions."2022".application_links]]
 id = "modelo-100-export"
 surface = "export"
-consumer = "aeat.application.filing.export"
+consumer = "aeat.application.filing.export_draft"
 requires_snapshot = true
 legal_refs = [
     "ley-35-2006:art-27",
