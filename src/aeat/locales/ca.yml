@@ -341,6 +341,12 @@ cli:
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
+        invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules de
+          64 caràcters (resum SHA-256)
+        invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
+          més separadors . _ : -, màx. 64 caràcters)'
+        invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric
+          en minúscules més separadors . _ : -, màx. 128 caràcters)'
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
   common:
     errors:

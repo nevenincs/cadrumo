@@ -533,3 +533,16 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
     assert "external_evidence.reference_id\tCSV-303-2026-Q1" in lines
     assert f"external_evidence.imported_at\t{imported_at.isoformat()}" in lines
     assert f"amends_filing_record_id\t{amends_id}" in lines
+
+
+def test_work_calculate_help_exposes_by_actor_flag() -> None:
+    """``aeat app modelo work calculate --help`` advertises a ``--by ACTOR``
+    option so operators can attribute a calculation revision to a specific
+    actor; the default factory pulls the active profile display name when
+    ``--by`` is omitted."""
+
+    from aeat.tests.cli_runner import invoke_cached_cli
+
+    result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "--by" in result.output
