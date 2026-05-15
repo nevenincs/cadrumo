@@ -30,7 +30,6 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
-from ...domain.calculations.registry._bindings import CasillaObservation
 from ...domain.deadlines import AutonomoProfile, DeadlineEngine
 from ...domain.filing import FilingDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
@@ -555,16 +554,22 @@ def rename_work_unit(
     work_unit_id: str,
     new_name: str,
     *,
+    actor: str,
     repository: WorkUnitCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
 ) -> WorkUnit:
     """Update a work unit's display name and bump ``updated_at``.
 
     The ``work_unit_id`` does not change — the identifier is
     content-addressed by the four-axis key, not by display name.
+    A ``modelo.work_unit.renamed`` bucket event records the actor and
+    the prior / new name so the audit trail captures who initiated the
+    rename.
     """
 
     repo = repository or WorkUnitCatalogueRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue: WorkUnitCatalogue = repo.load()
     existing = catalogue.get(work_unit_id)
     if existing is None:
@@ -575,9 +580,27 @@ def rename_work_unit(
             "create a fresh work unit on the same modelo / year / period to continue"
         )
     now = clock or datetime.now(UTC)
-    renamed = existing.model_copy(update={"name": new_name.strip(), "updated_at": now})
+    cleaned_name = new_name.strip()
+    cleaned_actor = actor.strip()
+    renamed = existing.model_copy(update={"name": cleaned_name, "updated_at": now})
     updated_catalogue = upsert_work_unit(catalogue, renamed)
     repo.save(updated_catalogue)
+    _emit_bucket_event(
+        repository=bv_repo,
+        bucket_id=renamed.bucket_id,
+        event_type=BucketEventType.MODELO_WORK_UNIT_RENAMED,
+        occurred_at=now,
+        actor=cleaned_actor,
+        object_type=BucketEventObjectType.WORK_UNIT,
+        object_id=renamed.work_unit_id,
+        payload={
+            "modelo": str(renamed.modelo),
+            "filing_year": str(renamed.filing_year),
+            "period": renamed.period,
+            "previous_name": existing.name,
+            "new_name": cleaned_name,
+        },
+    )
     return renamed
 
 
@@ -816,17 +839,13 @@ def calculate_modelo_revision(
             + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
         )
     )
-    # Persist the full typed observation tuple (defect T-01 fix: do not
-    # discard engine_result.observations carrying formula provenance).
-    casilla_observations: tuple[CasillaObservation, ...] = engine_result.observations
+    casilla_values = {key: value for key, value in engine_result.values.items()}
 
-    # Derive the content-addressed id from the Decimal mapping view so
-    # the hash remains stable across the typed-envelope migration.
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
-        casilla_values={obs.casilla_id: obs.value for obs in casilla_observations},
+        casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
         borrador_snapshot_id=borrador_result.borrador_snapshot_id,
         bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
@@ -834,7 +853,6 @@ def calculate_modelo_revision(
     revisions = cr_repo.load()
     existing = revisions.get(revision_id)
     if existing is not None:
-        # Idempotent: structurally identical re-run.
         return existing
     now = clock or datetime.now(UTC)
     revision = CalculationRevision(
@@ -846,7 +864,7 @@ def calculate_modelo_revision(
         source_transaction_ids=source_transaction_ids,
         borrador_snapshot_id=borrador_result.borrador_snapshot_id,
         bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
-        observations=casilla_observations,
+        casilla_values=casilla_values,
         created_at=now,
         updated_at=now,
     )
@@ -876,7 +894,7 @@ def calculate_modelo_revision(
             "filing_year": str(work_unit.filing_year),
             "period": work_unit.period,
             "input_casilla_count": str(len(inputs_snapshot)),
-            "casilla_count": str(len(casilla_observations)),
+            "casilla_count": str(len(casilla_values)),
             "formula_count": str(len(engine_result.entries)),
             "source_transaction_count": str(len(source_transaction_ids)),
             "borrador_snapshot_id": borrador_result.borrador_snapshot_id or "",
@@ -1895,18 +1913,6 @@ def amend_modelo_revision(
     now = clock or datetime.now(UTC)
     corrected_values: dict[str, Decimal] = dict(baseline_revision.casilla_values)
     corrected_values.update(overrides)
-    # Build observations tuple for the amendment: apply overrides onto baseline
-    # observations, replacing values for amended casillas and preserving provenance
-    # for unmodified ones.
-    base_obs_by_id: dict[str, CasillaObservation] = {
-        obs.casilla_id: obs for obs in baseline_revision.observations
-    }
-    corrected_observations: tuple[CasillaObservation, ...] = tuple(
-        base_obs_by_id[cid].model_copy(update={"value": val})
-        if cid in base_obs_by_id
-        else CasillaObservation(casilla_id=cid, value=val)
-        for cid, val in corrected_values.items()
-    )
 
     new_revision_id = derive_calculation_revision_id(
         work_unit_id=baseline.work_unit_id,
@@ -1932,7 +1938,7 @@ def amend_modelo_revision(
         source_transaction_ids=baseline_revision.source_transaction_ids,
         borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
         bindings_sourced_from_borrador=baseline_revision.bindings_sourced_from_borrador,
-        observations=corrected_observations,
+        casilla_values=corrected_values,
         created_at=now,
         updated_at=now,
         amendment_kind=amendment_kind,
@@ -2119,9 +2125,6 @@ def import_external_filing_evidence(
     inputs_snapshot: dict[str, str] = {}
     binding_overrides: dict[str, str] = {}
     outputs = dict(casilla_values)
-    import_observations: tuple[CasillaObservation, ...] = tuple(
-        CasillaObservation(casilla_id=cid, value=val) for cid, val in outputs.items()
-    )
 
     now = clock or datetime.now(UTC)
     revision_id = derive_calculation_revision_id(
@@ -2143,7 +2146,7 @@ def import_external_filing_evidence(
         state=CalculationRevisionState.FILED,
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
-        observations=import_observations,
+        casilla_values=outputs,
         created_at=now,
         updated_at=now,
         verified_at=now,
