@@ -1,11 +1,11 @@
 """Atomic IO for the ``<aeat-root>/active-bucket`` pointer file.
 
-The pointer file is the third rung of the active-bucket precedence chain
-defined in ADR-2 section 5 (``--bucket`` flag > ``AEAT_ACTIVE_BUCKET``
-env > pointer file). The write path uses the write-then-rename pattern
-per ADR-2 section 6 so a crashed switch never produces a truncated
-pointer; the read path returns ``None`` when the pointer is absent and
-the higher-level precedence resolver (P04) handles the missing case.
+The pointer file is the third rung of the active-bucket precedence
+chain (``--bucket`` flag > ``AEAT_ACTIVE_BUCKET`` env > pointer file).
+The write path uses the write-then-rename pattern so a crashed switch
+never produces a truncated pointer; the read path returns ``None``
+when the pointer is absent and the higher-level precedence resolver
+handles the missing case.
 """
 
 from __future__ import annotations

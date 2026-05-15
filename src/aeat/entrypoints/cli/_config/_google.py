@@ -500,8 +500,7 @@ def _label_for(namespace: str) -> str:
 
     Default policy: trailing dotted segment, capped at 32 chars,
     sanitised to alnum/dash/underscore. Per-namespace registered
-    label-derivers (per P03.S04-S06 + P06.S14-S24) override this
-    default once they ship.
+    label-derivers override this default once they ship.
     """
 
     leaf = namespace.rsplit(".", 1)[-1] or "obj"
@@ -536,8 +535,7 @@ def google_sync_push(
     `(namespace, object_key)`. Each row's ciphertext payload uploads
     via `GoogleDriveProvider.put(...)` under the namespace's Drive
     folder, named `<hmac_prefix_8>--<label>.bin`. The local master
-    key never leaves the host — only ciphertext reaches Drive per
-    ADR-3's ciphertext-layer mirror.
+    key never leaves the host — only ciphertext reaches Drive.
     """
 
     try:

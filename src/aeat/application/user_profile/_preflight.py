@@ -16,7 +16,7 @@ class ProfilePreflightService:
     ``schedule_predicates`` declarations. Today every required field whose
     ``model_selectors`` reference the target modelo is considered required;
     revision-specific filtering will land alongside the registry-time
-    selector inventory work in W09.P041.S0244.
+    selector inventory work.
     """
 
     def __init__(self, *, schema: ProfileSchemaDefinition) -> None:

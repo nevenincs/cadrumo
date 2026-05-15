@@ -22,15 +22,15 @@ class NoActiveBucketError(BucketError):
 
     The precedence chain is exhausted (no ``--bucket`` flag, no
     ``AEAT_ACTIVE_BUCKET`` env, no pointer file), and the process
-    refuses to proceed per ADR-2 section 5.
+    refuses to proceed.
     """
 
 
 class BucketBusyError(BucketError):
     """Raised when a second process attempts to unlock a held bucket.
 
-    Carries the holding PID per ADR-2 section 11 so the caller can
-    render the diagnostic without re-parsing the lockfile.
+    Carries the holding PID so the caller can render the diagnostic
+    without re-parsing the lockfile.
     """
 
     def __init__(self, *, bucket_id: str, holding_pid: int) -> None:
@@ -43,7 +43,7 @@ class BucketBusyError(BucketError):
 class BucketAlreadyPresentError(BucketError):
     """Raised when an import would collide with an existing bucket id.
 
-    Carries the conflicting bucket id per ADR-2 section 10.
+    Carries the conflicting bucket id.
     """
 
     def __init__(self, *, bucket_id: str) -> None:
@@ -55,8 +55,8 @@ class BucketAlreadyPresentError(BucketError):
 class BucketLockedError(BucketError):
     """Raised when an operation requires an unlocked :class:`BucketSession`.
 
-    Carries the locked bucket id per ADR-1 section 5 so the diagnostic
-    can point the operator at ``aeat config unlock``.
+    Carries the locked bucket id so the diagnostic can point the
+    operator at ``aeat config unlock``.
     """
 
     def __init__(self, *, bucket_id: str) -> None:
@@ -68,9 +68,9 @@ class BucketLockedError(BucketError):
 class LegacyLayoutDetectedError(BucketError):
     """Raised when the legacy interleaved ``var/`` layout is detected.
 
-    Per ADR-2 section 13 the substrate refuses to operate against the
-    legacy layout; the operator must back up ``var/`` to cold storage
-    and run ``aeat config init`` from scratch.
+    The substrate refuses to operate against the legacy layout; the
+    operator must back up ``var/`` to cold storage and run
+    ``aeat config init`` from scratch.
     """
 
 
@@ -79,7 +79,7 @@ class RecoveryUnavailableError(BucketError):
 
     Distinguishes "recovery never enrolled" (the bucket's manifest has
     ``recovery_enrolled = false``) from a torn or tampered envelope; the
-    typed payload carries the active bucket id per ADR-1 section 4.
+    typed payload carries the active bucket id.
     """
 
     def __init__(self, *, bucket_id: str) -> None:
@@ -91,8 +91,8 @@ class RecoveryUnavailableError(BucketError):
 class RecoveryVerificationError(BucketError):
     """Raised when the operator-typed recovery code does not decode.
 
-    Fired by ``aeat config verify-recovery`` (ADR-1 section 7) when the
-    24-word entry does not unwrap the bucket's recovery envelope.
+    Fired by ``aeat config verify-recovery`` when the 24-word entry
+    does not unwrap the bucket's recovery envelope.
     """
 
 

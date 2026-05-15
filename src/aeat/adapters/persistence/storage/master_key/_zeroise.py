@@ -1,7 +1,7 @@
 """In-memory zeroisation primitives for the master-key surface.
 
 The substrate holds the unlocked KEK and DEK in `bytearray` buffers
-attached to a `BucketSession` instance per ADR-1 section 5. On `lock`
+attached to a `BucketSession` instance. On `lock`
 the session calls into this module to overwrite each buffer with zero
 bytes before dropping the reference, so a memory-disclosure bug
 elsewhere (a debug traceback, a post-mortem core dump) cannot surface
