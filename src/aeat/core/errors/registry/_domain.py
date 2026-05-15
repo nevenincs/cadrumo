@@ -1854,6 +1854,61 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.modelos._errors.ModeloExportError",
+        ErrorCode(
+            code="FAIL_MODELO_EXPORT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.modelo_export",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._errors.ModeloExportManifestError",
+        ErrorCode(
+            code="FAIL_MODELO_EXPORT_MANIFEST",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.modelo_export_manifest",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._errors.Modelo036LifecycleError",
+        ErrorCode(
+            code="FAIL_MODELO_036_LIFECYCLE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.modelo_036_lifecycle",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._errors.Modelo036PriorAltaRequiredError",
+        ErrorCode(
+            code="REFUSED_MODELO_036_PRIOR_ALTA_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_036_prior_alta_required",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.modelos._errors.Modelo036TerminalStateError",
+        ErrorCode(
+            code="REFUSED_MODELO_036_TERMINAL_STATE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_036_terminal_state",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.filing.reconciliation._errors.DeclarationParseError",
         ErrorCode(
             code="FAIL_DECLARATION_PARSE",
