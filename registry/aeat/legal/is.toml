@@ -18,6 +18,66 @@ required_text = [
     "1 millón de euros",
 ]
 
+[legal."ley-27-2014:art-19"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-19.html#a19"
+document_id = "BOE-A-2014-12328"
+article = "19"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a19"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 19: cambios de residencia, operaciones realizadas con o por personas o entidades residentes en paraisos fiscales y cantidades sujetas a retencion. Establece la regla de salida fiscal (integracion en base imponible de la diferencia entre valor de mercado y valor fiscal de los elementos patrimoniales al trasladar la residencia) y la opcion de fraccionamiento del pago en cinco anualidades cuando el destino es la UE/EEE con asistencia mutua equivalente. Base sustantiva de la opcion_de_fraccionamiento_en_supuestos_de_cambios section de M200."
+required_text = [
+    "Cambios de residencia",
+    "diferencia entre el valor de mercado y el valor fiscal",
+    "fraccionar el pago",
+]
+
+[legal."ley-27-2014:art-36"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-36.html#a36"
+document_id = "BOE-A-2014-12328"
+article = "36"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a36"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 36: deduccion por inversiones en producciones cinematograficas, series audiovisuales y espectaculos en vivo de artes escenicas y musicales. Establece las tasas de deduccion (30 por ciento primer millon de base, 25 por ciento exceso), los limites por produccion y episodio (20M / 10M EUR), el requisito de gasto territorial espanol (50 por ciento de la base) y el sub-regimen de productor/financiacion (la letra que M200 cita como art-36.1 y 36.3 para entidades cofinanciadoras)."
+required_text = [
+    "Deducción por inversiones en producciones cinematográficas",
+    "30 por ciento",
+    "25 por ciento",
+]
+
+[legal."ley-27-2014:art-100"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-100.html#a100"
+document_id = "BOE-A-2014-12328"
+article = "100"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a100"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 100: Transparencia Fiscal Internacional. Imputacion de rentas positivas obtenidas por entidades no residentes y establecimientos permanentes cuando el contribuyente tenga (solo o con vinculadas art-18) participacion igual o superior al 50 por ciento Y el gravamen extranjero sea inferior al 75 por ciento del que hubiera correspondido en Espana. Base sustantiva de la imputacion-rentas-positivas-art-100-LIS section de M200."
+required_text = [
+    "Imputación de rentas positivas obtenidas por entidades no residentes",
+    "participación igual o superior al 50 por ciento",
+    "inferior al 75 por ciento",
+]
+
 [legal."ley-27-2014:art-25"]
 evidence_tier = "legal_authority"
 authority = "boe"
