@@ -652,7 +652,7 @@ class TestUnsecuredProvider:
         settings = Settings(
             aeat_secret_store_dir=tmp_path / "secrets",
             aeat_secret_store_backend=SecretStoreBackend.UNSECURED,
-            aeat_allow_unencrypted=False,
+            aeat_allow_unencrypted="",  # not "1": kill-switch refuses
         )
         with pytest.raises(UnsecuredModeRefusedError, match="AEAT_ALLOW_UNENCRYPTED"):
             get_master_key_provider(settings_override=settings)
@@ -661,7 +661,7 @@ class TestUnsecuredProvider:
         settings = Settings(
             aeat_secret_store_dir=tmp_path / "secrets",
             aeat_secret_store_backend=SecretStoreBackend.UNSECURED,
-            aeat_allow_unencrypted=True,
+            aeat_allow_unencrypted="1",  # literal "1" enables the unsecured backend
         )
         provider = get_master_key_provider(settings_override=settings)
         assert isinstance(provider, UnsecuredMasterKeyProvider)
