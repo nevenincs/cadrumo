@@ -49,6 +49,7 @@ _LAZY_NAMES: frozenset[str] = frozenset(
 
 
 def __getattr__(name: str) -> Any:
+    # Any: PEP 562 module-level __getattr__ must return Any; concrete types known via TYPE_CHECKING.
     """Lazily materialise the registry surface on first access."""
     if name not in _LAZY_NAMES:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

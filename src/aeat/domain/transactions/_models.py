@@ -23,9 +23,10 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Any, Literal, Self
+from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator, model_validator
+from pydantic_core import core_schema
 
 from .._identifiers import canonical_decimal_string
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
@@ -60,7 +61,7 @@ def derive_transaction_id(raw: RawTransaction) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def _json_default(value: Any) -> str:
+def _json_default(value: object) -> str:
     """Serialize strict-python values into JSON-mode inputs for validation."""
     return str(value)
 
@@ -70,7 +71,7 @@ def _parse_datetime(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def _coerce_history(raw: Any) -> tuple[Any, ...]:
+def _coerce_history(raw: object) -> tuple[object, ...]:
     """Freeze an inbound history sequence into a tuple; leave items for pydantic to validate."""
     if isinstance(raw, tuple):
         return raw
@@ -134,7 +135,7 @@ def _validate_business_pct_coupling(
         raise TransactionValidationError("business_pct must be None unless classification is MIXED")
 
 
-def _coerce_identifier_tuple(raw: Any) -> tuple[str, ...]:
+def _coerce_identifier_tuple(raw: object) -> tuple[str, ...]:
     """Freeze inbound identifier sequences while rejecting scalar strings."""
 
     if isinstance(raw, tuple):
@@ -203,11 +204,11 @@ class ClassificationHistoryEntry(BaseModel):
     category_id: str | None = None
     notes: str = ""
     confidence: Decimal | None = None
-    provenance: dict[str, Any] | None = None
+    provenance: dict[str, object] | None = None
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_inbound(cls, data: Any) -> Any:
+    def _coerce_inbound(cls, data: object) -> object:
         """Parse JSON-mode strings back into strict Python types on load."""
         if isinstance(data, cls):
             return data

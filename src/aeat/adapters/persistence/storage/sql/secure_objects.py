@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import datetime
-from typing import Any, cast
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import Engine, bindparam, delete, select, text, update
+from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError
 
 from .....core.classification import SensitivityClass
@@ -147,7 +147,7 @@ class SecureObjectRepository:
 
     def __init__(self, *, engine: Engine | None = None) -> None:
         self._engine = engine or get_engine()
-        cast(Any, _orm.SecureObjectRow.__table__).create(self._engine, checkfirst=True)
+        inspect(_orm.SecureObjectRow).local_table.create(self._engine, checkfirst=True)
 
     def exists(self, namespace: str, object_key: str) -> bool:
         """Return whether ``namespace`` / ``object_key`` is present."""

@@ -119,7 +119,7 @@ pydantic-extending types. Most likely must remain as pydantic v2
 compatibility shims. Investigation determines whether each is
 necessary or can be replaced with a typed pattern.
 
-- [ ] `P09.S38` - investigate each dunder-override site and write report; `scratch/out/dunder_overrides.md`.
+- [x] `P09.S38` - investigate each dunder-override site and write report; `scratch/out/dunder_overrides.md`.
 - [ ] `P09.S39` - replace removable dunder shims with typed patterns; `src/aeat/`.
 - [ ] `P09.S40` - document irreducible shims with rationale comments; `src/aeat/`.
 

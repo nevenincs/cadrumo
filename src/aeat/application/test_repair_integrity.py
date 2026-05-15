@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TypedDict
 
 import pytest
 
@@ -17,18 +17,27 @@ from aeat.application.repair_integrity import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
+class _NamespaceRecord(TypedDict):
+    """Typed fixture record for a single namespace in the stub repository."""
+
+    readable: int
+    unreadable: int
+    keys: list[str]
+
+
 class _StubRepository:
     """In-memory stand-in for SecureObjectRepository."""
 
-    def __init__(self, namespaces: dict[str, dict[str, Any]]) -> None:
-        # namespaces: { ns_name: { "readable": int, "unreadable": int, "keys": [str, ...] } }
+    def __init__(self, namespaces: dict[str, _NamespaceRecord]) -> None:
         self._namespaces = namespaces
 
     def list_namespaces(self) -> tuple[str, ...]:
         return tuple(sorted(self._namespaces.keys()))
 
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
-        data = self._namespaces.get(namespace, {"readable": 0, "unreadable": 0, "keys": []})
+        data: _NamespaceRecord = self._namespaces.get(
+            namespace, _NamespaceRecord(readable=0, unreadable=0, keys=[])
+        )
         return SecureObjectNamespaceIntegrity(
             namespace=namespace,
             readable=data["readable"],
@@ -36,7 +45,7 @@ class _StubRepository:
         )
 
     def list_keys(self, namespace: str) -> tuple[str, ...]:
-        return tuple(self._namespaces.get(namespace, {"keys": []})["keys"])
+        return tuple(self._namespaces.get(namespace, _NamespaceRecord(readable=0, unreadable=0, keys=[]))["keys"])
 
 
 class TestBuildIntegrityReport:

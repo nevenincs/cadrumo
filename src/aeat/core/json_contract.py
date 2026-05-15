@@ -18,7 +18,7 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Callable
-from typing import Any, Protocol, runtime_checkable
+from typing import IO, Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
@@ -121,11 +121,11 @@ class _ReconfigurableStream(Protocol):
 
 
 def emit_json_document(
-    payload: Any,
+    payload: object,
     *,
     indent: int | None = 2,
     sort_keys: bool = False,
-    stream: Any = None,
+    stream: IO[str] | None = None,
 ) -> None:
     """Serialise ``payload`` and write a single UTF-8 JSON document followed by ``\\n``.
 
@@ -166,12 +166,12 @@ def emit_json_document(
 
 def emit_json_success(
     command: str,
-    result: Any,
+    result: object,
     *,
     warnings: list[str] | None = None,
     indent: int | None = 2,
     sort_keys: bool = False,
-    stream: Any = None,
+    stream: IO[str] | None = None,
 ) -> None:
     """Wrap ``result`` in :class:`SchemaEnvelope` and emit it via :func:`emit_json_document`.
 
@@ -256,7 +256,7 @@ def register_schema(command_path: str) -> Callable[[RegisteredSchema], Registere
     return _decorator
 
 
-def _jsonable_payload(payload: Any) -> Any:
+def _jsonable_payload(payload: object) -> object:
     """Recursively coerce ``payload`` to JSON-serialisable primitives.
 
     :class:`pydantic.BaseModel` instances are dumped via ``model_dump``,
