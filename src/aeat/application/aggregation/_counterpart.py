@@ -22,6 +22,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._errors import AggregationUnsupportedModeloError, t
+from ._grouping import group_and_collect_names
 
 _CANONICAL_SOURCE_KINDS: frozenset[str] = frozenset(
     {
@@ -54,11 +55,11 @@ class OperationKind347(StrEnum):
     Source: AEAT Modelo 347 instrucciones.
     """
 
-    DELIVERY = "entregas_y_prestaciones"          # clave A
-    ACQUISITION = "adquisiciones_y_recepciones"   # clave B
-    INSURANCE = "operaciones_seguros"             # clave C
-    RENTAL = "arrendamientos_locales"             # clave D
-    SUBSIDY = "subvenciones_y_ayudas"             # clave E
+    DELIVERY = "entregas_y_prestaciones"  # clave A
+    ACQUISITION = "adquisiciones_y_recepciones"  # clave B
+    INSURANCE = "operaciones_seguros"  # clave C
+    RENTAL = "arrendamientos_locales"  # clave D
+    SUBSIDY = "subvenciones_y_ayudas"  # clave E
 
 
 class OperationKind349(StrEnum):
@@ -69,11 +70,11 @@ class OperationKind349(StrEnum):
     type (bienes/servicios).
     """
 
-    INTRA_DELIVERY = "entrega_intracomunitaria_bienes"        # clave E
-    INTRA_ACQUISITION = "adquisicion_intracomunitaria_bienes" # clave A
-    INTRA_SERVICE_OUT = "prestacion_servicios_intracom"        # clave S
-    INTRA_SERVICE_IN = "adquisicion_servicios_intracom"        # clave I
-    TRIANGULAR = "triangular"                                   # clave T
+    INTRA_DELIVERY = "entrega_intracomunitaria_bienes"  # clave E
+    INTRA_ACQUISITION = "adquisicion_intracomunitaria_bienes"  # clave A
+    INTRA_SERVICE_OUT = "prestacion_servicios_intracom"  # clave S
+    INTRA_SERVICE_IN = "adquisicion_servicios_intracom"  # clave I
+    TRIANGULAR = "triangular"  # clave T
 
 
 class CounterpartObservation(BaseModel):
@@ -162,8 +163,7 @@ class CounterpartAggregation(BaseModel):
         unique_counterparties = {row.counterparty_nif for row in self.rollups}
         if len(unique_counterparties) != self.total_counterparties:
             raise ValueError(
-                f"total_counterparties {self.total_counterparties} != distinct NIFs "
-                f"{len(unique_counterparties)}",
+                f"total_counterparties {self.total_counterparties} != distinct NIFs {len(unique_counterparties)}",
             )
         return self
 
@@ -195,14 +195,12 @@ def _aggregate_for_modelo(
     period: str,
 ) -> CounterpartAggregation:
     filtered = _filter_observations_for_modelo(observations, modelo=modelo)
-    grouped: dict[tuple[str, str, str], list[CounterpartObservation]] = {}
-    names: dict[tuple[str, str], str] = {}
-    for obs in filtered:
-        key = (obs.source_kind, obs.counterparty_nif, obs.operation_kind)
-        grouped.setdefault(key, []).append(obs)
-        identity_key = (obs.source_kind, obs.counterparty_nif)
-        if obs.counterparty_name and not names.get(identity_key):
-            names[identity_key] = obs.counterparty_name
+    grouped, names = group_and_collect_names(
+        filtered,
+        group_key_fn=lambda obs: (obs.source_kind, obs.counterparty_nif, obs.operation_kind),
+        identity_key_fn=lambda obs: (obs.source_kind, obs.counterparty_nif),
+        name_fn=lambda obs: obs.counterparty_name,
+    )
     rollups: list[CounterpartRollup] = []
     for (source_kind, nif, op_kind), group in sorted(grouped.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2])):
         total_base = sum((g.taxable_base for g in group), Decimal("0"))

@@ -37,23 +37,27 @@ def test_round_trip() -> None:
 
 def test_rejects_unknown_keys() -> None:
     with pytest.raises(ValidationError):
-        ExportArchiveHeader(
-            bucket_id="bucket-001",
-            manifest_digest=_digest(),
-            recovery_wrap_present=True,
-            archive_schema_version=1,
-            created_at=datetime.now(tz=UTC),
-            unexpected=1,  # ty: ignore[unknown-argument]
+        ExportArchiveHeader.model_validate(
+            {
+                "bucket_id": "bucket-001",
+                "manifest_digest": _digest(),
+                "recovery_wrap_present": True,
+                "archive_schema_version": 1,
+                "created_at": datetime.now(tz=UTC),
+                "unexpected": 1,
+            }
         )
 
 
 def test_rejects_missing_digest() -> None:
     with pytest.raises(ValidationError):
-        ExportArchiveHeader(  # ty: ignore[missing-argument]
-            bucket_id="bucket-001",
-            recovery_wrap_present=True,
-            archive_schema_version=1,
-            created_at=datetime.now(tz=UTC),
+        ExportArchiveHeader.model_validate(
+            {
+                "bucket_id": "bucket-001",
+                "recovery_wrap_present": True,
+                "archive_schema_version": 1,
+                "created_at": datetime.now(tz=UTC),
+            }
         )
 
 

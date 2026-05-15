@@ -435,6 +435,9 @@ cli:
           export:
             modelo_help: Identificador del model a exportar (p. ex. 130, 303, 100)
             period_help: Codi de període (p. ex. 1T, 2T, 0A)
+            prefill_relations_help: Preomple els valors de relacions entre revisions
+              des del magatzem local d'observacions abans d'exportar (resums anuals,
+              arrossegament de trimestres anteriors, etc.)
             root_folder_required: No hi ha cap carpeta arrel de Drive configurada;
               executeu `aeat config google folder set <id>` primer
             unknown_modelo: Model desconegut {modelo!r}; els models disponibles són
@@ -1006,6 +1009,35 @@ cli:
       slug: Identificador del tema (kebab-case, ex. iva-regime)
 dotted:
   key: dotted.key
+errors:
+  calc:
+    binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
+    bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
+      negativa {base}.
+    bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que
+      cobreixi la base {base}.
+    bracket_no_window: El paràmetre escalonat {parameter_id} no té cap tram vàlid
+      per a {as_of}.
+    casilla_constraint_violation: 'La casella {casilla_id} amb valor {value} infringeix
+      la restricció declarada: {violation}. Refs: {legal_refs}.'
+    casilla_referenced_before_evaluation: La casella {casilla_id} s''ha referenciat
+      abans d''avaluar la seva fórmula.
+    computed_supplied_as_input: 'No es poden subministrar com a entrada les caselles
+      calculades: {casilla_ids}.'
+    dispatch_key_unknown: 'La clau de despatx {dispatch_key!r} no és a la taula de
+      l''operador {op} sobre la vinculació {binding_id} (claus declarades: {available_keys}).'
+    dispatch_parameter_kind: El paràmetre {parameter_id} no encaixa amb l''operador
+      {op}; s''esperava un paràmetre escalar (decimal / dinerari / enter / ràtio).
+    divide_by_zero: La fórmula amb operador {op} divideix entre zero.
+    empty_expression: Expressió de fórmula buida.
+    enum_binding_value_missing: La vinculació enumerada {binding_id} no té cap valor
+      assignat (requerida per l''operador {op}).
+    lookup_dispatch_arg_count: L''operador {op} de la fórmula espera {expected} arguments.
+    lookup_dispatch_arg_kind: L''operador {op} de la fórmula requereix que {position}
+      sigui una fulla de tipus {expected_kind}.
+    parameter_unknown: El paràmetre {parameter_id} no està registrat.
+    relation_value_missing: La relació {relation_id} no té cap valor assignat.
+    unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
 filing:
   validation:
     deadline_missed: Termini de presentació vençut
@@ -1449,3 +1481,39 @@ wizard:
     main:
       title: Main test
     title: Test
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Data d'adquisició
+      amount: Import
+      asset_class_code: Clau del bé
+      asset_identifier: Identificació del bé
+      base_imponible: Base imposable
+      base_imponible_assigned: Base imposable atribuïda
+      clave: Clau
+      counterparty_legal_name: Raó social de la contrapart
+      counterparty_tax_id: NIF de la contrapart
+      country_code: Codi de país
+      currency_code: Codi de divisa
+      ingreso_a_cuenta: Ingrés a compte
+      member_legal_name: Raó social del membre
+      member_state_code: Estat membre
+      member_tax_id: NIF del membre
+      operation_date: Data de l'operació
+      operation_kind_code: Clau d'operació
+      party_legal_name: Raó social
+      party_tax_id: NIF
+      perceptor_legal_name: Cognoms i nom del perceptor
+      perceptor_tax_id: NIF del perceptor
+      percibido_dinerario: Percepcions dineràries
+      percibido_especie: Percepcions en espècie
+      rectified_base_previous: Base imposable anterior (rectificació)
+      rectified_period: Període rectificat
+      rectified_year: Exercici rectificat
+      refund_amount: Import a retornar
+      retencion_practicada: Retenció practicada
+      share_percentage: Percentatge de participació
+      subclave: Subclau
+      supplier_tax_id: NIF del proveïdor
+      transfer_pricing_method_code: Mètode de valoració
+      valuation_amount: Valoració

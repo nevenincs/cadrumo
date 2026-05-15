@@ -11,8 +11,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from re import compile
-from typing import Any
+from typing import TYPE_CHECKING
 from unicodedata import category, normalize
+
+if TYPE_CHECKING:
+    from playwright.async_api import Locator, Page
 
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
@@ -45,7 +48,7 @@ def registry_failure_message(exc: BaseException) -> str:
 
 
 async def first_visible_locator(
-    page: Any,
+    page: Page,
     selectors: tuple[str, ...],
     *,
     stage: str,
@@ -54,7 +57,7 @@ async def first_visible_locator(
     probe_timeout_ms: int,
     surface_label: str,
     shape_suggestion: str,
-) -> Any:
+) -> Locator:
     probe_timeout = min(timeout_ms, probe_timeout_ms)
     for selector in selectors:
         locator = page.locator(selector).first

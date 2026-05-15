@@ -30,6 +30,7 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.calculations.registry import ModeloRevision, RegistrySnapshot
+from ...domain.calculations.registry._bindings import CasillaObservation
 from ...domain.deadlines import AutonomoProfile, DeadlineEngine
 from ...domain.filing import FilingDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
@@ -61,10 +62,10 @@ from ...domain.modelos._repository import (
     upsert_work_unit,
 )
 from ...domain.modelos._verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
-    VerificationFinding,
-    VerificationFindingKind,
-    VerificationFindingSeverity,
     VerificationReport,
     derive_verification_report_id,
 )
@@ -90,6 +91,7 @@ from ..filing import (
 from ..live import Borrador100SnapshotRepository
 from ..workflow import (
     DeadlineEngineAdapter,
+    RegistryFilingDraftProtocol,
     WorkflowEngine,
     WorkflowResult,
     WorkflowStage,
@@ -331,7 +333,7 @@ class _RevisionDraftBuilder:
         profile: AutonomoProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
-    ):
+    ) -> RegistryFilingDraftProtocol:
         draft = build_draft(
             modelo=modelo,
             period=period,
@@ -781,9 +783,7 @@ def calculate_modelo_revision(
     resolved_bindings = dict(
         sorted({**lower_precedence_binding_values, **borrador_result.binding_values, **caller_binding_values}.items())
     )
-    resolved_enum_bindings = dict(
-        sorted({**borrador_result.enum_binding_values, **caller_enum_binding_values}.items())
-    )
+    resolved_enum_bindings = dict(sorted({**borrador_result.enum_binding_values, **caller_enum_binding_values}.items()))
     resolved_relations = dict(relation_values or {})
     resolved_inputs = dict(
         sorted(
@@ -816,13 +816,17 @@ def calculate_modelo_revision(
             + [(k.strip(), v.strip()) for k, v in resolved_enum_bindings.items()]
         )
     )
-    casilla_values: dict[str, Decimal] = dict(engine_result.values)
+    # Persist the full typed observation tuple (defect T-01 fix: do not
+    # discard engine_result.observations carrying formula provenance).
+    casilla_observations: tuple[CasillaObservation, ...] = engine_result.observations
 
+    # Derive the content-addressed id from the Decimal mapping view so
+    # the hash remains stable across the typed-envelope migration.
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
-        casilla_values=casilla_values,
+        casilla_values={obs.casilla_id: obs.value for obs in casilla_observations},
         source_transaction_ids=source_transaction_ids,
         borrador_snapshot_id=borrador_result.borrador_snapshot_id,
         bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
@@ -842,7 +846,7 @@ def calculate_modelo_revision(
         source_transaction_ids=source_transaction_ids,
         borrador_snapshot_id=borrador_result.borrador_snapshot_id,
         bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
-        casilla_values=casilla_values,
+        observations=casilla_observations,
         created_at=now,
         updated_at=now,
     )
@@ -872,7 +876,7 @@ def calculate_modelo_revision(
             "filing_year": str(work_unit.filing_year),
             "period": work_unit.period,
             "input_casilla_count": str(len(inputs_snapshot)),
-            "casilla_count": str(len(casilla_values)),
+            "casilla_count": str(len(casilla_observations)),
             "formula_count": str(len(engine_result.entries)),
             "source_transaction_count": str(len(source_transaction_ids)),
             "borrador_snapshot_id": borrador_result.borrador_snapshot_id or "",
@@ -1148,9 +1152,7 @@ def _reject_incomplete_amendment_casillas(
     → file path satisfies.
     """
 
-    required_optional = _required_input_casillas_for_revision(
-        modelo=modelo, filing_year=filing_year, period=period
-    )
+    required_optional = _required_input_casillas_for_revision(modelo=modelo, filing_year=filing_year, period=period)
     if required_optional is None:
         raise AmendmentVerificationRefusedError(
             f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
@@ -1272,7 +1274,6 @@ def _required_input_casillas_for_revision(
     bindings layer is responsible for them.
     """
 
-
     from ...core.config import PROJECT_ROOT
     from ...domain.calculations.registry import (
         RegistrySnapshotError,
@@ -1372,7 +1373,7 @@ def verify_modelo_revision(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}"
         )
 
-    findings: list[VerificationFinding] = []
+    findings: list[ModeloVerificationFinding] = []
     resolved_casillas: list[str] = []
     missing_required: list[str] = []
 
@@ -1383,9 +1384,9 @@ def verify_modelo_revision(
     )
     if registry_lookup is None:
         findings.append(
-            VerificationFinding(
-                kind=VerificationFindingKind.BLOCKING_RULE,
-                severity=VerificationFindingSeverity.BLOCKING,
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
                 message=(
                     f"registry snapshot for modelo={work_unit.modelo!r} "
                     f"year={work_unit.filing_year} period={work_unit.period!r} "
@@ -1409,9 +1410,9 @@ def verify_modelo_revision(
             else:
                 missing_required.append(casilla_id)
                 findings.append(
-                    VerificationFinding(
-                        kind=VerificationFindingKind.MISSING_REQUIRED_CASILLA,
-                        severity=VerificationFindingSeverity.BLOCKING,
+                    ModeloVerificationFinding(
+                        kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
+                        severity=ModeloVerificationFindingSeverity.BLOCKING,
                         casilla_id=casilla_id,
                         message=(
                             f"required casilla {casilla_id!r} is not present in "
@@ -1423,11 +1424,11 @@ def verify_modelo_revision(
                     )
                 )
 
-    has_blocking = any(f.severity is VerificationFindingSeverity.BLOCKING for f in findings)
+    has_blocking = any(f.severity is ModeloVerificationFindingSeverity.BLOCKING for f in findings)
     if has_blocking:
         completeness = (
             VerificationCompletenessStatus.INCOMPLETE
-            if missing_required and not any(f.kind is VerificationFindingKind.BLOCKING_RULE for f in findings)
+            if missing_required and not any(f.kind is ModeloVerificationFindingKind.BLOCKING_RULE for f in findings)
             else VerificationCompletenessStatus.BLOCKED
         )
         granted = False
@@ -1894,6 +1895,18 @@ def amend_modelo_revision(
     now = clock or datetime.now(UTC)
     corrected_values: dict[str, Decimal] = dict(baseline_revision.casilla_values)
     corrected_values.update(overrides)
+    # Build observations tuple for the amendment: apply overrides onto baseline
+    # observations, replacing values for amended casillas and preserving provenance
+    # for unmodified ones.
+    base_obs_by_id: dict[str, CasillaObservation] = {
+        obs.casilla_id: obs for obs in baseline_revision.observations
+    }
+    corrected_observations: tuple[CasillaObservation, ...] = tuple(
+        base_obs_by_id[cid].model_copy(update={"value": val})
+        if cid in base_obs_by_id
+        else CasillaObservation(casilla_id=cid, value=val)
+        for cid, val in corrected_values.items()
+    )
 
     new_revision_id = derive_calculation_revision_id(
         work_unit_id=baseline.work_unit_id,
@@ -1919,7 +1932,7 @@ def amend_modelo_revision(
         source_transaction_ids=baseline_revision.source_transaction_ids,
         borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
         bindings_sourced_from_borrador=baseline_revision.bindings_sourced_from_borrador,
-        casilla_values=corrected_values,
+        observations=corrected_observations,
         created_at=now,
         updated_at=now,
         amendment_kind=amendment_kind,
@@ -2106,6 +2119,9 @@ def import_external_filing_evidence(
     inputs_snapshot: dict[str, str] = {}
     binding_overrides: dict[str, str] = {}
     outputs = dict(casilla_values)
+    import_observations: tuple[CasillaObservation, ...] = tuple(
+        CasillaObservation(casilla_id=cid, value=val) for cid, val in outputs.items()
+    )
 
     now = clock or datetime.now(UTC)
     revision_id = derive_calculation_revision_id(
@@ -2127,7 +2143,7 @@ def import_external_filing_evidence(
         state=CalculationRevisionState.FILED,
         inputs_snapshot=inputs_snapshot,
         binding_overrides=binding_overrides,
-        casilla_values=outputs,
+        observations=import_observations,
         created_at=now,
         updated_at=now,
         verified_at=now,

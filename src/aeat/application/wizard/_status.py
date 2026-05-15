@@ -20,6 +20,7 @@ from ...domain.deadlines._models import (
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile._projections import record_to_path_values
 from ..workflow._models import WorkflowState
+from . import _compiler as _compiler  # side-effect: registers PROFILE_KEYS before _keys_validation
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardError
 from ._persistence import project_answers
@@ -174,7 +175,9 @@ def load_active_autonomo_profile(state: WorkflowState) -> AutonomoProfile:
         )
     return AutonomoProfile(
         tax_id=typed.tax_id,
-        iva_regime=IVARegime(values.get("iva.regime", IVARegime.GENERAL.value)),  # iva.regime path unchanged in canonical schema
+        iva_regime=IVARegime(
+            values.get("iva.regime", IVARegime.GENERAL.value)
+        ),  # iva.regime path unchanged in canonical schema
         has_employees=typed.has_employees,
         pays_professionals_with_retencion=typed.pays_professionals_with_retencion,
         professional_income_withholding_ge_70pct=typed.professional_income_withholding_ge_70pct,

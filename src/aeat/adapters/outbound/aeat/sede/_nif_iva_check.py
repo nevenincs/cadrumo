@@ -24,7 +24,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from playwright.async_api import Locator, Page, ViewportSize
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -61,13 +64,13 @@ _playwright_stage = build_playwright_stage_runner(
 
 
 async def _locate(
-    page: Any,
+    page: Page,
     selectors: tuple[str, ...],
     *,
     stage: str,
     description: str,
     timeout_ms: int,
-) -> Any:
+) -> Locator:
     return await first_visible_locator(
         page,
         selectors,
@@ -87,7 +90,7 @@ async def _locate(
 _TIMEOUT_DEFAULTS = Settings()
 DEFAULT_NIF_IVA_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_navigation_timeout_ms
 _SELECTOR_PROBE_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_selector_probe_timeout_ms
-_DEFAULT_VIEWPORT = {
+_DEFAULT_VIEWPORT: ViewportSize = {
     "width": _TIMEOUT_DEFAULTS.aeat_browser_viewport_width,
     "height": _TIMEOUT_DEFAULTS.aeat_browser_viewport_height,
 }
@@ -256,7 +259,12 @@ async def collect_nif_iva_check_observations(
     context = None
     try:
         context = await browser_session.create_context(storage_state={})
-        page = cast(Any, await context.new_page())
+        from playwright.async_api import Page as _Page
+
+        _raw_page = await context.new_page()
+        if not isinstance(_raw_page, _Page):
+            raise TypeError(f"BrowserContext.new_page() did not return a Playwright Page; got {type(_raw_page)}")
+        page: _Page = _raw_page
         await _playwright_stage(
             page.set_viewport_size(_DEFAULT_VIEWPORT),
             stage="set-viewport",
@@ -339,7 +347,7 @@ async def collect_nif_iva_check_observations(
         await browser_session.close()
 
 
-async def _open_nif_iva_form(page: Any, *, timeout_ms: int) -> None:
+async def _open_nif_iva_form(page: Page, *, timeout_ms: int) -> None:
     """Wait for the country and VAT-number controls to become interactive."""
 
     await _locate(
@@ -359,7 +367,7 @@ async def _open_nif_iva_form(page: Any, *, timeout_ms: int) -> None:
 
 
 async def _check_single_nif(
-    page: Any,
+    page: Page,
     *,
     nif: str,
     timeout_ms: int,
@@ -440,7 +448,7 @@ def extract_verdict_from_response_text(body_text: str) -> Literal["valid", "inva
     return "unknown"
 
 
-async def _select_country_code(page: Any, country_code: str, *, timeout_ms: int) -> None:
+async def _select_country_code(page: Page, country_code: str, *, timeout_ms: int) -> None:
     locator = await _locate(
         page,
         _COUNTRY_SELECTORS,
@@ -462,7 +470,7 @@ async def _select_country_code(page: Any, country_code: str, *, timeout_ms: int)
     )
 
 
-async def _fill_vat_number(page: Any, vat_number: str, *, timeout_ms: int) -> None:
+async def _fill_vat_number(page: Page, vat_number: str, *, timeout_ms: int) -> None:
     locator = await _locate(
         page,
         _VAT_NUMBER_SELECTORS,
@@ -479,7 +487,7 @@ async def _fill_vat_number(page: Any, vat_number: str, *, timeout_ms: int) -> No
     )
 
 
-async def _click_query_button(page: Any, *, timeout_ms: int) -> None:
+async def _click_query_button(page: Page, *, timeout_ms: int) -> None:
     locator = await _locate(
         page,
         _SUBMIT_SELECTORS,
@@ -490,7 +498,7 @@ async def _click_query_button(page: Any, *, timeout_ms: int) -> None:
     await _click_expected(locator, stage="check-nif:submit", description="NIF-IVA query button", timeout_ms=timeout_ms)
 
 
-async def _fill_expected(locator: Any, value: str, *, stage: str, description: str, timeout_ms: int) -> None:
+async def _fill_expected(locator: Locator, value: str, *, stage: str, description: str, timeout_ms: int) -> None:
     await _playwright_stage(
         locator.fill(value, timeout=timeout_ms),
         stage=stage,
@@ -500,7 +508,7 @@ async def _fill_expected(locator: Any, value: str, *, stage: str, description: s
     )
 
 
-async def _click_expected(locator: Any, *, stage: str, description: str, timeout_ms: int) -> None:
+async def _click_expected(locator: Locator, *, stage: str, description: str, timeout_ms: int) -> None:
     await _playwright_stage(
         locator.click(timeout=timeout_ms),
         stage=stage,

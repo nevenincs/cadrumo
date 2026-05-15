@@ -24,11 +24,11 @@ from collections.abc import Mapping
 from pydantic import BaseModel, ConfigDict
 
 from ...domain.profile import (
-    PROFILE_KEYS,
     ProfileKey,
     ProfileKeyRequirement,
     optional_profile_keys,
 )
+from ...domain.profile._keys import _profile_keys as _get_profile_keys
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -78,7 +78,7 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
     (``identity.tax_id``, ``preferences.output_language`` etc.).
     """
 
-    entries = PROFILE_KEYS
+    entries = _get_profile_keys()
     required_keys = tuple(
         entry.key
         for entry in entries
@@ -107,7 +107,7 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
 def list_profile_key_records() -> tuple[ProfileKey, ...]:
     """Return the full :data:`PROFILE_KEYS` tuple in registry order."""
 
-    return PROFILE_KEYS
+    return _get_profile_keys()
 
 
 def list_profile_value_rows(
@@ -118,7 +118,7 @@ def list_profile_value_rows(
     """Return schema-backed profile rows for display surfaces."""
 
     rows: list[ProfileValueRow] = []
-    for entry in PROFILE_KEYS:
+    for entry in _get_profile_keys():
         value = values.get(entry.key)
         is_set = value is not None and value.strip() != ""
         if not is_set and not include_unset:

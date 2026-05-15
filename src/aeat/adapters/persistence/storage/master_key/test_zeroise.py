@@ -46,11 +46,10 @@ def test_zeroise_does_not_replace_buffer_object() -> None:
 
 def test_zeroise_rejects_immutable_bytes() -> None:
     """Python cannot overwrite immutable `bytes`; the contract is enforced."""
-
     with pytest.raises(TypeError, match="bytearray"):
-        zeroise(b"\x01" * 32)  # type: ignore[arg-type]
+        zeroise(b"\x01" * 32)
 
 
 def test_zeroise_rejects_non_bytes_like() -> None:
     with pytest.raises(TypeError, match="bytearray"):
-        zeroise("password")  # type: ignore[arg-type]
+        zeroise("password")

@@ -92,7 +92,8 @@ class TestVerifySubgroup:
             checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
         result = cli_runner.invoke(
-            verify_app, ["latest", "--surface", "nif_iva", "--nif", "ESB12345678"],
+            verify_app,
+            ["latest", "--surface", "nif_iva", "--nif", "ESB12345678"],
         )
         assert result.exit_code == 0, result.output
         assert "nif\tESB12345678" in result.output
@@ -100,7 +101,8 @@ class TestVerifySubgroup:
 
     def test_verify_latest_renders_dash_when_no_observation(self, cli_runner: CliRunner) -> None:
         result = cli_runner.invoke(
-            verify_app, ["latest", "--surface", "tgvi", "--nif", "B99999999"],
+            verify_app,
+            ["latest", "--surface", "tgvi", "--nif", "B99999999"],
         )
         assert result.exit_code == 0, result.output
         assert "observation_id\t-" in result.output
@@ -122,7 +124,8 @@ class TestBorrador100Subgroup:
         assert result.exit_code != 0
 
     def test_borrador_100_full_lifecycle_via_service_seed(
-        self, cli_runner: CliRunner,
+        self,
+        cli_runner: CliRunner,
     ) -> None:
         bucket_id = "default"
         Borrador100SnapshotService(bucket_id=bucket_id).capture(
@@ -144,9 +147,7 @@ class TestBorrador100Subgroup:
 
         # Pick the snapshot id off the latest row to drive show.
         snapshot_id = next(
-            line.split("\t", 1)[1]
-            for line in latest.output.splitlines()
-            if line.startswith("snapshot_id\t")
+            line.split("\t", 1)[1] for line in latest.output.splitlines() if line.startswith("snapshot_id\t")
         )
         shown = cli_runner.invoke(borrador_100_app, ["view", snapshot_id])
         assert shown.exit_code == 0, shown.output

@@ -31,16 +31,16 @@ def _holder_script(bucket_dir: Path, hold_seconds: float, ready_path: Path) -> s
         f"""
         import sys, time
         from pathlib import Path
-        sys.path.insert(0, {str(Path(__file__).resolve().parents[5]) !r})
+        sys.path.insert(0, {str(Path(__file__).resolve().parents[5])!r})
         from aeat.adapters.persistence.storage.bucket._layout import bucket_paths
         from aeat.adapters.persistence.storage.bucket._lockfile import (
             acquire_lock,
             release_lock,
         )
 
-        paths = bucket_paths(Path({str(bucket_dir.parent.parent) !r}), {bucket_dir.name !r})
+        paths = bucket_paths(Path({str(bucket_dir.parent.parent)!r}), {bucket_dir.name!r})
         acquire_lock(paths)
-        Path({str(ready_path) !r}).write_text("ready", encoding="utf-8")
+        Path({str(ready_path)!r}).write_text("ready", encoding="utf-8")
         time.sleep({hold_seconds!r})
         release_lock(paths)
         """,
@@ -93,7 +93,7 @@ def test_cross_process_busy_detection(tmp_path: Path) -> None:
     ready = tmp_path / "ready"
     script = _holder_script(paths.bucket_dir, hold_seconds=2.0, ready_path=ready)
 
-    holder = subprocess.Popen([sys.executable, "-c", script])  # noqa: S603
+    holder = subprocess.Popen([sys.executable, "-c", script])
     try:
         _wait_for_ready(ready)
         recorded_pid = int(lock_path(paths).read_text(encoding="utf-8").strip())
@@ -113,7 +113,7 @@ def test_wait_seconds_eventually_acquires(tmp_path: Path) -> None:
     ready = tmp_path / "ready"
     script = _holder_script(paths.bucket_dir, hold_seconds=0.6, ready_path=ready)
 
-    holder = subprocess.Popen([sys.executable, "-c", script])  # noqa: S603
+    holder = subprocess.Popen([sys.executable, "-c", script])
     try:
         _wait_for_ready(ready)
         # Holder releases after 0.6s; wait 3s window must succeed.

@@ -159,20 +159,19 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
     target = path.resolve()
     target.parent.mkdir(parents=True, exist_ok=True)
     payload = envelope.model_dump_json()
-    # Assign tmp_path BEFORE the ``with`` so cleanup works even when
-    # context entry raises. NamedTemporaryFile raising means no file
-    # was created; the outer except re-raises cleanly.
-    handle = tempfile.NamedTemporaryFile(
-        mode="w",
-        encoding="utf-8",
-        dir=target.parent,
-        prefix=f"{target.stem}.",
-        suffix=".tmp",
-        delete=False,
-    )
-    tmp_path = Path(handle.name)
+    # NamedTemporaryFile raising means no file was created; the outer
+    # except re-raises cleanly.
+    tmp_path: Path | None = None
     try:
-        with handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=target.parent,
+            prefix=f"{target.stem}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
             handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
@@ -180,7 +179,8 @@ def save_envelope(envelope: Envelope[Any], path: Path) -> None:
         fsync_parent_dir(target)
     except OSError:
         _log.error("envelope: atomic write failed target=%s", target, exc_info=True)
-        tmp_path.unlink(missing_ok=True)
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
         raise
 
 
@@ -393,20 +393,19 @@ def save_encrypted_envelope(
         encryption=EncryptionMetadata.from_blob(blob, associated_data=aad),
     )
     serialised = cipher_envelope.model_dump_json()
-    # Assign tmp_path BEFORE the ``with`` so cleanup works even when
-    # context entry raises. NamedTemporaryFile raising means no file
-    # was created; the outer except re-raises cleanly.
-    handle = tempfile.NamedTemporaryFile(
-        mode="w",
-        encoding="utf-8",
-        dir=target.parent,
-        prefix=f"{target.stem}.",
-        suffix=".tmp",
-        delete=False,
-    )
-    tmp_path = Path(handle.name)
+    # NamedTemporaryFile raising means no file was created; the outer
+    # except re-raises cleanly.
+    tmp_path: Path | None = None
     try:
-        with handle:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=target.parent,
+            prefix=f"{target.stem}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            tmp_path = Path(handle.name)
             handle.write(serialised)
             handle.flush()
             os.fsync(handle.fileno())
@@ -414,7 +413,8 @@ def save_encrypted_envelope(
         fsync_parent_dir(target)
     except OSError:
         _log.error("envelope: atomic encrypted write failed target=%s", target, exc_info=True)
-        tmp_path.unlink(missing_ok=True)
+        if tmp_path is not None:
+            tmp_path.unlink(missing_ok=True)
         raise
 
 

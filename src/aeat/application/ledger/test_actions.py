@@ -16,12 +16,14 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from ...adapters.persistence.storage.sql._orm import Base
 from ...application.export import ExportSerializationFormat
 from ...core.config import Settings
-from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource, AttachmentStore
+from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
+from ...domain.calculations.registry._bindings import CasillaObservation
 from ...domain.categories import SpendingCategory
 from ...domain.invoices import (
     Invoice,
@@ -186,7 +188,7 @@ def _persist_verified_revision_citing_transaction(engine: Engine, *, transaction
         inputs_snapshot={"01": "1"},
         binding_overrides={},
         source_transaction_ids=(transaction_id,),
-        casilla_values={"01": Decimal("1")},
+        observations=(CasillaObservation(casilla_id="01", value=Decimal("1")),),
         created_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
         verified_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
@@ -1560,7 +1562,9 @@ def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_eng
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+        calculation_repository=CalculationRevisionCatalogueRepository(
+            objects=SecureObjectRepository(engine=secure_engine)
+        ),
     )
 
     assert dry_run.blocking_modelo_references[0].modelo == "303"
@@ -1610,7 +1614,9 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_eng
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
             work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+            calculation_repository=CalculationRevisionCatalogueRepository(
+                objects=SecureObjectRepository(engine=secure_engine)
+            ),
             occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
         )
 
@@ -1645,7 +1651,9 @@ def test_lifecycle_change_refuses_finalized_modelo_reference(secure_engine: Engi
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
             work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+            calculation_repository=CalculationRevisionCatalogueRepository(
+                objects=SecureObjectRepository(engine=secure_engine)
+            ),
             occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
         )
 
@@ -1696,7 +1704,9 @@ def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
             work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+            calculation_repository=CalculationRevisionCatalogueRepository(
+                objects=SecureObjectRepository(engine=secure_engine)
+            ),
         )
 
     assert transaction_repository.load().get(updated.ref.transaction_id) is not None
@@ -1796,7 +1806,9 @@ def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_engine
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+        calculation_repository=CalculationRevisionCatalogueRepository(
+            objects=SecureObjectRepository(engine=secure_engine)
+        ),
     )
 
     assert dry_run.blocking_modelo_references[0].modelo == "303"

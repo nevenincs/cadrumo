@@ -9,7 +9,6 @@ coercion, and length invariants on the SQL-layer record types
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
@@ -22,15 +21,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 def test_modelo_record_strict_rejects_coercion() -> None:
     """Strict mode must refuse silent int→str coercion."""
     with pytest.raises(ValidationError):
-        ModeloRecord(id=1, identifier=cast(str, 130), name="Pagos fraccionados")
+        ModeloRecord.model_validate({"id": 1, "identifier": 130, "name": "Pagos fraccionados"})
 
 
 def test_records_are_frozen() -> None:
     """Frozen records must reject mutation."""
     record = ModeloRecord(identifier="MODELO_130", name="Pagos fraccionados")
-    mutable: Any = record
     with pytest.raises(ValidationError):
-        mutable.identifier = "MODELO_303"
+        record.identifier = "MODELO_303"
 
 
 def test_portal_record_requires_enum_auth_method() -> None:

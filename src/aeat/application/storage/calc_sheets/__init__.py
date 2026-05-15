@@ -20,7 +20,7 @@ Operator-facing CLI surface lives under
 domain and application logic only.
 """
 
-from ._engine import build_export_plan
+from ._engine import build_export_plan, collect_row_sets
 from ._layout import BracketRanges, SheetLayout, plan_layout
 from ._records import (
     OperatorInput,
@@ -29,12 +29,15 @@ from ._records import (
     RelationValue,
     RelationValues,
     SheetCellAddress,
+    SheetCellConstraint,
     SheetExportMetadata,
     SheetExportPlan,
     SheetFormulaCell,
     SheetGuideContent,
     SheetProtectedRange,
     SheetProvenanceRow,
+    SheetRowSet,
+    SheetRowSetColumn,
     SheetTariffTable,
     SheetTariffTableRow,
     SheetValueCell,
@@ -50,6 +53,7 @@ __all__ = [
     "RelationValue",
     "RelationValues",
     "SheetCellAddress",
+    "SheetCellConstraint",
     "SheetExportMetadata",
     "SheetExportPlan",
     "SheetFormulaCell",
@@ -57,12 +61,15 @@ __all__ = [
     "SheetLayout",
     "SheetProtectedRange",
     "SheetProvenanceRow",
+    "SheetRowSet",
+    "SheetRowSetColumn",
     "SheetTariffTable",
     "SheetTariffTableRow",
     "SheetValueCell",
     "TabName",
     "TranslationError",
     "build_export_plan",
+    "collect_row_sets",
     "plan_layout",
     "translate_formula",
 ]

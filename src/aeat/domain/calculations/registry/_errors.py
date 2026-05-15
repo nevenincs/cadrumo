@@ -19,3 +19,13 @@ class RegistryValidationError(RegistryError):
 
 class RegistrySnapshotError(RegistryError):
     """Raised when a filing-grade snapshot cannot be selected."""
+
+
+class CasillaConstraintViolationError(RegistryError):
+    """Raised when a computed casilla value falls outside its declared
+    `casilla.constraints` (sign, min_value, max_value).
+
+    The error envelope carries `casilla_id`, the offending `value`, the
+    offended constraint clause, and the casilla's `legal_refs` so the
+    operator sees the BOE permalink that justifies the rule.
+    """

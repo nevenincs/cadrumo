@@ -401,7 +401,7 @@ def test_export_result_is_frozen() -> None:
         narrative=_narrative(),
     )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        receipt.byte_size = 1  # type: ignore[misc]
+        receipt.byte_size = 1
 
 
 def test_verify_result_match_carries_no_mismatched_casillas() -> None:

@@ -77,6 +77,5 @@ def test_only_v1_modules_present_in_package() -> None:
     found_files = {entry.name for entry in _PACKAGE_ROOT.iterdir() if entry.is_file() and entry.suffix == ".py"}
     unexpected = sorted(found_files - _ALLOWED_MODULES)
     assert unexpected == [], (
-        f"unexpected .py files in {_PACKAGE_ROOT.name}: {unexpected}; "
-        f"add to _ALLOWED_MODULES with rationale or remove"
+        f"unexpected .py files in {_PACKAGE_ROOT.name}: {unexpected}; add to _ALLOWED_MODULES with rationale or remove"
     )

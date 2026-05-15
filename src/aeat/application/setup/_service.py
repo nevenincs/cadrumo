@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from ...domain.user_profile import UserProfileFact
-from ..workflow._persistence import workflow_state_repository
+from ..auth import AuthProviderReservedError, configure_operator_auth
 from ..user_profile._orchestration import register_active_profile
-from ..auth import configure_operator_auth, AuthProviderReservedError
-
+from ..workflow._persistence import workflow_state_repository
 from ._contracts import InitializeWorkspaceCommand, InitializeWorkspaceResult
+
 
 def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorkspaceResult:
     """Initialize a new active workspace profile and bucket."""
@@ -20,9 +20,9 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
         facts.append(UserProfileFact(path="tax_residence.ccaa", value=command.tax_residence_ccaa))
     if command.output_language is not None:
         facts.append(UserProfileFact(path="preferences.output_language", value=command.output_language))
-        
+
     repository = workflow_state_repository()
-    
+
     # 1. Create profile and bucket atomically
     repository.update(
         lambda state: register_active_profile(

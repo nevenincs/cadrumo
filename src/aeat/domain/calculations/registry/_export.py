@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
-from typing import Literal, cast
+from typing import Literal, TypeGuard
 
 from ._errors import RegistryValidationError
 from ._schema import (
@@ -211,11 +211,14 @@ def _selector_int(binding: DataBindingDefinition, key: str) -> int:
     return int(value)
 
 
+def _is_binding_export_data_type(value: str) -> TypeGuard[_BindingExportDataType]:
+    return value in {"text", "integer", "decimal", "money", "date", "boolean"}
+
+
 def _binding_data_type(binding: DataBindingDefinition, value: object) -> _BindingExportDataType:
-    allowed = {"text", "integer", "decimal", "money", "date", "boolean"}
-    if not isinstance(value, str) or value not in allowed:
+    if not isinstance(value, str) or not _is_binding_export_data_type(value):
         raise RegistryValidationError(f"binding {binding.id!r} selector data_type is not exportable")
-    return cast(_BindingExportDataType, value)
+    return value
 
 
 def _padding_for_binding_data_type(data_type: _BindingExportDataType) -> _ExportPadding:

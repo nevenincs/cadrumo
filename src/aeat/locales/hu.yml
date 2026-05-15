@@ -426,6 +426,9 @@ cli:
           export:
             modelo_help: Az exportálandó modelo azonosítója (pl. 130, 303, 100)
             period_help: Időszak kódja (pl. 1T, 2T, 0A)
+            prefill_relations_help: Revíziók közötti relációértékek előtöltése a helyi
+              megfigyelési tárból az exportálás előtt (éves összesítések, előző negyedévek
+              átvitele stb.)
             root_folder_required: Nincs Drive gyökérmappa konfigurálva; futtassa először
               az `aeat config google folder set <id>` parancsot
             unknown_modelo: 'Ismeretlen modelo {modelo!r}; elérhető modelók: {available}'
@@ -998,6 +1001,34 @@ cli:
       slug: Téma azonosító (kebab-case, pl. iva-regime)
 dotted:
   key: dotted.key
+errors:
+  calc:
+    binding_value_missing: A {binding_id} kötés nem rendelkezik értékkel.
+    bracket_negative_base: A(z) {parameter_id} sávos paraméter nem fogad el negatív
+      bázist {base}.
+    bracket_no_coverage: A(z) {parameter_id} sávos paraméternek nincs olyan sávja,
+      amely lefedi a(z) {base} bázist.
+    bracket_no_window: A(z) {parameter_id} sávos paraméternek nincs érvényes sávja
+      {as_of} időpontra.
+    casilla_constraint_violation: 'A(z) {casilla_id} cella {value} értéke megsérti
+      a deklarált megszorítást: {violation}. Refs: {legal_refs}.'
+    casilla_referenced_before_evaluation: A(z) {casilla_id} cellára hivatkoztak a
+      képlete kiértékelése előtt.
+    computed_supplied_as_input: 'Számított cellák nem adhatók meg bemenetként: {casilla_ids}.'
+    dispatch_key_unknown: 'A(z) {dispatch_key!r} elosztási kulcs nincs a(z) {op} operátor
+      táblájában a(z) {binding_id} kötésen (deklarált kulcsok: {available_keys}).'
+    dispatch_parameter_kind: A(z) {parameter_id} paraméter típusa nem illik a(z) {op}
+      operátorhoz; skalár paraméter szükséges (decimal / pénz / egész / arány).
+    divide_by_zero: A(z) {op} operátorral rendelkező képlet nullával oszt.
+    empty_expression: Üres képletkifejezés.
+    enum_binding_value_missing: A(z) {binding_id} felsorolt kötés nem rendelkezik
+      értékkel (a(z) {op} operátor megköveteli).
+    lookup_dispatch_arg_count: A(z) {op} képlet operátor {expected} argumentumot vár.
+    lookup_dispatch_arg_kind: A(z) {op} képlet operátor megköveteli, hogy a(z) {position}
+      egy {expected_kind} típusú levél legyen.
+    parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
+    relation_value_missing: A(z) {relation_id} reláció nem rendelkezik értékkel.
+    unknown_input_casillas: 'Ismeretlen cellaazonosítók a bemenetben: {casilla_ids}.'
 filing:
   validation:
     deadline_missed: A benyújtási határidő lejárt
@@ -1442,3 +1473,39 @@ wizard:
     main:
       title: Main test
     title: Test
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Beszerzés dátuma
+      amount: Összeg
+      asset_class_code: Vagyontárgy típusa
+      asset_identifier: Vagyontárgy azonosítója
+      base_imponible: Adóalap
+      base_imponible_assigned: Hozzárendelt adóalap
+      clave: Kulcs
+      counterparty_legal_name: Partner cégneve
+      counterparty_tax_id: Partner adószáma
+      country_code: Ország kódja
+      currency_code: Pénznem kódja
+      ingreso_a_cuenta: Természetbeni adóelőleg
+      member_legal_name: Tag cégneve
+      member_state_code: Tagállam
+      member_tax_id: Tag adószáma
+      operation_date: Művelet dátuma
+      operation_kind_code: Művelet típusa
+      party_legal_name: Cégnév
+      party_tax_id: Adószám
+      perceptor_legal_name: Kedvezményezett neve
+      perceptor_tax_id: Kedvezményezett adószáma
+      percibido_dinerario: Készpénzes jövedelem
+      percibido_especie: Természetbeni jövedelem
+      rectified_base_previous: Korábbi adóalap (helyesbítés)
+      rectified_period: Helyesbített időszak
+      rectified_year: Helyesbített év
+      refund_amount: Visszatérítés összege
+      retencion_practicada: Levont forrásadó
+      share_percentage: Részesedés százaléka
+      subclave: Alkulcs
+      supplier_tax_id: Beszállító adószáma
+      transfer_pricing_method_code: Transzferár-módszer
+      valuation_amount: Értékelés

@@ -18,14 +18,14 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 
 
 class WizardWidget(StrEnum):
     """Closed taxonomy of input primitives the wizard runtime supports."""
 
     TEXT = "text"
-    SECRET = "secret"  # noqa: S105 - widget kind token, not a credential.
+    SECRET = "secret"
     CONFIRM = "confirm"
     SELECT = "select"
     CHECKBOX = "checkbox"

@@ -8,11 +8,10 @@ from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, cast
 
 from pydantic import ValidationError
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ...core.paths import PROJECT_ROOT
 from ._errors import CategoryValidationError
 from ._profile import CategoryProfile, VatCategory
@@ -48,7 +47,7 @@ def _load_category_profile_file_cached(
     target = Path(path)
     try:
         with target.open("rb") as fh:
-            payload = tomllib.load(fh)
+            payload: dict[str, object] = tomllib.load(fh)
     except tomllib.TOMLDecodeError as exc:
         raise CategoryValidationError(f"{target}: invalid category profile TOML: {exc}") from exc
     except OSError as exc:
@@ -63,7 +62,7 @@ def _load_category_profile_file_cached(
         if not isinstance(raw_profile, dict):
             raise CategoryValidationError(f"{target}: profiles[{index}] must be a table")
         try:
-            profile = _parse_profile(cast("Mapping[str, Any]", raw_profile))
+            profile = _parse_profile(raw_profile)
         except (ValidationError, ValueError) as exc:
             raise CategoryValidationError(f"{target}: invalid profiles[{index}]: {exc}") from exc
         if profile.category in profiles:
@@ -120,74 +119,92 @@ def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryPr
     return profiles
 
 
-def _parse_profile(raw_profile: Mapping[str, Any]) -> CategoryProfile:
-    category = SpendingCategory(str(raw_profile.get("category")))
-    raw_rule = raw_profile.get("proportionality")
+def _to_str_dict(raw: Mapping) -> dict[str, object]:
+    """Convert a Mapping with unknown key types to a str-keyed dict."""
+    result: dict[str, object] = {}
+    for k, v in raw.items():
+        if not isinstance(k, str):
+            raise CategoryValidationError("TOML table keys must be strings")
+        result[k] = v
+    return result
+
+
+def _parse_profile(raw_profile: object) -> CategoryProfile:
+    if not isinstance(raw_profile, dict):
+        raise CategoryValidationError("profile entry must be a table")
+    data = _to_str_dict(raw_profile)
+    category = SpendingCategory(str(data.get("category")))
+    raw_rule = data.get("proportionality")
     if not isinstance(raw_rule, dict):
         raise CategoryValidationError(f"profile {category.value!r} must declare [profiles.proportionality]")
-    raw_vat_hint = raw_profile.get("vat_hint")
+    raw_vat_hint = data.get("vat_hint")
     return CategoryProfile.model_validate(
         {
             "category": category,
-            "display_label": tr(str(raw_profile.get("display_label"))),
-            "proportionality": _parse_rule(cast("Mapping[str, Any]", raw_rule)),
+            "display_label": tr(str(data.get("display_label"))),
+            "proportionality": _parse_rule(raw_rule),
             "vat_hint": VatCategory(str(raw_vat_hint)) if raw_vat_hint is not None else None,
         }
     )
 
 
-def _parse_rule(raw_rule: Mapping[str, Any]) -> ProportionalityRule:
-    raw_variants = raw_rule.get("statutory_cap_variants", ())
+def _parse_rule(raw_rule: object) -> ProportionalityRule:
+    if not isinstance(raw_rule, dict):
+        raise CategoryValidationError("proportionality rule must be a table")
+    data = _to_str_dict(raw_rule)
+    raw_variants = data.get("statutory_cap_variants", ())
     if not isinstance(raw_variants, list | tuple):
         raise CategoryValidationError("statutory_cap_variants must be a list")
-    raw_citations = raw_rule.get("citations", ())
+    raw_citations = data.get("citations", ())
     if not isinstance(raw_citations, list | tuple):
         raise CategoryValidationError("citations must be a list")
     return ProportionalityRule.model_validate(
         {
-            "kind": ProportionalityKind(str(raw_rule.get("kind"))),
-            "fixed_pct": _decimal_or_none(raw_rule.get("fixed_pct")),
-            "default_ratio": _decimal_or_none(raw_rule.get("default_ratio")),
-            "statutory_cap_eur_per_day": _decimal_or_none(raw_rule.get("statutory_cap_eur_per_day")),
-            "statutory_cap_eur": _decimal_or_none(raw_rule.get("statutory_cap_eur")),
-            "statutory_cap_period": _cap_period_or_none(raw_rule.get("statutory_cap_period")),
-            "statutory_cap_variants": tuple(
-                _parse_cap_variant(cast("Mapping[str, Any]", raw_variant)) for raw_variant in raw_variants
-            ),
-            "citations": tuple(
-                _parse_citation(cast("Mapping[str, Any]", raw_citation)) for raw_citation in raw_citations
-            ),
-            "notes": tr(str(raw_rule.get("notes"))),
+            "kind": ProportionalityKind(str(data.get("kind"))),
+            "fixed_pct": _decimal_or_none(data.get("fixed_pct")),
+            "default_ratio": _decimal_or_none(data.get("default_ratio")),
+            "statutory_cap_eur_per_day": _decimal_or_none(data.get("statutory_cap_eur_per_day")),
+            "statutory_cap_eur": _decimal_or_none(data.get("statutory_cap_eur")),
+            "statutory_cap_period": _cap_period_or_none(data.get("statutory_cap_period")),
+            "statutory_cap_variants": tuple(_parse_cap_variant(raw_variant) for raw_variant in raw_variants),
+            "citations": tuple(_parse_citation(raw_citation) for raw_citation in raw_citations),
+            "notes": tr(str(data.get("notes"))),
         }
     )
 
 
-def _parse_cap_variant(raw_variant: Mapping[str, Any]) -> StatutoryCapVariant:
+def _parse_cap_variant(raw_variant: object) -> StatutoryCapVariant:
+    if not isinstance(raw_variant, dict):
+        raise CategoryValidationError("statutory_cap_variants entries must be tables")
+    data = _to_str_dict(raw_variant)
     return StatutoryCapVariant.model_validate(
         {
-            "id": raw_variant.get("id"),
-            "label": tr(str(raw_variant.get("label"))),
-            "statutory_cap_eur_per_day": _decimal_or_none(raw_variant.get("statutory_cap_eur_per_day")),
+            "id": data.get("id"),
+            "label": tr(str(data.get("label"))),
+            "statutory_cap_eur_per_day": _decimal_or_none(data.get("statutory_cap_eur_per_day")),
         }
     )
 
 
-def _parse_citation(raw_citation: Mapping[str, Any]) -> CategoryCitation:
-    url = raw_citation.get("url")
+def _parse_citation(raw_citation: object) -> CategoryCitation:
+    if not isinstance(raw_citation, dict):
+        raise CategoryValidationError("citations entries must be tables")
+    data = _to_str_dict(raw_citation)
+    url = data.get("url")
     if not isinstance(url, str):
         raise CategoryValidationError("citation url must be a string")
     return CategoryCitation.model_validate(
         {
-            "source": CategoryCitationSource(str(raw_citation.get("source"))),
-            "reference": raw_citation.get("reference"),
-            "locator": raw_citation.get("locator"),
+            "source": CategoryCitationSource(str(data.get("source"))),
+            "reference": data.get("reference"),
+            "locator": data.get("locator"),
             "url": parse_http_url(url),
-            "quote": tr(str(raw_citation.get("quote"))),
+            "quote": tr(str(data.get("quote"))),
         }
     )
 
 
-def _decimal_or_none(value: Any) -> Decimal | None:
+def _decimal_or_none(value: object) -> Decimal | None:
     if value is None:
         return None
     if isinstance(value, Decimal):
@@ -197,7 +214,7 @@ def _decimal_or_none(value: Any) -> Decimal | None:
     return Decimal(str(value))
 
 
-def _cap_period_or_none(value: Any) -> StatutoryCapPeriod | None:
+def _cap_period_or_none(value: object) -> StatutoryCapPeriod | None:
     if value is None:
         return None
     return StatutoryCapPeriod(str(value))

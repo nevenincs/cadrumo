@@ -81,35 +81,39 @@ class TestAggregate347:
         )
         result = aggregate_counterpart_347(observations, period="2025")
         assert result.total_counterparties == 2
-        x1_delivery = next(r for r in result.rollups if r.counterparty_nif == "X1" and r.operation_kind == OperationKind347.DELIVERY.value)
+        x1_delivery = next(
+            r
+            for r in result.rollups
+            if r.counterparty_nif == "X1" and r.operation_kind == OperationKind347.DELIVERY.value
+        )
         assert x1_delivery.observations_count == 2
         assert x1_delivery.total_taxable_base == Decimal("5000")
 
 
 class TestThreshold347:
     def test_threshold_is_canonical_3005_06(self) -> None:
-        assert THRESHOLD_347_EUR == Decimal("3005.06")
+        assert Decimal("3005.06") == THRESHOLD_347_EUR
 
     def test_declarable_when_above_threshold(self) -> None:
         observations = (
             _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="5000", invoice_total="6050", source_id="t1"),
         )
         result = aggregate_counterpart_347(observations, period="2025")
-        assert declarable_for_347(result.rollups[0]) is True
+        assert declarable_for_347(result, counterparty_nif="X1") is True
 
     def test_not_declarable_when_at_or_below_threshold(self) -> None:
         observations = (
             _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="2500", invoice_total="3000", source_id="t1"),
         )
         result = aggregate_counterpart_347(observations, period="2025")
-        assert declarable_for_347(result.rollups[0]) is False
+        assert declarable_for_347(result, counterparty_nif="X1") is False
 
     def test_threshold_excludes_exactly_at_floor(self) -> None:
         observations = (
             _obs(nif="X1", op_kind=OperationKind347.DELIVERY.value, base="0", invoice_total="3005.06", source_id="t1"),
         )
         result = aggregate_counterpart_347(observations, period="2025")
-        assert declarable_for_347(result.rollups[0]) is False
+        assert declarable_for_347(result, counterparty_nif="X1") is False
 
 
 class TestAggregate349:
@@ -137,8 +141,8 @@ class TestAggregate349:
 
 class TestInvariants:
     def test_unregistered_modelo_raises_domain_error(self) -> None:
-        from aeat.application.aggregation._errors import AggregationUnsupportedModeloError
         from aeat.application.aggregation._counterpart import _filter_observations_for_modelo
+        from aeat.application.aggregation._errors import AggregationUnsupportedModeloError
 
         with pytest.raises(AggregationUnsupportedModeloError, match="modelo '720'"):
             _filter_observations_for_modelo((), modelo="720")

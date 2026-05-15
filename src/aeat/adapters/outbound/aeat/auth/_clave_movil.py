@@ -30,7 +30,7 @@ import time
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final
+from typing import IO, TYPE_CHECKING, Final
 from urllib.parse import quote
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -59,6 +59,8 @@ from ._providers import (
 )
 
 if TYPE_CHECKING:
+    from playwright.async_api import Dialog
+
     from .....core.config import Settings
 
 
@@ -172,7 +174,7 @@ def _render_progress_banner(
     verification_code: str | None,
     timeout_seconds: int,
     used_non_qr_fallback: bool,
-    stream: Any = sys.stderr,
+    stream: IO[str] = sys.stderr,
 ) -> None:
     """Print an operator-readable instruction block while the provider waits for approval."""
     lines = [
@@ -594,7 +596,7 @@ class ClaveMovilAuthProvider:
     def _persist_session(
         storage_state_path: Path,
         *,
-        storage_state: dict[str, Any],
+        storage_state: dict[str, object],
         metadata: _ClaveMovilSessionMetadata,
     ) -> None:
         _session_store.save(
@@ -968,7 +970,7 @@ class ClaveMovilAuthProvider:
 
         pending: set[asyncio.Task[object]] = set()
 
-        def _handle(dialog: Any) -> None:
+        def _handle(dialog: Dialog) -> None:
             accept = getattr(dialog, "accept", None)
             if accept is None:
                 return
@@ -996,7 +998,7 @@ class ClaveMovilAuthProvider:
         try:
             ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
             url = getattr(page, "url", "") or ""
-            payload: dict[str, Any] = {
+            payload: dict[str, object] = {
                 "reason": reason,
                 "url": url,
                 "captured_at": datetime.now(UTC).isoformat(),

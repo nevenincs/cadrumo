@@ -19,7 +19,7 @@ def test_period_accepts_quarter_with_dash_and_is_frozen() -> None:
     assert period.start == date(2025, 1, 1)
     assert period.end == date(2025, 3, 31)
     with pytest.raises(ValidationError):
-        period.year = 2026  # type: ignore[misc]
+        period.year = 2026
 
 
 def test_aggregation_period_kind_values() -> None:

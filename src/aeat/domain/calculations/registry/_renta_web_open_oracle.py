@@ -15,9 +15,7 @@ from ._live_parity import OracleSurfaceKind, ParityFieldComparison, ParityResult
 from ._remote_state_guard import RemoteOperation, RemoteStateGuardPolicy
 
 _EXTERNAL = Settings.external_constants()
-RENTA_WEB_OPEN_LANDING_URL = AnyUrl(
-    f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.renta_web_open_landing}"
-)
+RENTA_WEB_OPEN_LANDING_URL = AnyUrl(f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.help_pages.renta_web_open_landing}")
 RENTA_WEB_OPEN_APP_URL = AnyUrl(_EXTERNAL.aeat.oracles.renta_web_open_app_template.format(year=2025))
 
 

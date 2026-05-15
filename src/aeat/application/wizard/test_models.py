@@ -21,7 +21,7 @@ from aeat.application.wizard._models import (
     WizardSection,
     WizardWidget,
 )
-from aeat.core.i18n import Translatable as tr  # noqa: N813
+from aeat.core.i18n import Translatable as tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -69,9 +69,9 @@ def test_every_model_is_strict_frozen_extra_forbid() -> None:
         WizardFlow,
     ):
         config = cls.model_config
-        assert config["strict"] is True
-        assert config["frozen"] is True
-        assert config["extra"] == "forbid"
+        assert config.get("strict") is True
+        assert config.get("frozen") is True
+        assert config.get("extra") == "forbid"
 
 
 def test_flow_rejects_non_tuple_sections() -> None:

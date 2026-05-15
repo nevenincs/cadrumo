@@ -57,7 +57,7 @@ class TestExtractedCasillaShape:
     def test_is_frozen(self) -> None:
         record = self._build()
         with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-            record.casilla_id = "02"  # type: ignore[misc]
+            record.casilla_id = "02"
 
     def test_extra_fields_rejected(self) -> None:
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):

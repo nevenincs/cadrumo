@@ -344,12 +344,18 @@ class Settings(BaseSettings):
             "key; requires aeat_allow_unencrypted=true and refuses real NIFs."
         ),
     )
-    aeat_allow_unencrypted: bool = Field(
-        default=False,
+    # Typed as ``str`` (not ``bool``) to preserve the strict-"1"-only
+    # kill-switch semantic. Pydantic's bool coercion would widen the
+    # opt-in surface to accept "true"/"yes"/"on" — a softer gate than
+    # the safety-critical "no confidentiality" surface allows. The
+    # consumer in master_key checks ``settings.aeat_allow_unencrypted
+    # == "1"`` rather than truth-testing.
+    aeat_allow_unencrypted: str = Field(
+        default="",
         description=(
             "Hostile-named opt-out gate for the unsecured backend. Must be "
-            "set to true (env var: AEAT_ALLOW_UNENCRYPTED=1) to use "
-            "aeat_secret_store_backend=unsecured. The unsecured backend "
+            "set to the literal '1' (env var: AEAT_ALLOW_UNENCRYPTED=1) to "
+            "use aeat_secret_store_backend=unsecured. The unsecured backend "
             "is intended for testing / educational / throwaway scenarios "
             "only and provides ZERO confidentiality. The substrate refuses "
             "to load an operator profile that carries a real NIF/NIE/CIF "
@@ -398,9 +404,28 @@ class Settings(BaseSettings):
     )
 
     # ── Live tests ──────────────────────────────────────────────────────────
-    aeat_live_tests_enabled: bool = Field(
-        default=False,
-        description="Opt-in flag to run @pytest.mark.live_read tests against real external services",
+    # Typed as ``str`` (not ``bool``) so the strict-match safety property is
+    # preserved: only the literal "1" enables live reads. Pydantic's bool
+    # coercion would accept "true"/"yes"/"on" — a wider opt-in surface than
+    # the kill-switch intent allows. The AeatAccessGate consumer checks
+    # ``settings.aeat_live_tests_enabled == "1"`` rather than truth-testing.
+    aeat_live_tests_enabled: str = Field(
+        default="",
+        description="Opt-in flag (set to '1') to run @pytest.mark.live_read tests against real external services",
+    )
+
+    # ── Replay IPC ──────────────────────────────────────────────────────────
+    # Set by ``aeat.core.observability._replay.replay_run`` on the parent
+    # process before it re-enters the CLI, then read by ``run_context`` in
+    # the child invocation so the persisted trace can label its
+    # ``replay_of`` field with the original run id. Subprocess IPC writes
+    # still go through ``os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id``
+    # (Settings is read-only and ``Settings()`` is re-instantiated by
+    # ``load_settings()`` on each call, so the write is visible to the
+    # next read).
+    aeat_replay_active: str = Field(
+        default="",
+        description="Subprocess-IPC marker carrying the original run_id when a CLI invocation is a replay re-entry",
     )
 
     # ── Diagnostic logging ──────────────────────────────────────────────────

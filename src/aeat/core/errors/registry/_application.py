@@ -279,7 +279,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.workflow._errors.WorkflowAbortSignal",
+        "aeat.application.workflow._errors.WorkflowAbortSignalError",
         ErrorCode(
             code="INTERNAL_WORKFLOW_ABORT_SIGNAL",
             category=ErrorCategory.INTERNAL,

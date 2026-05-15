@@ -69,7 +69,7 @@ class LedgerPreflightReport(BaseModel):
     def _serialize_issues(self, value: Sequence[LedgerPreflightIssue]) -> tuple[LedgerPreflightIssue, ...]:
         return tuple(value)
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def ready(self) -> bool:
         return not self.issues

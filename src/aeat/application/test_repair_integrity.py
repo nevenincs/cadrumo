@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TypedDict
 
 import pytest
 
@@ -10,8 +10,6 @@ from aeat.adapters.persistence.storage.sql.secure_objects import (
     SecureObjectNamespaceIntegrity,
 )
 from aeat.application.repair_integrity import (
-    RepairIntegrityReport,
-    RepairListReport,
     build_repair_integrity_report,
     build_repair_list_report,
 )
@@ -19,18 +17,25 @@ from aeat.application.repair_integrity import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
+class _NamespaceRecord(TypedDict):
+    """Typed fixture record for a single namespace in the stub repository."""
+
+    readable: int
+    unreadable: int
+    keys: list[str]
+
+
 class _StubRepository:
     """In-memory stand-in for SecureObjectRepository."""
 
-    def __init__(self, namespaces: dict[str, dict[str, Any]]) -> None:
-        # namespaces: { ns_name: { "readable": int, "unreadable": int, "keys": [str, ...] } }
+    def __init__(self, namespaces: dict[str, _NamespaceRecord]) -> None:
         self._namespaces = namespaces
 
     def list_namespaces(self) -> tuple[str, ...]:
         return tuple(sorted(self._namespaces.keys()))
 
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
-        data = self._namespaces.get(namespace, {"readable": 0, "unreadable": 0, "keys": []})
+        data: _NamespaceRecord = self._namespaces.get(namespace, _NamespaceRecord(readable=0, unreadable=0, keys=[]))
         return SecureObjectNamespaceIntegrity(
             namespace=namespace,
             readable=data["readable"],
@@ -38,7 +43,7 @@ class _StubRepository:
         )
 
     def list_keys(self, namespace: str) -> tuple[str, ...]:
-        return tuple(self._namespaces.get(namespace, {"keys": []})["keys"])
+        return tuple(self._namespaces.get(namespace, _NamespaceRecord(readable=0, unreadable=0, keys=[]))["keys"])
 
 
 class TestBuildIntegrityReport:
@@ -97,7 +102,9 @@ class TestBuildListReport:
         assert report.namespace == "aeat.workflow"
         assert report.rows_total == 3
         assert tuple(r.object_key_digest for r in report.rows) == (
-            "digest-a", "digest-b", "digest-c",
+            "digest-a",
+            "digest-b",
+            "digest-c",
         )
         assert report.integrity.readable == 3
 
@@ -106,11 +113,15 @@ class TestBuildListReport:
         default = build_repair_list_report(namespace="aeat.workflow", repository=repo)
         assert default.filter_mode == "default"
         all_mode = build_repair_list_report(
-            namespace="aeat.workflow", include_all=True, repository=repo,
+            namespace="aeat.workflow",
+            include_all=True,
+            repository=repo,
         )
         assert all_mode.filter_mode == "all"
         unreadable_mode = build_repair_list_report(
-            namespace="aeat.workflow", only_unreadable=True, repository=repo,
+            namespace="aeat.workflow",
+            only_unreadable=True,
+            repository=repo,
         )
         assert unreadable_mode.filter_mode == "unreadable"
 
@@ -138,4 +149,4 @@ class TestReportInvariants:
         repo = _StubRepository({"aeat.workflow": {"readable": 1, "unreadable": 0, "keys": []}})
         report = build_repair_integrity_report(repository=repo)
         with pytest.raises(ValidationError):
-            report.readable_total = 99  # type: ignore[misc]
+            report.readable_total = 99

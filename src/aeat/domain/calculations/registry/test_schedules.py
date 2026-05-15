@@ -75,7 +75,7 @@ def test_profile_condition_matches_unsupported_op_raises() -> None:
     runtime-side defensive branch in profile_condition_matches."""
     condition = ProfilePredicateDefinition.model_construct(
         field="residence_ccaa",
-        op="contains",  # type: ignore[arg-type]  # intentional invalid op for branch coverage
+        op="contains",  # intentional invalid op for branch coverage
         value="madrid",
         explanation="forged",
         legal_refs=("ley-35-2006:art-1",),

@@ -11,6 +11,7 @@ or the import would raise at module load.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -43,7 +44,24 @@ from aeat.adapters.outbound.google._records import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 
-def _valid_client_kwargs() -> dict[str, object]:
+class _ClientKwargs(TypedDict):
+    client_id: str
+    client_secret: str
+    project_id: str
+    auth_uri: str
+    token_uri: str
+    auth_provider_x509_cert_url: str
+    redirect_uris: tuple[str, ...]
+
+
+class _MetadataKwargs(TypedDict):
+    account_email: str
+    granted_scopes: tuple[str, ...]
+    issued_at: datetime
+    last_refresh_at: datetime
+
+
+def _valid_client_kwargs() -> _ClientKwargs:
     return {
         "client_id": "1234.apps.googleusercontent.com",
         "client_secret": "GOCSPX-deadbeef",
@@ -55,7 +73,7 @@ def _valid_client_kwargs() -> dict[str, object]:
     }
 
 
-def _valid_metadata_kwargs() -> dict[str, object]:
+def _valid_metadata_kwargs() -> _MetadataKwargs:
     return {
         "account_email": "operator@example.com",
         "granted_scopes": REQUIRED_SCOPES,
@@ -67,7 +85,7 @@ def _valid_metadata_kwargs() -> dict[str, object]:
 def test_required_scopes_contains_drive_and_sheets() -> None:
     assert DRIVE_FILE_SCOPE in REQUIRED_SCOPES
     assert SHEETS_SCOPE in REQUIRED_SCOPES
-    assert len(REQUIRED_SCOPES) == 2
+    assert len(REQUIRED_SCOPES) == 4
 
 
 def test_oauth_client_round_trips_through_strict_validation() -> None:
@@ -86,14 +104,13 @@ def test_oauth_client_rejects_non_https_auth_uri() -> None:
 def test_oauth_client_is_frozen() -> None:
     client = OAuthClient(**_valid_client_kwargs())
     with pytest.raises(ValidationError, match="frozen"):
-        client.client_id = "other.apps.googleusercontent.com"  # type: ignore[misc]
+        client.client_id = "other.apps.googleusercontent.com"
 
 
 def test_oauth_client_rejects_extra_fields() -> None:
-    kwargs = _valid_client_kwargs()
-    kwargs["unexpected"] = "value"
+    data: dict[str, object] = {**_valid_client_kwargs(), "unexpected": "value"}
     with pytest.raises(ValidationError, match="Extra"):
-        OAuthClient(**kwargs)
+        OAuthClient.model_validate(data)
 
 
 def test_oauth_client_rejects_empty_client_secret() -> None:
@@ -111,7 +128,7 @@ def test_oauth_token_minimum_shape() -> None:
 def test_oauth_token_is_frozen() -> None:
     token = OAuthToken(refresh_token="1//deadbeef", token_uri="https://oauth2.googleapis.com/token")
     with pytest.raises(ValidationError, match="frozen"):
-        token.refresh_token = "1//rotated"  # type: ignore[misc]
+        token.refresh_token = "1//rotated"
 
 
 def test_oauth_token_rejects_empty_refresh() -> None:
@@ -140,9 +157,8 @@ def test_oauth_metadata_rejects_empty_scope_tuple() -> None:
 
 
 def test_oauth_metadata_reauth_required_round_trips() -> None:
-    kwargs = _valid_metadata_kwargs()
-    kwargs["reauth_required"] = True
-    metadata = OAuthMetadata(**kwargs)
+    base = _valid_metadata_kwargs()
+    metadata = OAuthMetadata(**base, reauth_required=True)
     assert metadata.reauth_required is True
 
 

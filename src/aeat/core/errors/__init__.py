@@ -7,7 +7,10 @@ predictable error handling throughout the application.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, ClassVar
+
+if TYPE_CHECKING:
+    from aeat.adapters.outbound.aeat.browser._site_health import SiteHealthStatus
 
 
 class AeatError(Exception):
@@ -105,9 +108,14 @@ class SiteHealthError(AeatError):
     subpackage) to break the circular import between
     :mod:`aeat.adapters.outbound.aeat.browser` (which raises it) and :mod:`aeat.application.workflow`
     (which consumes it).
+
+    The ``SiteHealthStatus`` import is guarded by ``TYPE_CHECKING`` so no
+    runtime adapter-layer import occurs; :data:`.importlinter` is configured
+    with ``exclude_type_checking_imports = True`` to keep this edge invisible
+    to the ``core-not-outer`` contract.
     """
 
-    def __init__(self, *, status: Any) -> None:
+    def __init__(self, *, status: SiteHealthStatus) -> None:
         """Construct a SiteHealthError carrying a detected status.
 
         Args:
@@ -129,7 +137,7 @@ class SiteHealthError(AeatError):
         if status.retry_after_seconds is not None:
             context["retry_after_seconds"] = status.retry_after_seconds
         super().__init__(str(state_value), context=context)
-        self.status: Any = status
+        self.status: SiteHealthStatus = status
 
 
 class McpLaunchError(AeatError):

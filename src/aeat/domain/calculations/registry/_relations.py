@@ -57,7 +57,13 @@ def relation_source_requirements(
                 f"relation {relation.id!r} source modelo {relation.source_modelo!r} has no dependency classification"
             )
         source_year = _relation_source_year(relation, filing_year=filing_year)
-        source_periods = relation.source_periods or (period,)
+        if relation.source_period_offset_from_target is not None:
+            derived = _derive_offset_source_period(relation, target_period=period)
+            if derived is None:
+                continue
+            source_periods = (derived,)
+        else:
+            source_periods = relation.source_periods or (period,)
         key = (
             str(relation.source_modelo),
             source_year,
@@ -176,6 +182,42 @@ def _relation_source_year(relation: RelationDefinition, *, filing_year: int) -> 
     if not isinstance(delta, int):
         raise RegistryValidationError(f"relation {relation.id!r} source selector filing_year_delta must be an integer")
     return filing_year + delta
+
+
+_QUARTERLY_PERIOD_ORDINAL: dict[str, int] = {"1T": 1, "2T": 2, "3T": 3, "4T": 4}
+_ORDINAL_TO_QUARTERLY: dict[int, str] = {ordinal: code for code, ordinal in _QUARTERLY_PERIOD_ORDINAL.items()}
+_PAGO_FRACCIONADO_PERIOD_ORDINAL: dict[str, int] = {"1P": 1, "2P": 2, "3P": 3}
+_ORDINAL_TO_PAGO_FRACCIONADO: dict[int, str] = {
+    ordinal: code for code, ordinal in _PAGO_FRACCIONADO_PERIOD_ORDINAL.items()
+}
+
+
+def _derive_offset_source_period(relation: RelationDefinition, *, target_period: str) -> str | None:
+    """Apply ``source_period_offset_from_target`` to a target period code.
+
+    Supports quarterly period codes (``1T``..``4T``), pago-fraccionado period
+    codes used by modelo 202 (``1P``..``3P``), and zero-padded monthly codes
+    (``01``..``12``). Returns ``None`` when the offset would land outside the
+    canonical period span (e.g. ``1T`` with offset ``-1``).
+    """
+
+    offset = relation.source_period_offset_from_target
+    if offset is None:
+        return None
+    if target_period in _QUARTERLY_PERIOD_ORDINAL:
+        ordinal = _QUARTERLY_PERIOD_ORDINAL[target_period] + offset
+        return _ORDINAL_TO_QUARTERLY.get(ordinal)
+    if target_period in _PAGO_FRACCIONADO_PERIOD_ORDINAL:
+        ordinal = _PAGO_FRACCIONADO_PERIOD_ORDINAL[target_period] + offset
+        return _ORDINAL_TO_PAGO_FRACCIONADO.get(ordinal)
+    if len(target_period) == 2 and target_period.isdigit():
+        ordinal = int(target_period) + offset
+        if 1 <= ordinal <= 12:
+            return f"{ordinal:02d}"
+        return None
+    raise RegistryValidationError(
+        f"relation {relation.id!r} source_period_offset_from_target cannot interpret target period {target_period!r}"
+    )
 
 
 def _observed_requirement_values(

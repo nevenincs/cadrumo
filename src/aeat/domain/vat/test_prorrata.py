@@ -374,7 +374,7 @@ def test_inputs_is_frozen_and_forbids_extras() -> None:
         operaciones_sin_derecho_deduccion=Decimal("50"),
     )
     with pytest.raises(ValidationError, match=r"frozen"):
-        inputs.operaciones_con_derecho_deduccion = Decimal("0")  # type: ignore[misc]
+        inputs.operaciones_con_derecho_deduccion = Decimal("0")
     with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
         extra_kwargs: dict[str, object] = {"unexpected_field": Decimal("1")}
         ProrrataInputs.model_validate(

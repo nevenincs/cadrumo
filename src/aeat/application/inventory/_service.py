@@ -163,7 +163,7 @@ def _replace_ledger(document: InventoryLedgerDocument, ledger: InventoryLedger) 
         for existing in document.ledgers
         if not (existing.actividad_id == ledger.actividad_id and existing.year == ledger.year)
     )
-    return InventoryLedgerDocument(ledgers=others + (ledger,))
+    return InventoryLedgerDocument(ledgers=(*others, ledger))
 
 
 class InventoryService:
@@ -271,7 +271,7 @@ class InventoryService:
             vat_rate=movement.vat_rate,
         )
         updated = ledger.model_copy(
-            update={"period_movements": ledger.period_movements + (record,)},
+            update={"period_movements": (*ledger.period_movements, record)},
         )
         document = _load_document(self._settings, bucket_id)
         document = _replace_ledger(document, updated)

@@ -16,7 +16,6 @@ boundary; the service has no verb that would write to AEAT.
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
 from pathlib import Path
 

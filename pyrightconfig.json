@@ -1,0 +1,51 @@
+{
+  "include": [
+    "src/aeat"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    ".venv",
+    "scratch"
+  ],
+  "stubPath": "stubs",
+  "extraPaths": [
+    "src"
+  ],
+  "pythonVersion": "3.13",
+  "pythonPlatform": "All",
+  "typeCheckingMode": "standard",
+  "executionEnvironments": [
+    {
+      "root": "src/aeat/domain",
+      "reportMissingParameterType": "error",
+      "reportMissingTypeArgument": "error",
+      "reportIncompatibleMethodOverride": "error",
+      "reportImportCycles": "warning",
+      "reportPrivateUsage": "warning",
+      "reportUnusedFunction": "warning",
+      "reportUnusedExpression": "warning",
+      "reportUnnecessaryIsInstance": "warning",
+      "reportDeprecated": "warning",
+      "reportUnhashable": "error"
+    },
+    {
+      "root": "src/aeat/application",
+      "reportMissingParameterType": "error",
+      "reportMissingTypeArgument": "error",
+      "reportIncompatibleMethodOverride": "error",
+      "reportImportCycles": "warning",
+      "reportPrivateUsage": "warning",
+      "reportUnusedFunction": "warning",
+      "reportUnusedExpression": "warning",
+      "reportUnnecessaryIsInstance": "warning",
+      "reportDeprecated": "warning",
+      "reportUnhashable": "error",
+      "reportCallIssue": "error",
+      "reportAttributeAccessIssue": "error",
+      "reportUnsupportedDunderAll": "error"
+    }
+  ],
+  "reportMissingImports": "error",
+  "reportMissingTypeStubs": "warning"
+}

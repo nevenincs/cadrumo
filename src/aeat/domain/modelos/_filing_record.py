@@ -26,10 +26,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
@@ -163,7 +163,7 @@ class FilingRecord(BaseModel):
 
     @field_validator("modelo", mode="before")
     @classmethod
-    def _coerce_modelo(cls, value: Any) -> ModeloCode:
+    def _coerce_modelo(cls, value: object) -> ModeloCode:
         if isinstance(value, ModeloCode):
             return value
         if isinstance(value, str):
@@ -279,7 +279,7 @@ class FilingRecordCatalogue(BaseModel):
     def values(self):
         return self.records.values()
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self) -> Iterator[FilingRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         return iter(self.records.values())
 
     def __len__(self) -> int:

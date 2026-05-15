@@ -57,3 +57,57 @@ def test_parse_tax_region_accepts_accented_display_names() -> None:
 def test_parse_tax_region_refuses_accented_foral_alias() -> None:
     with pytest.raises(ForalRegimeError, match=r"País Vasco"):
         parse_tax_region("País Vasco")
+
+
+def test_ccaa_from_iso_code_maps_all_common_regime_codes() -> None:
+    """CCAA.from_iso_code must resolve every 3-letter code used by the former RentaCCAA enum."""
+    mapping = {
+        "AND": CCAA.ANDALUCIA,
+        "ARA": CCAA.ARAGON,
+        "AST": CCAA.ASTURIAS,
+        "BAL": CCAA.BALEARES,
+        "CAN": CCAA.CANARIAS,
+        "CAB": CCAA.CANTABRIA,
+        "CLM": CCAA.CASTILLA_LA_MANCHA,
+        "CYL": CCAA.CASTILLA_Y_LEON,
+        "CAT": CCAA.CATALUNA,
+        "VAL": CCAA.COMUNIDAD_VALENCIANA,
+        "EXT": CCAA.EXTREMADURA,
+        "GAL": CCAA.GALICIA,
+        "LAR": CCAA.LA_RIOJA,
+        "MAD": CCAA.MADRID,
+        "MUR": CCAA.MURCIA,
+    }
+    for code, expected in mapping.items():
+        assert CCAA.from_iso_code(code) is expected
+
+
+def test_ccaa_from_iso_code_is_case_insensitive() -> None:
+    assert CCAA.from_iso_code("and") is CCAA.ANDALUCIA
+    assert CCAA.from_iso_code("And") is CCAA.ANDALUCIA
+
+
+def test_ccaa_from_iso_code_raises_key_error_for_unknown_code() -> None:
+    with pytest.raises(KeyError, match="XXX"):
+        CCAA.from_iso_code("XXX")
+
+
+def test_ccaa_from_label_accepts_canonical_value() -> None:
+    assert CCAA.from_label("andalucia") is CCAA.ANDALUCIA
+    assert CCAA.from_label("madrid") is CCAA.MADRID
+    assert CCAA.from_label("castilla_la_mancha") is CCAA.CASTILLA_LA_MANCHA
+
+
+def test_ccaa_from_label_accepts_iso_code() -> None:
+    assert CCAA.from_label("AND") is CCAA.ANDALUCIA
+    assert CCAA.from_label("and") is CCAA.ANDALUCIA
+
+
+def test_ccaa_from_label_normalises_hyphens() -> None:
+    assert CCAA.from_label("castilla-la-mancha") is CCAA.CASTILLA_LA_MANCHA
+    assert CCAA.from_label("comunidad-valenciana") is CCAA.COMUNIDAD_VALENCIANA
+
+
+def test_ccaa_from_label_raises_value_error_for_unknown_label() -> None:
+    with pytest.raises(ValueError, match="unknown CCAA label"):
+        CCAA.from_label("pais_vasco")

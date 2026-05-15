@@ -22,7 +22,7 @@ from ....application.wizard._catalogue import SETUP_FLOW
 from ....application.wizard._commands import build_wizard_command
 from ....core.logging import default_log_file_path
 from .._common import _emit
-from .._errors import CliRefusedBoundaryError, write_stderr
+from .._errors import CliRefusedBoundaryError
 from .._i18n import tr
 
 _wizard_init_command = build_wizard_command(SETUP_FLOW)
@@ -1101,7 +1101,7 @@ auth_app.add_typer(apoderado_app, name="apoderado")
 app.add_typer(auth_app, name="auth")
 app.add_typer(bucket_app, name="bucket")
 
-from ._google import google_app  # noqa: E402  -- registered after siblings to keep the alphabetical add order
+from ._google import google_app
 
 app.add_typer(google_app, name="google")
 

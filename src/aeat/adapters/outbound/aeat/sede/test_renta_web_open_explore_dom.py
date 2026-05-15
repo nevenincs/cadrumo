@@ -18,7 +18,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from playwright.async_api import Page
 
 import pytest
 
@@ -38,7 +41,7 @@ _APARTADOS_DIALOG_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-a
 _log = logging.getLogger(__name__)
 
 
-async def _snapshot_zk_layer(page: Any, label: str) -> str:
+async def _snapshot_zk_layer(page: Page, label: str) -> str:
     """Snapshot ZK dialog/popup state immediately after a dialog opens.
 
     Dumps every visible ZK window / popup / [role=dialog] container's
@@ -146,7 +149,11 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
     context = None
     try:
         context = await browser_session.create_context(storage_state={})
-        page = cast(Any, await context.new_page())
+        from playwright.async_api import Page as _Page
+
+        _raw = await context.new_page()
+        assert isinstance(_raw, _Page), f"new_page() did not return a Playwright Page; got {type(_raw)}"
+        page: _Page = _raw
         # SAFETY-CRITICAL: install dialog dismissal + URL guards.
         await install_page_safety_net(page)
         await page.set_viewport_size({"width": 1366, "height": 900})
@@ -314,7 +321,8 @@ async def _capture_resumen_dom() -> tuple[str, str, str, str, str]:
                 _log.debug("explore DOM input inventory metadata unreadable index=%d", idx, exc_info=True)
                 title = placeholder = input_type = name = value = "?"
             button_inventory_lines.append(
-                f"  [{idx}] type={input_type!r} title={title!r} placeholder={placeholder!r} name={name!r} value={value!r}"  # noqa: E501
+                f"  [{idx}] type={input_type!r} title={title!r}"
+                f" placeholder={placeholder!r} name={name!r} value={value!r}"
             )
         button_inventory_lines.append("\n=== visible dialogs / modals ===")
         for cls in (".z-window", ".z-window-modal", "[role='dialog']"):

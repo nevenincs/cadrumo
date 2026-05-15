@@ -20,7 +20,6 @@ flagged independently from the selector check.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, cast
 
 import pytest
 
@@ -73,7 +72,11 @@ async def _assert_form_shape() -> None:
     context = None
     try:
         context = await session.create_context(storage_state_path=storage_state_path)
-        page = cast(Any, await context.new_page())
+        from playwright.async_api import Page as _Page
+
+        _raw = await context.new_page()
+        assert isinstance(_raw, _Page), f"new_page() did not return a Playwright Page; got {type(_raw)}"
+        page: _Page = _raw
         await page.set_viewport_size({"width": 1366, "height": 900})
         await session.navigate(page, str(AEAT_GROI_URL))
         await page.wait_for_load_state("networkidle", timeout=20_000)
@@ -106,14 +109,18 @@ async def _query_live_body_text(nif: str) -> str:
     context = None
     try:
         context = await session.create_context(storage_state_path=storage_state_path)
-        page = cast(Any, await context.new_page())
+        from playwright.async_api import Page as _Page
+
+        _raw = await context.new_page()
+        assert isinstance(_raw, _Page), f"new_page() did not return a Playwright Page; got {type(_raw)}"
+        page: _Page = _raw
         await page.set_viewport_size({"width": 1366, "height": 900})
         await session.navigate(page, str(AEAT_GROI_URL))
         await page.wait_for_load_state("networkidle", timeout=20_000)
         await page.locator("input#nif").fill(nif, timeout=10_000)
         await page.locator("input#enviar").click(timeout=10_000)
         await page.wait_for_load_state("networkidle", timeout=20_000)
-        return cast(str, await page.locator("body").inner_text(timeout=10_000))
+        return await page.locator("body").inner_text(timeout=10_000)
     finally:
         if context is not None:
             await context.close()

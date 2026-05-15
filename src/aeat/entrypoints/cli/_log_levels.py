@@ -12,7 +12,6 @@ consistent across commands.
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import Mapping
 from enum import StrEnum
 
@@ -71,7 +70,8 @@ def resolve_log_level(
         verbose: Whether ``--verbose`` was passed.
         debug: Whether ``--debug`` was passed.
         env: Optional environment mapping for deterministic tests; when
-            :data:`None`, :data:`os.environ` is used.
+            :data:`None`, :func:`aeat.core.config.load_settings` is
+            consulted (the single AEAT-config surface).
 
     Returns:
         The effective :class:`LogLevel`.
@@ -92,8 +92,18 @@ def resolve_log_level(
     if quiet:
         return LogLevel.QUIET
 
-    source = os.environ if env is None else env
-    raw_value = source.get("AEAT_LOG_LEVEL", "").strip().lower()
+    if env is not None:
+        raw_value = env.get("AEAT_LOG_LEVEL", "").strip().lower()
+    else:
+        # No explicit env mapping: read via Settings (single AEAT-config surface).
+        # The env parameter remains for tests that need to inject an isolated
+        # mapping without going through Settings's os.environ + .env merge.
+        from ...core.config import load_settings
+
+        try:
+            raw_value = load_settings().aeat_log_level.strip().lower()
+        except (KeyError, ValueError, AttributeError):
+            raw_value = ""
     if not raw_value:
         return LogLevel.DEFAULT
     try:

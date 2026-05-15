@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
@@ -599,14 +600,14 @@ def test_committed_modelo_349_declares_invoice_source_bindings_for_declarant_sum
     ):
         binding = invoice_bindings[binding_id]
         assert binding.selector["rectification_scope"] == "exclude_rectifications"
-        assert tuple(binding.selector["claves"]) == expected_claves
+        assert cast("tuple[str, ...]", binding.selector["claves"]) == expected_claves
     for binding_id in (
         "vat-349-declarante-numero-rectificaciones",
         "vat-349-declarante-importe-rectificaciones",
     ):
         binding = invoice_bindings[binding_id]
         assert binding.selector["rectification_scope"] == "only_rectifications"
-        assert tuple(binding.selector["claves"]) == expected_claves
+        assert cast("tuple[str, ...]", binding.selector["claves"]) == expected_claves
 
 
 def test_committed_modelo_349_invoice_binding_requirements_split_by_rectification_scope() -> None:

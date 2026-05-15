@@ -46,43 +46,6 @@ class RentaIncomeType(StrEnum):
     ATRIBUCION_RENTAS = "atribucion_rentas"
 
 
-class RentaCCAA(StrEnum):
-    """Closed catalogue of the Spanish autonomous communities + Ciudades autónomas.
-
-    Mirrors :class:`aeat.domain.vat.EUMemberState` shape (lowercase ISO
-    code values). Covers the 17 autonomous communities (comunidades
-    autónomas) plus the 2 autonomous cities (ciudades autónomas) of
-    Ceuta and Melilla. Used by the Renta autonomic-deductions chain
-    (Anexo B) and the autonomic escala (LIRPF art. 74).
-
-    Foral regimes (País Vasco diputaciones forales, Comunidad Foral de
-    Navarra) are represented as single members at the autonomous-
-    community granularity. Operations that depend on the specific
-    diputación foral (Álava / Bizkaia / Gipuzkoa) must use a separate
-    enum or per-diputación selector layered on top.
-    """
-
-    AND = "and"  # Andalucía
-    ARA = "ara"  # Aragón
-    AST = "ast"  # Principado de Asturias
-    BAL = "bal"  # Illes Balears
-    CAN = "can"  # Canarias
-    CAB = "cab"  # Cantabria
-    CLM = "clm"  # Castilla-La Mancha
-    CYL = "cyl"  # Castilla y León
-    CAT = "cat"  # Cataluña / Catalunya
-    EXT = "ext"  # Extremadura
-    GAL = "gal"  # Galicia
-    MAD = "mad"  # Comunidad de Madrid
-    MUR = "mur"  # Región de Murcia
-    NAV = "nav"  # Comunidad Foral de Navarra
-    PVA = "pva"  # País Vasco / Euskadi
-    LAR = "lar"  # La Rioja
-    VAL = "val"  # Comunitat Valenciana
-    CEU = "ceu"  # Ciudad Autónoma de Ceuta
-    MEL = "mel"  # Ciudad Autónoma de Melilla
-
-
 class EstimacionDirectaModalidad(StrEnum):
     """Closed catalogue for the estimación directa modality selector.
 
@@ -105,6 +68,5 @@ class EstimacionDirectaModalidad(StrEnum):
 
 __all__ = [
     "EstimacionDirectaModalidad",
-    "RentaCCAA",
     "RentaIncomeType",
 ]

@@ -553,6 +553,8 @@ def google_sync_push(
     except (GoogleAuthError, StorageError) as exc:
         raise CliRefusedBoundaryError(str(exc)) from exc
 
+    resolved_root_folder_id = getattr(provider, "root_folder_id", "")
+
     repository = SecureObjectRepository()
     pushed_by_ns: dict[str, int] = {}
     skipped_by_ns: dict[str, int] = {}
@@ -667,6 +669,11 @@ def google_sync_calc_export(
     year: int = typer.Option(
         ..., "--year", help=tr("cli.config.google.sync.calc.export.year_help"), min=2000, max=2099
     ),
+    prefill_relations: bool = typer.Option(
+        False,
+        "--prefill-relations/--no-prefill-relations",
+        help=tr("cli.config.google.sync.calc.export.prefill_relations_help"),
+    ),
     profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Export the registry calculation surface for a modelo + period to a real
@@ -676,7 +683,18 @@ def google_sync_calc_export(
     per-casilla ROUND-wrapped Decimal parity), Procedencia (audit trail),
     Tarifas (parameter + relation mirrors), and Guía (engine version +
     registry SHA stamps the pull adapter validates against).
+
+    When `--prefill-relations` is set, the engine consults the local
+    `CalculationObservationRepository` for prior filings of the
+    relations' source modelos, pre-resolves the relation values via
+    `resolve_relations_from_local_store`, and stamps each prefilled
+    Tarifas cell with provenance metadata (source modelo + filing year
+    + periods + resolution timestamp). Without prior filings in the
+    local store the flag is a no-op and the workbook ships with blank
+    relation cells the operator fills by hand.
     """
+
+    from ....application.calculations import resolve_relations_from_local_store
 
     try:
         active = resolve_active_profile(profile)
@@ -689,11 +707,18 @@ def google_sync_calc_export(
         raise CliRefusedBoundaryError(str(exc)) from exc
 
     snapshot = _load_snapshot(modelo, period, year)
-    plan = build_export_plan(
-        snapshot,
-        operator_inputs=OperatorInputs(),
-        relation_values=RelationValues(),
-    )
+    if prefill_relations:
+        plan = build_export_plan(
+            snapshot,
+            operator_inputs=OperatorInputs(),
+            relation_resolver=resolve_relations_from_local_store,
+        )
+    else:
+        plan = build_export_plan(
+            snapshot,
+            operator_inputs=OperatorInputs(),
+            relation_values=RelationValues(),
+        )
 
     try:
         result: CalcSheetsApplyResult = apply_export_plan(
@@ -773,7 +798,7 @@ def google_sync_calc_verify(
     `inconclusive` in that case.
     """
 
-    from decimal import Decimal as _D
+    from decimal import Decimal
 
     from ....application.storage.calc_sheets._parity_harness import (
         OperatorInputScenario,
@@ -797,10 +822,10 @@ def google_sync_calc_verify(
     else:
         raw = json.loads(scenario_path.read_text(encoding="utf-8"))
 
-        def _to_decimal_map(node: object) -> dict[str, _D]:
+        def _to_decimal_map(node: object) -> dict[str, Decimal]:
             if not isinstance(node, dict):
                 return {}
-            return {str(k): _D(str(v)) for k, v in node.items()}
+            return {str(k): Decimal(str(v)) for k, v in node.items()}
 
         scenario = OperatorInputScenario(
             inputs_by_number=_to_decimal_map(raw.get("inputs_by_number")),
@@ -915,6 +940,8 @@ def google_sync_calc_pull(
     populated_operator = [e for e in result.operator_edits if e.value is not None]
     populated_bindings = [e for e in result.binding_edits if e.value is not None]
     populated_relations = [e for e in result.relation_edits if e.value is not None]
+    populated_row_sets = [rs for rs in result.row_set_edits if rs.cells]
+    row_set_cells_total = sum(len(rs.cells) for rs in populated_row_sets)
 
     computed_casillas: list[dict[str, str]] = []
     if compute:
@@ -976,6 +1003,22 @@ def google_sync_calc_pull(
             {"relation": e.relation, "value": str(e.value) if e.value is not None else None}
             for e in populated_relations
         ],
+        "row_set_edits_populated": len(populated_row_sets),
+        "row_set_cells_populated": row_set_cells_total,
+        "row_set_edits": [
+            {
+                "grouping": rs.grouping,
+                "cells": [
+                    {
+                        "binding": c.binding,
+                        "row_index": c.row_index,
+                        "value": str(c.value) if c.value is not None else None,
+                    }
+                    for c in rs.cells
+                ],
+            }
+            for rs in populated_row_sets
+        ],
         "computed": computed_casillas,
     }
     lines: list[str] = [
@@ -994,6 +1037,8 @@ def google_sync_calc_pull(
         f"operator_edits_populated\t{len(populated_operator)}",
         f"binding_edits_populated\t{len(populated_bindings)}",
         f"relation_edits_populated\t{len(populated_relations)}",
+        f"row_set_edits_populated\t{len(populated_row_sets)}",
+        f"row_set_cells_populated\t{row_set_cells_total}",
     ]
     for e in populated_operator:
         lines.append(f"casilla\t{e.casilla_number}\t{e.value}\t{e.label}")
@@ -1001,6 +1046,9 @@ def google_sync_calc_pull(
         lines.append(f"binding\t{e.binding}\t{e.value}")
     for e in populated_relations:
         lines.append(f"relation\t{e.relation}\t{e.value}")
+    for rs in populated_row_sets:
+        for c in rs.cells:
+            lines.append(f"row_set\t{rs.grouping}\t{c.row_index}\t{c.binding}\t{c.value}")
     for entry in computed_casillas:
         lines.append(f"computed\t{entry['casilla_id']}\t{entry['value']}\t{entry['formula_id']}")
     _emit(ctx, payload, tuple(lines))

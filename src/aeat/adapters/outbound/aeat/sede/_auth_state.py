@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ..auth import _session_store
 from ._errors import SedeNavigationError
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from ..auth._authenticator import AeatSession
 
 
-def storage_state_for_session(session: AeatSession) -> dict[str, Any]:
+def storage_state_for_session(session: AeatSession) -> dict[str, object]:
     """Return decrypted Playwright storage state for an authenticated session."""
 
     if session.storage_state_path is None:

@@ -16,8 +16,12 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ._authenticator import BrowserResponseLike
 
 import pytest
 
@@ -71,7 +75,7 @@ class _RecordingPage:
         self.url: str = ""
         self.closed = False
 
-    async def goto(self, url: str, *, timeout: float | None = None) -> Any:
+    async def goto(self, url: str, *, timeout: float | None = None) -> BrowserResponseLike | None:
         del timeout
         self.gotos.append(url)
         # Simulate AEAT's selector dispatch. An authenticated resume
@@ -118,11 +122,11 @@ class _RecordingPage:
     async def content(self) -> str:
         return "<html></html>"
 
-    async def wait_for_url(self, matcher: Any, *, timeout: float | None = None) -> None:
+    async def wait_for_url(self, matcher: str | Callable[[str], bool], *, timeout: float | None = None) -> None:
         del timeout
         # Simulate a phone approval that auto-redirects to the target.
         self.url = f"https://www6.agenciatributaria.gob.es{self._target_path}"
-        if callable(matcher) and not matcher(self.url):
+        if not isinstance(matcher, str) and not matcher(self.url):
             raise TimeoutError("matcher rejected simulated URL")
 
     async def close(self) -> None:
@@ -190,7 +194,7 @@ class _RecordingBrowserSession:
     async def create_context(
         self,
         *,
-        provisioner: Any | None = None,
+        provisioner: object | None = None,
         storage_state_path: Path | None = None,
         storage_state: dict[str, object] | None = None,
     ) -> _RecordingContext:

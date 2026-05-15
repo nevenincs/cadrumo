@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-import io
-import json
 import zipfile
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -15,11 +13,11 @@ from ...core.config import Settings
 from ._models import (
     BundleVerificationState,
     EvidenceBundle,
+    EvidenceBundleCheckResult,
     EvidenceBundleNotFoundError,
     EvidenceBundleVerificationError,
     EvidenceRecordRef,
     VerificationCheck,
-    VerificationFinding,
     derive_bundle_id,
     utcnow,
 )
@@ -35,7 +33,7 @@ class EvidenceBundleVerificationReport(BaseModel):
 
     bundle_id: str = Field(min_length=64, max_length=64)
     verification_state: BundleVerificationState
-    findings: tuple[VerificationFinding, ...] = Field(default_factory=tuple)
+    findings: tuple[EvidenceBundleCheckResult, ...] = Field(default_factory=tuple)
     completeness_ratio: float = Field(ge=0.0, le=1.0)
 
 
@@ -153,10 +151,10 @@ class EvidenceBundleService:
         completeness; mismatched digests fail verification.
         """
         bundle = self.show(bucket_id=bucket_id, bundle_id=bundle_id)
-        findings: list[VerificationFinding] = []
+        findings: list[EvidenceBundleCheckResult] = []
 
         findings.append(
-            VerificationFinding(
+            EvidenceBundleCheckResult(
                 check=VerificationCheck.BUCKET_BINDING,
                 passed=bundle.bucket_id == bucket_id,
                 detail=f"manifest bucket={bundle.bucket_id!r}",
@@ -180,14 +178,14 @@ class EvidenceBundleService:
 
         completeness = reachable / total if total else 1.0
         findings.append(
-            VerificationFinding(
+            EvidenceBundleCheckResult(
                 check=VerificationCheck.OBJECT_REACHABILITY,
                 passed=reachable == total,
                 detail=f"{reachable}/{total} reachable",
             ),
         )
         findings.append(
-            VerificationFinding(
+            EvidenceBundleCheckResult(
                 check=VerificationCheck.RECORD_DIGESTS,
                 passed=digest_passes == reachable and not digest_failures,
                 detail=(
@@ -207,7 +205,7 @@ class EvidenceBundleService:
             filing_record_id=bundle.filing_record_id,
         )
         findings.append(
-            VerificationFinding(
+            EvidenceBundleCheckResult(
                 check=VerificationCheck.MANIFEST_DIGEST,
                 passed=expected_bundle_id == bundle.bundle_id,
                 detail=f"expected {expected_bundle_id!r}, got {bundle.bundle_id!r}",

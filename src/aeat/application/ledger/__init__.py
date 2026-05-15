@@ -2,18 +2,6 @@
 
 from __future__ import annotations
 
-from ._evidence import (
-    PurchaseInvoiceEvidence,
-    PurchaseInvoiceEvidenceInputError,
-    PurchaseInvoiceEvidenceNotFoundError,
-    PurchaseInvoiceEvidencePatch,
-    PurchaseInvoiceEvidenceService,
-)
-from ._id_resolution import (
-    MINIMUM_DISPLAY_ID_WIDTH,
-    compute_display_id_width,
-    resolve_transaction_id,
-)
 from ._actions import (
     archive_manual_transaction,
     attach_manual_transaction_evidence,
@@ -37,6 +25,18 @@ from ._actions import (
     summarize_manual_transactions,
     update_manual_transaction,
     update_manual_transaction_fields,
+)
+from ._evidence import (
+    PurchaseInvoiceEvidence,
+    PurchaseInvoiceEvidenceInputError,
+    PurchaseInvoiceEvidenceNotFoundError,
+    PurchaseInvoiceEvidencePatch,
+    PurchaseInvoiceEvidenceService,
+)
+from ._id_resolution import (
+    MINIMUM_DISPLAY_ID_WIDTH,
+    compute_display_id_width,
+    resolve_transaction_id,
 )
 from ._models import (
     LedgerCatalogueResetReport,
@@ -100,6 +100,8 @@ __all__ = [
     "PurchaseInvoiceEvidenceNotFoundError",
     "PurchaseInvoiceEvidencePatch",
     "PurchaseInvoiceEvidenceService",
+    "SplitChildCommand",
+    "SplitTransactionResult",
     "archive_manual_transaction",
     "attach_manual_transaction_evidence",
     "compute_display_id_width",
@@ -122,8 +124,6 @@ __all__ = [
     "reset_ledger_catalogue",
     "resolve_transaction_id",
     "split_transaction",
-    "SplitChildCommand",
-    "SplitTransactionResult",
     "stash_manual_transaction",
     "summarize_manual_transactions",
     "update_manual_transaction",

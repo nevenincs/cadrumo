@@ -84,7 +84,7 @@ class TestArticulo:
     def test_frozen(self) -> None:
         articulo = _articulo()
         with pytest.raises(ValidationError, match=r"frozen"):
-            articulo.notes = "mutated"  # type: ignore[misc]
+            articulo.notes = "mutated"
 
 
 class TestNormativeReference:

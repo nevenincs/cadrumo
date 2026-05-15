@@ -80,7 +80,7 @@ def test_listing_is_frozen() -> None:
 
     entry = AUTH_PROVIDER_CATALOGUE[0]
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        entry.id = "changed"  # type: ignore[misc]
+        entry.id = "changed"
 
 
 def test_every_entry_carries_strings() -> None:

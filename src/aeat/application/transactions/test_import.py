@@ -354,8 +354,9 @@ def test_import_returns_strict_frozen_result() -> None:
         existing_catalogue=TransactionCatalogue(),
     )
 
+    attr = "imported_count"
     with pytest.raises(Exception, match="frozen"):
-        result.imported_count = 99
+        setattr(result, attr, 99)
 
 
 def test_import_diagnostics_is_tuple_not_list() -> None:

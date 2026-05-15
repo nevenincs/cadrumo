@@ -23,9 +23,10 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from types import MappingProxyType
-from typing import Any, Literal, Self
+from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator, model_validator
+from pydantic_core import core_schema
 
 from .._identifiers import canonical_decimal_string
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
@@ -60,7 +61,7 @@ def derive_transaction_id(raw: RawTransaction) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def _json_default(value: Any) -> str:
+def _json_default(value: object) -> str:
     """Serialize strict-python values into JSON-mode inputs for validation."""
     return str(value)
 
@@ -70,7 +71,7 @@ def _parse_datetime(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def _coerce_history(raw: Any) -> tuple[Any, ...]:
+def _coerce_history(raw: object) -> tuple[object, ...]:
     """Freeze an inbound history sequence into a tuple; leave items for pydantic to validate."""
     if isinstance(raw, tuple):
         return raw
@@ -134,7 +135,7 @@ def _validate_business_pct_coupling(
         raise TransactionValidationError("business_pct must be None unless classification is MIXED")
 
 
-def _coerce_identifier_tuple(raw: Any) -> tuple[str, ...]:
+def _coerce_identifier_tuple(raw: object) -> tuple[object, ...]:
     """Freeze inbound identifier sequences while rejecting scalar strings."""
 
     if isinstance(raw, tuple):
@@ -203,11 +204,11 @@ class ClassificationHistoryEntry(BaseModel):
     category_id: str | None = None
     notes: str = ""
     confidence: Decimal | None = None
-    provenance: dict[str, Any] | None = None
+    provenance: dict[str, object] | None = None
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_inbound(cls, data: Any) -> Any:
+    def _coerce_inbound(cls, data: object) -> object:
         """Parse JSON-mode strings back into strict Python types on load."""
         if isinstance(data, cls):
             return data
@@ -297,7 +298,7 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
 
     @field_validator("linked_at", mode="before")
     @classmethod
-    def _parse_linked_at(cls, value: Any) -> datetime:
+    def _parse_linked_at(cls, value: object) -> datetime:
         if isinstance(value, str):
             value = _parse_datetime(value)
         if not isinstance(value, datetime):
@@ -328,7 +329,7 @@ class TransactionEditLineageEntry(BaseModel):
 
     @field_validator("edited_at", mode="before")
     @classmethod
-    def _parse_edited_at(cls, value: Any) -> datetime:
+    def _parse_edited_at(cls, value: object) -> datetime:
         if isinstance(value, str):
             value = _parse_datetime(value)
         if not isinstance(value, datetime):
@@ -351,7 +352,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_lifecycle_states(cls, data: Any) -> Any:
+    def _coerce_lifecycle_states(cls, data: object) -> object:
         if not isinstance(data, Mapping):
             return data
         payload = dict(data)
@@ -377,7 +378,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
 
     @field_validator("changed_at", mode="before")
     @classmethod
-    def _parse_changed_at(cls, value: Any) -> datetime:
+    def _parse_changed_at(cls, value: object) -> datetime:
         if isinstance(value, str):
             value = _parse_datetime(value)
         if not isinstance(value, datetime):
@@ -416,7 +417,7 @@ class SplitLineage(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_role(cls, data: Any) -> Any:
+    def _coerce_role(cls, data: object) -> object:
         if not isinstance(data, Mapping):
             return data
         payload = dict(data)
@@ -430,16 +431,14 @@ class SplitLineage(BaseModel):
         try:
             int(value, 16)
         except ValueError as exc:
-            raise TransactionValidationError(
-                "split_group_id must be a 64-character lowercase hex digest"
-            ) from exc
+            raise TransactionValidationError("split_group_id must be a 64-character lowercase hex digest") from exc
         if value != value.lower():
             raise TransactionValidationError("split_group_id must be lowercase")
         return value
 
     @field_validator("sibling_transaction_ids", mode="before")
     @classmethod
-    def _coerce_siblings(cls, value: Any) -> tuple[str, ...]:
+    def _coerce_siblings(cls, value: object) -> tuple[object, ...]:
         if isinstance(value, tuple):
             return value
         if isinstance(value, Sequence) and not isinstance(value, str | bytes):
@@ -455,9 +454,7 @@ class SplitLineage(BaseModel):
             if not trimmed:
                 raise TransactionValidationError("sibling_transaction_ids entries must not be blank")
             if len(trimmed) != 64:
-                raise TransactionValidationError(
-                    "sibling_transaction_ids entries must be 64-character SHA-256 digests"
-                )
+                raise TransactionValidationError("sibling_transaction_ids entries must be 64-character SHA-256 digests")
             try:
                 int(trimmed, 16)
             except ValueError as exc:
@@ -474,9 +471,7 @@ class SplitLineage(BaseModel):
     @model_validator(mode="after")
     def _require_siblings_for_lineage(self) -> Self:
         if not self.sibling_transaction_ids:
-            raise TransactionValidationError(
-                "split_lineage must reference at least one sibling transaction id"
-            )
+            raise TransactionValidationError("split_lineage must reference at least one sibling transaction id")
         return self
 
 
@@ -598,13 +593,16 @@ class Transaction(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _enforce_derived_transaction_id(cls, data: Any) -> Any:
+    def _enforce_derived_transaction_id(cls, data: object) -> object:
         """Compute or validate ``transaction_id`` from the wrapped raw record."""
         if isinstance(data, cls):
             return data
-        if not isinstance(data, Mapping) or "raw" not in data:
+        if not isinstance(data, Mapping):
             return data
-        raw = data["raw"]
+        payload = dict(data)
+        if "raw" not in payload:
+            return data
+        raw = payload["raw"]
         if isinstance(raw, RawTransaction):
             raw_transaction = raw
         else:
@@ -615,10 +613,9 @@ class Transaction(BaseModel):
                     json.dumps(raw, default=_json_default, ensure_ascii=True)
                 )
         derived = derive_transaction_id(raw_transaction)
-        existing = data.get("transaction_id")
+        existing = payload.get("transaction_id")
         if existing is not None and str(existing).strip() != derived:
             raise TransactionValidationError("transaction_id must match the stable hash derived from raw")
-        payload = dict(data)
         payload["raw"] = raw_transaction
         if isinstance(payload.get("direction"), str):
             payload["direction"] = TransactionDirection(payload["direction"])
@@ -684,10 +681,10 @@ class Transaction(BaseModel):
 
     @field_validator("taxable_base", "iva_rate", "iva_amount")
     @classmethod
-    def _validate_tax_amounts(cls, value: Decimal | None, info: Any) -> Decimal | None:
+    def _validate_tax_amounts(cls, value: Decimal | None, info: core_schema.ValidationInfo) -> Decimal | None:
         """Reject negative tax substrate values."""
 
-        return _validate_non_negative_decimal(value, field_name=info.field_name)
+        return _validate_non_negative_decimal(value, field_name=info.field_name or "")
 
     @field_validator("notes", "classification_reason")
     @classmethod
@@ -755,7 +752,7 @@ class TransactionCatalogue(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_catalogue_input(cls, data: Any) -> Any:
+    def _coerce_catalogue_input(cls, data: object) -> object:
         """Accept either a bare mapping or an iterable of transactions."""
         if isinstance(data, cls):
             return data
@@ -796,7 +793,7 @@ class TransactionCatalogue(BaseModel):
         return dict(value)
 
     @classmethod
-    def from_transactions(cls, transactions: Iterable[Transaction | Mapping[str, Any]]) -> Self:
+    def from_transactions(cls, transactions: Iterable[Transaction | Mapping[str, object]]) -> Self:
         """Build a catalogue from an iterable of transactions.
 
         Args:
@@ -807,7 +804,7 @@ class TransactionCatalogue(BaseModel):
         """
         return cls.model_validate(tuple(transactions))
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self) -> Iterator[Transaction]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over catalogue transactions."""
         return iter(self.transactions.values())
 

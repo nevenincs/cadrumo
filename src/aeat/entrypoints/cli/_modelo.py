@@ -8,7 +8,7 @@ from contextlib import suppress
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 import typer
 
@@ -44,7 +44,7 @@ from ...application.modelo import (
 )
 from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
-from ...domain.calculations.registry._errors import RegistryValidationError, RegistrySnapshotError
+from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._queries import parse_modelo_period
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import FilingRecord
@@ -334,9 +334,7 @@ def bindings_list(
                     )
                 )
             else:
-                report = _run_query(
-                    lambda code=target: service.bindings(code, period=period, as_of=_as_of(as_of))
-                )
+                report = _run_query(lambda code=target: service.bindings(code, period=period, as_of=_as_of(as_of)))
         except Exception:
             if modelo is not None:
                 raise
@@ -617,7 +615,7 @@ work_app = typer.Typer(
 app.add_typer(work_app, name="work")
 
 
-def _work_unit_payload(unit: WorkUnit) -> dict[str, Any]:
+def _work_unit_payload(unit: WorkUnit) -> dict[str, object]:
     return {
         "work_unit_id": unit.work_unit_id,
         "bucket_id": unit.bucket_id,
@@ -847,7 +845,7 @@ filing_record_app = typer.Typer(
 app.add_typer(filing_record_app, name="filing-record")
 
 
-def _calculation_revision_payload(rev: CalculationRevision) -> dict[str, Any]:
+def _calculation_revision_payload(rev: CalculationRevision) -> dict[str, object]:
     return {
         "calculation_revision_id": rev.calculation_revision_id,
         "work_unit_id": rev.work_unit_id,
@@ -886,7 +884,7 @@ def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
     return lines
 
 
-def _filing_record_payload(record: FilingRecord) -> dict[str, Any]:
+def _filing_record_payload(record: FilingRecord) -> dict[str, object]:
     return {
         "filing_record_id": record.filing_record_id,
         "work_unit_id": record.work_unit_id,
@@ -1121,7 +1119,7 @@ def work_history(
     _emit(ctx, payload, lines)
 
 
-def _verification_report_payload(report: VerificationReport) -> dict[str, Any]:
+def _verification_report_payload(report: VerificationReport) -> dict[str, object]:
     return {
         "verification_report_id": report.verification_report_id,
         "calculation_revision_id": report.calculation_revision_id,
@@ -1921,9 +1919,7 @@ def modelo_history(
     }
     lines = [f"modelo\t{modelo}", f"count\t{len(matches)}"]
     for e in matches:
-        lines.append(
-            f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_id}\t{e.actor}"
-        )
+        lines.append(f"{e.occurred_at.isoformat()}\t{e.event_type.value}\t{e.object_id}\t{e.actor}")
     _emit(ctx, payload, lines)
 
 

@@ -64,9 +64,7 @@ class PortalsService:
     """
 
     def __init__(self, registry: dict[Portal, PortalMetadata] | None = None) -> None:
-        self._registry: dict[Portal, PortalMetadata] = dict(
-            registry if registry is not None else PORTAL_REGISTRY
-        )
+        self._registry: dict[Portal, PortalMetadata] = dict(registry if registry is not None else PORTAL_REGISTRY)
 
     def list_portals(
         self,
@@ -88,11 +86,7 @@ class PortalsService:
         if category is not None:
             entries = (e for e in entries if e.category is category)
         if modelo is not None:
-            entries = (
-                e
-                for e in entries
-                if hasattr(e, "modelo_codes") and modelo in (e.modelo_codes or ())
-            )
+            entries = (e for e in entries if modelo in getattr(e, "modelo_codes", ()))
         rows = tuple(_portal_to_row(metadata) for metadata in entries)
         return tuple(sorted(rows, key=lambda row: row.portal.value))
 

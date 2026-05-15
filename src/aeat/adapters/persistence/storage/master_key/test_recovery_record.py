@@ -76,12 +76,14 @@ def test_rejects_empty_hkdf_info() -> None:
 
 def test_rejects_unknown_keys() -> None:
     with pytest.raises(ValidationError):
-        RecoveryRecord(
-            wrapped_dek_b64=_b64(32),
-            nonce_b64=_b64(12),
-            tag_b64=_b64(16),
-            mnemonic_word_count=24,
-            hkdf_info="aeat-recovery-v1",
-            created_at=datetime.now(tz=UTC),
-            unexpected="nope",  # ty: ignore[unknown-argument]
+        RecoveryRecord.model_validate(
+            {
+                "wrapped_dek_b64": _b64(32),
+                "nonce_b64": _b64(12),
+                "tag_b64": _b64(16),
+                "mnemonic_word_count": 24,
+                "hkdf_info": "aeat-recovery-v1",
+                "created_at": datetime.now(tz=UTC),
+                "unexpected": "nope",
+            }
         )

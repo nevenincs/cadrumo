@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import cast
 
 import pytest
 
@@ -198,7 +199,7 @@ def test_committed_modelo_720_type_1_bindings_target_declarante_record() -> None
         bindings = _layout_bindings_for(revision, "type_1")
         assert bindings, revision.id
         # Type 1 starts at position 1 (TIPO DE REGISTRO constant) per Orden HAP/72/2013 anexo
-        first_offset = min(int(b.selector["offset"]) for b in bindings)
+        first_offset = min(int(cast(int, b.selector["offset"])) for b in bindings)
         assert first_offset == 1, first_offset
 
 
@@ -207,10 +208,10 @@ def test_committed_modelo_720_type_2_bindings_target_detalle_record() -> None:
     for revision in modelo.revisions.values():
         bindings = _layout_bindings_for(revision, "type_2")
         assert bindings, revision.id
-        first_offset = min(int(b.selector["offset"]) for b in bindings)
+        first_offset = min(int(cast(int, b.selector["offset"])) for b in bindings)
         assert first_offset == 1, first_offset
         # Type 2 closes at position 480 (PORCENTAJE DE PARTICIPACIÓN, last field of detalle record)
-        ranges = sorted((int(b.selector["offset"]), int(b.selector["length"])) for b in bindings)
+        ranges = sorted((int(cast(int, b.selector["offset"])), int(cast(int, b.selector["length"]))) for b in bindings)
         last_offset, last_length = ranges[-1]
         assert last_offset + last_length - 1 == 480, last_offset + last_length - 1
 

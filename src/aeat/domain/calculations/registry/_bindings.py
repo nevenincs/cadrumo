@@ -5,11 +5,10 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
-from ...renta import RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS, RentaDeductibleExpenseObservation
 from ...vat import (
     EUMemberState,
     InvoiceDirection,
@@ -23,6 +22,7 @@ from ._schema import DataBindingDefinition, ModeloRevision
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
 
 __all__ = [
+    "CasillaObservation",
     "DataBindingDefinition",
     "InvoiceObservation",
     "InvoiceObservationRequirement",
@@ -30,6 +30,7 @@ __all__ = [
     "OssIossLedgerObservation",
     "RegistryFilingObservation",
     "RegistryFilingObservationRequirement",
+    "RentaExpenseObservationProtocol",
     "invoice_binding_requirements",
     "previous_filing_observation_requirements",
     "resolve_bound_casilla_inputs",
@@ -58,25 +59,59 @@ _InvoiceRowField = Literal[
 ]
 
 
+class CasillaObservation(BaseModel):
+    """One typed casilla observation emitted by the formula runtime.
+
+    Carries the casilla id + final Decimal value plus optional formula
+    provenance: when ``formula_id`` is set, the runtime computed this
+    casilla and ``operand_refs`` / ``operand_values`` trace its inputs;
+    when ``formula_id`` is ``None`` the casilla was supplied as input
+    (manual / bound) and the trace fields are empty.
+
+    Used as the primary storage for :class:`RegistryCalculationResult`;
+    legacy ``values`` and ``entries`` views derive from it.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    casilla_id: str = Field(min_length=1)
+    value: Decimal
+    formula_id: str | None = None
+    operand_refs: tuple[str, ...] = ()
+    operand_values: tuple[Decimal, ...] = ()
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
+
+    @field_validator("value")
+    @classmethod
+    def _decimal_value(cls, value: Decimal) -> Decimal:
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError("casilla observation value must be Decimal")
+        return value
+
+
 class RegistryFilingObservation(BaseModel):
-    """Observed casilla values from a filed declaration."""
+    """Observed casilla values from a filed declaration.
+
+    Primary storage is ``observations`` — a typed tuple of
+    :class:`CasillaObservation` carrying full formula provenance
+    (defect T-01 fix). The legacy ``casilla_values`` mapping is
+    derived on demand via a computed field so existing read-callers
+    continue to work without modification.
+    """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=8)
-    casilla_values: Mapping[str, Decimal]
+    observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
 
-    @field_validator("casilla_values")
-    @classmethod
-    def _values_are_decimal(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
-        for casilla_id, casilla_value in value.items():
-            if not casilla_id:
-                raise RegistryValidationError("observed casilla id must be non-empty")
-            if isinstance(casilla_value, bool) or not isinstance(casilla_value, Decimal):
-                raise RegistryValidationError(f"observed casilla {casilla_id!r} must be a Decimal")
-        return value
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def casilla_values(self) -> Mapping[str, Decimal]:
+        """Compat view: casilla_id → Decimal derived from typed observations."""
+        return {obs.casilla_id: obs.value for obs in self.observations}
 
 
 class RegistryFilingObservationRequirement(BaseModel):
@@ -139,6 +174,11 @@ def previous_filing_observation_requirements(
     for binding in revision.bindings:
         if binding.source != "previous_filing":
             continue
+        if not _is_direct_previous_filing_binding(binding):
+            # Relation-driven bindings (no source_casillas in the
+            # selector) are resolved by the relation system and do
+            # NOT generate direct observation requirements.
+            continue
         selector = _previous_filing_selector(binding)
         expected_year = filing_year + selector.filing_year_delta
         for required_period in selector.required_periods:
@@ -172,6 +212,12 @@ def resolve_previous_filing_binding_values(
     for binding in revision.bindings:
         if binding.source != "previous_filing":
             continue
+        if not _is_direct_previous_filing_binding(binding):
+            # Relation-driven bindings are resolved by the relation
+            # system; skip them here so a workbook that only goes
+            # through the relation path does not fail with a missing
+            # source_casillas error.
+            continue
         selector = _previous_filing_selector(binding)
         expected_year = filing_year + selector.filing_year_delta
         values = []
@@ -198,6 +244,19 @@ def resolve_previous_filing_binding_values(
                 values.append(casilla_value)
         resolved[binding.id] = _aggregate_previous_filing_binding(binding, values)
     return resolved
+
+
+def _selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
+    """Return the binding selector as a plain dict, stripping the injected `source` key.
+
+    Handles two cases:
+    - TOML-loaded bindings: selector is already a typed pydantic model; use model_dump().
+    - Test-constructed bindings via model_copy(update=...): selector may be a raw dict.
+    """
+    selector = binding.selector
+    if isinstance(selector, dict):
+        return {k: v for k, v in selector.items() if k != "source"}
+    return selector.model_dump(exclude={"source"}, exclude_none=True)
 
 
 class _PreviousFilingSelector(BaseModel):
@@ -247,9 +306,28 @@ class _PreviousFilingSelector(BaseModel):
 
 def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousFilingSelector:
     try:
-        return _PreviousFilingSelector.model_validate(binding.selector)
+        return _PreviousFilingSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed previous-filing selector") from exc
+
+
+def _is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
+    """Return ``True`` when the binding declares a direct observation selector.
+
+    A direct previous-filing binding declares ``source_casillas`` plus a
+    period anchor (``period`` or ``source_periods``) in its selector and
+    is consumed by :func:`resolve_previous_filing_binding_values`.
+
+    A binding lacking ``source_casillas`` is relation-driven: it is the
+    target of one or more :class:`RelationDefinition` records that
+    supply the source casilla + period at resolve time. The direct
+    resolver skips these to avoid spurious malformed-selector errors.
+    """
+
+    selector = binding.selector
+    if isinstance(selector, dict):
+        return "source_casillas" in selector
+    return getattr(selector, "source_casillas", None) is not None
 
 
 def _aggregate_previous_filing_binding(binding: DataBindingDefinition, values: list[Decimal]) -> Decimal:
@@ -392,7 +470,7 @@ class _InvoiceSelector(BaseModel):
 
 def _invoice_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
     try:
-        return _InvoiceSelector.model_validate(binding.selector)
+        return _InvoiceSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed invoice selector") from exc
 
@@ -876,7 +954,7 @@ class _OssIossLedgerSelector(BaseModel):
 def _ledger_oss_selector(binding: DataBindingDefinition) -> _OssIossLedgerSelector:
     """Validate and parse a binding selector into a typed OSS / IOSS selector."""
     try:
-        return _OssIossLedgerSelector.model_validate(dict(binding.selector))
+        return _OssIossLedgerSelector.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_oss_aggregation selector") from exc
 
@@ -1039,7 +1117,7 @@ class _IvaLedgerSelector(BaseModel):
 def _iva_ledger_selector(binding: DataBindingDefinition) -> _IvaLedgerSelector:
     """Validate and parse a binding selector into a typed IVA selector."""
     try:
-        return _IvaLedgerSelector.model_validate(dict(binding.selector))
+        return _IvaLedgerSelector.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed ledger_iva_aggregation selector") from exc
 
@@ -1123,7 +1201,42 @@ def resolve_ledger_iva_aggregation_binding_values(
 # evaluated deductible amounts, so proportionality, legal category eligibility,
 # invoice reconciliation, and period/date filtering stay outside the registry
 # formula runtime.
+#
+# The registry accesses only four attributes on each observation. A Protocol
+# avoids a cross-domain import (domain.calculations -> domain.renta) that
+# violated the hexagonal boundary (linkage-design-audit F7).
 # ---------------------------------------------------------------------------
+
+# Casilla IDs covered by the first Renta expense slice (Modelo 100, period 0A).
+# These must stay in sync with the binding selectors in the TOML; they are
+# validated at registry load time so mismatches surface before any calculation.
+_RENTA_100_FIRST_SLICE_CASILLAS: frozenset[str] = frozenset({"0186", "0192", "0199", "0203"})
+
+
+class RentaExpenseObservationProtocol(Protocol):
+    """Structural protocol for first-slice Renta expense observations.
+
+    The registry only needs these four attributes to resolve
+    ``ledger_renta_expense_aggregation`` bindings; the full
+    :class:`~aeat.domain.renta.RentaDeductibleExpenseObservation` satisfies
+    this protocol without any explicit declaration.
+
+    Properties are declared read-only so that Literal-typed concrete attributes
+    (e.g. ``modelo: Literal["100"]``) satisfy the protocol under strict
+    covariant checking.
+    """
+
+    @property
+    def modelo(self) -> str: ...
+
+    @property
+    def period(self) -> str: ...
+
+    @property
+    def target_casilla(self) -> str: ...
+
+    @property
+    def deductible_amount(self) -> Decimal: ...
 
 
 class _RentaLedgerExpenseSelector(BaseModel):
@@ -1139,7 +1252,7 @@ class _RentaLedgerExpenseSelector(BaseModel):
 
 def _renta_ledger_expense_selector(binding: DataBindingDefinition) -> _RentaLedgerExpenseSelector:
     try:
-        return _RentaLedgerExpenseSelector.model_validate(dict(binding.selector))
+        return _RentaLedgerExpenseSelector.model_validate(_selector_as_dict(binding))
     except (ValueError, TypeError) as exc:
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_renta_expense_aggregation selector"
@@ -1152,8 +1265,7 @@ def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBi
     if binding.source != "ledger_renta_expense_aggregation":
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_expense_aggregation source")
     selector = _renta_ledger_expense_selector(binding)
-    allowed_casillas = set(RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.values())
-    if selector.target_casilla not in allowed_casillas:
+    if selector.target_casilla not in _RENTA_100_FIRST_SLICE_CASILLAS:
         raise RegistryValidationError(
             f"binding {binding.id!r} target_casilla {selector.target_casilla!r} "
             "is outside the first Modelo 100 Renta ledger expense slice"
@@ -1172,7 +1284,7 @@ def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBi
 
 def resolve_ledger_renta_expense_aggregation_binding_values(
     revision: ModeloRevision,
-    observations: Iterable[RentaDeductibleExpenseObservation],
+    observations: Iterable[RentaExpenseObservationProtocol],
 ) -> dict[str, Decimal]:
     """Resolve every ``ledger_renta_expense_aggregation`` binding on ``revision``."""
 
@@ -1190,4 +1302,1010 @@ def resolve_ledger_renta_expense_aggregation_binding_values(
             and observation.target_casilla == selector.target_casilla
         ]
         resolved[binding.id] = sum((observation.deductible_amount for observation in matched), Decimal("0"))
+    return resolved
+
+
+COUNTERPART_BINDING_SOURCE_KINDS: frozenset[str] = frozenset(
+    {"invoice", "ledger_transaction", "purchase_invoice_evidence", "payable_invoice", "collectible_invoice"}
+)
+
+
+class CounterpartAggregationObservation(BaseModel):
+    """One factual line from the user's counterpart aggregation source.
+
+    Mirrors :class:`InvoiceObservation` plus a ``source_kind`` field that is
+    matched against the declared counterpart-source binding.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_kind: str = Field(default="ledger_transaction", min_length=1, max_length=64)
+    source_id: str = Field(min_length=1, max_length=128)
+    party_tax_id: str = Field(min_length=1, max_length=64)
+    country_code: str = Field(min_length=2, max_length=2)
+    transaction_date: date
+    base_amount: Decimal
+    intracommunity_clave: str | None = Field(default=None, max_length=2)
+    is_rectification: bool = False
+    rectified_year: int | None = Field(default=None, ge=2000, le=2099)
+    rectified_period: str | None = Field(default=None, max_length=8)
+    rectified_base_previous: Decimal | None = None
+    party_legal_name: str | None = Field(default=None, max_length=200)
+
+    @field_validator("country_code")
+    @classmethod
+    def _country_code_uppercase(cls, value: str) -> str:
+        if value != value.upper():
+            raise RegistryValidationError("country_code must be uppercase")
+        if not value.isalpha():
+            raise RegistryValidationError("country_code must be alphabetic")
+        return value
+
+    @field_validator("intracommunity_clave")
+    @classmethod
+    def _clave_uppercase(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if value != value.upper():
+            raise RegistryValidationError("intracommunity_clave must be uppercase")
+        if value not in {"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"}:
+            raise RegistryValidationError(f"intracommunity_clave {value!r} is not an AEAT clave de operacion")
+        return value
+
+    @field_validator("base_amount", "rectified_base_previous")
+    @classmethod
+    def _decimal_amount(cls, value: Decimal | None) -> Decimal | None:
+        if value is None:
+            return None
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError("counterpart amounts must be Decimal")
+        return value
+
+    @model_validator(mode="after")
+    def _validate_rectification(self) -> CounterpartAggregationObservation:
+        if self.is_rectification:
+            if self.rectified_year is None or self.rectified_period is None:
+                raise RegistryValidationError(
+                    "rectification observation must declare rectified_year and rectified_period"
+                )
+            if self.rectified_base_previous is None:
+                raise RegistryValidationError("rectification observation must declare rectified_base_previous")
+        else:
+            if self.rectified_year is not None or self.rectified_period is not None:
+                raise RegistryValidationError("non-rectification observation must not declare rectified_year/period")
+            if self.rectified_base_previous is not None:
+                raise RegistryValidationError("non-rectification observation must not declare rectified_base_previous")
+        return self
+
+
+class CounterpartObservationRequirement(BaseModel):
+    """Counterpart slice declared by one or more counterpart-source bindings."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    binding_ids: tuple[str, ...] = Field(min_length=1)
+    source_kinds: tuple[str, ...] = Field(min_length=1)
+    claves: tuple[str, ...] = ()
+    rectification_scope: _RectificationScope = "any"
+
+    @field_validator("binding_ids", "claves", "source_kinds")
+    @classmethod
+    def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("counterpart requirement tuple entries must be unique")
+        return value
+
+
+_COUNTERPART_FACTS = _INVOICE_FACTS
+
+
+def _validated_counterpart_selector(binding: DataBindingDefinition) -> _InvoiceSelector:
+    """Validate a counterpart-source binding selector with counterpart-flavoured errors."""
+
+    selector = _invoice_selector(binding)
+    if selector.fact not in _COUNTERPART_FACTS:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} declares unsupported counterpart aggregation fact {selector.fact!r}"
+        )
+    op = str((binding.aggregation or {}).get("op", "sum"))
+    if selector.fact == "operator_count" and op != "count_distinct":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'"
+        )
+    if selector.fact in {"base_sum", "rectified_base_delta_sum"} and op != "sum":
+        raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
+    if selector.fact == "rectified_base_delta_sum" and selector.rectification_scope != "only_rectifications":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} fact 'rectified_base_delta_sum' requires rectification_scope 'only_rectifications'"
+        )
+    if selector.fact == "row_field":
+        if op != "rows":
+            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
+        if selector.row_field is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
+            )
+        if selector.grouping is None:
+            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
+        if selector.row_field in _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS:
+            if selector.grouping != "operator_clave_period":
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} row_field {selector.row_field!r} requires grouping 'operator_clave_period'"
+                )
+            if selector.rectification_scope != "only_rectifications":
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} row_field {selector.row_field!r} "
+                    f"requires rectification_scope 'only_rectifications'"
+                )
+        if selector.grouping == "operator_clave_period" and selector.rectification_scope != "only_rectifications":
+            raise RegistryValidationError(
+                f"binding {binding.id!r} grouping 'operator_clave_period' requires "
+                f"rectification_scope 'only_rectifications'"
+            )
+    return selector
+
+
+def _counterpart_to_invoice(observation: CounterpartAggregationObservation) -> InvoiceObservation:
+    return InvoiceObservation(
+        invoice_id=observation.source_id,
+        party_tax_id=observation.party_tax_id,
+        country_code=observation.country_code,
+        transaction_date=observation.transaction_date,
+        base_amount=observation.base_amount,
+        vat_regime=None,
+        intracommunity_clave=observation.intracommunity_clave,
+        is_rectification=observation.is_rectification,
+        rectified_year=observation.rectified_year,
+        rectified_period=observation.rectified_period,
+        rectified_base_previous=observation.rectified_base_previous,
+        party_legal_name=observation.party_legal_name,
+    )
+
+
+def counterpart_binding_requirements(
+    revision: ModeloRevision,
+) -> tuple[CounterpartObservationRequirement, ...]:
+    """Return counterpart slices needed by ``revision``'s counterpart bindings."""
+
+    grouped: dict[tuple[tuple[str, ...], tuple[str, ...], _RectificationScope], set[str]] = {}
+    for binding in revision.bindings:
+        if binding.source not in COUNTERPART_BINDING_SOURCE_KINDS:
+            continue
+        selector = _validated_counterpart_selector(binding)
+        source_kinds = (binding.source,)
+        key = (source_kinds, tuple(sorted(selector.claves)), selector.rectification_scope)
+        grouped.setdefault(key, set()).add(binding.id)
+    requirements: list[CounterpartObservationRequirement] = []
+    for (source_kinds, claves, scope), binding_ids in sorted(
+        grouped.items(),
+        key=lambda item: (item[0][0], item[0][1], item[0][2]),
+    ):
+        requirements.append(
+            CounterpartObservationRequirement(
+                binding_ids=tuple(sorted(binding_ids)),
+                source_kinds=source_kinds,
+                claves=claves,
+                rectification_scope=scope,
+            )
+        )
+    return tuple(requirements)
+
+
+def resolve_counterpart_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[CounterpartAggregationObservation],
+) -> dict[str, Decimal]:
+    """Resolve scalar counterpart-source bindings into Decimal aggregates."""
+
+    available = tuple(observations)
+    resolved: dict[str, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source not in COUNTERPART_BINDING_SOURCE_KINDS:
+            continue
+        selector = _validated_counterpart_selector(binding)
+        if selector.fact == "row_field":
+            continue
+        matched = tuple(
+            _counterpart_to_invoice(observation)
+            for observation in available
+            if binding.source == "invoice" or observation.source_kind == binding.source
+        )
+        scope_filtered = tuple(_filter_invoice_observations(matched, selector))
+        resolved[binding.id] = _aggregate_invoice_binding(binding, selector, scope_filtered)
+    return resolved
+
+
+def resolve_counterpart_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[CounterpartAggregationObservation],
+) -> dict[tuple[str, int], Decimal | str]:
+    """Resolve row-producer counterpart-source bindings into per-row indexed values."""
+
+    available = tuple(observations)
+    resolved: dict[tuple[str, int], Decimal | str] = {}
+    cohorts: dict[
+        tuple[str, _InvoiceGrouping, _RectificationScope, tuple[str, ...]],
+        list[tuple[DataBindingDefinition, _InvoiceSelector]],
+    ] = {}
+    for binding in revision.bindings:
+        if binding.source not in COUNTERPART_BINDING_SOURCE_KINDS:
+            continue
+        selector = _validated_counterpart_selector(binding)
+        if selector.fact != "row_field":
+            continue
+        assert selector.grouping is not None
+        cohort_key = (
+            binding.source,
+            selector.grouping,
+            selector.rectification_scope,
+            tuple(sorted(selector.claves)),
+        )
+        cohorts.setdefault(cohort_key, []).append((binding, selector))
+    for cohort_key, members in cohorts.items():
+        source_kind, grouping, _, _ = cohort_key
+        _, sample_selector = members[0]
+        matched = tuple(
+            _counterpart_to_invoice(observation)
+            for observation in available
+            if source_kind == "invoice" or observation.source_kind == source_kind
+        )
+        scope_filtered = tuple(_filter_invoice_observations(matched, sample_selector))
+        rows = _build_invoice_rows(grouping, scope_filtered)
+        for binding, selector in members:
+            assert selector.row_field is not None
+            for row_index, row in enumerate(rows, start=1):
+                value = row.get(selector.row_field)
+                if value is None:
+                    raise RegistryValidationError(
+                        f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
+                        f"for grouping {grouping!r}"
+                    )
+                resolved[(binding.id, row_index)] = value
+    return resolved
+
+
+_WithholdingRowField = Literal[
+    "perceptor_tax_id",
+    "perceptor_legal_name",
+    "country_code",
+    "clave",
+    "subclave",
+    "percibido_dinerario",
+    "percibido_especie",
+    "retencion_practicada",
+    "ingreso_a_cuenta",
+]
+_WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
+_WITHHOLDING_FACTS = frozenset({"row_field", "perceptor_count", "percibido_sum", "retencion_sum"})
+
+
+class WithholdingObservation(BaseModel):
+    """Per-perceptor retencion / ingreso-a-cuenta observation for modelo 190 / 193."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_id: str = Field(min_length=1, max_length=128)
+    perceptor_tax_id: str = Field(min_length=1, max_length=64)
+    perceptor_legal_name: str = Field(default="", max_length=200)
+    country_code: str = Field(default="ES", min_length=2, max_length=2)
+    transaction_date: date
+    clave: str = Field(min_length=1, max_length=2)
+    subclave: str = Field(default="", max_length=4)
+    percibido_dinerario: Decimal = Decimal("0")
+    percibido_especie: Decimal = Decimal("0")
+    retencion_practicada: Decimal = Decimal("0")
+    ingreso_a_cuenta: Decimal = Decimal("0")
+
+    @field_validator("country_code")
+    @classmethod
+    def _country_code_uppercase(cls, value: str) -> str:
+        if value != value.upper() or not value.isalpha():
+            raise RegistryValidationError("country_code must be uppercase alphabetic")
+        return value
+
+    @field_validator("clave")
+    @classmethod
+    def _clave_uppercase(cls, value: str) -> str:
+        if value != value.upper():
+            raise RegistryValidationError("withholding clave must be uppercase")
+        return value
+
+    @field_validator("percibido_dinerario", "percibido_especie", "retencion_practicada", "ingreso_a_cuenta")
+    @classmethod
+    def _decimal_amount(cls, value: Decimal) -> Decimal:
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError("withholding amounts must be Decimal")
+        if value < Decimal("0"):
+            raise RegistryValidationError("withholding amounts must be non-negative")
+        return value
+
+
+class WithholdingObservationRequirement(BaseModel):
+    """Withholding-source slice declared by one or more withholding bindings."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    binding_ids: tuple[str, ...] = Field(min_length=1)
+    claves: tuple[str, ...] = ()
+
+    @field_validator("binding_ids", "claves")
+    @classmethod
+    def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("withholding requirement tuple entries must be unique")
+        return value
+
+
+class _WithholdingSelector(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    fact: str = Field(min_length=1, max_length=64)
+    claves: tuple[str, ...] = ()
+    row_field: _WithholdingRowField | None = None
+    grouping: _WithholdingGrouping | None = None
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+def _withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelector:
+    try:
+        return _WithholdingSelector.model_validate(binding.selector)
+    except ValueError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed withholding selector") from exc
+
+
+def _validated_withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelector:
+    selector = _withholding_selector(binding)
+    if selector.fact not in _WITHHOLDING_FACTS:
+        raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact {selector.fact!r}")
+    op = str((binding.aggregation or {}).get("op", "sum"))
+    if selector.fact == "perceptor_count" and op != "count_distinct":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} fact 'perceptor_count' requires aggregation op 'count_distinct'"
+        )
+    if selector.fact in {"percibido_sum", "retencion_sum"} and op != "sum":
+        raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
+    if selector.fact == "row_field":
+        if op != "rows":
+            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
+        if selector.row_field is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
+            )
+        if selector.grouping is None:
+            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
+    return selector
+
+
+def withholding_binding_requirements(
+    revision: ModeloRevision,
+) -> tuple[WithholdingObservationRequirement, ...]:
+    """Return withholding slices needed by ``revision``'s withholding bindings."""
+
+    grouped: dict[tuple[str, ...], set[str]] = {}
+    for binding in revision.bindings:
+        if binding.source != "withholding":
+            continue
+        selector = _validated_withholding_selector(binding)
+        key = tuple(sorted(selector.claves))
+        grouped.setdefault(key, set()).add(binding.id)
+    return tuple(
+        WithholdingObservationRequirement(
+            binding_ids=tuple(sorted(binding_ids)),
+            claves=claves,
+        )
+        for claves, binding_ids in sorted(grouped.items())
+    )
+
+
+def _filter_withholding_observations(
+    observations: Iterable[WithholdingObservation],
+    selector: _WithholdingSelector,
+) -> Iterable[WithholdingObservation]:
+    clave_filter = set(selector.claves)
+    for observation in observations:
+        if clave_filter and observation.clave not in clave_filter:
+            continue
+        yield observation
+
+
+def resolve_withholding_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[WithholdingObservation],
+) -> dict[str, Decimal]:
+    """Resolve scalar withholding-source bindings into Decimal aggregates."""
+
+    available = tuple(observations)
+    resolved: dict[str, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source != "withholding":
+            continue
+        selector = _validated_withholding_selector(binding)
+        if selector.fact == "row_field":
+            continue
+        scope_filtered = tuple(_filter_withholding_observations(available, selector))
+        if selector.fact == "perceptor_count":
+            resolved[binding.id] = Decimal(len({obs.perceptor_tax_id for obs in scope_filtered}))
+        elif selector.fact == "percibido_sum":
+            resolved[binding.id] = sum(
+                (obs.percibido_dinerario + obs.percibido_especie for obs in scope_filtered),
+                Decimal("0"),
+            )
+        elif selector.fact == "retencion_sum":
+            resolved[binding.id] = sum(
+                (obs.retencion_practicada + obs.ingreso_a_cuenta for obs in scope_filtered),
+                Decimal("0"),
+            )
+        else:  # pragma: no cover — guarded by validator
+            raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact")
+    return resolved
+
+
+def resolve_withholding_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[WithholdingObservation],
+) -> dict[tuple[str, int], Decimal | str]:
+    """Resolve row-producer withholding bindings into per-row indexed values."""
+
+    available = tuple(observations)
+    resolved: dict[tuple[str, int], Decimal | str] = {}
+    cohorts: dict[
+        tuple[_WithholdingGrouping, tuple[str, ...]],
+        list[tuple[DataBindingDefinition, _WithholdingSelector]],
+    ] = {}
+    for binding in revision.bindings:
+        if binding.source != "withholding":
+            continue
+        selector = _validated_withholding_selector(binding)
+        if selector.fact != "row_field":
+            continue
+        assert selector.grouping is not None
+        cohort_key = (selector.grouping, tuple(sorted(selector.claves)))
+        cohorts.setdefault(cohort_key, []).append((binding, selector))
+    for cohort_key, members in cohorts.items():
+        grouping = cohort_key[0]
+        _, sample_selector = members[0]
+        scope_filtered = tuple(_filter_withholding_observations(available, sample_selector))
+        rows = _build_withholding_rows(grouping, scope_filtered)
+        for binding, selector in members:
+            assert selector.row_field is not None
+            for row_index, row in enumerate(rows, start=1):
+                value = row.get(selector.row_field)
+                if value is None:
+                    raise RegistryValidationError(
+                        f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
+                        f"for grouping {grouping!r}"
+                    )
+                resolved[(binding.id, row_index)] = value
+    return resolved
+
+
+def _build_withholding_rows(
+    grouping: _WithholdingGrouping,
+    observations: tuple[WithholdingObservation, ...],
+) -> tuple[Mapping[str, Decimal | str], ...]:
+    """Group withholding observations into rows keyed by perceptor (and optionally clave)."""
+
+    accum: dict[tuple[str, str, str, str], dict[str, Decimal | str]] = {}
+    for observation in observations:
+        if grouping == "per_perceptor":
+            key = (observation.country_code, observation.perceptor_tax_id, "", "")
+            row_clave = ""
+            row_subclave = ""
+        else:
+            key = (
+                observation.country_code,
+                observation.perceptor_tax_id,
+                observation.clave,
+                observation.subclave,
+            )
+            row_clave = observation.clave
+            row_subclave = observation.subclave
+        bucket = accum.setdefault(
+            key,
+            {
+                "country_code": observation.country_code,
+                "perceptor_tax_id": observation.perceptor_tax_id,
+                "perceptor_legal_name": observation.perceptor_legal_name,
+                "clave": row_clave,
+                "subclave": row_subclave,
+                "percibido_dinerario": Decimal("0"),
+                "percibido_especie": Decimal("0"),
+                "retencion_practicada": Decimal("0"),
+                "ingreso_a_cuenta": Decimal("0"),
+            },
+        )
+        prev_dinerario = bucket["percibido_dinerario"]
+        prev_especie = bucket["percibido_especie"]
+        prev_retencion = bucket["retencion_practicada"]
+        prev_ingreso = bucket["ingreso_a_cuenta"]
+        assert isinstance(prev_dinerario, Decimal)
+        assert isinstance(prev_especie, Decimal)
+        assert isinstance(prev_retencion, Decimal)
+        assert isinstance(prev_ingreso, Decimal)
+        bucket["percibido_dinerario"] = prev_dinerario + observation.percibido_dinerario
+        bucket["percibido_especie"] = prev_especie + observation.percibido_especie
+        bucket["retencion_practicada"] = prev_retencion + observation.retencion_practicada
+        bucket["ingreso_a_cuenta"] = prev_ingreso + observation.ingreso_a_cuenta
+    return tuple(accum[key] for key in sorted(accum.keys()))
+
+
+# ---------------------------------------------------------------------------
+# Related-party operation source bindings (modelo 232).
+#
+# Legal authority: LIS art. 18 (operaciones vinculadas), RD 634/2015
+# art. 13 (informe-país-por-país y declaración modelo 232), Orden
+# HFP/816/2017 Anexo (diseno de registro modelo 232).
+# ---------------------------------------------------------------------------
+
+
+_RelatedPartyRowField = Literal[
+    "counterparty_tax_id",
+    "counterparty_legal_name",
+    "country_code",
+    "operation_kind_code",
+    "transfer_pricing_method_code",
+    "amount",
+]
+
+
+class RelatedPartyOperationObservation(BaseModel):
+    """One related-party operation for modelo 232."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_id: str = Field(min_length=1, max_length=128)
+    counterparty_tax_id: str = Field(min_length=1, max_length=64)
+    counterparty_legal_name: str = Field(default="", max_length=200)
+    country_code: str = Field(default="ES", min_length=2, max_length=2)
+    transaction_date: date
+    operation_kind_code: str = Field(min_length=1, max_length=4)
+    transfer_pricing_method_code: str = Field(default="", max_length=4)
+    amount: Decimal
+
+    @field_validator("country_code")
+    @classmethod
+    def _country_code_uppercase(cls, value: str) -> str:
+        if value != value.upper() or not value.isalpha():
+            raise RegistryValidationError("country_code must be uppercase alphabetic")
+        return value
+
+    @field_validator("amount")
+    @classmethod
+    def _decimal_amount(cls, value: Decimal) -> Decimal:
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError("related-party amount must be Decimal")
+        return value
+
+
+class _RelatedPartySelector(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    fact: str = Field(min_length=1, max_length=64)
+    row_field: _RelatedPartyRowField | None = None
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+def _validated_related_party_selector(binding: DataBindingDefinition) -> _RelatedPartySelector:
+    try:
+        selector = _RelatedPartySelector.model_validate(binding.selector)
+    except ValueError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed related-party selector") from exc
+    if selector.fact != "row_field":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} declares unsupported related-party fact {selector.fact!r}"
+        )
+    op = str((binding.aggregation or {}).get("op", "rows"))
+    if op != "rows":
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
+    if selector.row_field is None:
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
+    return selector
+
+
+def resolve_related_party_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[RelatedPartyOperationObservation],
+) -> dict[tuple[str, int], Decimal | str]:
+    """Resolve row-producer related-party bindings into per-row indexed values."""
+
+    available = tuple(observations)
+    members: list[tuple[DataBindingDefinition, _RelatedPartySelector]] = []
+    for binding in revision.bindings:
+        if binding.source != "related_party_operation":
+            continue
+        selector = _validated_related_party_selector(binding)
+        members.append((binding, selector))
+    if not members:
+        return {}
+    rows = _build_related_party_rows(available)
+    resolved: dict[tuple[str, int], Decimal | str] = {}
+    for binding, selector in members:
+        assert selector.row_field is not None
+        for row_index, row in enumerate(rows, start=1):
+            value = row.get(selector.row_field)
+            if value is None:
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for related-party rows"
+                )
+            resolved[(binding.id, row_index)] = value
+    return resolved
+
+
+def _build_related_party_rows(
+    observations: tuple[RelatedPartyOperationObservation, ...],
+) -> tuple[Mapping[str, Decimal | str], ...]:
+    """Group related-party observations by (party, country, kind, method) summing amounts."""
+
+    accum: dict[tuple[str, str, str, str], dict[str, Decimal | str]] = {}
+    for obs in observations:
+        key = (obs.country_code, obs.counterparty_tax_id, obs.operation_kind_code, obs.transfer_pricing_method_code)
+        bucket = accum.setdefault(
+            key,
+            {
+                "country_code": obs.country_code,
+                "counterparty_tax_id": obs.counterparty_tax_id,
+                "counterparty_legal_name": obs.counterparty_legal_name,
+                "operation_kind_code": obs.operation_kind_code,
+                "transfer_pricing_method_code": obs.transfer_pricing_method_code,
+                "amount": Decimal("0"),
+            },
+        )
+        prev = bucket["amount"]
+        assert isinstance(prev, Decimal)
+        bucket["amount"] = prev + obs.amount
+    return tuple(accum[key] for key in sorted(accum.keys()))
+
+
+# ---------------------------------------------------------------------------
+# Foreign asset source bindings (modelo 720).
+#
+# Legal authority: RD 1065/2007 arts. 42 bis / 42 ter, Orden HAP/72/2013
+# Anexo (modelo 720 diseno de registro). Threshold: 50,000 EUR per asset
+# class (already encoded as a parameter on modelo 720).
+# ---------------------------------------------------------------------------
+
+
+_ForeignAssetRowField = Literal[
+    "asset_class_code",
+    "country_code",
+    "currency_code",
+    "asset_identifier",
+    "valuation_amount",
+    "acquisition_date",
+]
+
+
+class ForeignAssetObservation(BaseModel):
+    """One foreign asset for modelo 720."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_id: str = Field(min_length=1, max_length=128)
+    asset_class_code: str = Field(min_length=1, max_length=4)
+    country_code: str = Field(min_length=2, max_length=2)
+    currency_code: str = Field(default="EUR", min_length=3, max_length=3)
+    asset_identifier: str = Field(default="", max_length=128)
+    acquisition_date: date
+    valuation_amount: Decimal
+
+    @field_validator("country_code", "currency_code")
+    @classmethod
+    def _iso_code_uppercase(cls, value: str) -> str:
+        if value != value.upper() or not value.isalpha():
+            raise RegistryValidationError("ISO code must be uppercase alphabetic")
+        return value
+
+    @field_validator("valuation_amount")
+    @classmethod
+    def _decimal_amount(cls, value: Decimal) -> Decimal:
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError("foreign asset valuation must be Decimal")
+        if value < Decimal("0"):
+            raise RegistryValidationError("foreign asset valuation must be non-negative")
+        return value
+
+
+class _ForeignAssetSelector(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    fact: str = Field(min_length=1, max_length=64)
+    row_field: _ForeignAssetRowField | None = None
+    asset_classes: tuple[str, ...] = ()
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+def _validated_foreign_asset_selector(binding: DataBindingDefinition) -> _ForeignAssetSelector:
+    try:
+        selector = _ForeignAssetSelector.model_validate(binding.selector)
+    except ValueError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed foreign-asset selector") from exc
+    if selector.fact != "row_field":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} declares unsupported foreign-asset fact {selector.fact!r}"
+        )
+    op = str((binding.aggregation or {}).get("op", "rows"))
+    if op != "rows":
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
+    if selector.row_field is None:
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
+    return selector
+
+
+def resolve_foreign_asset_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[ForeignAssetObservation],
+) -> dict[tuple[str, int], Decimal | str]:
+    """Resolve row-producer foreign-asset bindings into per-row indexed values."""
+
+    available = tuple(observations)
+    members: list[tuple[DataBindingDefinition, _ForeignAssetSelector]] = []
+    cohort_classes: set[tuple[str, ...]] = set()
+    for binding in revision.bindings:
+        if binding.source != "foreign_asset":
+            continue
+        selector = _validated_foreign_asset_selector(binding)
+        members.append((binding, selector))
+        cohort_classes.add(tuple(sorted(selector.asset_classes)))
+    if not members:
+        return {}
+    # All bindings in a cohort share the same asset_classes filter.
+    sample_classes = next(iter(cohort_classes)) if cohort_classes else ()
+    class_filter = set(sample_classes)
+    filtered = tuple(obs for obs in available if not class_filter or obs.asset_class_code in class_filter)
+    rows = _build_foreign_asset_rows(filtered)
+    resolved: dict[tuple[str, int], Decimal | str] = {}
+    for binding, selector in members:
+        assert selector.row_field is not None
+        for row_index, row in enumerate(rows, start=1):
+            value = row.get(selector.row_field)
+            if value is None:
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for foreign-asset rows"
+                )
+            resolved[(binding.id, row_index)] = value
+    return resolved
+
+
+def _build_foreign_asset_rows(
+    observations: tuple[ForeignAssetObservation, ...],
+) -> tuple[Mapping[str, Decimal | str], ...]:
+    rows: list[Mapping[str, Decimal | str]] = []
+    for obs in sorted(
+        observations,
+        key=lambda o: (o.country_code, o.asset_class_code, o.asset_identifier, o.acquisition_date.isoformat()),
+    ):
+        rows.append(
+            {
+                "asset_class_code": obs.asset_class_code,
+                "country_code": obs.country_code,
+                "currency_code": obs.currency_code,
+                "asset_identifier": obs.asset_identifier,
+                "valuation_amount": obs.valuation_amount,
+                "acquisition_date": obs.acquisition_date.isoformat(),
+            }
+        )
+    return tuple(rows)
+
+
+# ---------------------------------------------------------------------------
+# Atribución member source bindings (modelo 184).
+#
+# Legal authority: Ley 35/2006 LIRPF arts. 87-90 (régimen de atribución de
+# rentas), Orden HFP/227/2017 Anexo (modelo 184 diseno de registro).
+# ---------------------------------------------------------------------------
+
+
+_AtributionRowField = Literal[
+    "member_tax_id",
+    "member_legal_name",
+    "country_code",
+    "share_percentage",
+    "base_imponible_assigned",
+]
+
+
+class AtributionMemberObservation(BaseModel):
+    """One atribución member for modelo 184."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_id: str = Field(min_length=1, max_length=128)
+    member_tax_id: str = Field(min_length=1, max_length=64)
+    member_legal_name: str = Field(default="", max_length=200)
+    country_code: str = Field(default="ES", min_length=2, max_length=2)
+    transaction_date: date
+    share_percentage: Decimal
+    base_imponible_assigned: Decimal
+
+    @field_validator("country_code")
+    @classmethod
+    def _country_code_uppercase(cls, value: str) -> str:
+        if value != value.upper() or not value.isalpha():
+            raise RegistryValidationError("country_code must be uppercase alphabetic")
+        return value
+
+    @field_validator("share_percentage")
+    @classmethod
+    def _share_within_bounds(cls, value: Decimal) -> Decimal:
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError("share_percentage must be Decimal")
+        if value < Decimal("0") or value > Decimal("100"):
+            raise RegistryValidationError("share_percentage must be within [0, 100]")
+        return value
+
+    @field_validator("base_imponible_assigned")
+    @classmethod
+    def _decimal_amount(cls, value: Decimal) -> Decimal:
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError("base_imponible_assigned must be Decimal")
+        return value
+
+
+class _AtributionSelector(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    fact: str = Field(min_length=1, max_length=64)
+    row_field: _AtributionRowField | None = None
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+def _validated_atribucion_selector(binding: DataBindingDefinition) -> _AtributionSelector:
+    try:
+        selector = _AtributionSelector.model_validate(binding.selector)
+    except ValueError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed atribucion selector") from exc
+    if selector.fact != "row_field":
+        raise RegistryValidationError(f"binding {binding.id!r} declares unsupported atribucion fact {selector.fact!r}")
+    op = str((binding.aggregation or {}).get("op", "rows"))
+    if op != "rows":
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
+    if selector.row_field is None:
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
+    return selector
+
+
+def resolve_atribucion_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[AtributionMemberObservation],
+) -> dict[tuple[str, int], Decimal | str]:
+    """Resolve row-producer atribucion bindings into per-row indexed values."""
+
+    available = tuple(observations)
+    members: list[tuple[DataBindingDefinition, _AtributionSelector]] = []
+    for binding in revision.bindings:
+        if binding.source != "atribucion_member":
+            continue
+        selector = _validated_atribucion_selector(binding)
+        members.append((binding, selector))
+    if not members:
+        return {}
+    rows = tuple(
+        {
+            "member_tax_id": obs.member_tax_id,
+            "member_legal_name": obs.member_legal_name,
+            "country_code": obs.country_code,
+            "share_percentage": obs.share_percentage,
+            "base_imponible_assigned": obs.base_imponible_assigned,
+        }
+        for obs in sorted(available, key=lambda o: (o.country_code, o.member_tax_id))
+    )
+    resolved: dict[tuple[str, int], Decimal | str] = {}
+    for binding, selector in members:
+        assert selector.row_field is not None
+        for row_index, row in enumerate(rows, start=1):
+            value = row.get(selector.row_field)
+            if value is None:
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for atribucion rows"
+                )
+            resolved[(binding.id, row_index)] = value
+    return resolved
+
+
+# ---------------------------------------------------------------------------
+# Refund operation source bindings (modelo 360).
+#
+# Legal authority: Ley 37/1992 art. 117 bis (devolucion 8a Directiva),
+# Orden EHA/789/2010 Anexo (modelo 360 diseno de registro).
+# ---------------------------------------------------------------------------
+
+
+_RefundRowField = Literal[
+    "member_state_code",
+    "operation_kind_code",
+    "operation_date",
+    "supplier_tax_id",
+    "refund_amount",
+]
+
+
+class RefundOperationObservation(BaseModel):
+    """One foreign-MS refund operation for modelo 360."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_id: str = Field(min_length=1, max_length=128)
+    member_state_code: str = Field(min_length=2, max_length=2)
+    operation_kind_code: str = Field(min_length=1, max_length=4)
+    operation_date: date
+    supplier_tax_id: str = Field(min_length=1, max_length=64)
+    refund_amount: Decimal
+
+    @field_validator("member_state_code")
+    @classmethod
+    def _iso_code_uppercase(cls, value: str) -> str:
+        if value != value.upper() or not value.isalpha():
+            raise RegistryValidationError("member_state_code must be uppercase alphabetic")
+        return value
+
+    @field_validator("refund_amount")
+    @classmethod
+    def _decimal_amount(cls, value: Decimal) -> Decimal:
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError("refund_amount must be Decimal")
+        if value < Decimal("0"):
+            raise RegistryValidationError("refund_amount must be non-negative")
+        return value
+
+
+class _RefundSelector(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    fact: str = Field(min_length=1, max_length=64)
+    row_field: _RefundRowField | None = None
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+def _validated_refund_selector(binding: DataBindingDefinition) -> _RefundSelector:
+    try:
+        selector = _RefundSelector.model_validate(binding.selector)
+    except ValueError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed refund selector") from exc
+    if selector.fact != "row_field":
+        raise RegistryValidationError(f"binding {binding.id!r} declares unsupported refund fact {selector.fact!r}")
+    op = str((binding.aggregation or {}).get("op", "rows"))
+    if op != "rows":
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
+    if selector.row_field is None:
+        raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
+    return selector
+
+
+def resolve_refund_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[RefundOperationObservation],
+) -> dict[tuple[str, int], Decimal | str]:
+    """Resolve row-producer refund-operation bindings into per-row indexed values."""
+
+    available = tuple(observations)
+    members: list[tuple[DataBindingDefinition, _RefundSelector]] = []
+    for binding in revision.bindings:
+        if binding.source != "refund_operation":
+            continue
+        selector = _validated_refund_selector(binding)
+        members.append((binding, selector))
+    if not members:
+        return {}
+    rows = tuple(
+        {
+            "member_state_code": obs.member_state_code,
+            "operation_kind_code": obs.operation_kind_code,
+            "operation_date": obs.operation_date.isoformat(),
+            "supplier_tax_id": obs.supplier_tax_id,
+            "refund_amount": obs.refund_amount,
+        }
+        for obs in sorted(
+            available, key=lambda o: (o.member_state_code, o.operation_date.isoformat(), o.supplier_tax_id)
+        )
+    )
+    resolved: dict[tuple[str, int], Decimal | str] = {}
+    for binding, selector in members:
+        assert selector.row_field is not None
+        for row_index, row in enumerate(rows, start=1):
+            value = row.get(selector.row_field)
+            if value is None:
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} row_field {selector.row_field!r} not produced for refund rows"
+                )
+            resolved[(binding.id, row_index)] = value
     return resolved

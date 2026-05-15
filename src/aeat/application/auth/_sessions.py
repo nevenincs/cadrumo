@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -23,8 +24,18 @@ from ._acquisition_lock import (
 )
 
 if TYPE_CHECKING:
-    from ...adapters.outbound.aeat.auth import AeatSession
+    from ...adapters.outbound.aeat.auth import (
+        AeatLoginAssertion,
+        AeatSession,
+        BrowserSessionFactory,
+    )
     from ...core.config import Settings
+    from . import AuthProvider
+
+    ProviderFactory = Callable[
+        [AuthProviderKind, Settings, BrowserSessionFactory | None],
+        AuthProvider,
+    ]
 
 _logger = get_logger(__name__)
 
@@ -51,8 +62,8 @@ class AuthenticatedAeatSessionResult(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
     provider_kind: AuthProviderKind
-    session: Any
-    assertion: Any
+    session: AeatSession
+    assertion: AeatLoginAssertion
     reused_persisted_session: bool
     acquired_lock: AuthAcquisitionLockRecord | None = None
     reset_lock: AuthAcquisitionLockStatus | None = None
@@ -183,8 +194,8 @@ async def ensure_authenticated_aeat_session(
     fresh: bool = False,
     reset_lock: bool = False,
     operation: str = "auth-ensure-session",
-    browser_session_factory: Any | None = None,
-    provider_factory: Any | None = None,
+    browser_session_factory: BrowserSessionFactory | None = None,
+    provider_factory: ProviderFactory | None = None,
 ) -> AuthenticatedAeatSessionResult:
     """Return a verified AEAT session, authenticating only when required.
 
@@ -339,9 +350,9 @@ async def _try_probe_verified_session(
     settings: Settings,
     kind: AuthProviderKind,
     *,
-    browser_session_factory: Any | None,
-    provider_factory: Any | None,
-) -> tuple[AeatSession, Any] | None:
+    browser_session_factory: BrowserSessionFactory | None,
+    provider_factory: ProviderFactory | None,
+) -> tuple[AeatSession, AeatLoginAssertion] | None:
     provider = _build_provider(
         settings,
         kind,
@@ -364,9 +375,9 @@ def _build_provider(
     settings: Settings,
     kind: AuthProviderKind,
     *,
-    browser_session_factory: Any | None,
-    provider_factory: Any | None,
-) -> Any:
+    browser_session_factory: BrowserSessionFactory | None,
+    provider_factory: ProviderFactory | None,
+) -> AuthProvider:
     if provider_factory is not None:
         return provider_factory(kind, settings, browser_session_factory)
     if browser_session_factory is None:
@@ -380,7 +391,7 @@ def _build_provider(
     )
 
 
-async def _probe_existing_session(provider: Any) -> tuple[AeatSession, Any]:
+async def _probe_existing_session(provider: AuthProvider) -> tuple[AeatSession, AeatLoginAssertion]:
     probe = getattr(provider, "probe_persisted_session", None)
     if probe is not None:
         return await probe()
@@ -389,7 +400,7 @@ async def _probe_existing_session(provider: Any) -> tuple[AeatSession, Any]:
     return session, assertion
 
 
-async def _close_provider(provider: Any) -> None:
+async def _close_provider(provider: AuthProvider) -> None:
     close = getattr(provider, "close", None)
     if close is None:
         return

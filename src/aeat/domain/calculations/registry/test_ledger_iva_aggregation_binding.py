@@ -370,4 +370,4 @@ def test_modelo_390_annual_iva_totals_reconcile_with_four_registry_calculated_mo
 def test_iva_ledger_observation_is_strict_and_frozen() -> None:
     obs = _observation()
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        obs.iva_amount = Decimal("999")  # type: ignore[misc]
+        obs.iva_amount = Decimal("999")

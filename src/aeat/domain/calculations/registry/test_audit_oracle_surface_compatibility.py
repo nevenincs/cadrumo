@@ -76,9 +76,7 @@ def _bind_first_cross_reference(
 
 
 def test_compatible_pair_passes_audit() -> None:
-    modelo = _bind_first_cross_reference(
-        _modelo_130(), oracle_id=AEAT_NIF_IVA_ORACLE_ID, surface="public_read_surface"
-    )
+    modelo = _bind_first_cross_reference(_modelo_130(), oracle_id=AEAT_NIF_IVA_ORACLE_ID, surface="public_read_surface")
 
     failures = audit_oracle_bindings(modelo, _build_catalogue(), environment="production")
 
@@ -147,13 +145,16 @@ def test_compatibility_allow_list_matches_documented_pairs() -> None:
     consults this set verbatim — any drift here is a silent change to
     every binding decision."""
 
-    assert _COMPATIBLE_SURFACE_PAIRS == frozenset(
-        {
-            ("open_simulator", "open_simulator"),
-            ("integration_test_service", "integration_test_service"),
-            ("public_read_surface", "vat_id_check"),
-            ("public_read_surface", "file_validator"),
-            ("authenticated_read_surface", "pre_filing_validator"),
-            ("authenticated_simulator", "vat_id_check"),
-        }
+    assert (
+        frozenset(
+            {
+                ("open_simulator", "open_simulator"),
+                ("integration_test_service", "integration_test_service"),
+                ("public_read_surface", "vat_id_check"),
+                ("public_read_surface", "file_validator"),
+                ("authenticated_read_surface", "pre_filing_validator"),
+                ("authenticated_simulator", "vat_id_check"),
+            }
+        )
+        == _COMPATIBLE_SURFACE_PAIRS
     )

@@ -24,13 +24,17 @@ phase.
 from __future__ import annotations
 
 
-def zeroise(buffer: bytearray) -> None:
+def zeroise(buffer: object) -> None:
     """Overwrite every byte of a mutable buffer with zero.
 
     This is the canonical wipe-primitive consumed by `BucketSession.close()`.
     The function operates in place; the caller's reference still points
     at the same `bytearray` object after the call returns, but every
     byte has been replaced by `0x00`.
+
+    Args:
+        buffer: Must be a ``bytearray``. Any other type is rejected at
+            runtime with :exc:`TypeError`.
 
     Raises:
         TypeError: If `buffer` is not a `bytearray`. Passing an

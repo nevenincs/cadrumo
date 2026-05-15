@@ -1,6 +1,7 @@
-import pytest
 from datetime import date
 from decimal import Decimal
+
+import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

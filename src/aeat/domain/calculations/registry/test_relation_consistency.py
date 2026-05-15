@@ -50,6 +50,21 @@ def test_registry_relations_reference_existing_modelo_outputs_and_target_binding
                     f"not accepted by {source_modelo.id}/{source_revision.id}"
                 )
 
+            if relation.source_period_offset_from_target is not None:
+                from ._relations import _derive_offset_source_period
+
+                derived: set[str] = set()
+                for target_period in relation.target_periods:
+                    candidate = _derive_offset_source_period(relation, target_period=target_period)
+                    if candidate is not None:
+                        derived.add(candidate)
+                unknown_derived = sorted(derived - revision_periods)
+                if unknown_derived:
+                    errors.append(
+                        f"{modelo.id}/{revision.id}/{relation.id}: offset-derived source periods "
+                        f"{unknown_derived} not accepted by {source_modelo.id}/{source_revision.id}"
+                    )
+
     assert not errors
 
 

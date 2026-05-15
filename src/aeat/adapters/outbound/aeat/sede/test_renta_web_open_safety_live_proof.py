@@ -22,7 +22,6 @@ the mine for #175 (filing-prevention belt-and-suspenders).
 from __future__ import annotations
 
 import asyncio
-from typing import Any, cast
 
 import pytest
 
@@ -52,7 +51,11 @@ async def _attempt_presentar_click() -> tuple[bool, str]:
     context = None
     try:
         context = await browser_session.create_context(storage_state={})
-        page = cast(Any, await context.new_page())
+        from playwright.async_api import Page as _Page
+
+        _raw = await context.new_page()
+        assert isinstance(_raw, _Page), f"new_page() did not return a Playwright Page; got {type(_raw)}"
+        page: _Page = _raw
         await install_page_safety_net(page)
         await page.set_viewport_size({"width": 1366, "height": 900})
         await browser_session.navigate(page, str(payload.app_url))

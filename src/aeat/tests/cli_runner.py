@@ -28,6 +28,10 @@ def invoke_cached_cli(args: Sequence[str], **kwargs: Any) -> Result:
     Typer's test runner rebuilds the full Click command tree on every
     invocation. The AEAT tree is large enough that repeated materialization
     dominates test runtime for default-locale CLI smoke tests.
+
+    ``**kwargs: Any``: forwarded verbatim to ``CliRunner.invoke``; the Click
+    stubs accept many heterogeneous optional kwargs so a delegation wrapper
+    correctly uses ``Any`` here.
     """
 
     return _RUNNER.invoke(aeat_click_command(), list(args), **kwargs)

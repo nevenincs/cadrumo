@@ -68,7 +68,7 @@ def test_bucket_paths_record_is_immutable(tmp_path: Path) -> None:
     paths = bucket_paths(tmp_path, "alpha")
 
     with pytest.raises(ValidationError):
-        paths.bucket_id = "other"  # type: ignore[misc]
+        paths.bucket_id = "other"
 
 
 def test_two_buckets_share_buckets_parent(tmp_path: Path) -> None:

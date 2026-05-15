@@ -77,9 +77,9 @@ class FilingDraftBuilderAdapter:
     workflow engine's signature.
     """
 
-    def __init__(self, *, schema_provider: object) -> None:
+    def __init__(self, *, schema_provider: CasillaSchemaProvider) -> None:
         """Store the schema provider used for every subsequent build."""
-        self._schema_provider = schema_provider
+        self._schema_provider: CasillaSchemaProvider = schema_provider
 
     def build(
         self,
@@ -92,21 +92,22 @@ class FilingDraftBuilderAdapter:
     ) -> RegistryFilingDraftProtocol:
         """Delegate to :func:`build_draft`.
 
-        ``cast`` is used for the filing-engine cross-module types because
-        :class:`AutonomoProfile` and :class:`aeat.application.filing.FilingProfile`
-        are structurally similar but not declared as the same Protocol
-        — the real adapter hooks in on the call site when the profile
-        loader lands.
+        ``cast`` is used for ``profile`` because :class:`AutonomoProfile`
+        and :class:`aeat.application.filing.FilingProfile` are structurally
+        compatible (both expose ``tax_id``) but ``AutonomoProfile`` does not
+        declare ``display_name`` and therefore does not satisfy the Protocol
+        statically. At this adapter boundary the structural bridging is
+        intentional.
         """
         draft: FilingDraft = build_draft(
             modelo=modelo,
             period=period,
-            profile=cast("FilingProfile", profile),
+            profile=cast(FilingProfile, profile),
             inputs=inputs,
-            schema_provider=cast("CasillaSchemaProvider", self._schema_provider),
+            schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
         )
-        return cast("RegistryFilingDraftProtocol", draft)
+        return cast(RegistryFilingDraftProtocol, draft)
 
 
 class SubmissionEngineAdapter:

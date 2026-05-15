@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class CurrencyNormalizationStatus(str, Enum):
+class CurrencyNormalizationStatus(StrEnum):
     """Status of currency normalization."""
 
     NATIVE_EUR = "native_eur"

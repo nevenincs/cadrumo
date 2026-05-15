@@ -1,11 +1,13 @@
 import re
 from pathlib import Path
-from typing import Any
 
 import yaml
 
 from aeat.core.errors import AeatError
 from aeat.core.logging import get_logger
+
+# YAML locale values are either leaf strings or nested dicts of the same shape.
+type LocaleNode = str | dict[str, "LocaleNode"]
 
 _log = get_logger(__name__)
 
@@ -79,7 +81,7 @@ class LocaleManager:
 
         return scan_namespace_markers(self.src_dir)
 
-    def get_yaml_keys(self, d: dict[str, Any], current_path: str = "") -> set[str]:
+    def get_yaml_keys(self, d: dict[str, LocaleNode], current_path: str = "") -> set[str]:
         """Recursively extract all dot-notated keys from a nested dictionary."""
         keys = set()
         if isinstance(d, dict):
@@ -91,7 +93,7 @@ class LocaleManager:
                     keys.add(path)
         return keys
 
-    def load_locale(self, path: Path) -> dict[str, Any]:
+    def load_locale(self, path: Path) -> dict[str, LocaleNode]:
         """Load a locale YAML file strictly, failing on duplicates."""
         with open(path, encoding="utf-8") as f:
             loader = StrictUniqueKeyLoader(f)
@@ -104,9 +106,9 @@ class LocaleManager:
     def _build_nested_dict(
         self,
         keys: set[str],
-        existing_data: dict[str, Any],
+        existing_data: dict[str, LocaleNode],
         namespace_prefixes: tuple[str, ...] = (),
-    ) -> dict[str, Any]:
+    ) -> dict[str, LocaleNode]:
         """Build a sorted, nested dictionary strictly conforming to the required keys."""
         # 1. Gather all values from existing data to preserve translations
         existing_flat = {}
@@ -132,28 +134,28 @@ class LocaleManager:
             }
         )
 
+        def _set_nested(root: dict[str, LocaleNode], dotted_key: str, value: LocaleNode) -> None:
+            """Write ``value`` at ``dotted_key`` inside ``root``, creating sub-dicts as needed."""
+            parts = dotted_key.split(".")
+            curr: dict[str, LocaleNode] = root
+            for part in parts[:-1]:
+                if part not in curr or not isinstance(curr[part], dict):
+                    curr[part] = {}
+                child = curr[part]
+                assert isinstance(child, dict)  # narrowing: we just ensured it above
+                curr = child
+            curr[parts[-1]] = value
+
         # 2. Rebuild the nested structure from scratch to prune extras and ensure type safety
-        new_data: dict[str, Any] = {}
+        new_data: dict[str, LocaleNode] = {}
         for key in sorted(keys):
             if key not in existing_flat:
                 continue
-            parts = key.split(".")
-            curr = new_data
-            for part in parts[:-1]:
-                if part not in curr:
-                    curr[part] = {}
-                curr = curr[part]
-            curr[parts[-1]] = existing_flat[key]
+            _set_nested(new_data, key, existing_flat[key])
         for key in sorted(existing_flat):
             if key in keys:
                 continue
-            parts = key.split(".")
-            curr = new_data
-            for part in parts[:-1]:
-                if part not in curr:
-                    curr[part] = {}
-                curr = curr[part]
-            curr[parts[-1]] = existing_flat[key]
+            _set_nested(new_data, key, existing_flat[key])
 
         return new_data
 
@@ -183,10 +185,10 @@ class LocaleManager:
                 yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
 
 
-def _flatten_leaf_values(mapping: dict[str, Any], prefix: str = "") -> dict[str, Any]:
+def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> dict[str, str]:
     """Return leaf locale values keyed by dotted path."""
 
-    flattened: dict[str, Any] = {}
+    flattened: dict[str, str] = {}
     for key, value in mapping.items():
         path = f"{prefix}.{key}" if prefix else str(key)
         if isinstance(value, dict):

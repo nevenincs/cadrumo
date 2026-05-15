@@ -27,11 +27,11 @@ from __future__ import annotations
 from ._models import (
     BundleVerificationState,
     EvidenceBundle,
+    EvidenceBundleCheckResult,
     EvidenceBundleNotFoundError,
     EvidenceBundleVerificationError,
     EvidenceRecordRef,
     VerificationCheck,
-    VerificationFinding,
 )
 from ._service import (
     EvidenceBundleService,
@@ -41,11 +41,11 @@ from ._service import (
 __all__ = [
     "BundleVerificationState",
     "EvidenceBundle",
+    "EvidenceBundleCheckResult",
     "EvidenceBundleNotFoundError",
     "EvidenceBundleService",
     "EvidenceBundleVerificationError",
     "EvidenceBundleVerificationReport",
     "EvidenceRecordRef",
     "VerificationCheck",
-    "VerificationFinding",
 ]

@@ -6,10 +6,9 @@ import json
 import re
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
 
 import pytest
-from typer.testing import CliRunner
+from typer.testing import CliRunner, Result
 
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
@@ -41,7 +40,7 @@ def _seed(name: str = "default") -> None:
     workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=name))
 
 
-def _json_payload(result: Any) -> dict:
+def _json_payload(result: Result) -> dict[str, object]:
     match = re.search(r"\{.*\}", result.output, re.DOTALL)
     assert match, result.output
     return json.loads(match.group(0))
@@ -125,6 +124,7 @@ def test_config_profile_validate_emits_validation_report(cli_runner: CliRunner) 
 def test_config_profile_validate_refuses_when_no_active_profile(cli_runner: CliRunner) -> None:
     # Reset the workflow state's active pointer so there is no active profile.
     from aeat.application.workflow._utils import utc_now
+
     workflow_state_repository().update(
         lambda current: current.model_copy(update={"active_profile": None, "updated_at": utc_now()})
     )

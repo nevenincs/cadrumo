@@ -32,6 +32,8 @@ def test_passphrase_present_in_settings_is_returned_with_crlf_stripped() -> None
 
 
 def test_crlf_only_passphrase_raises_secret_store_error() -> None:
-    with override_settings(aeat_secret_passphrase=SecretStr("\r\n")):
-        with pytest.raises(SecretStoreError, match="whitespace-only"):
-            _default_passphrase_callback()
+    with (
+        override_settings(aeat_secret_passphrase=SecretStr("\r\n")),
+        pytest.raises(SecretStoreError, match="whitespace-only"),
+    ):
+        _default_passphrase_callback()

@@ -21,7 +21,9 @@ from ...adapters.inbound.financial.providers import (
     detect_provider,
 )
 from ...adapters.inbound.pdf._utils import sha256_file
-from ...domain.attachments import AttachmentNotFoundError, AttachmentStore, AttachmentValidationError
+from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
+from ...domain.attachments._repository import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -138,7 +140,7 @@ def create_manual_transaction(
     transaction_repository: TransactionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    attachment_store: AttachmentStore | None = None,
+    attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
@@ -185,7 +187,7 @@ def attach_manual_transaction_evidence(
     transaction_repository: TransactionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    attachment_store: AttachmentStore | None = None,
+    attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -982,7 +984,7 @@ def update_manual_transaction(
     transaction_repository: TransactionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    attachment_store: AttachmentStore | None = None,
+    attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -997,8 +999,7 @@ def update_manual_transaction(
     current = _require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
-            "only active ledger transactions can be edited; "
-            "archived, stashed, and split-parent rows are immutable",
+            "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
             context={
                 "transaction_id": transaction_id,
                 "lifecycle_state": current.lifecycle_state.value,
@@ -1100,7 +1101,7 @@ def update_manual_transaction_fields(
     transaction_repository: TransactionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    attachment_store: AttachmentStore | None = None,
+    attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -1360,9 +1361,7 @@ def _build_split_child_transaction(
         description=child.description,
         provenance=RawProvenance(
             source_path=Path.cwd() / ".aeat-ledger-split",
-            source_sha256=hashlib.sha256(
-                f"split:{parent.transaction_id}:{index}".encode("utf-8")
-            ).hexdigest(),
+            source_sha256=hashlib.sha256(f"split:{parent.transaction_id}:{index}".encode()).hexdigest(),
             source_row_index=index + 1,
             source_format=SourceFormat.MANUAL,
             ingested_at=occurred_at,
@@ -1453,6 +1452,7 @@ def merge_transactions(
             context={"bucket_id": bucket_id, "child_transaction_ids": tuple(child_transaction_ids)},
         )
     split_group_id = next(iter(split_group_ids))
+    assert split_group_id is not None  # narrowed: None already excluded by the guard above
     for child in children:
         if child.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             raise TransactionValidationError(
@@ -1490,7 +1490,7 @@ def merge_transactions(
     if parent.lifecycle_state is not TransactionLifecycleState.SPLIT:
         raise TransactionValidationError(
             "ledger merge parent must be in SPLIT state",
-            context={"parent_transaction_id": parent_id, "lifecycle_state": parent.lifecycle_state.value},
+            context={"parent_transaction_id": parent.transaction_id, "lifecycle_state": parent.lifecycle_state.value},
         )
     if parent.split_lineage is None or parent.split_lineage.role is not SplitRole.PARENT:
         raise TransactionValidationError(
@@ -2292,13 +2292,12 @@ def transaction_catalogue_object_id(bucket_id: str) -> str:
     return f"transaction-catalogue:{bucket_id.strip()}"
 
 
-
 def _verify_evidence_references(
     command: ManualLedgerTransactionCommand,
     *,
     transaction_id: str,
     invoice_repository: InvoiceCatalogueRepository | None,
-    attachment_store: AttachmentStore | None,
+    attachment_store: _AttachmentStoreProtocol | None,
 ) -> None:
     if command.purchase_invoice_evidence_id is not None:
         invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
@@ -2611,9 +2610,7 @@ def _transaction_from_command(
             evidence_event_ids=evidence_event_ids or {},
         ),
         "edit_lineage": (
-            (*existing_edit_lineage, edit_lineage_entry)
-            if edit_lineage_entry is not None
-            else existing_edit_lineage
+            (*existing_edit_lineage, edit_lineage_entry) if edit_lineage_entry is not None else existing_edit_lineage
         ),
         "notes": command.notes,
     }

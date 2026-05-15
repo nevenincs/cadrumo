@@ -322,14 +322,14 @@ def test_holiday_is_frozen_and_forbids_extras() -> None:
         name="Test",
     )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        holiday.name = "Renamed"  # type: ignore[misc]
+        holiday.name = "Renamed"
 
 
 def test_deadline_shift_is_frozen_and_immutable() -> None:
     shift = shift_deadline(date(2025, 3, 4), modelo="303", ccaa_code=None)
     assert isinstance(shift, DeadlineShift)
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        shift.shifted = True  # type: ignore[misc]
+        shift.shifted = True
 
 
 def test_holiday_calendar_year_must_be_in_supported_range() -> None:

@@ -5,7 +5,10 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from re import compile
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from playwright.async_api import Locator, Page, ViewportSize
 
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
@@ -27,7 +30,7 @@ from ._errors import SedeError, SedeFailureMode, SedeNavigationError
 from ._renta_web_open_safety import assert_click_target_safe, install_page_safety_net
 
 _VIEWPORT_DEFAULTS = Settings()
-_DEFAULT_VIEWPORT = {
+_DEFAULT_VIEWPORT: ViewportSize = {
     "width": _VIEWPORT_DEFAULTS.aeat_browser_viewport_width,
     "height": _VIEWPORT_DEFAULTS.aeat_browser_viewport_height,
 }
@@ -103,7 +106,12 @@ async def collect_renta_web_open_observation(
     context = None
     try:
         context = await browser_session.create_context(storage_state={})
-        page = cast(Any, await context.new_page())
+        from playwright.async_api import Page as _Page
+
+        _raw_page = await context.new_page()
+        if not isinstance(_raw_page, _Page):
+            raise TypeError(f"BrowserContext.new_page() did not return a Playwright Page; got {type(_raw_page)}")
+        page: _Page = _raw_page
         # SAFETY-CRITICAL: install dialog auto-dismiss + URL navigation guard
         # before any user interaction. The page-level safety net is the
         # outermost defense layer; click-time `assert_click_target_safe`
@@ -217,7 +225,7 @@ def extract_renta_web_open_summary_value(body_text: str, label: str) -> str | No
     return None
 
 
-async def _navigate_to_casilla(page: Any, casilla_number: str, *, timeout_ms: int) -> None:
+async def _navigate_to_casilla(page: Page, casilla_number: str, *, timeout_ms: int) -> None:
     """Open the Buscar casilla dialog, enter the casilla number, jump to the page.
 
     On the Resumen view the "Buscar casilla" button lives on a secondary
@@ -273,7 +281,7 @@ async def _navigate_to_casilla(page: Any, casilla_number: str, *, timeout_ms: in
     )
 
 
-async def _navigate_to_resumen(page: Any, *, timeout_ms: int) -> None:
+async def _navigate_to_resumen(page: Page, *, timeout_ms: int) -> None:
     """Return to the Resumen view after editing form casillas."""
 
     await _click_expected(
@@ -290,7 +298,7 @@ async def _navigate_to_resumen(page: Any, *, timeout_ms: int) -> None:
     )
 
 
-async def _locate_casilla_input(page: Any, casilla_number: str, *, timeout_ms: int) -> Any:
+async def _locate_casilla_input(page: Page, casilla_number: str, *, timeout_ms: int) -> Locator:
     """Locate the editable input for a given casilla number on the form page.
 
     The Buscar casilla dialog's "Ir a la página" navigation auto-focuses
@@ -312,7 +320,7 @@ async def _locate_casilla_input(page: Any, casilla_number: str, *, timeout_ms: i
 
 
 async def _apply_casilla_overrides(
-    page: Any,
+    page: Page,
     overrides: Mapping[str, str],
     *,
     timeout_ms: int,
@@ -337,7 +345,7 @@ async def _apply_casilla_overrides(
 
 
 async def _scrape_casilla_form_value(
-    page: Any,
+    page: Page,
     casilla_number: str,
     *,
     timeout_ms: int,
@@ -360,7 +368,7 @@ async def _scrape_casilla_form_value(
         return None
     try:
         locator = await _locate_casilla_input(page, casilla_number, timeout_ms=timeout_ms)
-        return cast(str, await locator.input_value(timeout=timeout_ms))
+        return await locator.input_value(timeout=timeout_ms)
     except (PlaywrightError, PlaywrightTimeoutError, BrowserError, SedeError) as exc:
         logger.debug(
             "renta web open: input read for casilla %s failed; treating as unreadable (%s)",
@@ -370,7 +378,7 @@ async def _scrape_casilla_form_value(
         return None
 
 
-async def _fill_identification_profile(page: Any, profile: RentaWebOpenSyntheticProfile, *, timeout_ms: int) -> None:
+async def _fill_identification_profile(page: Page, profile: RentaWebOpenSyntheticProfile, *, timeout_ms: int) -> None:
     await _fill_expected(
         page.locator('input[title="NIF:"]').first,
         profile.nif,
@@ -402,7 +410,7 @@ async def _fill_identification_profile(page: Any, profile: RentaWebOpenSynthetic
     await _select_combo_item(page, combo_index=2, item_text=profile.autonomous_community, timeout_ms=timeout_ms)
 
 
-async def _select_combo_item(page: Any, *, combo_index: int, item_text: str, timeout_ms: int) -> None:
+async def _select_combo_item(page: Page, *, combo_index: int, item_text: str, timeout_ms: int) -> None:
     await _click_expected(
         page.locator("input.z-combobox-input").nth(combo_index),
         stage=f"fill-synthetic-profile:combo-{combo_index}",
@@ -417,7 +425,7 @@ async def _select_combo_item(page: Any, *, combo_index: int, item_text: str, tim
     )
 
 
-async def _fill_expected(locator: Any, value: str, *, stage: str, description: str, timeout_ms: int) -> None:
+async def _fill_expected(locator: Locator, value: str, *, stage: str, description: str, timeout_ms: int) -> None:
     await _expect_visible(locator, stage=stage, description=description, timeout_ms=timeout_ms)
     await _playwright_stage(
         locator.fill(value, timeout=timeout_ms),
@@ -427,7 +435,7 @@ async def _fill_expected(locator: Any, value: str, *, stage: str, description: s
     )
 
 
-async def _click_expected(locator: Any, *, stage: str, description: str, timeout_ms: int) -> None:
+async def _click_expected(locator: Locator, *, stage: str, description: str, timeout_ms: int) -> None:
     """Wait, safety-check, then click. Single click site for the driver — no bypass.
 
     The safety check (``assert_click_target_safe``) runs BEFORE the click
@@ -448,7 +456,7 @@ async def _click_expected(locator: Any, *, stage: str, description: str, timeout
     )
 
 
-async def _expect_visible(locator: Any, *, stage: str, description: str, timeout_ms: int) -> None:
+async def _expect_visible(locator: Locator, *, stage: str, description: str, timeout_ms: int) -> None:
     await _playwright_stage(
         locator.wait_for(state="visible", timeout=timeout_ms),
         stage=stage,

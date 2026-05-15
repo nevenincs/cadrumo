@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .....domain.submission._preflight import AuthProviderProbe, DeadlineWindowChecker
 
 import pytest
 
@@ -77,7 +80,7 @@ def test_preflight_uses_canonical_filing_finding_severity() -> None:
     assert FilingFindingSeverity is DomainSubmissionFindingSeverity
 
 
-def _preflight(*, checker: Any | None = None, cert: Any | None = None) -> Preflight:
+def _preflight(*, checker: DeadlineWindowChecker | None = None, cert: AuthProviderProbe | None = None) -> Preflight:
     return Preflight(
         deadline_checker=checker or _AlwaysOpenChecker(),
         auth_provider=cert or _OkAuthProvider(),

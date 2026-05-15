@@ -27,7 +27,7 @@ tautologies.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import cast
 
 import pytest
 
@@ -121,7 +121,7 @@ def test_decode_invoice_payload_csv_returns_empty_tuple_for_header_only() -> Non
 def test_synthesise_single_line_returns_silently_when_lines_already_set() -> None:
     """When the payload already carries ``lines`` the helper is a
     no-op; pre-existing entries are not touched."""
-    payload: dict[str, Any] = {"lines": [{"description": "row"}]}
+    payload: dict[str, object] = {"lines": [{"description": "row"}]}
 
     _synthesise_single_line_if_needed(payload)
 
@@ -129,7 +129,7 @@ def test_synthesise_single_line_returns_silently_when_lines_already_set() -> Non
 
 
 def test_synthesise_single_line_skips_when_base_total_missing() -> None:
-    payload: dict[str, Any] = {"iva_rate": "21"}
+    payload: dict[str, object] = {"iva_rate": "21"}
 
     _synthesise_single_line_if_needed(payload)
 
@@ -137,7 +137,7 @@ def test_synthesise_single_line_skips_when_base_total_missing() -> None:
 
 
 def test_synthesise_single_line_skips_when_iva_rate_missing() -> None:
-    payload: dict[str, Any] = {"base_total": "100"}
+    payload: dict[str, object] = {"base_total": "100"}
 
     _synthesise_single_line_if_needed(payload)
 
@@ -147,22 +147,23 @@ def test_synthesise_single_line_skips_when_iva_rate_missing() -> None:
 def test_synthesise_single_line_back_fills_with_substrate_slot_alias() -> None:
     """Wire rate ``"21"`` maps through ``_IVA_RATE_ALIASES`` to the
     substrate slot name ``"RATE_21"``."""
-    payload: dict[str, Any] = {"base_total": "100", "iva_rate": "21", "iva_total": "21"}
+    payload: dict[str, object] = {"base_total": "100", "iva_rate": "21", "iva_total": "21"}
 
     _synthesise_single_line_if_needed(payload)
 
     assert "lines" in payload
     lines = payload["lines"]
     assert isinstance(lines, list)
-    assert lines[0]["iva_rate"] == "RATE_21"
-    assert lines[0]["subtotal"] == "100"
-    assert lines[0]["iva_amount"] == "21"
+    first_line = cast(dict[str, object], lines[0])
+    assert first_line["iva_rate"] == "RATE_21"
+    assert first_line["subtotal"] == "100"
+    assert first_line["iva_amount"] == "21"
 
 
 def test_synthesise_single_line_pops_top_level_iva_rate_after_projection() -> None:
     """After back-filling the line, the top-level ``iva_rate`` is
     removed so it does not double-flow into Invoice.model_validate."""
-    payload: dict[str, Any] = {"base_total": "100", "iva_rate": "21"}
+    payload: dict[str, object] = {"base_total": "100", "iva_rate": "21"}
 
     _synthesise_single_line_if_needed(payload)
 
@@ -173,25 +174,27 @@ def test_synthesise_single_line_passes_through_unknown_rate_string_unchanged() -
     """A rate string outside the alias table passes through verbatim
     (so substrate-slot names like ``"RATE_21"`` already in the
     payload survive the projection without double-aliasing)."""
-    payload: dict[str, Any] = {"base_total": "50", "iva_rate": "RATE_21"}
+    payload: dict[str, object] = {"base_total": "50", "iva_rate": "RATE_21"}
 
     _synthesise_single_line_if_needed(payload)
 
     lines = payload["lines"]
     assert isinstance(lines, list)
-    assert lines[0]["iva_rate"] == "RATE_21"
+    first_line = cast(dict[str, object], lines[0])
+    assert first_line["iva_rate"] == "RATE_21"
 
 
 def test_synthesise_single_line_defaults_iva_amount_to_zero_when_absent() -> None:
     """When iva_total is absent the back-fill defaults the line's
     iva_amount to ``"0"`` rather than raising."""
-    payload: dict[str, Any] = {"base_total": "100", "iva_rate": "0"}
+    payload: dict[str, object] = {"base_total": "100", "iva_rate": "0"}
 
     _synthesise_single_line_if_needed(payload)
 
     lines = payload["lines"]
     assert isinstance(lines, list)
-    assert lines[0]["iva_amount"] == "0"
+    first_line = cast(dict[str, object], lines[0])
+    assert first_line["iva_amount"] == "0"
 
 
 def test_iva_rate_alias_table_covers_every_canonical_substrate_slot() -> None:

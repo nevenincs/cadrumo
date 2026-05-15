@@ -23,7 +23,8 @@ def isolated_settings(tmp_path: Path) -> Settings:
 
 class TestStatus:
     def test_status_on_unconfigured_bucket_reports_not_configured(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = ApoderadoService(settings=isolated_settings)
         status = svc.status(bucket_id="bucket-001")
@@ -132,7 +133,8 @@ class TestClear:
 
 class TestCheck:
     def test_check_returns_local_status_until_live_wired(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = ApoderadoService(settings=isolated_settings)
         svc.configure(

@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any
 
 import pytest
+from click.testing import Result
 
 from aeat.tests.cli_runner import invoke_cached_cli
 
@@ -18,7 +18,7 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _json_output(result: Any) -> str:
+def _json_output(result: Result) -> str:
     match = re.search(r"(\{.*\}|\[.*\])", result.output, re.DOTALL)
     return match.group(0) if match else result.output
 

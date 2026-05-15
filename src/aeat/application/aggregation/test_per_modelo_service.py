@@ -120,7 +120,7 @@ def test_command_contract_is_strict_and_immutable() -> None:
             }
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        command.period = "2025-Q2"  # type: ignore[misc]
+        command.period = "2025-Q2"
 
 
 def test_service_routes_retenciones_modelos_to_retenciones_aggregation() -> None:
@@ -277,7 +277,7 @@ def test_result_contract_rejects_provider_payload_mismatch() -> None:
 def test_service_surface_has_no_cli_dependency() -> None:
     source = "\n".join(
         [
-            inspect.getsource(aggregation._service),  # type: ignore[attr-defined]
+            inspect.getsource(aggregation._service),
             inspect.getsource(aggregation.PerModeloAggregationCommand),
             inspect.getsource(aggregation.PerModeloAggregationResult),
         ]

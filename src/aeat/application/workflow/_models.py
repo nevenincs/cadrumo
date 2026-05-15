@@ -20,7 +20,7 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -32,6 +32,8 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 if TYPE_CHECKING:
     from ...adapters.persistence.storage.sql import SecureObjectRepository
     from ...domain.transactions import TransactionCatalogueRepository
+    from ...domain.user_profile import UserProfileRecord
+    from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
 
 
 class WorkflowEvent(BaseModel):
@@ -146,12 +148,12 @@ class WorkflowState(BaseModel):
     profiles: dict[str, ProfileBucketPointer] = Field(default_factory=dict)
     active_profile: str | None = None
     declarations: dict[str, DeclarationPointer] = Field(default_factory=dict)
-    invoice_reviews: dict[str, Any] = Field(default_factory=dict)
-    ledger_reviews: dict[str, Any] = Field(default_factory=dict)
+    invoice_reviews: dict[str, InvoiceReviewRecord | dict[str, object]] = Field(default_factory=dict)
+    ledger_reviews: dict[str, LedgerReviewRecord | dict[str, object]] = Field(default_factory=dict)
     bucket_events: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)
 
-    def active_profile_record(self) -> Any | None:
+    def active_profile_record(self) -> UserProfileRecord | None:
         """Return the active :class:`UserProfileRecord` from its secure bucket."""
         if self.active_profile is None:
             return None
@@ -226,16 +228,17 @@ def update_declaration_pointer(
     """Return ``state`` with the declaration pointer upserted for ``(modelo, period)``."""
     import json as _json
 
-    declarations: dict[str, Any] = dict(state.declarations)
+    declarations: dict[str, DeclarationPointer] = dict(state.declarations)
     key = declaration_key(modelo, period)
     current = declarations.get(key)
     if isinstance(current, dict):
         current = DeclarationPointer.model_validate_json(_json.dumps(current, default=str))
 
-    update_fields: dict[str, Any] = {
+    now = utc_now()
+    update_fields: dict[str, object] = {
         "draft_id": draft_id,
         "status": status,
-        "updated_at": utc_now(),
+        "updated_at": now,
     }
     if exported_path is not None:
         update_fields["exported_path"] = exported_path
@@ -245,7 +248,15 @@ def update_declaration_pointer(
     if isinstance(current, DeclarationPointer):
         declarations[key] = current.model_copy(update=update_fields)
     else:
-        declarations[key] = DeclarationPointer(modelo=modelo, period=period, **update_fields)
+        declarations[key] = DeclarationPointer(
+            modelo=modelo,
+            period=period,
+            draft_id=draft_id,
+            status=status,
+            exported_path=exported_path,
+            verified=verified,
+            updated_at=now,
+        )
     return state.model_copy(update={"declarations": declarations, "updated_at": utc_now()})
 
 
@@ -256,8 +267,8 @@ def update_declaration_pointer(
 # already present in sys.modules['aeat.application.workflow._models'].
 # ---------------------------------------------------------------------------
 
-from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus  # noqa: E402
-from ...domain.deadlines import FilingObligation  # noqa: E402
+from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
+from ...domain.deadlines import FilingObligation
 
 
 class SiteHealthAlert(BaseModel):

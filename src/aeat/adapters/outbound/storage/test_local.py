@@ -67,9 +67,7 @@ def test_put_writes_sidecar_with_canonical_fields(provider: LocalFileSystemProvi
         content_hash=_hash(payload),
         label="record",
     )
-    sidecar_path = Path(metadata.provider_object_id).with_name(
-        Path(metadata.provider_object_id).stem + ".meta.json"
-    )
+    sidecar_path = Path(metadata.provider_object_id).with_name(Path(metadata.provider_object_id).stem + ".meta.json")
     sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
     assert sidecar["namespace"] == "ledger_transaction"
     assert sidecar["object_key_hmac"] == "abcdef0123456789"

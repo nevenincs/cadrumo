@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ...domain.transactions import TransactionCatalogue
 from . import (
     CasillaSchemaProvider,

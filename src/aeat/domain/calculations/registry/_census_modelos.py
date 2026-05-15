@@ -15,9 +15,7 @@ from ._errors import RegistrySnapshotError, RegistryValidationError
 
 CENSUS_MODELO_SERVICE_OWNER = "aeat.domain.calculations.registry"
 CENSUS_MODELO_EVENT_KINDS: tuple[str, ...] = ("alta", "modificacion", "baja")
-CENSUS_MODELO_ERROR_CODES: tuple[str, ...] = (
-    "ERROR_CALCULATIONS_REGISTRY_VALIDATION",
-)
+CENSUS_MODELO_ERROR_CODES: tuple[str, ...] = ("ERROR_CALCULATIONS_REGISTRY_VALIDATION",)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _LOGGER = get_logger(__name__)
 
@@ -152,7 +150,7 @@ class CensusModeloFoundationResult(BaseModel):
     active_work_unit_allowed: bool
     superseded_by: str | None = Field(default=None, min_length=3, max_length=3, pattern=r"^[0-9]{3}$")
 
-    @computed_field  # type: ignore[prop-decorator]
+    @computed_field
     @property
     def log_fields(self) -> CensusModeloFoundationLogFields:
         """Return stable logging fields for this foundation decision."""
@@ -347,8 +345,7 @@ def resolve_census_modelo_work_unit_foundation(
         payload["event_kind"] = CensusModeloEventKind(period)
     except ValueError as exc:
         raise RegistryValidationError(
-            "active census modelo 036 work units require one of the census event periods: "
-            "alta, modificacion, baja"
+            "active census modelo 036 work units require one of the census event periods: alta, modificacion, baja"
         ) from exc
     return resolve_census_modelo_foundation(CensusModeloFoundationCommand.model_validate(payload))
 

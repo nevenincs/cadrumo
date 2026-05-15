@@ -33,7 +33,6 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
 
 import pytest
 
@@ -72,8 +71,6 @@ from aeat.application.modelo import (
 )
 from aeat.application.workflow import (
     DeadlineEngineAdapter,
-    FilingInputsProviderProtocol,
-    SubmissionEngineProtocol,
     WorkflowEngine,
 )
 from aeat.core.config import Settings
@@ -83,6 +80,7 @@ from aeat.domain.buckets import (
     BucketEventType,
 )
 from aeat.domain.calculations.registry import ValidatedRegistryAuthority
+from aeat.domain.calculations.registry._bindings import CasillaObservation
 from aeat.domain.deadlines import AutonomoProfile, DeadlineEngine, IVARegime
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
@@ -90,9 +88,9 @@ from aeat.domain.modelos._filing_record import FilingRecordStatus
 from aeat.domain.modelos._filing_repository import FilingRecordCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.modelos._verification_report import (
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
-    VerificationFindingKind,
-    VerificationFindingSeverity,
 )
 from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
@@ -361,13 +359,10 @@ def _workflow_gate(
                 actor="operator-A",
                 clock=clock,
             ),
-            submission_engine=cast(SubmissionEngineProtocol, submission_engine),
+            submission_engine=submission_engine,
             session=None,
             certificate_bundle=None,
-            inputs_provider=cast(
-                FilingInputsProviderProtocol,
-                _RevisionInputsProvider(revision=revision, work_unit=work_unit),
-            ),
+            inputs_provider=_RevisionInputsProvider(revision=revision, work_unit=work_unit),
             settings=Settings(),
         ),
     )
@@ -767,10 +762,13 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
         calculation_repository=cr_repo,
     )
     assert refreshed_revision.state is CalculationRevisionState.DRAFT
-    assert list_verification_reports(
-        calculation_revision_id=revision.calculation_revision_id,
-        verification_repository=vr_repo,
-    ) == ()
+    assert (
+        list_verification_reports(
+            calculation_revision_id=revision.calculation_revision_id,
+            verification_repository=vr_repo,
+        )
+        == ()
+    )
     verification_events = bv_repo.load().for_bucket(
         work_unit.bucket_id,
         event_types=(
@@ -1027,10 +1025,7 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
         clock=_T1,
     )
     history = bv_repo.load().for_bucket(discarded.bucket_id)
-    discard_events = [
-        event for event in history
-        if event.event_type is BucketEventType.MODELO_WORK_UNIT_DISCARDED
-    ]
+    discard_events = [event for event in history if event.event_type is BucketEventType.MODELO_WORK_UNIT_DISCARDED]
     assert len(discard_events) == 1
     event = discard_events[0]
     assert event.object_type is BucketEventObjectType.WORK_UNIT
@@ -1167,8 +1162,8 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     assert report.granted_verified_complete is False
     assert report.completeness_status is VerificationCompletenessStatus.INCOMPLETE
     assert any(
-        f.kind is VerificationFindingKind.MISSING_REQUIRED_CASILLA
-        and f.severity is VerificationFindingSeverity.BLOCKING
+        f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
+        and f.severity is ModeloVerificationFindingSeverity.BLOCKING
         and f.casilla_id == omitted
         for f in report.findings
     )
@@ -1235,7 +1230,9 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         state=CalculationRevisionState.DRAFT,
         inputs_snapshot=inputs,
         binding_overrides=overrides_map,
-        casilla_values=casillas,
+        observations=tuple(
+            CasillaObservation(casilla_id=cid, value=val) for cid, val in casillas.items()
+        ),
         created_at=_T1,
         updated_at=_T1,
     )
@@ -1254,7 +1251,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
 
     assert report.granted_verified_complete is False
     assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
-    assert any(f.kind is VerificationFindingKind.BLOCKING_RULE for f in report.findings)
+    assert any(f.kind is ModeloVerificationFindingKind.BLOCKING_RULE for f in report.findings)
 
     refreshed = get_calculation_revision(
         revision.calculation_revision_id,

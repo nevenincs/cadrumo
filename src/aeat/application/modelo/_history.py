@@ -91,7 +91,8 @@ def assemble_work_unit_history(
     # object_type=WORK_UNIT keyed by work_unit_id.
     collected = list(
         catalogue.for_object(
-            object_type=BucketEventObjectType.WORK_UNIT, object_id=work_unit_id,
+            object_type=BucketEventObjectType.WORK_UNIT,
+            object_id=work_unit_id,
         )
     )
 
@@ -106,9 +107,12 @@ def assemble_work_unit_history(
             )
         )
 
+    revision_ids = {
+        revision.calculation_revision_id for revision in revisions.values() if revision.work_unit_id == work_unit_id
+    }
     verifications = vr_repo.load()
     for report in verifications.values():
-        if report.work_unit_id != work_unit_id:
+        if report.calculation_revision_id not in revision_ids:
             continue
         collected.extend(
             catalogue.for_object(

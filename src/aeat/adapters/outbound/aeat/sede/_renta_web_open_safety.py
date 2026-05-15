@@ -32,8 +32,12 @@ failure cannot result in a real filing.
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from playwright.async_api import Dialog, Locator, Page, Request
 
 from .....core.logging import get_logger
 from .....domain.calculations.registry import AEAT_WRITE_FORBIDDEN_VERB_TOKENS
@@ -122,7 +126,7 @@ def _matches_forbidden_token(normalised_text: str) -> str | None:
 
 
 async def assert_click_target_safe(
-    locator: Any,
+    locator: Locator,
     *,
     stage: str,
     description: str,
@@ -195,7 +199,7 @@ async def assert_click_target_safe(
                     )
 
 
-async def install_page_safety_net(page: Any) -> None:
+async def install_page_safety_net(page: Page) -> None:
     """Attach page-level safety listeners that auto-dismiss dialogs and
     block forbidden navigations.
 
@@ -203,7 +207,7 @@ async def install_page_safety_net(page: Any) -> None:
     listeners stay attached for the lifetime of the page.
     """
 
-    async def _on_dialog(dialog: Any) -> None:
+    async def _on_dialog(dialog: Dialog) -> None:
         try:
             kind = dialog.type
             message = dialog.message
@@ -221,9 +225,9 @@ async def install_page_safety_net(page: Any) -> None:
             # guarantee — the test or audit will still see the warning log.
             await dialog.dismiss()
 
-    _pending_dialog_tasks: set[Any] = set()
+    _pending_dialog_tasks: set[asyncio.Task[None]] = set()
 
-    def _dialog_handler(dialog: Any) -> None:
+    def _dialog_handler(dialog: Dialog) -> None:
         # Playwright dialog handler must be sync; schedule async dismissal.
         import asyncio
 
@@ -233,7 +237,7 @@ async def install_page_safety_net(page: Any) -> None:
 
     page.on("dialog", _dialog_handler)
 
-    def _request_handler(request: Any) -> None:
+    def _request_handler(request: Request) -> None:
         url = request.url.lower()
         for fragment in FORBIDDEN_URL_FRAGMENTS:
             if fragment in url:

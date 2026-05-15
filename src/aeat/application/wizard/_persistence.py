@@ -84,11 +84,7 @@ def persist_answers(
     from ...domain.user_profile import ProfileNotFoundError, UserProfileFact
 
     canonical = serialise_answers(flow, answers)
-    facts = tuple(
-        UserProfileFact(path=path, value=value)
-        for path, value in canonical.items()
-        if value
-    )
+    facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
     pointer = state.profiles.get(profile_name)
     if pointer is None or state.active_profile != profile_name:
         return register_active_profile(

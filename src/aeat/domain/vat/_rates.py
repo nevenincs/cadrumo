@@ -9,7 +9,6 @@ from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, cast
 
 from pydantic import ValidationError
 
@@ -53,7 +52,7 @@ def _load_vat_rate_table_cached(
         if not isinstance(raw_rate, dict):
             raise VatCatalogueError(f"{target}: rates[{index}] must be a table")
         try:
-            rate = _parse_rate(cast("Mapping[str, Any]", raw_rate))
+            rate = _parse_rate(raw_rate)
         except (ValidationError, VatValidationError, ValueError) as exc:
             raise VatCatalogueError(f"{target}: invalid rates[{index}]: {exc}") from exc
         by_member_state.setdefault(rate.member_state, []).append(rate)
@@ -70,11 +69,14 @@ def _load_vat_rate_table_cached(
     return MappingProxyType(immutable)
 
 
-def _parse_rate(raw_rate: Mapping[str, Any]) -> VATRate:
+def _parse_rate(raw_rate: object) -> VATRate:
+    if not isinstance(raw_rate, dict):
+        raise VatValidationError(f"VAT rate entry must be a table, got: {type(raw_rate)!r}")
+    data: dict[str, object] = {str(k): v for k, v in raw_rate.items()}
     try:
-        member_state = EUMemberState(str(raw_rate.get("member_state")))
-        kind = VATRateKind(str(raw_rate.get("kind")))
-        pct = Decimal(str(raw_rate.get("pct")))
+        member_state = EUMemberState(str(data.get("member_state")))
+        kind = VATRateKind(str(data.get("kind")))
+        pct = Decimal(str(data.get("pct")))
     except (ArithmeticError, TypeError, ValueError) as exc:
         raise VatValidationError(f"invalid VAT rate key or pct: {raw_rate!r}") from exc
     return VATRate.model_validate(
@@ -82,9 +84,9 @@ def _parse_rate(raw_rate: Mapping[str, Any]) -> VATRate:
             "member_state": member_state,
             "kind": kind,
             "pct": pct,
-            "effective_from": raw_rate.get("effective_from"),
-            "effective_until": raw_rate.get("effective_until"),
-            "boe_or_directive_reference": raw_rate.get("reference"),
+            "effective_from": data.get("effective_from"),
+            "effective_until": data.get("effective_until"),
+            "boe_or_directive_reference": data.get("reference"),
         }
     )
 

@@ -220,17 +220,17 @@ class SecretStore:
         self._store_dir.mkdir(parents=True, exist_ok=True)
         target = self._index_path()
         payload = index.model_dump_json(indent=2)
-        handle = tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=target.parent,
-            prefix=f"{target.stem}.",
-            suffix=".tmp",
-            delete=False,
-        )
-        tmp_path = Path(handle.name)
+        tmp_path: Path | None = None
         try:
-            with handle:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                dir=target.parent,
+                prefix=f"{target.stem}.",
+                suffix=".tmp",
+                delete=False,
+            ) as handle:
+                tmp_path = Path(handle.name)
                 handle.write(payload)
                 handle.flush()
                 os.fsync(handle.fileno())
@@ -238,7 +238,8 @@ class SecretStore:
             fsync_parent_dir(target)
         except OSError:
             _log.error("secret_store: atomic index write failed target=%s", target, exc_info=True)
-            tmp_path.unlink(missing_ok=True)
+            if tmp_path is not None:
+                tmp_path.unlink(missing_ok=True)
             raise
 
     def _build_envelope(self, record: SecretRecord) -> Envelope[SecretRecord]:

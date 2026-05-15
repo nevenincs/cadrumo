@@ -128,28 +128,22 @@ class TestAggregateBasic:
 
 class TestThreshold720:
     def test_threshold_is_canonical_50000(self) -> None:
-        assert THRESHOLD_720_EUR_PER_CLASS == Decimal("50000.00")
+        assert Decimal("50000.00") == THRESHOLD_720_EUR_PER_CLASS
 
     def test_declarable_strict_above_50000(self) -> None:
-        observations = (
-            _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.01", asset_external_id="A1"),
-        )
+        observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.01", asset_external_id="A1"),)
         result = aggregate_foreign_assets_720(observations, period="2025")
-        assert declarable_class(result.rollups[0]) is True
+        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is True
 
     def test_not_declarable_at_exactly_50000(self) -> None:
-        observations = (
-            _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.00", asset_external_id="A1"),
-        )
+        observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="50000.00", asset_external_id="A1"),)
         result = aggregate_foreign_assets_720(observations, period="2025")
-        assert declarable_class(result.rollups[0]) is False
+        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
 
     def test_not_declarable_below_threshold(self) -> None:
-        observations = (
-            _obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="49999.99", asset_external_id="A1"),
-        )
+        observations = (_obs(asset_class=ForeignAssetClass.ACCOUNT, valuation="49999.99", asset_external_id="A1"),)
         result = aggregate_foreign_assets_720(observations, period="2025")
-        assert declarable_class(result.rollups[0]) is False
+        assert declarable_class(result, asset_class=ForeignAssetClass.ACCOUNT) is False
 
 
 class TestInvariants:
@@ -167,6 +161,7 @@ class TestInvariants:
 
         with pytest.raises(ValidationError, match="held_at_year_end_count"):
             ForeignAssetClassRollup(
+                source_kind="ledger_transaction",
                 asset_class=ForeignAssetClass.ACCOUNT,
                 assets_count=2,
                 held_at_year_end_count=99,
@@ -178,6 +173,7 @@ class TestInvariants:
         from pydantic import ValidationError
 
         row = ForeignAssetClassRollup(
+            source_kind="ledger_transaction",
             asset_class=ForeignAssetClass.ACCOUNT,
             assets_count=1,
             held_at_year_end_count=1,

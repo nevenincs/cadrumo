@@ -78,7 +78,7 @@ def test_filter_clause_is_frozen() -> None:
 
     clause = FilterClause(key="status", value="pending")
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        clause.value = "changed"  # type: ignore[misc]
+        clause.value = "changed"
 
 
 # ---------------------------------------------------------------------
@@ -218,7 +218,7 @@ def test_ledger_spec_is_frozen() -> None:
 
     spec = LedgerReviewFilterSpec.from_strings([])
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        spec.period = "2026-Q1"  # type: ignore[misc]
+        spec.period = "2026-Q1"
 
 
 def test_ledger_spec_rejects_inconsistent_construction() -> None:

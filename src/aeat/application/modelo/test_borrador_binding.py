@@ -103,9 +103,7 @@ def _save_snapshot(
         state=state,
         binding_values=values,
         superseded_by_snapshot_id=superseded_by_snapshot_id,
-        discarded_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC)
-        if state is Borrador100SnapshotState.DISCARDED
-        else None,
+        discarded_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC) if state is Borrador100SnapshotState.DISCARDED else None,
         discarded_by=discarded_by,
         discard_reason="refetched" if state is Borrador100SnapshotState.DISCARDED else "",
     )
@@ -275,9 +273,10 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
     assert events[0].payload["borrador_snapshot_id"] == snapshot_id
     assert events[0].payload["borrador_participated"] == "true"
     assert events[0].payload["borrador_binding_count"] == "2"
-    assert events[0].payload["borrador_bindings_trace_sha256"] == hashlib.sha256(
-        "\n".join((_DECIMAL_BINDING, _ENUM_BINDING)).encode("utf-8")
-    ).hexdigest()
+    assert (
+        events[0].payload["borrador_bindings_trace_sha256"]
+        == hashlib.sha256("\n".join((_DECIMAL_BINDING, _ENUM_BINDING)).encode("utf-8")).hexdigest()
+    )
 
 
 def test_borrador_binding_error_has_stable_service_error_code() -> None:
@@ -291,9 +290,7 @@ def test_borrador_binding_error_has_stable_service_error_code() -> None:
 def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_backend(
     service_repositories,
 ) -> None:
-    work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, _ = (
-        service_repositories
-    )
+    work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, _ = service_repositories
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,
         modelo="100",

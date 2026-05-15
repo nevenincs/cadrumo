@@ -57,7 +57,7 @@ class TestSubmissionAttempt:
         """Assert the model is frozen (mutating an attribute raises)."""
         attempt = _attempt()
         with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-            attempt.attempt_id = "a2"  # type: ignore[misc]
+            attempt.attempt_id = "a2"
 
     def test_end_before_start_rejected(self) -> None:
         """Assert ``ended_at < started_at`` is rejected by validation."""

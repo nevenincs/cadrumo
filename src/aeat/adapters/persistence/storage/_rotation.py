@@ -31,7 +31,7 @@ import tempfile
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -49,6 +49,27 @@ from .errors import DecryptionError, EncryptionError
 from .master_key._master_key import MasterKeyProvider
 
 _log = get_logger(__name__)
+
+
+class _RotationPlanSettings(Protocol):
+    """Minimal settings surface required by :func:`default_rotation_plan`."""
+
+    aeat_financial_txs_dir: Path
+    aeat_invoices_dir: Path
+    aeat_attachments_dir: Path
+    aeat_usage_ratios_path: Path
+    aeat_drafts_dir: Path
+    aeat_submissions_dir: Path
+    aeat_justificantes_dir: Path
+    aeat_filing_history_dir: Path
+    aeat_workflow_runs_dir: Path
+
+
+class _BlobStoreSettings(Protocol):
+    """Minimal settings surface required by :func:`default_blob_store_roots`."""
+
+    aeat_blob_store_dir: Path
+    aeat_attachments_dir: Path
 
 
 class RotationPlanEntry(BaseModel):
@@ -330,7 +351,7 @@ def rotate_master_key(
     return RotationSummary(rotated=rotated, skipped=skipped, errors=errors)
 
 
-def default_rotation_plan(settings: Any) -> tuple[RotationPlanEntry, ...]:
+def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlanEntry, ...]:
     """Return the canonical rotation plan against ``settings``.
 
     Enumerates every repository's directory + HKDF
@@ -443,7 +464,7 @@ def rotate_blob_stores(
     return RotationSummary(rotated=rotated, skipped=skipped, errors=errors)
 
 
-def default_blob_store_roots(settings: Any) -> tuple[Path, ...]:
+def default_blob_store_roots(settings: _BlobStoreSettings) -> tuple[Path, ...]:
     """Return the canonical blob-store roots covered by master-key rotation.
 
     The substrate persists wrapped DEKs in:

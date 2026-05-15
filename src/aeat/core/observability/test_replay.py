@@ -207,7 +207,6 @@ class TestReplayEndToEndBooleanFlag:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        from . import record_event  # noqa: F401 - ensure module import chain
 
         monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
         # A fresh workflow-runs dir so list has nothing to render.

@@ -45,8 +45,7 @@ _BIP39_ALL_ZERO_MNEMONIC = (
 
 _BIP39_ALL_ONES_ENTROPY = bytes([0xFF] * 32)
 _BIP39_ALL_ONES_MNEMONIC = (
-    "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo "
-    "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote"
+    "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo vote"
 )
 
 

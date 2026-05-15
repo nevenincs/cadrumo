@@ -14,10 +14,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping, ValuesView
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
@@ -129,9 +129,7 @@ class BucketEventType(StrEnum):
 
     # reverse-merge corrections
     LEDGER_TRANSACTION_CORRECTION_APPLIED = "ledger.transaction.correction.applied"
-    LEDGER_PURCHASE_INVOICE_EVIDENCE_CORRECTION_APPLIED = (
-        "ledger.purchase_invoice_evidence.correction.applied"
-    )
+    LEDGER_PURCHASE_INVOICE_EVIDENCE_CORRECTION_APPLIED = "ledger.purchase_invoice_evidence.correction.applied"
     LEDGER_PAYABLE_INVOICE_CORRECTION_APPLIED = "ledger.payable_invoice.correction.applied"
     LEDGER_COLLECTIBLE_INVOICE_CORRECTION_APPLIED = "ledger.collectible_invoice.correction.applied"
     LEDGER_RENTAL_INCOME_CORRECTION_APPLIED = "ledger.rental_income.correction.applied"
@@ -280,10 +278,10 @@ class BucketEventHistoryCatalogue(BaseModel):
         matching = (e for e in self.events.values() if e.object_type is object_type and e.object_id == object_id)
         return tuple(sorted(matching, key=lambda e: e.occurred_at))
 
-    def values(self) -> Any:
+    def values(self) -> ValuesView[BucketEvent]:
         return self.events.values()
 
-    def __iter__(self):  # type: ignore[override]
+    def __iter__(self) -> Iterator[BucketEvent]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         return iter(self.events.values())
 
     def __len__(self) -> int:

@@ -118,7 +118,7 @@ def test_torn_write_does_not_corrupt_existing_manifest(tmp_path: Path) -> None:
 
     target = manifest_path(paths)
     tmp = target.with_suffix(target.suffix + ".tmp")
-    tmp.write_text("bucket_id = \"partial", encoding="utf-8")
+    tmp.write_text('bucket_id = "partial', encoding="utf-8")
 
     loaded = read_manifest(paths)
     assert loaded == good

@@ -24,7 +24,6 @@ The tests cover three cases:
 from __future__ import annotations
 
 import io
-from typing import Any
 
 import pytest
 
@@ -38,9 +37,9 @@ class _ReconfigurableStream(io.StringIO):
 
     def __init__(self) -> None:
         super().__init__()
-        self.reconfigure_calls: list[dict[str, Any]] = []
+        self.reconfigure_calls: list[dict[str, str]] = []
 
-    def reconfigure(self, **kwargs: Any) -> None:
+    def reconfigure(self, **kwargs: str) -> None:
         self.reconfigure_calls.append(kwargs)
 
 
@@ -58,7 +57,7 @@ class _ReconfigureRefusingStream(io.StringIO):
         super().__init__()
         self.reconfigure_calls = 0
 
-    def reconfigure(self, **kwargs: Any) -> None:
+    def reconfigure(self, **kwargs: str) -> None:
         del kwargs
         self.reconfigure_calls += 1
         raise OSError("stream refused mid-run reconfiguration")

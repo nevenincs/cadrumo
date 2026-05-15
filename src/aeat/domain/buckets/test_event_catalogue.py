@@ -72,12 +72,7 @@ def test_empty_catalogue_is_constructible_and_iterates_to_nothing() -> None:
     assert len(catalogue) == 0
     assert tuple(catalogue) == ()
     assert catalogue.for_bucket(_BUCKET_A) == ()
-    assert (
-        catalogue.for_object(
-            object_type=BucketEventObjectType.WORK_UNIT, object_id="anything"
-        )
-        == ()
-    )
+    assert catalogue.for_object(object_type=BucketEventObjectType.WORK_UNIT, object_id="anything") == ()
 
 
 def test_catalogue_rejects_key_that_does_not_match_event_id() -> None:
@@ -142,9 +137,7 @@ def test_catalogue_for_bucket_isolates_buckets() -> None:
         object_type=BucketEventObjectType.CALCULATION_REVISION,
         object_id="rev-b",
     )
-    catalogue = BucketEventHistoryCatalogue(
-        events={a_event.event_id: a_event, b_event.event_id: b_event}
-    )
+    catalogue = BucketEventHistoryCatalogue(events={a_event.event_id: a_event, b_event.event_id: b_event})
     assert tuple(e.event_id for e in catalogue.for_bucket(_BUCKET_A)) == (a_event.event_id,)
     assert tuple(e.event_id for e in catalogue.for_bucket(_BUCKET_B)) == (b_event.event_id,)
 
@@ -164,9 +157,7 @@ def test_catalogue_for_bucket_filters_by_event_types() -> None:
         object_type=BucketEventObjectType.FILING_RECORD,
         object_id="fr-1",
     )
-    catalogue = BucketEventHistoryCatalogue(
-        events={calc.event_id: calc, filed.event_id: filed}
-    )
+    catalogue = BucketEventHistoryCatalogue(events={calc.event_id: calc, filed.event_id: filed})
     rows = catalogue.for_bucket(_BUCKET_A, event_types=(BucketEventType.MODELO_FILED,))
     assert tuple(e.event_id for e in rows) == (filed.event_id,)
 
@@ -202,8 +193,7 @@ def test_reverse_merge_correction_events_match_taxonomy_adr() -> None:
         == "ledger.purchase_invoice_evidence.correction.applied"
     )
     assert (
-        BucketEventType.LEDGER_PAYABLE_INVOICE_CORRECTION_APPLIED.value
-        == "ledger.payable_invoice.correction.applied"
+        BucketEventType.LEDGER_PAYABLE_INVOICE_CORRECTION_APPLIED.value == "ledger.payable_invoice.correction.applied"
     )
     assert (
         BucketEventType.LEDGER_COLLECTIBLE_INVOICE_CORRECTION_APPLIED.value
@@ -309,9 +299,7 @@ def test_catalogue_for_object_returns_events_for_one_object() -> None:
             fr_amended.event_id: fr_amended,
         }
     )
-    rows = catalogue.for_object(
-        object_type=BucketEventObjectType.FILING_RECORD, object_id="fr-1"
-    )
+    rows = catalogue.for_object(object_type=BucketEventObjectType.FILING_RECORD, object_id="fr-1")
     assert tuple(e.event_id for e in rows) == (fr_created.event_id, fr_amended.event_id)
 
 
@@ -331,7 +319,7 @@ def test_catalogue_get_returns_event_by_id_or_none() -> None:
 def test_catalogue_is_frozen_and_extra_forbid() -> None:
     catalogue = BucketEventHistoryCatalogue()
     with pytest.raises(ValidationError, match="frozen"):
-        catalogue.events = MappingProxyType({})  # type: ignore[misc]
+        catalogue.events = MappingProxyType({})
 
     event = _build_event(
         bucket_id=_BUCKET_A,

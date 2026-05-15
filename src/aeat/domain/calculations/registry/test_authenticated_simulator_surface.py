@@ -50,7 +50,7 @@ def test_authenticated_simulator_with_canonical_groi_shape_validates() -> None:
     """The canonical GROI cross-reference shape — auth required, synthetic data,
     POST in allowed_methods, executable parity — validates clean."""
 
-    decision = LiveCrossReferenceDecision.model_validate(_kwargs())  # type: ignore[arg-type]
+    decision = LiveCrossReferenceDecision.model_validate(_kwargs())
 
     assert decision.surface == "authenticated_simulator"
     assert decision.evidence_tier == "executable_parity_evidence"

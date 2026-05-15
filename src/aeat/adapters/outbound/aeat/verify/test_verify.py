@@ -7,8 +7,6 @@ Exercises the borrowed-vs-self-owned browser-session lifecycle of
 
 from __future__ import annotations
 
-from typing import cast
-
 import pytest
 
 import aeat.adapters.outbound.aeat.verify as verify_module
@@ -91,7 +89,8 @@ async def test_verify_csv_does_not_close_borrowed_browser_session() -> None:
     """Borrowed sessions remain caller-owned."""
     session = _RecordingBrowserSession("<html>documento válido</html>")
 
-    result = await verify_csv(" abcd1234 ", browser=cast(verify_module.VerifyBrowserSessionLike, session))
+    assert isinstance(session, verify_module.VerifyBrowserSessionLike)
+    result = await verify_csv(" abcd1234 ", browser=session)
 
     assert result is True
     assert session.create_context_calls == 1
@@ -104,13 +103,14 @@ async def test_verify_csv_does_not_close_borrowed_browser_session() -> None:
 async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
     """Self-owned sessions must honor the central BrowserSession close contract."""
     session = _RecordingBrowserSession("<html>documento desconocido</html>")
-    session_like = cast(verify_module.VerifyBrowserSessionLike, session)
+    assert isinstance(session, verify_module.VerifyBrowserSessionLike)
+    session_like = session
 
     async def _factory() -> verify_module.VerifyBrowserSessionLike:
         return session_like
 
     original_factory = verify_module.DEFAULT_BROWSER_SESSION_FACTORY
-    verify_module.DEFAULT_BROWSER_SESSION_FACTORY = cast(verify_module.VerifyBrowserSessionFactory, _factory)
+    verify_module.DEFAULT_BROWSER_SESSION_FACTORY = _factory
     try:
         result = await verify_module.verify_csv("ABCD1234EFGH5678")
     finally:

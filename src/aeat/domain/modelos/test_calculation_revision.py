@@ -25,12 +25,15 @@ def test_revision_id_without_borrador_metadata_keeps_original_payload_shape() ->
         json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
     ).hexdigest()
 
-    assert derive_calculation_revision_id(
-        work_unit_id="a" * 64,
-        inputs_snapshot={"001": "10.00"},
-        binding_overrides={},
-        casilla_values={"002": Decimal("15.00")},
-    ) == expected
+    assert (
+        derive_calculation_revision_id(
+            work_unit_id="a" * 64,
+            inputs_snapshot={"001": "10.00"},
+            binding_overrides={},
+            casilla_values={"002": Decimal("15.00")},
+        )
+        == expected
+    )
 
 
 def test_revision_id_includes_present_borrador_metadata() -> None:

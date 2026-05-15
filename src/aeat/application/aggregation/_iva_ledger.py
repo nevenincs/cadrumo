@@ -6,7 +6,6 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
@@ -162,12 +161,12 @@ def aggregate_iva_ledger_observations(
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
-        issue_common: dict[str, Any] = {"transaction_id": transaction.transaction_id}
+        transaction_id = transaction.transaction_id
         operation_date = transaction.raw.value_date or transaction.raw.booked_date
         if not resolved_period.contains(operation_date):
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
                     detail=f"transaction date {operation_date.isoformat()} is outside {resolved_period.raw}",
                 )
@@ -176,7 +175,7 @@ def aggregate_iva_ledger_observations(
         if transaction.raw.currency != "EUR":
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
                     detail=f"transaction currency {transaction.raw.currency!r} is not supported for IVA aggregation",
                 )
@@ -186,7 +185,7 @@ def aggregate_iva_ledger_observations(
         if flow_direction is None:
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
                     detail=f"transaction direction {transaction.direction.value!r} is not an IVA settlement flow",
                 )
@@ -201,7 +200,7 @@ def aggregate_iva_ledger_observations(
             )
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=reason,
                     detail=(
                         f"business classification {transaction.business_classification.value!r} "
@@ -214,7 +213,7 @@ def aggregate_iva_ledger_observations(
         if missing_reason is not None:
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=missing_reason,
                     detail=_missing_tax_fact_detail(missing_reason),
                 )
@@ -227,7 +226,7 @@ def aggregate_iva_ledger_observations(
         if rate_kind is None:
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
                     detail=f"IVA rate {transaction.iva_rate} is not a canonical substrate IVA rate",
                 )
@@ -246,7 +245,7 @@ def aggregate_iva_ledger_observations(
             if flow_direction is not IvaFlowDirection.SOPORTADO:
                 issues.append(
                     IvaLedgerAggregationIssue(
-                        **issue_common,
+                        transaction_id=transaction_id,
                         reason=IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE,
                         detail="prorrata_reference may only be attached to supported input VAT rows",
                     )
@@ -349,6 +348,7 @@ def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> VATRateKind | None:
         if rate_record.pct / Decimal("100") == rate:
             return kind
     return None
+
 
 __all__ = [
     "IvaLedgerAggregation",

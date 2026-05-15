@@ -19,9 +19,7 @@ expanding the registry parameter lookup surface.
 
 from __future__ import annotations
 
-import tomllib
 from decimal import Decimal
-from pathlib import Path
 from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -53,35 +51,42 @@ class LirpfArt85ImputacionParameters(BaseModel):
     catastral_revision_lookback_years: int = Field(gt=0)
 
 
-_PARAMETER_TABLE_PATH: Final[Path] = PROJECT_ROOT / "registry" / "aeat" / "legal" / "irpf.toml"
-
 _RECENT_REVISION_PARAM_ID: Final[str] = "lirpf-art-85:imputacion-rate-recent-revision"
 _OLD_OR_NO_REVISION_PARAM_ID: Final[str] = "lirpf-art-85:imputacion-rate-old-or-no-revision"
 _LOOKBACK_PARAM_ID: Final[str] = "lirpf-art-85:catastral-revision-lookback-years"
 
 
 def _load_parameters() -> LirpfArt85ImputacionParameters:
-    """Read the three LIRPF art. 85 parameters from ``registry/aeat/legal/irpf.toml``.
+    """Read the three LIRPF art. 85 parameters from the registry catalogue.
+
+    Routes through ``aeat.domain.calculations.registry.load_registry_tree``
+    so parameters land in the validated :class:`RegistryCatalogues.parameters`
+    surface (single config-resolution path). The legacy direct
+    ``tomllib.load`` of ``registry/aeat/legal/irpf.toml`` is replaced —
+    bypassing the loader was the same architectural drift pattern as
+    direct ``os.environ`` reads.
 
     Raises:
-        FileNotFoundError: If the parameter TOML is missing.
         KeyError: If any of the three expected parameter ids is absent.
         ValueError: If any value cannot be parsed as the expected type.
     """
-    with _PARAMETER_TABLE_PATH.open("rb") as handle:
-        data = tomllib.load(handle)
+    # load_legal_parameters_only is the cycle-safe entry point — the full
+    # load_registry_tree path pulls in registry._bindings which imports
+    # from aeat.domain.vat (which itself imports rental upstream), so a
+    # parameter-only loader is needed here to avoid import-time cycles.
+    from ..calculations.registry._loader import load_legal_parameters_only
 
-    parameters = data.get("parameters", {})
+    parameters = load_legal_parameters_only(PROJECT_ROOT / "registry" / "aeat")
     try:
-        recent_raw = parameters[_RECENT_REVISION_PARAM_ID]["value"]
-        old_raw = parameters[_OLD_OR_NO_REVISION_PARAM_ID]["value"]
-        lookback_raw = parameters[_LOOKBACK_PARAM_ID]["value"]
+        recent_raw = parameters[_RECENT_REVISION_PARAM_ID].value
+        old_raw = parameters[_OLD_OR_NO_REVISION_PARAM_ID].value
+        lookback_raw = parameters[_LOOKBACK_PARAM_ID].value
     except KeyError as exc:
         raise KeyError(f"registry/aeat/legal/irpf.toml is missing LIRPF art. 85 parameter {exc.args[0]!r}") from exc
 
     return LirpfArt85ImputacionParameters(
-        recent_revision_rate=Decimal(str(recent_raw)),
-        old_or_no_revision_rate=Decimal(str(old_raw)),
+        recent_revision_rate=Decimal(recent_raw),
+        old_or_no_revision_rate=Decimal(old_raw),
         catastral_revision_lookback_years=int(lookback_raw),
     )
 

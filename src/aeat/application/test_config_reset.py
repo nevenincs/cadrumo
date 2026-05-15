@@ -32,7 +32,7 @@ def _profile_facts(overrides: Mapping[str, object] | None = None):
     }
     if overrides:
         values.update(overrides)
-    return tuple(UserProfileFact(path=path, value=value) for path, value in values.items())
+    return tuple(UserProfileFact.model_validate({"path": path, "value": value}) for path, value in values.items())
 
 
 def _register_profile(profile_id: str, *, overrides: Mapping[str, object] | None = None) -> None:

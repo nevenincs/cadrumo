@@ -22,7 +22,7 @@ from aeat.application.wizard._models import (
     WizardWidget,
 )
 from aeat.application.wizard._widgets import validate_widget_answer
-from aeat.core.i18n import Translatable as tr  # noqa: N813
+from aeat.core.i18n import Translatable as tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

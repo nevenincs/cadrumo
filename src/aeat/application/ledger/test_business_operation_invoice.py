@@ -7,14 +7,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.application.ledger._business_operation_invoice import (
-    BusinessOperationInvoice,
     BusinessOperationInvoiceInputError,
     BusinessOperationInvoiceNotFoundError,
     BusinessOperationInvoicePatch,
@@ -64,7 +62,9 @@ def _make_collectible_svc(isolated_settings: Settings, engine: Engine) -> Collec
 
 
 class TestPayableInvoiceCrud:
-    def test_add_creates_persisted_record_with_source_kind(self, isolated_settings: Settings, secure_engine: Engine) -> None:
+    def test_add_creates_persisted_record_with_source_kind(
+        self, isolated_settings: Settings, secure_engine: Engine
+    ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_engine)
         result = svc.add(
             bucket_id="bucket-001",
@@ -264,7 +264,9 @@ class TestCollectibleInvoiceEventEmission:
 
 
 class TestPrefixCollisionRefusal:
-    def test_ambiguous_prefix_refuses_with_full_id_set(self, isolated_settings: Settings, secure_engine: Engine, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_ambiguous_prefix_refuses_with_full_id_set(
+        self, isolated_settings: Settings, secure_engine: Engine, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         svc = _make_payable_svc(isolated_settings, secure_engine)
         ids = iter(["abcdef1234567890fedcba0987654321", "abcdef1234567890ffffffffffffffff"])
 
@@ -304,7 +306,7 @@ class TestRecordImmutability:
         from pydantic import ValidationError
 
         with pytest.raises(ValidationError):
-            result.record.notes = "mutated"  # type: ignore[misc]
+            result.record.notes = "mutated"
 
 
 class TestRoundTripPersistence:

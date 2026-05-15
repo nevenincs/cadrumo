@@ -139,7 +139,9 @@ class TestEvidenceErrorPaths:
         with pytest.raises(PurchaseInvoiceEvidenceInputError, match="not a readable file"):
             svc.add(bucket_id="b1", source_path=tmp_path / "ghost.pdf")
 
-    def test_add_rejects_unsupported_extension(self, isolated_settings: Settings, secure_engine: Engine, tmp_path: Path) -> None:
+    def test_add_rejects_unsupported_extension(
+        self, isolated_settings: Settings, secure_engine: Engine, tmp_path: Path
+    ) -> None:
         txt_file = tmp_path / "note.txt"
         txt_file.write_text("hello")
         svc = _make_svc(isolated_settings, secure_engine)

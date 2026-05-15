@@ -16,7 +16,7 @@ application functions and pydantic records.
 
 from __future__ import annotations
 
-from typing import Any
+import types
 
 import click
 import typer
@@ -30,28 +30,28 @@ from ._stdio import configure_stdio_for_utf8
 # :mod:`._stdio` for the rationale.
 configure_stdio_for_utf8()
 
-from ...application.diagnostics import build_cli_version_report, render_cli_version_text  # noqa: E402
-from ...application.operator_surface import (  # noqa: E402
+from ...application.diagnostics import build_cli_version_report, render_cli_version_text
+from ...application.operator_surface import (
     build_help_document,
     build_root_landing_report,
     render_help_text,
 )
-from ...application.overview import build_overview_status_report  # noqa: E402
-from ...application.workflow import workflow_state_repository  # noqa: E402
-from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES  # noqa: E402
-from . import _config  # noqa: E402
-from ._common import _FORMAT_TEXT, _emit  # noqa: E402
-from ._errors import decorate_typer_app, write_stderr  # noqa: E402
-from ._i18n import tr  # noqa: E402
-from ._log_levels import apply_to_root_logger, resolve_log_level  # noqa: E402
-from ._root_landing import render_cli_root_landing_lines  # noqa: E402
+from ...application.overview import build_overview_status_report
+from ...application.workflow import workflow_state_repository
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from . import _config
+from ._common import _FORMAT_TEXT, _emit
+from ._errors import decorate_typer_app, write_stderr
+from ._i18n import tr
+from ._log_levels import apply_to_root_logger, resolve_log_level
+from ._root_landing import render_cli_root_landing_lines
 
-_overview_module: Any | None = None
-_ledger_module: Any | None = None
-_live_module: Any | None = None
-_modelo_module: Any | None = None
-_registry_module: Any | None = None
-_review_module: Any | None = None
+_overview_module: types.ModuleType | None = None
+_ledger_module: types.ModuleType | None = None
+_live_module: types.ModuleType | None = None
+_modelo_module: types.ModuleType | None = None
+_registry_module: types.ModuleType | None = None
+_review_module: types.ModuleType | None = None
 
 try:
     from . import _app_live as _live_module

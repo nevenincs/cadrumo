@@ -906,6 +906,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.calculations.registry._errors.CasillaConstraintViolationError",
+        ErrorCode(
+            code="REFUSED_CALCULATIONS_CASILLA_CONSTRAINT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_calculations_casilla_constraint",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.renta.errors.RentaError",
         ErrorCode(
             code="ERROR_RENTA",
@@ -1573,6 +1584,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_CALCULATIONS_REGISTRY_SNAPSHOT",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_calculations_registry_snapshot",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.calculations.registry._errors.CasillaConstraintViolationError",
+        ErrorCode(
+            code="REFUSED_CALCULATIONS_CASILLA_CONSTRAINT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_calculations_casilla_constraint",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

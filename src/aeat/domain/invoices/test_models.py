@@ -86,7 +86,7 @@ def test_invoice_is_frozen_and_rejects_mutation() -> None:
     """Invoice models must be frozen."""
     invoice = _valid_invoice()
     with pytest.raises(ValidationError, match=r"frozen"):
-        invoice.notes = "mutated"  # type: ignore[misc]
+        invoice.notes = "mutated"
 
 
 def test_invoice_line_accepts_one_cent_rounding() -> None:

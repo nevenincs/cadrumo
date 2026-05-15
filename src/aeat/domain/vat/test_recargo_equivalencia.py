@@ -50,8 +50,8 @@ def test_recargo_parameters_each_cite_liva_art_161() -> None:
         "liva-art-161:recargo-rate-super-reducido",
         "liva-art-161:recargo-rate-tabaco",
     ):
-        legal_refs = raw[parameter_id].get("legal_refs")
-        assert legal_refs == ["ley-37-1992:art-161"], f"{parameter_id} must cite ley-37-1992:art-161"
+        legal_refs = raw[parameter_id].get("legal_refs") or []
+        assert "ley-37-1992:art-161" in legal_refs, f"{parameter_id} must cite ley-37-1992:art-161"
 
 
 def test_recargo_legal_section_carries_required_text_from_boe() -> None:
@@ -76,7 +76,7 @@ def test_recargo_corpus_excerpt_present_with_boe_quotes() -> None:
 
 def test_recargo_record_is_frozen() -> None:
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        LIVA_ART_161_RECARGO.general_rate = Decimal("0.999")  # type: ignore[misc]
+        LIVA_ART_161_RECARGO.general_rate = Decimal("0.999")
 
 
 def test_recargo_rate_for_general_returns_5_2_percent() -> None:

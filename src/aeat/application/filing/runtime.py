@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 from typing import Protocol
@@ -42,6 +43,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     expression_casilla_refs,
 )
+from ...domain.calculations.registry._ids import CasillaId, FormulaId, LegalRefId, SourceRefId
 from ...domain.filing import CasillaCollection, CasillaSchema
 from ...domain.filing._errors import FilingBuilderError
 
@@ -74,16 +76,25 @@ class FilingOperatorProfile(BaseModel):
     display_name: str = Field(min_length=1)
 
 
-@dataclass(frozen=True, slots=True)
-class RegistryCasillaSchema:
-    """Filing schema projection for one registry casilla."""
+class RegistryCasillaSchema(BaseModel):
+    """Filing schema projection for one registry casilla.
 
-    id: str
+    Strict, frozen pydantic v2 projection preserving typed IDs,
+    ``Decimal`` bounds, and the regulatory grounding (``legal_refs``,
+    ``source_refs``) from the authoritative :class:`CasillaDefinition`.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    id: CasillaId
     value_type: str
     required: bool
-    formula_inputs: tuple[str, ...]
-    min_value: float | int | None = None
-    max_value: float | int | None = None
+    formula: FormulaId | None
+    formula_inputs: tuple[CasillaId, ...]
+    legal_refs: tuple[LegalRefId, ...]
+    source_refs: tuple[SourceRefId, ...]
+    min_value: Decimal | None = None
+    max_value: Decimal | None = None
     default: object | None = None
 
 
@@ -363,15 +374,25 @@ def _casilla_schema(
     casilla: CasillaDefinition,
     formulas: dict[str, FormulaDefinition],
 ) -> RegistryCasillaSchema:
-    formula_inputs: tuple[str, ...] = ()
+    formula_inputs: tuple[CasillaId, ...] = ()
     if casilla.formula is not None:
         formula = formulas[casilla.formula]
         formula_inputs = tuple(dict.fromkeys(expression_casilla_refs(formula.expression)))
+    min_value: Decimal | None = None
+    max_value: Decimal | None = None
+    if casilla.constraints is not None:
+        min_value = casilla.constraints.min_value
+        max_value = casilla.constraints.max_value
     return RegistryCasillaSchema(
         id=casilla.id,
         value_type=_value_type(casilla.data_type),
         required=casilla.required,
+        formula=casilla.formula,
         formula_inputs=formula_inputs,
+        legal_refs=casilla.legal_refs,
+        source_refs=casilla.source_refs,
+        min_value=min_value,
+        max_value=max_value,
     )
 
 

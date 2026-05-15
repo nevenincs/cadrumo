@@ -67,6 +67,14 @@ jobs:
       - name: Typecheck
         run: just typecheck
 
+      - name: Semgrep regression rules (linkage-design type-uniformity)
+        # Semgrep requires the Unix `resource` module and does not run on
+        # Windows. Rules in `.semgrep/rules/` enforce the type-uniformity
+        # discipline established in Wave 1 of the linkage-design epic;
+        # see `.semgrep/README.md` for the rule inventory and policy.
+        if: matrix.os == 'ubuntu-latest'
+        run: uv run --no-sync semgrep --config .semgrep/rules/ --error src/aeat/
+
       - name: Registry verify
         run: uv run --no-sync aeat app registry verify --json
 

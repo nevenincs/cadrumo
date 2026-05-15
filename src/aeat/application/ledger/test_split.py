@@ -150,9 +150,7 @@ def test_split_emits_single_event_anchored_on_parent(secure_engine: Engine) -> N
 
     catalogue = event_repository.load()
     split_events = [
-        event
-        for event in catalogue.events.values()
-        if event.event_type is BucketEventType.LEDGER_TRANSACTION_SPLIT
+        event for event in catalogue.events.values() if event.event_type is BucketEventType.LEDGER_TRANSACTION_SPLIT
     ]
     assert len(split_events) == 1
     event = split_events[0]
@@ -331,8 +329,7 @@ def test_split_preserves_parent_amount_as_persisted_child_sum(secure_engine: Eng
         bucket_id="bucket-a",
         transaction_id=parent_result.ref.transaction_id,
         children=tuple(
-            SplitChildCommand(amount=value, description=f"slice-{idx}")
-            for idx, value in enumerate(amounts)
+            SplitChildCommand(amount=value, description=f"slice-{idx}") for idx, value in enumerate(amounts)
         ),
         actor="operator-A",
         transaction_repository=transaction_repository,

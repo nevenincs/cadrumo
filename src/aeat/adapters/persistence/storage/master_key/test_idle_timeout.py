@@ -123,7 +123,7 @@ def test_idle_evaluation_record_is_strict_pydantic() -> None:
     assert evaluation.remaining_seconds == 42
     # Strict: unknown keys rejected
     with pytest.raises(ValueError):
-        IdleEvaluation(expired=False, remaining_seconds=42, extra="nope")  # type: ignore[call-arg]
+        IdleEvaluation.model_validate({"expired": False, "remaining_seconds": 42, "extra": "nope"})
     # Strict: negative remaining_seconds rejected
     with pytest.raises(ValueError):
         IdleEvaluation(expired=True, remaining_seconds=-1)

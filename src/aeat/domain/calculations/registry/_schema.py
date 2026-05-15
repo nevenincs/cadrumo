@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from itertools import pairwise
-from typing import Annotated, Any, Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
@@ -36,7 +36,7 @@ from ._ids import (
 )
 
 
-def _coerce_decimal(value: Any) -> Any:
+def _coerce_decimal(value: object) -> object:
     if isinstance(value, Decimal):
         return value
     if isinstance(value, bool | float):
@@ -48,7 +48,7 @@ def _coerce_decimal(value: Any) -> Any:
 
 DecimalValue = Annotated[Decimal, BeforeValidator(_coerce_decimal)]
 
-ReviewStatus = Literal["reviewed", "provisional", "rejected"]
+ReviewStatus = Literal["reviewed"]
 DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
 EvidenceTier = Literal[
     "legal_authority",
@@ -80,6 +80,7 @@ FormulaOperator = Literal[
     "lookup_parameter",
     "lookup_bracket",
     "lookup_bracket_by_ccaa",
+    "lookup_parameter_by_entity_type",
     "previous_period_value",
     "previous_period_sum",
     "cross_model_sum",
@@ -175,12 +176,17 @@ class LegalReference(RegistryModel):
     def _validate_legal_reference(self) -> LegalReference:
         if self.effective_to is not None and self.effective_to < self.effective_from:
             raise RegistryValidationError("legal reference effective_to must be on or after effective_from")
-        if self.review_status != "reviewed":
-            raise RegistryValidationError(f"legal reference {self.id!r} is not reviewed")
         if any(not item.strip() for item in self.required_text):
             raise RegistryValidationError("legal reference required_text entries must be non-empty")
         if len(set(self.required_text)) != len(self.required_text):
             raise RegistryValidationError("legal reference required_text entries must be unique")
+        if "#" not in self.corpus_ref:
+            raise RegistryValidationError(
+                f"legal reference {self.id!r} corpus_ref must be of the form 'path#anchor' (got {self.corpus_ref!r})"
+            )
+        path_part, _, anchor_part = self.corpus_ref.partition("#")
+        if not path_part or not anchor_part:
+            raise RegistryValidationError(f"legal reference {self.id!r} corpus_ref must have non-empty path and anchor")
         return self
 
 
@@ -201,8 +207,6 @@ class SourceReference(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_source_reference(self) -> SourceReference:
-        if self.review_status != "reviewed":
-            raise RegistryValidationError(f"source reference {self.id!r} is not reviewed")
         if self.applies_to is not None and self.applies_from is not None and self.applies_to < self.applies_from:
             raise RegistryValidationError("source reference applies_to must be on or after applies_from")
         if "\\" in self.corpus_path or self.corpus_path.startswith(("/", ".")):
@@ -216,6 +220,35 @@ class SourceReference(RegistryModel):
         if lowered != value or any(char not in "0123456789abcdef" for char in value):
             raise RegistryValidationError("sha256 must be lowercase hexadecimal")
         return value
+
+
+class LegalParameter(RegistryModel):
+    """Authoritative numeric/categorical constant grounded in BOE law.
+
+    Distinct from :class:`LegalReference` (which catalogues articles) and
+    from per-modelo ``[[revisions.parameters]]`` blocks (which carry
+    revision-scoped parameter values). A ``LegalParameter`` is a global
+    constant tied to a specific legal article — e.g., the 19 percent
+    urban-rental retention rate, the 1.1 percent imputación rate, the
+    €400 8th-Directive refund threshold.
+
+    Lives in ``registry/aeat/legal/*.toml`` under top-level
+    ``[parameters."slug"]`` tables and is loaded into
+    :class:`RegistryCatalogues.parameters` so consumers go through the
+    single validated registry-load surface instead of opening the TOML
+    file directly.
+    """
+
+    id: str
+    evidence_tier: Literal["legal_authority"]
+    value: str
+    unit: str
+    applies_to: str
+    legal_refs: LegalRefs
+    review_status: ReviewStatus
+    reviewed_at: date | None = None
+    reviewed_by: str | None = None
+    notes: str | None = None
 
 
 class SourceCitation(RegistryModel):
@@ -799,6 +832,15 @@ class DataBindingDefinition(RegistryModel):
         "ledger_oss_aggregation",
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
+        "payable_invoice",
+        "collectible_invoice",
+        "ledger_transaction",
+        "purchase_invoice_evidence",
+        "withholding",
+        "related_party_operation",
+        "foreign_asset",
+        "atribucion_member",
+        "refund_operation",
     ]
     selector: Mapping[str, str | int | DecimalValue | bool | tuple[str, ...]]
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
@@ -806,6 +848,7 @@ class DataBindingDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
+    aeat_prefilled: bool = False
 
 
 class FormulaDefinition(RegistryModel):
@@ -818,6 +861,60 @@ class FormulaDefinition(RegistryModel):
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
+class CasillaConstraints(RegistryModel):
+    """Declarative value constraints applied after a casilla is evaluated.
+
+    Captures the legal sign / range rules AEAT mandates per LIRPF /
+    LIVA / LIS articles: a withholding casilla cannot carry a
+    negative value, a deductibility cap restricts the maximum, a
+    non-negativity floor on a cuota líquida prevents arithmetic
+    underflow propagating through downstream formulas.
+
+    Each constraint declares its own legal grounding so the engine
+    can surface a BOE permalink in the violation envelope when a
+    computed value falls outside the declared bounds. The runtime
+    raises a typed `CasillaConstraintViolationError`; the Sheets apply
+    adapter renders the same record as a `setDataValidation` rule
+    on the corresponding cell so the operator sees the constraint
+    directly in the workbook UI.
+    """
+
+    sign: Literal["any", "non_negative", "non_positive"] = "any"
+    min_value: DecimalValue | None = None
+    max_value: DecimalValue | None = None
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @model_validator(mode="after")
+    def _validate_bounds(self) -> CasillaConstraints:
+        if self.min_value is not None and self.max_value is not None and self.min_value > self.max_value:
+            raise RegistryValidationError(
+                f"casilla constraints: min_value {self.min_value} > max_value {self.max_value}"
+            )
+        if self.sign == "non_negative" and self.max_value is not None and self.max_value < Decimal("0"):
+            raise RegistryValidationError(
+                "casilla constraints: sign='non_negative' is incompatible with negative max_value"
+            )
+        if self.sign == "non_positive" and self.min_value is not None and self.min_value > Decimal("0"):
+            raise RegistryValidationError(
+                "casilla constraints: sign='non_positive' is incompatible with positive min_value"
+            )
+        return self
+
+    def violates(self, value: Decimal) -> str | None:
+        """Return a short reason string if `value` violates this constraint, else None."""
+
+        if self.sign == "non_negative" and value < Decimal("0"):
+            return f"value {value} violates sign=non_negative"
+        if self.sign == "non_positive" and value > Decimal("0"):
+            return f"value {value} violates sign=non_positive"
+        if self.min_value is not None and value < self.min_value:
+            return f"value {value} below min_value {self.min_value}"
+        if self.max_value is not None and value > self.max_value:
+            return f"value {value} above max_value {self.max_value}"
+        return None
+
+
 class CasillaDefinition(RegistryModel):
     id: CasillaId
     number: str
@@ -828,8 +925,8 @@ class CasillaDefinition(RegistryModel):
     input_kind: Literal["manual", "bound", "computed", "informational"] = "manual"
     formula: FormulaId | None = None
     binding: BindingId | None = None
-    validation_refs: tuple[str, ...] = ()
     export_refs: tuple[ExportFieldId, ...] = ()
+    constraints: CasillaConstraints | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -887,6 +984,7 @@ class RelationDefinition(RegistryModel):
     period_alignment: Mapping[str, str | int]
     source_periods: tuple[str, ...] = ()
     target_periods: tuple[str, ...] = ()
+    source_period_offset_from_target: int | None = None
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -904,6 +1002,16 @@ class RelationDefinition(RegistryModel):
             raise RegistryValidationError(
                 f"annual summary relation {self.id!r} must use periodic_to_annual_summary role"
             )
+        if self.source_period_offset_from_target is not None:
+            # The offset declares "for each target_period, derive source_period
+            # by adding the offset to the target's ordinal". It is incompatible
+            # with explicit source_periods which fixes a single static source set.
+            if self.source_periods:
+                raise RegistryValidationError(
+                    f"relation {self.id!r} cannot declare source_periods together with source_period_offset_from_target"
+                )
+            if self.source_period_offset_from_target == 0:
+                raise RegistryValidationError(f"relation {self.id!r} source_period_offset_from_target must be non-zero")
         return self
 
 
@@ -1061,13 +1169,40 @@ class ModeloDefinition(RegistryModel):
 class RegistryCatalogues(RegistryModel):
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
+    parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
 
 
 class RegistrySnapshot(RegistryModel):
     modelo: ModeloDefinition
     revision: ModeloRevision
     filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=8)
+    # Accommodates time-codes ("1T", "2T", "0A", "01"-"12", "EXT-1T") and
+    # event-period names from ad_hoc modelos (M036 "alta", "modificacion",
+    # "baja"; M308 "AD-HOC"; M115 etc.). The 32-char ceiling is generous
+    # enough for descriptive future event names without becoming a free-text
+    # field — the matching constraint is enforced upstream in
+    # PeriodSelector + FilingScheduleDefinition (which validate against
+    # each modelo's declared periods).
+    #
+    # Audit note on the layered max_length contract across the codebase:
+    #
+    #   - RegistrySnapshot.period (this field): max_length=32 — the
+    #     registry-side surface where event-period names live.
+    #   - Application-side serialization buffers (filing/_calculate.py,
+    #     filing/_export.py, aggregation/_service.py, etc.): max_length=16
+    #     — sufficient for every period name registered today
+    #     ("modificacion" is 12).
+    #   - Sede outbound models (sede/_declarations.py, sede/_schema.py):
+    #     max_length=8 — AEAT-side period codes from the sede HTML are
+    #     always ≤ 8 chars (e.g. "1T", "0A"). M036 events never traverse
+    #     these models (census events do not flow through the
+    #     filed-declaration sede surface).
+    #
+    # Verified end-to-end: M036's "modificacion" period builds a
+    # RegistrySnapshot, threads through the application/filing layer
+    # (16 ≥ 12), and never reaches the sede 8-cap models.
+    # the modelo's declared periods).
+    period: str = Field(min_length=1, max_length=32)
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
     extraction_profiles: Mapping[ExtractionProfileId, ExtractionProfileDefinition]

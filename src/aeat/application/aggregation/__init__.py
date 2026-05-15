@@ -2,6 +2,16 @@
 
 from __future__ import annotations
 
+from ._counterpart import (
+    CounterpartAggregation,
+    CounterpartObservation,
+    OperationKind347,
+    OperationKind349,
+    aggregate_counterpart_347,
+    aggregate_counterpart_349,
+    declarable_counterparty_nifs_347,
+    declarable_for_347,
+)
 from ._errors import (
     AggregationCategoryCoverageError,
     AggregationError,
@@ -9,6 +19,15 @@ from ._errors import (
     AggregationPeriodError,
     AggregationUnsupportedModeloError,
     AggregationValidationError,
+)
+from ._foreign_assets import (
+    ForeignAssetClass,
+    ForeignAssetClassRollup,
+    ForeignAssetObservation,
+    ForeignAssetsAggregation,
+    aggregate_foreign_assets_720,
+    declarable_asset_classes_720,
+    declarable_class,
 )
 from ._iva_ledger import (
     IvaLedgerAggregation,
@@ -25,11 +44,6 @@ from ._modelo_bindings import (
     resolve_modelo_ledger_binding_values_from_repositories,
 )
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind, Quarter
-from ._service import (
-    PerModeloAggregationCommand,
-    PerModeloAggregationResult,
-    aggregate_per_modelo,
-)
 from ._oss_ioss import (
     OssIossLedgerCandidate,
     aggregate_oss_ioss_bindings,
@@ -44,6 +58,10 @@ from ._prorrata import (
     aggregate_prorrata_inputs,
     aggregate_provisional_prorrata,
 )
+from ._registry_provider import (
+    PerModeloRegistryBindingResolution,
+    resolve_per_modelo_registry_binding_values,
+)
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
     RentaLedgerAggregationIssueReason,
@@ -51,23 +69,60 @@ from ._renta_ledger import (
     aggregate_renta_ledger_expenses,
     aggregate_renta_ledger_expenses_from_repositories,
 )
+from ._retenciones import (
+    RetencionesAggregation,
+    RetencionObservation,
+    RetencionPerceptorRollup,
+    RetencionScheme,
+    aggregate_retenciones_111,
+    aggregate_retenciones_115,
+    aggregate_retenciones_123,
+    aggregate_retenciones_180,
+    aggregate_retenciones_190,
+    aggregate_retenciones_193,
+)
+from ._service import (
+    ACCEPTED_SOURCE_KINDS,
+    ERROR_CODES,
+    AggregationSourceKind,
+    PerModeloAggregationCommand,
+    PerModeloAggregationLogFields,
+    PerModeloAggregationProvider,
+    PerModeloAggregationResult,
+    aggregate_per_modelo,
+    get_per_modelo_aggregation_contract,
+)
 
 __all__ = [
+    "ACCEPTED_SOURCE_KINDS",
+    "ERROR_CODES",
     "AggregationCategoryCoverageError",
     "AggregationError",
     "AggregationMissingClassificationError",
     "AggregationPeriodError",
+    "AggregationSourceKind",
     "AggregationUnsupportedModeloError",
     "AggregationValidationError",
     "CasillaAggregation",
     "CasillaProvenance",
+    "CounterpartAggregation",
+    "CounterpartObservation",
+    "ForeignAssetClass",
+    "ForeignAssetClassRollup",
+    "ForeignAssetObservation",
+    "ForeignAssetsAggregation",
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",
     "IvaLedgerAggregationIssueReason",
     "ModeloLedgerBindingAggregation",
+    "OperationKind347",
+    "OperationKind349",
     "OssIossLedgerCandidate",
     "PerModeloAggregationCommand",
+    "PerModeloAggregationLogFields",
+    "PerModeloAggregationProvider",
     "PerModeloAggregationResult",
+    "PerModeloRegistryBindingResolution",
     "Period",
     "PeriodKind",
     "ProrrataAggregation",
@@ -76,9 +131,16 @@ __all__ = [
     "RentaLedgerAggregationIssue",
     "RentaLedgerAggregationIssueReason",
     "RentaLedgerExpenseAggregation",
+    "RetencionObservation",
+    "RetencionPerceptorRollup",
+    "RetencionScheme",
+    "RetencionesAggregation",
     "VatOperation",
     "VatOperationKind",
+    "aggregate_counterpart_347",
+    "aggregate_counterpart_349",
     "aggregate_definitiva_prorrata",
+    "aggregate_foreign_assets_720",
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
     "aggregate_oss_ioss_bindings",
@@ -87,9 +149,21 @@ __all__ = [
     "aggregate_provisional_prorrata",
     "aggregate_renta_ledger_expenses",
     "aggregate_renta_ledger_expenses_from_repositories",
+    "aggregate_retenciones_111",
+    "aggregate_retenciones_115",
+    "aggregate_retenciones_123",
+    "aggregate_retenciones_180",
+    "aggregate_retenciones_190",
+    "aggregate_retenciones_193",
     "aggregation_period_for_modelo",
+    "declarable_asset_classes_720",
+    "declarable_class",
+    "declarable_counterparty_nifs_347",
+    "declarable_for_347",
+    "get_per_modelo_aggregation_contract",
     "iva_ledger_missing_fact_reasons",
     "resolve_modelo_ledger_binding_values_from_repositories",
+    "resolve_per_modelo_registry_binding_values",
     "validate_oss_ioss_observation",
     "validate_oss_ioss_observations",
 ]

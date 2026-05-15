@@ -256,8 +256,7 @@ class LocalFileSystemProvider:
         stripped_stored = stored_hash.split("-", 1)[1] if stored_hash.startswith("sha256-") else stored_hash
         if stripped_stored and stripped_stored != actual_hash:
             raise StorageIntegrityError(
-                f"content_hash mismatch for {target_path.name}: "
-                f"stored={stored_hash!r} actual_sha256={actual_hash!r}",
+                f"content_hash mismatch for {target_path.name}: stored={stored_hash!r} actual_sha256={actual_hash!r}",
                 context={"path": str(target_path), "stored_hash": stored_hash, "actual_sha256": actual_hash},
             )
 
@@ -267,11 +266,14 @@ class LocalFileSystemProvider:
         except ValueError:
             written_at = datetime.now(UTC)
 
+        _byte_length_raw = sidecar.get("byte_length", len(payload))
+        if not isinstance(_byte_length_raw, (int, str)):
+            raise TypeError(f"sidecar byte_length has unexpected type: {type(_byte_length_raw)!r}")
         metadata = ProviderObjectMetadata(
             namespace=namespace_clean,
             object_key_hmac=hmac_clean,
             provider_object_id=str(target_path),
-            byte_length=int(sidecar.get("byte_length", len(payload))),
+            byte_length=int(_byte_length_raw),
             content_hash=stored_hash or f"sha256-{actual_hash}",
             written_at=written_at,
         )
@@ -324,26 +326,26 @@ class LocalFileSystemProvider:
                 written_at = datetime.fromisoformat(written_at_raw) if written_at_raw else datetime.now(UTC)
             except ValueError:
                 written_at = datetime.now(UTC)
+            _byte_length_raw = sidecar.get("byte_length", 0)
+            if not isinstance(_byte_length_raw, (int, str)):
+                raise TypeError(f"sidecar byte_length has unexpected type: {type(_byte_length_raw)!r}")
             yield ProviderObjectMetadata(
                 namespace=namespace_clean,
                 object_key_hmac=str(sidecar.get("object_key_hmac", "")),
                 provider_object_id=str(entry),
-                byte_length=int(sidecar.get("byte_length", 0)),
+                byte_length=int(_byte_length_raw),
                 content_hash=str(sidecar.get("content_hash", "")),
                 written_at=written_at,
             )
 
     def probe(self, *, read_only: bool = False) -> ProviderProbeReport:
-        report_kwargs: dict[str, object] = {
-            "provider_kind": ProviderKind.LOCAL_FILESYSTEM,
-            "read_only": read_only,
-        }
         if not self._root.exists():
             try:
                 self._root.mkdir(parents=True, exist_ok=True)
             except (PermissionError, OSError) as exc:
                 return ProviderProbeReport(
-                    **report_kwargs,
+                    provider_kind=ProviderKind.LOCAL_FILESYSTEM,
+                    read_only=read_only,
                     reachable=False,
                     writable=False,
                     detail=f"root {self._root} unreachable: {exc}",
@@ -351,7 +353,8 @@ class LocalFileSystemProvider:
 
         if read_only:
             return ProviderProbeReport(
-                **report_kwargs,
+                provider_kind=ProviderKind.LOCAL_FILESYSTEM,
+                read_only=read_only,
                 reachable=True,
                 writable=False,
                 detail=f"read_only probe; root {self._root} is reachable",
@@ -368,7 +371,8 @@ class LocalFileSystemProvider:
             )
         except (PermissionError, OSError, StoragePermissionError, StorageConflictError) as exc:
             return ProviderProbeReport(
-                **report_kwargs,
+                provider_kind=ProviderKind.LOCAL_FILESYSTEM,
+                read_only=read_only,
                 reachable=True,
                 writable=False,
                 detail=f"sentinel write refused: {exc}",
@@ -377,7 +381,8 @@ class LocalFileSystemProvider:
             self.delete(_PROBE_NAMESPACE, "00000000probe")
         del metadata
         return ProviderProbeReport(
-            **report_kwargs,
+            provider_kind=ProviderKind.LOCAL_FILESYSTEM,
+            read_only=read_only,
             reachable=True,
             writable=True,
             detail=f"sentinel round-trip ok in {self._root}",

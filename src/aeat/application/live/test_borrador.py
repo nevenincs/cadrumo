@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 
 from aeat.application.live._borrador import (
-    Borrador100Snapshot,
     BorradorPrefillEntry,
     BorradorService,
     BorradorSnapshotNotFoundError,
@@ -37,7 +36,8 @@ _SOURCE = "https://www2.agenciatributaria.gob.es/wlpl/PRET-R210/SimuladorOpenAja
 
 class TestCapture:
     def test_capture_persists_with_content_addressed_id(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = BorradorService(settings=isolated_settings)
         snap = svc.capture(
@@ -54,49 +54,78 @@ class TestCapture:
         assert snap.prefill_entries[0].value == Decimal("1000.00")
 
     def test_capture_deduplicates_identical_snapshots(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = BorradorService(settings=isolated_settings)
-        kwargs = dict(
+        captured_at = datetime(2025, 3, 15, tzinfo=UTC)
+        prefill_entries = (_entry(),)
+        a = svc.capture(
             bucket_id="bucket-001",
             tax_year=2024,
-            captured_at=datetime(2025, 3, 15, tzinfo=UTC),
+            captured_at=captured_at,
             source_url=_SOURCE,
-            prefill_entries=(_entry(),),
+            prefill_entries=prefill_entries,
         )
-        a = svc.capture(**kwargs)
-        b = svc.capture(**kwargs)
+        b = svc.capture(
+            bucket_id="bucket-001",
+            tax_year=2024,
+            captured_at=captured_at,
+            source_url=_SOURCE,
+            prefill_entries=prefill_entries,
+        )
         assert a.snapshot_id == b.snapshot_id
         assert len(svc.list_snapshots(bucket_id="bucket-001")) == 1
 
     def test_capture_distinct_entries_yield_distinct_ids(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = BorradorService(settings=isolated_settings)
-        common = dict(
-            bucket_id="bucket-001",
-            tax_year=2024,
-            captured_at=datetime(2025, 3, 15, tzinfo=UTC),
-            source_url=_SOURCE,
+        bucket_id = "bucket-001"
+        tax_year = 2024
+        captured_at = datetime(2025, 3, 15, tzinfo=UTC)
+        source_url = _SOURCE
+        a = svc.capture(
+            bucket_id=bucket_id,
+            tax_year=tax_year,
+            captured_at=captured_at,
+            source_url=source_url,
+            prefill_entries=(_entry(casilla="100", value="1000"),),
         )
-        a = svc.capture(prefill_entries=(_entry(casilla="100", value="1000"),), **common)
-        b = svc.capture(prefill_entries=(_entry(casilla="100", value="2000"),), **common)
+        b = svc.capture(
+            bucket_id=bucket_id,
+            tax_year=tax_year,
+            captured_at=captured_at,
+            source_url=source_url,
+            prefill_entries=(_entry(casilla="100", value="2000"),),
+        )
         assert a.snapshot_id != b.snapshot_id
 
     def test_capture_id_is_entry_order_invariant(self, isolated_settings: Settings) -> None:
         svc = BorradorService(settings=isolated_settings)
-        common = dict(
-            bucket_id="bucket-001",
-            tax_year=2024,
-            captured_at=datetime(2025, 3, 15, tzinfo=UTC),
-            source_url=_SOURCE,
-        )
+        bucket_id = "bucket-001"
+        tax_year = 2024
+        captured_at = datetime(2025, 3, 15, tzinfo=UTC)
+        source_url = _SOURCE
         entries_a = (_entry(casilla="100", value="1000"), _entry(casilla="200", value="2000"))
         entries_b = (_entry(casilla="200", value="2000"), _entry(casilla="100", value="1000"))
-        a = svc.capture(prefill_entries=entries_a, **common)
+        a = svc.capture(
+            bucket_id=bucket_id,
+            tax_year=tax_year,
+            captured_at=captured_at,
+            source_url=source_url,
+            prefill_entries=entries_a,
+        )
         # Need a fresh storage to dedup-bypass: same snapshot_id by content
-        svc.discard(bucket_id="bucket-001", snapshot_id=a.snapshot_id)
-        b = svc.capture(prefill_entries=entries_b, **common)
+        svc.discard(bucket_id=bucket_id, snapshot_id=a.snapshot_id)
+        b = svc.capture(
+            bucket_id=bucket_id,
+            tax_year=tax_year,
+            captured_at=captured_at,
+            source_url=source_url,
+            prefill_entries=entries_b,
+        )
         # Hash is computed from sorted entries, so a/b share id; second
         # capture deduplicates to the existing record. The dedup-hit
         # preserves discarded=True from the first capture.
@@ -125,56 +154,63 @@ class TestShow:
 class TestListAndLatest:
     def test_list_excludes_discarded_by_default(self, isolated_settings: Settings) -> None:
         svc = BorradorService(settings=isolated_settings)
-        common = dict(
-            bucket_id="b1",
-            tax_year=2024,
-            source_url=_SOURCE,
-        )
+        bucket_id = "b1"
+        tax_year = 2024
+        source_url = _SOURCE
         a = svc.capture(
+            bucket_id=bucket_id,
+            tax_year=tax_year,
             captured_at=datetime(2025, 1, 1, tzinfo=UTC),
+            source_url=source_url,
             prefill_entries=(_entry(casilla="100", value="100"),),
-            **common,
         )
         b = svc.capture(
+            bucket_id=bucket_id,
+            tax_year=tax_year,
             captured_at=datetime(2025, 6, 1, tzinfo=UTC),
+            source_url=source_url,
             prefill_entries=(_entry(casilla="100", value="200"),),
-            **common,
         )
-        svc.discard(bucket_id="b1", snapshot_id=a.snapshot_id, reason="stale")
-        visible = svc.list_snapshots(bucket_id="b1")
-        with_discarded = svc.list_snapshots(bucket_id="b1", include_discarded=True)
+        svc.discard(bucket_id=bucket_id, snapshot_id=a.snapshot_id, reason="stale")
+        visible = svc.list_snapshots(bucket_id=bucket_id)
+        with_discarded = svc.list_snapshots(bucket_id=bucket_id, include_discarded=True)
         assert len(visible) == 1
         assert visible[0].snapshot_id == b.snapshot_id
         assert len(with_discarded) == 2
 
     def test_latest_for_year_filters_year_and_excludes_discarded(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = BorradorService(settings=isolated_settings)
-        common = dict(bucket_id="b1", source_url=_SOURCE)
+        bucket_id = "b1"
+        source_url = _SOURCE
         svc.capture(
+            bucket_id=bucket_id,
             tax_year=2023,
             captured_at=datetime(2024, 6, 1, tzinfo=UTC),
+            source_url=source_url,
             prefill_entries=(_entry(casilla="100", value="500"),),
-            **common,
         )
         newer = svc.capture(
+            bucket_id=bucket_id,
             tax_year=2024,
             captured_at=datetime(2025, 6, 1, tzinfo=UTC),
+            source_url=source_url,
             prefill_entries=(_entry(casilla="100", value="1000"),),
-            **common,
         )
         older = svc.capture(
+            bucket_id=bucket_id,
             tax_year=2024,
             captured_at=datetime(2025, 1, 1, tzinfo=UTC),
+            source_url=source_url,
             prefill_entries=(_entry(casilla="100", value="900"),),
-            **common,
         )
-        latest = svc.latest_for_year(bucket_id="b1", tax_year=2024)
+        latest = svc.latest_for_year(bucket_id=bucket_id, tax_year=2024)
         assert latest == newer
         # Discarding the newer one falls back to older.
-        svc.discard(bucket_id="b1", snapshot_id=newer.snapshot_id)
-        latest_after_discard = svc.latest_for_year(bucket_id="b1", tax_year=2024)
+        svc.discard(bucket_id=bucket_id, snapshot_id=newer.snapshot_id)
+        latest_after_discard = svc.latest_for_year(bucket_id=bucket_id, tax_year=2024)
         assert latest_after_discard == older
 
     def test_latest_for_year_returns_none_when_empty(self, isolated_settings: Settings) -> None:
@@ -184,7 +220,8 @@ class TestListAndLatest:
 
 class TestDiscard:
     def test_discard_marks_snapshot_and_records_reason(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = BorradorService(settings=isolated_settings)
         snap = svc.capture(
@@ -207,20 +244,22 @@ class TestDiscard:
 class TestBucketIsolation:
     def test_snapshots_are_bucket_scoped(self, isolated_settings: Settings) -> None:
         svc = BorradorService(settings=isolated_settings)
-        common = dict(
-            tax_year=2024,
-            captured_at=datetime(2025, 3, 15, tzinfo=UTC),
-            source_url=_SOURCE,
-        )
+        tax_year = 2024
+        captured_at = datetime(2025, 3, 15, tzinfo=UTC)
+        source_url = _SOURCE
         svc.capture(
             bucket_id="bucket-A",
+            tax_year=tax_year,
+            captured_at=captured_at,
+            source_url=source_url,
             prefill_entries=(_entry(casilla="100", value="100"),),
-            **common,
         )
         svc.capture(
             bucket_id="bucket-B",
+            tax_year=tax_year,
+            captured_at=captured_at,
+            source_url=source_url,
             prefill_entries=(_entry(casilla="100", value="200"),),
-            **common,
         )
         a = svc.list_snapshots(bucket_id="bucket-A")
         b = svc.list_snapshots(bucket_id="bucket-B")

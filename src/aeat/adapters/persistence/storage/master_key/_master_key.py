@@ -986,10 +986,12 @@ def get_master_key_provider(
     store_dir = Path(settings.aeat_secret_store_dir)
     if resolved is SecretStoreBackend.UNSECURED:
         # Hostile-named opt-out gate: the unsecured backend requires the
-        # operator to explicitly set AEAT_ALLOW_UNENCRYPTED=1. Refuse
-        # otherwise. The NIF-canary that fences off real tax data lives
-        # at the profile-load boundary (see consumer modules).
-        if not settings.aeat_allow_unencrypted:
+        # operator to explicitly set AEAT_ALLOW_UNENCRYPTED=1 (strict
+        # string match, not Pydantic bool coercion — see the Settings
+        # field's inline rationale). Refuse otherwise. The NIF-canary
+        # that fences off real tax data lives at the profile-load
+        # boundary (see consumer modules).
+        if settings.aeat_allow_unencrypted != "1":
             raise UnsecuredModeRefusedError(
                 "aeat_secret_store_backend='unsecured' requires "
                 "AEAT_ALLOW_UNENCRYPTED=1. The unsecured backend uses a "

@@ -191,9 +191,7 @@ def _assert_registry_snapshot_axis(
 
 def _borrador_capable_bindings(registry_snapshot: RegistrySnapshot) -> dict[str, DataBindingDefinition]:
     return {
-        str(binding.id): binding
-        for binding in registry_snapshot.revision.bindings
-        if binding.aeat_prefilled is True
+        str(binding.id): binding for binding in registry_snapshot.revision.bindings if binding.aeat_prefilled is True
     }
 
 

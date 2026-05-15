@@ -30,7 +30,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ....domain.calculations.registry._ids import CasillaId, ParameterId, RelationId
+from ....domain.calculations.registry._ids import BindingId, CasillaId, ParameterId, RelationId
 from ....domain.calculations.registry._schema import DecimalValue as _RegistryDecimalValue
 
 # `DecimalValue` is the registry's annotated `Decimal` with a
@@ -60,6 +60,7 @@ class TabName(StrEnum):
     CALCULOS = "Cálculos"
     PROVENANCE = "Procedencia"
     TARIFFS = "Tarifas"
+    DETALLE = "Detalle"
     GUIDE = "Guía"
 
 
@@ -158,6 +159,73 @@ class SheetFormulaCell(BaseModel):
     rounding_scale: int | None = Field(default=None, ge=0, le=12)
     rounding_rule: Literal["money", "integer", "none"]
     note: str | None = None
+
+
+class SheetCellConstraint(BaseModel):
+    """A declarative value constraint surfaced to one Sheets cell.
+
+    Mirrors the registry's `CasillaConstraints` record into a Sheets
+    `setDataValidation` rule. The apply adapter renders this as a
+    `condition` block on the target cell so an operator who types an
+    out-of-range value sees Sheets's own validation banner reject it
+    in the workbook UI.
+
+    The constraint also propagates to the cell's `note` so the
+    operator sees the legal grounding ("LIRPF art. 56 — non-negative")
+    even before they attempt invalid input.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    address: SheetCellAddress
+    sign: Literal["any", "non_negative", "non_positive"] = "any"
+    min_value: Decimal | None = None
+    max_value: Decimal | None = None
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    casilla: CasillaId
+
+
+class SheetRowSetColumn(BaseModel):
+    """One column of a `SheetRowSet`, mapping a binding id to a header cell."""
+
+    model_config = _STRICT_FROZEN
+
+    binding: BindingId
+    header_address: SheetCellAddress
+    header_label: str = Field(min_length=1)
+    legal_refs: tuple[str, ...] = ()
+
+
+class SheetRowSet(BaseModel):
+    """A repeating-row data block in the `Detalle` tab.
+
+    Mirrors the registry's row-producer binding pattern (bindings
+    declared with `aggregation = { op = "rows", grouping = "..." }`).
+    Each row in the workbook represents one operator-supplied detail
+    record (e.g., one perceptor on modelo 190, one VIES counterparty
+    on modelo 349, one foreign asset on modelo 720). Columns are
+    declared per row-producing binding sharing the same `grouping`.
+
+    The engine emits a header row carrying `header_label` for each
+    column. Operators add row data freely below; the apply adapter
+    leaves the data area unprotected. The pull adapter reads the
+    operator-supplied rows back into structured `RowSetEdit` records
+    keyed by binding id.
+
+    `legal_refs` and `source_refs` ground the row-set against AEAT's
+    diseño-de-registro authority that mandates the per-record
+    fields.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    grouping: str = Field(min_length=1)
+    tab: TabName
+    header_row: int = Field(ge=1)
+    first_data_row: int = Field(ge=2)
+    columns: tuple[SheetRowSetColumn, ...] = Field(min_length=1)
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
 
 
 class SheetProtectedRange(BaseModel):
@@ -301,12 +369,24 @@ class RelationValue(BaseModel):
     `resolve_relation_values_from_observations` and supplies the
     result here; the engine mirrors it as a scalar cell in `Tarifas`
     so the workbook's formulas can consume it.
+
+    `provenance` carries the source tier the value came from:
+    `local_filing` (operator's own prior filing in
+    `SecureObjectRepository`), `aeat_live` (remote AEAT Sede
+    justificante parse), `operator_manual` (operator entered the
+    value into Sheets directly). The engine stamps the provenance
+    on the workbook so the pull adapter can detect stale prefills.
     """
 
     model_config = _STRICT_FROZEN
 
     relation: RelationId
     value: Decimal | None = None
+    provenance: Literal["local_filing", "aeat_live", "operator_manual"] = "operator_manual"
+    source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    source_periods: tuple[str, ...] = ()
+    resolved_at: datetime | None = None
+    note: str | None = None
 
 
 class RelationValues(BaseModel):
@@ -374,6 +454,9 @@ class SheetExportPlan(BaseModel):
     tariffs: tuple[SheetTariffTable, ...] = ()
     provenance: tuple[SheetProvenanceRow, ...] = ()
     protected_ranges: tuple[SheetProtectedRange, ...] = ()
+    cell_constraints: tuple[SheetCellConstraint, ...] = ()
+    row_sets: tuple[SheetRowSet, ...] = ()
+    relation_provenance: RelationValues | None = None
     guide: SheetGuideContent
 
     def all_addresses(self) -> tuple[SheetCellAddress, ...]:
@@ -396,12 +479,15 @@ __all__ = [
     "RelationValue",
     "RelationValues",
     "SheetCellAddress",
+    "SheetCellConstraint",
     "SheetExportMetadata",
     "SheetExportPlan",
     "SheetFormulaCell",
     "SheetGuideContent",
     "SheetProtectedRange",
     "SheetProvenanceRow",
+    "SheetRowSet",
+    "SheetRowSetColumn",
     "SheetTariffTable",
     "SheetTariffTableRow",
     "SheetValueCell",

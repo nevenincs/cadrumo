@@ -9,7 +9,7 @@ repository.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Protocol, cast
+from typing import Protocol, runtime_checkable
 
 from ...core.logging import get_logger
 from ...domain.filing import FilingDraft, FilingDraftRepository, FilingValueKind
@@ -28,6 +28,7 @@ from ...domain.filing._protocols import CasillaSchemaProvider
 _logger = get_logger(__name__)
 
 
+@runtime_checkable
 class _SubmittedOriginal(Protocol):
     submission_id: str
     draft_id: str
@@ -103,7 +104,9 @@ def _submitted_original(original: object) -> _SubmittedOriginal:
     missing = [name for name in required if not hasattr(original, name)]
     if missing:
         raise FilingBuilderError(f"original submission is missing required fields: {missing!r}")
-    submitted = cast("_SubmittedOriginal", original)
+    if not isinstance(original, _SubmittedOriginal):
+        raise FilingBuilderError("original submission does not conform to the expected protocol shape")
+    submitted: _SubmittedOriginal = original
     csv = submitted.justificante_csv
     if not isinstance(csv, str) or not csv.strip():
         raise FilingBuilderError("original submission must include an official justificante CSV")

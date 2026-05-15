@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
-from typing import Protocol, cast
+from typing import Protocol, runtime_checkable
 
 from ofxparse import OfxParser
 
@@ -45,6 +45,7 @@ class _OfxTransactionLike(Protocol):
     type: str | None
 
 
+@runtime_checkable
 class _OfxStatementLike(Protocol):
     """Minimal OFX statement surface used by the provider."""
 
@@ -52,6 +53,7 @@ class _OfxStatementLike(Protocol):
     currency: str | None
 
 
+@runtime_checkable
 class _OfxAccountLike(Protocol):
     """Minimal OFX account surface used by the provider."""
 
@@ -180,7 +182,11 @@ class OfxProvider(FinancialProvider):
             if marker in seen_accounts:
                 continue
             seen_accounts.add(marker)
-            typed_accounts.append(cast(_OfxAccountLike, account))
+            if not isinstance(account, _OfxAccountLike):
+                raise InvalidFinancialSourceError(
+                    f"OFX account object is missing expected attributes: {type(account).__name__}"
+                )
+            typed_accounts.append(account)
         if not any(getattr(account, "statement", None) is not None for account in typed_accounts):
             raise InvalidFinancialSourceError("OFX account does not expose a statement block")
         return tuple(typed_accounts)
@@ -192,5 +198,5 @@ def _iter_account_statements(
     """Yield every account that exposes a statement block."""
     for account in accounts:
         statement = getattr(account, "statement", None)
-        if statement is not None:
-            yield account, cast(_OfxStatementLike, statement)
+        if statement is not None and isinstance(statement, _OfxStatementLike):
+            yield account, statement

@@ -17,8 +17,12 @@ import logging
 import logging.config
 import re
 from collections.abc import Mapping
+from contextvars import ContextVar
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from .observability._context import RunContextInfo
 
 _CONFIGURED = False
 _FACTORY_INSTALLED = False
@@ -52,10 +56,7 @@ SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
     "token",
 )
 _SENSITIVE_KEY_SET = frozenset(pattern.lower() for pattern in SCRUB_FIELD_PATTERNS)
-_SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = cast(
-    tuple[str, ...],
-    tuple(sorted(SCRUB_FIELD_PATTERNS, key=len, reverse=True)),
-)
+_SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = (*sorted(SCRUB_FIELD_PATTERNS, key=lambda p: len(p), reverse=True),)
 
 _SENSITIVE_ASSIGNMENT_RE = re.compile(
     r"(?<![A-Za-z0-9])(?P<key>"
@@ -115,7 +116,7 @@ def _scrub_text(value: str, *, key: str | None = None) -> str:
     return scrubbed
 
 
-def _scrub_value(value: Any, *, key: str | None = None) -> Any:
+def _scrub_value(value: object, *, key: str | None = None) -> Any:
     """Recursively scrub sensitive values in common logging payload shapes."""
 
     if isinstance(value, str):
@@ -154,9 +155,8 @@ class SecretScrubbingFilter(logging.Filter):
 
         if isinstance(record.args, tuple | list) and isinstance(record.msg, str):
             scrubbed_args = _scrub_positional_args(record.msg, tuple(record.args))
-            record.args = cast(
-                Any,
-                list(scrubbed_args) if isinstance(record.args, list) else scrubbed_args,
+            record.args = (  # ty: ignore[invalid-assignment]
+                list(scrubbed_args) if isinstance(record.args, list) else tuple(scrubbed_args)
             )
         elif record.args:
             record.args = _scrub_value(record.args)
@@ -190,7 +190,7 @@ def _install_run_context_record_factory() -> None:
     # it into the closure eliminates the repeated try/except on every
     # single log record — the factory runs in the hottest path of the
     # logging subsystem.
-    cached_vars: tuple[Any, Any] | None = None
+    cached_vars: tuple[ContextVar[RunContextInfo | None], ContextVar[str | None]] | None = None
 
     def _factory(*args: Any, **kwargs: Any) -> logging.LogRecord:
         nonlocal cached_vars
