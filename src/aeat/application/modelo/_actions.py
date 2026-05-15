@@ -90,6 +90,8 @@ from ..filing import (
 from ..live import Borrador100SnapshotRepository
 from ..workflow import (
     DeadlineEngineAdapter,
+    FilingDraftBuilderProtocol,
+    RegistryFilingDraftProtocol,
     WorkflowEngine,
     WorkflowResult,
     WorkflowStage,
@@ -331,7 +333,7 @@ class _RevisionDraftBuilder:
         profile: AutonomoProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
-    ):
+    ) -> RegistryFilingDraftProtocol:
         draft = build_draft(
             modelo=modelo,
             period=period,
