@@ -284,6 +284,14 @@ class WorkflowEngine:
         Returns:
             A fully populated :class:`WorkflowResult`.
         """
+        if resumed_from is not None:
+            stripped = resumed_from.strip()
+            if len(stripped) != 16 or any(c not in "0123456789abcdef" for c in stripped):
+                raise ValueError(
+                    "resumed_from must be a 16-character lowercase hex run id; "
+                    f"got {resumed_from!r}",
+                )
+            resumed_from = stripped
         return await self._drive(
             profile=profile,
             target_modelo=modelo,
