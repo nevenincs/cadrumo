@@ -2642,7 +2642,7 @@ This Phase delivers thin cli exposure for filing record and submission status as
 - [x] `W43.P215.S1285` - Expose accepted command handlers for filing record and submission status under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
 - [x] `W43.P215.S1286` - Keep argument parsing for filing record and submission status separate from backend behavior; `src/aeat/entrypoints/cli`.
 - [x] `W43.P215.S1287` - Delegate filing record and submission status execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [ ] `W43.P215.S1288` - Render filing record and submission status results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [x] `W43.P215.S1288` - Render filing record and submission status results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
 - [x] `W43.P215.S1289` - Handle filing record and submission status failures through the central command error boundary; `src/aeat/entrypoints/cli`.
 - [x] `W43.P215.S1290` - Validate help text for filing record and submission status uses accepted vocabulary only; `tests/entrypoints/cli`.
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import date
@@ -45,6 +46,7 @@ from ...application.modelo import (
 from ...core.config import PROJECT_ROOT
 from ...domain.calculations.registry import RegistryQueryService, ValidatedRegistryAuthority
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
+from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
 from ...domain.calculations.registry._queries import parse_modelo_period
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import FilingRecord
@@ -54,6 +56,32 @@ from ._common import _emit, _parse_iso_date, _profile_to_autonomo
 from ._i18n import tr
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
+
+_WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
+"""SHA-256 hex digest expected as the canonical work-unit identifier."""
+
+_CASILLA_MAX_LEN = 64
+_BINDING_MAX_LEN = 128
+
+
+def _validate_work_unit_id(value: str) -> str:
+    """Validate that *value* is a 64-character lowercase hex string.
+
+    Raises :class:`typer.BadParameter` if the format is wrong so that
+    invalid identifiers are rejected at the CLI boundary rather than
+    surfacing as an opaque application-layer error.
+    """
+
+    stripped = value.strip()
+    if not re.fullmatch(_WORK_UNIT_ID_RE, stripped):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.invalid_work_unit_id",
+                default=(f"work_unit_id must be a 64-character lowercase hex string (SHA-256 digest); got {value!r}"),
+            )
+        )
+    return stripped
+
 
 app = typer.Typer(
     name="modelo",
@@ -222,6 +250,7 @@ def _parse_kv_spec[T](
     key_label: str = "KEY",
     value_label: str = "VALUE",
     transform: Callable[[str], T],
+    key_validator: Callable[[str, str], None] | None = None,
 ) -> tuple[str, T]:
     """Parse a ``KEY=VALUE`` CLI spec into ``(key, transform(value))``.
 
@@ -230,6 +259,9 @@ def _parse_kv_spec[T](
     a flag-specific transform. ``flag``/``key_label``/``value_label``
     feed the :class:`typer.BadParameter` messages so each call site
     keeps its own operator-facing wording.
+
+    If ``key_validator`` is provided it receives ``(key, spec)`` and
+    must raise :class:`typer.BadParameter` if the key is malformed.
     """
 
     if "=" not in spec:
@@ -238,6 +270,8 @@ def _parse_kv_spec[T](
     key = key.strip()
     if not key:
         raise typer.BadParameter(f"{flag} key must be non-empty; got {spec!r}")
+    if key_validator is not None:
+        key_validator(key, spec)
     return key, transform(value)
 
 
@@ -274,16 +308,36 @@ def _resolve_year_period(year: int, period: str) -> tuple[int, str]:
         raise typer.BadParameter(str(exc)) from exc
 
 
+def _validate_binding_key(key: str, spec: str) -> None:
+    """Validate a ``--binding`` key against :data:`BindingId` constraints."""
+
+    if len(key) > _BINDING_MAX_LEN or not re.fullmatch(_REF_RE, key):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.invalid_binding_key",
+                default=(
+                    f"--binding key {key!r} is not a valid BindingId "
+                    f"(pattern: {_REF_RE!r}, max {_BINDING_MAX_LEN} chars); "
+                    f"got {spec!r}"
+                ),
+            )
+        )
+
+
 def _parse_binding_override(spec: str) -> tuple[str, str]:
     """Parse a ``--binding KEY=VALUE`` spec into a ``(key, value)`` pair.
 
-    Scalar, list, and mapping values must survive resolution — the
-    parsing here is intentionally permissive at the CLI boundary;
-    the raw value flows through unchanged so the bindings-
-    resolution layer downstream can coerce it per source type.
+    The key is validated against :data:`BindingId` constraints at the
+    CLI boundary; the value is passed through unchanged so the
+    bindings-resolution layer can coerce it per source type.
     """
 
-    return _parse_kv_spec(spec, flag="--binding", transform=lambda value: value)
+    return _parse_kv_spec(
+        spec,
+        flag="--binding",
+        transform=lambda value: value,
+        key_validator=_validate_binding_key,
+    )
 
 
 @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
@@ -761,6 +815,7 @@ def work_status(
 ) -> None:
     """View one work unit's metadata."""
 
+    work_unit_id = _validate_work_unit_id(work_unit_id)
     try:
         unit = get_work_unit(work_unit_id)
     except WorkUnitNotFoundError as exc:
@@ -787,6 +842,7 @@ def work_rename(
 ) -> None:
     """Update one work unit's display name (preserves work_unit_id)."""
 
+    work_unit_id = _validate_work_unit_id(work_unit_id)
     try:
         unit = rename_work_unit(work_unit_id, name)
     except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
@@ -824,6 +880,7 @@ def work_discard(
     ``aeat app modelo work list`` output.
     """
 
+    work_unit_id = _validate_work_unit_id(work_unit_id)
     try:
         unit = discard_work_unit(work_unit_id, actor=actor or _resolve_default_actor(), reason=reason)
     except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
@@ -885,6 +942,15 @@ def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
 
 
 def _filing_record_payload(record: FilingRecord) -> dict[str, object]:
+    external_evidence: dict[str, object] | None
+    if record.external_evidence is None:
+        external_evidence = None
+    else:
+        external_evidence = {
+            "kind": record.external_evidence.kind.value,
+            "reference_id": record.external_evidence.reference_id,
+            "imported_at": record.external_evidence.imported_at.isoformat(),
+        }
     return {
         "filing_record_id": record.filing_record_id,
         "work_unit_id": record.work_unit_id,
@@ -900,6 +966,8 @@ def _filing_record_payload(record: FilingRecord) -> dict[str, object]:
         "status": record.status.value,
         "superseded_at": record.superseded_at.isoformat() if record.superseded_at else None,
         "superseded_by_filing_record_id": record.superseded_by_filing_record_id,
+        "external_evidence": external_evidence,
+        "amends_filing_record_id": record.amends_filing_record_id,
         "kind": "internal_filing",
         "live_submission": False,
     }
@@ -925,13 +993,41 @@ def _filing_record_lines(record: FilingRecord) -> list[str]:
         lines.append(f"superseded_at\t{record.superseded_at.isoformat()}")
     if record.superseded_by_filing_record_id is not None:
         lines.append(f"superseded_by_filing_record_id\t{record.superseded_by_filing_record_id}")
+    if record.external_evidence is not None:
+        lines.append(f"external_evidence.kind\t{record.external_evidence.kind.value}")
+        lines.append(f"external_evidence.reference_id\t{record.external_evidence.reference_id}")
+        lines.append(f"external_evidence.imported_at\t{record.external_evidence.imported_at.isoformat()}")
+    if record.amends_filing_record_id is not None:
+        lines.append(f"amends_filing_record_id\t{record.amends_filing_record_id}")
     lines.append("kind\tinternal_filing")
     lines.append("live_submission\tfalse")
     return lines
 
 
+def _validate_casilla_key(key: str, spec: str) -> None:
+    """Validate a ``--casilla`` key against :data:`CasillaId` constraints."""
+
+    if len(key) > _CASILLA_MAX_LEN or not re.fullmatch(_CASILLA_RE, key):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.invalid_casilla_key",
+                default=(
+                    f"--casilla key {key!r} is not a valid CasillaId "
+                    f"(pattern: {_CASILLA_RE!r}, max {_CASILLA_MAX_LEN} chars); "
+                    f"got {spec!r}"
+                ),
+            )
+        )
+
+
 def _parse_casilla_override(spec: str) -> tuple[str, str]:
-    return _parse_kv_spec(spec, flag="--casilla", key_label="ID", transform=str.strip)
+    return _parse_kv_spec(
+        spec,
+        flag="--casilla",
+        key_label="ID",
+        transform=str.strip,
+        key_validator=_validate_casilla_key,
+    )
 
 
 @work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
@@ -973,6 +1069,7 @@ def work_calculate(
 ) -> None:
     """Persist a new draft calculation revision for the work unit."""
 
+    work_unit_id = _validate_work_unit_id(work_unit_id)
     from ...application.modelo import (
         CalculationRegistryUnavailableError,
         Modelo100BorradorBindingError,
@@ -985,7 +1082,7 @@ def work_calculate(
             casilla_inputs[k] = Decimal(v)
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(f"--casilla value for {k!r} is not a decimal: {v!r}") from exc
-    binding_pairs = dict(_parse_casilla_override(spec) for spec in (binding or ()))
+    binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
     for k, v in binding_pairs.items():
@@ -1030,6 +1127,8 @@ def work_revisions(
 ) -> None:
     """List calculation revisions, optionally filtered to one work unit."""
 
+    if work_unit_id is not None:
+        work_unit_id = _validate_work_unit_id(work_unit_id)
     revisions = list_calculation_revisions(work_unit_id=work_unit_id)
     payload = {
         "operation": "modelo.work.revisions",
@@ -1078,6 +1177,7 @@ def work_history(
 
     from ...application.modelo import assemble_work_unit_history
 
+    work_unit_id = _validate_work_unit_id(work_unit_id)
     history = assemble_work_unit_history(work_unit_id)
     payload = {
         "operation": "modelo.work.history",
@@ -1338,6 +1438,7 @@ def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
         key_label="CASILLA",
         value_label="DECIMAL",
         transform=_to_decimal,
+        key_validator=_validate_casilla_key,
     )
 
 
@@ -1606,6 +1707,7 @@ def filing_record_import(
 ) -> None:
     """Persist an externally-filed return as a baseline filing record."""
 
+    work_unit_id = _validate_work_unit_id(work_unit_id)
     from ...application.modelo import (
         ExternalFilingImportError,
         import_external_filing_evidence,
