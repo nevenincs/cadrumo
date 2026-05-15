@@ -168,3 +168,26 @@ ADR.
 
 Production-grade calendar/agenda semantics use the festivos and business-day
 deadline-shift rules.
+
+## 2026-05-15 amendment - separate verb tree ratification
+
+The 2026-05-15 ground-truth audit found that only `aeat app overview
+status` shipped; `calendar`, `agenda`, `backlog`, and `explain` were
+left as flag axes on `status`. This amendment ratifies the **separate
+verbs** decision: `aeat app overview` exposes five top-level verbs:
+
+- `status` - composite roll-up (kept as the single bare-invocation
+  entry point; surfaces a brief calendar / agenda / backlog summary).
+- `calendar` - period-keyed deadline calendar with festivos
+  shift-deadline applied; supports `--year` / `--modelo` / `--period`
+  optional filters per the W70.P336 list-vs-query semantics.
+- `agenda` - upcoming-deadline ranking with a top-of-payload
+  `next_due` field; `--horizon` controls the window.
+- `backlog` - past-due / missing-prerequisite / triage cohort listing.
+- `explain` - per-(modelo, period) decomposition of required inputs,
+  binding sources, and current readiness flags.
+
+`status` retains a brief composite roll-up but does not gate
+discoverability of the other four. Lifecycle continuation remains
+owned by `aeat app modelo resume` per the workflow-resumption-semantics
+ADR; `aeat app overview` does not own resume.

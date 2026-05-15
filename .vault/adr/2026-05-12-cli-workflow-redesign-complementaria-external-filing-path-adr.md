@@ -62,3 +62,31 @@ filing root.
 Operators can amend externally filed returns without live submission. The
 system refuses incomplete evidence and no longer depends solely on local
 original draft persistence.
+
+## 2026-05-15 amendment - reconcile-from-justificante interface
+
+The 2026-05-15 ground-truth audit found that `aeat app modelo
+reconcile from-justificante PATH` (W64 / W85.S2342 dependency) was
+never wired despite the W85 closure claim. This amendment locks the
+verb shape so the gap is closed in a follow-up wave.
+
+Required CLI surface: `aeat app modelo reconcile from-justificante
+PATH WORK_UNIT_ID` is a subverb under `aeat app modelo reconcile`. It
+shares the `modelo_reconcile` application service entry point with
+the `--from-justificante` flag variant of the parent verb (decided
+under app-modelo-shape ADR amendment); this subverb is sugar for
+operators who think "reconcile from this justificante" rather than
+"reconcile, source = justificante".
+
+Required behaviour: parse the supplied justificante PDF via
+`JustificanteRepository`; produce a `ReconciliationReport` keyed by
+work unit; emit the reconciliation event on the bucket-event
+catalogue; refuse if the work unit is in a non-reconcileable state
+(e.g. pre-DRAFT) or if the parser yields invalid evidence.
+
+Required errors: `ReconciliationEvidenceInvalidError` for malformed
+justificantes; `ReconciliationMismatchError` is a verdict carried in
+the report payload, not a hard CLI error (operators must be able to
+inspect mismatches without a non-zero exit).
+
+The verb is local-only and does not invoke `require_live_read`.

@@ -5,6 +5,7 @@ official_name = "Modelo 720. Declaracion informativa sobre bienes y derechos sit
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
 legal_refs = [
     "ley-58-2003:da-18",
     "rd-1065-2007:art-42-bis",
@@ -734,7 +735,7 @@ source_refs = ["boe-modelo-720-2013-form"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-asset-row-class"
 source = "foreign_asset"
-selector = { fact = "row_field", row_field = "asset_class_code", record = "bien" }
+selector = { fact = "row_field", row_field = "asset_class_code", grouping = "per_foreign_asset", record = "bien" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
@@ -746,7 +747,7 @@ required_text = ["bienes y derechos situados en el extranjero"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-asset-row-country"
 source = "foreign_asset"
-selector = { fact = "row_field", row_field = "country_code", record = "bien" }
+selector = { fact = "row_field", row_field = "country_code", grouping = "per_foreign_asset", record = "bien" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
@@ -758,7 +759,7 @@ required_text = ["bienes y derechos situados en el extranjero"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-asset-row-currency"
 source = "foreign_asset"
-selector = { fact = "row_field", row_field = "currency_code", record = "bien" }
+selector = { fact = "row_field", row_field = "currency_code", grouping = "per_foreign_asset", record = "bien" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
@@ -770,7 +771,7 @@ required_text = ["bienes y derechos situados en el extranjero"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-asset-row-identifier"
 source = "foreign_asset"
-selector = { fact = "row_field", row_field = "asset_identifier", record = "bien" }
+selector = { fact = "row_field", row_field = "asset_identifier", grouping = "per_foreign_asset", record = "bien" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
@@ -782,7 +783,7 @@ required_text = ["bienes y derechos situados en el extranjero"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-asset-row-valuation"
 source = "foreign_asset"
-selector = { fact = "row_field", row_field = "valuation_amount", record = "bien" }
+selector = { fact = "row_field", row_field = "valuation_amount", grouping = "per_foreign_asset", record = "bien" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]
@@ -794,7 +795,7 @@ required_text = ["bienes y derechos situados en el extranjero"]
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-asset-row-acquisition-date"
 source = "foreign_asset"
-selector = { fact = "row_field", row_field = "acquisition_date", record = "bien" }
+selector = { fact = "row_field", row_field = "acquisition_date", grouping = "per_foreign_asset", record = "bien" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-72-2013:art-1", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure"]

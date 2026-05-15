@@ -207,3 +207,46 @@ lands its own plan + exec record; this ADR fixes the scope.
   registry-boundary, and app-review-queue-execution ADRs. Bucket schema
   migration and ledger-to-modelo calculation data flow are tracked in the
   execution plan, not in additional ADRs.
+
+## 2026-05-15 amendment - bucket maintenance verbs
+
+The 2026-05-15 ground-truth audit found `BucketMaintenanceService` and
+the prescribed maintenance verbs entirely absent from the codebase
+despite the W77 closure claim. This amendment locks the maintenance
+surface so the gap is closed in a follow-up wave.
+
+Required application-layer surface: a `BucketMaintenanceService` under
+`src/aeat/application/bucket_maintenance/` exposing six lifecycle-state
+methods on the active profile bucket:
+
+- `browse(bucket_id, namespace_filter=None, cursor=None)` - paginated
+  listing of bucket contents grouped by namespace; respects
+  `SensitivityClass` redaction policy.
+- `search(query, scope=None)` - attribute / payload search; returns
+  ranked rows with match metadata.
+- `export(bucket_id, output_path)` - portable encrypted archive with
+  manifest + checksums; emits `bucket.exported` bucket event.
+- `import(source_path, force_replace=False)` - validates manifest +
+  checksums; refuses identity collision unless `force_replace`; emits
+  `bucket.imported`.
+- `rename(bucket_id, new_display_name)` - mutates display name only;
+  bucket id is stable; emits `bucket.renamed` with old / new payload.
+- `delete(bucket_id, confirmed=False)` - destructive erase; refuses
+  unless `confirmed=True`; emits `bucket.deleted` event before erase.
+
+Required CLI surface: `aeat config bucket {browse, search, export,
+import, rename, delete}` as thin handlers under the existing
+`bucket_app` Typer group. All handlers MUST delegate to the service,
+render via `_emit`, route errors through `command_error_boundary`.
+
+Required `BucketEventType` additions: `BUCKET_EXPORTED`,
+`BUCKET_IMPORTED`, `BUCKET_RENAMED`, `BUCKET_DELETED`. The maintenance
+verbs are documented as **lifecycle-state operations** under W71's
+contract, not CRUD verbs (browse / search are key-value queries on
+container contents; export / import / rename / delete operate on the
+container itself).
+
+Destructive-action protocol: `delete` requires explicit `--yes` flag at
+the CLI boundary; the service refuses without `confirmed=True`. Active
+profile bucket cannot be deleted until the operator switches profiles
+first.
