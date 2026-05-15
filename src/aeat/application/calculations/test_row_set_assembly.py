@@ -18,9 +18,11 @@ import pytest
 
 from ...core.paths import PROJECT_ROOT
 from ...domain.calculations.registry._loader import load_registry_tree
+from ...domain.calculations.registry._errors import RegistryValidationError
 from ._row_set_assembly import (
     assemble_atribucion_observations,
     assemble_foreign_asset_observations,
+    assemble_observations_for_grouping,
     assemble_refund_observations,
     assemble_related_party_observations,
     assemble_withholding_observations,
@@ -210,3 +212,51 @@ def test_assemble_returns_empty_for_empty_cells() -> None:
     revision = _modelo("190", "2025-y-siguientes")
 
     assert assemble_withholding_observations((), revision, filing_year=2025) == ()
+
+
+def test_assemble_observations_for_grouping_dispatches_per_perceptor_clave() -> None:
+    revision = _modelo("190", "2025-y-siguientes")
+    cells = (
+        _Cell("modelo-190-perceptor-row-nif", 1, "12345678A"),
+        _Cell("modelo-190-perceptor-row-clave", 1, "A"),
+    )
+
+    source_kind, observations = assemble_observations_for_grouping(
+        "per_perceptor_clave",
+        cells,
+        revision,
+        filing_year=2025,
+    )
+
+    assert source_kind == "withholding"
+    assert len(observations) == 1
+    assert observations[0].perceptor_tax_id == "12345678A"
+
+
+def test_assemble_observations_for_grouping_dispatches_foreign_asset() -> None:
+    revision = _modelo("720", "2013-y-siguientes")
+    cells = (
+        _Cell("modelo-720-asset-row-class", 1, "C"),
+        _Cell("modelo-720-asset-row-country", 1, "CH"),
+    )
+
+    source_kind, observations = assemble_observations_for_grouping(
+        "per_foreign_asset",
+        cells,
+        revision,
+        filing_year=2025,
+    )
+
+    assert source_kind == "foreign_asset"
+    assert len(observations) == 1
+
+
+def test_assemble_observations_for_grouping_rejects_unknown_grouping() -> None:
+    revision = _modelo("190", "2025-y-siguientes")
+    with pytest.raises(RegistryValidationError, match="has no application-layer assembler"):
+        assemble_observations_for_grouping(
+            "operator_clave",  # invoice/counterpart grouping; no assembler
+            (),
+            revision,
+            filing_year=2025,
+        )
