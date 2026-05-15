@@ -1064,6 +1064,67 @@ def _ratios_bucket_id() -> str:
         raise _bad(tr("cli.config.errors.no_active_profile")) from exc
 
 
+def _emit_ratios_event(
+    *,
+    bucket_id: str,
+    event_type,
+    category: str,
+    prior,
+    new,
+) -> None:
+    """Append a ratios mutation event to the bucket-event-history catalogue.
+
+    Records the per-category ratio change so downstream auditors can
+    reconstruct the sequence of overrides without re-deriving them
+    from secure-object snapshots. ``prior`` is ``None`` on a first
+    set; ``new`` is ``None`` on unset.
+    """
+
+    from datetime import UTC, datetime
+
+    from ...domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
+
+    occurred_at = datetime.now(UTC)
+    payload = {
+        "category": category,
+        "prior": "" if prior is None else str(prior),
+        "new": "" if new is None else str(new),
+    }
+    actor = "operator"
+    event_id = derive_bucket_event_id(
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=category,
+        payload=payload,
+    )
+    repo = BucketEventHistoryRepository()
+    catalogue = repo.load()
+    repo.save(
+        append_bucket_event(
+            catalogue,
+            BucketEvent(
+                event_id=event_id,
+                bucket_id=bucket_id,
+                event_type=event_type,
+                occurred_at=occurred_at,
+                actor=actor,
+                object_type=BucketEventObjectType.PROFILE,
+                object_id=category,
+                payload=payload,
+            ),
+        )
+    )
+
+
 def _resolve_category(raw: str):
     from ...domain.categories import SpendingCategory
 
@@ -1111,8 +1172,16 @@ def ratios_set(
     parsed = _parse_required_decimal(ratio, label="ratio")
     bucket_id = _ratios_bucket_id()
     profile = load_usage_ratios(bucket_id=bucket_id)
+    prior = profile.ratios.get(category_enum)
     updated = profile.with_ratio(category_enum, parsed)
     save_usage_ratios(updated, bucket_id=bucket_id)
+    _emit_ratios_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_RATIOS_SET,
+        category=category_enum.value,
+        prior=prior,
+        new=parsed,
+    )
     payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": str(parsed)}
     _emit(
         ctx,
@@ -1143,8 +1212,16 @@ def ratios_unset(
                 default="No persisted override for category {category!r} on bucket {bucket_id!r}",
             ).format(category=category_enum.value, bucket_id=bucket_id)
         )
+    prior = profile.ratios.get(category_enum)
     updated = profile.without_ratio(category_enum)
     save_usage_ratios(updated, bucket_id=bucket_id)
+    _emit_ratios_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_RATIOS_UNSET,
+        category=category_enum.value,
+        prior=prior,
+        new=None,
+    )
     payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": ""}
     _emit(ctx, payload, (f"bucket\t{bucket_id}", f"{category_enum.value}\t<unset>"))
 
