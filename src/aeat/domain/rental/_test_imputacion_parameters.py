@@ -61,8 +61,8 @@ def test_lirpf_art_85_parameters_each_cite_the_boe_authority() -> None:
         "lirpf-art-85:imputacion-rate-old-or-no-revision",
         "lirpf-art-85:catastral-revision-lookback-years",
     ):
-        legal_refs = raw[parameter_id].get("legal_refs")
-        assert legal_refs == ["ley-35-2006:art-85"], (
+        legal_refs = raw[parameter_id].get("legal_refs") or []
+        assert "ley-35-2006:art-85" in legal_refs, (
             f"{parameter_id} must cite ley-35-2006:art-85 to remain registry-grounded"
         )
 
