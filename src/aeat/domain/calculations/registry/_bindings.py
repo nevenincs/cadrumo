@@ -27,9 +27,9 @@ __all__ = [
     "InvoiceObservationRequirement",
     "IvaLedgerObservation",
     "OssIossLedgerObservation",
-    "RentaExpenseObservationProtocol",
     "RegistryFilingObservation",
     "RegistryFilingObservationRequirement",
+    "RentaExpenseObservationProtocol",
     "invoice_binding_requirements",
     "previous_filing_observation_requirements",
     "resolve_bound_casilla_inputs",
@@ -1605,9 +1605,7 @@ def _withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelecto
 def _validated_withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelector:
     selector = _withholding_selector(binding)
     if selector.fact not in _WITHHOLDING_FACTS:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} declares unsupported withholding fact {selector.fact!r}"
-        )
+        raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact {selector.fact!r}")
     op = str((binding.aggregation or {}).get("op", "sum"))
     if selector.fact == "perceptor_count" and op != "count_distinct":
         raise RegistryValidationError(
@@ -1623,9 +1621,7 @@ def _validated_withholding_selector(binding: DataBindingDefinition) -> _Withhold
                 f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
             )
         if selector.grouping is None:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key"
-            )
+            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
     return selector
 
 
@@ -2108,9 +2104,7 @@ def _validated_atribucion_selector(binding: DataBindingDefinition) -> _Atributio
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed atribucion selector") from exc
     if selector.fact != "row_field":
-        raise RegistryValidationError(
-            f"binding {binding.id!r} declares unsupported atribucion fact {selector.fact!r}"
-        )
+        raise RegistryValidationError(f"binding {binding.id!r} declares unsupported atribucion fact {selector.fact!r}")
     op = str((binding.aggregation or {}).get("op", "rows"))
     if op != "rows":
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
@@ -2217,9 +2211,7 @@ def _validated_refund_selector(binding: DataBindingDefinition) -> _RefundSelecto
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed refund selector") from exc
     if selector.fact != "row_field":
-        raise RegistryValidationError(
-            f"binding {binding.id!r} declares unsupported refund fact {selector.fact!r}"
-        )
+        raise RegistryValidationError(f"binding {binding.id!r} declares unsupported refund fact {selector.fact!r}")
     op = str((binding.aggregation or {}).get("op", "rows"))
     if op != "rows":
         raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
@@ -2251,7 +2243,9 @@ def resolve_refund_binding_row_values(
             "supplier_tax_id": obs.supplier_tax_id,
             "refund_amount": obs.refund_amount,
         }
-        for obs in sorted(available, key=lambda o: (o.member_state_code, o.operation_date.isoformat(), o.supplier_tax_id))
+        for obs in sorted(
+            available, key=lambda o: (o.member_state_code, o.operation_date.isoformat(), o.supplier_tax_id)
+        )
     )
     resolved: dict[tuple[str, int], Decimal | str] = {}
     for binding, selector in members:

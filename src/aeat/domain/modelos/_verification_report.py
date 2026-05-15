@@ -206,10 +206,10 @@ class VerificationReportCatalogue(BaseModel):
 
 
 __all__ = [
-    "VerificationCompletenessStatus",
     "ModeloVerificationFinding",
     "ModeloVerificationFindingKind",
     "ModeloVerificationFindingSeverity",
+    "VerificationCompletenessStatus",
     "VerificationReport",
     "VerificationReportCatalogue",
     "derive_verification_report_id",

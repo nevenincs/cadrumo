@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -80,7 +81,7 @@ def test_withholding_observation_amounts_must_be_decimal_not_bool() -> None:
             perceptor_tax_id="12345678A",
             transaction_date=date(2025, 3, 15),
             clave="A",
-            retencion_practicada=True,  # type: ignore[arg-type]
+            retencion_practicada=cast(Decimal, True),
         )
 
 
@@ -173,7 +174,7 @@ def test_related_party_observation_amount_must_be_decimal() -> None:
             counterparty_tax_id="A12345678",
             transaction_date=date(2025, 3, 15),
             operation_kind_code="01",
-            amount=True,  # type: ignore[arg-type]
+            amount=cast(Decimal, True),
         )
 
 

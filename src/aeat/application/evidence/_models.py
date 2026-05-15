@@ -121,11 +121,11 @@ def utcnow() -> datetime:
 __all__ = [
     "BundleVerificationState",
     "EvidenceBundle",
+    "EvidenceBundleCheckResult",
     "EvidenceBundleNotFoundError",
     "EvidenceBundleVerificationError",
     "EvidenceRecordRef",
     "VerificationCheck",
-    "EvidenceBundleCheckResult",
     "derive_bundle_id",
     "utcnow",
 ]

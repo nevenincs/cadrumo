@@ -811,9 +811,7 @@ def apply_export_plan(
     # Write values and formulas as USER_ENTERED so Sheets parses
     # formula strings starting with "=".
     value_data = (
-        _build_value_data(plan.value_cells)
-        + _build_guide_value_data(plan)
-        + _build_row_set_header_data(plan.row_sets)
+        _build_value_data(plan.value_cells) + _build_guide_value_data(plan) + _build_row_set_header_data(plan.row_sets)
     )
     formula_data = _build_formula_data(plan.formula_cells)
     update_body = {

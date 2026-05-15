@@ -8,6 +8,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Final, Literal
 
+from ....core.i18n import tr
 from ....domain.calculations.registry._schema import (
     CasillaDefinition,
     DataBindingDefinition,
@@ -16,7 +17,6 @@ from ....domain.calculations.registry._schema import (
     ParameterDefinition,
     RegistrySnapshot,
 )
-from ....core.i18n import tr
 from ._layout import SheetLayout, plan_layout
 from ._records import (
     OperatorInputs,
@@ -824,8 +824,6 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
         # downwards if more rows are needed.
         next_row = first_data_row + 50 + 1
     return tuple(row_sets)
-
-
 
 
 def _row_set_column_label(binding: DataBindingDefinition) -> str:
