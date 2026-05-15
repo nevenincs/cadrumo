@@ -13,6 +13,7 @@ legal_refs = [
     "rd-439-2007:art-108",
     "rd-439-2007:art-90",
     "ley-35-2006:art-101",
+    "ley-58-2003:art-93",
 ]
 source_refs = [
     "aeat-dr-193-2024",
@@ -33,6 +34,7 @@ legal_refs = [
     "rd-439-2007:art-108",
     "rd-439-2007:art-90",
     "ley-35-2006:art-101",
+    "ley-58-2003:art-93",
 ]
 source_refs = [
     "aeat-dr-193-2024",
@@ -45,7 +47,7 @@ id = "modelo-193-123-perceptores-anual"
 source = "previous_filing"
 selector = { source_modelo = "123", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["03"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -57,7 +59,7 @@ id = "modelo-193-123-base-anual"
 source = "previous_filing"
 selector = { source_modelo = "123", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["06"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -69,7 +71,7 @@ id = "modelo-193-123-retenciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "123", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["09"] }
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
@@ -88,7 +90,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".relations]]
@@ -103,7 +105,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".relations]]
@@ -118,7 +120,7 @@ period_alignment = { source_periods = "quarters", target_period = "0A" }
 source_periods = ["1T", "2T", "3T", "4T"]
 target_periods = ["0A"]
 aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -130,7 +132,7 @@ data_type = "integer"
 required = true
 input_kind = "computed"
 formula = "modelo-193-total-perceptores"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -142,7 +144,7 @@ data_type = "money"
 required = true
 input_kind = "computed"
 formula = "modelo-193-base-total"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".casillas]]
@@ -154,7 +156,7 @@ data_type = "money"
 required = true
 input_kind = "computed"
 formula = "modelo-193-retenciones-total"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".formulas]]
@@ -162,7 +164,7 @@ id = "modelo-193-total-perceptores"
 target = "decl.total-perceptores"
 expression = { op = "copy", args = [{ relation = "modelo-193-rel-123-perceptores-anual" }] }
 rounding = "integer"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
@@ -174,7 +176,7 @@ id = "modelo-193-base-total"
 target = "decl.base-total"
 expression = { op = "copy", args = [{ relation = "modelo-193-rel-123-base-anual" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
@@ -186,7 +188,7 @@ id = "modelo-193-retenciones-total"
 target = "decl.retenciones-total"
 expression = { op = "copy", args = [{ relation = "modelo-193-rel-123-retenciones-anual" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".formulas.source_citations]]
@@ -203,7 +205,7 @@ target_casillas = ["decl.total-perceptores", "decl.base-total", "decl.retencione
 confidence = "strict"
 min_coverage = "1.0"
 failure_semantics = "fail_hard"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".live_cross_references]]
@@ -226,7 +228,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = true
 requires_aeat_authorization = true
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".workbook_parity_refs]]
@@ -236,7 +238,7 @@ fixture_id = "modelo-193-2024-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.01"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2024"]
 
 [[revisions."2024-y-siguientes".verification_expectations]]
@@ -246,7 +248,7 @@ tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1.0"
 discrepancy_causes = ["correctness_divergence"]
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -254,7 +256,7 @@ id = "modelo-193-portal"
 surface = "portal"
 consumer = "aeat.domain.portals.Portal.PORTAL_M193_RESUMEN_CAPITAL"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -262,7 +264,7 @@ id = "modelo-193-calculation"
 surface = "calculation"
 consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -270,7 +272,7 @@ id = "modelo-193-filing"
 surface = "filing"
 consumer = "aeat.application.filing"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -278,7 +280,7 @@ id = "modelo-193-verification"
 surface = "verification"
 consumer = "aeat.application.verification"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2024", "boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -286,7 +288,7 @@ id = "modelo-193-extractor"
 surface = "extractor"
 consumer = "aeat.adapters.outbound.aeat.sede.registry_observation_from_filed_declaration"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -294,7 +296,7 @@ id = "modelo-193-review"
 surface = "review"
 consumer = "aeat.application.review"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form", "aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -302,7 +304,7 @@ id = "modelo-193-approval"
 surface = "approval"
 consumer = "aeat.application.workflow.approval"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form", "aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -310,7 +312,7 @@ id = "modelo-193-reconciliation"
 surface = "reconciliation"
 consumer = "aeat.application.reconciliation"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
 
 [[revisions."2024-y-siguientes".application_links]]
@@ -318,13 +320,13 @@ id = "modelo-193-workflow"
 surface = "workflow"
 consumer = "aeat.application.workflow"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form", "aeat-modelo-193-procedure"]
 
 [[revisions."2024-y-siguientes".constructs]]
 id = "modelo-193-annual-summary"
 title = "Modelo 193 annual summary from Modelo 123 quarterly filings"
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure", "boe-modelo-193-2011-form"]
 casillas = ["decl.total-perceptores", "decl.base-total", "decl.retenciones-total"]
 formulas = ["modelo-193-total-perceptores", "modelo-193-base-total", "modelo-193-retenciones-total"]
@@ -353,5 +355,5 @@ source_modelo = "123"
 treatment = "direct_annual_settlement"
 target_constructs = ["modelo-193-annual-summary"]
 relation_refs = ["modelo-193-rel-123-perceptores-anual", "modelo-193-rel-123-base-anual", "modelo-193-rel-123-retenciones-anual"]
-legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form"]
