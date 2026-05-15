@@ -5,6 +5,8 @@ official_name = "Modelo 100. Declaracion del Impuesto sobre la Renta de las Pers
 tax_domain = "irpf"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+capabilities = ["borrador", "renta_ledger_default"]
 legal_refs = [
     "ley-35-2006:art-17",
     "ley-35-2006:art-18",

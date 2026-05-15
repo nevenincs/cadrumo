@@ -5,6 +5,7 @@ official_name = "Modelo 390. Declaracion-resumen anual del Impuesto sobre el Val
 tax_domain = "iva"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
 legal_refs = [
     "rd-1624-1992:art-71",
     "orden-eha-3111-2009:art-1",
