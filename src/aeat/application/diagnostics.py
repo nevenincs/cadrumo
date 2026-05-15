@@ -437,8 +437,7 @@ def _windows_stale_sync_check() -> DiagnosticCheck | None:
 
     Plain ``uv run aeat`` re-syncs the venv on each invocation, which
     races the OS handle on ``Scripts/aeat.exe`` and intermittently raises
-    ``os error 32``. The canonical workaround documented by the
-    ``dev-environment-uv-windows`` ADR is to invoke the CLI via
+    ``os error 32``. The canonical workaround is to invoke the CLI via
     ``uv run --no-sync aeat`` (or the ``tools/aeat.cmd`` launcher).
     That workaround skips sync, so a stale venv must be detected
     explicitly. This row fires when the host is Windows and

@@ -275,7 +275,13 @@ ERROR_CODES: tuple[str, ...] = ("REFUSED_OPERATOR_SURFACE_CONTRACT",)
 
 
 def build_operator_surface_contract() -> OperatorSurfaceContract:
-    """Build the immutable operator surface contract from accepted ADR decisions."""
+    """Build the immutable operator surface contract.
+
+    Returns the canonical declaration of the modelo lifecycle steps,
+    operator-facing CLI surfaces, and orthogonal verb axes the rest
+    of the codebase reads from. The contract is constructed once at
+    import time so every consumer sees the same shape.
+    """
 
     lifecycle = LifecycleContract(
         steps=(

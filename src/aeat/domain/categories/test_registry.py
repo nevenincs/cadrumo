@@ -55,7 +55,10 @@ def test_proportionality_kinds_carry_kind_specific_fields() -> None:
     ]
 
     assert all(rule.fixed_pct is not None and rule.default_ratio is None for rule in fixed_percentage_rules)
-    assert usage_ratio_rules, "registry must keep at least one usage-ratio category per ADR 2026-04-21"
+    assert usage_ratio_rules, (
+        "registry must keep at least one usage-ratio category — operator-defined "
+        "proportionality cannot be replaced by fixed-percentage rules alone"
+    )
     assert all(rule.fixed_pct is None for rule in usage_ratio_rules)
 
 

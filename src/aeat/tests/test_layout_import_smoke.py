@@ -1,4 +1,12 @@
-"""Import smoke for ADR 2026-04-30 layout buckets and named subpackages."""
+"""Import smoke for canonical layout buckets and named subpackages.
+
+Walks the declared ``CANONICAL_LAYOUT_PACKAGES`` tuple and asserts
+each one is importable. Catches accidental cross-bucket imports
+that break the public-package surface (a misplaced relative import,
+a deleted ``__init__.py``, or a renamed module breaking a symbol
+export). Pairs with ``CANONICAL_PUBLIC_SYMBOLS`` which pins the
+shape of the public re-exports the wider codebase consumes.
+"""
 
 from __future__ import annotations
 
@@ -12,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 SRC_AEAT = Path(__file__).resolve().parents[1]
 
 
-ADR_LAYOUT_PACKAGES: tuple[str, ...] = (
+CANONICAL_LAYOUT_PACKAGES: tuple[str, ...] = (
     "aeat.domain",
     "aeat.domain.modelos",
     "aeat.domain.manuals",
@@ -98,15 +106,15 @@ REQUIRED_RELOCATED_PATHS: tuple[str, ...] = (
 )
 
 
-@pytest.mark.parametrize("module_name", ADR_LAYOUT_PACKAGES)
-def test_adr_layout_package_import_smoke(module_name: str) -> None:
-    """Every ADR-listed import surface must be importable."""
+@pytest.mark.parametrize("module_name", CANONICAL_LAYOUT_PACKAGES)
+def test_canonical_layout_package_import_smoke(module_name: str) -> None:
+    """Every canonical layout import surface must be importable."""
     importlib.import_module(module_name)
 
 
 @pytest.mark.parametrize(("module_name", "symbol_name"), CANONICAL_PUBLIC_SYMBOLS)
 def test_canonical_public_symbols_are_exposed(module_name: str, symbol_name: str) -> None:
-    """Representative ADR public symbols remain available at canonical paths."""
+    """Representative public symbols remain available at canonical paths."""
     module = importlib.import_module(module_name)
 
     assert hasattr(module, symbol_name), f"{module_name} must expose {symbol_name}"
