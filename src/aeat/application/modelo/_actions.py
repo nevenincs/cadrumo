@@ -413,6 +413,7 @@ def _run_revision_workflow_gate(
     work_unit: WorkUnit,
     today: date,
     runs_dir: Path | None,
+    resumed_from: str | None = None,
 ) -> WorkflowResult:
     result = asyncio.run(
         engine.run_for_period(
@@ -420,6 +421,7 @@ def _run_revision_workflow_gate(
             str(work_unit.modelo),
             _workflow_period_for_work_unit(work_unit),
             today=today,
+            resumed_from=resumed_from,
         )
     )
     save_run(result, runs_dir=runs_dir)
