@@ -14,7 +14,7 @@ from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Any, Self
+from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer, field_validator, model_validator
 
@@ -82,7 +82,7 @@ class Period(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _parse_raw_period(cls, data: Any) -> Any:
+    def _parse_raw_period(cls, data: object) -> object:
         if isinstance(data, cls):
             return data
         if isinstance(data, str):

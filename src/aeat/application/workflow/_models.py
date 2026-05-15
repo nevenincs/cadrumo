@@ -234,10 +234,11 @@ def update_declaration_pointer(
     if isinstance(current, dict):
         current = DeclarationPointer.model_validate_json(_json.dumps(current, default=str))
 
+    now = utc_now()
     update_fields: dict[str, object] = {
         "draft_id": draft_id,
         "status": status,
-        "updated_at": utc_now(),
+        "updated_at": now,
     }
     if exported_path is not None:
         update_fields["exported_path"] = exported_path
@@ -247,7 +248,15 @@ def update_declaration_pointer(
     if isinstance(current, DeclarationPointer):
         declarations[key] = current.model_copy(update=update_fields)
     else:
-        declarations[key] = DeclarationPointer(modelo=modelo, period=period, **update_fields)
+        declarations[key] = DeclarationPointer(
+            modelo=modelo,
+            period=period,
+            draft_id=draft_id,
+            status=status,
+            exported_path=exported_path,
+            verified=verified,
+            updated_at=now,
+        )
     return state.model_copy(update={"declarations": declarations, "updated_at": utc_now()})
 
 

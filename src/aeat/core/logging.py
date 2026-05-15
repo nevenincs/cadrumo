@@ -112,7 +112,7 @@ def _scrub_text(value: str, *, key: str | None = None) -> str:
     return scrubbed
 
 
-def _scrub_value(value: Any, *, key: str | None = None) -> Any:
+def _scrub_value(value: object, *, key: str | None = None) -> object:
     """Recursively scrub sensitive values in common logging payload shapes."""
 
     if isinstance(value, str):
@@ -151,12 +151,13 @@ class SecretScrubbingFilter(logging.Filter):
 
         if isinstance(record.args, tuple | list) and isinstance(record.msg, str):
             scrubbed_args = _scrub_positional_args(record.msg, tuple(record.args))
-            record.args = cast(
-                Any,
-                list(scrubbed_args) if isinstance(record.args, list) else scrubbed_args,
-            )
+            record.args = tuple(scrubbed_args)
         elif record.args:
-            record.args = _scrub_value(record.args)
+            scrubbed = _scrub_value(record.args)
+            if isinstance(scrubbed, tuple):
+                record.args = scrubbed
+            elif isinstance(scrubbed, dict):
+                record.args = scrubbed
 
         if record.exc_info is not None:
             record.exc_text = _scrub_text(_EXCEPTION_FORMATTER.formatException(record.exc_info))

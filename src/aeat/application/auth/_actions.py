@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ._models import AuthState
 
@@ -31,7 +31,7 @@ def update_auth(
     if isinstance(auth, dict):
         auth = AuthState.model_validate(auth)
 
-    update: dict[str, Any] = {}
+    update: dict[str, object] = {}
     if provider is not None:
         update["provider"] = provider.strip().lower()
         update["configured_at"] = utc_now()
