@@ -8,7 +8,7 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from ._bindings import RegistryFilingObservation
+from ._bindings import CasillaObservation, RegistryFilingObservation
 from ._loader import load_registry_tree
 from ._relations import resolve_relation_values_from_observations
 from ._schema import ModeloDefinition, ModeloRevision
@@ -42,7 +42,7 @@ def _quarterly_filings(
             modelo=modelo_id,
             filing_year=filing_year,
             period=period,
-            casilla_values=values,
+            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in values.items()),
         )
         for period, values in by_period.items()
     )

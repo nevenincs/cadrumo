@@ -10,6 +10,7 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from . import (
+    CasillaObservation,
     RegistryFilingObservation,
     RegistryValidator,
     build_snapshot,
@@ -112,7 +113,7 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
             modelo="123",
             filing_year=2025,
             period=period,
-            casilla_values=casilla_values,
+            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
         )
         for period, casilla_values in sorted(observed_by_period.items())
     )

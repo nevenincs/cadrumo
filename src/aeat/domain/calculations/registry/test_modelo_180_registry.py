@@ -10,6 +10,7 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from . import (
+    CasillaObservation,
     RegistryFilingObservation,
     RegistryValidationError,
     RegistryValidator,
@@ -118,7 +119,7 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
             modelo="115",
             filing_year=2025,
             period=period,
-            casilla_values=casilla_values,
+            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
         )
         for period, casilla_values in sorted(observed_by_period.items())
     )
@@ -151,7 +152,12 @@ def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
         period="0A",
     )
     incomplete_observations = (
-        RegistryFilingObservation(modelo="115", filing_year=2025, period="1T", casilla_values={"01": Decimal("1")}),
+        RegistryFilingObservation(
+            modelo="115",
+            filing_year=2025,
+            period="1T",
+            observations=(CasillaObservation(casilla_id="01", value=Decimal("1")),),
+        ),
     )
 
     with pytest.raises(RegistryValidationError, match="expected one observed filing"):
