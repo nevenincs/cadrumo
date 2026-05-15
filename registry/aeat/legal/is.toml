@@ -1,3 +1,23 @@
+[legal."ley-27-2014:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-13.html#a13"
+document_id = "BOE-A-2014-12328"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a13"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 13: correcciones de valor - perdida por deterioro del valor de los elementos patrimoniales. Establece la deducibilidad del deterioro de creditos cuando concurra una de cuatro circunstancias (6 meses de vencimiento, concurso, alzamiento de bienes, reclamacion judicial / arbitral), las exclusiones (creditos publicos, vinculadas excepto liquidacion concursal, estimaciones globales), y la no-deducibilidad general del deterioro de inmovilizado material/intangible/inversiones inmobiliarias y participaciones. Base sustantiva de la dotaciones_deterioro_creditos_u_otros_activos section de M200."
+required_text = [
+    "pérdida por deterioro del valor",
+    "deterioro de los créditos",
+    "6 meses desde el vencimiento",
+]
+
 [legal."ley-27-2014:art-15"]
 evidence_tier = "legal_authority"
 authority = "boe"
