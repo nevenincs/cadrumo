@@ -6,8 +6,8 @@ date: '2026-05-14'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-root-help-shape-adr]]"
+  - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
 ---
-
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
      outside the YAML frontmatter above -->
 

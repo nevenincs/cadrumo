@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#google-oauth'
-date: '2026-05-14'
+date: '2026-05-15'
 related:
   - '[[2026-05-06-google-oauth-audit]]'
   - '[[2026-05-06-google-oauth-research]]'

@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#trilingual-i18n'
   - '#index'
-date: '2026-04-27'
+  - '#trilingual-i18n'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-trilingual-i18n-adr]]'
   - '[[2026-04-12-trilingual-i18n-phase1-step1-exec]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-04-12-trilingual-i18n-reference]]'
   - '[[2026-04-12-trilingual-i18n-research]]'
   - '[[2026-04-12-trilingual-i18n-review-exec]]'
+  - '[[2026-05-04-trilingual-i18n-phase2-step1-cleanup-exec]]'
 ---
 
 # `trilingual-i18n` feature index
@@ -35,6 +36,7 @@ Auto-generated index of all documents tagged with `#trilingual-i18n`.
 - `2026-04-12-trilingual-i18n-phase1-step4-exec` - Document the trilingual contract
 - `2026-04-12-trilingual-i18n-phase1-summary-exec` - Trilingual i18n Phase 1 Summary
 - `2026-04-12-trilingual-i18n-review-exec` - rilingual-i18n Code Review
+- `2026-05-04-trilingual-i18n-phase2-step1-cleanup-exec` - cleanup-remaining-field-call-sites
 
 ### plan
 

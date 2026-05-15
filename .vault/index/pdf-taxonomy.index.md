@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#pdf-taxonomy'
   - '#index'
-date: '2026-04-27'
+  - '#pdf-taxonomy'
+date: '2026-05-15'
 related:
   - '[[2026-04-21-pdf-taxonomy-adr]]'
   - '[[2026-04-21-pdf-taxonomy-plan]]'

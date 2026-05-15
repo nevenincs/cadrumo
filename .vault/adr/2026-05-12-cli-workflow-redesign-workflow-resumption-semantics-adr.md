@@ -59,10 +59,11 @@ result and start a new current-state attempt.
 
 ## Implementation
 
-Adopt this command as the only user-facing resume placement:
+Adopt this command as the only user-facing resume placement in the reconciled
+modelo work-unit surface:
 
 ```text
-aeat app modelo resume <workflow_run_id>
+aeat app modelo work resume <workflow_run_id>
 ```
 
 `workflow_run_id` is a workflow-engine run id loaded through workflow
@@ -71,18 +72,18 @@ persistence.
 Resume means continue from a prior terminal aborted modelo filing result, not
 replay. The command loads the prior `WorkflowResult`, verifies that
 `final_stage` is `ABORTED`, verifies enough modelo filing context to identify
-the modelo, period, and target work unit, then starts a new current-state filing
-attempt through the normal app modelo lifecycle.
+the modelo and period, then returns the current-state retry context the normal
+modelo lifecycle will consume.
 
-Resume re-runs lifecycle gates from the beginning. It does not resume
-mid-stage.
+Resume validation does not reconstruct argv, mutate the prior run, emit bucket
+events, or resume mid-stage.
 
-A resumed run creates a new workflow run id. The new `WorkflowResult` records
-`resumed_from` with the prior workflow run id. It does not use replay metadata
-and is not a reconstructed invocation.
+The returned context records `resumed_from_run_id` with the prior workflow run
+id. It does not use replay metadata and is not a reconstructed invocation.
 
-If the target work unit or revision is already filed, resume is idempotent and
-creates no new filing record.
+Resume itself creates no filing record. A later verify or file attempt uses
+the normal current-state lifecycle gates for already-filed or non-resumable
+conditions.
 
 If the prior run was `DONE`, resume returns either an already-complete no-op or
 a nonzero domain error pointing to app modelo status or history. It does not
@@ -95,7 +96,6 @@ includes:
 
 - error
 - prior workflow run id
-- new workflow run id, if created
 - stage
 - aborted reason
 - summary
@@ -112,12 +112,22 @@ resume works against current bucket state.
 
 ## Consequences
 
-Resume remains part of the app modelo lifecycle and does not introduce a
-workflow root.
+Resume remains part of the `app modelo work` lifecycle and does not introduce
+a workflow root.
 
 Workflow persistence only needs terminal result loading and linking for this
 ADR. Checkpoint continuation is out of scope.
 
 Run-trace replay remains separate diagnostic and audit functionality. Resume
-creates a new workflow result linked by `resumed_from`; replay reproduces
-recorded CLI argv and uses replay-specific metadata.
+returns current-state context linked by `resumed_from_run_id`; replay
+reproduces recorded CLI argv and uses replay-specific metadata.
+
+## 2026-05-14 reconciliation amendment — shipped command surface
+
+Wave W80 closes the absent-resume regression through
+`aeat app modelo work resume WORKFLOW_RUN_ID`. The handler delegates to
+`resume_modelo_workflow`, accepts workflow-engine run ids only, emits the
+resumable modelo/period/obligation context, and stays local-only. It does not
+introduce root `aeat workflow`, root `aeat run`, flat `aeat app modelo resume`,
+observability replay ids, argv reconstruction, mid-stage continuation, bucket
+events, or compatibility surfaces.

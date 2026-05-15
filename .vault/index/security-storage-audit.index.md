@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#security-storage-audit'
   - '#index'
-date: '2026-04-27'
+  - '#security-storage-audit'
+date: '2026-05-15'
 related:
   - '[[2026-04-27-security-storage-audit-audit]]'
 ---

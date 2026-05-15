@@ -6,7 +6,7 @@ date: '2026-05-14'
 step_id: 'W12.P056..W12.P060'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
-  - "[[2026-05-10-eliminate-user-cli-shim]]"
+  - "[[2026-05-10-eliminate-user-cli-shim-plan]]"
 ---
 
 # `cli-workflow-redesign` W12 closeout (eliminate user_cli shim)

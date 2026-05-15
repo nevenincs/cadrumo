@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#transaction-catalogue'
   - '#index'
-date: '2026-04-27'
+  - '#transaction-catalogue'
+date: '2026-05-15'
 related:
   - '[[2026-04-14-transaction-catalogue-adr]]'
   - '[[2026-04-14-transaction-catalogue-phase1-step1-exec]]'

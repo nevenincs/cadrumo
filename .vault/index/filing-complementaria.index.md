@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#filing-complementaria'
   - '#index'
-date: '2026-04-27'
+  - '#filing-complementaria'
+date: '2026-05-15'
 related:
   - '[[2026-04-13-filing-complementaria-adr]]'
   - '[[2026-04-13-filing-complementaria-plan]]'

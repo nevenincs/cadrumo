@@ -8,8 +8,8 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-modelo-filing-record-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
+  - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
 ---
-
 # `cli-workflow-redesign` adr: `modelo external filing import` | (**status:** `accepted`)
 
 ## CLI Backend Boundary

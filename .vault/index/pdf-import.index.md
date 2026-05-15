@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#pdf-import'
   - '#index'
-date: '2026-04-27'
+  - '#pdf-import'
+date: '2026-05-15'
 related:
   - '[[2026-04-20-pdf-import-adr]]'
   - '[[2026-04-20-pdf-import-phase-1-summary-exec]]'

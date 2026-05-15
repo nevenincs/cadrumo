@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#dev-scaffolding'
   - '#index'
-date: '2026-04-27'
+  - '#dev-scaffolding'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-dev-scaffolding-adr]]'
   - '[[2026-04-12-dev-scaffolding-phase1-summary-exec]]'

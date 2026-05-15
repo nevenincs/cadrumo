@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#google-fixtures'
   - '#index'
-date: '2026-04-27'
+  - '#google-fixtures'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-google-fixtures-adr]]'
   - '[[2026-04-12-google-fixtures-phase1-step1-exec]]'

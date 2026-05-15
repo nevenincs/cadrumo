@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#multilang-externalization'
   - '#index'
-date: '2026-05-06'
+  - '#multilang-externalization'
+date: '2026-05-15'
 related:
   - '[[2026-05-04-multilang-externalization-phase1-adr]]'
   - '[[2026-05-04-multilang-externalization-phase1-plan]]'

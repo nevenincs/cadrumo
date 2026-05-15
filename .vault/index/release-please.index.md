@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#release-please'
   - '#index'
-date: '2026-04-27'
+  - '#release-please'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-release-please-adr]]'
   - '[[2026-04-12-release-please-audit]]'

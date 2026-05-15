@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#category-assignment'
   - '#index'
-date: '2026-04-27'
+  - '#category-assignment'
+date: '2026-05-15'
 related:
   - '[[2026-04-18-category-assignment-cli-adr]]'
   - '[[2026-04-18-category-assignment-cli-plan]]'

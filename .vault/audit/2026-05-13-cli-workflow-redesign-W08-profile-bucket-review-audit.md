@@ -7,7 +7,7 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
-  - '[[2026-05-13-cli-workflow-redesign-W08-summary]]'
+  - '[[2026-05-13-cli-workflow-redesign-W08-summary-exec]]'
 ---
 
 # `cli-workflow-redesign` `W08 profile bucket` Code Review

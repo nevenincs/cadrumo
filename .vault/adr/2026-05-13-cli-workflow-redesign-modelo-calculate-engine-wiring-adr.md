@@ -8,8 +8,8 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-modelo-verify-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
+  - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
 ---
-
 # `cli-workflow-redesign` adr: `modelo calculate engine wiring` | (**status:** `accepted`)
 
 ## CLI Backend Boundary

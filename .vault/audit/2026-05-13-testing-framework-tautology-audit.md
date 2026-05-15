@@ -4,7 +4,6 @@ tags:
   - "#testing-framework"
 date: 2026-05-13
 related:
-  - "[[no-tautological-calculation-tests]]"
   - "[[2026-05-13-schema-driven-wizard-ux-audit]]"
 ---
 

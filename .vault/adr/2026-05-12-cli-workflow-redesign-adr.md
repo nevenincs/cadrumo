@@ -672,7 +672,7 @@ Canonical verb tree:
   successful-output footer, and confirmation prompts all carry the qualifier
   "(internal only — does not submit to AEAT)" per the modelo-file ADR
   refinement.
-- `resume WORKFLOW_RUN_ID`
+- `work resume WORKFLOW_RUN_ID`
 - `audit show WORK_UNIT_ID [--revision REV | --filing-record ID]`
 - `audit check WORK_UNIT_ID [--revision REV | --filing-record ID]` — report-only bundle integrity check (renamed from `verify` to avoid collision with the `app modelo verify` lifecycle gate)
 - `audit export WORK_UNIT_ID --output PATH [--revision REV | --filing-record ID] [--force-incomplete]`
@@ -721,15 +721,18 @@ Bindings shape:
 
 Resume shape:
 
-- `app modelo resume <workflow_run_id>` accepts workflow-engine run ids only.
+- `app modelo work resume <workflow_run_id>` accepts workflow-engine run ids only.
 - Resume means continue from a prior terminal aborted modelo filing result, not
   run-trace replay.
-- Resume starts a new current-state lifecycle attempt, records
-  `resumed_from`, and never resumes mid-stage.
-- If the target work unit/revision is already filed, resume is idempotent and
-  creates no new filing record.
+- Resume validates the prior aborted run, emits current-state retry context
+  with `resumed_from_run_id`, and never resumes mid-stage.
+- Resume itself is read-only and creates no filing record; subsequent verify
+  or file attempts pass through the normal current-state lifecycle gates.
 - Root `aeat workflow`, root `aeat run`, observability replay ids, historical
   argv reconstruction, and shims are rejected.
+- W80 ratifies resume under the reconciled W72 nested work-unit surface:
+  `app modelo work resume WORKFLOW_RUN_ID` is the accepted path. A flat
+  `app modelo resume` path is not introduced.
 
 Audit/evidence shape:
 
@@ -1019,7 +1022,7 @@ explicitly adopted or retired.
   `app overview status`; the daily-status view becomes `app overview agenda`;
   `backlog show/scaffold` becomes read-only `app overview backlog`;
   `history` is satisfied by `app modelo history` plus `config bucket
-  history`; `resume` becomes `app modelo resume <workflow_run_id>` per the
+  history`; `resume` becomes `app modelo work resume <workflow_run_id>` per the
   workflow-resumption-semantics ADR.
 - **`compare` family** (`compare show / explain / fix / verify`,
   `ComparisonCase`) — **retired**. Reconciliation (the underlying
@@ -1034,7 +1037,7 @@ explicitly adopted or retired.
 - **`backlog` family** (`backlog show / import / scaffold / resume`) —
   **partially adopted**: `app overview backlog` covers the show/scaffold
   read model. The `import` verb is rejected here. `backlog resume` is not a
-  command; lifecycle continuation is `app modelo resume <workflow_run_id>`.
+  command; lifecycle continuation is `app modelo work resume <workflow_run_id>`.
 - **`data require / readiness` family** — **adopted as `aeat app modelo
   bindings`** (the `--missing` filter variant). The per-period data
   checklist becomes
@@ -1098,15 +1101,19 @@ capability without a CLI verb appears here with its assigned mini-app
 target. As each verb lands, the entry is removed.
 
 - **`WorkflowEngine.run_next` / `run_for_period`** (`application/workflow/
-  _engine.py`) — read/preflight lifecycle gate. **Target behavior locked**:
+  _engine.py`) — read/preflight lifecycle gate. **Closed by W80**:
   `WorkflowEngine.run_for_period(profile, modelo, period, as_of=...)` is
-  invoked internally by `aeat app modelo file`; `run_next` remains
-  application-only. No `aeat workflow` root, per-stage verbs, or standalone
-  `app modelo preflight` command.
+  invoked internally by `aeat app modelo work verify` and
+  `aeat app modelo work file`; `run_next` remains application-only. No
+  `aeat workflow` root, per-stage verbs, or standalone `app modelo preflight`
+  command.
 - **`SubmissionEngine.preflight`** (`domain/submission/_engine.py`,
   `_preflight.py`) — preflight gate (auth, deadline, draft approval, no
-  blockers). **Target behavior**: invoked internally by `app modelo verify`
-  or `app modelo file`; no standalone `app modelo preflight` verb.
+  blockers). **Closed by W80**: invoked only through the
+  `WorkflowEngine.run_for_period` path reached by `app modelo work verify`
+  and `app modelo work file`; modelo actions and CLI handlers must not call
+  `SubmissionEngine.preflight` directly, and no standalone
+  `app modelo preflight` verb exists.
 - **`FilingHistoryRepository`** (`application/filing/_history_repository.py`,
   `_history_models.py`) — encrypted per-modelo filing history. **Target
   verb**: `aeat app modelo history` (§4.3).
@@ -1660,7 +1667,7 @@ amendments to the affected child ADR.
 | R13 | `aeat app live portals` mount absent; `application/portals/` wrapper missing | domain-portals-harvest ADR, W35 | Regression — close P174 (application wrapper + Typer mount) | `W79` |
 | R14 | `WorkflowEngine.run_for_period` exists but is not invoked from `aeat app modelo file` | workflow-engine-harvest ADR, W58 | Regression — wire `run_for_period` into `file_modelo_revision` per apex §8 backend exit-cap mandate | `W80` |
 | R15 | `SubmissionEngine.preflight` exists but is not invoked from `verify_modelo_revision`/`file_modelo_revision` | apex §8, W65 | Regression — invoke preflight inside both modelo actions (alternative: route everything through `WorkflowEngine`; adjudicate during wave) | `W80` |
-| R16 | `aeat app modelo resume <workflow_run_id>` entirely absent | workflow-resumption-semantics ADR, W59 | Regression — ship verb per ADR with `resumed_from` tracking + idempotency | `W80` |
+| R16 | `aeat app modelo work resume <workflow_run_id>` entirely absent | workflow-resumption-semantics ADR, W59 | Regression — ship verb per ADR with `resumed_from_run_id` retry context and no replay semantics | `W80` |
 | R17 | `aeat app overview` ships only `status` verb; `calendar/agenda/backlog/explain` not exposed as discrete verbs (`--calendar` is a flag on `status`) | app-overview-shape ADR, W53 | Adjudicate — flag-on-status may be Improvement (single verb with axis switches) or Regression (loses discoverability); if Improvement, amend §4.1 | `W81` |
 | R18 | `domain/deadlines/_festivos.shift_deadline` exists but is never called from `OverviewCalendarEntry`; `adjusted_closes_on` field absent | festivos-deadline-shift ADR, W37 | Regression — wire into overview calendar; add field; retire legacy `entrypoints/cli/deadlines/` package | `W81` |
 | R19 | `aeat config repair` ships 4 of 6 locked subverbs (`connectivity/quarantine/reset-state/logs`); missing `integrity` and `list` | config-repair-shape ADR, W18 | Regression — add 2 subcommands wired to existing AES-256-GCM scan + namespace inventory functions | `W82` |
@@ -1671,11 +1678,11 @@ amendments to the affected child ADR.
 | R24 | `application.ledger.classify_ledger_transaction` wrapper absent; `application/rental` + CLI absent; `aeat app modelo reconcile --justificante` CLI absent | domain-harvest-vat-classification ADR, domain-harvest-rental ADR, W32, W34, W64 | Regression — backend-done-CLI-deferred pattern; ship wrappers and CLI surfaces | `W85` |
 | R25 | Plan rows out of sync with shipped code (`W22` invoice decoupling; `W34` rental domain; `W35` portals `_cli.py` deletion; `W44` actor flags; `W45` discard verb) | epic plan ledger, multiple waves | Bookkeeping — check [x] rows after wave-specific reconciliation lands; no ADR impact | Closed inline as each wave above lands |
 
-W80.P385.S2206 verdict: `SubmissionEngine.preflight` is routed through
+W80.P385.S2206/S2207 verdict: `SubmissionEngine.preflight` is routed through
 `WorkflowEngine.run_for_period` only. Modelo actions and CLI handlers must not
-call `SubmissionEngine.preflight` directly. The file path satisfies R15 by
-delegating to WorkflowEngine before filing-state mutation; any verify-path
-preflight work must use the same WorkflowEngine-owned gate rather than a
+call `SubmissionEngine.preflight` directly. The verify and file paths satisfy
+R15 by delegating to WorkflowEngine before verified-state or filing-state
+mutation; both paths use the same WorkflowEngine-owned gate rather than a
 second direct preflight policy path.
 
 ### Cross-reference index
@@ -1736,9 +1743,9 @@ sweep.
 | R08 | W77 | ✅ closed |
 | R09, R10, R11 | W78 | ✅ closed |
 | R12, R13 | W79 | ✅ closed |
-| R14 | W80 | ✅ closed — code: `_run_modelo_workflow_gate` routes verify + file through `WorkflowEngine.run_for_period`; preflight stays internal via `SubmissionEngineAdapter`; no direct CLI preflight surface. Legal grounding: `ley-58-2003:art-119` (declaración tributaria) + `ley-58-2003:art-120` (autoliquidaciones) + `ley-58-2003:art-122` (complementarias / sustitutivas) landed in `registry/aeat/legal/lgt-autoliquidacion.toml` with corpus excerpts under `corpus/normatives/html/`. The workflow gate's annotation pass against those slugs is the follow-on chore. |
-| R15 | W80 | ✅ closed — code: preflight is internal to `WorkflowEngine`; no direct CLI/modelo standalone surface introduced; `aeat workflow` / `aeat run` / `aeat app modelo preflight` proven absent by negative tests at `test_backend_boundary.py`. Legal grounding: same LGT autoliquidación regime (art-119/120/122) governs which acts count as a tax declaration; per-modelo preflight specifics (NIF-IVA, GROI, deadline windows) remain grounded in their own existing legal entries (`ley-37-1992:art-163-*`, `orden-hap-2250-2015:art-4`, etc.). |
-| R16 | W80 | ✅ closed — `resume_modelo_workflow` local action shipped; CLI mount `aeat app modelo work resume WORKFLOW_RUN_ID` shipped; 17 of 25 W80 plan rows ticked. The remaining 8 W80 rows are now LEGALLY UNBLOCKED (LGT articles landed); they remain plan-open only because they're documentation rows that close after the legal_refs annotation in `_actions.py` lands. |
+| R14 | W80 | ✅ closed — code: `_run_revision_workflow_gate` routes verify and file through `WorkflowEngine.run_for_period`; no direct CLI workflow surface exists. |
+| R15 | W80 | ✅ closed — code: preflight is internal to `WorkflowEngine` at `RUNNING_PREFLIGHT`; modelo actions only compose the real `SubmissionEngine` dependency and never call `SubmissionEngine.preflight` directly; `aeat workflow`, `aeat run`, and `aeat app modelo preflight` remain absent. |
+| R16 | W80 | ✅ closed — `resume_modelo_workflow` local action shipped; the reconciled CLI mount is `aeat app modelo work resume WORKFLOW_RUN_ID`; the handler delegates to the workflow application service, accepts workflow run ids only, and does not reconstruct argv, replay traces, resume mid-stage, or create compatibility surfaces. |
 | R17, R18 | W81 | ✅ closed (`shift_deadline` wired into `OverviewCalendarEntry`; calendar adjudication ratified) |
 | R19 | W82 | ✅ closed |
 | R20 | W83 | ✅ closed |

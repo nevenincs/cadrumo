@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#mandatory-citations'
   - '#index'
-date: '2026-04-27'
+  - '#mandatory-citations'
+date: '2026-05-15'
 related:
   - '[[2026-04-25-mandatory-citations-adr]]'
   - '[[2026-04-25-mandatory-citations-phase1-step1-exec]]'

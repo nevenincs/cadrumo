@@ -8,7 +8,7 @@ related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-W01-P004-exec]]"
-  - "[[2026-05-13-cli-workflow-redesign-W01-P004-review]]"
+  - "[[2026-05-13-cli-workflow-redesign-W01-P004-review-audit]]"
 ---
 
 # `cli-workflow-redesign` `W01.P004` Summary

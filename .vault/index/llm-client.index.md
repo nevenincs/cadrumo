@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#llm-client'
   - '#index'
-date: '2026-04-27'
+  - '#llm-client'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-llm-client-adr]]'
   - '[[2026-04-12-llm-client-plan]]'

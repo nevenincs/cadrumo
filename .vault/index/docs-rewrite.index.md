@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#docs-rewrite'
   - '#index'
-date: '2026-04-27'
+  - '#docs-rewrite'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-docs-rewrite-adr]]'
   - '[[2026-04-12-docs-rewrite-phase1-step1-exec]]'

@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#path-handling-safety'
   - '#index'
-date: '2026-04-27'
+  - '#path-handling-safety'
+date: '2026-05-15'
 related:
   - '[[2026-04-17-path-handling-safety-adr]]'
   - '[[2026-04-17-path-handling-safety-phase1-plan]]'

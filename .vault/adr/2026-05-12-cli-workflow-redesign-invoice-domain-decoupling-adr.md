@@ -20,8 +20,8 @@ related:
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"
   - "[[2026-05-08-ledger-renta-pipeline-phase2-contract-decisions-adr]]"
   - "[[2026-05-03-calculation-truth-registry-pending-adr]]"
+  - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
 ---
-
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
      outside the YAML frontmatter above -->
 

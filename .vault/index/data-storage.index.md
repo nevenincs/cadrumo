@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#data-storage'
   - '#index'
-date: '2026-04-27'
+  - '#data-storage'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-data-storage-adr]]'
   - '[[2026-04-12-data-storage-phase1-summary-exec]]'

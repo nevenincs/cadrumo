@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#casilla-db'
   - '#index'
-date: '2026-04-27'
+  - '#casilla-db'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-casilla-db-adr]]'
   - '[[2026-04-12-casilla-db-phase1-step1-exec]]'

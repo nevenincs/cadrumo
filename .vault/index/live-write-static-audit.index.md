@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#live-write-static-audit'
   - '#index'
-date: '2026-04-27'
+  - '#live-write-static-audit'
+date: '2026-05-15'
 related:
   - '[[2026-04-16-live-write-static-audit-reference]]'
   - '[[2026-04-16-live-write-static-audit-review-audit]]'

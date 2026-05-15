@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#submission-pipeline-hardening'
   - '#index'
-date: '2026-04-27'
+  - '#submission-pipeline-hardening'
+date: '2026-05-15'
 related:
   - '[[2026-04-22-submission-pipeline-hardening-reference]]'
 ---

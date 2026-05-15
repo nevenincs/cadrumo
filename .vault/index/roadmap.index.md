@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#roadmap'
   - '#index'
-date: '2026-04-27'
+  - '#roadmap'
+date: '2026-05-15'
 related:
   - '[[2026-04-13-cohesive-project-roadmap-reference]]'
 ---

@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#continuous-review'
   - '#index'
-date: '2026-04-27'
+  - '#continuous-review'
+date: '2026-05-15'
 related:
   - '[[2026-04-20-continuous-review-audit]]'
 ---

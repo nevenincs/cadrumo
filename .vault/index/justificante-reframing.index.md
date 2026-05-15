@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#justificante-reframing'
   - '#index'
-date: '2026-04-27'
+  - '#justificante-reframing'
+date: '2026-05-15'
 related:
   - '[[2026-04-21-justificante-reframing-adr]]'
   - '[[2026-04-21-justificante-reframing-plan]]'

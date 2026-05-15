@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#cert-auth'
   - '#index'
-date: '2026-04-27'
+  - '#cert-auth'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-cert-auth-adr]]'
   - '[[2026-04-12-cert-auth-code-review-exec]]'

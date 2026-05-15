@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#live-sync-backend'
   - '#index'
-date: '2026-04-27'
+  - '#live-sync-backend'
+date: '2026-05-15'
 related:
   - '[[2026-04-21-live-sync-backend-adr-audit]]'
   - '[[2026-04-21-live-sync-backend-adr]]'

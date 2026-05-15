@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#live-submit-permanently-forbidden-code-review'
   - '#index'
-date: '2026-04-27'
+  - '#live-submit-permanently-forbidden-code-review'
+date: '2026-05-15'
 related:
   - '[[2026-04-27-live-submit-permanently-forbidden-code-review-audit]]'
 ---
