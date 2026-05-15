@@ -1995,6 +1995,26 @@ required_text = [
     "1.200 euros anuales",
 ]
 
+[legal."ley-35-2006:art-101"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-101.html#a101"
+document_id = "BOE-A-2006-20764"
+article = "101"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a101"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 101: importe de los pagos a cuenta. Base sustantiva del regimen de tipos de retencion para rendimientos del trabajo (escala personalizada 19/24/30/37/45/47 por ciento), administradores y consejeros (35 por ciento, 19 por ciento para entidades de cifra de negocios inferior a 100.000 euros), atrasos imputados a ejercicios anteriores (15 por ciento), y reduccion del 60 por ciento para rendimientos de Ceuta o Melilla amparados en la deduccion del art 68.4. Espejo legal del articulo 80 RIRPF que desarrolla el procedimiento."
+required_text = [
+    "Importe de los pagos a cuenta",
+    "rendimientos del trabajo",
+    "35 por ciento",
+]
+
 [legal."ley-35-2006:art-103"]
 evidence_tier = "legal_authority"
 authority = "boe"
