@@ -59,6 +59,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.live._borrador.BorradorSnapshotNotFoundError",
+        ErrorCode(
+            code="REFUSED_BORRADOR_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.borrador_snapshot_not_found",
+            default_suggestion="aeat app live borrador list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._acquisition_lock.AuthAcquisitionLockedError",
         ErrorCode(
             code="LOCKED_AUTH_ACQUISITION",
