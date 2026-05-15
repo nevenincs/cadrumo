@@ -698,3 +698,4 @@ Final outcome: the branch passes a third-loop review with zero
 HIGH or MEDIUM findings surviving. The CI tautology gate landed
 in commit `f98ae451` continues to enforce that no new tautological
 calculation tests can re-introduce the antipattern.
+# smoke
