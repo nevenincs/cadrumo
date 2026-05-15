@@ -954,3 +954,139 @@ required_text = [
     "A tal efecto, se aplicarán las siguientes reglas:",
     "Uno. En los casos de entregas de bienes de inversión durante el período de regularización se efectuará una regularizació",
 ]
+
+[legal."ley-37-1992:art-163-duovicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-duovicies.html#a163duovicies"
+document_id = "BOE-A-1992-28740"
+article = "163-duovicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163duovicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 163 duovicies LIVA: regimen especial aplicable a empresarios o profesionales no establecidos que presten servicios de telecomunicaciones, radiodifusion, television o servicios prestados por via electronica a destinatarios que no sean empresarios o profesionales (one stop shop). Forma parte del bloque de regimenes especiales del titulo IX, capitulo XI."
+required_text = [
+    "a) Disponer del número de identificación fiscal al que se refiere el artículo 164.Uno.2.º de esta Ley.",
+    "f) Expedir y entregar factura, ajustada a lo que se determine reglamentariamente.",
+]
+
+[legal."ley-37-1992:art-163-sexvicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-sexvicies.html#a163sexvicies"
+document_id = "BOE-A-1992-28740"
+article = "163-sexvicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163sexvicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 163 sexvicies LIVA: regimen especial aplicable a las ventas a distancia de bienes importados procedentes de paises terceros (Import One Stop Shop / IOSS). Establecido como ventanilla unica para envios de valor intrinseco no superior a 150 euros."
+required_text = [
+    "En las entregas de bienes acogidas a este régimen especial el devengo del impuesto se producirá en el momento de la entrega, que s",
+]
+
+[legal."ley-37-1992:art-163-septvicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-septvicies.html#a163septvicies"
+document_id = "BOE-A-1992-28740"
+article = "163-septvicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163septvicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 163 septvicies LIVA: definiciones aplicables al regimen especial IOSS - empresario o profesional no establecido, Estado miembro de identificacion, Estado miembro de consumo, intermediario."
+required_text = [
+    "a) Disponer del número de identificación fiscal al que se refiere el artículo 164.Uno. 2.º de esta Ley.",
+    "f) Expedir y entregar factura, ajustada a lo que se determine reglamentariamente.",
+]
+
+[legal."ley-37-1992:art-163-octovicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-octovicies.html#a163octovicies"
+document_id = "BOE-A-1992-28740"
+article = "163-octovicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163octovicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 163 octovicies LIVA: obligaciones formales del regimen especial IOSS - declaracion de inicio, modificacion y cese, presentacion de declaraciones por trimestre natural, pagos, llevanza de un registro, conservacion de la documentacion durante diez anos."
+required_text = [
+    "Uno. Los empresarios o profesionales que se acojan a este régimen especial no podrán deducir en la declaración-liquidación a que s",
+    "No obstante lo anterior, los empresarios o profesionales acogidos a este régimen especial tendrán derecho a la devolución de las c",
+    "Dos. En caso de que el Reino de España sea el Estado miembro de consumo, sin perjuicio de lo dispuesto en el artículo 119.,Dos.2.º",
+]
+
+[legal."ley-37-1992:art-163-tervicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-tervicies.html#a163tervicies"
+document_id = "BOE-A-1992-28740"
+article = "163-tervicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163tervicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 163 tervicies LIVA: regimen especial aplicable a empresarios o profesionales establecidos en la Comunidad, pero no en el Estado miembro de consumo (Union One Stop Shop). Habilita la declaracion unica de servicios y ventas a distancia intracomunitarias a traves del Estado miembro de identificacion."
+required_text = [
+    "Uno. Los empresarios o profesionales que se acojan a este régimen especial no podrán deducir en la declaración-liquidación a que s",
+    "No obstante lo anterior, los empresarios o profesionales que se acojan a este régimen especial tendrán derecho a la devolución de ",
+    "Dos. En caso de que el Reino de España sea el Estado miembro de consumo, sin perjuicio de lo dispuesto en el artículo 119.Dos.2.º ",
+]
+
+[legal."ley-37-1992:art-163-septiesdecies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-septiesdecies.html#a163septiesdecies"
+document_id = "BOE-A-1992-28740"
+article = "163-septiesdecies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163septiesdecies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 163 septiesdecies LIVA: ambito objetivo del regimen especial aplicable a los servicios prestados por via electronica, de telecomunicaciones, de radiodifusion y de television (MOSS exterior). Define las prestaciones acogibles y los servicios excluidos del regimen."
+required_text = [
+    "Uno. A efectos del presente capítulo, serán de aplicación las siguientes definiciones:",
+    "b) “Estado miembro de consumo”: el definido como tal para cada uno de los regímenes especiales.",
+    "c) “Estado miembro de identificación”: el definido como tal para cada uno de los regímenes especiales.",
+]
+
+[legal."ley-37-1992:art-163-vicies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-163-vicies.html#a163vicies"
+document_id = "BOE-A-1992-28740"
+article = "163-vicies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163vicies"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Articulo 163 vicies LIVA: obligaciones formales del regimen especial MOSS exterior - declaracion de inicio/cese, presentacion de declaraciones trimestrales, ingreso por el total, llevanza del registro, conservacion durante diez anos, e idioma de las declaraciones."
+required_text = [
+    "Uno. Los empresarios o profesionales no establecidos en la Comunidad que se acojan a este régimen especial no podrán deducir en la",
+    "No obstante lo anterior, dichos empresarios o profesionales acogidos a este régimen especial tendrán derecho a la devolución de la",
+    "Dos. En caso de que el Reino de España sea el Estado miembro de consumo, sin perjuicio de lo dispuesto en el artículo 119. Dos.2.º",
+]
