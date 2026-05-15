@@ -40,6 +40,7 @@ from .....core.config import Settings
 from .....core.logging import get_logger
 from .....core.paths import PROJECT_ROOT
 from .....domain.calculations.registry import (
+    CasillaObservation,
     ExportFieldDefinition,
     ParsedExportFieldValue,
     RegistryFilingObservation,
@@ -1321,7 +1322,7 @@ def registry_observation_from_filed_declaration(
         modelo=observation.modelo,
         filing_year=observation.ejercicio,
         period=observation.period,
-        casilla_values=casilla_values,
+        observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
     )
 
 
