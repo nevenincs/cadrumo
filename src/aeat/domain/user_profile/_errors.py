@@ -43,3 +43,19 @@ class ProfileSnapshotHashMismatchError(UserProfileError):
 
 class ProfileSnapshotNotFoundError(UserProfileError):
     """Raised when a snapshot id has no persisted record in the secure backend."""
+
+
+class ProfileExportError(UserProfileError):
+    """Base error for profile-archive export failures (serialization, write)."""
+
+
+class ProfileImportError(UserProfileError):
+    """Base error for profile-archive import failures (parse, signature, collision)."""
+
+
+class ProfileImportSignatureError(ProfileImportError):
+    """Raised when a profile archive fails its signature/integrity check."""
+
+
+class ProfileImportCollisionError(ProfileImportError):
+    """Raised when an imported profile_id collides with an existing profile."""
