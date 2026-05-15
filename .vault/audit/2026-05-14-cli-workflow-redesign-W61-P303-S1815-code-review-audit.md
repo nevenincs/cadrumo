@@ -5,7 +5,7 @@ tags:
 date: '2026-05-14'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
-  - '[[2026-05-13-cli-workflow-redesign-W61-P303-S1815-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-w61-p303-s1815-exec]]'
   - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr]]'

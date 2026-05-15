@@ -41,4 +41,3 @@ Closed plan rows: `W08.P036.S0211`, `W08.P036.S0212`,
 ## Tests
 
 `uv run --no-sync pytest src/aeat/application/profile/test_actions.py src/aeat/application/workflow/test_adapters.py src/aeat/application/wizard/test_status.py src/aeat/application/wizard/test_status_next_action.py -q`
-

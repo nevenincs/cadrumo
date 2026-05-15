@@ -8,7 +8,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-research]]'
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
-  - '[[2026-05-14-cli-workflow-redesign-W51-modelo-145-deferral-baseline-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-w51-modelo-145-deferral-baseline-exec]]'
 ---
 
 <!-- LINK RULES:

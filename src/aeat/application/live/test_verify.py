@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from aeat.application.live._verify import (
-    VerifyObservation,
     VerifyObservationNotFoundError,
     VerifyService,
     VerifySurface,
@@ -62,7 +61,8 @@ class TestRecord:
         assert miss.matched_expectation is False
 
     def test_record_deduplicates_identical_observation(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = VerifyService(settings=isolated_settings)
         ts = datetime(2025, 3, 15, 10, 0, tzinfo=UTC)
@@ -84,7 +84,8 @@ class TestRecord:
         assert len(svc.list_observations(bucket_id="bucket-001")) == 1
 
     def test_record_distinct_verdict_at_same_timestamp_yields_distinct_id(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = VerifyService(settings=isolated_settings)
         ts = datetime(2025, 3, 15, 10, 0, tzinfo=UTC)
@@ -110,12 +111,18 @@ class TestListObservations:
         svc = VerifyService(settings=isolated_settings)
         ts = datetime(2025, 3, 15, tzinfo=UTC)
         svc.record(
-            bucket_id="b1", surface=VerifySurface.NIF_IVA, nif="DE1",
-            verdict="valid", checked_at=ts,
+            bucket_id="b1",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE1",
+            verdict="valid",
+            checked_at=ts,
         )
         svc.record(
-            bucket_id="b1", surface=VerifySurface.TGVI, nif="ES1",
-            verdict="valid", checked_at=ts,
+            bucket_id="b1",
+            surface=VerifySurface.TGVI,
+            nif="ES1",
+            verdict="valid",
+            checked_at=ts,
         )
         all_obs = svc.list_observations(bucket_id="b1")
         assert len(all_obs) == 2
@@ -124,12 +131,18 @@ class TestListObservations:
         svc = VerifyService(settings=isolated_settings)
         ts = datetime(2025, 3, 15, tzinfo=UTC)
         svc.record(
-            bucket_id="b1", surface=VerifySurface.NIF_IVA, nif="DE1",
-            verdict="valid", checked_at=ts,
+            bucket_id="b1",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE1",
+            verdict="valid",
+            checked_at=ts,
         )
         svc.record(
-            bucket_id="b1", surface=VerifySurface.TGVI, nif="ES1",
-            verdict="valid", checked_at=ts,
+            bucket_id="b1",
+            surface=VerifySurface.TGVI,
+            nif="ES1",
+            verdict="valid",
+            checked_at=ts,
         )
         nif_iva_obs = svc.list_observations(bucket_id="b1", surface=VerifySurface.NIF_IVA)
         tgvi_obs = svc.list_observations(bucket_id="b1", surface=VerifySurface.TGVI)
@@ -142,12 +155,18 @@ class TestListObservations:
         svc = VerifyService(settings=isolated_settings)
         ts = datetime(2025, 3, 15, tzinfo=UTC)
         svc.record(
-            bucket_id="b1", surface=VerifySurface.NIF_IVA, nif="DE1",
-            verdict="valid", checked_at=ts,
+            bucket_id="b1",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE1",
+            verdict="valid",
+            checked_at=ts,
         )
         svc.record(
-            bucket_id="b1", surface=VerifySurface.NIF_IVA, nif="DE2",
-            verdict="invalid", checked_at=ts,
+            bucket_id="b1",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE2",
+            verdict="invalid",
+            checked_at=ts,
         )
         de1_obs = svc.list_observations(bucket_id="b1", nif="DE1")
         assert len(de1_obs) == 1
@@ -158,8 +177,11 @@ class TestShow:
     def test_show_resolves_full_and_prefix(self, isolated_settings: Settings) -> None:
         svc = VerifyService(settings=isolated_settings)
         obs = svc.record(
-            bucket_id="b1", surface=VerifySurface.NIF_IVA, nif="DE1",
-            verdict="valid", checked_at=datetime(2025, 3, 15, tzinfo=UTC),
+            bucket_id="b1",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE1",
+            verdict="valid",
+            checked_at=datetime(2025, 3, 15, tzinfo=UTC),
         )
         full = svc.show(bucket_id="b1", observation_id=obs.observation_id)
         prefix = svc.show(bucket_id="b1", observation_id=obs.observation_id[:8])
@@ -176,15 +198,23 @@ class TestLatestForNif:
     def test_latest_returns_most_recent_for_pair(self, isolated_settings: Settings) -> None:
         svc = VerifyService(settings=isolated_settings)
         older = svc.record(
-            bucket_id="b1", surface=VerifySurface.NIF_IVA, nif="DE1",
-            verdict="valid", checked_at=datetime(2025, 1, 1, tzinfo=UTC),
+            bucket_id="b1",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE1",
+            verdict="valid",
+            checked_at=datetime(2025, 1, 1, tzinfo=UTC),
         )
         newer = svc.record(
-            bucket_id="b1", surface=VerifySurface.NIF_IVA, nif="DE1",
-            verdict="invalid", checked_at=datetime(2025, 6, 1, tzinfo=UTC),
+            bucket_id="b1",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE1",
+            verdict="invalid",
+            checked_at=datetime(2025, 6, 1, tzinfo=UTC),
         )
         latest = svc.latest_for_nif(
-            bucket_id="b1", surface=VerifySurface.NIF_IVA, nif="DE1",
+            bucket_id="b1",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE1",
         )
         assert latest == newer
         assert latest != older
@@ -192,7 +222,9 @@ class TestLatestForNif:
     def test_latest_returns_none_when_no_observations(self, isolated_settings: Settings) -> None:
         svc = VerifyService(settings=isolated_settings)
         result = svc.latest_for_nif(
-            bucket_id="b1", surface=VerifySurface.NIF_IVA, nif="DE1",
+            bucket_id="b1",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE1",
         )
         assert result is None
 
@@ -202,12 +234,18 @@ class TestBucketIsolation:
         svc = VerifyService(settings=isolated_settings)
         ts = datetime(2025, 3, 15, tzinfo=UTC)
         svc.record(
-            bucket_id="bucket-A", surface=VerifySurface.NIF_IVA, nif="DE1",
-            verdict="valid", checked_at=ts,
+            bucket_id="bucket-A",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE1",
+            verdict="valid",
+            checked_at=ts,
         )
         svc.record(
-            bucket_id="bucket-B", surface=VerifySurface.NIF_IVA, nif="DE2",
-            verdict="invalid", checked_at=ts,
+            bucket_id="bucket-B",
+            surface=VerifySurface.NIF_IVA,
+            nif="DE2",
+            verdict="invalid",
+            checked_at=ts,
         )
         a = svc.list_observations(bucket_id="bucket-A")
         b = svc.list_observations(bucket_id="bucket-B")

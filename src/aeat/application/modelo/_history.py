@@ -91,7 +91,8 @@ def assemble_work_unit_history(
     # object_type=WORK_UNIT keyed by work_unit_id.
     collected = list(
         catalogue.for_object(
-            object_type=BucketEventObjectType.WORK_UNIT, object_id=work_unit_id,
+            object_type=BucketEventObjectType.WORK_UNIT,
+            object_id=work_unit_id,
         )
     )
 

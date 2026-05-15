@@ -5,6 +5,7 @@ tags:
   - '#schema-driven-wizard-revision'
 date: '2026-05-15'
 related:
+  - '[[2026-05-12-schema-driven-wizard-revision-adr]]'
   - '[[2026-05-12-schema-driven-wizard-revision-phase1-step1-exec]]'
   - '[[2026-05-12-schema-driven-wizard-revision-phase1-step10-exec]]'
   - '[[2026-05-12-schema-driven-wizard-revision-phase1-step11-exec]]'
@@ -28,6 +29,10 @@ related:
 Auto-generated index of all documents tagged with `#schema-driven-wizard-revision`.
 
 ## Documents
+
+### adr
+
+- `2026-05-12-schema-driven-wizard-revision-adr` - `schema-driven-wizard-revision` adr
 
 ### exec
 

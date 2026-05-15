@@ -121,7 +121,7 @@ def register(code: ErrorCode) -> ErrorCode:
     return code
 
 
-from aeat.core.errors.registry import _ALL_DECLARED_ERROR_CODES  # noqa: E402
+from aeat.core.errors.registry import _ALL_DECLARED_ERROR_CODES
 
 _DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = MappingProxyType(
     {qualname: register(code) for qualname, code in _ALL_DECLARED_ERROR_CODES}
@@ -279,12 +279,34 @@ def resolve_error_message(error: BaseException, code: ErrorCode | None = None) -
     resolved_code = code or get_registered_error_code(error)
     from ...entrypoints.cli._i18n import tr
 
+    interpolation = _coerce_interpolation_kwargs(getattr(error, "context", None))
     translated_message = getattr(error, "translated_message", None)
     if isinstance(translated_message, str) and translated_message:
-        return tr(translated_message)
+        return tr(translated_message, **interpolation)
     if error.args and isinstance(error.args[0], str) and error.args[0]:
         return error.args[0]
-    return tr(resolved_code.message_key)
+    return tr(resolved_code.message_key, **interpolation)
+
+
+def _coerce_interpolation_kwargs(
+    context: Mapping[str, object] | None,
+) -> dict[str, object]:
+    """Reduce a structured error context to safe kwargs for `tr(...)`.
+
+    Preserves keys that are valid Python identifiers; drops anything
+    else so a free-form context entry can never break the
+    interpolation contract. Values are passed through unchanged so
+    `{value}` placeholders see the same Decimal / int / str the
+    error site recorded.
+    """
+
+    if context is None:
+        return {}
+    safe: dict[str, object] = {}
+    for key, value in context.items():
+        if isinstance(key, str) and key.isidentifier():
+            safe[key] = value
+    return safe
 
 
 def get_error_suggestion(error: BaseException, code: ErrorCode | None = None) -> str | None:

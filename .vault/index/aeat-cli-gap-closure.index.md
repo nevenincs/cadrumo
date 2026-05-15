@@ -5,6 +5,7 @@ tags:
   - '#aeat-cli-gap-closure'
 date: '2026-05-15'
 related:
+  - '[[2026-05-08-aeat-cli-gap-closure-adr]]'
   - '[[2026-05-08-aeat-cli-gap-closure-plan]]'
 ---
 
@@ -13,6 +14,10 @@ related:
 Auto-generated index of all documents tagged with `#aeat-cli-gap-closure`.
 
 ## Documents
+
+### adr
+
+- `2026-05-08-aeat-cli-gap-closure-adr` - `aeat-cli-gap-closure` adr
 
 ### plan
 

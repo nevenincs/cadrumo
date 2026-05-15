@@ -34,7 +34,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.config import Settings
 from ...core.errors import AeatError
 
-
 VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
 
@@ -190,8 +189,7 @@ class VerifyService:
         matches = [
             o
             for o in _load(self._settings, bucket_id)
-            if o.observation_id == observation_id
-            or o.observation_id.startswith(observation_id)
+            if o.observation_id == observation_id or o.observation_id.startswith(observation_id)
         ]
         if not matches:
             raise VerifyObservationNotFoundError(
@@ -214,11 +212,7 @@ class VerifyService:
         nif: str,
     ) -> VerifyObservation | None:
         """Return the most recent observation for (surface, nif), or None."""
-        matches = [
-            o
-            for o in _load(self._settings, bucket_id)
-            if o.surface is surface and o.nif == nif
-        ]
+        matches = [o for o in _load(self._settings, bucket_id) if o.surface is surface and o.nif == nif]
         if not matches:
             return None
         return max(matches, key=lambda o: o.checked_at)

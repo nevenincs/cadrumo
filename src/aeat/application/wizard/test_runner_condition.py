@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ._models import WizardCondition, WizardQuestion, WizardWidget
 from ._runner import _condition_satisfied
 

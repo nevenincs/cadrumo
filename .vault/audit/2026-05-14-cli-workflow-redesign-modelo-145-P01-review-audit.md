@@ -7,7 +7,7 @@ related:
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan]]'
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]'
   - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-research]]'
-  - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-P01-S01-S06-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-p01-s01-s06-exec]]'
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields

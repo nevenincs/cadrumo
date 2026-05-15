@@ -221,9 +221,12 @@ def test_borrador_100_snapshot_service_supersedes_prior_current_snapshot(
     assert repository.load(older.snapshot_id).state is Borrador100SnapshotState.SUPERSEDED
     assert repository.load(older.snapshot_id).superseded_by_snapshot_id == newer.snapshot_id
     assert service.list_snapshots() == (newer,)
-    assert service.list_snapshots(state=None) == (older.model_copy(
-        update={"state": Borrador100SnapshotState.SUPERSEDED, "superseded_by_snapshot_id": newer.snapshot_id}
-    ), newer)
+    assert service.list_snapshots(state=None) == (
+        older.model_copy(
+            update={"state": Borrador100SnapshotState.SUPERSEDED, "superseded_by_snapshot_id": newer.snapshot_id}
+        ),
+        newer,
+    )
 
 
 def test_borrador_100_snapshot_service_preserves_newer_current_for_out_of_order_capture(

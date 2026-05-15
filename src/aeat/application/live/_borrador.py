@@ -122,7 +122,9 @@ def _load(settings: Settings, bucket_id: str) -> list[Borrador100Snapshot]:
 
 
 def _save(
-    settings: Settings, bucket_id: str, snapshots: list[Borrador100Snapshot],
+    settings: Settings,
+    bucket_id: str,
+    snapshots: list[Borrador100Snapshot],
 ) -> None:
     path = _storage_path(settings, bucket_id)
     payload = "\n".join(s.model_dump_json() for s in snapshots)
@@ -217,11 +219,7 @@ class BorradorService:
         tax_year: int,
     ) -> Borrador100Snapshot | None:
         """Return the most recent non-discarded snapshot for a tax year."""
-        snapshots = [
-            s
-            for s in _load(self._settings, bucket_id)
-            if s.tax_year == tax_year and not s.discarded
-        ]
+        snapshots = [s for s in _load(self._settings, bucket_id) if s.tax_year == tax_year and not s.discarded]
         if not snapshots:
             return None
         return max(snapshots, key=lambda s: s.captured_at)
@@ -241,9 +239,7 @@ class BorradorService:
         """
         snapshots = _load(self._settings, bucket_id)
         target = self.show(bucket_id=bucket_id, snapshot_id=snapshot_id)
-        index = next(
-            i for i, s in enumerate(snapshots) if s.snapshot_id == target.snapshot_id
-        )
+        index = next(i for i, s in enumerate(snapshots) if s.snapshot_id == target.snapshot_id)
         updated = target.model_copy(
             update={
                 "discarded": True,

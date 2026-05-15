@@ -145,15 +145,15 @@ class MutatingNounGroupContract(BaseModel):
         description="canonical CRUD verbs registered on this noun-group",
     )
     key_value_verbs: frozenset[KeyValueVerb] = Field(
-        default_factory=frozenset,
+        default_factory=lambda: frozenset[KeyValueVerb](),
         description="key-value verbs (set/get/unset/list) when exception is KEY_VALUE_AS_RECORD",
     )
     orthogonal_axes: frozenset[OrthogonalAxis] = Field(
-        default_factory=frozenset,
+        default_factory=lambda: frozenset[OrthogonalAxis](),
         description="orthogonal axes registered alongside the canonical spine",
     )
     lifecycle_state_verbs: frozenset[LifecycleStateVerb] = Field(
-        default_factory=frozenset,
+        default_factory=lambda: frozenset[LifecycleStateVerb](),
         description="lifecycle-state verbs registered alongside the canonical spine",
     )
 

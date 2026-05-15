@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ._models import WizardChoice, WizardQuestion, WizardWidget
 from ._persistence import _canonicalise, _parse_canonical, _resolve_canonical
 

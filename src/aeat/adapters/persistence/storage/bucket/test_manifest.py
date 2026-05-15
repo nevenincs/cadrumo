@@ -45,15 +45,17 @@ def _manifest(**overrides: object) -> BucketManifest:
 
 def test_round_trip_preserves_salt_bytes() -> None:
     salt = secrets.token_bytes(16)
-    manifest = _manifest(kdf_params=KdfParams(
-        algorithm="argon2id",
-        version=19,
-        memory_cost=19 * 1024,
-        time_cost=2,
-        parallelism=1,
-        salt=salt,
-        output_length=32,
-    ))
+    manifest = _manifest(
+        kdf_params=KdfParams(
+            algorithm="argon2id",
+            version=19,
+            memory_cost=19 * 1024,
+            time_cost=2,
+            parallelism=1,
+            salt=salt,
+            output_length=32,
+        )
+    )
     blob = manifest.model_dump_json()
     revived = BucketManifest.model_validate_json(blob)
     assert revived.kdf_params.salt == salt

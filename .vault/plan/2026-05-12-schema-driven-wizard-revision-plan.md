@@ -7,6 +7,8 @@ related:
   - "[[2026-05-12-schema-driven-wizard-adr]]"
   - "[[2026-05-12-schema-driven-wizard-plan]]"
   - "[[2026-05-12-schema-driven-wizard-reference]]"
+  - "[[2026-05-12-schema-driven-wizard-research]]"
+  - "[[2026-04-12-setup-wizard-research]]"
 ---
 
 # schema-driven wizard revision plan

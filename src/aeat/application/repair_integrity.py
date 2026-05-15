@@ -19,6 +19,8 @@ renderer; both functions are read-only and emit no bucket events.
 
 from __future__ import annotations
 
+from typing import Protocol, runtime_checkable
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..adapters.persistence.storage.sql.secure_objects import (
@@ -26,6 +28,19 @@ from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectRepository,
 )
 from .diagnostics import DiagnosticCheck
+
+
+@runtime_checkable
+class _SecureObjectRepositoryProtocol(Protocol):
+    """Structural interface consumed by the repair-integrity application layer.
+
+    ``SecureObjectRepository`` satisfies this protocol; test stubs that
+    implement only these three methods are accepted without subclassing.
+    """
+
+    def list_namespaces(self) -> tuple[str, ...]: ...
+    def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity: ...
+    def list_keys(self, namespace: str) -> tuple[str, ...]: ...
 
 
 class RepairIntegrityReport(BaseModel):
@@ -75,9 +90,7 @@ def _aggregate_integrity(
         return DiagnosticCheck(
             name="secure_objects.integrity",
             status="ok",
-            summary=(
-                f"{readable} row(s) decryptable across {len(integrity)} namespace(s)"
-            ),
+            summary=(f"{readable} row(s) decryptable across {len(integrity)} namespace(s)"),
         )
     impacted = ", ".join(
         f"{item.namespace} ({item.unreadable}/{item.readable + item.unreadable})"
@@ -95,14 +108,14 @@ def _aggregate_integrity(
 def build_repair_integrity_report(
     *,
     namespace: str | None = None,
-    repository: SecureObjectRepository | None = None,
+    repository: _SecureObjectRepositoryProtocol | None = None,
 ) -> RepairIntegrityReport:
     """Probe namespace integrity. When ``namespace`` is set, restrict scope."""
     repo = repository or SecureObjectRepository()
     if namespace is None:
         try:
             namespaces = repo.list_namespaces()
-        except Exception:  # pragma: no cover - defensive; storage layer surfaces typed errors  # noqa: BLE001
+        except Exception:  # pragma: no cover - defensive; storage layer surfaces typed errors
             namespaces = ()
     else:
         namespaces = (namespace,)
@@ -122,7 +135,7 @@ def build_repair_list_report(
     namespace: str,
     include_all: bool = False,
     only_unreadable: bool = False,
-    repository: SecureObjectRepository | None = None,
+    repository: _SecureObjectRepositoryProtocol | None = None,
 ) -> RepairListReport:
     """List object keys stored under ``namespace``.
 
@@ -134,10 +147,7 @@ def build_repair_list_report(
     namespaces with no integrity issues.
     """
     if include_all and only_unreadable:
-        msg = (
-            "build_repair_list_report cannot combine --all and --unreadable; "
-            "pass one or neither"
-        )
+        msg = "build_repair_list_report cannot combine --all and --unreadable; pass one or neither"
         raise ValueError(msg)
     repo = repository or SecureObjectRepository()
     integrity = repo.probe_namespace_integrity(namespace)

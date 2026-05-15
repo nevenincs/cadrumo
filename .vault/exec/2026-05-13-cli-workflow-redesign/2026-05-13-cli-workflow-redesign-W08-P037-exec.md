@@ -37,4 +37,3 @@ Closed plan rows: `W08.P037.S0217`, `W08.P037.S0218`,
 ## Tests
 
 `uv run --no-sync pytest src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/test_backend_boundary.py src/aeat/tests/test_config.py -q`
-

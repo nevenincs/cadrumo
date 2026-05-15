@@ -9,7 +9,6 @@ import pytest
 
 from aeat.application.evidence import (
     BundleVerificationState,
-    EvidenceBundle,
     EvidenceBundleNotFoundError,
     EvidenceBundleService,
     EvidenceBundleVerificationError,
@@ -67,7 +66,9 @@ class TestBuild:
             record_payloads=payloads,
         )
         # Fresh service, same payloads, same bucket — bundle_id should match.
-        svc2 = EvidenceBundleService(settings=Settings(aeat_audit_dir=isolated_settings.aeat_audit_dir.parent / "isolated2"))
+        svc2 = EvidenceBundleService(
+            settings=Settings(aeat_audit_dir=isolated_settings.aeat_audit_dir.parent / "isolated2")
+        )
         bundle2 = svc2.build(
             bucket_id="bucket-001",
             work_unit_id="wu-100",
@@ -257,16 +258,19 @@ class TestBucketIsolation:
         svc.build(bucket_id="bucket-A", work_unit_id="wu-A", record_payloads=payloads)
         svc.build(bucket_id="bucket-B", work_unit_id="wu-B", record_payloads=payloads)
         # show() filters by bucket: A's bundle must be invisible to B and vice versa
-        a_bundles = [b for b in [svc.show(bucket_id="bucket-A", bundle_id="")] if b]  # noop
+        [b for b in [svc.show(bucket_id="bucket-A", bundle_id="")] if b]  # noop
         # Direct attempt: lookup a bundle that exists in A while addressing bucket B
-        bundle_in_a = next(iter(svc.show(bucket_id="bucket-A", bundle_id="") for _ in [0]), None)
+        next(iter(svc.show(bucket_id="bucket-A", bundle_id="") for _ in [0]), None)
         # Simpler: a bundle persisted to A is not reachable from B
         a_added = EvidenceBundleService(settings=isolated_settings).build(
-            bucket_id="bucket-A", work_unit_id="wu-A", record_payloads=payloads,
+            bucket_id="bucket-A",
+            work_unit_id="wu-A",
+            record_payloads=payloads,
         )
         with pytest.raises(EvidenceBundleNotFoundError):
             EvidenceBundleService(settings=isolated_settings).show(
-                bucket_id="bucket-B", bundle_id=a_added.bundle_id,
+                bucket_id="bucket-B",
+                bundle_id=a_added.bundle_id,
             )
 
 
@@ -288,9 +292,15 @@ class TestDeriveBundleId:
             payload_size_bytes=10,
         )
         id_a = derive_bundle_id(
-            bucket_id="bucket-001", work_unit_id="wu-1", manifest_version=1, records=(rec_a,),
+            bucket_id="bucket-001",
+            work_unit_id="wu-1",
+            manifest_version=1,
+            records=(rec_a,),
         )
         id_b = derive_bundle_id(
-            bucket_id="bucket-001", work_unit_id="wu-1", manifest_version=1, records=(rec_b,),
+            bucket_id="bucket-001",
+            work_unit_id="wu-1",
+            manifest_version=1,
+            records=(rec_b,),
         )
         assert id_a != id_b

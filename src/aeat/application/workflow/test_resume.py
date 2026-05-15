@@ -131,7 +131,8 @@ def test_resume_refuses_done_run(tmp_path: Path) -> None:
     ],
 )
 def test_resume_refuses_non_resumable_reasons(
-    tmp_path: Path, reason: WorkflowAbortReason,
+    tmp_path: Path,
+    reason: WorkflowAbortReason,
 ) -> None:
     run_id = "c" * 16
     save_run(

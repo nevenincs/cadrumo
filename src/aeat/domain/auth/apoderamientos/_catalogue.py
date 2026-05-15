@@ -9,13 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ....core.errors import AeatError
 
-_DEFAULT_CATALOGUE_PATH = (
-    Path(__file__).resolve().parents[5]
-    / "registry"
-    / "aeat"
-    / "apoderamientos"
-    / "scopes.toml"
-)
+_DEFAULT_CATALOGUE_PATH = Path(__file__).resolve().parents[5] / "registry" / "aeat" / "apoderamientos" / "scopes.toml"
 
 ALL_TOKEN = "ALL"
 

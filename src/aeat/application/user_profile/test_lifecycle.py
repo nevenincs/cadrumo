@@ -173,9 +173,7 @@ def test_lifecycle_emits_bucket_events(secure_objects, schema) -> None:
             facts=_all_required_facts(schema),
         )
     )
-    svc.edit_field(
-        EditProfileFieldCommand(profile_id="operator", path="identity.email", value="op@example.test")
-    )
+    svc.edit_field(EditProfileFieldCommand(profile_id="operator", path="identity.email", value="op@example.test"))
     svc.edit_field(EditProfileFieldCommand(profile_id="operator", path="identity.email", value=None))
     svc.duplicate(
         DuplicateProfileCommand(

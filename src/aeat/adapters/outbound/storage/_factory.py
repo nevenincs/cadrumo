@@ -70,8 +70,7 @@ def _build_google_credentials(*, profile: str) -> Any:
     token = load_token(profile)
     if token is None:
         raise StorageValidationError(
-            f"no Google OAuth token persisted for profile {profile!r}; "
-            "run `aeat config google login` first",
+            f"no Google OAuth token persisted for profile {profile!r}; run `aeat config google login` first",
             context={"profile": profile},
         )
     try:

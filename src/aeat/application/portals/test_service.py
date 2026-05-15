@@ -9,7 +9,7 @@ from aeat.application.portals import (
     PortalRow,
     PortalsService,
 )
-from aeat.domain.portals import PORTAL_REGISTRY, Portal, PortalCategory
+from aeat.domain.portals import PORTAL_REGISTRY
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -95,9 +95,7 @@ class TestNoLiveOrWriteSurface:
         # Portals exposes NO action verbs. open/submit/present/sign/pay
         # must not exist on the service.
         for forbidden in ("open", "submit", "present", "sign", "pay", "navigate"):
-            assert not hasattr(PortalsService, forbidden), (
-                f"PortalsService must not expose {forbidden!r}"
-            )
+            assert not hasattr(PortalsService, forbidden), f"PortalsService must not expose {forbidden!r}"
 
     def test_service_does_not_import_browser_or_require_live_read(self) -> None:
         # The service is local-only: the module text must not import

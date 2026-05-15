@@ -997,8 +997,7 @@ def update_manual_transaction(
     current = _require_transaction(catalogue, transaction_id)
     if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         raise TransactionValidationError(
-            "only active ledger transactions can be edited; "
-            "archived, stashed, and split-parent rows are immutable",
+            "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
             context={
                 "transaction_id": transaction_id,
                 "lifecycle_state": current.lifecycle_state.value,
@@ -1360,9 +1359,7 @@ def _build_split_child_transaction(
         description=child.description,
         provenance=RawProvenance(
             source_path=Path.cwd() / ".aeat-ledger-split",
-            source_sha256=hashlib.sha256(
-                f"split:{parent.transaction_id}:{index}".encode("utf-8")
-            ).hexdigest(),
+            source_sha256=hashlib.sha256(f"split:{parent.transaction_id}:{index}".encode()).hexdigest(),
             source_row_index=index + 1,
             source_format=SourceFormat.MANUAL,
             ingested_at=occurred_at,
@@ -1453,6 +1450,7 @@ def merge_transactions(
             context={"bucket_id": bucket_id, "child_transaction_ids": tuple(child_transaction_ids)},
         )
     split_group_id = next(iter(split_group_ids))
+    assert split_group_id is not None  # narrowed: None already excluded by the guard above
     for child in children:
         if child.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             raise TransactionValidationError(
@@ -1490,7 +1488,7 @@ def merge_transactions(
     if parent.lifecycle_state is not TransactionLifecycleState.SPLIT:
         raise TransactionValidationError(
             "ledger merge parent must be in SPLIT state",
-            context={"parent_transaction_id": parent_id, "lifecycle_state": parent.lifecycle_state.value},
+            context={"parent_transaction_id": parent.transaction_id, "lifecycle_state": parent.lifecycle_state.value},
         )
     if parent.split_lineage is None or parent.split_lineage.role is not SplitRole.PARENT:
         raise TransactionValidationError(
@@ -2292,7 +2290,6 @@ def transaction_catalogue_object_id(bucket_id: str) -> str:
     return f"transaction-catalogue:{bucket_id.strip()}"
 
 
-
 def _verify_evidence_references(
     command: ManualLedgerTransactionCommand,
     *,
@@ -2611,9 +2608,7 @@ def _transaction_from_command(
             evidence_event_ids=evidence_event_ids or {},
         ),
         "edit_lineage": (
-            (*existing_edit_lineage, edit_lineage_entry)
-            if edit_lineage_entry is not None
-            else existing_edit_lineage
+            (*existing_edit_lineage, edit_lineage_entry) if edit_lineage_entry is not None else existing_edit_lineage
         ),
         "notes": command.notes,
     }

@@ -781,9 +781,7 @@ def calculate_modelo_revision(
     resolved_bindings = dict(
         sorted({**lower_precedence_binding_values, **borrador_result.binding_values, **caller_binding_values}.items())
     )
-    resolved_enum_bindings = dict(
-        sorted({**borrador_result.enum_binding_values, **caller_enum_binding_values}.items())
-    )
+    resolved_enum_bindings = dict(sorted({**borrador_result.enum_binding_values, **caller_enum_binding_values}.items()))
     resolved_relations = dict(relation_values or {})
     resolved_inputs = dict(
         sorted(
@@ -1148,9 +1146,7 @@ def _reject_incomplete_amendment_casillas(
     → file path satisfies.
     """
 
-    required_optional = _required_input_casillas_for_revision(
-        modelo=modelo, filing_year=filing_year, period=period
-    )
+    required_optional = _required_input_casillas_for_revision(modelo=modelo, filing_year=filing_year, period=period)
     if required_optional is None:
         raise AmendmentVerificationRefusedError(
             f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
@@ -1271,7 +1267,6 @@ def _required_input_casillas_for_revision(
     implementation treats them as informational because the
     bindings layer is responsible for them.
     """
-
 
     from ...core.config import PROJECT_ROOT
     from ...domain.calculations.registry import (

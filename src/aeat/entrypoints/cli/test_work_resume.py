@@ -7,6 +7,7 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
+from aeat.entrypoints.cli._modelo import work_app
 from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage import (
@@ -22,7 +23,6 @@ from aeat.application.workflow import (
     save_run,
 )
 from aeat.domain.deadlines import FilingObligation, ObligationStatus
-from aeat.entrypoints.cli._modelo import work_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

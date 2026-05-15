@@ -9,7 +9,7 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
-  - "[[2026-05-14-cli-workflow-redesign-W61-P303-S1817-code-review-audit]]"
+  - "[[2026-05-14-cli-workflow-redesign-w61-p303-s1817-code-review-audit]]"
 ---
 
 # `cli-workflow-redesign` `W61.P303.S1817`

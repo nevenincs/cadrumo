@@ -6,7 +6,7 @@ date: '2026-05-14'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-07-user-profile-backend-schema-adr]]'
-  - '[[2026-05-13-cli-workflow-redesign-W09-P041-S0241-profile-service-ownership-audit]]'
+  - '[[2026-05-13-cli-workflow-redesign-w09-p041-s0241-profile-service-ownership-audit]]'
 ---
 
 # `cli-workflow-redesign` `W09.P042.S0247` Audit — Duplicate Profile Surface Inventory

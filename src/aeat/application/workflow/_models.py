@@ -256,8 +256,8 @@ def update_declaration_pointer(
 # already present in sys.modules['aeat.application.workflow._models'].
 # ---------------------------------------------------------------------------
 
-from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus  # noqa: E402
-from ...domain.deadlines import FilingObligation  # noqa: E402
+from ...adapters.outbound.aeat.browser._site_health import SiteHealthStatus
+from ...domain.deadlines import FilingObligation
 
 
 class SiteHealthAlert(BaseModel):

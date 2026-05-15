@@ -7,7 +7,7 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-modelo-145-foundation-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-modelo-145-foundation-research]]'
-  - '[[2026-05-14-cli-workflow-redesign-W51-modelo-145-deferral-baseline-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-w51-modelo-145-deferral-baseline-exec]]'
 ---
 
 # `cli-workflow-redesign` research: `Modelo 145 foundation reopening`

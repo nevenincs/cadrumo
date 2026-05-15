@@ -1,8 +1,8 @@
 import pytest
+from aeat.entrypoints.cli._config.__init__ import app
 from typer.testing import CliRunner
 
 from aeat.application.workflow._persistence import WorkflowStateRepository
-from aeat.entrypoints.cli._config.__init__ import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

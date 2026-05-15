@@ -1,3 +1,13 @@
+---
+tags:
+  - '#audit'
+  - '#cli-structural-localization'
+date: '2026-05-10'
+related:
+  - '[[2026-05-10-eliminate-user-cli-shim-adr]]'
+  - '[[2026-05-10-eliminate-user-cli-shim-plan]]'
+---
+
 # Audit Finding: CLI Structural and Localization Regression
 #audit #cli #i18n #ux-025
 

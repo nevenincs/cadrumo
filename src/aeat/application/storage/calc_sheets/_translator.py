@@ -54,6 +54,7 @@ _SUPPORTED_OPS: Final[frozenset[str]] = frozenset(
         "lookup_parameter",
         "lookup_bracket",
         "lookup_bracket_by_ccaa",
+        "lookup_parameter_by_entity_type",
         "previous_period_value",
         "previous_period_sum",
         "cross_model_sum",
@@ -101,6 +102,8 @@ def _translate(expression: FormulaExpression, *, layout: SheetLayout) -> str:
         return _translate_lookup_bracket(expression, layout=layout)
     if op == "lookup_bracket_by_ccaa":
         return _translate_lookup_bracket_by_ccaa(expression, layout=layout)
+    if op == "lookup_parameter_by_entity_type":
+        return _translate_lookup_parameter_by_entity_type(expression, layout=layout)
     args = [_translate(arg, layout=layout) for arg in expression.args]
     if op in {"add", "sum"}:
         if not args:
@@ -271,6 +274,55 @@ def _translate_lookup_bracket_by_ccaa(
         # value with a quote cannot break the formula.
         safe_code = ccaa_code.replace('"', '""')
         branches.append(f'"{safe_code}",{bracket_expr}')
+    return f"SWITCH({binding_a1},{','.join(branches)})"
+
+
+def _translate_lookup_parameter_by_entity_type(
+    expression: FormulaExpression,
+    *,
+    layout: SheetLayout,
+) -> str:
+    """Emit a SWITCH that dispatches a scalar parameter lookup by an enum binding.
+
+    Runtime semantics: an enum binding (e.g. `entity_type`) selects
+    one of several scalar parameters from the dispatch_table mapping;
+    the selected parameter resolves to its temporally-active dated
+    value. Closed Sheets form is a `SWITCH` over the binding cell
+    whose branches each reference the dispatched parameter's
+    `Tarifas` anchor cell directly. Without a default branch SWITCH
+    returns `#N/A` for an unmapped enum key — matching the runtime's
+    `RegistryValidationError` semantics.
+    """
+
+    if len(expression.args) != 3:
+        raise TranslationError(
+            "lookup_parameter_by_entity_type expects 3 args (placeholder, binding, dispatch_table)",
+            op="lookup_parameter_by_entity_type",
+        )
+    _placeholder_expr, binding_arg, dispatch_arg = expression.args
+    if binding_arg.binding is None:
+        raise TranslationError(
+            "lookup_parameter_by_entity_type args[1] must be a binding leaf",
+            op="lookup_parameter_by_entity_type",
+        )
+    if dispatch_arg.dispatch_table is None:
+        raise TranslationError(
+            "lookup_parameter_by_entity_type args[2] must be a dispatch_table leaf",
+            op="lookup_parameter_by_entity_type",
+        )
+    binding_a1 = _binding_reference(binding_arg.binding, layout=layout)
+    branches: list[str] = []
+    for enum_key, parameter_id in sorted(dispatch_arg.dispatch_table.items()):
+        param_cell = layout.parameter_cells.get(parameter_id)
+        if param_cell is None:
+            raise TranslationError(
+                f"parameter {parameter_id!r} is referenced by lookup_parameter_by_entity_type "
+                f"but has no anchor cell in the layout",
+                op="lookup_parameter_by_entity_type",
+                hint="the layout planner must mirror every dispatched parameter into Tarifas",
+            )
+        safe_key = enum_key.replace('"', '""')
+        branches.append(f'"{safe_key}",{param_cell.anchor.qualified()}')
     return f"SWITCH({binding_a1},{','.join(branches)})"
 
 

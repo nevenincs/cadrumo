@@ -78,13 +78,11 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
 
     if prior.final_stage is not WorkflowStage.ABORTED:
         raise WorkflowResumeRefusedError(
-            f"workflow run {run_id!r} is in final_stage="
-            f"{prior.final_stage.value!r}; only ABORTED runs may be resumed",
+            f"workflow run {run_id!r} is in final_stage={prior.final_stage.value!r}; only ABORTED runs may be resumed",
         )
     if prior.aborted_reason is None:  # defensive: validator enforces this
         raise WorkflowResumeRefusedError(
-            f"workflow run {run_id!r} is ABORTED without aborted_reason; "
-            f"refusing to resume an inconsistent record",
+            f"workflow run {run_id!r} is ABORTED without aborted_reason; refusing to resume an inconsistent record",
         )
     if prior.aborted_reason in _NON_RESUMABLE_REASONS:
         raise WorkflowResumeRefusedError(
@@ -94,8 +92,7 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
         )
     if prior.obligation is None:
         raise WorkflowResumeRefusedError(
-            f"workflow run {run_id!r} carries no obligation; cannot "
-            f"determine (modelo, period) for a retry",
+            f"workflow run {run_id!r} carries no obligation; cannot determine (modelo, period) for a retry",
         )
 
     return WorkflowResumeContext(

@@ -1172,9 +1172,12 @@ class AeatAuthenticator:
         path = self._settings.aeat_certificate_path
         if path is None:
             raise CertificateLoadError("AEAT_CERTIFICATE_PATH is not set; cannot build CertificateBundle")
+        password = self._settings.aeat_certificate_password_secret
+        if password is None:
+            raise CertificateLoadError("AEAT_CERTIFICATE_PASSWORD_SECRET is not set; cannot build CertificateBundle")
         return CertificateBundle(
             path=path,
-            password_env_var="AEAT_CERTIFICATE_PASSWORD_SECRET",
+            password=password,
             friendly_name=self._settings.aeat_certificate_friendly_name,
             backend=CertificateBackend(self._settings.aeat_certificate_backend.name),
         )

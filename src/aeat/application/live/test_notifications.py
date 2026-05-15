@@ -60,7 +60,8 @@ def _snapshot(
 
 class TestCapture:
     def test_capture_persists_snapshot_with_content_addressed_id(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = NotificationsService(settings=isolated_settings)
         persisted = svc.capture(
@@ -73,7 +74,8 @@ class TestCapture:
         assert persisted.rows[0].titular_nif == "B12345678"
 
     def test_capture_deduplicates_identical_snapshots(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = NotificationsService(settings=isolated_settings)
         snap = _snapshot(rows=(_row(concepto="Same"),))
@@ -83,7 +85,8 @@ class TestCapture:
         assert len(svc.list_snapshots(bucket_id="bucket-001")) == 1
 
     def test_capture_distinct_snapshots_produce_distinct_ids(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = NotificationsService(settings=isolated_settings)
         a = svc.capture(

@@ -8,7 +8,7 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-app-registry-boundary-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
-  - '[[2026-05-14-cli-workflow-redesign-S1840-code-review-audit]]'
+  - '[[2026-05-14-cli-workflow-redesign-s1840-code-review-audit]]'
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields

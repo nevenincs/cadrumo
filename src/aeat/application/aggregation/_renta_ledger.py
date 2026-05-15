@@ -55,9 +55,7 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     UNSUPPORTED_PURCHASE_INVOICE_EVIDENCE_KIND = "unsupported_purchase_invoice_evidence_kind"
     PURCHASE_INVOICE_EVIDENCE_BUCKET_MISMATCH = "purchase_invoice_evidence_bucket_mismatch"
     PURCHASE_INVOICE_EVIDENCE_LINK_MISMATCH = "purchase_invoice_evidence_link_mismatch"
-    PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE = (
-        "partial_or_multi_transaction_purchase_invoice_evidence"
-    )
+    PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE = "partial_or_multi_transaction_purchase_invoice_evidence"
     AMOUNT_MISMATCH = "amount_mismatch"
     INVALID_LEDGER_FACT = "invalid_ledger_fact"
     INELIGIBLE_DEDUCTIBILITY = "ineligible_deductibility"

@@ -114,9 +114,7 @@ def resolve_modelo_ledger_binding_values_from_repositories(
             period=aggregation_period,
             transaction_repository=transaction_repository,
         )
-        binding_values.update(
-            resolve_ledger_iva_aggregation_binding_values(revision, iva_aggregation.observations)
-        )
+        binding_values.update(resolve_ledger_iva_aggregation_binding_values(revision, iva_aggregation.observations))
         source_transaction_ids.update(observation.ledger_id for observation in iva_aggregation.observations)
         source_transaction_ids.update(reference.transaction_id for reference in iva_aggregation.prorrata_references)
         iva_issues = tuple(iva_aggregation.issues)

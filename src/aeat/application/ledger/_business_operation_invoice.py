@@ -23,13 +23,11 @@ MutatingNounGroupContract.
 
 from __future__ import annotations
 
-import json
 import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
@@ -194,7 +192,9 @@ def _storage_path(settings: Settings, kind: BusinessOperationInvoiceSourceKind, 
     return root / f"{bucket_id}.jsonl"
 
 
-def _load(settings: Settings, kind: BusinessOperationInvoiceSourceKind, bucket_id: str) -> list[BusinessOperationInvoice]:
+def _load(
+    settings: Settings, kind: BusinessOperationInvoiceSourceKind, bucket_id: str
+) -> list[BusinessOperationInvoice]:
     path = _storage_path(settings, kind, bucket_id)
     if not path.exists():
         return []

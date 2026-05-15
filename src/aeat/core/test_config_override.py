@@ -57,10 +57,9 @@ def test_override_settings_restores_prior_value_on_exception() -> None:
 
     assert load_settings().aeat_log_dir is None
 
-    with pytest.raises(RuntimeError, match="planned-failure"):
-        with override_settings(aeat_log_dir=Path("/tmp/scratch")):
-            assert load_settings().aeat_log_dir == Path("/tmp/scratch")
-            raise RuntimeError("planned-failure")
+    with pytest.raises(RuntimeError, match="planned-failure"), override_settings(aeat_log_dir=Path("/tmp/scratch")):
+        assert load_settings().aeat_log_dir == Path("/tmp/scratch")
+        raise RuntimeError("planned-failure")
 
     # The finally branch of the context manager restored the prior
     # ContextVar value despite the exception.
@@ -74,9 +73,8 @@ def test_override_settings_rejects_malformed_override_at_entry() -> None:
     baseline = load_settings()
     assert baseline.aeat_log_dir is None
 
-    with pytest.raises(ValidationError):
-        with override_settings(aeat_cert_warn_days=-1):  # gt=0 constraint
-            pytest.fail("the with-block must not execute when override is invalid")
+    with pytest.raises(ValidationError), override_settings(aeat_cert_warn_days=-1):  # gt=0 constraint
+        pytest.fail("the with-block must not execute when override is invalid")
 
     assert load_settings().aeat_log_dir is None
 

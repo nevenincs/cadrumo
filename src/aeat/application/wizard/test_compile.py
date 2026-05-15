@@ -25,7 +25,7 @@ from aeat.application.wizard._models import (
     WizardSection,
     WizardWidget,
 )
-from aeat.core.i18n import Translatable as tr  # noqa: N813
+from aeat.core.i18n import Translatable as tr
 from aeat.domain.profile._keys import ProfileKeyRequirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
