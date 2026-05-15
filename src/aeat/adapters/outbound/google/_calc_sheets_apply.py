@@ -35,6 +35,7 @@ from ....application.storage.calc_sheets import (
     SheetExportPlan,
     SheetFormulaCell,
     SheetProtectedRange,
+    SheetRowSet,
     SheetValueCell,
     TabName,
 )
@@ -73,6 +74,7 @@ class CalcSheetsApplyResult(BaseModel):
     value_cells_written: int = Field(ge=0)
     formula_cells_written: int = Field(ge=0)
     protected_ranges_written: int = Field(ge=0)
+    row_set_headers_written: int = Field(ge=0, default=0)
     tab_count: int = Field(ge=1)
 
 
@@ -313,6 +315,27 @@ def _build_formula_data(formula_cells: Iterable[SheetFormulaCell]) -> list[dict[
     return data
 
 
+def _build_row_set_header_data(row_sets: Iterable[SheetRowSet]) -> list[dict[str, Any]]:
+    """Emit Detalle-tab header cells declaring each row-set column.
+
+    The engine reserves a header row + data area per row-set. This writer
+    materialises the header labels so an operator opening the spreadsheet
+    sees the per-record column titles ready to receive their tipo-2
+    detail rows (perceptores on 190, foreign assets on 720, etc.).
+    """
+
+    data: list[dict[str, Any]] = []
+    for row_set in row_sets:
+        for column in row_set.columns:
+            data.append(
+                {
+                    "range": column.header_address.qualified(),
+                    "values": [[column.header_label]],
+                }
+            )
+    return data
+
+
 def _build_grid_resize_requests(
     plan: SheetExportPlan,
     *,
@@ -353,6 +376,13 @@ def _build_grid_resize_requests(
     # Guide tab content is written via _build_guide_value_data which
     # extends a few rows past the title; reserve a generous floor.
     bump("Guía", 1 + len(plan.guide.paragraphs) + 10, 4)
+    # Reserve grid space for each row-set on the Detalle tab. Each
+    # row-set occupies header_row + 50 reserved data rows + 1 gap,
+    # so the worst case is the last row-set's first_data_row + 50.
+    for row_set in plan.row_sets:
+        last_data_row = row_set.first_data_row + 50
+        column_count = len(row_set.columns)
+        bump(row_set.tab.value, last_data_row, column_count)
 
     requests: list[dict[str, Any]] = []
     for tab_value, max_r in max_row.items():
@@ -780,7 +810,11 @@ def apply_export_plan(
 
     # Write values and formulas as USER_ENTERED so Sheets parses
     # formula strings starting with "=".
-    value_data = _build_value_data(plan.value_cells) + _build_guide_value_data(plan)
+    value_data = (
+        _build_value_data(plan.value_cells)
+        + _build_guide_value_data(plan)
+        + _build_row_set_header_data(plan.row_sets)
+    )
     formula_data = _build_formula_data(plan.formula_cells)
     update_body = {
         "valueInputOption": "USER_ENTERED",
@@ -830,6 +864,7 @@ def apply_export_plan(
         value_cells_written=len(plan.value_cells),
         formula_cells_written=len(plan.formula_cells),
         protected_ranges_written=len(plan.protected_ranges),
+        row_set_headers_written=sum(len(rs.columns) for rs in plan.row_sets),
         tab_count=len(tab_titles),
     )
 

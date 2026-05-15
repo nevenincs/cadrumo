@@ -143,7 +143,7 @@ different issues.
 - [x] `P11.S44` - add pyright strict configuration; `pyrightconfig.json`.
 - [x] `P11.S45` - run pyright strict on domain and capture findings; `src/aeat/domain/`.
 - [x] `P11.S46` - run pyright strict on application and capture findings; `src/aeat/application/`.
-- [ ] `P11.S47` - resolve pyright-only findings across domain and application; `src/aeat/`.
+- [x] `P11.S47` - resolve pyright-only findings across domain and application; `src/aeat/`.
 - [x] `P11.S48` - wire pyright into CI alongside ty; `.github/workflows/`.
 
 ### Phase `P12` - regression gates
@@ -157,4 +157,4 @@ semgrep rules. Aligns with the prior-art research recommendation for
 - [x] `P12.S51` - add semgrep rule rejecting new cast calls in domain and application; `.semgrep/rules/no-cast-in-domain.yml`.
 - [x] `P12.S52` - add semgrep rule requiring inline justification for new ty-ignore; `.semgrep/rules/justify-ty-ignore.yml`.
 - [x] `P12.S53` - wire semgrep into CI as gating check; `.github/workflows/`.
-- [ ] `P12.S54` - close out Wave 1 by re-running suppression inventory; `scratch/out/suppressions.json`.
+- [x] `P12.S54` - close out Wave 1 by re-running suppression inventory; `scratch/out/suppressions.json`.
