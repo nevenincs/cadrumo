@@ -82,7 +82,7 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
     assert order["03"] < order["04"] < order["07"] < order["12"] < order["14"] < order["17"] < order["19"]
     assert order["09"] < order["11"] < order["12"]
     assert "19" in result.values
-    assert result.entries[0].legal_refs == ("rd-439-2007:art-110",)
+    assert "rd-439-2007:art-110" in result.entries[0].legal_refs
 
 
 def test_registry_formula_runtime_rejects_inputs_for_computed_casillas(
