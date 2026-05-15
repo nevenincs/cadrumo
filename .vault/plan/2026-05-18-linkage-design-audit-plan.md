@@ -67,12 +67,12 @@ on ModeloDefinition.
 Add per-casilla export_refs and backfill cross_model_output relations
 for 2020-2024 revisions.
 
-- [ ] `P05.S15` - add per-casilla export_refs to Modelo 100 revision 2025; `registry/aeat/modelos/100/revisions/2025.toml`.
-- [ ] `P05.S16` - backfill cross_model_output relations for retenciones in 2024 revision; `registry/aeat/modelos/100/revisions/2024.toml`.
-- [ ] `P05.S17` - backfill cross_model_output relations for 2023 revision; `registry/aeat/modelos/100/revisions/2023.toml`.
-- [ ] `P05.S18` - backfill cross_model_output relations for 2022 revision; `registry/aeat/modelos/100/revisions/2022.toml`.
-- [ ] `P05.S19` - backfill cross_model_output relations for 2021 revision; `registry/aeat/modelos/100/revisions/2021.toml`.
-- [ ] `P05.S20` - backfill cross_model_output relations for 2020 revision; `registry/aeat/modelos/100/revisions/2020.toml`.
+- [x] `P05.S15` - add per-casilla export_refs to Modelo 100 revision 2025; `registry/aeat/modelos/100/revisions/2025.toml`.
+- [x] `P05.S16` - backfill cross_model_output relations for retenciones in 2024 revision; `registry/aeat/modelos/100/revisions/2024.toml`.
+- [x] `P05.S17` - backfill cross_model_output relations for 2023 revision; `registry/aeat/modelos/100/revisions/2023.toml`.
+- [x] `P05.S18` - backfill cross_model_output relations for 2022 revision; `registry/aeat/modelos/100/revisions/2022.toml`.
+- [x] `P05.S19` - backfill cross_model_output relations for 2021 revision; `registry/aeat/modelos/100/revisions/2021.toml`.
+- [x] `P05.S20` - backfill cross_model_output relations for 2020 revision; `registry/aeat/modelos/100/revisions/2020.toml`.
 
 ### Phase `P06` - identity propagation into filing records
 
@@ -115,9 +115,9 @@ parallel-mechanism gap. Type OracleId. Introduce OracleFilingObservation.
 Promote remaining hand-authored export coordinate systems and silent
 fallback returns.
 
-- [ ] `P10.S34` - convert _ROW_FIELD_CASILLA_BY_RECORD to schema declaration; `src/aeat/domain/calculations/registry/_export.py`.
-- [ ] `P10.S35` - tighten _export_field_from_row_binding to raise on missing instead of returning None; `src/aeat/domain/calculations/registry/_export.py`.
-- [ ] `P10.S36` - replace WorkbookParityReference.output_cells str-keyed mapping with typed shape; `src/aeat/domain/calculations/registry/_schema.py`.
+- [x] `P10.S34` - convert _ROW_FIELD_CASILLA_BY_RECORD to schema declaration; `src/aeat/domain/calculations/registry/_export.py`.
+- [x] `P10.S35` - tighten _export_field_from_row_binding to raise on missing instead of returning None; `src/aeat/domain/calculations/registry/_export.py`.
+- [x] `P10.S36` - replace WorkbookParityReference.output_cells str-keyed mapping with typed shape; `src/aeat/domain/calculations/registry/_schema.py`.
 - [x] `P10.S37` - replace fields_by_casilla str key with CasillaId-typed mapping; `src/aeat/domain/calculations/registry/_export.py`.
 - [ ] `P10.S38` - declare ParityScenario as registry-driven shape; `src/aeat/application/storage/calc_sheets/_parity_tapes.py`.
 
