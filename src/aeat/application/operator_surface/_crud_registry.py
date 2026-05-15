@@ -24,7 +24,6 @@ detect drift between shipped Typer subgroups and the locked design.
 from __future__ import annotations
 
 from ._crud_contract import (
-    CANONICAL_CRUD_VERBS,
     CrudContractCatalogue,
     KeyValueVerb,
     LifecycleStateVerb,

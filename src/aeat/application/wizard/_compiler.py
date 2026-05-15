@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ...domain.profile._keys import ProfileKey, ProfileKeyRequirement
 from ._errors import WizardCompileError
 from ._models import WizardCondition, WizardFlow, WizardQuestion

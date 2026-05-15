@@ -7,9 +7,9 @@ step_id: 'W61.P301.S1805-S1806'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
   - "[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]"
-  - "[[2026-05-13-cli-workflow-redesign-W61-P301-S1801-ledger-storage-ownership-audit]]"
-  - "[[2026-05-13-cli-workflow-redesign-W61-P301-S1803-exec]]"
-  - "[[2026-05-13-cli-workflow-redesign-W61-P301-S1804-exec]]"
+  - "[[2026-05-13-cli-workflow-redesign-w61-p301-s1801-ledger-storage-ownership-audit]]"
+  - "[[2026-05-13-cli-workflow-redesign-w61-p301-s1803-exec]]"
+  - "[[2026-05-13-cli-workflow-redesign-w61-p301-s1804-exec]]"
 ---
 
 # `cli-workflow-redesign` `W61.P301.S1805-S1806`

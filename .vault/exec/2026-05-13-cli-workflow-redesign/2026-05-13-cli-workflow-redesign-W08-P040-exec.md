@@ -32,4 +32,3 @@ Closed plan rows: `W08.P040.S0235`, `W08.P040.S0236`,
 ## Tests
 
 `uv run --no-sync pytest src/aeat/application/test_config_parity.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/test_backend_boundary.py -q`
-

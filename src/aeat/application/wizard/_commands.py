@@ -305,7 +305,7 @@ def _python_parameter(
     wrapper from ellipsising long flag names.
     """
 
-    flag = _flag_name(question)
+    _flag_name(question)
     del section_title
     try:
         option = _SETUP_OPTION_INFOS[question.id]

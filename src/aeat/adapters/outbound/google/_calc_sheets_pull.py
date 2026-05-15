@@ -387,7 +387,8 @@ def pull_operator_edits(
         coerced = _coerce_value(raw)
         if coerced is not None:
             cells_read += 1
-        binding_edits.append(BindingEdit(binding=binding_id, value=coerced))
+        binding_value: Decimal | str | None = str(coerced) if isinstance(coerced, bool) else coerced
+        binding_edits.append(BindingEdit(binding=binding_id, value=binding_value))
 
     for relation_id in relation_ids:
         vr = value_ranges[cursor] if cursor < len(value_ranges) else {}

@@ -6,13 +6,13 @@ date: '2026-05-14'
 related:
   - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]'
-  - '[[2026-05-14-cli-workflow-redesign-W61-P302-code-review-audit]]'
-  - '[[2026-05-13-cli-workflow-redesign-W61-P302-S1807-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-W61-P302-S1808-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-W61-P302-S1809-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-W61-P302-S1810-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-W61-P302-S1811-exec]]'
-  - '[[2026-05-13-cli-workflow-redesign-W61-P302-S1812-exec]]'
+  - '[[2026-05-14-cli-workflow-redesign-w61-p302-code-review-audit]]'
+  - '[[2026-05-13-cli-workflow-redesign-w61-p302-s1807-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-w61-p302-s1808-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-w61-p302-s1809-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-w61-p302-s1810-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-w61-p302-s1811-exec]]'
+  - '[[2026-05-13-cli-workflow-redesign-w61-p302-s1812-exec]]'
 ---
 
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields

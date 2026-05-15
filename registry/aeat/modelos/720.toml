@@ -63,6 +63,27 @@ input_kind = "informational"
 legal_refs = ["orden-hap-72-2013:art-2", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-720"]
 
+# Per-asset / per-account / per-real-estate declaration threshold per
+# RD 1065/2007 art. 42 bis–quater: only foreign accounts, securities,
+# and real estate exceeding €50,000 (sum of opening/closing/4Q balances
+# or year-end valuation) trigger the declaration obligation. Encoded
+# as a static parameter for downstream detail-record validation.
+[[revisions."2013-y-siguientes".parameters]]
+id = "modelo-720-asset-declaration-threshold-eur"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter"]
+source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".parameters.values]]
+value = "50000.00"
+date_axis = "filing_period"
+valid_from = 2013-01-01
+
 [[revisions."2013-y-siguientes".bindings]]
 id = "modelo-720-2013.type_1.1-1.tipo-de-registro"
 source = "manual_input"

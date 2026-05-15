@@ -1,7 +1,6 @@
 ---
 tags:
   - '#audit'
-  - '#testing'
   - '#pytest'
 date: '2026-05-14'
 related:

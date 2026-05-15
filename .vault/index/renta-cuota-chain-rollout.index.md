@@ -5,6 +5,7 @@ tags:
   - '#renta-cuota-chain-rollout'
 date: '2026-05-15'
 related:
+  - '[[2026-05-06-renta-cuota-chain-rollout-adr]]'
   - '[[2026-05-06-renta-cuota-chain-rollout-plan]]'
 ---
 
@@ -13,6 +14,10 @@ related:
 Auto-generated index of all documents tagged with `#renta-cuota-chain-rollout`.
 
 ## Documents
+
+### adr
+
+- `2026-05-06-renta-cuota-chain-rollout-adr` - `renta-cuota-chain-rollout` adr
 
 ### plan
 

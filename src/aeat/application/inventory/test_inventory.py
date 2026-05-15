@@ -8,7 +8,6 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
@@ -88,7 +87,10 @@ class TestCreate:
 
     def test_create_persists_across_service_instances(self, isolated_settings: Settings, secure_engine: Engine) -> None:
         _make_svc(isolated_settings, secure_engine).create(
-            bucket_id="b1", actividad_id="A1", year=2025, valuation_method="fifo",
+            bucket_id="b1",
+            actividad_id="A1",
+            year=2025,
+            valuation_method="fifo",
         )
         fresh = _make_svc(isolated_settings, secure_engine)
         ledgers = fresh.list_all(bucket_id="b1")
@@ -101,7 +103,9 @@ class TestList:
         svc = _make_svc(isolated_settings, secure_engine)
         assert svc.list_all(bucket_id="b1") == ()
 
-    def test_list_returns_one_summary_per_actividad_year(self, isolated_settings: Settings, secure_engine: Engine) -> None:
+    def test_list_returns_one_summary_per_actividad_year(
+        self, isolated_settings: Settings, secure_engine: Engine
+    ) -> None:
         svc = _make_svc(isolated_settings, secure_engine)
         svc.create(bucket_id="b1", actividad_id="A1", year=2024, valuation_method="fifo")
         svc.create(bucket_id="b1", actividad_id="A1", year=2025, valuation_method="pmp")
@@ -143,7 +147,9 @@ class TestMovementAdd:
         svc = _make_svc(isolated_settings, secure_engine)
         svc.create(bucket_id="b1", actividad_id="A1", year=2025, valuation_method="fifo")
         svc.movement_add(
-            bucket_id="b1", actividad_id="A1", year=2025,
+            bucket_id="b1",
+            actividad_id="A1",
+            year=2025,
             movement=InventoryMovementCommand(
                 movement_id="M-001",
                 movement_date=date(2025, 3, 1),
@@ -153,7 +159,9 @@ class TestMovementAdd:
             ),
         )
         result = svc.movement_add(
-            bucket_id="b1", actividad_id="A1", year=2025,
+            bucket_id="b1",
+            actividad_id="A1",
+            year=2025,
             movement=InventoryMovementCommand(
                 movement_id="M-002",
                 movement_date=date(2025, 3, 15),
@@ -167,7 +175,9 @@ class TestMovementAdd:
         ids = [m.movement_id for m in ledger.period_movements]
         assert ids == ["M-001", "M-002"]
 
-    def test_movement_add_refuses_duplicate_movement_id(self, isolated_settings: Settings, secure_engine: Engine) -> None:
+    def test_movement_add_refuses_duplicate_movement_id(
+        self, isolated_settings: Settings, secure_engine: Engine
+    ) -> None:
         svc = _make_svc(isolated_settings, secure_engine)
         svc.create(bucket_id="b1", actividad_id="A1", year=2025, valuation_method="fifo")
         cmd = InventoryMovementCommand(
@@ -181,7 +191,9 @@ class TestMovementAdd:
         with pytest.raises(InventoryServiceInputError, match="already present"):
             svc.movement_add(bucket_id="b1", actividad_id="A1", year=2025, movement=cmd)
 
-    def test_movement_add_refuses_when_actividad_missing(self, isolated_settings: Settings, secure_engine: Engine) -> None:
+    def test_movement_add_refuses_when_actividad_missing(
+        self, isolated_settings: Settings, secure_engine: Engine
+    ) -> None:
         svc = _make_svc(isolated_settings, secure_engine)
         cmd = InventoryMovementCommand(
             movement_id="M-001",
@@ -198,11 +210,16 @@ class TestValuationPreview:
     def test_valuation_preview_runs_domain_engine(self, isolated_settings: Settings, secure_engine: Engine) -> None:
         svc = _make_svc(isolated_settings, secure_engine)
         svc.create(
-            bucket_id="b1", actividad_id="A1", year=2025, valuation_method="fifo",
+            bucket_id="b1",
+            actividad_id="A1",
+            year=2025,
+            valuation_method="fifo",
             opening_stock=Decimal("0"),
         )
         svc.movement_add(
-            bucket_id="b1", actividad_id="A1", year=2025,
+            bucket_id="b1",
+            actividad_id="A1",
+            year=2025,
             movement=InventoryMovementCommand(
                 movement_id="P1",
                 movement_date=date(2025, 1, 10),
@@ -247,11 +264,15 @@ class TestInventoryEventEmission:
         assert event.bucket_id == "b1"
         assert "A1" in event.object_id
 
-    def test_movement_add_emits_ledger_inventory_movement_added(self, isolated_settings: Settings, secure_engine: Engine) -> None:
+    def test_movement_add_emits_ledger_inventory_movement_added(
+        self, isolated_settings: Settings, secure_engine: Engine
+    ) -> None:
         svc = _make_svc(isolated_settings, secure_engine)
         svc.create(bucket_id="b1", actividad_id="A1", year=2025, valuation_method="fifo")
         result = svc.movement_add(
-            bucket_id="b1", actividad_id="A1", year=2025,
+            bucket_id="b1",
+            actividad_id="A1",
+            year=2025,
             movement=InventoryMovementCommand(
                 movement_id="M-001",
                 movement_date=date(2025, 3, 1),
@@ -265,7 +286,9 @@ class TestInventoryEventEmission:
         event = catalogue.events[result.bucket_event_ids[0]]
         assert event.event_type is BucketEventType.LEDGER_INVENTORY_MOVEMENT_ADDED
 
-    def test_valuation_preview_emits_ledger_inventory_valuation_previewed(self, isolated_settings: Settings, secure_engine: Engine) -> None:
+    def test_valuation_preview_emits_ledger_inventory_valuation_previewed(
+        self, isolated_settings: Settings, secure_engine: Engine
+    ) -> None:
         svc = _make_svc(isolated_settings, secure_engine)
         svc.create(bucket_id="b1", actividad_id="A1", year=2025, valuation_method="fifo")
         result = svc.valuation_preview(bucket_id="b1", actividad_id="A1", year=2025)

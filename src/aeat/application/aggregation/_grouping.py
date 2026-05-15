@@ -22,7 +22,7 @@ GroupKey = TypeVar("GroupKey", bound=tuple[object, ...])
 IdentityKey = TypeVar("IdentityKey", bound=tuple[object, ...])
 
 
-def group_and_collect_names(
+def group_and_collect_names[T, GroupKey: tuple[object, ...], IdentityKey: tuple[object, ...]](
     observations: Iterable[T],
     *,
     group_key_fn: Callable[[T], GroupKey],

@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from aeat.application.operator_surface._crud_contract import (
+    CANONICAL_CRUD_VERBS,
+    NounGroupExceptionKind,
+)
 from aeat.application.operator_surface._crud_registry import (
     APODERADO,
     BUILTIN_CRUD_CATALOGUE,
@@ -13,11 +17,6 @@ from aeat.application.operator_surface._crud_registry import (
     PAYABLE_INVOICE,
     USAGE_RATIOS,
     get_builtin_catalogue,
-)
-from aeat.application.operator_surface._crud_contract import (
-    CANONICAL_CRUD_VERBS,
-    CrudVerb,
-    NounGroupExceptionKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

@@ -305,6 +305,7 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
     :class:`ExpedientesService` against the active bucket.
     """
     from datetime import UTC, datetime
+
     from ._expedientes import ExpedientesCapture, ExpedientesService
 
     session, settings = await _active_verified_session()
@@ -380,7 +381,6 @@ __all__ = [
     "capture_filed_data",
     "capture_notifications",
     "capture_source_filed_data",
-    "walk_expedientes",
     "derive_borrador_100_snapshot_id",
     "filed_data_listing_row",
     "list_filed_data",

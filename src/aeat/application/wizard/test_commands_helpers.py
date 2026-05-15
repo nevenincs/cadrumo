@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ._commands import (
     _canonical_from_flag_value,
     _flag_name,

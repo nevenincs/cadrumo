@@ -50,11 +50,11 @@ class ForeignAssetClass(StrEnum):
     after the aggregator runs.
     """
 
-    ACCOUNT = "cuenta_entidad_financiera"          # clave C
-    SECURITY = "valor_seguro_renta"                 # clave V
-    REAL_ESTATE = "inmueble_extranjero"             # clave I
-    INSURANCE = "seguro_renta_temporal_vitalicia"   # clave S
-    VIRTUAL_CURRENCY = "moneda_virtual"             # clave M
+    ACCOUNT = "cuenta_entidad_financiera"  # clave C
+    SECURITY = "valor_seguro_renta"  # clave V
+    REAL_ESTATE = "inmueble_extranjero"  # clave I
+    INSURANCE = "seguro_renta_temporal_vitalicia"  # clave S
+    VIRTUAL_CURRENCY = "moneda_virtual"  # clave M
 
 
 class ForeignAssetObservation(BaseModel):
@@ -111,8 +111,7 @@ class ForeignAssetClassRollup(BaseModel):
     def _held_count_within_total(self) -> ForeignAssetClassRollup:
         if self.held_at_year_end_count > self.assets_count:
             raise ValueError(
-                f"held_at_year_end_count {self.held_at_year_end_count} > assets_count "
-                f"{self.assets_count}",
+                f"held_at_year_end_count {self.held_at_year_end_count} > assets_count {self.assets_count}",
             )
         return self
 
@@ -132,7 +131,8 @@ class ForeignAssetsAggregation(BaseModel):
     def _totals_match_rollups(self) -> ForeignAssetsAggregation:
         computed_assets = sum(row.assets_count for row in self.rollups)
         computed_valuation = sum(
-            (row.total_valuation_eur for row in self.rollups), Decimal("0"),
+            (row.total_valuation_eur for row in self.rollups),
+            Decimal("0"),
         )
         if computed_assets != self.total_assets:
             raise ValueError(
@@ -140,8 +140,7 @@ class ForeignAssetsAggregation(BaseModel):
             )
         if computed_valuation != self.total_valuation_eur:
             raise ValueError(
-                f"total_valuation_eur {self.total_valuation_eur} != sum of rollups "
-                f"{computed_valuation}",
+                f"total_valuation_eur {self.total_valuation_eur} != sum of rollups {computed_valuation}",
             )
         cohorts = [(row.source_kind, row.asset_class) for row in self.rollups]
         if len(cohorts) != len(set(cohorts)):
@@ -196,7 +195,8 @@ def aggregate_foreign_assets_720(
                 assets_count=len(group),
                 held_at_year_end_count=sum(1 for o in group if o.held_at_year_end),
                 total_valuation_eur=sum(
-                    (obs.valuation_eur for obs in group), Decimal("0"),
+                    (obs.valuation_eur for obs in group),
+                    Decimal("0"),
                 ),
                 countries=countries,
             ),
@@ -207,7 +207,8 @@ def aggregate_foreign_assets_720(
         rollups=tuple(rollups),
         total_assets=sum(row.assets_count for row in rollups),
         total_valuation_eur=sum(
-            (row.total_valuation_eur for row in rollups), Decimal("0"),
+            (row.total_valuation_eur for row in rollups),
+            Decimal("0"),
         ),
     )
 

@@ -80,7 +80,7 @@ must satisfy the following invariants:
 
 - `[modelo]` table is REQUIRED with at least the fields the loader's
   `ModeloDefinition` schema requires (`id`, `label`, etc.).
-- `[revisions]` table or `[[revisions.X]]` array is FORBIDDEN. The
+- `[revisions]` table or `[revisions.X]` array is FORBIDDEN. The
   directory loader raises `RegistryLoadError` if encountered.
 - `[legal]`, `[sources]`, `[legal_refs_catalogue]` tables are
   FORBIDDEN (same constraint as single-file mode — local catalogues
@@ -91,7 +91,7 @@ must satisfy the following invariants:
 Files under `revisions/` declare per-revision data. Each file:
 
 - MUST declare at least one `[revisions."<id>"]` table (or its
-  `[[revisions."<id>".X]]` array variants for casillas / formulas /
+  `[revisions."<id>".X]` array variants for casillas / formulas /
   etc.).
 - MUST NOT redeclare `[modelo]` — that is manifest-only.
 - MUST NOT declare local `[legal]` / `[sources]` / `[legal_refs_catalogue]`

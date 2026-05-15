@@ -350,6 +350,7 @@ def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> VATRateKind | None:
             return kind
     return None
 
+
 __all__ = [
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",

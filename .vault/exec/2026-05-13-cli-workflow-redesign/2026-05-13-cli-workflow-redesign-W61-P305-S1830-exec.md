@@ -6,7 +6,7 @@ date: '2026-05-14'
 step_id: 'W61.P305.S1830'
 related:
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
-  - "[[2026-05-14-cli-workflow-redesign-W61-P305-S1830-code-review-audit]]"
+  - "[[2026-05-14-cli-workflow-redesign-w61-p305-s1830-code-review-audit]]"
   - "[[2026-05-13-cli-workflow-redesign-manual-ledger-storage-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr]]"

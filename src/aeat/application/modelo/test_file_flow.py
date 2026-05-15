@@ -767,10 +767,13 @@ def test_verify_runs_workflow_gate_and_refuses_before_verified_state_write(repos
         calculation_repository=cr_repo,
     )
     assert refreshed_revision.state is CalculationRevisionState.DRAFT
-    assert list_verification_reports(
-        calculation_revision_id=revision.calculation_revision_id,
-        verification_repository=vr_repo,
-    ) == ()
+    assert (
+        list_verification_reports(
+            calculation_revision_id=revision.calculation_revision_id,
+            verification_repository=vr_repo,
+        )
+        == ()
+    )
     verification_events = bv_repo.load().for_bucket(
         work_unit.bucket_id,
         event_types=(
@@ -1027,10 +1030,7 @@ def test_discard_emits_modelo_work_unit_discarded_event(repos) -> None:
         clock=_T1,
     )
     history = bv_repo.load().for_bucket(discarded.bucket_id)
-    discard_events = [
-        event for event in history
-        if event.event_type is BucketEventType.MODELO_WORK_UNIT_DISCARDED
-    ]
+    discard_events = [event for event in history if event.event_type is BucketEventType.MODELO_WORK_UNIT_DISCARDED]
     assert len(discard_events) == 1
     event = discard_events[0]
     assert event.object_type is BucketEventObjectType.WORK_UNIT

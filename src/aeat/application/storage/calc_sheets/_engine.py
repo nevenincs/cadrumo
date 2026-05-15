@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Final
+from typing import Final, Literal, cast
 
 from ....domain.calculations.registry._schema import (
     CasillaDefinition,
@@ -20,6 +20,7 @@ from ._records import (
     OperatorInputs,
     RelationValues,
     SheetCellAddress,
+    SheetCellConstraint,
     SheetExportMetadata,
     SheetExportPlan,
     SheetFormulaCell,
@@ -37,7 +38,9 @@ from ._translator import translate_formula
 _ENGINE_VERSION: Final[str] = "calc-sheets/0.1.0"
 
 
-def _rounding_rule_for(formula: FormulaDefinition) -> tuple[str, int | None]:
+def _rounding_rule_for(
+    formula: FormulaDefinition,
+) -> tuple[Literal["money", "integer", "none"], int | None]:
     """Map a registry rounding code to (rule_name, scale)."""
 
     if formula.rounding is None:
@@ -343,11 +346,15 @@ def _tariff_tables(
             )
         else:
             scalar = _resolve_scalar(definition, today)
+            scalar_data_type = cast(
+                Literal["decimal", "money", "integer", "ratio"],
+                definition.data_type,
+            )
             tables.append(
                 SheetTariffTable(
                     parameter=parameter_id,
                     label=parameter_id,
-                    data_type=definition.data_type,
+                    data_type=scalar_data_type,
                     anchor=anchor,
                     scalar_value=scalar,
                 )
@@ -622,6 +629,7 @@ def _relation_value_cells(
             SheetValueCell(
                 address=anchor,
                 value=supplied.value if supplied is not None else None,
+                note=supplied.note if supplied is not None else None,
                 role="parameter_value",
             )
         )
@@ -666,18 +674,23 @@ def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
     )
 
 
+RelationResolver = Callable[[RegistrySnapshot], RelationValues]
+
+
 def build_export_plan(
     snapshot: RegistrySnapshot,
     *,
     operator_inputs: OperatorInputs | None = None,
     relation_values: RelationValues | None = None,
+    relation_resolver: RelationResolver | None = None,
 ) -> SheetExportPlan:
     """Walk a registry snapshot and produce a complete `SheetExportPlan`.
 
     The plan is a pure function of `snapshot`, `operator_inputs`, and
-    `relation_values`: the apply adapter writes exactly what is in
-    the plan, no more, no less. Two engine runs with the same inputs
-    yield the same plan modulo the `exported_at` timestamp.
+    the resolved relation values: the apply adapter writes exactly
+    what is in the plan, no more, no less. Two engine runs with the
+    same inputs yield the same plan modulo the `exported_at`
+    timestamp.
 
     Args:
         snapshot: The validated registry snapshot to export.
@@ -688,12 +701,27 @@ def build_export_plan(
             aggregations mirrored into the `Tarifas` tab. Required
             when the revision's formulas consume `relation` leaves
             (annual roll-ups like modelo 190 over modelo 111); when
-            absent the engine emits blank cells the operator must
-            populate before the Sheet's formulas yield correct values.
+            absent and `relation_resolver` is also unset, the engine
+            emits blank cells the operator must populate before the
+            Sheet's formulas yield correct values.
+        relation_resolver: Optional callable that resolves the
+            snapshot's relations from a structured source (typically
+            the local observation store via
+            `aeat.application.calculations.resolve_relations_from_local_store`).
+            When supplied AND `relation_values` is None, the engine
+            invokes the resolver and stamps each resolved value's
+            provenance onto the workbook so the pull adapter can
+            detect stale prefills. Explicit `relation_values` take
+            precedence over the resolver.
     """
 
     inputs = operator_inputs if operator_inputs is not None else OperatorInputs()
-    relations = relation_values if relation_values is not None else RelationValues()
+    if relation_values is not None:
+        relations = relation_values
+    elif relation_resolver is not None:
+        relations = relation_resolver(snapshot)
+    else:
+        relations = RelationValues()
     revision = snapshot.revision
     # Anchor every temporal lookup (scalar parameter, bracket-table
     # window selection) at the snapshot's filing date so the workbook
@@ -710,6 +738,7 @@ def build_export_plan(
     provenance = _provenance_rows(revision, layout)
     provenance_values = _provenance_value_cells(provenance)
     protected = _protected_ranges(layout)
+    cell_constraints = _collect_cell_constraints(revision, layout)
 
     metadata = _stamp_registry_metadata(snapshot)
     guide = SheetGuideContent(
@@ -726,8 +755,46 @@ def build_export_plan(
         tariffs=tariff_tables,
         provenance=provenance,
         protected_ranges=protected,
+        cell_constraints=cell_constraints,
+        relation_provenance=relations,
         guide=guide,
     )
+
+
+def _collect_cell_constraints(
+    revision: ModeloRevision,
+    layout: SheetLayout,
+) -> tuple[SheetCellConstraint, ...]:
+    """Mirror each casilla's declared `constraints` onto its target cell.
+
+    Computed casillas resolve their cell address through the
+    `Cálculos` map; manual / bound casillas resolve through the
+    `Entradas` map. Informational casillas are skipped.
+    """
+
+    constraints: list[SheetCellConstraint] = []
+    for casilla in revision.casillas:
+        if casilla.constraints is None:
+            continue
+        if casilla.input_kind == "computed":
+            address = layout.calculos_cells.get(casilla.id)
+        elif casilla.input_kind in ("manual", "bound"):
+            address = layout.entradas_cells.get(casilla.id)
+        else:
+            continue
+        if address is None:
+            continue
+        constraints.append(
+            SheetCellConstraint(
+                address=address,
+                sign=casilla.constraints.sign,
+                min_value=casilla.constraints.min_value,
+                max_value=casilla.constraints.max_value,
+                legal_refs=tuple(casilla.constraints.legal_refs),
+                casilla=casilla.id,
+            )
+        )
+    return tuple(constraints)
 
 
 __all__ = ["build_export_plan"]

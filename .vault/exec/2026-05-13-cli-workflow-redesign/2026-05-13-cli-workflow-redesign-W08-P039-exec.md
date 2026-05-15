@@ -36,4 +36,3 @@ Closed plan rows: `W08.P039.S0229`, `W08.P039.S0230`,
 ## Tests
 
 `uv run --no-sync pytest src/aeat/application/profile/test_actions.py src/aeat/application/archive/test_archive.py src/aeat/application/test_config_parity.py src/aeat/entrypoints/cli/filing/test_filing_cli.py src/aeat/entrypoints/cli/test_workflow_surface.py::test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_bucket -q`
-

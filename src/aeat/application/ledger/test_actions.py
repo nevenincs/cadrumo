@@ -1560,7 +1560,9 @@ def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_eng
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+        calculation_repository=CalculationRevisionCatalogueRepository(
+            objects=SecureObjectRepository(engine=secure_engine)
+        ),
     )
 
     assert dry_run.blocking_modelo_references[0].modelo == "303"
@@ -1610,7 +1612,9 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_eng
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
             work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+            calculation_repository=CalculationRevisionCatalogueRepository(
+                objects=SecureObjectRepository(engine=secure_engine)
+            ),
             occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
         )
 
@@ -1645,7 +1649,9 @@ def test_lifecycle_change_refuses_finalized_modelo_reference(secure_engine: Engi
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
             work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+            calculation_repository=CalculationRevisionCatalogueRepository(
+                objects=SecureObjectRepository(engine=secure_engine)
+            ),
             occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
         )
 
@@ -1696,7 +1702,9 @@ def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
             work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+            calculation_repository=CalculationRevisionCatalogueRepository(
+                objects=SecureObjectRepository(engine=secure_engine)
+            ),
         )
 
     assert transaction_repository.load().get(updated.ref.transaction_id) is not None
@@ -1796,7 +1804,9 @@ def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_engine
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
         work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-        calculation_repository=CalculationRevisionCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+        calculation_repository=CalculationRevisionCatalogueRepository(
+            objects=SecureObjectRepository(engine=secure_engine)
+        ),
     )
 
     assert dry_run.blocking_modelo_references[0].modelo == "303"

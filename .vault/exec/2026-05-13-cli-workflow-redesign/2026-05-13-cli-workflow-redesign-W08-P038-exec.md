@@ -35,4 +35,3 @@ Closed plan rows: `W08.P038.S0223`, `W08.P038.S0224`,
 ## Tests
 
 `uv run --no-sync ruff check src/aeat/application/profile/test_actions.py src/aeat/application/config_reset.py src/aeat/application/setup_reset.py src/aeat/entrypoints/cli/deadlines/__init__.py src/aeat/adapters/persistence/storage/_rotation.py src/aeat/adapters/persistence/storage/_test_rotation.py`
-

@@ -5,6 +5,7 @@ tags:
   - '#schema-driven-wizard-closure'
 date: '2026-05-15'
 related:
+  - '[[2026-05-12-schema-driven-wizard-closure-adr]]'
   - '[[2026-05-12-schema-driven-wizard-closure-phase1-step1-exec]]'
   - '[[2026-05-12-schema-driven-wizard-closure-phase1-step2-exec]]'
   - '[[2026-05-12-schema-driven-wizard-closure-phase1-step3-exec]]'
@@ -19,6 +20,10 @@ related:
 Auto-generated index of all documents tagged with `#schema-driven-wizard-closure`.
 
 ## Documents
+
+### adr
+
+- `2026-05-12-schema-driven-wizard-closure-adr` - `schema-driven-wizard-closure` adr
 
 ### exec
 

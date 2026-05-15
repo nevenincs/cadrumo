@@ -162,9 +162,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
     assert Decimal(revision.binding_overrides["modelo-303-iva-soportado-interiores-cuota"]) == outgoing.iva_amount
     assert revision.casilla_values["iva.repercutido.general"] == incoming.iva_amount
     assert revision.casilla_values["iva.soportado.interiores"] == outgoing.iva_amount
-    assert revision.source_transaction_ids == tuple(
-        sorted((incoming.transaction_id, outgoing.transaction_id))
-    )
+    assert revision.source_transaction_ids == tuple(sorted((incoming.transaction_id, outgoing.transaction_id)))
 
     events = event_repo.load().for_bucket("bucket-a")
     assert [event.event_type for event in events] == [BucketEventType.MODELO_CALCULATION_CREATED]

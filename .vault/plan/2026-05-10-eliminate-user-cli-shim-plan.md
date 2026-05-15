@@ -1,3 +1,16 @@
+---
+tags:
+  - '#plan'
+  - '#eliminate-user-cli-shim'
+date: '2026-05-10'
+related:
+  - '[[2026-05-10-eliminate-user-cli-shim-adr]]'
+  - '[[2026-05-10-cli-structural-localization-audit]]'
+  - '[[2026-05-07-user-profile-schema-research]]'
+  - '[[2026-04-12-setup-wizard-research]]'
+  - '[[2026-05-12-cli-design-research]]'
+---
+
 # Plan: Eliminate `user_cli.py` Architectural Shim
 #plan #cli #workflow #ux-025
 

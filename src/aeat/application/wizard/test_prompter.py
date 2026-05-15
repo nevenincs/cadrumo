@@ -14,7 +14,7 @@ from aeat.application.wizard._errors import (
 )
 from aeat.application.wizard._models import WizardQuestion, WizardWidget
 from aeat.application.wizard._prompter import Prompter, ScriptedPrompter
-from aeat.core.i18n import Translatable as tr  # noqa: N813
+from aeat.core.i18n import Translatable as tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

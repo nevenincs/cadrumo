@@ -343,7 +343,7 @@ def verify_modelo_parity(
 
     sheets_values = _read_sheets_computed(sheets_service, apply_result.spreadsheet_id, plan)
     local_values = _compute_local(snapshot, inputs_by_id, scenario)
-    by_number = {casilla.number: casilla for casilla in snapshot.revision.casillas}
+    {casilla.number: casilla for casilla in snapshot.revision.casillas}
 
     casillas: list[CasillaParity] = []
     divergences: list[CasillaParity] = []

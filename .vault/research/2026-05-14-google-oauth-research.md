@@ -688,4 +688,3 @@ The four streams converge on a single tractable design space:
   available; values.update is LWW.** Cell partitioning is the
   cleanest sidestep; allowing operator edits to formula cells
   forces the 412-retry regime and needs an operator-pause signal.
-

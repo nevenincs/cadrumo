@@ -5,6 +5,7 @@ tags:
   - '#feature-356'
 date: '2026-05-15'
 related:
+  - '[[2026-04-23-feature-356-adr]]'
   - '[[2026-04-23-feature-356-phase1-review-exec]]'
   - '[[2026-04-23-feature-356-phase1-step1-exec]]'
 ---
@@ -14,6 +15,10 @@ related:
 Auto-generated index of all documents tagged with `#feature-356`.
 
 ## Documents
+
+### adr
+
+- `2026-04-23-feature-356-adr` - `feature-356` adr
 
 ### exec
 

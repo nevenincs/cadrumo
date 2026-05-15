@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 import hashlib
-import io
-import json
 import zipfile
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field

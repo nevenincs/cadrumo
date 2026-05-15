@@ -5,6 +5,7 @@ tags:
   - '#audit-concerns-2026-05'
 date: '2026-05-15'
 related:
+  - '[[2026-05-08-audit-concerns-2026-05-adr]]'
   - '[[2026-05-08-audit-concerns-2026-05-plan]]'
 ---
 
@@ -13,6 +14,10 @@ related:
 Auto-generated index of all documents tagged with `#audit-concerns-2026-05`.
 
 ## Documents
+
+### adr
+
+- `2026-05-08-audit-concerns-2026-05-adr` - `audit-concerns-2026-05` adr
 
 ### plan
 

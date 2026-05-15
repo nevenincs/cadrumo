@@ -56,7 +56,8 @@ def _capture(
 
 class TestCapture:
     def test_capture_persists_with_content_addressed_id(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = ExpedientesService(settings=isolated_settings)
         persisted = svc.capture(
@@ -68,7 +69,8 @@ class TestCapture:
         assert persisted.declarations[0].expediente_id == "12345678901234567890"
 
     def test_capture_deduplicates_identical_captures(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = ExpedientesService(settings=isolated_settings)
         cap = _capture(declarations=(_declaration(),))
@@ -78,7 +80,8 @@ class TestCapture:
         assert len(svc.list_snapshots(bucket_id="bucket-001")) == 1
 
     def test_capture_distinct_inputs_yield_distinct_ids(
-        self, isolated_settings: Settings,
+        self,
+        isolated_settings: Settings,
     ) -> None:
         svc = ExpedientesService(settings=isolated_settings)
         a = svc.capture(
