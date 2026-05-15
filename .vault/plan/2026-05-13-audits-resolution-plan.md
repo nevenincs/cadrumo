@@ -7,6 +7,11 @@ related:
   - "[[2026-05-13-eliminate-shims-audit]]"
   - "[[2026-05-13-schema-driven-wizard-ux-audit]]"
   - "[[2026-05-13-testing-framework-tautology-audit]]"
+  - "[[2026-05-10-eliminate-user-cli-shim-adr]]"
+  - "[[2026-05-12-schema-driven-wizard-adr]]"
+  - "[[2026-05-12-cli-design-research]]"
+  - "[[2026-05-12-schema-driven-wizard-research]]"
+  - "[[2026-04-17-pytest-only-testing-research]]"
 ---
 
 # audits resolution plan
@@ -462,6 +467,92 @@ plan and commit messages only; they never appear in source code.
       emits the existing summary
     - `aeat --help` lists exactly `config` and `app`
   - Acceptance gate: every check above passes
+
+### Group F — type-safety closure (`ty` + suppression strip)
+
+This group was added 2026-05-15 after `uv run ty check src/` was wired
+into prek and immediately surfaced a backlog of legitimate type defects
+plus a residue of `# type: ignore` suppressions that mask real bugs.
+The calculation engines are type-sensitive (Decimal vs. float vs. bool,
+binding-source Literals, frozen Pydantic schemas) and every silenced
+type error is a latent calculation defect. Closure of this group is
+non-negotiable for any merge from this branch.
+
+Concurrent activity caveat: a prior session lost ~4h of work to a
+`git reset --hard` race. Every Step in Group F commits the moment its
+acceptance gates pass; no Step parks more than one file's worth of
+work in the unstaged tree.
+
+- F1 — Close the four `ty` diagnostics in `_binding_prefill.py`
+  - Files owned: `src/aeat/application/calculations/_binding_prefill.py`
+  - The diagnostics at lines 86, 92, 154, 161 are all
+    `invalid-argument-type` against `int.__new__` and `tuple` — values
+    typed `object` reaching `int(value)` and `tuple(value)` without
+    runtime narrowing. Add `isinstance` guards that raise
+    `RegistryValidationError` (or the closest contextual error) on
+    unexpected types; do not widen the consumer-side signature.
+  - Acceptance gates:
+    - `uv run --no-sync ty check src/aeat/application/calculations/_binding_prefill.py 2>&1 | tail -3` shows `All checks passed!`
+    - `uv run --no-sync pytest src/aeat/application/calculations/ -q` green
+    - `uv run --no-sync ty check src/ 2>&1 | tail -3` reports zero diagnostics
+  - Does NOT: refactor the prefill engine or change its public API
+
+- F2 — Finalise the half-implemented features from commit `6b78f880`
+  - Files owned:
+    - `src/aeat/domain/calculations/registry/_schema.py`
+    - `src/aeat/domain/calculations/registry/__init__.py`
+    - `src/aeat/domain/calculations/registry/_bindings.py`
+    - `registry/aeat/modelos/100/revisions/2025.toml`
+  - Three sub-features were partially shipped and crashed mid-session.
+    Each must be completed end-to-end:
+    1. `DataBindingDefinition.aeat_prefilled: bool = False` field on
+       the schema, with `aeat_prefilled = true` declared on the two
+       binding rows the borrador-prefilled test pins
+       (`renta-2025-profile-tax-residence-ccaa` and
+       `renta-2025-modelo-111-retenciones-periodicas`).
+    2. Re-export the seventeen `_census_modelos` public names from
+       `registry/__init__.py` (`CENSUS_MODELO_*`,
+       `CensusModeloFoundation*`, `census_modelo_ownership*`,
+       `resolve_census_modelo_*`, etc.). The implementations exist;
+       only the package surface gap remains.
+    3. Implement the registry-side counterpart binding API in
+       `_bindings.py`: `CounterpartAggregationObservation`,
+       `CounterpartObservationRequirement`,
+       `counterpart_binding_requirements`,
+       `resolve_counterpart_binding_values`,
+       `resolve_counterpart_binding_row_values`, plus extending
+       `DataBindingDefinition.source` Literal with
+       `payable_invoice`, `collectible_invoice`, `ledger_transaction`,
+       `purchase_invoice_evidence`. Pattern: parallel of the existing
+       `InvoiceObservation` / `resolve_invoice_binding_*` machinery.
+       The full test contract lives in
+       `src/aeat/domain/calculations/registry/test_counterpart_bindings.py`.
+  - Acceptance gates:
+    - `pytest src/aeat/domain/calculations/registry/test_borrador_prefilled_schema.py src/aeat/domain/calculations/registry/test_census_modelo_foundation.py src/aeat/domain/calculations/registry/test_counterpart_bindings.py -q` green
+    - `uv run --no-sync ty check src/aeat/domain/calculations/registry/ 2>&1 | tail -3` zero diagnostics
+    - Every name listed above resolves from `aeat.domain.calculations.registry` via `from aeat.domain.calculations.registry import <name>` in a one-shot import smoke test
+  - Does NOT: extend the in-flight features beyond the test contract; no new modelos, no new TOML rows beyond the two prefilled markers
+
+- F3 — Strip every `# type: ignore` suppression, fix each underlying issue
+  - Files owned: every `.py` under `src/aeat/` carrying a `# type: ignore` comment (current count `91`; reconfirm with `grep -rn "# type: ignore" src/ --include="*.py" | wc -l`)
+  - Each suppression must be removed and the underlying type defect resolved per the project's mandate: "Any type checking suppression should be treated as a critical failure in a type-sensitive application like this where calculation engines require very specific input/output types." Permitted patterns for legitimate misuse-tests:
+    - `typing.cast(T, value)` only at boundaries where the runtime contract is documented and the cast is provably safe.
+    - `Model.model_validate({...})` for tests that intentionally pass forbidden inputs through Pydantic runtime validation.
+    - `setattr(obj, "field", value)  # noqa: B010` for tests that verify frozen-Pydantic rejection (B010 is a ruff style rule, not a type-checker suppression).
+  - Acceptance gates:
+    - `grep -rn "# type: ignore" src/ --include="*.py" | wc -l` returns `0`
+    - `uv run --no-sync ty check src/ 2>&1 | tail -3` shows `All checks passed!`
+    - `pytest src/aeat/ -q` green for every test surface a suppression was removed from
+  - Does NOT: introduce new `# pyright: ignore`, `# pylint: disable`, or other type-checker bypasses
+
+- F4 — Final type-safety verification + prek closure
+  - Files owned: none (verification record only)
+  - Run:
+    - `uv run --no-sync ty check src/` — `All checks passed!`
+    - `grep -rn "# type: ignore\|# pyright: ignore" src/ --include="*.py" | wc -l` returns `0`
+    - `uv run --no-sync prek run --all-files` green
+    - `pytest src/aeat/ -q` overall green (concurrent-agent pre-existing failures flagged but not fixed)
+  - Acceptance gate: every check above passes; record the closure in `.vault/exec/2026-05-13-audits-resolution/`
 
 ## Off-limits worktree state
 
