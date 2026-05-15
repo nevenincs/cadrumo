@@ -27,6 +27,7 @@ __all__ = [
     "InvoiceObservationRequirement",
     "IvaLedgerObservation",
     "OssIossLedgerObservation",
+    "RentaExpenseObservationProtocol",
     "RegistryFilingObservation",
     "RegistryFilingObservationRequirement",
     "invoice_binding_requirements",
@@ -1122,7 +1123,31 @@ def resolve_ledger_iva_aggregation_binding_values(
 # evaluated deductible amounts, so proportionality, legal category eligibility,
 # invoice reconciliation, and period/date filtering stay outside the registry
 # formula runtime.
+#
+# The registry accesses only four attributes on each observation. A Protocol
+# avoids a cross-domain import (domain.calculations -> domain.renta) that
+# violated the hexagonal boundary (linkage-design-audit F7).
 # ---------------------------------------------------------------------------
+
+# Casilla IDs covered by the first Renta expense slice (Modelo 100, period 0A).
+# These must stay in sync with the binding selectors in the TOML; they are
+# validated at registry load time so mismatches surface before any calculation.
+_RENTA_100_FIRST_SLICE_CASILLAS: frozenset[str] = frozenset({"0186", "0192", "0199", "0203"})
+
+
+class RentaExpenseObservationProtocol(Protocol):
+    """Structural protocol for first-slice Renta expense observations.
+
+    The registry only needs these four attributes to resolve
+    ``ledger_renta_expense_aggregation`` bindings; the full
+    :class:`~aeat.domain.renta.RentaDeductibleExpenseObservation` satisfies
+    this protocol without any explicit declaration.
+    """
+
+    modelo: str
+    period: str
+    target_casilla: str
+    deductible_amount: Decimal
 
 
 class _RentaLedgerExpenseSelector(BaseModel):
@@ -1151,8 +1176,7 @@ def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBi
     if binding.source != "ledger_renta_expense_aggregation":
         raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_expense_aggregation source")
     selector = _renta_ledger_expense_selector(binding)
-    allowed_casillas = set(RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS.values())
-    if selector.target_casilla not in allowed_casillas:
+    if selector.target_casilla not in _RENTA_100_FIRST_SLICE_CASILLAS:
         raise RegistryValidationError(
             f"binding {binding.id!r} target_casilla {selector.target_casilla!r} "
             "is outside the first Modelo 100 Renta ledger expense slice"
@@ -1171,7 +1195,7 @@ def validate_ledger_renta_expense_aggregation_binding_definition(binding: DataBi
 
 def resolve_ledger_renta_expense_aggregation_binding_values(
     revision: ModeloRevision,
-    observations: Iterable[RentaDeductibleExpenseObservation],
+    observations: Iterable[RentaExpenseObservationProtocol],
 ) -> dict[str, Decimal]:
     """Resolve every ``ledger_renta_expense_aggregation`` binding on ``revision``."""
 
