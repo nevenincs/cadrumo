@@ -453,6 +453,11 @@ cli:
             i període a un full de Google Sheets dins de `aeat-vault/`
           help: Superfície de càlcul esquema-a-full (exportar i recuperar)
           pull:
+            assemble_observations_help: Després de recuperar, reensambla les cel·les
+              de files de la pestanya Detalle en observacions tipades (perceptors,
+              béns a l'estranger, operacions vinculades, membres d'atribució,
+              operacions de devolució) i emet-les al payload al costat dels
+              row_set_edits crus
             compute_help: Després de recuperar les edicions, executa el motor Decimal
               local sobre elles i emet els valors calculats de les caselles
             compute_refused_stale: 'rebutjant calcular contra un llibre les marques

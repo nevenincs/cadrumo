@@ -897,6 +897,11 @@ def google_sync_calc_pull(
         "--compute/--no-compute",
         help=tr("cli.config.google.sync.calc.pull.compute_help"),
     ),
+    assemble_observations: bool = typer.Option(
+        False,
+        "--assemble-observations/--no-assemble-observations",
+        help=tr("cli.config.google.sync.calc.pull.assemble_observations_help"),
+    ),
     profile: str | None = typer.Option(None, "--profile", help=tr("cli.config.google.profile_help")),
 ) -> None:
     """Read operator-edited cells back from a workbook into typed records.
@@ -940,6 +945,31 @@ def google_sync_calc_pull(
     populated_relations = [e for e in result.relation_edits if e.value is not None]
     populated_row_sets = [rs for rs in result.row_set_edits if rs.cells]
     row_set_cells_total = sum(len(rs.cells) for rs in populated_row_sets)
+
+    assembled_groupings: list[dict[str, object]] = []
+    assembled_observation_count = 0
+    if assemble_observations:
+        from ....application.calculations import assemble_observations_for_grouping
+
+        for row_set in populated_row_sets:
+            try:
+                source_kind, observations = assemble_observations_for_grouping(
+                    row_set.grouping,
+                    row_set.cells,
+                    snapshot.revision,
+                    filing_year=snapshot.filing_year,
+                )
+            except StorageError as exc:
+                raise CliRefusedBoundaryError(str(exc)) from exc
+            assembled_observation_count += len(observations)
+            assembled_groupings.append(
+                {
+                    "grouping": row_set.grouping,
+                    "source_kind": source_kind,
+                    "observation_count": len(observations),
+                    "observations": [obs.model_dump(mode="json") for obs in observations],
+                }
+            )
 
     computed_casillas: list[dict[str, str]] = []
     if compute:
@@ -1003,6 +1033,8 @@ def google_sync_calc_pull(
         ],
         "row_set_edits_populated": len(populated_row_sets),
         "row_set_cells_populated": row_set_cells_total,
+        "assembled_groupings": assembled_groupings,
+        "assembled_observation_count": assembled_observation_count,
         "row_set_edits": [
             {
                 "grouping": rs.grouping,
@@ -1047,6 +1079,10 @@ def google_sync_calc_pull(
     for rs in populated_row_sets:
         for c in rs.cells:
             lines.append(f"row_set\t{rs.grouping}\t{c.row_index}\t{c.binding}\t{c.value}")
+    for assembled in assembled_groupings:
+        lines.append(
+            f"assembled\t{assembled['grouping']}\t{assembled['source_kind']}\t{assembled['observation_count']}"
+        )
     for entry in computed_casillas:
         lines.append(f"computed\t{entry['casilla_id']}\t{entry['value']}\t{entry['formula_id']}")
     _emit(ctx, payload, tuple(lines))

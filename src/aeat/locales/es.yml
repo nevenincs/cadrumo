@@ -469,6 +469,11 @@ cli:
             y período a una hoja de Google Sheets dentro de `aeat-vault/`
           help: Superficie de cálculo esquema-a-hoja (exportar y recuperar)
           pull:
+            assemble_observations_help: Tras recuperar, reensambla las celdas de
+              filas de la pestaña Detalle en observaciones tipadas (perceptores,
+              bienes en el extranjero, operaciones vinculadas, miembros de
+              atribución, operaciones de devolución) y emítelas en el payload junto
+              a los row_set_edits brutos
             compute_help: Tras recuperar las ediciones, ejecuta el motor Decimal
               local contra ellas y emite los valores calculados de las casillas
             compute_refused_stale: 'rechazo a calcular contra un libro cuyas marcas

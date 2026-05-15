@@ -443,6 +443,11 @@ cli:
             a Google Sheets munkafüzetbe az `aeat-vault/` alá
           help: Séma-táblázat számítási felület (exportálás és visszaolvasás)
           pull:
+            assemble_observations_help: A behúzás után állítsa össze a Detalle fül
+              sor-cellaértékeit típusos megfigyelésekké (kedvezményezettek,
+              külföldi vagyon, kapcsolt felek közötti műveletek, atribución tagok,
+              visszatérítési műveletek) és bocsássa ki őket a payloadba a nyers
+              row_set_edits mellett
             compute_help: A behúzás után futtassa a lokális Decimal futtatókörnyezetet
               a behúzott bemenetekre és bocsássa ki a számított cella értékeket
             compute_refused_stale: 'megtagadva a számítás olyan munkafüzettel szemben
