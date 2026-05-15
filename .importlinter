@@ -18,11 +18,9 @@ source_modules =
     aeat.domain.calculations
 forbidden_modules =
     aeat.domain.renta
-# Both edges are part of the same F7 family. Remove these ignores when
-# Wave 2 P04.S13 / S14 / S16 complete and RentaDeductibleExpenseObservation
-# is reachable from application/aggregation instead.
+# Test modules that construct domain objects for registry integration tests
+# are permitted to import domain.renta directly — they are not production code.
 ignore_imports =
-    aeat.domain.calculations.registry._bindings -> aeat.domain.renta
     aeat.domain.calculations.registry.test_ledger_renta_expense_binding -> aeat.domain.renta
 
 # ── Layered architecture (hexagonal direction) ───────────────────────────────

@@ -940,6 +940,8 @@ def google_sync_calc_pull(
     populated_operator = [e for e in result.operator_edits if e.value is not None]
     populated_bindings = [e for e in result.binding_edits if e.value is not None]
     populated_relations = [e for e in result.relation_edits if e.value is not None]
+    populated_row_sets = [rs for rs in result.row_set_edits if rs.cells]
+    row_set_cells_total = sum(len(rs.cells) for rs in populated_row_sets)
 
     computed_casillas: list[dict[str, str]] = []
     if compute:
@@ -1001,6 +1003,22 @@ def google_sync_calc_pull(
             {"relation": e.relation, "value": str(e.value) if e.value is not None else None}
             for e in populated_relations
         ],
+        "row_set_edits_populated": len(populated_row_sets),
+        "row_set_cells_populated": row_set_cells_total,
+        "row_set_edits": [
+            {
+                "grouping": rs.grouping,
+                "cells": [
+                    {
+                        "binding": c.binding,
+                        "row_index": c.row_index,
+                        "value": str(c.value) if c.value is not None else None,
+                    }
+                    for c in rs.cells
+                ],
+            }
+            for rs in populated_row_sets
+        ],
         "computed": computed_casillas,
     }
     lines: list[str] = [
@@ -1019,6 +1037,8 @@ def google_sync_calc_pull(
         f"operator_edits_populated\t{len(populated_operator)}",
         f"binding_edits_populated\t{len(populated_bindings)}",
         f"relation_edits_populated\t{len(populated_relations)}",
+        f"row_set_edits_populated\t{len(populated_row_sets)}",
+        f"row_set_cells_populated\t{row_set_cells_total}",
     ]
     for e in populated_operator:
         lines.append(f"casilla\t{e.casilla_number}\t{e.value}\t{e.label}")
@@ -1026,6 +1046,9 @@ def google_sync_calc_pull(
         lines.append(f"binding\t{e.binding}\t{e.value}")
     for e in populated_relations:
         lines.append(f"relation\t{e.relation}\t{e.value}")
+    for rs in populated_row_sets:
+        for c in rs.cells:
+            lines.append(f"row_set\t{rs.grouping}\t{c.row_index}\t{c.binding}\t{c.value}")
     for entry in computed_casillas:
         lines.append(f"computed\t{entry['casilla_id']}\t{entry['value']}\t{entry['formula_id']}")
     _emit(ctx, payload, tuple(lines))

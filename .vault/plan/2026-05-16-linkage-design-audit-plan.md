@@ -32,7 +32,7 @@ Produce a prioritised consolidation catalogue at
 family, its canonical-target shape, and its migration cost estimate.
 
 - [x] `P01.S01` - extend pydantic audit tool to dedupe by file-line and emit a refined catalogue; `scratch/pydantic_audit.py`.
-- [ ] `P01.S02` - dispatch Sonnet agent to triage 253 similarity pairs into duplicate families; `scratch/out/wave2_consolidation_catalogue.md`.
+- [x] `P01.S02` - dispatch Sonnet agent to triage 253 similarity pairs into duplicate families; `scratch/out/wave2_consolidation_catalogue.md`.
 - [ ] `P01.S03` - validate the catalogue against the research record's three known duplicate families; `scratch/out/wave2_consolidation_catalogue.md`.
 
 ### Phase `P02` - CCAA canonicalisation
