@@ -11,10 +11,13 @@ from __future__ import annotations
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
+from .....core.config import Settings
 from .....core.logging import get_logger
 from .._errors import LLMConfigError, LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
+
+_GEMINI_GENERATE_TEMPLATE = Settings.external_constants().online_services.llm_endpoints.gemini_generate_content_template
 
 _logger = get_logger(__name__)
 
@@ -120,7 +123,7 @@ class GeminiAdapter(_ProviderAdapter):
         parts.append({"text": request.prompt})
         async with httpx.AsyncClient(timeout=self._timeout_s) as client:
             response = await client.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/{request.model}:generateContent",
+                _GEMINI_GENERATE_TEMPLATE.format(model=request.model),
                 headers={"x-goog-api-key": self._api_key},
                 json={
                     "contents": [{"role": "user", "parts": parts}],

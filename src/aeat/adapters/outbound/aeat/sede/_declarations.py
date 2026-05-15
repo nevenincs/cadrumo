@@ -85,15 +85,16 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 
-_SEDE_BASE = "https://www6.agenciatributaria.gob.es"
-_LISTING_URL = f"{_SEDE_BASE}/wlpl/SCEJ-MANT/CONSUL/index.zul"
-_COTEJO_VIEW = f"{_SEDE_BASE}/wlpl/KATA-APLI/cotejo/CotejoIdSv"
-_COTEJO_DOC = f"{_SEDE_BASE}/wlpl/KATA-APLI/cotejo/CotejoDocIdSv"
-_COTEJO_PATH_PREFIX = "/wlpl/KATA-APLI/cotejo/CotejoIdSv"
-_NAVIGATION_TIMEOUT_MS = 30_000
-_FORM_INTERACTION_TIMEOUT_MS = 10_000
-_BUSCAR_SETTLE_MS = 3_000
-_VER_CLICK_TIMEOUT_MS = 15_000
+_EXTERNAL = Settings.external_constants()
+_SEDE_BASE = _EXTERNAL.aeat.domains.www6
+_LISTING_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.declarations_listing}"
+_COTEJO_VIEW = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_query}"
+_COTEJO_DOC = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.cotejo_document}"
+_COTEJO_PATH_PREFIX = _EXTERNAL.aeat.sede_paths.cotejo_query
+_NAVIGATION_TIMEOUT_MS = _EXTERNAL.aeat.timeouts_ms.navigation
+_FORM_INTERACTION_TIMEOUT_MS = _EXTERNAL.aeat.timeouts_ms.form_interaction
+_BUSCAR_SETTLE_MS = _EXTERNAL.aeat.timeouts_ms.buscar_settle
+_VER_CLICK_TIMEOUT_MS = _EXTERNAL.aeat.timeouts_ms.ver_click
 _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     id="aeat-sede-declarations-read",
     evidence_tier="official_source_guidance",

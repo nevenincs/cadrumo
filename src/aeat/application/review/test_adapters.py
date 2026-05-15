@@ -15,8 +15,10 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage.sql import dispose_engine
+from ...application.user_profile._testing import register_minimal_profile
+from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import Settings
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -87,8 +89,13 @@ def _build_settings(tmp_path: Path) -> Settings:
     )
 
 
-def _summary(text: str = "demo") -> Translatable:
-    return Translatable("translation")
+def _seed_active_profile() -> None:
+    """Register the minimal placeholder profile so drafts are not treated as legacy."""
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
+
+
+def _summary(text: str = "demo") -> tr:
+    return tr("translation")
 
 
 def _schema_version(modelo: str = "130") -> str:
@@ -368,6 +375,7 @@ def test_drafts_pending_returns_empty_when_source_missing(tmp_path: Path) -> Non
 
 def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
+    _seed_active_profile()
     findings = (
         FilingValidationFinding(
             casilla_id="03",
@@ -401,6 +409,7 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
 def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> None:
     """`status=DRAFT` with no findings must emit the same placeholder as VALIDATED."""
     settings = _build_settings(tmp_path)
+    _seed_active_profile()
     _write_draft(settings, _draft(draft_id="d_draft", status=FilingDraftStatus.DRAFT))
     items = drafts_pending(settings)
     assert len(items) == 1
@@ -412,6 +421,7 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
 
 def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
+    _seed_active_profile()
     _write_draft(settings, _draft(draft_id="d2", status=FilingDraftStatus.VALIDATED))
     items = drafts_pending(settings)
     assert len(items) == 1

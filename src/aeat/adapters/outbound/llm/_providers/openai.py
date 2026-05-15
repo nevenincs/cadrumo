@@ -10,10 +10,13 @@ from __future__ import annotations
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
+from .....core.config import Settings
 from .....core.logging import get_logger
 from .._errors import LLMConfigError, LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
+
+_OPENAI_CHAT_URL = Settings.external_constants().online_services.llm_endpoints.openai_chat_completions
 
 _logger = get_logger(__name__)
 
@@ -116,7 +119,7 @@ class OpenAIAdapter(_ProviderAdapter):
         messages.append({"role": "user", "content": request.prompt})
         async with httpx.AsyncClient(timeout=self._timeout_s) as client:
             response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
+                _OPENAI_CHAT_URL,
                 headers={"Authorization": f"Bearer {self._api_key}"},
                 json={
                     "model": request.model,

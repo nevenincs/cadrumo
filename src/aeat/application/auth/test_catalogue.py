@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.i18n import Translatable
+from ...core.i18n import Translatable as tr
 from . import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderListing,
@@ -15,7 +15,6 @@ from . import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
-tr = Translatable
 
 
 def test_catalogue_carries_supported_entries() -> None:
