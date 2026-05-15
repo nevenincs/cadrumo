@@ -1120,6 +1120,7 @@ def _emit_ratios_event(
                 object_type=BucketEventObjectType.PROFILE,
                 object_id=category,
                 payload=payload,
+                payload_version=1,
             ),
         )
     )
