@@ -50,12 +50,11 @@ def test_modelo_036_revision_starts_at_2025_02_03() -> None:
 
 
 def test_modelo_036_snapshot_builds_for_event_periods() -> None:
-    # NOTE: registry declares periods=["alta", "modificacion", "baja"] but
-    # the RegistrySnapshot.period field has max_length=8 — so "modificacion"
-    # (12 chars) cannot instantiate a snapshot today. Schema/registry drift
-    # tracked separately; this test covers the periods that DO snapshot-build.
+    # M036 is event-triggered (cadence="ad_hoc"); the period names are
+    # the three censal event kinds the form supports. Snapshot.period
+    # max_length=32 accommodates these descriptive names.
     modelo, catalogues = _load_modelo_036()
-    for period in ("alta", "baja"):
+    for period in ("alta", "modificacion", "baja"):
         snapshot = build_snapshot(
             modelo,
             catalogues,
