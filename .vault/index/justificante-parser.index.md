@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#justificante-parser'
   - '#index'
-date: '2026-04-27'
+  - '#justificante-parser'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-justificante-parser-adr]]'
   - '[[2026-04-12-justificante-parser-plan]]'

@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#m100-per-ano-test-parity'
   - '#index'
-date: '2026-04-29'
+  - '#m100-per-ano-test-parity'
+date: '2026-05-15'
 related:
   - '[[2026-04-29-m100-per-ano-test-parity-adr]]'
   - '[[2026-04-29-m100-per-ano-test-parity-audit]]'
@@ -24,7 +24,7 @@ Auto-generated index of all documents tagged with `#m100-per-ano-test-parity`.
 
 ### audit
 
-- `2026-04-29-m100-per-ano-test-parity-audit` - `m100-per-ano-test-parity` audit: `m100-per-ano-test-parity-review`
+- `2026-04-29-m100-per-ano-test-parity-audit` - `m100-per-ano-test-parity` audit: `implementation review`
 
 ### exec
 

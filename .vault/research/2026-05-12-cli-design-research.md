@@ -12,7 +12,7 @@ date: '2026-05-12'
 # Related documents as quoted wiki-links
 # (e.g., "[[2026-02-04-feature-plan]]")
 related:
-  - "[[2026-05-10-eliminate-user-cli-shim]]"
+  - "[[2026-05-10-eliminate-user-cli-shim-plan]]"
   - "[[2026-05-10-cli-structural-localization-audit]]"
   - "[[2026-04-12-workflow-engine-adr]]"
   - "[[2026-04-12-workflow-engine-audit]]"

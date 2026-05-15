@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#normatives'
   - '#index'
-date: '2026-04-27'
+  - '#normatives'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-normatives-adr]]'
   - '[[2026-04-12-normatives-phase1-implementation-exec]]'

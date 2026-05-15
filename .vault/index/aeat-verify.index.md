@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#aeat-verify'
   - '#index'
-date: '2026-04-27'
+  - '#aeat-verify'
+date: '2026-05-15'
 related:
   - '[[2026-04-22-aeat-verify-exec]]'
   - '[[2026-04-24-aeat-verify-adr]]'

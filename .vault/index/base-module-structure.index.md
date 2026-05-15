@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#base-module-structure'
   - '#index'
-date: '2026-04-27'
+  - '#base-module-structure'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-base-module-structure-adr]]'
   - '[[2026-04-12-base-module-structure-phase1-step1-exec]]'

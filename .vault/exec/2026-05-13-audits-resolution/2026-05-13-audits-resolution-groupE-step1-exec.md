@@ -5,7 +5,7 @@ tags:
 date: '2026-05-13'
 related:
   - "[[2026-05-13-audits-resolution-plan]]"
-  - "[[2026-05-13-wizard-ux-transcripts]]"
+  - "[[2026-05-13-wizard-ux-transcripts-audit]]"
 ---
 
 # audits-resolution group-e step-1

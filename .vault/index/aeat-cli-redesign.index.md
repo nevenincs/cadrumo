@@ -1,13 +1,15 @@
 ---
 generated: true
 tags:
-  - '#aeat-cli-redesign'
   - '#index'
-date: '2026-05-02'
+  - '#aeat-cli-redesign'
+date: '2026-05-15'
 related:
   - '[[2026-05-02-aeat-cli-redesign-adr]]'
   - '[[2026-05-02-aeat-cli-redesign-reference]]'
   - '[[2026-05-02-aeat-cli-redesign-research]]'
+  - '[[2026-05-03-aeat-cli-redesign-audit]]'
+  - '[[2026-05-05-aeat-cli-redesign-continuation-plan]]'
 ---
 
 # `aeat-cli-redesign` feature index
@@ -19,6 +21,14 @@ Auto-generated index of all documents tagged with `#aeat-cli-redesign`.
 ### adr
 
 - `2026-05-02-aeat-cli-redesign-adr` - `aeat-cli-redesign` adr: `user-cli-redesign-review-contract-v6` | (**status:** `in progress`)
+
+### audit
+
+- `2026-05-03-aeat-cli-redesign-audit` - `aeat-cli-redesign` audit: backend-library readiness for v6 candidate
+
+### plan
+
+- `2026-05-05-aeat-cli-redesign-continuation-plan` - `aeat-cli-redesign` `continuation` plan
 
 ### reference
 

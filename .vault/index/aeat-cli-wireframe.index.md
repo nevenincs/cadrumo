@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#aeat-cli-wireframe'
   - '#index'
-date: '2026-04-27'
+  - '#aeat-cli-wireframe'
+date: '2026-05-15'
 related:
   - '[[2026-04-24-aeat-cli-wireframe-adr]]'
   - '[[2026-04-24-aeat-cli-wireframe-reference]]'

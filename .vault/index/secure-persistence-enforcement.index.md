@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#secure-persistence-enforcement'
   - '#index'
-date: '2026-05-06'
+  - '#secure-persistence-enforcement'
+date: '2026-05-15'
 related:
   - '[[2026-05-06-secure-persistence-enforcement-adr]]'
   - '[[2026-05-06-secure-persistence-enforcement-plan]]'

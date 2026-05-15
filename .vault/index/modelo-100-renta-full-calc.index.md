@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#modelo-100-renta-full-calc'
   - '#index'
-date: '2026-04-28'
+  - '#modelo-100-renta-full-calc'
+date: '2026-05-15'
 related:
   - '[[2026-04-27-modelo-100-renta-full-calc-adr]]'
   - '[[2026-04-27-modelo-100-renta-full-calc-plan]]'

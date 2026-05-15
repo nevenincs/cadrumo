@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#usage-ratios'
   - '#index'
-date: '2026-04-27'
+  - '#usage-ratios'
+date: '2026-05-15'
 related:
   - '[[2026-04-21-usage-ratios-adr]]'
   - '[[2026-04-21-usage-ratios-code-review-exec]]'

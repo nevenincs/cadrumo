@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#export-first'
   - '#index'
-date: '2026-04-27'
+  - '#export-first'
+date: '2026-05-15'
 related:
   - '[[2026-04-17-export-first-adr]]'
   - '[[2026-04-17-export-first-roadmap-plan]]'

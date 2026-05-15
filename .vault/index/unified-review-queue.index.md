@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#unified-review-queue'
   - '#index'
-date: '2026-04-27'
+  - '#unified-review-queue'
+date: '2026-05-15'
 related:
   - '[[2026-04-18-unified-review-queue-adr]]'
   - '[[2026-04-18-unified-review-queue-phase1-summary-exec]]'

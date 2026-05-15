@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#schema-extraction'
   - '#index'
-date: '2026-04-27'
+  - '#schema-extraction'
+date: '2026-05-15'
 related:
   - '[[2026-04-17-schema-extraction-adr]]'
   - '[[2026-04-17-schema-extraction-plan]]'

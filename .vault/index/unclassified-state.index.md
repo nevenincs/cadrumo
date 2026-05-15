@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#unclassified-state'
   - '#index'
-date: '2026-04-27'
+  - '#unclassified-state'
+date: '2026-05-15'
 related:
   - '[[2026-04-18-unclassified-state-adr]]'
   - '[[2026-04-18-unclassified-state-plan]]'

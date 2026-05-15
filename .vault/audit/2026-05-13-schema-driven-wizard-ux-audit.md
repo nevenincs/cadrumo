@@ -5,7 +5,7 @@ tags:
 date: '2026-05-13'
 related:
   - "[[2026-05-12-schema-driven-wizard-adr]]"
-  - "[[2026-05-13-wizard-ux-transcripts]]"
+  - "[[2026-05-13-wizard-ux-transcripts-audit]]"
 ---
 
 # schema-driven wizard ux audit

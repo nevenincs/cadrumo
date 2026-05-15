@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#error-code-registry'
   - '#index'
-date: '2026-04-27'
+  - '#error-code-registry'
+date: '2026-05-15'
 related:
   - '[[2026-04-25-error-code-registry-adr]]'
   - '[[2026-04-25-error-code-registry-code-review-exec]]'

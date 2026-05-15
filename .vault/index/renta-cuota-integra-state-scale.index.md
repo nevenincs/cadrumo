@@ -1,8 +1,9 @@
 ---
 generated: true
 tags:
+  - '#index'
   - '#renta-cuota-integra-state-scale'
-date: '2026-05-08'
+date: '2026-05-15'
 related:
   - '[[2026-05-08-renta-cuota-integra-state-scale-adr]]'
   - '[[2026-05-08-renta-cuota-integra-state-scale-plan]]'

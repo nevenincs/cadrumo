@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#user-profile-registry-dependencies'
   - '#index'
-date: '2026-05-07'
+  - '#user-profile-registry-dependencies'
+date: '2026-05-15'
 related:
   - '[[2026-05-07-user-profile-registry-dependencies-reference]]'
 ---

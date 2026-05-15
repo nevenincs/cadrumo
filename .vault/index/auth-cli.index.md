@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#auth-cli'
   - '#index'
-date: '2026-04-27'
+  - '#auth-cli'
+date: '2026-05-15'
 related:
   - '[[2026-04-21-auth-cli-adr]]'
   - '[[2026-04-21-auth-cli-plan]]'

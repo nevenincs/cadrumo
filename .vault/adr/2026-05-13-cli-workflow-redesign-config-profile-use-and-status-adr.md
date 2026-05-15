@@ -16,8 +16,8 @@ related:
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-modelo-shape-adr]]"
+  - "[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-research]]"
 ---
-
 <!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
      outside the YAML frontmatter above -->
 

@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#attachment-service'
   - '#index'
-date: '2026-04-27'
+  - '#attachment-service'
+date: '2026-05-15'
 related:
   - '[[2026-04-17-attachment-service-adr]]'
   - '[[2026-04-17-attachment-service-audit]]'

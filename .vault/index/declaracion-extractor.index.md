@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#declaracion-extractor'
   - '#index'
-date: '2026-04-27'
+  - '#declaracion-extractor'
+date: '2026-05-15'
 related:
   - '[[2026-04-21-declaracion-extractor-adr]]'
   - '[[2026-04-21-declaracion-extractor-plan]]'

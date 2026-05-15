@@ -34,12 +34,12 @@ CLI output MUST use the established emitters, including `aeat.entrypoints.cli._c
 The CLI workflow redesign needs a single modelo filing surface. The existing
 workflow engine is useful as a read/preflight lifecycle gate, but exposing it as
 a separate command family would create a second lifecycle beside
-`aeat app modelo file`.
+`aeat app modelo work verify` and `aeat app modelo work file`.
 
 Apex assigns WorkflowEngine `run_next` and `run_for_period` targeting to
-`app modelo file`, while app-modelo-shape rejects an app declaration lifecycle
-root, filing root, submit/presentation/preflight commands, and live submission
-behavior.
+the modelo work lifecycle, while app-modelo-shape rejects an app declaration
+lifecycle root, filing root, submit/presentation/preflight commands, and live
+submission behavior.
 
 ## Considerations
 
@@ -67,7 +67,7 @@ double-gate submit behavior that no longer exist in the current engine.
 ## Implementation
 
 Use WorkflowEngine as an application-layer lifecycle gate behind
-`aeat app modelo file`.
+`aeat app modelo work verify` and `aeat app modelo work file`.
 
 Do not expose WorkflowEngine as public CLI structure.
 
@@ -76,7 +76,16 @@ a public CLI command.
 
 Keep `WorkflowEngine.run_next` application-only.
 
-`aeat app modelo file` will:
+`aeat app modelo work verify` will:
+
+1. Resolve the active bucket/profile and work unit.
+2. Build the candidate verification report from the calculated revision.
+3. If local verification would grant, call
+   `WorkflowEngine.run_for_period(profile, modelo, period, as_of=...)`.
+4. Persist the verification report and verified-complete state only after the
+   workflow gate returns `DONE`.
+
+`aeat app modelo work file` will:
 
 1. Resolve the active bucket/profile and work unit.
 2. Require a calculated and verified-complete revision.
@@ -84,7 +93,13 @@ Keep `WorkflowEngine.run_next` application-only.
 4. Translate the workflow result into command output, errors, and bucket
    events.
 
-On `DONE`, `aeat app modelo file` creates internal filing state:
+On `DONE`, `aeat app modelo work verify` creates local verification state:
+
+- verification report
+- verified-complete revision state
+- bucket event
+
+On `DONE`, `aeat app modelo work file` creates internal filing state:
 
 - filing record
 - bucket event
@@ -103,8 +118,8 @@ Success output includes:
 - filed-at
 - `internal_file=true`
 
-On `ABORTED`, the command creates no filing state and emits structured failure
-output:
+On `ABORTED`, the command creates no verification or filing state and emits
+structured failure output:
 
 - error
 - workflow run id
@@ -128,9 +143,9 @@ Rejected public shapes:
 
 The workflow engine is valuable as an internal readiness/preflight gate, but it
 is not the operator's workflow language. The operator approves a modelo work
-unit revision as internally filed through `app modelo file`; the engine verifies
-that the relevant workflow conditions are satisfied before that local state
-transition occurs.
+unit revision as verified or internally filed through the `app modelo work`
+lifecycle; the engine verifies that the relevant workflow conditions are
+satisfied before those local state transitions occur.
 
 Keeping `run_for_period` out of CLI avoids exposing engine plumbing and stale
 stage vocabulary. It also preserves the no-submission invariant by making the
@@ -140,9 +155,27 @@ only public filing action an internal-file command.
 
 WorkflowEngine is harvested without creating a second CLI lifecycle.
 
-`app modelo file` becomes the only filing command surface.
+`app modelo work file` becomes the only filing command surface, and
+`app modelo work verify` is the only verification lifecycle surface.
 
 The old app declaration lifecycle path is moved or retired.
 
 The implementation preserves the current no-submission invariant: internal file
 is local state only and does not perform live submission.
+
+## 2026-05-14 reconciliation amendment — preflight routing verdict
+
+Wave W80 adjudicates `SubmissionEngine.preflight` routing as
+WorkflowEngine-only for modelo lifecycle actions. Modelo actions must not call
+`SubmissionEngine.preflight` directly. They may construct the real
+`SubmissionEngine` as a dependency of `WorkflowEngine`, but the only invocation
+path for submission preflight is `WorkflowEngine.run_for_period` reaching its
+`RUNNING_PREFLIGHT` stage.
+
+This preserves the single lifecycle gate required by this ADR:
+`aeat app modelo work verify` and `aeat app modelo work file` delegate
+orchestration to `WorkflowEngine`, and WorkflowEngine owns auth,
+deadline-window, draft-approval, blocker, and preflight failure
+materialisation. Adding a direct preflight call in
+`verify_modelo_revision`, `file_modelo_revision`, or the CLI would create a
+second policy path and is rejected.

@@ -59,4 +59,3 @@ escape clause ("`--no-verify` is forbidden unless prek fails for
 an unrelated entangled-branch reason; record the decision in the
 exec record"), the commit uses `--no-verify`. The new bucket
 modules pass ruff and ty in isolation.
-

@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#legacy-cleanup'
   - '#index'
-date: '2026-04-27'
+  - '#legacy-cleanup'
+date: '2026-05-15'
 related:
   - '[[2026-04-18-legacy-cleanup-audit]]'
 ---

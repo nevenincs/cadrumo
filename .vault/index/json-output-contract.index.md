@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#json-output-contract'
   - '#index'
-date: '2026-04-27'
+  - '#json-output-contract'
+date: '2026-05-15'
 related:
   - '[[2026-04-25-json-output-contract-adr]]'
   - '[[2026-04-25-json-output-contract-audit]]'

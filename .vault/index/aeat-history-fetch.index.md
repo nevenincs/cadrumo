@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#aeat-history-fetch'
   - '#index'
-date: '2026-04-27'
+  - '#aeat-history-fetch'
+date: '2026-05-15'
 related:
   - '[[2026-04-16-aeat-history-fetch-adr]]'
   - '[[2026-04-16-aeat-history-fetch-plan]]'

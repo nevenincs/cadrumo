@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#branch-hygiene'
   - '#index'
-date: '2026-04-27'
+  - '#branch-hygiene'
+date: '2026-05-15'
 related:
   - '[[2026-04-22-branch-hygiene-rolling-audit]]'
 ---

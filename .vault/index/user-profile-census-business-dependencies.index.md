@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#user-profile-census-business-dependencies'
   - '#index'
-date: '2026-05-07'
+  - '#user-profile-census-business-dependencies'
+date: '2026-05-15'
 related:
   - '[[2026-05-07-user-profile-census-business-dependencies-reference]]'
 ---

@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#integration-tests-ci'
   - '#index'
-date: '2026-04-27'
+  - '#integration-tests-ci'
+date: '2026-05-15'
 related:
   - '[[2026-04-21-integration-tests-ci-adr]]'
   - '[[2026-04-21-integration-tests-ci-plan]]'

@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#session-persistence'
   - '#index'
-date: '2026-04-27'
+  - '#session-persistence'
+date: '2026-05-15'
 related:
   - '[[2026-04-16-session-persistence-research]]'
   - '[[2026-04-17-session-persistence-adr]]'

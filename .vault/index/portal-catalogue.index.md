@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#portal-catalogue'
   - '#index'
-date: '2026-04-27'
+  - '#portal-catalogue'
+date: '2026-05-15'
 related:
   - '[[2026-04-17-portal-catalogue-adr]]'
   - '[[2026-04-17-portal-catalogue-plan]]'

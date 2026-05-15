@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#config-cli-profile-surface'
   - '#index'
-date: '2026-05-07'
+  - '#config-cli-profile-surface'
+date: '2026-05-15'
 related:
   - '[[2026-05-07-config-cli-profile-surface-adr]]'
 ---

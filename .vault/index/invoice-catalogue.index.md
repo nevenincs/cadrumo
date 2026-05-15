@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#invoice-catalogue'
   - '#index'
-date: '2026-04-27'
+  - '#invoice-catalogue'
+date: '2026-05-15'
 related:
   - '[[2026-04-17-invoice-catalogue-adr]]'
   - '[[2026-04-17-invoice-catalogue-plan]]'

@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#status-reader'
   - '#index'
-date: '2026-04-27'
+  - '#status-reader'
+date: '2026-05-15'
 related:
   - '[[2026-04-12-status-reader-adr]]'
   - '[[2026-04-12-status-reader-plan]]'

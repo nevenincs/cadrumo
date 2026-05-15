@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#casilla-schema-completeness'
   - '#index'
-date: '2026-04-27'
+  - '#casilla-schema-completeness'
+date: '2026-05-15'
 related:
   - '[[2026-04-21-casilla-schema-completeness-adr]]'
   - '[[2026-04-21-casilla-schema-completeness-plan]]'

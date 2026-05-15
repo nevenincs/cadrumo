@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#workflow-live-flag-excision'
   - '#index'
-date: '2026-04-27'
+  - '#workflow-live-flag-excision'
+date: '2026-05-15'
 related:
   - '[[2026-04-25-workflow-live-flag-excision-adr]]'
   - '[[2026-04-25-workflow-live-flag-excision-audit]]'

@@ -1,9 +1,9 @@
 ---
 generated: true
 tags:
-  - '#user-profile-renta-dependencies'
   - '#index'
-date: '2026-05-07'
+  - '#user-profile-renta-dependencies'
+date: '2026-05-15'
 related:
   - '[[2026-05-07-user-profile-renta-dependencies-reference]]'
 ---
