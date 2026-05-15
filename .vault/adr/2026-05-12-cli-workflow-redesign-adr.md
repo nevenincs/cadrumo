@@ -1754,3 +1754,24 @@ sweep.
 | R23 | W85 | ✅ closed (`EvidenceBundle` + `aeat app modelo audit` verbs shipped) |
 | R24 | W85 | 🔄 partial — vat-classification wrapper + rental wrappers shipped; `aeat app modelo reconcile --justificante` verb deferred (verb name under review) |
 | R25 | inline | 🔄 ongoing bookkeeping; closes inline as each wave's plan rows are ticked |
+
+#### 2026-05-15 audit correction (overlay on the closure table above)
+
+A read-only ground-truth audit on 2026-05-15 verified each R-row's
+closure against the codebase via per-wave subagents. The table above
+shows the in-flight closure intent; the audit found the following
+R-rows were paper-closed and require reopening or partial annotation.
+Detail and per-step reopen list lives in the audit document.
+
+| R-id | Audit verdict | Why |
+|---|---|---|
+| R02 | reopened | `aeat app modelo reconcile` verb absent from Typer graph |
+| R03 | reopened | `aeat app ledger {link, check, preflight}` verbs absent |
+| R05 | partial | `export` / `import` profile verbs and `profile.exported` / `.imported` / `.activated` events absent |
+| R08 | reopened | `BucketMaintenanceService` and bucket maintenance verbs absent; ratios event emission unwired |
+| R14 | partial | `WorkflowResult.resumed_from` field and `run_for_period(resumed_from=)` parameter never landed despite exec-record claim |
+| R17 | partial | only `status` verb shipped; `calendar` / `agenda` / `backlog` / `explain` absent |
+| R18 | partial | `next_due` field on agenda payload absent |
+| R20 | partial | three event types named in plan are absent or named differently in the enum |
+| R21 | partial | `registry/aeat/modelos/349.toml` migrated to per-direction `collectible_invoice` / `payable_invoice` (per audit) — done |
+| R24 | partial | `aeat app modelo reconcile from-justificante PATH` and Modelo 036 `alta` / `modificacion` / `baja` lifecycle verbs absent |
