@@ -451,6 +451,9 @@ cli:
           export:
             modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
             period_help: Código de período (p. ej. 1T, 2T, 0A)
+            prefill_relations_help: Prerrellenar valores de relaciones entre revisiones
+              desde el almacén local de observaciones antes de exportar (resúmenes
+              anuales, arrastre de trimestres anteriores, etc.)
             root_folder_required: No hay carpeta raíz de Drive configurada; ejecute
               `aeat config google folder set <id>` primero
             unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles
@@ -1024,6 +1027,35 @@ cli:
       slug: Identificador del tema (kebab-case, ej. iva-regime)
 dotted:
   key: dotted.key
+errors:
+  calc:
+    binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
+    bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
+      negativa {base}.
+    bracket_no_coverage: El parámetro escalonado {parameter_id} no tiene tramo que
+      cubra la base {base}.
+    bracket_no_window: El parámetro escalonado {parameter_id} no tiene tramo válido
+      para {as_of}.
+    casilla_constraint_violation: 'La casilla {casilla_id} con valor {value} infringe
+      su restricción declarada: {violation}. Refs: {legal_refs}.'
+    casilla_referenced_before_evaluation: La casilla {casilla_id} se referenció antes
+      de evaluar su fórmula.
+    computed_supplied_as_input: 'No se pueden suministrar como entrada las casillas
+      calculadas: {casilla_ids}.'
+    dispatch_key_unknown: 'La clave de despacho {dispatch_key!r} no está en la tabla
+      del operador {op} sobre la vinculación {binding_id} (claves declaradas: {available_keys}).'
+    dispatch_parameter_kind: El parámetro {parameter_id} no encaja con el operador
+      {op}; se esperaba un parámetro escalar (decimal / dinerario / entero / ratio).
+    divide_by_zero: La fórmula con operador {op} divide entre cero.
+    empty_expression: Expresión de fórmula vacía.
+    enum_binding_value_missing: La vinculación enumerada {binding_id} no tiene valor
+      asignado (requerida por el operador {op}).
+    lookup_dispatch_arg_count: El operador {op} de la fórmula espera {expected} argumentos.
+    lookup_dispatch_arg_kind: El operador {op} de la fórmula requiere que {position}
+      sea una hoja de tipo {expected_kind}.
+    parameter_unknown: El parámetro {parameter_id} no está registrado.
+    relation_value_missing: La relación {relation_id} no tiene valor asignado.
+    unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
 filing:
   validation:
     deadline_missed: Plazo de presentación vencido
@@ -1467,3 +1499,39 @@ wizard:
     main:
       title: Main test
     title: Test
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Fecha de adquisición
+      amount: Importe
+      asset_class_code: Clave del bien
+      asset_identifier: Identificación del bien
+      base_imponible: Base imponible
+      base_imponible_assigned: Base imponible atribuida
+      clave: Clave
+      counterparty_legal_name: Razón social de la contraparte
+      counterparty_tax_id: NIF de la contraparte
+      country_code: Código de país
+      currency_code: Código de divisa
+      ingreso_a_cuenta: Ingreso a cuenta
+      member_legal_name: Razón social del miembro
+      member_state_code: Estado miembro
+      member_tax_id: NIF del miembro
+      operation_date: Fecha de la operación
+      operation_kind_code: Clave de operación
+      party_legal_name: Razón social
+      party_tax_id: NIF
+      perceptor_legal_name: Apellidos y nombre del perceptor
+      perceptor_tax_id: NIF del perceptor
+      percibido_dinerario: Percepciones dinerarias
+      percibido_especie: Percepciones en especie
+      rectified_base_previous: Base imponible anterior (rectificación)
+      rectified_period: Periodo rectificado
+      rectified_year: Ejercicio rectificado
+      refund_amount: Importe a devolver
+      retencion_practicada: Retención practicada
+      share_percentage: Porcentaje de participación
+      subclave: Subclave
+      supplier_tax_id: NIF del proveedor
+      transfer_pricing_method_code: Método de valoración
+      valuation_amount: Valoración

@@ -16,6 +16,7 @@ from ....domain.calculations.registry._schema import (
     ParameterDefinition,
     RegistrySnapshot,
 )
+from ....core.i18n import tr
 from ._layout import SheetLayout, plan_layout
 from ._records import (
     OperatorInputs,
@@ -828,16 +829,17 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
 
 
 def _row_set_column_label(binding: DataBindingDefinition) -> str:
-    """Derive a human label for a row-set column header.
+    """Derive a human-readable column header for a row-set binding.
 
-    Prefers the binding's `selector.row_field` enum (e.g.
-    ``country_code`` -> "Country code"); falls back to the binding id
-    when the selector lacks a row_field.
+    Resolves the operator-facing label through the i18n translation
+    catalogue keyed by ``selector.row_field``. Locale strings live
+    under ``sheets.detalle.headers.*``; missing keys fall back to the
+    binding id so the workbook still renders rather than 500-erroring.
     """
 
     row_field = binding.selector.get("row_field")
     if isinstance(row_field, str) and row_field:
-        return row_field.replace("_", " ").capitalize()
+        return tr(f"sheets.detalle.headers.{row_field}", default=binding.id)
     return binding.id
 
 

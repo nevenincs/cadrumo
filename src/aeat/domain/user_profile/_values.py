@@ -182,10 +182,17 @@ class UserProfileSnapshot(BaseModel):
 
 
 class UserProfilePortableExport(BaseModel):
-    """User-directed portable profile export payload."""
+    """User-directed portable profile export payload.
+
+    ``bundle_schema_version`` gates forward-compatible import: callers that read
+    an export bundle compare this integer to their supported range before
+    attempting to parse ``profile``. Increment it when the serialised shape
+    changes in a backward-incompatible way.
+    """
 
     model_config = _STRICT_FROZEN
 
+    bundle_schema_version: int = Field(default=1, ge=1)
     exported_at: datetime = Field(default_factory=utc_now)
     profile: UserProfileRecord
 

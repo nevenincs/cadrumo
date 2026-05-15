@@ -22,13 +22,12 @@ from ._ledger_expenses import (
     evaluate_renta_deductibility,
     normalize_spending_category,
 )
-from ._substrate import EstimacionDirectaModalidad, RentaCCAA, RentaIncomeType
+from ._substrate import EstimacionDirectaModalidad, RentaIncomeType
 
 __all__ = [
     "LEDGER_RENTA_EXPENSE_SOURCE",
     "RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS",
     "EstimacionDirectaModalidad",
-    "RentaCCAA",
     "RentaDeductibilityContext",
     "RentaDeductibilityResult",
     "RentaDeductibilityStatus",

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import date
+from decimal import Decimal
 from typing import Protocol, runtime_checkable
 
 
@@ -47,10 +48,15 @@ class CasillaSchema(Protocol):
             ``"bool"``, ``"date"``.
         required: Whether the casilla must be present in a valid
             draft.
+        formula: ID of the formula declared on this casilla, or
+            ``None`` for literal casillas.
         formula_inputs: Tuple of casilla IDs this casilla depends
             on. Empty for literal casillas.
-        min_value / max_value: Inclusive bounds for numeric
-            casillas; ``None`` if unbounded.
+        legal_refs: Regulatory citations grounding this casilla's
+            definition (BOE / AEAT permalinks).
+        source_refs: Source-material citations backing this casilla.
+        min_value / max_value: Inclusive ``Decimal`` bounds for
+            numeric casillas; ``None`` if unbounded.
         default: Default value used when the casilla is required
             and no input was supplied.
     """
@@ -71,17 +77,32 @@ class CasillaSchema(Protocol):
         ...
 
     @property
+    def formula(self) -> str | None:
+        """Return the formula ID, or ``None`` if this is a literal casilla."""
+        ...
+
+    @property
     def formula_inputs(self) -> tuple[str, ...]:
         """Return the casilla IDs this casilla's formula depends on."""
         ...
 
     @property
-    def min_value(self) -> float | int | None:
+    def legal_refs(self) -> tuple[str, ...]:
+        """Return the regulatory citation IDs grounding this casilla."""
+        ...
+
+    @property
+    def source_refs(self) -> tuple[str, ...]:
+        """Return the source-material citation IDs for this casilla."""
+        ...
+
+    @property
+    def min_value(self) -> Decimal | None:
         """Return the inclusive lower bound, if any."""
         ...
 
     @property
-    def max_value(self) -> float | int | None:
+    def max_value(self) -> Decimal | None:
         """Return the inclusive upper bound, if any."""
         ...
 

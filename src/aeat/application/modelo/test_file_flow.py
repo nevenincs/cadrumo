@@ -87,9 +87,9 @@ from aeat.domain.modelos._filing_record import FilingRecordStatus
 from aeat.domain.modelos._filing_repository import FilingRecordCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.modelos._verification_report import (
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
-    VerificationFindingKind,
-    VerificationFindingSeverity,
 )
 from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
@@ -1161,8 +1161,8 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     assert report.granted_verified_complete is False
     assert report.completeness_status is VerificationCompletenessStatus.INCOMPLETE
     assert any(
-        f.kind is VerificationFindingKind.MISSING_REQUIRED_CASILLA
-        and f.severity is VerificationFindingSeverity.BLOCKING
+        f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
+        and f.severity is ModeloVerificationFindingSeverity.BLOCKING
         and f.casilla_id == omitted
         for f in report.findings
     )
@@ -1248,7 +1248,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
 
     assert report.granted_verified_complete is False
     assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
-    assert any(f.kind is VerificationFindingKind.BLOCKING_RULE for f in report.findings)
+    assert any(f.kind is ModeloVerificationFindingKind.BLOCKING_RULE for f in report.findings)
 
     refreshed = get_calculation_revision(
         revision.calculation_revision_id,

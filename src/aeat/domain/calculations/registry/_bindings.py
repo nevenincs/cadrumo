@@ -1142,12 +1142,23 @@ class RentaExpenseObservationProtocol(Protocol):
     ``ledger_renta_expense_aggregation`` bindings; the full
     :class:`~aeat.domain.renta.RentaDeductibleExpenseObservation` satisfies
     this protocol without any explicit declaration.
+
+    Properties are declared read-only so that Literal-typed concrete attributes
+    (e.g. ``modelo: Literal["100"]``) satisfy the protocol under strict
+    covariant checking.
     """
 
-    modelo: str
-    period: str
-    target_casilla: str
-    deductible_amount: Decimal
+    @property
+    def modelo(self) -> str: ...
+
+    @property
+    def period(self) -> str: ...
+
+    @property
+    def target_casilla(self) -> str: ...
+
+    @property
+    def deductible_amount(self) -> Decimal: ...
 
 
 class _RentaLedgerExpenseSelector(BaseModel):

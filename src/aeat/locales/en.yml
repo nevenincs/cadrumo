@@ -424,6 +424,9 @@ cli:
           export:
             modelo_help: Modelo id to export (e.g. 130, 303, 100)
             period_help: Filing period code (e.g. 1T, 2T, 0A)
+            prefill_relations_help: Prefill cross-revision relation values from the local
+              observation store before exporting (annual roll-ups, prior-quarter
+              carry-forward etc.)
             root_folder_required: No Drive root folder id is configured; run `aeat
               config google folder set <id>` first
             unknown_modelo: Unknown modelo {modelo!r}; available modelos are {available}
@@ -995,6 +998,33 @@ cli:
       slug: Topic identifier (kebab-case, e.g. iva-regime)
 dotted:
   key: dotted.key
+errors:
+  calc:
+    binding_value_missing: Binding {binding_id} has no supplied value.
+    bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative base
+      {base}.
+    bracket_no_coverage: Bracket parameter {parameter_id} has no entry covering base
+      {base}.
+    bracket_no_window: Bracket parameter {parameter_id} has no bracket valid for {as_of}.
+    casilla_constraint_violation: 'Casilla {casilla_id} value {value} violates constraint:
+      {violation}. Refs: {legal_refs}.'
+    casilla_referenced_before_evaluation: Casilla {casilla_id} referenced before its
+      formula evaluated.
+    computed_supplied_as_input: 'Computed casillas cannot be supplied as inputs: {casilla_ids}.'
+    dispatch_key_unknown: 'Dispatch key {dispatch_key!r} is not in the dispatch table
+      for op {op} on binding {binding_id} (declared keys: {available_keys}).'
+    dispatch_parameter_kind: Parameter {parameter_id} kind mismatch for op {op}; expected
+      a scalar parameter (decimal / money / integer / ratio).
+    divide_by_zero: Formula op {op} divides by zero.
+    empty_expression: Empty formula expression.
+    enum_binding_value_missing: Enum binding {binding_id} has no supplied value (required
+      by op {op}).
+    lookup_dispatch_arg_count: Formula op {op} expects {expected} arguments.
+    lookup_dispatch_arg_kind: Formula op {op} requires {position} to be a {expected_kind}
+      leaf.
+    parameter_unknown: Parameter {parameter_id} is not registered.
+    relation_value_missing: Relation {relation_id} has no supplied value.
+    unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
 filing:
   validation:
     deadline_missed: Submission deadline has passed
@@ -1436,3 +1466,39 @@ wizard:
     main:
       title: Main test
     title: Test
+sheets:
+  detalle:
+    headers:
+      acquisition_date: Acquisition date
+      amount: Amount
+      asset_class_code: Asset class code
+      asset_identifier: Asset identifier
+      base_imponible: Tax base
+      base_imponible_assigned: Tax base assigned
+      clave: Clave
+      counterparty_legal_name: Counterparty legal name
+      counterparty_tax_id: Counterparty tax id
+      country_code: Country code
+      currency_code: Currency code
+      ingreso_a_cuenta: In-kind tax credit
+      member_legal_name: Member legal name
+      member_state_code: Member state
+      member_tax_id: Member tax id
+      operation_date: Operation date
+      operation_kind_code: Operation kind
+      party_legal_name: Party legal name
+      party_tax_id: Party tax id
+      perceptor_legal_name: Perceptor legal name
+      perceptor_tax_id: Perceptor tax id
+      percibido_dinerario: Cash income
+      percibido_especie: In-kind income
+      rectified_base_previous: Prior base (rectification)
+      rectified_period: Rectified period
+      rectified_year: Rectified year
+      refund_amount: Refund amount
+      retencion_practicada: Withholding applied
+      share_percentage: Share percentage
+      subclave: Subclave
+      supplier_tax_id: Supplier tax id
+      transfer_pricing_method_code: Transfer pricing method
+      valuation_amount: Valuation
