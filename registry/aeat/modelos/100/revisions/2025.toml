@@ -3437,6 +3437,29 @@ legal_refs = [
     "orden-eha-672-2007:art-1",
     "orden-eha-3435-2007:anexo-ii",
     "orden-hac-56-2024:art-1",
+    "ley-35-2006:art-101",
+    "ley-35-2006:art-17",
+    "ley-35-2006:art-18",
+    "ley-35-2006:art-19",
+    "ley-35-2006:art-20",
+    "ley-35-2006:art-22",
+    "ley-35-2006:art-23",
+    "ley-35-2006:art-24",
+    "ley-35-2006:art-25",
+    "ley-35-2006:art-26",
+    "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-33",
+    "ley-35-2006:art-34",
+    "ley-35-2006:art-37",
+    "ley-35-2006:art-86",
+    "ley-35-2006:art-87",
+    "ley-35-2006:art-88",
+    "ley-35-2006:art-89",
+    "rd-439-2007:art-80",
+    "rd-439-2007:art-86",
+    "rd-439-2007:art-90",
+    "rd-439-2007:art-95",
 ]
 source_refs = [
     "aeat-dr-100-2025-dictionary",
@@ -3607,6 +3630,7 @@ legal_refs = [
     "orden-eha-3435-2007:anexo-ii",
     "orden-hac-56-2024:art-1",
     "orden-hfp-1284-2023:art-7",
+    "ley-35-2006:art-101",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
@@ -3736,6 +3760,7 @@ legal_refs = [
     "orden-hap-1732-2014:art-2",
     "orden-hfp-1284-2023:art-7",
     "ley-35-2006:art-85",
+    "ley-35-2006:art-101",
 ]
 source_refs = [
     "aeat-renta-2025-manual-parte1",
