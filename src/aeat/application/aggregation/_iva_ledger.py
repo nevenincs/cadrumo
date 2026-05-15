@@ -6,7 +6,6 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
@@ -162,12 +161,12 @@ def aggregate_iva_ledger_observations(
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
-        issue_common: dict[str, Any] = {"transaction_id": transaction.transaction_id}
+        transaction_id = transaction.transaction_id
         operation_date = transaction.raw.value_date or transaction.raw.booked_date
         if not resolved_period.contains(operation_date):
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
                     detail=f"transaction date {operation_date.isoformat()} is outside {resolved_period.raw}",
                 )
@@ -176,7 +175,7 @@ def aggregate_iva_ledger_observations(
         if transaction.raw.currency != "EUR":
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
                     detail=f"transaction currency {transaction.raw.currency!r} is not supported for IVA aggregation",
                 )
@@ -186,7 +185,7 @@ def aggregate_iva_ledger_observations(
         if flow_direction is None:
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
                     detail=f"transaction direction {transaction.direction.value!r} is not an IVA settlement flow",
                 )
@@ -201,7 +200,7 @@ def aggregate_iva_ledger_observations(
             )
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=reason,
                     detail=(
                         f"business classification {transaction.business_classification.value!r} "

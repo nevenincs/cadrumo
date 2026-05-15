@@ -8,8 +8,7 @@ per-provider detail models and the certificate browser-context provisioner.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Literal, Protocol, TypedDict, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -128,11 +127,22 @@ AuthSessionDetail = CertificateSessionDetail | ClaveMovilSessionDetail
 AuthLoginAssertionDetail = CertificateLoginAssertionDetail | ClaveMovilLoginAssertionDetail
 
 
+class BrowserContextKwargs(TypedDict, total=False):
+    """Subset of Playwright ``Browser.new_context()`` keyword arguments.
+
+    Only the kwargs that AEAT auth provisioners currently supply are
+    declared here. ``total=False`` makes every key optional so callers
+    can return a partial mapping.
+    """
+
+    client_certificates: list[dict[str, str]]
+
+
 @runtime_checkable
 class BrowserContextProvisioner(Protocol):
     """Hook that decorates BrowserSession.create_context()."""
 
-    def build_context_kwargs(self) -> Mapping[str, Any]: ...
+    def build_context_kwargs(self) -> BrowserContextKwargs: ...
 
     def annotate_context(self, context: BrowserContextLike) -> None: ...
 
@@ -144,7 +154,7 @@ class CertificateContextProvisioner:
         self._cert = cert
         self._origin = origin
 
-    def build_context_kwargs(self) -> Mapping[str, Any]:
+    def build_context_kwargs(self) -> BrowserContextKwargs:
         return {
             "client_certificates": build_client_certificates_kwarg(
                 self._cert,

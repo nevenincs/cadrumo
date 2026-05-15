@@ -120,8 +120,8 @@ compatibility shims. Investigation determines whether each is
 necessary or can be replaced with a typed pattern.
 
 - [x] `P09.S38` - investigate each dunder-override site and write report; `scratch/out/dunder_overrides.md`.
-- [ ] `P09.S39` - replace removable dunder shims with typed patterns; `src/aeat/`.
-- [ ] `P09.S40` - document irreducible shims with rationale comments; `src/aeat/`.
+- [x] `P09.S39` - replace removable dunder shims with typed patterns; `src/aeat/`.
+- [x] `P09.S40` - document irreducible shims with rationale comments; `src/aeat/`.
 
 ### Phase `P10` - 'other' bucket investigation
 
@@ -129,7 +129,7 @@ necessary or can be replaced with a typed pattern.
 category. Investigation determines correct categorisation and Phase
 assignment.
 
-- [ ] `P10.S41` - categorise the 12 unclassified sites; `scratch/out/other_sites.md`.
+- [x] `P10.S41` - categorise the 12 unclassified sites; `scratch/out/other_sites.md`.
 - [ ] `P10.S42` - dispatch each site to the correct Phase or address inline; `src/aeat/`.
 
 ### Phase `P11` - dual-checker strictness gate

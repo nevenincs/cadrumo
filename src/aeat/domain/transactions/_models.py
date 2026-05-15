@@ -135,7 +135,7 @@ def _validate_business_pct_coupling(
         raise TransactionValidationError("business_pct must be None unless classification is MIXED")
 
 
-def _coerce_identifier_tuple(raw: object) -> tuple[str, ...]:
+def _coerce_identifier_tuple(raw: object) -> tuple[object, ...]:
     """Freeze inbound identifier sequences while rejecting scalar strings."""
 
     if isinstance(raw, tuple):
@@ -298,7 +298,7 @@ class TransactionEvidenceProvenanceEntry(BaseModel):
 
     @field_validator("linked_at", mode="before")
     @classmethod
-    def _parse_linked_at(cls, value: Any) -> datetime:
+    def _parse_linked_at(cls, value: object) -> datetime:
         if isinstance(value, str):
             value = _parse_datetime(value)
         if not isinstance(value, datetime):
@@ -329,7 +329,7 @@ class TransactionEditLineageEntry(BaseModel):
 
     @field_validator("edited_at", mode="before")
     @classmethod
-    def _parse_edited_at(cls, value: Any) -> datetime:
+    def _parse_edited_at(cls, value: object) -> datetime:
         if isinstance(value, str):
             value = _parse_datetime(value)
         if not isinstance(value, datetime):
@@ -352,7 +352,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_lifecycle_states(cls, data: Any) -> Any:
+    def _coerce_lifecycle_states(cls, data: object) -> object:
         if not isinstance(data, Mapping):
             return data
         payload = dict(data)
@@ -378,7 +378,7 @@ class TransactionLifecycleLineageEntry(BaseModel):
 
     @field_validator("changed_at", mode="before")
     @classmethod
-    def _parse_changed_at(cls, value: Any) -> datetime:
+    def _parse_changed_at(cls, value: object) -> datetime:
         if isinstance(value, str):
             value = _parse_datetime(value)
         if not isinstance(value, datetime):
@@ -417,7 +417,7 @@ class SplitLineage(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_role(cls, data: Any) -> Any:
+    def _coerce_role(cls, data: object) -> object:
         if not isinstance(data, Mapping):
             return data
         payload = dict(data)
@@ -438,7 +438,7 @@ class SplitLineage(BaseModel):
 
     @field_validator("sibling_transaction_ids", mode="before")
     @classmethod
-    def _coerce_siblings(cls, value: Any) -> tuple[str, ...]:
+    def _coerce_siblings(cls, value: object) -> tuple[object, ...]:
         if isinstance(value, tuple):
             return value
         if isinstance(value, Sequence) and not isinstance(value, str | bytes):
@@ -593,7 +593,7 @@ class Transaction(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _enforce_derived_transaction_id(cls, data: Any) -> Any:
+    def _enforce_derived_transaction_id(cls, data: object) -> object:
         """Compute or validate ``transaction_id`` from the wrapped raw record."""
         if isinstance(data, cls):
             return data
@@ -679,7 +679,7 @@ class Transaction(BaseModel):
 
     @field_validator("taxable_base", "iva_rate", "iva_amount")
     @classmethod
-    def _validate_tax_amounts(cls, value: Decimal | None, info: Any) -> Decimal | None:
+    def _validate_tax_amounts(cls, value: Decimal | None, info: core_schema.ValidationInfo) -> Decimal | None:
         """Reject negative tax substrate values."""
 
         return _validate_non_negative_decimal(value, field_name=info.field_name)
@@ -750,7 +750,7 @@ class TransactionCatalogue(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_catalogue_input(cls, data: Any) -> Any:
+    def _coerce_catalogue_input(cls, data: object) -> object:
         """Accept either a bare mapping or an iterable of transactions."""
         if isinstance(data, cls):
             return data
@@ -791,7 +791,7 @@ class TransactionCatalogue(BaseModel):
         return dict(value)
 
     @classmethod
-    def from_transactions(cls, transactions: Iterable[Transaction | Mapping[str, Any]]) -> Self:
+    def from_transactions(cls, transactions: Iterable[Transaction | Mapping[str, object]]) -> Self:
         """Build a catalogue from an iterable of transactions.
 
         Args:
