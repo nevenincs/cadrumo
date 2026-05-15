@@ -14,7 +14,6 @@ a new step identifier.
 from __future__ import annotations
 
 import logging
-import os
 import uuid
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
@@ -273,7 +272,15 @@ def run_context(
         # trace with the original run id so ``aeat run show`` can tell a
         # replay trace apart from a fresh one. Only a legitimately-shaped
         # 16-hex run id is propagated; any other value is ignored.
-        replay_of_env = os.environ.get(_REPLAY_ACTIVE_ENV_VAR)
+        # Read via Settings (the canonical AEAT-config surface);
+        # load_settings() re-instantiates Settings on each call so the
+        # subprocess-IPC write performed by replay_run is observed here.
+        from ..config import load_settings
+
+        try:
+            replay_of_env = load_settings().aeat_replay_active or None
+        except (KeyError, ValueError, AttributeError):
+            replay_of_env = None
         replay_of: str | None = None
         if replay_of_env and len(replay_of_env) == 16:
             try:
