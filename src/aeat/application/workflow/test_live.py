@@ -14,18 +14,25 @@ per the project's canonical opt-in env var
 
 from __future__ import annotations
 
-from typing import cast
+from datetime import date
 
 import pytest
 
-from aeat.application.workflow import SubmissionEngineProtocol, WorkflowError, default_engine
+from aeat.application.workflow import WorkflowError, default_engine
 from aeat.entrypoints.cli._live import requires_live_enabled
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]
+
+
+class _NullSubmissionEngine:
+    """Minimal Protocol-conforming engine for adapter wiring tests."""
+
+    def preflight(self, draft: object, *, today: date) -> None:
+        """No-op preflight — never reached in this test."""
 
 
 def test_default_engine_requires_adapters() -> None:
     """Without adapters, :func:`default_engine` rejects the call cleanly."""
     requires_live_enabled()
     with pytest.raises(WorkflowError):
-        default_engine(submission_engine=cast(SubmissionEngineProtocol, None))
+        default_engine(submission_engine=_NullSubmissionEngine())

@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
@@ -163,7 +162,7 @@ def test_topic_projection_rejects_unknown_locale_with_application_error(caplog: 
     }
     records = [record for record in caplog.records if getattr(record, "registry_service", "") == "registry.topics"]
     assert len(records) == 1
-    record = cast(Any, records[0])
+    record = records[0]
     assert record.levelno == logging.WARNING
     assert record.registry_locale == "zz"
     assert record.registry_allowed_locales == ("es", "en", "ca", "hu")
@@ -204,7 +203,7 @@ def test_manual_rule_kind_refusal_uses_structured_registry_logging(caplog: pytes
         record for record in caplog.records if getattr(record, "registry_service", "") == "registry.manuals.rules"
     ]
     assert len(records) == 1
-    record = cast(Any, records[0])
+    record = records[0]
     assert record.levelno == logging.WARNING
     assert record.registry_rule_kind == "not-a-kind"
     assert "formal_obligation" in record.registry_allowed_rule_kinds
@@ -232,7 +231,7 @@ def test_citation_missing_article_uses_structured_registry_logging(
         record for record in caplog.records if getattr(record, "registry_service", "") == "registry.citations.show"
     ]
     assert len(records) == 1
-    record = cast(Any, records[0])
+    record = records[0]
     assert record.levelno == logging.WARNING
     assert record.registry_normative_id == "ley-35-2006"
     assert record.registry_articulo == "999"

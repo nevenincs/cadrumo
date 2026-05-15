@@ -8,7 +8,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -42,7 +41,7 @@ class RenderedCommandOutput(BaseModel):
 def render_command_output(
     *,
     format_name: str,
-    payload: Any,
+    payload: object,
     lines: Iterable[str],
 ) -> RenderedCommandOutput:
     """Render a payload or line iterator according to the root output format."""
@@ -59,7 +58,7 @@ def render_command_output(
     return RenderedCommandOutput(format=output_format, text="\n".join(lines))
 
 
-def _json_default(value: Any) -> Any:
+def _json_default(value: object) -> object:
     if isinstance(value, Path):
         return value.as_posix()
     if isinstance(value, date | datetime):
@@ -71,7 +70,7 @@ def _json_default(value: Any) -> Any:
     raise OutputRenderingError(f"output rendering cannot JSON-encode {type(value).__name__}")
 
 
-def jsonable_output_payload(payload: Any) -> Any:
+def jsonable_output_payload(payload: object) -> object:
     """Convert command payload values into JSON-serialisable primitives."""
 
     if isinstance(payload, BaseModel):

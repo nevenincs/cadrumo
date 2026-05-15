@@ -24,14 +24,17 @@ class ModeloIdentity(Protocol):
     @property
     def id(self) -> str:
         """Return the stable string ID of the modelo."""
+        ...
 
     @property
     def display_name(self) -> str:
         """Return a short human-readable name for the modelo."""
+        ...
 
     @property
     def cadence(self) -> str:
         """Return the filing cadence (e.g. ``"quarterly"``)."""
+        ...
 
 
 @runtime_checkable
@@ -55,30 +58,37 @@ class CasillaSchema(Protocol):
     @property
     def id(self) -> str:
         """Return the casilla identifier."""
+        ...
 
     @property
     def value_type(self) -> str:
         """Return the casilla value-type tag."""
+        ...
 
     @property
     def required(self) -> bool:
         """Return whether the casilla must be present in a valid draft."""
+        ...
 
     @property
     def formula_inputs(self) -> tuple[str, ...]:
         """Return the casilla IDs this casilla's formula depends on."""
+        ...
 
     @property
     def min_value(self) -> float | int | None:
         """Return the inclusive lower bound, if any."""
+        ...
 
     @property
     def max_value(self) -> float | int | None:
         """Return the inclusive upper bound, if any."""
+        ...
 
     @property
     def default(self) -> object | None:
         """Return the default value used when no input is supplied."""
+        ...
 
 
 @runtime_checkable
@@ -88,15 +98,19 @@ class CasillaCollection(Protocol):
     @property
     def schema_version(self) -> str:
         """Return the version of the underlying casilla DB."""
+        ...
 
     def __iter__(self) -> object:  # pragma: no cover - Protocol
         """Iterate the collection."""
+        ...
 
     def get(self, casilla_id: str) -> CasillaSchema | None:
         """Return the casilla schema for ``casilla_id``, or ``None``."""
+        ...
 
     def all(self) -> Sequence[CasillaSchema]:
         """Return every casilla schema in the collection."""
+        ...
 
 
 @runtime_checkable
@@ -105,6 +119,7 @@ class CasillaSchemaProvider(Protocol):
 
     def get_collection(self, modelo: str) -> CasillaCollection:
         """Return the casilla collection for ``modelo``."""
+        ...
 
 
 @runtime_checkable
@@ -114,10 +129,12 @@ class DeadlineStatus(Protocol):
     @property
     def due_date(self) -> date:
         """Return the AEAT-published due date."""
+        ...
 
     @property
     def is_overdue(self) -> bool:
         """Return ``True`` when the reference date is past ``due_date``."""
+        ...
 
 
 @runtime_checkable
@@ -126,6 +143,7 @@ class DeadlineChecker(Protocol):
 
     def check(self, modelo: str, period: str) -> DeadlineStatus:
         """Return the :class:`DeadlineStatus` for ``modelo`` and ``period``."""
+        ...
 
 
 @runtime_checkable
@@ -140,10 +158,12 @@ class FilingProfile(Protocol):
     @property
     def tax_id(self) -> str:
         """Return the taxpayer's NIF / NIE."""
+        ...
 
     @property
     def display_name(self) -> str:
         """Return a short human-readable label for the taxpayer."""
+        ...
 
 
 # A typed alias for the raw input mapping passed into builders.

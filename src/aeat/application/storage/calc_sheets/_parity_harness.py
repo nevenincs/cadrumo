@@ -35,7 +35,11 @@ import time
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from googleapiclient._apis.sheets.v4.resources import SheetsResource
+    from googleapiclient._apis.sheets.v4.schemas import BatchUpdateValuesRequest, ValueRange
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -153,7 +157,7 @@ def _build_relation_values(scenario: OperatorInputScenario) -> RelationValues:
 
 
 def _seed_inputs_into_sheet(
-    sheets_service: Any,
+    sheets_service: SheetsResource,
     spreadsheet_id: str,
     plan: SheetExportPlan,
     scenario: OperatorInputScenario,
@@ -183,7 +187,7 @@ def _seed_inputs_into_sheet(
     filing_anchor = date(snapshot.filing_year, 12, 31)
     layout = plan_layout(snapshot.revision, bracket_filter_date=filing_anchor)
 
-    data: list[dict[str, Any]] = []
+    data: list[ValueRange] = []
 
     for number, value in scenario.inputs_by_number.items():
         casilla_id = by_number.get(number)
@@ -207,14 +211,15 @@ def _seed_inputs_into_sheet(
         data.append({"range": address.qualified(), "values": [[text]]})
 
     if data:
+        batch_body: BatchUpdateValuesRequest = {"valueInputOption": "USER_ENTERED", "data": data}
         sheets_service.spreadsheets().values().batchUpdate(
             spreadsheetId=spreadsheet_id,
-            body={"valueInputOption": "USER_ENTERED", "data": data},
+            body=batch_body,
         ).execute()
 
 
 def _read_sheets_computed(
-    sheets_service: Any,
+    sheets_service: SheetsResource,
     spreadsheet_id: str,
     plan: SheetExportPlan,
 ) -> dict[CasillaId, Decimal]:

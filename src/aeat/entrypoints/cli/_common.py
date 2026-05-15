@@ -4,7 +4,6 @@ import re as _re
 from collections.abc import Iterable
 from datetime import date as _date
 from decimal import Decimal
-from typing import Any
 
 import typer
 
@@ -45,7 +44,7 @@ def _format_of(ctx: typer.Context) -> str:
     return state.get("format", _FORMAT_TEXT)
 
 
-def _emit(ctx: typer.Context, payload: Any, lines: Iterable[str]) -> None:
+def _emit(ctx: typer.Context, payload: object, lines: Iterable[str]) -> None:
     """Render the result either as JSON or as line-formatted text."""
     rendered = render_command_output(format_name=_format_of(ctx), payload=payload, lines=lines)
     if rendered.text:

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -29,6 +30,20 @@ from ...domain.user_profile import (
     UserProfileRecord,
     UserProfileStatus,
 )
+
+if TYPE_CHECKING:
+    from ._lifecycle import ProfileLifecycleService
+    from ._preflight import ProfilePreflightService
+    from ._projections import facts_to_values, projection_for_autonomo, record_to_values, snapshot_to_values
+    from ._repository import (
+        USER_PROFILE_SNAPSHOT_NAMESPACE,
+        USER_PROFILE_VALUE_NAMESPACE,
+        UserProfileLifecycleRepository,
+        UserProfileSnapshotRepository,
+        user_profile_snapshot_object_key,
+        user_profile_value_object_key,
+    )
+    from ._validation import ProfileValidationService
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 

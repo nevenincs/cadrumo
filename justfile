@@ -66,9 +66,14 @@ lint:
 fmt:
     uv run ruff format .
 
-# Type-check with ty.
+# Type-check with ty (primary) and pyright (cross-checker on
+# src/aeat/domain and src/aeat/application). Both must pass.
+# Pyright config in pyrightconfig.json sets standard mode globally
+# with selected strict rules on the two listed packages; the
+# Unknown-family rules are deferred to a tracked ratchet workstream.
 typecheck:
     uv run ty check src tests
+    uv run pyright src/aeat/domain src/aeat/application
 
 # Run the pytest suite (unit-only by default via pyproject addopts).
 test:

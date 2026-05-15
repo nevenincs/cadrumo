@@ -50,19 +50,13 @@ def _sensitivity_attr_references(source: Path) -> set[str]:
     tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
     found: set[str] = set()
     for node in ast.walk(tree):
-        if (
-            isinstance(node, ast.Attribute)
-            and isinstance(node.value, ast.Name)
-            and node.value.id == "SensitivityClass"
-        ):
+        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id == "SensitivityClass":
             found.add(node.attr)
     return found
 
 
 @pytest.mark.parametrize(("repository_name", "source_path"), _REPOSITORY_SOURCES)
-def test_repository_classifies_every_persistence_under_financial(
-    repository_name: str, source_path: Path
-) -> None:
+def test_repository_classifies_every_persistence_under_financial(repository_name: str, source_path: Path) -> None:
     """Each modelo / bucket-event-history repository must use only
     ``SensitivityClass.FINANCIAL`` for its load / save calls.
     A future migration to a different class would be a deliberate

@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Union
 
 import yaml
 
@@ -8,7 +7,7 @@ from aeat.core.errors import AeatError
 from aeat.core.logging import get_logger
 
 # YAML locale values are either leaf strings or nested dicts of the same shape.
-type LocaleNode = Union[str, dict[str, "LocaleNode"]]
+type LocaleNode = str | dict[str, "LocaleNode"]
 
 _log = get_logger(__name__)
 
@@ -135,28 +134,28 @@ class LocaleManager:
             }
         )
 
+        def _set_nested(root: dict[str, LocaleNode], dotted_key: str, value: LocaleNode) -> None:
+            """Write ``value`` at ``dotted_key`` inside ``root``, creating sub-dicts as needed."""
+            parts = dotted_key.split(".")
+            curr: dict[str, LocaleNode] = root
+            for part in parts[:-1]:
+                if part not in curr or not isinstance(curr[part], dict):
+                    curr[part] = {}
+                child = curr[part]
+                assert isinstance(child, dict)  # narrowing: we just ensured it above
+                curr = child
+            curr[parts[-1]] = value
+
         # 2. Rebuild the nested structure from scratch to prune extras and ensure type safety
         new_data: dict[str, LocaleNode] = {}
         for key in sorted(keys):
             if key not in existing_flat:
                 continue
-            parts = key.split(".")
-            curr = new_data
-            for part in parts[:-1]:
-                if part not in curr:
-                    curr[part] = {}
-                curr = curr[part]
-            curr[parts[-1]] = existing_flat[key]
+            _set_nested(new_data, key, existing_flat[key])
         for key in sorted(existing_flat):
             if key in keys:
                 continue
-            parts = key.split(".")
-            curr = new_data
-            for part in parts[:-1]:
-                if part not in curr:
-                    curr[part] = {}
-                curr = curr[part]
-            curr[parts[-1]] = existing_flat[key]
+            _set_nested(new_data, key, existing_flat[key])
 
         return new_data
 

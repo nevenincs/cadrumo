@@ -247,7 +247,9 @@ def test_resolve_counterpart_binding_values_computes_rectification_delta_sum() -
 
 def test_resolve_counterpart_binding_values_rejects_unsupported_fact() -> None:
     revision = _revision(_with_selector(_binding("vat-349-declarante-importe-operaciones"), fact="not_a_fact"))
-    with pytest.raises(RegistryValidationError, match=r"declares unsupported counterpart aggregation fact 'not_a_fact'"):
+    with pytest.raises(
+        RegistryValidationError, match=r"declares unsupported counterpart aggregation fact 'not_a_fact'"
+    ):
         resolve_counterpart_binding_values(revision, ())
 
 
@@ -292,7 +294,9 @@ def test_counterpart_binding_requirements_groups_bindings_by_clave_and_scope() -
 
 
 def test_counterpart_binding_requirements_keep_source_kind_cohorts_distinct() -> None:
-    payable_binding = _binding("vat-349-declarante-importe-operaciones").model_copy(update={"source": "payable_invoice"})
+    payable_binding = _binding("vat-349-declarante-importe-operaciones").model_copy(
+        update={"source": "payable_invoice"}
+    )
     collectible_binding = _binding("vat-349-declarante-numero-operadores").model_copy(
         update={"source": "collectible_invoice"}
     )
@@ -499,4 +503,3 @@ def test_row_binding_period_grouping_requires_rectification_scope() -> None:
     )
     with pytest.raises(RegistryValidationError, match=r"grouping 'operator_clave_period' requires"):
         resolve_counterpart_binding_row_values(revision, ())
-

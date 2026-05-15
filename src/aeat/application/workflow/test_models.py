@@ -10,7 +10,6 @@ stability and the validators on :class:`aeat.application.workflow.WorkflowStep`,
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -73,13 +72,15 @@ class TestWorkflowStepValidation:
         """Strict validation rejects non-string values in the details dict."""
         now = datetime(2026, 4, 12, tzinfo=UTC)
         with pytest.raises(ValidationError, match=r"valid string"):
-            WorkflowStep(
-                stage=WorkflowStage.LOADING_PROFILE,
-                started_at=now,
-                ended_at=now,
-                success=True,
-                summary="translation",
-                details=cast(dict[str, str], {"key": 42}),
+            WorkflowStep.model_validate(
+                {
+                    "stage": WorkflowStage.LOADING_PROFILE,
+                    "started_at": now,
+                    "ended_at": now,
+                    "success": True,
+                    "summary": "translation",
+                    "details": {"key": 42},
+                }
             )
 
 

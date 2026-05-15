@@ -11,7 +11,6 @@ import importlib.resources
 import re
 from collections.abc import Mapping
 from functools import lru_cache
-from typing import Any
 
 import i18n
 import yaml
@@ -210,7 +209,7 @@ def _humanise_key(translation_key: str) -> str:
     return stripped.replace("_", " ").capitalize()
 
 
-def _interpolate(rendered: str, values: Mapping[str, Any]) -> str:
+def _interpolate(rendered: str, values: Mapping[str, object]) -> str:
     def _replace(match: re.Match[str]) -> str:
         name = match.group("name")
         if name not in values:

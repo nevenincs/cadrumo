@@ -14,7 +14,7 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Literal, cast
+from typing import Literal
 
 from openpyxl import load_workbook
 from openpyxl.formula import Tokenizer
@@ -800,8 +800,7 @@ def run_workbook_with_excel_com(
     import pythoncom
     import win32com.client
 
-    pythoncom_module = cast(Any, pythoncom)
-    pythoncom_module.CoInitialize()
+    pythoncom.CoInitialize()
     excel = win32com.client.DispatchEx("Excel.Application")
     workbook = None
     try:
@@ -820,7 +819,7 @@ def run_workbook_with_excel_com(
         if workbook is not None:
             workbook.Close(SaveChanges=False)
         excel.Quit()
-        pythoncom_module.CoUninitialize()
+        pythoncom.CoUninitialize()
 
 
 def compare_registry_to_workbook(

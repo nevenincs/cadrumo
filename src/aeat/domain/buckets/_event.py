@@ -14,10 +14,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping, ValuesView
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
@@ -278,10 +278,10 @@ class BucketEventHistoryCatalogue(BaseModel):
         matching = (e for e in self.events.values() if e.object_type is object_type and e.object_id == object_id)
         return tuple(sorted(matching, key=lambda e: e.occurred_at))
 
-    def values(self) -> Any:
+    def values(self) -> ValuesView[BucketEvent]:
         return self.events.values()
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[BucketEvent]:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         return iter(self.events.values())
 
     def __len__(self) -> int:

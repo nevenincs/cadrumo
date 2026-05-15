@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Any, Self
+from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
@@ -196,16 +196,16 @@ def aggregate_renta_ledger_expenses(
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
-        issue_common: dict[str, Any] = {
-            "transaction_id": transaction.transaction_id,
-            "purchase_invoice_evidence_id": transaction.purchase_invoice_evidence_id,
-            "category_id": transaction.category_id,
-        }
-        direction = _renta_direction_for(transaction.direction, transaction.purchase_invoice_evidence_id)
+        transaction_id = transaction.transaction_id
+        purchase_invoice_evidence_id = transaction.purchase_invoice_evidence_id
+        category_id = transaction.category_id
+        direction = _renta_direction_for(transaction.direction, purchase_invoice_evidence_id)
         if direction is None:
             issues.append(
                 RentaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
+                    purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+                    category_id=category_id,
                     reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
                     detail=f"transaction direction {transaction.direction.value!r} is not a Renta expense flow",
                 )
@@ -214,7 +214,9 @@ def aggregate_renta_ledger_expenses(
         if transaction.raw.currency != "EUR":
             issues.append(
                 RentaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
+                    purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+                    category_id=category_id,
                     reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
                     detail=f"transaction currency {transaction.raw.currency!r} is not supported for Renta expenses",
                 )
@@ -234,7 +236,9 @@ def aggregate_renta_ledger_expenses(
             )
             issues.append(
                 RentaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
+                    purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+                    category_id=category_id,
                     reason=reason,
                     detail=(
                         f"business classification {transaction.business_classification.value!r} "
@@ -244,30 +248,36 @@ def aggregate_renta_ledger_expenses(
             )
             continue
 
-        if transaction.category_id is None:
+        if category_id is None:
             issues.append(
                 RentaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
+                    purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+                    category_id=category_id,
                     reason=RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
                     detail="classified expense transaction has no ledger category",
                 )
             )
             continue
         try:
-            category = normalize_spending_category(transaction.category_id)
+            category = normalize_spending_category(category_id)
         except ValueError:
             issues.append(
                 RentaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
+                    purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+                    category_id=category_id,
                     reason=RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
-                    detail=f"ledger category {transaction.category_id!r} is not in the spending taxonomy",
+                    detail=f"ledger category {category_id!r} is not in the spending taxonomy",
                 )
             )
             continue
         if category not in RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS:
             issues.append(
                 RentaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
+                    purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+                    category_id=category_id,
                     reason=RentaLedgerAggregationIssueReason.CATEGORY_OUTSIDE_FIRST_SLICE,
                     detail=f"category {category.value!r} has no first-slice Modelo 100 casilla mapping",
                 )
@@ -277,7 +287,9 @@ def aggregate_renta_ledger_expenses(
         if profile is None:
             issues.append(
                 RentaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
+                    purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+                    category_id=category_id,
                     reason=RentaLedgerAggregationIssueReason.MISSING_CATEGORY_PROFILE,
                     detail=f"category {category.value!r} has no profile for {resolved_profile_year}",
                 )
@@ -287,9 +299,9 @@ def aggregate_renta_ledger_expenses(
         evidence_payload = _purchase_invoice_evidence_payload(
             invoices=invoices,
             bucket_id=bucket_id,
-            transaction_id=transaction.transaction_id,
-            purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
-            category_id=transaction.category_id,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+            category_id=category_id,
             signed_transaction_amount=transaction.raw.amount,
         )
         if isinstance(evidence_payload, RentaLedgerAggregationIssue):
@@ -298,8 +310,8 @@ def aggregate_renta_ledger_expenses(
 
         try:
             fact = RentaDeductibleExpenseFact(
-                transaction_id=transaction.transaction_id,
-                invoice_id=transaction.purchase_invoice_evidence_id,
+                transaction_id=transaction_id,
+                invoice_id=purchase_invoice_evidence_id,
                 catalogue_id=_LEDGER_CATALOGUE_ID,
                 operation_date=transaction.raw.value_date or transaction.raw.booked_date,
                 invoice_issue_date=evidence_payload.invoice_issue_date,
@@ -314,7 +326,9 @@ def aggregate_renta_ledger_expenses(
         except ValueError as exc:
             issues.append(
                 RentaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
+                    purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+                    category_id=category_id,
                     reason=RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
                     detail=_bounded_detail(str(exc)),
                 )
@@ -323,7 +337,9 @@ def aggregate_renta_ledger_expenses(
         if not resolved_period.contains(fact.filing_date):
             issues.append(
                 RentaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
+                    purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+                    category_id=category_id,
                     reason=RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
                     detail=f"filing date {fact.filing_date.isoformat()} is outside {resolved_period.raw}",
                 )
@@ -333,7 +349,9 @@ def aggregate_renta_ledger_expenses(
         if result.status is not RentaDeductibilityStatus.ELIGIBLE:
             issues.append(
                 RentaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
+                    purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+                    category_id=category_id,
                     reason=RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY,
                     detail=result.reason,
                 )
@@ -350,7 +368,9 @@ def aggregate_renta_ledger_expenses(
         except ValueError as exc:
             issues.append(
                 RentaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
+                    purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+                    category_id=category_id,
                     reason=RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
                     detail=_bounded_detail(str(exc)),
                 )
@@ -412,45 +432,52 @@ def _purchase_invoice_evidence_payload(
 ) -> _PurchaseInvoiceEvidencePayload | RentaLedgerAggregationIssue:
     if purchase_invoice_evidence_id is None:
         return _PurchaseInvoiceEvidencePayload()
-    issue_common = {
-        "transaction_id": transaction_id,
-        "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
-        "category_id": category_id,
-    }
     invoice = invoices.get(purchase_invoice_evidence_id)
     if invoice is None:
         return RentaLedgerAggregationIssue(
-            **issue_common,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+            category_id=category_id,
             reason=RentaLedgerAggregationIssueReason.MISSING_PURCHASE_INVOICE_EVIDENCE,
             detail="transaction references purchase invoice evidence that is absent from the invoice catalogue",
         )
     if invoice.bucket_id != bucket_id:
         return RentaLedgerAggregationIssue(
-            **issue_common,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+            category_id=category_id,
             reason=RentaLedgerAggregationIssueReason.PURCHASE_INVOICE_EVIDENCE_BUCKET_MISMATCH,
             detail="transaction references purchase invoice evidence outside the active bucket",
         )
     if invoice.kind is not InvoiceKind.RECEIVED:
         return RentaLedgerAggregationIssue(
-            **issue_common,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+            category_id=category_id,
             reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_PURCHASE_INVOICE_EVIDENCE_KIND,
             detail=f"purchase invoice evidence kind {invoice.kind.value!r} is not RECEIVED",
         )
     if transaction_id not in invoice.linked_transaction_ids:
         return RentaLedgerAggregationIssue(
-            **issue_common,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+            category_id=category_id,
             reason=RentaLedgerAggregationIssueReason.PURCHASE_INVOICE_EVIDENCE_LINK_MISMATCH,
             detail="transaction and purchase invoice evidence links are not reciprocal",
         )
     if len(invoice.linked_transaction_ids) != 1:
         return RentaLedgerAggregationIssue(
-            **issue_common,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+            category_id=category_id,
             reason=RentaLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE,
             detail="first-slice aggregation only accepts one transaction per purchase invoice evidence record",
         )
     if abs(signed_transaction_amount) != invoice.grand_total:
         return RentaLedgerAggregationIssue(
-            **issue_common,
+            transaction_id=transaction_id,
+            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+            category_id=category_id,
             reason=RentaLedgerAggregationIssueReason.AMOUNT_MISMATCH,
             detail="linked transaction amount does not match invoice grand total",
         )

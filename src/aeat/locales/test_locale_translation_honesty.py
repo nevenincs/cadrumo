@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
 
 import pytest
 import yaml
@@ -25,18 +24,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _LOCALES_DIR = Path(__file__).parent
 
+# Recursive YAML node: either a leaf string or a nested mapping.
+type _LocaleNode = str | dict[str, "_LocaleNode"]
 
-def _flatten(mapping: Any, prefix: str = "") -> dict[str, Any]:
+
+def _flatten(mapping: dict[str, _LocaleNode], prefix: str = "") -> dict[str, str]:
     """Walk a nested YAML mapping and return ``{dotted_key: leaf}``."""
 
-    result: dict[str, Any] = {}
-    if isinstance(mapping, dict):
-        for key, value in mapping.items():
-            sub = f"{prefix}.{key}" if prefix else key
-            if isinstance(value, dict):
-                result.update(_flatten(value, sub))
-            else:
-                result[sub] = value
+    result: dict[str, str] = {}
+    for key, value in mapping.items():
+        sub = f"{prefix}.{key}" if prefix else key
+        if isinstance(value, dict):
+            result.update(_flatten(value, sub))
+        else:
+            result[sub] = value
     return result
 
 
@@ -50,7 +51,9 @@ def _load_allowlist() -> dict[str, set[str]]:
     """
 
     path = _LOCALES_DIR / "_intentional_identical.json"
-    data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8")) or {}
+    raw = json.loads(path.read_text(encoding="utf-8")) or {}
+    # _intentional_identical.json schema: {locale: {key: reason}}
+    data: dict[str, dict[str, str]] = raw if isinstance(raw, dict) else {}
     # The current allowlist uses a wholesale "untranslated_pending"
     # entry per locale rather than per-key justifications. Treat the
     # presence of that key as "every key is allowed to match en".
@@ -72,8 +75,10 @@ def test_ca_hu_values_differ_from_en_unless_allowlisted(locale_code: str) -> Non
         # remove this bucket and the loop below starts flagging.
         return
 
-    en_keys = _flatten(yaml.safe_load((_LOCALES_DIR / "en.yml").read_text(encoding="utf-8")))
-    locale_keys = _flatten(yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8")))
+    en_raw = yaml.safe_load((_LOCALES_DIR / "en.yml").read_text(encoding="utf-8"))
+    locale_raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
+    en_keys = _flatten(en_raw if isinstance(en_raw, dict) else {})
+    locale_keys = _flatten(locale_raw if isinstance(locale_raw, dict) else {})
 
     offenders: list[str] = []
     for key, en_value in en_keys.items():

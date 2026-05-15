@@ -213,7 +213,7 @@ def aggregate_iva_ledger_observations(
         if missing_reason is not None:
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=missing_reason,
                     detail=_missing_tax_fact_detail(missing_reason),
                 )
@@ -226,7 +226,7 @@ def aggregate_iva_ledger_observations(
         if rate_kind is None:
             issues.append(
                 IvaLedgerAggregationIssue(
-                    **issue_common,
+                    transaction_id=transaction_id,
                     reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
                     detail=f"IVA rate {transaction.iva_rate} is not a canonical substrate IVA rate",
                 )
@@ -245,7 +245,7 @@ def aggregate_iva_ledger_observations(
             if flow_direction is not IvaFlowDirection.SOPORTADO:
                 issues.append(
                     IvaLedgerAggregationIssue(
-                        **issue_common,
+                        transaction_id=transaction_id,
                         reason=IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE,
                         detail="prorrata_reference may only be attached to supported input VAT rows",
                     )

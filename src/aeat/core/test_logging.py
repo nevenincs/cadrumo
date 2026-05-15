@@ -15,7 +15,6 @@ import io
 import logging
 import sys
 from pathlib import Path
-from typing import Any, cast
 
 import pytest
 
@@ -212,7 +211,7 @@ def test_secret_scrubbing_uses_context_hints_for_list_args_too() -> None:
         args=(),
         exc_info=None,
     )
-    record.args = cast(Any, ["safe-item", "token-secret"])
+    record.args = ["safe-item", "token-secret"]  # ty: ignore[invalid-assignment]
 
     filter_.filter(record)
     assert record.args == ["safe-item", "<redacted>"]

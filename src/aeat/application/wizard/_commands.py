@@ -29,7 +29,7 @@ import typing
 from collections import deque
 from collections.abc import Callable
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated
 
 import click
 import typer
@@ -270,7 +270,7 @@ def _scripted_from_canonical(flow: WizardFlow, canonical: dict[str, str]) -> Scr
     return ScriptedPrompter(answers)
 
 
-def _canonical_from_flag_value(question: WizardQuestion, value: Any) -> str | None:
+def _canonical_from_flag_value(question: WizardQuestion, value: object) -> str | None:
     """Project a Typer-parsed flag value into the canonical-token form."""
 
     if value is None:
@@ -285,7 +285,9 @@ def _canonical_from_flag_value(question: WizardQuestion, value: Any) -> str | No
         tokens = [str(item) for item in value if str(item)]
         return ",".join(tokens) if tokens else None
     if question.widget is WizardWidget.INTEGER:
-        return str(int(value))
+        if isinstance(value, int):
+            return str(value)
+        return str(int(str(value)))
     if question.widget is WizardWidget.PATH:
         return str(value)
     return str(value)
@@ -398,7 +400,7 @@ def _question_parameters(flow: WizardFlow) -> tuple[inspect.Parameter, ...]:
 
 def _collect_flag_values(
     flow: WizardFlow,
-    kwargs: dict[str, Any],
+    kwargs: dict[str, object],
 ) -> dict[str, str]:
     """Project the closure's keyword arguments into the canonical-token dict."""
 
@@ -426,12 +428,13 @@ def build_wizard_command(flow: WizardFlow) -> Callable[..., None]:
     mode_params = _mode_parameters(flow)
     parameters = (*mode_params, *question_params)
 
-    def _command(*, _prompter: Prompter | None = None, **kwargs: Any) -> None:
+    def _command(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
         from ..workflow._persistence import workflow_state_repository
 
-        profile_name = kwargs.pop("profile_name", "default")
-        quiet = kwargs.pop("quiet", False)
-        accept_defaults = kwargs.pop("accept_defaults", False)
+        raw_profile_name = kwargs.pop("profile_name", "default")
+        profile_name = raw_profile_name if isinstance(raw_profile_name, str) else "default"
+        quiet = bool(kwargs.pop("quiet", False))
+        accept_defaults = bool(kwargs.pop("accept_defaults", False))
         canonical = _collect_flag_values(flow, kwargs)
 
         if accept_defaults:

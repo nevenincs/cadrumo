@@ -279,6 +279,90 @@ source_ref = "boe-modelo-303-2008-form"
 required_text = ["modelo 303"]
 
 # -----------------------------------------------------------------------------
+# Prorrata general (LIVA arts. 102-105).
+# When the operator performs operations both with and without right to
+# deduction, only a percentage of soportado IVA is deductible. The
+# percentage is volumen_op_con_derecho / volumen_total_operaciones (per
+# art. 104.2), rounded UP to the nearest integer per art. 104.4. The
+# operator declares the two volume casillas manually; the prorrata
+# percentage and the post-prorrata deducible-effective amount are
+# computed.
+#
+# Regularización de bienes de inversión (LIVA arts. 107-110). For
+# capital goods acquired in prior years, the operator declares the
+# regularización amount manually for the period. The current period's
+# cuota-deducible-total formula does NOT auto-include this — it is
+# carried separately for AEAT reconciliation per AEAT modelo 303
+# instructions section on "Regularización de bienes de inversión".
+# -----------------------------------------------------------------------------
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "iva.prorrata-volumen-con-derecho"
+number = "prorrata-volumen-con-derecho"
+label = "Volumen anual de operaciones que originan derecho a deducción"
+section = ["iva", "prorrata"]
+data_type = "money"
+required = false
+input_kind = "manual"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-104"], source_refs = ["aeat-modelo-303-procedure"] }
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "iva.prorrata-volumen-total"
+number = "prorrata-volumen-total"
+label = "Volumen anual total de operaciones"
+section = ["iva", "prorrata"]
+data_type = "money"
+required = false
+input_kind = "manual"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-104"], source_refs = ["aeat-modelo-303-procedure"] }
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "iva.prorrata-porcentaje"
+number = "prorrata-porcentaje"
+label = "Prorrata general — porcentaje (volumen con derecho / volumen total × 100)"
+section = ["iva", "prorrata"]
+data_type = "ratio"
+required = false
+input_kind = "computed"
+formula = "modelo-303-iva-prorrata-porcentaje"
+constraints = { sign = "non_negative", min_value = "0", max_value = "100", legal_refs = ["ley-37-1992:art-104"], source_refs = ["aeat-modelo-303-procedure"] }
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "iva.regularizacion-inversiones"
+number = "regularizacion-inversiones"
+label = "Regularización por bienes de inversión (LIVA arts. 107-110)"
+section = ["iva", "regularizacion"]
+data_type = "money"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
+
+[[revisions."2009-y-siguientes".formulas]]
+id = "modelo-303-iva-prorrata-porcentaje"
+target = "iva.prorrata-porcentaje"
+expression = { op = "divide", args = [
+    { op = "multiply", args = [
+        { casilla = "iva.prorrata-volumen-con-derecho" },
+        { literal = "100" },
+    ] },
+    { casilla = "iva.prorrata-volumen-total" },
+] }
+rounding = "integer"
+legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
+[[revisions."2009-y-siguientes".formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303"]
+
+# -----------------------------------------------------------------------------
 # Prior-quarter compensation chain (LIVA art. 99). When a quarter's resultado
 # is negative, the absolute value is carried forward as a deductible
 # compensación in the following quarter within the same ejercicio. The
@@ -665,6 +749,10 @@ casillas = [
     "iva.compensacion-anteriores",
     "iva.resultado",
     "iva.compensacion-disponible-fin-periodo",
+    "iva.prorrata-volumen-con-derecho",
+    "iva.prorrata-volumen-total",
+    "iva.prorrata-porcentaje",
+    "iva.regularizacion-inversiones",
     "decl.ejercicio",
     "decl.periodo",
 ]
@@ -674,6 +762,7 @@ formulas = [
     "modelo-303-iva-resultado-regimen-general",
     "modelo-303-iva-resultado",
     "modelo-303-compensacion-disponible-fin-periodo",
+    "modelo-303-iva-prorrata-porcentaje",
 ]
 bindings = [
     "modelo-303-iva-repercutido-general-cuota",

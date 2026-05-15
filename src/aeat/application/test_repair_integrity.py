@@ -35,9 +35,7 @@ class _StubRepository:
         return tuple(sorted(self._namespaces.keys()))
 
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity:
-        data: _NamespaceRecord = self._namespaces.get(
-            namespace, _NamespaceRecord(readable=0, unreadable=0, keys=[])
-        )
+        data: _NamespaceRecord = self._namespaces.get(namespace, _NamespaceRecord(readable=0, unreadable=0, keys=[]))
         return SecureObjectNamespaceIntegrity(
             namespace=namespace,
             readable=data["readable"],

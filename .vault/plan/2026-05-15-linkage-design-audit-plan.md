@@ -73,21 +73,21 @@ shapes already live here. Highest-leverage files: `_models.py` in
 `invoices` (16) and `transactions` (16); `_loader.py` in registry (6);
 `attachments/_models.py` (6).
 
-- [ ] `P04.S24` - replace Any/cast in invoice models; `src/aeat/domain/invoices/_models.py`.
-- [ ] `P04.S25` - replace Any/cast in transaction models; `src/aeat/domain/transactions/_models.py`.
-- [ ] `P04.S26` - replace cast in registry loader; `src/aeat/domain/calculations/registry/_loader.py`.
-- [ ] `P04.S27` - replace Any in attachment models; `src/aeat/domain/attachments/_models.py`.
-- [ ] `P04.S28` - sweep remaining 22 domain files for suppression eradication; `src/aeat/domain/`.
+- [x] `P04.S24` - replace Any/cast in invoice models; `src/aeat/domain/invoices/_models.py`.
+- [x] `P04.S25` - replace Any/cast in transaction models; `src/aeat/domain/transactions/_models.py`.
+- [x] `P04.S26` - replace cast in registry loader; `src/aeat/domain/calculations/registry/_loader.py`.
+- [x] `P04.S27` - replace Any in attachment models; `src/aeat/domain/attachments/_models.py`.
+- [x] `P04.S28` - sweep remaining 22 domain files for suppression eradication; `src/aeat/domain/`.
 
 ### Phase `P05` - application/ suppression eradication
 
 70 sites across 28 files. Highest-leverage files: `auth/_sessions.py`
 (11), `auth/__init__.py` (6), `workflow/_models.py` (5).
 
-- [ ] `P05.S29` - replace Any/cast in auth sessions; `src/aeat/application/auth/_sessions.py`.
-- [ ] `P05.S30` - replace Any in auth package init; `src/aeat/application/auth/__init__.py`.
-- [ ] `P05.S31` - replace Any in workflow models; `src/aeat/application/workflow/_models.py`.
-- [ ] `P05.S32` - sweep remaining 25 application files for suppression eradication; `src/aeat/application/`.
+- [x] `P05.S29` - replace Any/cast in auth sessions; `src/aeat/application/auth/_sessions.py`.
+- [x] `P05.S30` - replace Any in auth package init; `src/aeat/application/auth/__init__.py`.
+- [x] `P05.S31` - replace Any in workflow models; `src/aeat/application/workflow/_models.py`.
+- [x] `P05.S32` - sweep remaining 25 application files for suppression eradication; `src/aeat/application/`.
 
 ### Phase `P06` - adapter-internal suppression eradication
 
@@ -96,21 +96,21 @@ Per the disciplined adapter-boundary policy these are direct fixes,
 not shims. Highest-leverage file: encrypted-columns adapter (8).
 
 - [ ] `P06.S33` - replace Any/cast in encrypted-columns adapter; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
-- [ ] `P06.S34` - sweep remaining 30 adapter-internal files for suppression eradication; `src/aeat/adapters/`.
+- [x] `P06.S34` - sweep remaining 30 adapter-internal files for suppression eradication; `src/aeat/adapters/`.
 
 ### Phase `P07` - core/ suppression eradication
 
 20 sites across 9 files. `core/json_contract.py` (6) ties to T-08 and
 will be revisited when `SchemaEnvelope` is adopted in Wave 3.
 
-- [ ] `P07.S35` - replace Any/cast in JSON-contract module; `src/aeat/core/json_contract.py`.
-- [ ] `P07.S36` - sweep remaining 8 core files for suppression eradication; `src/aeat/core/`.
+- [x] `P07.S35` - replace Any/cast in JSON-contract module; `src/aeat/core/json_contract.py`.
+- [x] `P07.S36` - sweep remaining 8 core files for suppression eradication; `src/aeat/core/`.
 
 ### Phase `P08` - entrypoints/ suppression eradication
 
 7 sites across 6 files. Smallest leak surface.
 
-- [ ] `P08.S37` - sweep 6 entrypoint files for suppression eradication; `src/aeat/entrypoints/`.
+- [x] `P08.S37` - sweep 6 entrypoint files for suppression eradication; `src/aeat/entrypoints/`.
 
 ### Phase `P09` - dunder-override investigation
 
@@ -130,7 +130,7 @@ category. Investigation determines correct categorisation and Phase
 assignment.
 
 - [x] `P10.S41` - categorise the 12 unclassified sites; `scratch/out/other_sites.md`.
-- [ ] `P10.S42` - dispatch each site to the correct Phase or address inline; `src/aeat/`.
+- [x] `P10.S42` - dispatch each site to the correct Phase or address inline; `src/aeat/`.
 
 ### Phase `P11` - dual-checker strictness gate
 
@@ -139,12 +139,12 @@ cross-checker verification on `src/aeat/domain/` and
 `src/aeat/application/`. Different inference algorithms catch
 different issues.
 
-- [ ] `P11.S43` - add pyright dev dependency; `pyproject.toml`.
-- [ ] `P11.S44` - add pyright strict configuration; `pyrightconfig.json`.
-- [ ] `P11.S45` - run pyright strict on domain and capture findings; `src/aeat/domain/`.
-- [ ] `P11.S46` - run pyright strict on application and capture findings; `src/aeat/application/`.
+- [x] `P11.S43` - add pyright dev dependency; `pyproject.toml`.
+- [x] `P11.S44` - add pyright strict configuration; `pyrightconfig.json`.
+- [x] `P11.S45` - run pyright strict on domain and capture findings; `src/aeat/domain/`.
+- [x] `P11.S46` - run pyright strict on application and capture findings; `src/aeat/application/`.
 - [ ] `P11.S47` - resolve pyright-only findings across domain and application; `src/aeat/`.
-- [ ] `P11.S48` - wire pyright into CI alongside ty; `.github/workflows/`.
+- [x] `P11.S48` - wire pyright into CI alongside ty; `.github/workflows/`.
 
 ### Phase `P12` - regression gates
 
@@ -152,9 +152,9 @@ Mechanical prevention of suppression reintroduction. CI step plus
 semgrep rules. Aligns with the prior-art research recommendation for
 `semgrep` as the per-pattern enforcement layer.
 
-- [ ] `P12.S49` - add semgrep rule rejecting new Any annotations; `.semgrep/rules/no-any-annotation.yml`.
-- [ ] `P12.S50` - add semgrep rule rejecting new dict-str-Any declarations; `.semgrep/rules/no-dict-str-any.yml`.
-- [ ] `P12.S51` - add semgrep rule rejecting new cast calls in domain and application; `.semgrep/rules/no-cast-in-domain.yml`.
-- [ ] `P12.S52` - add semgrep rule requiring inline justification for new ty-ignore; `.semgrep/rules/justify-ty-ignore.yml`.
-- [ ] `P12.S53` - wire semgrep into CI as gating check; `.github/workflows/`.
+- [x] `P12.S49` - add semgrep rule rejecting new Any annotations; `.semgrep/rules/no-any-annotation.yml`.
+- [x] `P12.S50` - add semgrep rule rejecting new dict-str-Any declarations; `.semgrep/rules/no-dict-str-any.yml`.
+- [x] `P12.S51` - add semgrep rule rejecting new cast calls in domain and application; `.semgrep/rules/no-cast-in-domain.yml`.
+- [x] `P12.S52` - add semgrep rule requiring inline justification for new ty-ignore; `.semgrep/rules/justify-ty-ignore.yml`.
+- [x] `P12.S53` - wire semgrep into CI as gating check; `.github/workflows/`.
 - [ ] `P12.S54` - close out Wave 1 by re-running suppression inventory; `scratch/out/suppressions.json`.
