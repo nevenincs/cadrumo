@@ -13,6 +13,7 @@ from aeat.core.paths import PROJECT_ROOT
 
 from ._authority import ValidatedRegistryAuthority
 from ._bindings import (
+    CasillaObservation,
     RegistryFilingObservation,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
@@ -163,7 +164,9 @@ def test_previous_filing_binding_resolves_from_observed_irpf_casillas(
                 modelo=str(selector["source_modelo"]),
                 filing_year=2025,
                 period=str(selector["period"]),
-                casilla_values=observed_values,
+                observations=tuple(
+                    CasillaObservation(casilla_id=cid, value=val) for cid, val in observed_values.items()
+                ),
             ),
         ),
         filing_year=2026,
@@ -237,11 +240,11 @@ def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods
             modelo="115",
             filing_year=2026,
             period=period,
-            casilla_values={
-                "01": Decimal("1"),
-                "02": base,
-                "03": retention,
-            },
+            observations=(
+                CasillaObservation(casilla_id="01", value=Decimal("1")),
+                CasillaObservation(casilla_id="02", value=base),
+                CasillaObservation(casilla_id="03", value=retention),
+            ),
         )
         for period, base, retention in (
             ("1T", Decimal("100.00"), Decimal("19.00")),
@@ -284,7 +287,7 @@ def test_previous_filing_binding_requires_complete_observed_casillas(
                     modelo=str(selector["source_modelo"]),
                     filing_year=2025,
                     period=str(selector["period"]),
-                    casilla_values={source_casillas[0]: Decimal("1")},
+                    observations=(CasillaObservation(casilla_id=source_casillas[0], value=Decimal("1")),),
                 ),
             ),
             filing_year=2026,

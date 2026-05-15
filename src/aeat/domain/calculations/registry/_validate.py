@@ -36,6 +36,7 @@ from ._text import normalise_corpus_text
 
 if TYPE_CHECKING:
     from ...user_profile._schema import ProfileSchemaDefinition
+    from ._snapshot import RegistrySnapshot
 
 _CatalogueCacheKey = tuple[int, int, str | None]
 _CatalogueCacheValue = tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], tuple[str, ...]]
@@ -184,6 +185,7 @@ class RegistryValidator:
             failures.extend(self._validate_revision(modelo, revision))
         failures.extend(self._validate_user_profile_contract((modelo,)))
         failures.extend(self._validate_revision_windows(modelo))
+        failures.extend(self._validate_informative_class_invariant(modelo))
         return failures
 
     def validate_registry(self, modelos: Iterable[ModeloDefinition]) -> None:
@@ -1016,6 +1018,38 @@ class RegistryValidator:
         return failures
 
     @staticmethod
+    def _validate_informative_class_invariant(modelo: ModeloDefinition) -> list[str]:
+        """Enforce that informative modelos carry no filing-grade computation artefacts.
+
+        An informative modelo reports data but does not compute filing-grade amounts.
+        Every revision must have empty ``formulas`` and empty ``relations``, and every
+        casilla must be ``manual`` or ``informational``.  A ``filing`` or ``summary``
+        modelo is not subject to this constraint.
+        """
+        if modelo.calculation_class != "informative":
+            return []
+        failures: list[str] = []
+        for revision in modelo.revisions.values():
+            prefix = f"modelo {modelo.id} revision {revision.id}"
+            if revision.formulas:
+                failures.append(
+                    f"{prefix}: informative modelo must not declare calculation formulas (got {len(revision.formulas)})"
+                )
+            if revision.relations:
+                failures.append(
+                    f"{prefix}: informative modelo must not declare cross-model relations "
+                    f"(got {len(revision.relations)})"
+                )
+            for casilla in revision.casillas:
+                if casilla.input_kind not in {"informational", "manual"}:
+                    failures.append(
+                        f"{prefix}: informative modelo casilla {casilla.id!r} "
+                        f"has input_kind={casilla.input_kind!r}; "
+                        "only 'informational' and 'manual' are permitted"
+                    )
+        return failures
+
+    @staticmethod
     def _validate_relation_closure(
         modelos: Iterable[ModeloDefinition],
         modelos_by_id: Mapping[str, ModeloDefinition],
@@ -1695,9 +1729,9 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     raises :class:`RegistryValidationError` listing every dangling reference.
     This is an existence gate only -- it does not alter any field types.
 
-    For union fields declared as ``TypedId | str`` (the F1 escape), the value
-    is treated as a candidate typed-ID and checked regardless of which arm is
-    active.
+    For union fields declared as ``TypedId | str`` (where the bare-``str``
+    arm is a legacy escape), the value is treated as a candidate typed-ID
+    and checked regardless of which arm is active.
     """
     revision = snapshot.revision
     prefix = f"snapshot modelo {snapshot.modelo.id} revision {revision.id}"
@@ -1836,7 +1870,9 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
         _chk_tuple(f"{dwp}.source_refs", window.source_refs, source_ids)
         for condition in window.applicability_conditions:
             _chk_tuple(f"{dwp}.applicability_conditions.{condition.field}.legal_refs", condition.legal_refs, legal_ids)
-            _chk_tuple(f"{dwp}.applicability_conditions.{condition.field}.source_refs", condition.source_refs, source_ids)
+            _chk_tuple(
+                f"{dwp}.applicability_conditions.{condition.field}.source_refs", condition.source_refs, source_ids
+            )
 
     # FilingScheduleId (str-keyed) references
     for schedule in revision.filing_schedules:
@@ -1873,7 +1909,9 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
         _chk_tuple(
             f"{ctp}.support_removal_decisions", construct.support_removal_decisions, support_removal_decision_ids
         )
-        _chk_tuple(f"{ctp}.dependency_classifications", construct.dependency_classifications, dependency_classification_ids)
+        _chk_tuple(
+            f"{ctp}.dependency_classifications", construct.dependency_classifications, dependency_classification_ids
+        )
         _chk_tuple(f"{ctp}.legal_refs", construct.legal_refs, legal_ids)
         _chk_tuple(f"{ctp}.source_refs", construct.source_refs, source_ids)
 

@@ -55,7 +55,14 @@ def test_committed_modelo_232_resolves_revision_by_filing_year(
 
 
 def test_committed_modelo_232_is_informative_only() -> None:
+    # The registry-wide invariant in RegistryValidator._validate_informative_class_invariant
+    # enforces these same contracts for every modelo whose calculation_class == "informative".
+    # This per-modelo assertion is kept as defense-in-depth to surface Modelo 232 violations
+    # with targeted diagnostics.
     modelo, _ = _load_modelo_232()
+    assert modelo.calculation_class == "informative", (
+        "Modelo 232 must be declared calculation_class='informative' in its manifest"
+    )
     for revision in modelo.revisions.values():
         assert revision.formulas == (), (
             f"revision {revision.id!r} declares calculation formulas; "

@@ -9,7 +9,7 @@ import pytest
 
 from aeat.core.paths import PROJECT_ROOT
 
-from ._bindings import RegistryFilingObservation
+from ._bindings import CasillaObservation, RegistryFilingObservation
 from ._errors import RegistryValidationError
 from ._filed_state import compare_calculation_to_filed_observation
 from ._formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
@@ -59,7 +59,9 @@ def _filed_observation(calculation: RegistryCalculationResult) -> RegistryFiling
         modelo="130",
         filing_year=2026,
         period="1T",
-        casilla_values={casilla_id: calculation.values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS},
+        observations=tuple(
+            CasillaObservation(casilla_id=cid, value=calculation.values[cid]) for cid in _MODELO_130_COMPUTED_CASILLAS
+        ),
     )
 
 
