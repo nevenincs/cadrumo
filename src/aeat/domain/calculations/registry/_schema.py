@@ -48,7 +48,7 @@ def _coerce_decimal(value: Any) -> Any:
 
 DecimalValue = Annotated[Decimal, BeforeValidator(_coerce_decimal)]
 
-ReviewStatus = Literal["reviewed", "provisional", "rejected"]
+ReviewStatus = Literal["reviewed"]
 DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
 EvidenceTier = Literal[
     "legal_authority",
@@ -1137,7 +1137,14 @@ class RegistrySnapshot(RegistryModel):
     modelo: ModeloDefinition
     revision: ModeloRevision
     filing_year: int = Field(ge=2000, le=2099)
-    period: str = Field(min_length=1, max_length=8)
+    # Accommodates time-codes ("1T", "2T", "0A", "01"-"12", "EXT-1T") and
+    # event-period names from ad_hoc modelos (M036 "alta", "modificacion",
+    # "baja"; M308 "AD-HOC"; M115 etc.). The 32-char ceiling is generous
+    # enough for descriptive future event names without becoming a free-text
+    # field — the matching constraint is enforced upstream in
+    # PeriodSelector + FilingScheduleDefinition (which validate against
+    # the modelo's declared periods).
+    period: str = Field(min_length=1, max_length=32)
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
     extraction_profiles: Mapping[ExtractionProfileId, ExtractionProfileDefinition]
