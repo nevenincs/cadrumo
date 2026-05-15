@@ -1326,6 +1326,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.transactions._errors.LedgerLinkError",
+        ErrorCode(
+            code="FAIL_LEDGER_LINK",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.ledger_link",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.transactions._errors.LedgerCheckError",
+        ErrorCode(
+            code="FAIL_LEDGER_CHECK",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.ledger_check",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.transactions._errors.LedgerPreflightError",
+        ErrorCode(
+            code="REFUSED_LEDGER_PREFLIGHT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.ledger_preflight",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.rental._errors.RentalValidationError",
         ErrorCode(
             code="ERROR_RENTAL_VALIDATION",

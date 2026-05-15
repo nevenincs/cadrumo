@@ -39,3 +39,15 @@ class LLMClassifierError(TransactionError):
 
 class TransactionValidationError(TransactionError, ValueError):
     """Raised on invalid transaction field values. Inherits from ValueError for Pydantic."""
+
+
+class LedgerLinkError(TransactionError):
+    """Raised when linking a ledger transaction to a modelo binding fails."""
+
+
+class LedgerCheckError(TransactionError):
+    """Raised when a ledger consistency check surfaces a blocking finding."""
+
+
+class LedgerPreflightError(TransactionError):
+    """Raised when ledger preflight rejects a modelo run as un-fileable."""
