@@ -30,6 +30,7 @@ from typing import TYPE_CHECKING, Literal
 import pikepdf
 from pikepdf import (
     ContentStreamInstruction,
+    Object as PikepdfObject,
     Operator,
     Page,
     Pdf,
@@ -143,7 +144,7 @@ def _rewrite_page(
             rebuilt.append(instruction)
             continue
 
-        new_operands: list[object] | None = None
+        new_operands: list[PikepdfObject | int | float] | None = None
         if operator in (_TJ, _QUOTE):
             first_operand = operands[0]
             if isinstance(first_operand, String):
@@ -168,14 +169,14 @@ def _rewrite_page(
                     instruction_index=instruction_index,
                 )
                 if hits:
-                    operand_list = list(operands)
+                    operand_list: list[PikepdfObject | int | float] = list(operands)
                     operand_list[target_index] = new_operand
-                    new_operands = list(operand_list)
+                    new_operands = operand_list
                     edits.extend(hits)
         elif operator == _TJ_ARRAY:
             # operands[0] is an Array of String + numeric kerning entries.
             array = operands[0]
-            new_array_elements: list[object] = []
+            new_array_elements: list[PikepdfObject] = []
             local_hits: list[Replacement] = []
             array_mutated = False
             for element_index in range(len(array)):
@@ -296,7 +297,7 @@ def _classify_encoding(operand: String) -> Literal["literal", "hex"]:
 
 
 def _build_instruction(
-    operands: list[object],
+    operands: list[PikepdfObject | int | float],
     operator: Operator,
 ) -> ContentStreamInstruction:
     """Construct a :class:`ContentStreamInstruction` from a plain operand list.
@@ -304,13 +305,7 @@ def _build_instruction(
     Centralises the construction so the static-type-checker comment
     lives in one place and call sites stay legible.
     """
-    # Cast to the iterable-overload signature: pikepdf's typing
-    # metadata declares the iterable accepts ``Object | int | float``;
-    # the runtime accepts any operand type the operator allows.
-    from typing import cast
-
-    iterable_operands = cast("list[pikepdf.Object | int | float]", operands)
-    return ContentStreamInstruction(iterable_operands, operator)
+    return ContentStreamInstruction(operands, operator)
 
 
 # Keep the runtime dep edge explicit so the type checker does not

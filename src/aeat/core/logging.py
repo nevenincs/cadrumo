@@ -52,10 +52,7 @@ SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
     "token",
 )
 _SENSITIVE_KEY_SET = frozenset(pattern.lower() for pattern in SCRUB_FIELD_PATTERNS)
-_SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = cast(
-    tuple[str, ...],
-    tuple(sorted(SCRUB_FIELD_PATTERNS, key=len, reverse=True)),
-)
+_SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = (*sorted(SCRUB_FIELD_PATTERNS, key=lambda p: len(p), reverse=True),)
 
 _SENSITIVE_ASSIGNMENT_RE = re.compile(
     r"(?<![A-Za-z0-9])(?P<key>"

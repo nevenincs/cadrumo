@@ -4,9 +4,13 @@ from __future__ import annotations
 
 from datetime import date
 from enum import StrEnum
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
+
+if TYPE_CHECKING:
+    from ...adapters.outbound.aeat.auth import AeatLoginAssertion, AeatSession, BrowserSessionFactory
+    from ...core.config import Settings
 
 from ._catalogue import (
     AUTH_PROVIDER_CATALOGUE,
@@ -75,18 +79,18 @@ class AuthProvider(Protocol):
     async def authenticate(
         self,
         *,
-        browser_session: Any | None = None,
+        browser_session: BrowserSessionFactory | None = None,
         target_url: str | None = None,
-    ) -> Any:
+    ) -> AeatSession:
         """Establish an authenticated session and return the provider's session record."""
         ...
 
     async def verify(
         self,
-        session: Any,
+        session: AeatSession,
         *,
         target_url: str | None = None,
-    ) -> Any:
+    ) -> AeatLoginAssertion:
         """Re-probe ``session`` against ``target_url`` and return the provider's assertion record."""
         ...
 
@@ -98,8 +102,8 @@ class AuthProvider(Protocol):
 def select_provider(
     kind: AuthProviderKind,
     *,
-    settings: Any,
-    browser_session_factory: Any | None = None,
+    settings: Settings,
+    browser_session_factory: BrowserSessionFactory | None = None,
 ) -> AuthProvider:
     """Return the concrete outbound auth provider for ``kind``.
 

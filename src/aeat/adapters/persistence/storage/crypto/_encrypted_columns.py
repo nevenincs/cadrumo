@@ -36,9 +36,8 @@ import hashlib
 import hmac
 import json
 import threading
-from typing import Any
-
 from sqlalchemy import LargeBinary
+from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
 
 from ..errors import StorageValidationError
@@ -131,7 +130,7 @@ class EncryptedString(TypeDecorator[str]):
     impl = LargeBinary
     cache_ok = True
 
-    def process_bind_param(self, value: str | None, dialect: Any) -> bytes | None:
+    def process_bind_param(self, value: str | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         if not isinstance(value, str):
@@ -140,7 +139,7 @@ class EncryptedString(TypeDecorator[str]):
         blob = encrypt_record(value.encode("utf-8"), key=key, associated_data=_AAD_STRING)
         return blob.to_wire()
 
-    def process_result_value(self, value: bytes | None, dialect: Any) -> str | None:
+    def process_result_value(self, value: bytes | None, dialect: Dialect) -> str | None:
         if value is None:
             return None
         key = _resolve_master_key()
@@ -160,7 +159,7 @@ class EncryptedBytes(TypeDecorator[bytes]):
     impl = LargeBinary
     cache_ok = True
 
-    def process_bind_param(self, value: bytes | None, dialect: Any) -> bytes | None:
+    def process_bind_param(self, value: bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         if not isinstance(value, bytes | bytearray | memoryview):
@@ -169,7 +168,7 @@ class EncryptedBytes(TypeDecorator[bytes]):
         blob = encrypt_record(bytes(value), key=key, associated_data=_AAD_BYTES)
         return blob.to_wire()
 
-    def process_result_value(self, value: bytes | None, dialect: Any) -> bytes | None:
+    def process_result_value(self, value: bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         key = _resolve_master_key()
@@ -189,7 +188,7 @@ class EncryptedJSON(TypeDecorator[object]):
     impl = LargeBinary
     cache_ok = True
 
-    def process_bind_param(self, value: object | None, dialect: Any) -> bytes | None:
+    def process_bind_param(self, value: object | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         try:
@@ -205,7 +204,7 @@ class EncryptedJSON(TypeDecorator[object]):
         blob = encrypt_record(serialised, key=key, associated_data=_AAD_JSON)
         return blob.to_wire()
 
-    def process_result_value(self, value: bytes | None, dialect: Any) -> object | None:
+    def process_result_value(self, value: bytes | None, dialect: Dialect) -> object | None:
         if value is None:
             return None
         key = _resolve_master_key()
@@ -272,7 +271,7 @@ class HashedLookup(TypeDecorator[bytes]):
         sub_key = cls._derive_lookup_key(key)
         return hmac.new(sub_key, plaintext.encode("utf-8"), hashlib.sha256).digest()
 
-    def process_bind_param(self, value: str | bytes | None, dialect: Any) -> bytes | None:
+    def process_bind_param(self, value: str | bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         if isinstance(value, str):
@@ -288,7 +287,7 @@ class HashedLookup(TypeDecorator[bytes]):
             f"HashedLookup expects str or bytes; got {type(value).__name__}",
         )
 
-    def process_result_value(self, value: bytes | None, dialect: Any) -> bytes | None:
+    def process_result_value(self, value: bytes | None, dialect: Dialect) -> bytes | None:
         if value is None:
             return None
         # The plaintext is intentionally not recoverable. We hand back

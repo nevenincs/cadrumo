@@ -38,6 +38,7 @@ class _ReconfigurableStream(io.StringIO):
 
     def __init__(self) -> None:
         super().__init__()
+        # dict[str, Any]: **kwargs from io.TextIOWrapper.reconfigure has no fixed schema.
         self.reconfigure_calls: list[dict[str, Any]] = []
 
     def reconfigure(self, **kwargs: Any) -> None:

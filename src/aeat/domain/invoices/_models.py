@@ -18,7 +18,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
@@ -90,7 +90,7 @@ def _is_hex_digest(value: str, *, length: int) -> bool:
     return len(value) == length and all(char in "0123456789abcdef" for char in value)
 
 
-def _coerce_decimal(value: Any) -> Decimal:
+def _coerce_decimal(value: object) -> Decimal:
     if isinstance(value, Decimal):
         return value
     if isinstance(value, int):
@@ -100,7 +100,7 @@ def _coerce_decimal(value: Any) -> Decimal:
     raise TypeError("expected a Decimal, int, or str value")
 
 
-def _coerce_date(value: Any) -> date:
+def _coerce_date(value: object) -> date:
     if isinstance(value, date):
         return value
     if isinstance(value, str):
@@ -108,7 +108,7 @@ def _coerce_date(value: Any) -> date:
     raise TypeError("expected a date or ISO-8601 string")
 
 
-def _normalise_invoice_enum_fields(payload: dict[str, Any]) -> dict[str, Any]:
+def _normalise_invoice_enum_fields(payload: dict[str, object]) -> dict[str, object]:
     if "kind" in payload and isinstance(payload["kind"], str):
         payload["kind"] = InvoiceKind(payload["kind"])
     if "payment_status" in payload and isinstance(payload["payment_status"], str):
@@ -119,7 +119,7 @@ def _normalise_invoice_enum_fields(payload: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def _normalise_invoice_string_fields(payload: dict[str, Any]) -> dict[str, Any]:
+def _normalise_invoice_string_fields(payload: dict[str, object]) -> dict[str, object]:
     if "bucket_id" in payload and isinstance(payload["bucket_id"], str):
         normalized_bucket = payload["bucket_id"].strip()
         payload["bucket_id"] = normalized_bucket or None
@@ -132,13 +132,13 @@ def _normalise_invoice_string_fields(payload: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def _normalise_invoice_dates(payload: dict[str, Any]) -> dict[str, Any]:
+def _normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
     if "issued_at" in payload:
         payload["issued_at"] = _coerce_date(payload["issued_at"])
     return payload
 
 
-def _normalise_invoice_counterparty(payload: dict[str, Any]) -> dict[str, Any]:
+def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, object]:
     if "counterparty_country" in payload and isinstance(payload["counterparty_country"], str):
         payload["counterparty_country"] = validate_country_code(payload["counterparty_country"])
     if "counterparty_tax_id" in payload and isinstance(payload["counterparty_tax_id"], str):
@@ -153,7 +153,7 @@ def _normalise_invoice_counterparty(payload: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def _normalise_invoice_currency(payload: dict[str, Any]) -> dict[str, Any]:
+def _normalise_invoice_currency(payload: dict[str, object]) -> dict[str, object]:
     if "currency" in payload and isinstance(payload["currency"], str):
         currency_value = payload["currency"].strip().upper()
         if len(currency_value) != 3 or not currency_value.isalpha():
@@ -162,7 +162,7 @@ def _normalise_invoice_currency(payload: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def _normalise_invoice_monetary_fields(payload: dict[str, Any]) -> dict[str, Any]:
+def _normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, object]:
     for key in ("grand_total", "base_total", "iva_total"):
         if key in payload:
             payload[key] = _coerce_decimal(payload[key])
@@ -184,16 +184,34 @@ _INVOICE_ID_REQUIRED_FIELDS = frozenset(
 )
 
 
-def _derive_invoice_id_when_complete(payload: dict[str, Any]) -> dict[str, Any]:
+def _derive_invoice_id_when_complete(payload: dict[str, object]) -> dict[str, object]:
     if not _INVOICE_ID_REQUIRED_FIELDS.issubset(payload):
         return payload
+    kind = payload["kind"]
+    invoice_number = payload["invoice_number"]
+    issued_at = payload["issued_at"]
+    counterparty_tax_id = payload["counterparty_tax_id"]
+    currency = payload["currency"]
+    grand_total = payload["grand_total"]
+    if not isinstance(kind, InvoiceKind):
+        raise InvoiceValidationError("kind must be an InvoiceKind")
+    if not isinstance(invoice_number, str):
+        raise InvoiceValidationError("invoice_number must be a string")
+    if not isinstance(issued_at, date):
+        raise InvoiceValidationError("issued_at must be a date")
+    if not isinstance(counterparty_tax_id, str):
+        raise InvoiceValidationError("counterparty_tax_id must be a string")
+    if not isinstance(currency, str):
+        raise InvoiceValidationError("currency must be a string")
+    if not isinstance(grand_total, Decimal):
+        raise InvoiceValidationError("grand_total must be a Decimal")
     derived = derive_invoice_id(
-        kind=payload["kind"],
-        invoice_number=payload["invoice_number"],
-        issued_at=payload["issued_at"],
-        counterparty_tax_id=payload["counterparty_tax_id"],
-        currency=payload["currency"],
-        grand_total=payload["grand_total"],
+        kind=kind,
+        invoice_number=invoice_number,
+        issued_at=issued_at,
+        counterparty_tax_id=counterparty_tax_id,
+        currency=currency,
+        grand_total=grand_total,
     )
     existing = payload.get("invoice_id")
     if existing is not None and str(existing).strip().lower() != derived:
@@ -202,7 +220,7 @@ def _derive_invoice_id_when_complete(payload: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def _normalise_invoice_collections(payload: dict[str, Any]) -> dict[str, Any]:
+def _normalise_invoice_collections(payload: dict[str, object]) -> dict[str, object]:
     if "linked_transaction_ids" in payload:
         payload["linked_transaction_ids"] = _normalise_linked_transaction_ids(payload["linked_transaction_ids"])
     if "lines" in payload and isinstance(payload["lines"], Sequence) and not isinstance(payload["lines"], str | bytes):
@@ -210,7 +228,7 @@ def _normalise_invoice_collections(payload: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def _normalise_invoice_payment_id(payload: dict[str, Any]) -> dict[str, Any]:
+def _normalise_invoice_payment_id(payload: dict[str, object]) -> dict[str, object]:
     if "payment_id" not in payload or not isinstance(payload["payment_id"], str):
         return payload
     normalized = payload["payment_id"].strip().lower()
@@ -238,7 +256,7 @@ class InvoiceLine(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_inputs(cls, data: Any) -> Any:
+    def _coerce_inputs(cls, data: object) -> object:
         """Coerce JSON-decoded strings into their strict pydantic types."""
         if isinstance(data, cls):
             return data
@@ -328,7 +346,7 @@ class Invoice(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _normalise_and_derive_invoice_id(cls, data: Any) -> Any:
+    def _normalise_and_derive_invoice_id(cls, data: object) -> object:
         """Canonicalise identity-bearing fields and derive ``invoice_id``."""
         if isinstance(data, cls):
             return data
@@ -459,7 +477,7 @@ class Invoice(BaseModel):
         )
 
 
-def _normalise_linked_transaction_ids(value: Any) -> tuple[str, ...]:
+def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
     """Deduplicate-preserve-order and validate the shape of linked transaction IDs."""
     if isinstance(value, str | bytes):
         raise InvoiceValidationError("linked_transaction_ids must be a sequence of IDs, not a single string")
@@ -486,7 +504,7 @@ class InvoiceCatalogue(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_catalogue_input(cls, data: Any) -> Any:
+    def _coerce_catalogue_input(cls, data: object) -> object:
         if isinstance(data, cls):
             return data
         if isinstance(data, Mapping):
@@ -521,7 +539,7 @@ class InvoiceCatalogue(BaseModel):
         return dict(value)
 
     @classmethod
-    def from_invoices(cls, invoices: Iterable[Invoice | Mapping[str, Any]]) -> Self:
+    def from_invoices(cls, invoices: Iterable[Invoice | Mapping[str, object]]) -> Self:
         """Build an immutable catalogue from an iterable of invoices.
 
         Args:

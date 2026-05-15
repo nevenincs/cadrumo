@@ -10,6 +10,7 @@ from typing import Final, Literal, cast
 
 from ....domain.calculations.registry._schema import (
     CasillaDefinition,
+    DataBindingDefinition,
     FormulaDefinition,
     ModeloRevision,
     ParameterDefinition,
@@ -27,6 +28,8 @@ from ._records import (
     SheetGuideContent,
     SheetProtectedRange,
     SheetProvenanceRow,
+    SheetRowSet,
+    SheetRowSetColumn,
     SheetTariffTable,
     SheetTariffTableRow,
     SheetValueCell,
@@ -739,6 +742,7 @@ def build_export_plan(
     provenance_values = _provenance_value_cells(provenance)
     protected = _protected_ranges(layout)
     cell_constraints = _collect_cell_constraints(revision, layout)
+    row_sets = _collect_row_sets(revision)
 
     metadata = _stamp_registry_metadata(snapshot)
     guide = SheetGuideContent(
@@ -757,8 +761,99 @@ def build_export_plan(
         protected_ranges=protected,
         cell_constraints=cell_constraints,
         relation_provenance=relations,
+        row_sets=row_sets,
         guide=guide,
     )
+
+
+def _collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
+    """Collect row-producer bindings into per-grouping `SheetRowSet` blocks.
+
+    Walks `revision.bindings` for invoice / counterpart bindings with
+    ``aggregation = { op = "rows" }``, groups them by ``selector.grouping``
+    (typically ``operator_clave`` or ``operator_clave_period``), and lays
+    them out as stacked header+data blocks in the `Detalle` tab. Each
+    grouping occupies a contiguous column block; groupings stack
+    vertically with a one-row gap between blocks. The pull adapter
+    reads row data from `first_data_row` downwards.
+    """
+
+    cohorts: dict[str, list[DataBindingDefinition]] = {}
+    cohort_legal: dict[str, set[str]] = {}
+    cohort_source: dict[str, set[str]] = {}
+    for binding in revision.bindings:
+        aggregation = binding.aggregation or {}
+        if str(aggregation.get("op")) != "rows":
+            continue
+        grouping = str(binding.selector.get("grouping", ""))
+        if not grouping:
+            continue
+        cohorts.setdefault(grouping, []).append(binding)
+        cohort_legal.setdefault(grouping, set()).update(str(ref) for ref in binding.legal_refs)
+        cohort_source.setdefault(grouping, set()).update(str(ref) for ref in binding.source_refs)
+
+    row_sets: list[SheetRowSet] = []
+    next_row = 1
+    for grouping in sorted(cohorts):
+        members = sorted(cohorts[grouping], key=lambda b: b.id)
+        header_row = next_row
+        first_data_row = next_row + 1
+        columns = tuple(
+            SheetRowSetColumn(
+                binding=binding.id,
+                header_address=SheetCellAddress(
+                    tab=TabName.DETALLE,
+                    column=_column_index_to_letters_engine(column_index),
+                    row=header_row,
+                ),
+                header_label=_row_set_column_label(binding),
+                legal_refs=tuple(sorted(str(ref) for ref in binding.legal_refs)),
+            )
+            for column_index, binding in enumerate(members, start=1)
+        )
+        row_sets.append(
+            SheetRowSet(
+                grouping=grouping,
+                tab=TabName.DETALLE,
+                header_row=header_row,
+                first_data_row=first_data_row,
+                columns=columns,
+                legal_refs=tuple(sorted(cohort_legal[grouping])),
+                source_refs=tuple(sorted(cohort_source[grouping])),
+            )
+        )
+        # Reserve 50 data rows per grouping + one blank separator. The
+        # apply adapter does not protect this area; operators may extend
+        # downwards if more rows are needed.
+        next_row = first_data_row + 50 + 1
+    return tuple(row_sets)
+
+
+def _column_index_to_letters_engine(column: int) -> str:
+    """A1-style column letters for row-set column allocation (1-based)."""
+
+    if column < 1:
+        raise ValueError("column index must be 1-based and positive")
+    letters: list[str] = []
+    remaining = column
+    while remaining > 0:
+        remaining, ordinal = divmod(remaining - 1, 26)
+        letters.append(chr(ord("A") + ordinal))
+    return "".join(reversed(letters))
+
+
+def _row_set_column_label(binding: DataBindingDefinition) -> str:
+    """Derive a human label for a row-set column header.
+
+    Prefers the binding's `selector.row_field` enum (e.g.
+    ``country_code`` -> "Country code"); falls back to the binding id
+    when the selector lacks a row_field.
+    """
+
+    row_field = binding.selector.get("row_field")
+    if isinstance(row_field, str) and row_field:
+        return row_field.replace("_", " ").capitalize()
+    return binding.id
 
 
 def _collect_cell_constraints(
