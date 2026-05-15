@@ -2182,7 +2182,7 @@ id = "0089"
 number = "0089"
 label = "Renta inmobiliaria imputada"
 section = ["rendimientos_capital_inmobiliario", "imputacion_rentas_inmobiliarias"]
-legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3", "ley-35-2006:art-85"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-22", "orden-hac-277-2026:art-3", "ley-35-2006:art-85"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2190,7 +2190,7 @@ id = "0102"
 number = "0102"
 label = "Ingresos integros computables del capital inmobiliario"
 section = ["rendimientos_capital_inmobiliario"]
-legal_refs = ["ley-35-2006:art-22"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-22"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2198,7 +2198,7 @@ id = "0104"
 number = "0104"
 label = "Gastos pendientes aplicados en esta declaracion"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2206,7 +2206,7 @@ id = "0107"
 number = "0107"
 label = "Intereses y reparacion/conservacion aplicados en esta declaracion"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2214,7 +2214,7 @@ id = "0109"
 number = "0109"
 label = "Gastos de comunidad"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2222,7 +2222,7 @@ id = "0110"
 number = "0110"
 label = "Gastos de formalizacion del contrato"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2230,7 +2230,7 @@ id = "0111"
 number = "0111"
 label = "Gastos de defensa juridica"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2238,7 +2238,7 @@ id = "0112"
 number = "0112"
 label = "Otras cantidades devengadas por terceros por servicios personales"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2246,7 +2246,7 @@ id = "0113"
 number = "0113"
 label = "Servicios y suministros"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2254,7 +2254,7 @@ id = "0114"
 number = "0114"
 label = "Primas de contratos de seguro"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2262,7 +2262,7 @@ id = "0115"
 number = "0115"
 label = "Tributos recargos y tasas"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2270,7 +2270,7 @@ id = "0116"
 number = "0116"
 label = "Saldos de dudoso cobro"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2278,7 +2278,7 @@ id = "0117"
 number = "0117"
 label = "Amortizacion de bienes muebles"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2286,7 +2286,7 @@ id = "0131"
 number = "0131"
 label = "Amortizacion del inmueble y la mejora"
 section = ["rendimientos_capital_inmobiliario", "amortizacion"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2294,7 +2294,7 @@ id = "0132"
 number = "0132"
 label = "Amortizacion en casos especiales"
 section = ["rendimientos_capital_inmobiliario", "amortizacion"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2302,7 +2302,7 @@ id = "0146"
 number = "0146"
 label = "Amortizacion del inmueble accesorio y mejoras"
 section = ["rendimientos_capital_inmobiliario", "amortizacion"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2310,7 +2310,7 @@ id = "0147"
 number = "0147"
 label = "Amortizacion en casos especiales del inmueble accesorio"
 section = ["rendimientos_capital_inmobiliario", "amortizacion"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2318,7 +2318,7 @@ id = "0148"
 number = "0148"
 label = "Otros gastos fiscalmente deducibles"
 section = ["rendimientos_capital_inmobiliario", "gastos_deducibles"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2328,7 +2328,7 @@ label = "Rendimiento neto del capital inmobiliario"
 section = ["rendimientos_capital_inmobiliario"]
 input_kind = "computed"
 formula = "renta-2025-capital-inmobiliario-rendimiento-neto"
-legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-22", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2336,7 +2336,7 @@ id = "0150"
 number = "0150"
 label = "Reduccion por arrendamiento de inmuebles destinados a vivienda"
 section = ["rendimientos_capital_inmobiliario", "reducciones"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2344,7 +2344,7 @@ id = "0151"
 number = "0151"
 label = "Reduccion por rendimientos irregulares del capital inmobiliario"
 section = ["rendimientos_capital_inmobiliario", "reducciones"]
-legal_refs = ["ley-35-2006:art-23"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-23"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2352,7 +2352,7 @@ id = "0152"
 number = "0152"
 label = "Rendimiento minimo computable en caso de parentesco"
 section = ["rendimientos_capital_inmobiliario"]
-legal_refs = ["ley-35-2006:art-24"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-24"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2360,7 +2360,7 @@ id = "0153"
 number = "0153"
 label = "Retenciones e ingresos a cuenta de capital inmobiliario"
 section = ["rendimientos_capital_inmobiliario", "retenciones"]
-legal_refs = ["ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2370,7 +2370,7 @@ label = "Rendimiento neto reducido del capital inmobiliario"
 section = ["rendimientos_capital_inmobiliario"]
 input_kind = "computed"
 formula = "renta-2025-capital-inmobiliario-rendimiento-neto-reducido"
-legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2380,7 +2380,7 @@ label = "Suma de rentas inmobiliarias imputadas"
 section = ["rendimientos_capital_inmobiliario", "imputacion_rentas_inmobiliarias"]
 input_kind = "computed"
 formula = "renta-2025-inmobiliario-suma-rentas-imputadas"
-legal_refs = ["ley-35-2006:art-22", "orden-hac-277-2026:art-3", "ley-35-2006:art-85"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-22", "orden-hac-277-2026:art-3", "ley-35-2006:art-85"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -2390,7 +2390,7 @@ label = "Suma de rendimientos netos reducidos del capital inmobiliario"
 section = ["rendimientos_capital_inmobiliario"]
 input_kind = "computed"
 formula = "renta-2025-capital-inmobiliario-suma-rendimientos-reducidos"
-legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
+legal_refs = ["rd-439-2007:art-13", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
 
 [[revisions."2025".casillas]]
@@ -3563,6 +3563,7 @@ legal_refs = [
     "ley-35-2006:art-23",
     "ley-35-2006:art-24",
     "ley-35-2006:art-30",
+    "rd-439-2007:art-13",
     "rd-439-2007:art-100",
     "rd-439-2007:art-109",
     "rd-439-2007:art-110",
@@ -3697,6 +3698,7 @@ legal_refs = [
     "ley-35-2006:art-23",
     "ley-35-2006:art-24",
     "ley-35-2006:art-99",
+    "rd-439-2007:art-13",
     "rd-439-2007:art-100",
     "rd-439-2007:art-109",
     "orden-hac-277-2026:art-3",
