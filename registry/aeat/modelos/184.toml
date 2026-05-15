@@ -5,6 +5,7 @@ official_name = "Modelo 184. Declaracion informativa anual de Entidades en regim
 tax_domain = "informative"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
 legal_refs = [
     "orden-hap-2250-2015:art-1",
     "orden-hap-2250-2015:art-2",
@@ -333,7 +334,7 @@ source_refs = ["boe-modelo-184-2015-form"]
 [[revisions."2015-y-siguientes".bindings]]
 id = "modelo-184-member-row-nif"
 source = "atribucion_member"
-selector = { fact = "row_field", row_field = "member_tax_id", record = "miembro" }
+selector = { fact = "row_field", row_field = "member_tax_id", grouping = "per_atribucion_member", record = "miembro" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "aeat-modelo-184-procedure"]
@@ -345,7 +346,7 @@ required_text = ["atribución de rentas"]
 [[revisions."2015-y-siguientes".bindings]]
 id = "modelo-184-member-row-name"
 source = "atribucion_member"
-selector = { fact = "row_field", row_field = "member_legal_name", record = "miembro" }
+selector = { fact = "row_field", row_field = "member_legal_name", grouping = "per_atribucion_member", record = "miembro" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "aeat-modelo-184-procedure"]
@@ -357,7 +358,7 @@ required_text = ["atribución de rentas"]
 [[revisions."2015-y-siguientes".bindings]]
 id = "modelo-184-member-row-share"
 source = "atribucion_member"
-selector = { fact = "row_field", row_field = "share_percentage", record = "miembro" }
+selector = { fact = "row_field", row_field = "share_percentage", grouping = "per_atribucion_member", record = "miembro" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "aeat-modelo-184-procedure"]
@@ -369,7 +370,7 @@ required_text = ["atribución de rentas"]
 [[revisions."2015-y-siguientes".bindings]]
 id = "modelo-184-member-row-base-assigned"
 source = "atribucion_member"
-selector = { fact = "row_field", row_field = "base_imponible_assigned", record = "miembro" }
+selector = { fact = "row_field", row_field = "base_imponible_assigned", grouping = "per_atribucion_member", record = "miembro" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-87", "ley-35-2006:art-89", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-184-2025", "aeat-modelo-184-procedure"]

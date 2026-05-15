@@ -8,6 +8,7 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-bank-provider-expansion-research]]"
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr]]"
+  - "[[2026-05-15-cli-workflow-redesign-audit]]"
 ---
 
 # `cli-workflow-redesign` adr: `bank provider expansion` | (**status:** `accepted`)
@@ -55,3 +56,35 @@ stays in inbound parsing, while the CLI remains a stable ledger import surface.
 Bank coverage expands without changing command topology. Tests must use real
 or sanitized provider-shaped fixtures and must not pass through unsupported
 heuristic imports.
+
+## 2026-05-15 amendment - shipped catalogue ratification
+
+The 2026-05-15 ground-truth audit verified that the original
+Implementation list (ING, Sabadell, Openbank, Bankinter, Triodos) was
+aspirational. The actual shipped CSV layouts under
+`src/aeat/adapters/inbound/financial/providers/_csv.py` are:
+
+- BBVA
+- Santander
+- CaixaBank
+- Revolut
+- N26 (also exposed via the dedicated `PdfN26Provider` for N26 PDF
+  statements)
+
+The W27 plan rows describe templated backend / shadow-removal /
+de-shim / verification / thin-CLI work that did happen, just for a
+different bank set than the ADR's original Implementation paragraph
+named. Rather than uncheck plan rows or open a new wave to add the
+five originally-named banks, this amendment ratifies the shipped
+catalogue as the operator-facing set.
+
+The Implementation list above is therefore superseded by the shipped
+catalogue. ING / Sabadell / Openbank / Bankinter / Triodos remain
+candidates for a future capacity wave if operator demand materialises;
+they are not blocking R-rows on the apex §12 ledger. The status
+remains `accepted` because the underlying decision (provider adapters
+behind `app ledger import`, no PSD2 / live scraping, fail-closed on
+unsupported files) is preserved by the shipped catalogue.
+
+The bank-provider-expansion plan rows S0781-S0810 stay `[x]` per the
+2026-05-15 audit verdict.

@@ -235,3 +235,45 @@ run readiness checks, but they do not expose a live-submission command.
   revisions, verified-complete semantics, filing-record storage, source-kind
   taxonomy, inventory placement, live-read boundaries, and workflow-engine
   wiring decisions owned by their respective ADRs.
+
+## 2026-05-15 amendment - reconcile + ledger link / check / preflight
+
+The 2026-05-15 ground-truth audit found that `aeat app modelo
+reconcile` and the `aeat app ledger {link, check, preflight}` verbs
+that R02 / R03 claimed closed are absent from the Typer graph. This
+amendment locks all four verbs so the gaps are closed in follow-up
+work.
+
+Required `aeat app modelo reconcile` surface:
+
+- Verb takes `WORK_UNIT_ID` plus exactly one of `--from-justificante
+  PATH` or `--from-declaration PATH`; refuses if both or neither.
+- Backend service `modelo_reconcile` parses the supplied evidence
+  (justificante PDF or declaration PDF) and produces a strict
+  `ReconciliationReport` containing diff entries (per-casilla),
+  matching evidence references, and a verdict (matches / mismatches /
+  evidence-invalid).
+- Reconcile is local-only; it does not contact AEAT and does not
+  invoke `require_live_read`.
+- The `from-justificante` variant under W85.S2342 reuses the same
+  service entry point (no fork).
+
+Required `aeat app ledger link / check / preflight` surface (per W71
+contract orthogonal axes):
+
+- `link --id ID --invoice-id INV [--evidence-id EV]` - thin handler
+  delegating to `ledger.link` service which binds a transaction to
+  invoice / evidence / counterpart references in a single canonical
+  call. Refuses cross-bucket links.
+- `check [--bucket-id ID]` - thin handler delegating to `ledger.check`
+  service which probes ledger transactions in the active bucket and
+  returns a `LedgerCheckReport` with anomaly rows.
+- `preflight [--period PERIOD]` - thin handler delegating to
+  `ledger.preflight` service which asserts every transaction in the
+  given period has the required taxonomy fields (category, base IVA,
+  business %); produces a blocker / warning report consumed by
+  downstream `aeat app modelo work calculate`.
+
+All three ledger verbs follow the W71 orthogonal-axis pattern: they
+sit alongside the canonical CRUD spine on the ledger noun-group, do
+not introduce new sub-noun-groups, and emit no bucket events.

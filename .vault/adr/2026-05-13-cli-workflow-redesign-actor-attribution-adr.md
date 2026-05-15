@@ -113,3 +113,32 @@ owner remains identified by the active profile, not by ACTOR.
   across subsequent display-name renames.
 - The flag grammar is locked. Future deviation (e.g. structured actor
   identifiers) requires its own ADR.
+
+## 2026-05-15 amendment - widen scope to all mutating modelo verbs
+
+The 2026-05-15 ground-truth audit found that `--by` is wired on
+`discard` / `file` / `amend` (the original ADR scope) but absent from
+`calculate` and `rename`, despite the plan rows describing actor
+attribution as covering "mutations" in the broad sense. This
+amendment widens the locked scope to include every mutating modelo
+verb.
+
+Required: `--by ACTOR` Typer Option with `default_factory=
+_resolve_default_actor` MUST be added to the following modelo CLI
+handlers and threaded through to the backend services as an explicit
+`actor` parameter recorded in the resulting bucket event payload:
+
+- `aeat app modelo work calculate` - default `system` becomes the
+  active profile display_name; backend `calculate_modelo_revision`
+  takes `actor: str` and records it in the `MODELO_CALCULATION_CREATED`
+  event payload.
+- `aeat app modelo work rename` - same default-factory pattern;
+  backend `rename_work_unit` takes `actor: str` and records it in the
+  `MODELO_WORK_UNIT_RENAMED` event payload (add the event type if
+  absent).
+
+Other mutating verbs (`work create`, `work delete`, `bindings *`,
+`filing-record *`) remain out of scope until each is reviewed for
+operator-attribution semantics. Read-only verbs (`work list`,
+`work show`, `bindings list`, `bindings preview`,
+`verification-report *`, etc.) are explicitly excluded.

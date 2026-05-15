@@ -132,3 +132,26 @@ Any required migration is backend/internal only.
 Tests prove that retired commands are absent, the new commands work, aliases
 resolve without persisting alias keys, bounds remain `[0,1]`, and set/unset
 operations emit the required ledger ratio events.
+
+## 2026-05-15 amendment - event emission lock
+
+The 2026-05-15 ground-truth audit found that `set_usage_ratios` /
+`unset_usage_ratios` paths persist correctly but **emit no bucket
+events**. The `ratios_set` and `ratios_unset` CLI handlers call
+`save_usage_ratios` directly without invoking
+`append_bucket_event`. This amendment locks the emission contract so
+the gap is closed in a follow-up wave.
+
+Required `BucketEventType` additions: `LEDGER_RATIOS_SET`,
+`LEDGER_RATIOS_UNSET`. Both events MUST carry the `usage_ratio_id`,
+`category`, prior value (or `null` for a first set), and new value
+(or `null` for unset) in the payload.
+
+Required service surface: every code path that mutates a usage ratio
+MUST go through a single application-layer entry point that appends
+the matching event after persistence. CLI handlers MUST NOT skip the
+service call. A boundary regression test asserts no shadow path can
+write to `usage_ratios` storage without emitting.
+
+The `eligible` and `validate` verbs from the 2026-05-13 extension
+remain read-only and do not emit events.

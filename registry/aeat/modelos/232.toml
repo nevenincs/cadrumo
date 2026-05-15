@@ -5,6 +5,8 @@ official_name = "Modelo 232. Declaracion informativa de operaciones vinculadas y
 tax_domain = "is"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
+calculation_class = "informative"
+output_sensitivity = "identity"
 legal_refs = [
     "ley-27-2014:art-18",
     "rd-634-2015:art-13",
@@ -2572,7 +2574,7 @@ source_refs = ["aeat-dr-232-2018"]
 [[revisions."2018-y-siguientes".bindings]]
 id = "modelo-232-related-party-row-nif"
 source = "related_party_operation"
-selector = { fact = "row_field", row_field = "counterparty_tax_id", record = "vinculada" }
+selector = { fact = "row_field", row_field = "counterparty_tax_id", grouping = "per_related_party_operation", record = "vinculada" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-18", "rd-634-2015:art-13", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure"]
@@ -2584,7 +2586,7 @@ required_text = ["operaciones vinculadas"]
 [[revisions."2018-y-siguientes".bindings]]
 id = "modelo-232-related-party-row-name"
 source = "related_party_operation"
-selector = { fact = "row_field", row_field = "counterparty_legal_name", record = "vinculada" }
+selector = { fact = "row_field", row_field = "counterparty_legal_name", grouping = "per_related_party_operation", record = "vinculada" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-18", "rd-634-2015:art-13", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure"]
@@ -2596,7 +2598,7 @@ required_text = ["operaciones vinculadas"]
 [[revisions."2018-y-siguientes".bindings]]
 id = "modelo-232-related-party-row-country"
 source = "related_party_operation"
-selector = { fact = "row_field", row_field = "country_code", record = "vinculada" }
+selector = { fact = "row_field", row_field = "country_code", grouping = "per_related_party_operation", record = "vinculada" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-18", "rd-634-2015:art-13", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure"]
@@ -2608,7 +2610,7 @@ required_text = ["operaciones vinculadas"]
 [[revisions."2018-y-siguientes".bindings]]
 id = "modelo-232-related-party-row-operation-kind"
 source = "related_party_operation"
-selector = { fact = "row_field", row_field = "operation_kind_code", record = "vinculada" }
+selector = { fact = "row_field", row_field = "operation_kind_code", grouping = "per_related_party_operation", record = "vinculada" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-18", "rd-634-2015:art-13", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure"]
@@ -2620,7 +2622,7 @@ required_text = ["operaciones vinculadas"]
 [[revisions."2018-y-siguientes".bindings]]
 id = "modelo-232-related-party-row-tpr-method"
 source = "related_party_operation"
-selector = { fact = "row_field", row_field = "transfer_pricing_method_code", record = "vinculada" }
+selector = { fact = "row_field", row_field = "transfer_pricing_method_code", grouping = "per_related_party_operation", record = "vinculada" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-18", "rd-634-2015:art-13", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure"]
@@ -2632,7 +2634,7 @@ required_text = ["operaciones vinculadas"]
 [[revisions."2018-y-siguientes".bindings]]
 id = "modelo-232-related-party-row-amount"
 source = "related_party_operation"
-selector = { fact = "row_field", row_field = "amount", record = "vinculada" }
+selector = { fact = "row_field", row_field = "amount", grouping = "per_related_party_operation", record = "vinculada" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-18", "rd-634-2015:art-13", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-232-2018", "aeat-modelo-232-procedure"]

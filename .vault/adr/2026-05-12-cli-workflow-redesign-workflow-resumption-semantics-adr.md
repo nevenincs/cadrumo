@@ -131,3 +131,28 @@ resumable modelo/period/obligation context, and stays local-only. It does not
 introduce root `aeat workflow`, root `aeat run`, flat `aeat app modelo resume`,
 observability replay ids, argv reconstruction, mid-stage continuation, bucket
 events, or compatibility surfaces.
+
+## 2026-05-15 amendment - engine linkage requirement
+
+The 2026-05-15 ground-truth audit found that the W59 and W80 execution
+records claim a `WorkflowResult.resumed_from` field and a
+`WorkflowEngine.run_for_period(resumed_from=...)` parameter exist;
+neither is present in `src/aeat/application/workflow/_models.py` or
+`_engine.py`. This amendment locks the engine-linkage contract so the
+gap is closed in a follow-up wave rather than left implicit.
+
+Required engine surface:
+
+- `WorkflowResult.resumed_from: str | None` field carrying the prior
+  workflow_run_id when the run was launched from a resume context.
+- `WorkflowEngine.run_for_period(..., resumed_from: str | None = None)`
+  parameter; when provided, the engine validates the prior run is
+  terminal-aborted and belongs to the same profile + modelo + period
+  scope before proceeding, refuses unknown run ids, and propagates the
+  value into the produced `WorkflowResult`.
+- `resume_modelo_workflow` does not invoke the engine itself; it
+  returns the `WorkflowResumeContext` and the caller (typically the
+  filing or verify path on the next operator action) passes
+  `resumed_from=context.resumed_from_run_id` to `run_for_period`.
+
+The CLI `aeat app modelo work resume` surface is unchanged.

@@ -5,6 +5,7 @@ official_name = "Modelo 349. Declaracion Informativa. Declaracion recapitulativa
 tax_domain = "iva"
 cadence = "profile_based"
 jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
 legal_refs = [
     "orden-eha-769-2010:art-1",
     "orden-hac-174-2020:art-1",
@@ -478,11 +479,26 @@ explanation = "Modelo 349 mensual cuando el importe total de entregas intracomun
 legal_refs = ["orden-eha-769-2010:art-2", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
-# --- Invoice-source bindings (autonomo invoice-ledger aggregation) ---
+# --- Per-direction invoice-source bindings ---
+#
+# Modelo 349 reports declarant-side intracomunitario operations across
+# 10 claves. Each binding is keyed by the canonical source kind that
+# matches the direction of the underlying operation:
+#   - `collectible_invoice` for outbound claves where the declarant
+#     issued the invoice: E entregas, M modificaciones a entregas,
+#     T triangulares (Spanish supplier as intermediary), S servicios
+#     prestados, R referidos por residentes en otros Estados
+#   - `payable_invoice` for inbound claves where the declarant
+#     received the invoice: A adquisiciones, I servicios recibidos,
+#     D devoluciones de adquisiciones, H hidden triangular receipts
+# Clave C (correcciones) can correct prior declarations of either
+# direction and therefore appears in both bindings; the calculation
+# runtime de-duplicates by operation id when unioning per-binding
+# results behind a single casilla.
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-declarante-numero-operadores"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "operator_count", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "count_distinct" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -494,7 +510,7 @@ required_text = ["NÚMERO TOTAL DE OPERADORES INTRACOMUNITARIOS"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-declarante-importe-operaciones"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "base_sum", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "sum" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -506,7 +522,7 @@ required_text = ["IMPORTE DE LAS OPERACIONES INTRACOMUNITARIAS"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-declarante-numero-rectificaciones"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "operator_count", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications" }
 aggregation = { op = "count_distinct" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -518,7 +534,7 @@ required_text = ["NÚMERO TOTAL DE OPERADORES INTRACOMUNITARIOS CON RECTIFICACIO
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-declarante-importe-rectificaciones"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "rectified_base_delta_sum", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications" }
 aggregation = { op = "sum" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -532,7 +548,7 @@ required_text = ["IMPORTE DE LAS RECTIFICACIONES"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-operador-row-codigo-pais"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -544,7 +560,7 @@ required_text = ["Código país"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-operador-row-nif"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "party_tax_id", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -556,7 +572,7 @@ required_text = ["NIF OPERADOR COMUNITARIO"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-operador-row-apellidos"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -568,7 +584,7 @@ required_text = ["APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL OPERADOR"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-operador-row-clave"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "clave", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -580,7 +596,7 @@ required_text = ["CLAVE DE OPERACIÓN"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-operador-row-base"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "base_imponible", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -594,7 +610,7 @@ required_text = ["BASE IMPONIBLE O IMPORTE"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-rectificacion-row-codigo-pais"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -606,7 +622,7 @@ required_text = ["RECTIFICACIONES"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-rectificacion-row-nif"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "party_tax_id", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -618,7 +634,7 @@ required_text = ["NIF OPERADOR COMUNITARIO"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-rectificacion-row-apellidos"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -630,7 +646,7 @@ required_text = ["APELLIDOS Y NOMBRE O RAZÓN SOCIAL DEL OPERADOR"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-rectificacion-row-clave"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "clave", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -642,7 +658,7 @@ required_text = ["CLAVE DE OPERACIÓN"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-rectificacion-row-ejercicio"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "rectified_year", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -654,7 +670,7 @@ required_text = ["Ejercicio"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-rectificacion-row-periodo"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "rectified_period", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -666,7 +682,7 @@ required_text = ["Periodo"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-rectificacion-row-base-rectificada"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "base_imponible", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
@@ -678,7 +694,7 @@ required_text = ["BASE IMPONIBLE O IMPORTES RECTIFICADOS"]
 
 [[revisions."2020-y-siguientes".bindings]]
 id = "vat-349-rectificacion-row-base-anterior"
-source = "invoice"
+source = "collectible_invoice"
 selector = { fact = "row_field", row_field = "rectified_base_previous", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
 legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]

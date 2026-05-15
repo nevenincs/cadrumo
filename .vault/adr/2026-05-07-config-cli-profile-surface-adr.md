@@ -159,3 +159,38 @@ becoming a free-form key/value store.
 
 The plan must sequence backend API availability before the CLI facade removes
 the old setup surface.
+
+## 2026-05-15 amendment - profile export / import verbs
+
+The 2026-05-15 ground-truth audit found that `aeat config profile
+export` and `aeat config profile import` were named in the original
+verb set but never shipped, and the matching bucket events
+(`profile.exported`, `profile.imported`, `profile.activated`) are
+absent from `BucketEventType`. This amendment locks the export / import
+surface so the gap is closed in a follow-up wave.
+
+Required service surface in `aeat.application.user_profile`:
+
+- `export_profile(bucket_id, output_path)` - snapshot the active
+  profile (bucket pointer + bucket contents) to a portable encrypted
+  archive with `format_version` field. Encrypted fields stay
+  encrypted; `SensitivityClass` labels transfer; emits
+  `profile.exported`.
+- `import_profile(source_path, force_replace=False)` - validate
+  signature + manifest; schema-migrate if archive's `format_version`
+  is older; refuse identity collision unless `force_replace`; emits
+  `profile.imported`.
+
+Required CLI surface: `aeat config profile {export, import}` thin
+handlers under the existing profile group. `import` requires `--yes`
+for force-replace.
+
+Required `BucketEventType` additions: `PROFILE_EXPORTED`,
+`PROFILE_IMPORTED`, `PROFILE_ACTIVATED`. The implementation note: the
+existing `PROFILE_SELECTED` event covers active-profile switch
+semantically; `PROFILE_ACTIVATED` is added as a distinct event to mark
+post-import or post-export activation transitions, not as an alias.
+
+Archive format: encrypted ZIP with manifest (object inventory,
+checksums, `format_version`, profile id, source toolchain version).
+Round-trip stability is required across schema-version bumps.
