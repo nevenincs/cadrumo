@@ -1314,9 +1314,7 @@ def _validated_counterpart_selector(binding: DataBindingDefinition) -> _InvoiceS
                 f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
             )
         if selector.grouping is None:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key"
-            )
+            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
         if selector.row_field in _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS:
             if selector.grouping != "operator_clave_period":
                 raise RegistryValidationError(
@@ -1324,7 +1322,8 @@ def _validated_counterpart_selector(binding: DataBindingDefinition) -> _InvoiceS
                 )
             if selector.rectification_scope != "only_rectifications":
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {selector.row_field!r} requires rectification_scope 'only_rectifications'"
+                    f"binding {binding.id!r} row_field {selector.row_field!r} "
+                    f"requires rectification_scope 'only_rectifications'"
                 )
         if selector.grouping == "operator_clave_period" and selector.rectification_scope != "only_rectifications":
             raise RegistryValidationError(

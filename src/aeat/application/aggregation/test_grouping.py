@@ -21,15 +21,15 @@ class _Obs:
     name: str | None
 
 
-def _NAME(obs: _Obs) -> str | None:
+def _name(obs: _Obs) -> str | None:
     return obs.name
 
 
-def _GROUP_KEY(obs: _Obs) -> tuple[str, str, str]:
+def _group_key(obs: _Obs) -> tuple[str, str, str]:
     return (obs.source_kind, obs.nif, obs.kind)
 
 
-def _IDENTITY_KEY(obs: _Obs) -> tuple[str, str]:
+def _identity_key(obs: _Obs) -> tuple[str, str]:
     return (obs.source_kind, obs.nif)
 
 
@@ -42,9 +42,9 @@ def test_group_and_collect_names_buckets_by_composite_key() -> None:
     )
     grouped, _ = group_and_collect_names(
         observations,
-        group_key_fn=_GROUP_KEY,
-        identity_key_fn=_IDENTITY_KEY,
-        name_fn=_NAME,
+        group_key_fn=_group_key,
+        identity_key_fn=_identity_key,
+        name_fn=_name,
     )
     assert set(grouped.keys()) == {
         ("ledger", "A", "k1"),
@@ -62,9 +62,9 @@ def test_group_and_collect_names_preserves_iteration_order_within_bucket() -> No
     third = _Obs("ledger", "A", "k1", "Alpha-3rd")
     grouped, _ = group_and_collect_names(
         (first, second, third),
-        group_key_fn=_GROUP_KEY,
-        identity_key_fn=_IDENTITY_KEY,
-        name_fn=_NAME,
+        group_key_fn=_group_key,
+        identity_key_fn=_identity_key,
+        name_fn=_name,
     )
     assert grouped[("ledger", "A", "k1")] == [first, second, third]
 
@@ -77,9 +77,9 @@ def test_group_and_collect_names_first_non_empty_name_wins() -> None:
     )
     _, names = group_and_collect_names(
         observations,
-        group_key_fn=_GROUP_KEY,
-        identity_key_fn=_IDENTITY_KEY,
-        name_fn=_NAME,
+        group_key_fn=_group_key,
+        identity_key_fn=_identity_key,
+        name_fn=_name,
     )
     assert names[("ledger", "A")] == "First Real Name"
 
@@ -92,9 +92,9 @@ def test_group_and_collect_names_skips_empty_names_without_clearing_prior_win() 
     )
     _, names = group_and_collect_names(
         observations,
-        group_key_fn=_GROUP_KEY,
-        identity_key_fn=_IDENTITY_KEY,
-        name_fn=_NAME,
+        group_key_fn=_group_key,
+        identity_key_fn=_identity_key,
+        name_fn=_name,
     )
     assert names[("ledger", "A")] == "Real Name"
 
@@ -107,9 +107,9 @@ def test_group_and_collect_names_separate_identities_get_separate_names() -> Non
     )
     _, names = group_and_collect_names(
         observations,
-        group_key_fn=_GROUP_KEY,
-        identity_key_fn=_IDENTITY_KEY,
-        name_fn=_NAME,
+        group_key_fn=_group_key,
+        identity_key_fn=_identity_key,
+        name_fn=_name,
     )
     assert names == {
         ("ledger", "A"): "Alpha",
@@ -121,9 +121,9 @@ def test_group_and_collect_names_separate_identities_get_separate_names() -> Non
 def test_group_and_collect_names_empty_iterable_returns_empty_maps() -> None:
     grouped, names = group_and_collect_names(
         (),
-        group_key_fn=_GROUP_KEY,
-        identity_key_fn=_IDENTITY_KEY,
-        name_fn=_NAME,
+        group_key_fn=_group_key,
+        identity_key_fn=_identity_key,
+        name_fn=_name,
     )
     assert grouped == {}
     assert names == {}
@@ -141,9 +141,9 @@ def test_group_and_collect_names_identity_subset_of_group_key_is_consistent() ->
     )
     grouped, names = group_and_collect_names(
         observations,
-        group_key_fn=_GROUP_KEY,
-        identity_key_fn=_IDENTITY_KEY,
-        name_fn=_NAME,
+        group_key_fn=_group_key,
+        identity_key_fn=_identity_key,
+        name_fn=_name,
     )
     assert names[("ledger", "A")] == "Name From K2"
     assert len(grouped[("ledger", "A", "k1")]) == 2

@@ -72,9 +72,8 @@ def _candidate_files() -> list[Path]:
 
 def _aeat_key_from_arg(node: ast.expr, constants: dict[str, str]) -> str | None:
     """Return the AEAT_* key string if ``node`` is a literal or a name-bound literal."""
-    if isinstance(node, ast.Constant) and isinstance(node.value, str):
-        if _AEAT_KEY_PATTERN.fullmatch(node.value):
-            return node.value
+    if isinstance(node, ast.Constant) and isinstance(node.value, str) and _AEAT_KEY_PATTERN.fullmatch(node.value):
+        return node.value
     if isinstance(node, ast.Name):
         resolved = constants.get(node.id)
         if resolved is not None and _AEAT_KEY_PATTERN.fullmatch(resolved):
@@ -101,9 +100,12 @@ def _collect_aeat_string_bindings(tree: ast.Module) -> dict[str, str]:
                         constants[target.id] = value
         elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.value, ast.Constant):
             value = node.value.value
-            if isinstance(value, str) and _AEAT_KEY_PATTERN.fullmatch(value):
-                if isinstance(node.target, ast.Name):
-                    constants[node.target.id] = value
+            if (
+                isinstance(value, str)
+                and _AEAT_KEY_PATTERN.fullmatch(value)
+                and isinstance(node.target, ast.Name)
+            ):
+                constants[node.target.id] = value
     return constants
 
 
@@ -143,10 +145,11 @@ def _is_string_with_aeat_format_template(node: ast.expr) -> bool:
     """
     if isinstance(node, ast.JoinedStr):
         for value in node.values:
-            if isinstance(value, ast.Constant) and isinstance(value.value, str):
-                if value.value.startswith("AEAT_"):
-                    return True
-            return False
+            return (
+                isinstance(value, ast.Constant)
+                and isinstance(value.value, str)
+                and value.value.startswith("AEAT_")
+            )
     return False
 
 
@@ -256,6 +259,5 @@ def test_allowlisted_paths_still_contain_aeat_env_reads() -> None:
         if not _violations_in(path):
             stale.append(entry)
     assert not stale, (
-        "Allowlisted files no longer contain any AEAT_* os.environ read — "
-        f"remove them from the allowlist: {stale}"
+        f"Allowlisted files no longer contain any AEAT_* os.environ read — remove them from the allowlist: {stale}"
     )
