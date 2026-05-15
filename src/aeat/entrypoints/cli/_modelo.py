@@ -1066,6 +1066,10 @@ def work_calculate(
             ),
         ),
     ] = None,
+    actor: Annotated[
+        str | None,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ] = None,
 ) -> None:
     """Persist a new draft calculation revision for the work unit."""
 
@@ -1096,6 +1100,7 @@ def work_calculate(
     try:
         revision = calculate_modelo_revision(
             work_unit_id,
+            actor=actor or _resolve_default_actor(),
             casilla_inputs=casilla_inputs,
             binding_values=binding_values or None,
             enum_binding_values=enum_binding_values or None,
