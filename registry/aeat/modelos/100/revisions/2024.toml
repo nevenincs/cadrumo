@@ -9262,7 +9262,7 @@ id = "0568"
 number = "0568"
 label = "Incremento de las cuotas líquidas por pérdida del derecho a la aplicación del incentivo fiscal regulado en el apartado c) del artículo 33.3 de la Ley del Impuesto (*): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9298,7 +9298,7 @@ id = "0572"
 number = "0572"
 label = "Importe de las deducciones a las que se ha perdido el derecho en 2024: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9306,7 +9306,7 @@ id = "0573"
 number = "0573"
 label = "Intereses de demora correspondientes a las deducciones anteriores: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9314,7 +9314,7 @@ id = "0574"
 number = "0574"
 label = "Importe de las deducciones a las que se ha perdido el derecho en 2024. Parte estatal: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9331,7 +9331,7 @@ id = "0576"
 number = "0576"
 label = "Intereses de demora correspondientes a las deducciones anteriores: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9380,7 +9380,7 @@ id = "0582"
 number = "0582"
 label = "Intereses de demora correspondientes a la regularización anterior: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9488,7 +9488,7 @@ id = "0595"
 number = "0595"
 label = "Cuota resultante de la autoliquidación ( [0587] - [0588] - [0589] - [0590] - [0591] )"
 section = ["resultados", "calculo_impuesto_res", "cuota_autoliquidacion_res"]
-legal_refs = ["ley-35-2006:art-79", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-79"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9496,7 +9496,7 @@ id = "0596"
 number = "0596"
 label = "Por rendimientos del trabajo"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9504,7 +9504,7 @@ id = "0597"
 number = "0597"
 label = "Por rendimientos del capital mobiliario"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9513,7 +9513,7 @@ number = "0598"
 label = "Suma de retenciones e ingresos a cuenta  (suma de las casillas [0153])"
 section = ["resultados", "inmuebles_res"]
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9529,7 +9529,7 @@ id = "0600"
 number = "0600"
 label = "Suma de retenciones e ingresos a cuenta atribuidos de ganancias y pérdidas patrimoniales imputables a 2024 (suma de las casillas [1600])"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9537,7 +9537,7 @@ id = "0601"
 number = "0601"
 label = "Suma de retenciones e ingresos a cuenta imputados: (suma de las casillas [0264] )"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9545,7 +9545,7 @@ id = "0602"
 number = "0602"
 label = "Ingresos a cuenta del artículo 92.8 de la Ley del Impuesto"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9553,7 +9553,7 @@ id = "0603"
 number = "0603"
 label = "Por ganancias patrimoniales, incluidos premios"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9569,7 +9569,7 @@ id = "0605"
 number = "0605"
 label = "Cuotas del Impuesto sobre la Renta de no Residentes (**)"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
@@ -9577,7 +9577,7 @@ id = "0606"
 number = "0606"
 label = "Retenciones art. 11 de la Directiva 2003/48/CE, del Consejo devengadas con anterioridad al 1 de enero de 2019 (Austria, Luxemburgo, Suiza, Liechtenstein, San Marino, Mónaco y Andorra)"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-dr-100-2024-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2024".casillas]]
