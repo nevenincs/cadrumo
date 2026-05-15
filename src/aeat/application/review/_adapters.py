@@ -299,10 +299,8 @@ def drafts_pending(
     under a different profile (commonly during scaffold runs before a
     real profile init). Items emitted from the legacy cohort are
     demoted to :attr:`ReviewSeverity.INFO` regardless of their finding
-    severity, per the
-    ``2026-05-12-cli-workflow-redesign-app-review-queue-execution-adr``
-    2026-05-14 amendment, so a fresh profile does not show legacy
-    drafts as ``critical``.
+    severity, so a fresh profile does not show legacy drafts as
+    ``critical``.
     """
     if drafts is None:
         drafts = _load_drafts(settings)

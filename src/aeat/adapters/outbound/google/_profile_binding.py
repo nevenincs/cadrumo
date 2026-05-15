@@ -10,7 +10,7 @@ override when given and otherwise falls back to the workflow state's
 
 There is no global Google session, no shared cross-profile token, and
 no multi-account binding within a single profile. The whole-package
-contract from ADR-0 §5 is enforced at this single chokepoint.
+contract is enforced at this single chokepoint.
 """
 
 from __future__ import annotations

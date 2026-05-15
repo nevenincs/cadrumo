@@ -1,18 +1,18 @@
 """Registered noun-group catalogue for the CRUD verb contract.
 
-Per apex ADR §12.b, every mutating noun-group in the redesigned CLI
-registers a :class:`MutatingNounGroupContract`. The catalogue exposed
-here is the **single source of truth** consumed by cross-cutting
-conformance tests and W72-W77 reconciliation waves.
+Every mutating noun-group in the operator-facing CLI registers a
+:class:`MutatingNounGroupContract`. The catalogue exposed here is the
+**single source of truth** consumed by cross-cutting conformance
+tests.
 
-Entries shipped in this initial registry:
+Entries shipped in this registry:
 
-  - ``aeat app ledger evidence``     (W70.P333 locked CRUD reference)
-  - ``aeat app ledger payable-invoice``      (W73A)
-  - ``aeat app ledger collectible-invoice``  (W73A)
-  - ``aeat app ledger ratios``       (key-value exception)
-  - ``aeat app ledger inventory``    (lifecycle operations)
-  - ``aeat config auth apoderado``   (W75A; lifecycle operations)
+  - ``aeat app ledger evidence``             (locked CRUD reference shape)
+  - ``aeat app ledger payable-invoice``      (link-orthogonal CRUD)
+  - ``aeat app ledger collectible-invoice``  (link-orthogonal CRUD)
+  - ``aeat app ledger ratios``               (key-value-as-record exception)
+  - ``aeat app ledger inventory``            (lifecycle operations)
+  - ``aeat config auth apoderado``           (lifecycle operations)
 
 Each entry documents the noun-group's intended verb set plus its
 declared exception class. The conformance harness in
@@ -35,13 +35,13 @@ from ._crud_contract import (
 EVIDENCE = MutatingNounGroupContract(
     noun="purchase_invoice_evidence",
     cli_path="aeat app ledger evidence",
-    # W70.P333 reference shape: strict 5-verb CRUD, no orthogonal axes.
+    # Reference shape: strict 5-verb CRUD, no orthogonal axes.
 )
 
 PAYABLE_INVOICE = MutatingNounGroupContract(
     noun="payable_invoice",
     cli_path="aeat app ledger payable-invoice",
-    # W73A: strict 5-verb CRUD with link-to-ledger-transaction orthogonal axis.
+    # Strict 5-verb CRUD with link-to-ledger-transaction orthogonal axis.
     orthogonal_axes=frozenset({OrthogonalAxis.LINK}),
 )
 
@@ -54,7 +54,7 @@ COLLECTIBLE_INVOICE = MutatingNounGroupContract(
 USAGE_RATIOS = MutatingNounGroupContract(
     noun="usage_ratio",
     cli_path="aeat app ledger ratios",
-    # Key-value-as-record exception per W71 contract; the operator edits
+    # Key-value-as-record exception; the operator edits
     # keyed scalars (per-category proportions) rather than entities.
     exception=NounGroupExceptionKind.KEY_VALUE_AS_RECORD,
     crud_verbs=frozenset(),

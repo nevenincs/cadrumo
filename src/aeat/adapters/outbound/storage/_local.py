@@ -2,7 +2,7 @@
 
 Stores objects under a configurable root directory. Each namespace is
 a subdirectory; each object is a single file named
-`<hmac_prefix_8>--<label>.<ext>` per ADR-2 §filename. Metadata
+`<hmac_prefix_8>--<label>.<ext>`. Metadata
 (content_hash, byte_length, written_at, full HMAC, label) lives in a
 sibling JSON sidecar so the listing API can return
 `ProviderObjectMetadata` without re-hashing the payload.

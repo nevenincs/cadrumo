@@ -1,4 +1,4 @@
-"""Keystore separation contract enforcing the ADR-1/ADR-2 isolation invariant.
+"""Keystore separation contract enforcing the isolation invariant.
 
 The KEK / DEK / passphrase / OS-keystore custody artefacts live under a
 keystore root that is structurally outside the buckets parent. The two

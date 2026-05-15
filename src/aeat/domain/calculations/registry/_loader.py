@@ -104,8 +104,6 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
     All revision files are merged into the single in-memory
     ``ModeloDefinition`` that single-file mode produces.
 
-    The directory layout is the segmentation target documented in
-    ``.vault/audit/2026-05-08-modelo-100-bulk-segmentation-audit.md``.
     Public API stays identical to ``load_modelo_file``: callers receive
     the same ``ModeloDefinition`` regardless of on-disk layout.
     """

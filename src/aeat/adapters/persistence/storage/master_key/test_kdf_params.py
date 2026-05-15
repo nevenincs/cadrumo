@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 def test_default_pins_owasp_baseline_constants() -> None:
-    """Pin-test the OWASP 2024 constants verbatim from ADR-1 section 1."""
+    """Pin-test the OWASP 2024 KDF parameters verbatim."""
 
     params = KdfParams.default()
     assert params.algorithm == "argon2id"

@@ -1,10 +1,10 @@
-"""Idle-timeout evaluation for `BucketSession` per ADR-1 section 5.
+"""Idle-timeout evaluation for `BucketSession`.
 
 Every CLI invocation runs `evaluate_idle(session, now, configured_minutes)`
 before granting access to the session. The configured value lives in
 the bucket manifest (`KdfParams` is plaintext; `idle_lock_minutes` is
-read by the `aeat config set idle-lock-minutes` verb that lands in
-P05.S10). The default is 15 minutes per ADR-1 section 5.
+read by the `aeat config set idle-lock-minutes` verb). The default is
+15 minutes.
 
 The evaluator is a pure function over the session's idle deadline and
 the supplied `now`; it never mutates the session. Mutation happens
@@ -52,7 +52,7 @@ def evaluate_idle(
         now: UTC timestamp at which the evaluation runs.
         configured_minutes: Operator-configured idle-lock window in
             minutes (read from the bucket manifest). Defaults to
-            `DEFAULT_IDLE_LOCK_MINUTES` (15) per ADR-1 section 5.
+            `DEFAULT_IDLE_LOCK_MINUTES` (15).
             Strict positive integer; non-positive values raise.
 
     Returns:

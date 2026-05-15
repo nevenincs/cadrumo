@@ -4,7 +4,7 @@ The manifest sits at ``<bucket-dir>/manifest.toml``. Writes use the
 write-then-rename pattern (tmp sibling, ``os.replace``) so a crash mid-write
 can never surface as a torn read; reads round-trip through the strict
 pydantic v2 :class:`BucketManifest` record so an unknown key or a torn
-payload fails closed at the boundary per ADR-2 section 3.
+payload fails closed at the boundary.
 """
 
 from __future__ import annotations
