@@ -5,6 +5,7 @@ tags:
   - '#corpus-registry-packaging'
 date: '2026-05-15'
 related:
+  - '[[2026-05-15-corpus-registry-packaging-adr]]'
   - '[[2026-05-15-corpus-registry-packaging-research]]'
 ---
 
@@ -13,6 +14,10 @@ related:
 Auto-generated index of all documents tagged with `#corpus-registry-packaging`.
 
 ## Documents
+
+### adr
+
+- `2026-05-15-corpus-registry-packaging-adr` - `corpus-registry-packaging` adr: Bundle corpus and registry trees as in-wheel package resources | (**status:** `accepted`)
 
 ### research
 
