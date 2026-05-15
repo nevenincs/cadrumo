@@ -2698,7 +2698,7 @@ This Phase delivers real behavior verification for actor attribution for mutatio
 
 This Phase delivers thin cli exposure for actor attribution for mutations as required by `2026-05-13-cli-workflow-redesign-actor-attribution-adr`.
 
-- [ ] `W44.P220.S1315` - Expose accepted command handlers for actor attribution for mutations under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [x] `W44.P220.S1315` - Expose accepted command handlers for actor attribution for mutations under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
 - [x] `W44.P220.S1316` - Keep argument parsing for actor attribution for mutations separate from backend behavior; `src/aeat/entrypoints/cli`.
 - [x] `W44.P220.S1317` - Delegate actor attribution for mutations execution to centralized backend services; `src/aeat/entrypoints/cli`.
 - [x] `W44.P220.S1318` - Render actor attribution for mutations results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
