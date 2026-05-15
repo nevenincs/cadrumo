@@ -4787,7 +4787,7 @@ Enforce four-source taxonomy and ship missing aggregators.
 
 Audit registry TOMLs and fix test collection errors.
 
-- [ ] `W84.P406.S2309` - Audit every modelo registry TOML for bare invoice source declarations and migrate to canonical source kinds; `registry/aeat/modelos`.
+- [x] `W84.P406.S2309` - Audit every modelo registry TOML for bare invoice source declarations and migrate to canonical source kinds; `registry/aeat/modelos`.
 - [x] `W84.P406.S2310` - Remove any shadow aggregation paths that bypass the four-source taxonomy; `src/aeat/application/aggregation`.
 - [x] `W84.P406.S2311` - Fix test collection errors in test_renta_ledger files per audit observation; `src/aeat/application/aggregation`.
 - [x] `W84.P406.S2312` - Confirm _renta_ledger and _iva_ledger aggregators use only canonical source kinds; `src/aeat/application/aggregation`.

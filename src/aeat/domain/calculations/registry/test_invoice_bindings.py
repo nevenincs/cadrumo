@@ -468,3 +468,31 @@ def test_row_binding_period_grouping_requires_rectification_scope() -> None:
     )
     with pytest.raises(RegistryValidationError, match=r"grouping 'operator_clave_period' requires"):
         resolve_invoice_binding_row_values(revision, ())
+
+
+def test_registry_modelo_349_has_no_bare_invoice_source_kind() -> None:
+    """Modelo 349's binding declarations resolve to canonical source
+    kinds (collectible_invoice / payable_invoice / ledger_transaction
+    / purchase_invoice_evidence). The legacy bare ``"invoice"`` source
+    kind was a pre-taxonomy conflation; this test pins the migrated
+    state so a regression surfaces immediately at registry load."""
+
+    from pathlib import Path
+
+    from aeat.core.paths import PROJECT_ROOT
+    from aeat.domain.calculations.registry._loader import load_modelo_file
+
+    modelo_path = PROJECT_ROOT / "registry" / "aeat" / "modelos" / "349.toml"
+    modelo = load_modelo_file(modelo_path)
+
+    bare_invoice_bindings = []
+    for revision in modelo.revisions.values():
+        for binding in revision.bindings:
+            if binding.source == "invoice":
+                bare_invoice_bindings.append((revision.id, binding.id))
+    assert bare_invoice_bindings == [], (
+        f"Modelo 349 still has bare 'invoice' source declarations: "
+        f"{bare_invoice_bindings!r}. Migrate to a canonical source kind "
+        "(collectible_invoice / payable_invoice / ledger_transaction / "
+        "purchase_invoice_evidence)."
+    )
