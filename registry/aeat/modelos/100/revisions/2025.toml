@@ -12704,7 +12704,7 @@ id = "0706"
 number = "0706"
 label = "\"Barcelona Music Lab. El Futuro de la Música\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -12712,7 +12712,7 @@ id = "0707"
 number = "0707"
 label = "\"Bicentenario de la Policia Nacional\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13085,7 +13085,7 @@ id = "0752"
 number = "0752"
 label = "Deducciones acogidas al régimen general de la Ley del Impuesto sobre Sociedades: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13093,7 +13093,7 @@ id = "0753"
 number = "0753"
 label = "Regímenes especiales de apoyo a acontecimientos de excepcional interés público: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13101,7 +13101,7 @@ id = "0754"
 number = "0754"
 label = "Por actividades de investigación y desarrollo (art. 35.1 de la LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13109,7 +13109,7 @@ id = "0755"
 number = "0755"
 label = "Por inversiones en producciones cinematográficas y series audiovisuales españolas (art. 36.1 de la LIS). Deducción para el productor: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13117,7 +13117,7 @@ id = "0756"
 number = "0756"
 label = "Creación de empleo para trabajadores con discapacidad (art. 38 de la LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13125,7 +13125,7 @@ id = "0757"
 number = "0757"
 label = "\"Primavera Sound, created in Barcelona\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13133,7 +13133,7 @@ id = "0758"
 number = "0758"
 label = "Por inversión en beneficios (art. 37 del TRLIS, DT 24ª LIS) (solo si existe un plan especial de inversión aprobado por la Administración que permita invertir en este ejercicio): Aplicado en esta de..."
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13141,7 +13141,7 @@ id = "0759"
 number = "0759"
 label = "Por inversiones en territorios de África Occidental (art. 27.1.a) bis de la Ley 19/1994): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13149,7 +13149,7 @@ id = "0760"
 number = "0760"
 label = "\"Año Tàpies. Cien años del nacimiento del artista Antoni Tàpies (1923 - 2012)\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13157,7 +13157,7 @@ id = "0761"
 number = "0761"
 label = "\"Eduardo Chillida 100 años\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13165,7 +13165,7 @@ id = "0762"
 number = "0762"
 label = "\"VIII Centenario de la Catedral gótica de Toledo, primada de España\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13181,7 +13181,7 @@ id = "0764"
 number = "0764"
 label = "Por contribuciones empresariales a sistemas de previsión social (D.A. tercera Real Decreto-ley13/2022): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13189,7 +13189,7 @@ id = "0765"
 number = "0765"
 label = "\"Año Santo Jacobeo 2027\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13197,7 +13197,7 @@ id = "0766"
 number = "0766"
 label = "\"Centenario de la Generación del 27\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13205,7 +13205,7 @@ id = "0767"
 number = "0767"
 label = "\"Música clásica para todos\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13213,7 +13213,7 @@ id = "0768"
 number = "0768"
 label = "\"150.º aniversario del nacimiento de Pau Casals\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13221,7 +13221,7 @@ id = "0769"
 number = "0769"
 label = "\"Petit Liceu\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13293,7 +13293,7 @@ id = "0779"
 number = "0779"
 label = "\"Fundación Joan Miró 50.º aniversario\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13301,7 +13301,7 @@ id = "0780"
 number = "0780"
 label = "\"Centenario Gaudí 2026\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13309,7 +13309,7 @@ id = "0781"
 number = "0781"
 label = "\"Quincuagésimo aniversario del Teatre Lliure\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13317,7 +13317,7 @@ id = "0783"
 number = "0783"
 label = "\"Año de Investigación Santiago Ramón y Cajal 2022\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13325,7 +13325,7 @@ id = "0784"
 number = "0784"
 label = "\"Año Jubilar Lebaniego 2023-2024\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13333,7 +13333,7 @@ id = "0785"
 number = "0785"
 label = "\"Vigésimo aniversario del Festival Bilbao BBK Live\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13341,7 +13341,7 @@ id = "0786"
 number = "0786"
 label = "\"75.ª edición del Festival Música y Danza de Granada\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13349,7 +13349,7 @@ id = "0787"
 number = "0787"
 label = "\"Caravaca de la Cruz 2024. Año Jubilar\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13357,7 +13357,7 @@ id = "0788"
 number = "0788"
 label = "\"150.º aniversario del nacimiento de Manuel de Falla\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13382,7 +13382,7 @@ id = "0791"
 number = "0791"
 label = "\"Dansàneu, Festival de Cultures del Pirineu\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13399,7 +13399,7 @@ id = "0793"
 number = "0793"
 label = "\"San Diego Comic-Con Málaga\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13416,7 +13416,7 @@ id = "0795"
 number = "0795"
 label = "\"Programa de preparación de los deportistas españoles de los Juegos de Los Ángeles 2028 \": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13424,7 +13424,7 @@ id = "0796"
 number = "0796"
 label = "\"Universo Mujer IV\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13432,7 +13432,7 @@ id = "0797"
 number = "0797"
 label = "\"Gran Premio de España de Motociclismo\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13440,7 +13440,7 @@ id = "0798"
 number = "0798"
 label = "\"Deporte Inclusivo III\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13595,7 +13595,7 @@ id = "0817"
 number = "0817"
 label = "\"Plan de Fomento de la ópera en la Calle del Teatro Real\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13701,7 +13701,7 @@ id = "0830"
 number = "0830"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2024 que se invierten en elementos nuevos afectos"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13709,7 +13709,7 @@ id = "0831"
 number = "0831"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2024 que se invierten en elementos nuevos afectos: Importe con derecho a deducción(*)"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13717,7 +13717,7 @@ id = "0832"
 number = "0832"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2024 que se invierten en elementos nuevos afectos: Importe de la deducción (**)"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13725,7 +13725,7 @@ id = "0833"
 number = "0833"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2025 que se invierten en elementos nuevos afectos"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13733,7 +13733,7 @@ id = "0834"
 number = "0834"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2025 que se invierten en elementos nuevos afectos: Importe con derecho a deducción(*)"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13741,7 +13741,7 @@ id = "0835"
 number = "0835"
 label = "Importe de los rendimientos netos de actividades económicas obtenidos en  2025 que se invierten en elementos nuevos afectos: Importe de la deducción (**)"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13749,7 +13749,7 @@ id = "0836"
 number = "0836"
 label = "Deducción por inversión en elementos nuevos del inmovilizado material o inversiones inmobiliarias afectas a actividades económicas: Importe de la deducción (**)"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13757,7 +13757,7 @@ id = "0837"
 number = "0837"
 label = "Inversiones en la adquisición de activos fijos: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13765,7 +13765,7 @@ id = "0838"
 number = "0838"
 label = "Restantes modalidades: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13773,7 +13773,7 @@ id = "0839"
 number = "0839"
 label = "Por actividades de investigación y desarrollo (art. 35.1 de la LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13781,7 +13781,7 @@ id = "0840"
 number = "0840"
 label = "Por inversiones en producciones cinematográficas y series audiovisuales españolas (art. 36.1 de la LIS). Deducción para el productor: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13789,7 +13789,7 @@ id = "0841"
 number = "0841"
 label = "Creación de empleo para trabajadores con discapacidad (art.º 38 de la LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13797,7 +13797,7 @@ id = "0842"
 number = "0842"
 label = "Por contribuciones empresariales a sistemas de previsión social (D.A. tercera Real Decreto-ley13/2022): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13805,7 +13805,7 @@ id = "0843"
 number = "0843"
 label = "Por gastos de propaganda y publicidad (art. 27.1.b) bis de la Ley 19/1994): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -13813,7 +13813,7 @@ id = "0844"
 number = "0844"
 label = "Ejercicio 2025. Inversiones en la adquisición de activos fijos: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -20146,7 +20146,7 @@ id = "1623"
 number = "1623"
 label = "\"Plan 2030 de Apoyo al Deporte Base II\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -20181,7 +20181,7 @@ id = "1627"
 number = "1627"
 label = "\"Ironman Calella-Barcelona\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -20197,7 +20197,7 @@ id = "1629"
 number = "1629"
 label = "\"Barcelona Mobile World Capital\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -20683,7 +20683,7 @@ id = "1686"
 number = "1686"
 label = "Por actividades de innovación tecnológica (art. 35.2 LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -20691,7 +20691,7 @@ id = "1687"
 number = "1687"
 label = "Por inversiones en producciones cinematográficas extranjeras en España (art. 36.2 de la LIS) (**): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -20699,7 +20699,7 @@ id = "1688"
 number = "1688"
 label = "Por inversiones en producciones de espectáculos en vivo de artes escénicas y musicales (art. 36.3 LIS). Deducción para el productor: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -20966,7 +20966,7 @@ id = "1722"
 number = "1722"
 label = "Por inversiones en producciones cinematográficas y series audiovisuales españolas (art. 36.1 de la LIS). Deducción para el financiador (*): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -20974,7 +20974,7 @@ id = "1723"
 number = "1723"
 label = "Por inversiones en producciones de espectáculos en vivo de artes escénicas y musicales (art. 36.3 LIS). Deducción para el financiador (*): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -20983,7 +20983,7 @@ number = "1724"
 label = "NIF del productor 1"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -20992,7 +20992,7 @@ number = "1725"
 label = "NIF del productor 2"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -21001,7 +21001,7 @@ number = "1726"
 label = "NIF del productor 3"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -21009,7 +21009,7 @@ id = "1727"
 number = "1727"
 label = "Por actividades de innovación tecnológica (art. 35.2 LIS): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -21017,7 +21017,7 @@ id = "1728"
 number = "1728"
 label = "Por inversiones en producciones cinematográficas extranjeras en España (art. 36.2 de la LIS) (*): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -21025,7 +21025,7 @@ id = "1729"
 number = "1729"
 label = "Por inversiones en producciones de espectáculos en vivo de artes escénicas y musicales (art. 36.3 LIS). Deducción para el productor: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -21033,7 +21033,7 @@ id = "1730"
 number = "1730"
 label = "Por inversiones en producciones cinematográficas y series audiovisuales españolas (art. 36.1 de la LIS). Deducción para el financiador(**): Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -21041,7 +21041,7 @@ id = "1731"
 number = "1731"
 label = "Por inversiones en producciones de espectáculos en vivo de artes escénicas y musicales (art. 36.3 LIS). Deducción para el productor: Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -21050,7 +21050,7 @@ number = "1732"
 label = "NIF del productor 1"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -21059,7 +21059,7 @@ number = "1733"
 label = "NIF del productor 2"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -21068,7 +21068,7 @@ number = "1734"
 label = "NIF del productor 3"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
 data_type = "text"
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -22833,7 +22833,7 @@ id = "1944"
 number = "1944"
 label = "\"Inauguración de la Galería de las Colecciones Reales\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -22850,7 +22850,7 @@ id = "1947"
 number = "1947"
 label = "\"60 aniversario del Festival Porta Ferrada\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -22858,7 +22858,7 @@ id = "1948"
 number = "1948"
 label = "\"Programa EN PLAN BIEN\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -22866,7 +22866,7 @@ id = "1950"
 number = "1950"
 label = "\"Ryder Cup 2031\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -22874,7 +22874,7 @@ id = "1951"
 number = "1951"
 label = "\"Open Barcelona-Trofeo Conde de Godó\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -22882,7 +22882,7 @@ id = "1952"
 number = "1952"
 label = "\"125 aniversario del Real Club de Tenis Barcelona\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -22890,7 +22890,7 @@ id = "1953"
 number = "1953"
 label = "\"750 aniversario del Consolat del Mar\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -22898,7 +22898,7 @@ id = "1954"
 number = "1954"
 label = "\"Congreso de la Unión Internacional de Arquitectos\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -22906,7 +22906,7 @@ id = "1955"
 number = "1955"
 label = "\"Festival Internacional Sónar de Música, Creativitat i Tecnologia\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -22914,7 +22914,7 @@ id = "1956"
 number = "1956"
 label = "\"XXXVII Copa América Barcelona\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -22922,7 +22922,7 @@ id = "1957"
 number = "1957"
 label = "\"Programa deportivo 'RETO DE'\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -23778,7 +23778,7 @@ id = "2060"
 number = "2060"
 label = "\"Barcelona 2026 Capital Mundial de la Arquitectura\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -23786,7 +23786,7 @@ id = "2061"
 number = "2061"
 label = "\"Rally Islas Canarias\": Aplicado en esta declaración"
 section = ["resultados", "anexo_a_res", "deducciones_inversion_empresarial_res"]
-legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-68.2", "ley-27-2014:art-36", "ley-27-2014:art-39", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
