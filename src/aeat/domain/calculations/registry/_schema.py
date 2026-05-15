@@ -80,6 +80,7 @@ FormulaOperator = Literal[
     "lookup_parameter",
     "lookup_bracket",
     "lookup_bracket_by_ccaa",
+    "lookup_parameter_by_entity_type",
     "previous_period_value",
     "previous_period_sum",
     "cross_model_sum",
@@ -181,6 +182,15 @@ class LegalReference(RegistryModel):
             raise RegistryValidationError("legal reference required_text entries must be non-empty")
         if len(set(self.required_text)) != len(self.required_text):
             raise RegistryValidationError("legal reference required_text entries must be unique")
+        if "#" not in self.corpus_ref:
+            raise RegistryValidationError(
+                f"legal reference {self.id!r} corpus_ref must be of the form 'path#anchor' (got {self.corpus_ref!r})"
+            )
+        path_part, _, anchor_part = self.corpus_ref.partition("#")
+        if not path_part or not anchor_part:
+            raise RegistryValidationError(
+                f"legal reference {self.id!r} corpus_ref must have non-empty path and anchor"
+            )
         return self
 
 
@@ -799,6 +809,10 @@ class DataBindingDefinition(RegistryModel):
         "ledger_oss_aggregation",
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
+        "payable_invoice",
+        "collectible_invoice",
+        "ledger_transaction",
+        "purchase_invoice_evidence",
     ]
     selector: Mapping[str, str | int | DecimalValue | bool | tuple[str, ...]]
     aggregation: Mapping[str, str | int | DecimalValue | bool] | None = None
@@ -806,6 +820,7 @@ class DataBindingDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
+    aeat_prefilled: bool = False
 
 
 class FormulaDefinition(RegistryModel):
@@ -818,6 +833,61 @@ class FormulaDefinition(RegistryModel):
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
+class CasillaConstraints(RegistryModel):
+    """Declarative value constraints applied after a casilla is evaluated.
+
+    Captures the legal sign / range rules AEAT mandates per LIRPF /
+    LIVA / LIS articles: a withholding casilla cannot carry a
+    negative value, a deductibility cap restricts the maximum, a
+    non-negativity floor on a cuota líquida prevents arithmetic
+    underflow propagating through downstream formulas.
+
+    Each constraint declares its own legal grounding so the engine
+    can surface a BOE permalink in the violation envelope when a
+    computed value falls outside the declared bounds. The runtime
+    raises a typed `CasillaConstraintViolation`; the Sheets apply
+    adapter renders the same record as a `setDataValidation` rule
+    on the corresponding cell so the operator sees the constraint
+    directly in the workbook UI.
+    """
+
+    sign: Literal["any", "non_negative", "non_positive"] = "any"
+    min_value: DecimalValue | None = None
+    max_value: DecimalValue | None = None
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @model_validator(mode="after")
+    def _validate_bounds(self) -> CasillaConstraints:
+        if self.min_value is not None and self.max_value is not None:
+            if self.min_value > self.max_value:
+                raise RegistryValidationError(
+                    f"casilla constraints: min_value {self.min_value} > max_value {self.max_value}"
+                )
+        if self.sign == "non_negative" and self.max_value is not None and self.max_value < Decimal("0"):
+            raise RegistryValidationError(
+                "casilla constraints: sign='non_negative' is incompatible with negative max_value"
+            )
+        if self.sign == "non_positive" and self.min_value is not None and self.min_value > Decimal("0"):
+            raise RegistryValidationError(
+                "casilla constraints: sign='non_positive' is incompatible with positive min_value"
+            )
+        return self
+
+    def violates(self, value: Decimal) -> str | None:
+        """Return a short reason string if `value` violates this constraint, else None."""
+
+        if self.sign == "non_negative" and value < Decimal("0"):
+            return f"value {value} violates sign=non_negative"
+        if self.sign == "non_positive" and value > Decimal("0"):
+            return f"value {value} violates sign=non_positive"
+        if self.min_value is not None and value < self.min_value:
+            return f"value {value} below min_value {self.min_value}"
+        if self.max_value is not None and value > self.max_value:
+            return f"value {value} above max_value {self.max_value}"
+        return None
+
+
 class CasillaDefinition(RegistryModel):
     id: CasillaId
     number: str
@@ -828,8 +898,8 @@ class CasillaDefinition(RegistryModel):
     input_kind: Literal["manual", "bound", "computed", "informational"] = "manual"
     formula: FormulaId | None = None
     binding: BindingId | None = None
-    validation_refs: tuple[str, ...] = ()
     export_refs: tuple[ExportFieldId, ...] = ()
+    constraints: CasillaConstraints | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
