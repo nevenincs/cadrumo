@@ -80,6 +80,7 @@ from aeat.domain.buckets import (
     BucketEventType,
 )
 from aeat.domain.calculations.registry import ValidatedRegistryAuthority
+from aeat.domain.calculations.registry._bindings import CasillaObservation
 from aeat.domain.deadlines import AutonomoProfile, DeadlineEngine, IVARegime
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
@@ -1229,7 +1230,9 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         state=CalculationRevisionState.DRAFT,
         inputs_snapshot=inputs,
         binding_overrides=overrides_map,
-        casilla_values=casillas,
+        observations=tuple(
+            CasillaObservation(casilla_id=cid, value=val) for cid, val in casillas.items()
+        ),
         created_at=_T1,
         updated_at=_T1,
     )

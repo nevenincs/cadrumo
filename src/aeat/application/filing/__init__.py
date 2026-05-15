@@ -318,8 +318,8 @@ def _binding_row_index(binding_id: str, row_key: object) -> int:
 
 
 def _binding_input(binding_id: str, value: object, binding: object) -> FilingScalar:
-    selector = getattr(binding, "selector", {})
-    data_type = str(selector.get("data_type", "decimal")) if isinstance(selector, dict) else "decimal"
+    selector = getattr(binding, "selector", None)
+    data_type = str(getattr(selector, "data_type", None) or "decimal")
     if data_type == "text":
         return str(value)
     if data_type == "integer":

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import importlib.resources
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from functools import lru_cache
 
 import i18n
@@ -23,6 +23,22 @@ _INITIALISED = False
 SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu")
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _OUTPUT_LANGUAGE_CACHE_VERSION = 0
+
+# Application-layer hook: set by aeat.application at startup to allow the i18n
+# layer to read the active-profile output language without importing application
+# modules directly. Remains None until explicitly registered.
+_profile_language_resolver: Callable[[], str | None] | None = None
+
+
+def register_profile_language_resolver(fn: Callable[[], str | None]) -> None:
+    """Register a callback that resolves the active-profile output language.
+
+    The application layer calls this once at startup so ``core.i18n`` can
+    read profile-level language preferences without importing application
+    modules directly.
+    """
+    global _profile_language_resolver
+    _profile_language_resolver = fn
 
 
 def _ensure_initialised() -> None:
@@ -115,16 +131,18 @@ def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
 
 
 def _active_profile_output_language() -> str | None:
-    """Return active profile language without mutating workflow state."""
+    """Return active profile language without mutating workflow state.
 
+    Delegates to the application-registered resolver if one has been
+    provided via :func:`register_profile_language_resolver`. Falls back
+    gracefully to ``None`` (settings-level language) when no resolver is
+    registered or the resolver raises.
+    """
+    resolver = _profile_language_resolver
+    if resolver is None:
+        return None
     try:
-        from ...application.user_profile._orchestration import fact_value
-        from ...application.workflow._persistence import workflow_state_repository
-
-        record = workflow_state_repository().load().active_profile_record()
-        if record is None:
-            return None
-        raw = _normalise_supported_language(fact_value(record, "preferences.output_language") or "")
+        return _normalise_supported_language(resolver() or "")
     except Exception as exc:
         _log.debug(
             "i18n: unable to resolve active-profile output language; falling back to settings (%s)",
@@ -132,7 +150,6 @@ def _active_profile_output_language() -> str | None:
             exc_info=True,
         )
         return None
-    return raw
 
 
 def tr(translation_key: str, /, **kwargs: object) -> str:
@@ -223,4 +240,4 @@ def _interpolate(rendered: str, values: Mapping[str, object]) -> str:
         return rendered
 
 
-__all__ = ["SUPPORTED_OUTPUT_LANGUAGES", "output_language", "tr"]
+__all__ = ["SUPPORTED_OUTPUT_LANGUAGES", "output_language", "register_profile_language_resolver", "tr"]

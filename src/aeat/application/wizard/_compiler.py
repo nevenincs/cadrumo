@@ -95,4 +95,20 @@ def _resolve_condition(
     return parent.profile_key, condition.equals
 
 
+def _register_compiled_keys() -> None:
+    """Register compiled PROFILE_KEYS into the domain registry at import time.
+
+    Called once when this module is first imported. The domain's
+    :func:`~aeat.domain.profile._keys.register_profile_keys` receives the
+    compiled tuple so the domain layer never needs to import application
+    modules to populate its registry.
+    """
+    from ...domain.profile._keys import register_profile_keys
+    from . import _catalogue  # local import to avoid circular dependency at module level
+
+    register_profile_keys(compile_profile_keys(_catalogue.WIZARD_FLOWS))
+
+
+_register_compiled_keys()
+
 __all__ = ["compile_profile_keys"]

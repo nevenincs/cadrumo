@@ -21,7 +21,9 @@ from ...adapters.inbound.financial.providers import (
     detect_provider,
 )
 from ...adapters.inbound.pdf._utils import sha256_file
-from ...domain.attachments import AttachmentNotFoundError, AttachmentStore, AttachmentValidationError
+from ...adapters.persistence.storage.attachment import AttachmentStore
+from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
+from ...domain.attachments._repository import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -138,7 +140,7 @@ def create_manual_transaction(
     transaction_repository: TransactionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    attachment_store: AttachmentStore | None = None,
+    attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
@@ -185,7 +187,7 @@ def attach_manual_transaction_evidence(
     transaction_repository: TransactionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    attachment_store: AttachmentStore | None = None,
+    attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -982,7 +984,7 @@ def update_manual_transaction(
     transaction_repository: TransactionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    attachment_store: AttachmentStore | None = None,
+    attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -1099,7 +1101,7 @@ def update_manual_transaction_fields(
     transaction_repository: TransactionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
-    attachment_store: AttachmentStore | None = None,
+    attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -2295,7 +2297,7 @@ def _verify_evidence_references(
     *,
     transaction_id: str,
     invoice_repository: InvoiceCatalogueRepository | None,
-    attachment_store: AttachmentStore | None,
+    attachment_store: _AttachmentStoreProtocol | None,
 ) -> None:
     if command.purchase_invoice_evidence_id is not None:
         invoices = (invoice_repository or InvoiceCatalogueRepository()).load()

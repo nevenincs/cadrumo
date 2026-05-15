@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ...entrypoints.cli._i18n import tr
+from ..i18n import tr
 from ..access_gate import LiveSubmitForbiddenError
 from ..observability._errors import RunContextMissingError
 from . import (
