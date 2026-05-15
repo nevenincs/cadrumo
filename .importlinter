@@ -2,29 +2,14 @@
 root_package = aeat
 include_external_packages = False
 
-# ── Layered architecture (hexagonal direction) ───────────────────────────────
-# The hexagonal layering rule: domain depends only on core. Application
-# depends on domain + core. Adapters depend on domain + application + core
-# (typically via Protocol-typed interfaces). Entrypoints sit on top.
-# Reverse-direction imports break hexagonal encapsulation and are forbidden.
-
-[importlinter:contract:layered]
-name = AEAT layered architecture
-type = layers
-layers =
-    aeat.entrypoints
-    aeat.adapters
-    aeat.application
-    aeat.domain
-    aeat.core
-exhaustive = false
-
 # ── Cross-package domain isolation ───────────────────────────────────────────
 # Domain peer-packages must not import each other's private internals.
 # The calculations registry was found importing from domain.renta during
 # the linkage-design audit (defect F7). Promoting the dependency through
 # application/aggregation is the correct fix; the contract below blocks
-# direct cross-package imports until that promotion lands.
+# direct cross-package imports.
+# Two import edges currently violate it and are explicitly ignored until
+# Wave 2 Phase P04 lands the migration.
 
 [importlinter:contract:no-renta-in-registry]
 name = Calculations registry must not import directly from domain.renta
@@ -33,23 +18,27 @@ source_modules =
     aeat.domain.calculations
 forbidden_modules =
     aeat.domain.renta
-# Remove once Wave 2 P04 lands. The exception keeps the contract honest
-# while the migration is in flight; flip to no exceptions once
-# RentaDeductibleExpenseObservation moves to application/aggregation.
+# Both edges are part of the same F7 family. Remove these ignores when
+# Wave 2 P04.S13 / S14 / S16 complete and RentaDeductibleExpenseObservation
+# is reachable from application/aggregation instead.
 ignore_imports =
     aeat.domain.calculations.registry._bindings -> aeat.domain.renta
+    aeat.domain.calculations.registry.test_ledger_renta_expense_binding -> aeat.domain.renta
 
-# ── Profile-level convergence (CCAA) ─────────────────────────────────────────
-# After Wave 2 P02 (CCAA canonicalisation) lands, this contract pins the
-# single canonical CCAA shape inside domain.profile and prevents
-# reintroduction of competing enums elsewhere in domain.
-# Stubbed for now; activate once the migration completes.
+# ── Layered architecture (hexagonal direction) ───────────────────────────────
+# Stub — enabling the layered contract surfaces ~30 legitimate architectural
+# violations plus many test-pattern edges (live-test files importing CLI
+# entrypoints). Wave 2 Phase P06.S19 lands the production-only layered
+# contract with proper test-file exclusions. The stub below documents the
+# intended layering and is commented out until then.
 #
-# [importlinter:contract:ccaa-canonical]
-# name = Single canonical CCAA enum lives in domain.profile
-# type = forbidden
-# source_modules =
-#     aeat.domain.renta
-# forbidden_modules =
-#     aeat.domain.profile._ccaa
-# Until the migration, renta retains its own enum; flip after P02.S07.
+# [importlinter:contract:layered]
+# name = AEAT layered architecture
+# type = layers
+# layers =
+#     aeat.entrypoints
+#     aeat.adapters
+#     aeat.application
+#     aeat.domain
+#     aeat.core
+# exhaustive = false

@@ -34,6 +34,7 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....application.storage.calc_sheets import collect_row_sets
 from ....application.storage.calc_sheets._layout import plan_layout
 from ....domain.calculations.registry._formula_runtime import (
     RegistryCalculationResult,
@@ -84,6 +85,25 @@ class RelationEdit(BaseModel):
     value: Decimal | None = None
 
 
+class RowSetCellEdit(BaseModel):
+    """One operator-edited cell from a Detalle tab row-set."""
+
+    model_config = _STRICT_FROZEN
+
+    binding: BindingId
+    row_index: int = Field(ge=1)
+    value: Decimal | str | None = None
+
+
+class RowSetEdit(BaseModel):
+    """All operator-supplied detail rows for one row-set grouping."""
+
+    model_config = _STRICT_FROZEN
+
+    grouping: str = Field(min_length=1)
+    cells: tuple[RowSetCellEdit, ...] = ()
+
+
 class PullMetadata(BaseModel):
     """Workbook identity metadata recovered from developer metadata."""
 
@@ -107,6 +127,7 @@ class PullResult(BaseModel):
     operator_edits: tuple[OperatorEdit, ...]
     binding_edits: tuple[BindingEdit, ...]
     relation_edits: tuple[RelationEdit, ...]
+    row_set_edits: tuple[RowSetEdit, ...] = ()
     metadata: PullMetadata
     metadata_match: Literal["matches", "stale", "missing"]
     cells_read: int = Field(ge=0)
@@ -400,15 +421,111 @@ def pull_operator_edits(
             cells_read += 1
         relation_edits.append(RelationEdit(relation=relation_id, value=coerced))
 
+    # Read row-set detail rows from the Detalle tab. Each row-set
+    # reserves first_data_row + 50 rows × N columns; we issue one
+    # batchGet covering each row-set's full data block and capture
+    # any non-blank cell as a RowSetCellEdit.
+    row_set_edits, row_set_cells_read = _read_row_set_edits(snapshot, sheets, spreadsheet_id)
+    cells_read += row_set_cells_read
+
     return PullResult(
         spreadsheet_id=spreadsheet_id,
         operator_edits=tuple(operator_edits),
         binding_edits=tuple(binding_edits),
         relation_edits=tuple(relation_edits),
+        row_set_edits=row_set_edits,
         metadata=metadata,
         metadata_match=metadata_match,
         cells_read=cells_read,
     )
+
+
+def _read_row_set_edits(
+    snapshot: RegistrySnapshot,
+    sheets: Any,
+    spreadsheet_id: str,
+) -> tuple[tuple[RowSetEdit, ...], int]:
+    """Read each row-set's Detalle-tab data area into typed row edits.
+
+    Returns the per-grouping ``RowSetEdit`` tuple plus the total count
+    of non-blank cells read across all row-sets. Each row-set's data
+    block is fetched in one batchGet entry (header_row+1 .. header_row+51).
+    """
+
+    row_sets = collect_row_sets(snapshot.revision)
+    if not row_sets:
+        return ((), 0)
+
+    block_ranges: list[str] = []
+    for row_set in row_sets:
+        last_column = max(col.header_address.column for col in row_set.columns)
+        start_col_letters = _column_index_to_letters(1)
+        end_col_letters = _column_index_to_letters(last_column)
+        start_row = row_set.first_data_row
+        end_row = row_set.first_data_row + 49
+        block_ranges.append(
+            f"'{row_set.tab.value}'!{start_col_letters}{start_row}:{end_col_letters}{end_row}"
+        )
+
+    response = _execute(
+        sheets.spreadsheets()
+        .values()
+        .batchGet(
+            spreadsheetId=spreadsheet_id,
+            ranges=block_ranges,
+            valueRenderOption="UNFORMATTED_VALUE",
+        ),
+        action="sheets.spreadsheets.values.batchGet.row_sets",
+    )
+    value_ranges = response.get("valueRanges", []) or []
+
+    edits: list[RowSetEdit] = []
+    cells_read = 0
+    for row_set_index, row_set in enumerate(row_sets):
+        vr = value_ranges[row_set_index] if row_set_index < len(value_ranges) else {}
+        rows = vr.get("values", []) or []
+        cells: list[RowSetCellEdit] = []
+        for local_row, row_values in enumerate(rows, start=1):
+            for col_index, raw in enumerate(row_values, start=1):
+                if raw is None or raw == "":
+                    continue
+                # Map the column index back to its binding via the row-set's
+                # ordered columns. row_set.columns is in column-allocation
+                # order (column 1, 2, ...).
+                if col_index > len(row_set.columns):
+                    continue
+                binding_id = row_set.columns[col_index - 1].binding
+                coerced = _coerce_value(raw)
+                if coerced is None:
+                    continue
+                cells_read += 1
+                coerced_value: Decimal | str | None
+                if isinstance(coerced, bool):
+                    coerced_value = str(coerced)
+                else:
+                    coerced_value = coerced
+                cells.append(
+                    RowSetCellEdit(
+                        binding=binding_id,
+                        row_index=local_row,
+                        value=coerced_value,
+                    )
+                )
+        edits.append(RowSetEdit(grouping=row_set.grouping, cells=tuple(cells)))
+    return tuple(edits), cells_read
+
+
+def _column_index_to_letters(column: int) -> str:
+    """Convert a 1-based column index to A1 letters (1 -> A, 27 -> AA)."""
+
+    if column < 1:
+        raise ValueError("column index must be 1-based and positive")
+    letters: list[str] = []
+    remaining = column
+    while remaining > 0:
+        remaining, ordinal = divmod(remaining - 1, 26)
+        letters.append(chr(ord("A") + ordinal))
+    return "".join(reversed(letters))
 
 
 def compute_from_pull(

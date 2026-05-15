@@ -5,11 +5,10 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...renta import RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS, RentaDeductibleExpenseObservation
 from ...vat import (
     EUMemberState,
     InvoiceDirection,
