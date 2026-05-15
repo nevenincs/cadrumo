@@ -1820,4 +1820,26 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.domain.currency._errors.ExchangeRateProviderError",
+        ErrorCode(
+            code="FAIL_EXCHANGE_RATE_PROVIDER",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.exchange_rate_provider",
+            default_suggestion=None,
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.currency._errors.StaleExchangeRateError",
+        ErrorCode(
+            code="FAIL_STALE_EXCHANGE_RATE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.stale_exchange_rate",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

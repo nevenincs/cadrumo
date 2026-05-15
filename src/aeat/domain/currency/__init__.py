@@ -1,6 +1,12 @@
 """Currency normalization layer."""
 
-from ._errors import CurrencyError, MissingExchangeRateError, UnsupportedCurrencyError
+from ._errors import (
+    CurrencyError,
+    ExchangeRateProviderError,
+    MissingExchangeRateError,
+    StaleExchangeRateError,
+    UnsupportedCurrencyError,
+)
 from ._models import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
@@ -13,8 +19,10 @@ __all__ = [
     "CurrencyNormalizationService",
     "CurrencyNormalizationStatus",
     "ExchangeRateProvider",
+    "ExchangeRateProviderError",
     "MissingExchangeRateError",
     "MonetaryAmount",
     "NormalizedAmount",
+    "StaleExchangeRateError",
     "UnsupportedCurrencyError",
 ]
