@@ -2,11 +2,7 @@
 
 Operator reference for the nine-marker pytest taxonomy, the permanent
 live-write ban, the pytest-only posture, and the associated plugin
-roster. See charter `#116` (live-AEAT-write safety charter),
-`.vault/adr/2026-04-17-pytest-markers-adr.md` (marker taxonomy), and
-`.vault/adr/2026-04-17-pytest-only-testing-adr.md` (pytest-only posture,
-plugin set, coverage gate) for the authoritative specifications; this
-file is the operator-facing summary.
+roster. This file is the operator-facing summary.
 
 ## Marker taxonomy
 
@@ -167,7 +163,7 @@ Test modules (`test_*.py`, `_test_*.py`, `src/aeat/tests/`) are omitted from
 coverage.
 
 Ratchet policy: the threshold only moves up. Lowering it requires a
-new ADR with the rationale (e.g. temporary dip during a refactor); the
+documented rationale (e.g. temporary dip during a refactor); the
 default posture is to delete dead code or add tests rather than relax
 the floor.
 
@@ -204,12 +200,6 @@ Checklist:
 
 ## Cross-references
 
-- Charter `#116` - rules R1..R6 governing the live-write path.
-- `.vault/adr/2026-04-17-pytest-markers-adr.md` - marker taxonomy decision.
-- `.vault/adr/2026-04-17-pytest-only-testing-adr.md` - pytest-only
-  posture, plugin set, coverage gate.
 - `src/aeat/tests/_marker_hook.py` - shared collection hook body.
 - `src/aeat/tests/test_marker_integrity.py` - AST-backed drift detector.
-- `scripts/README.md` - Google Workspace fixture provisioning for
-  `live_read` tests.
 - `CLAUDE.md` - multilingual testing contract and module-layout mandate.

@@ -627,7 +627,10 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
 def test_no_usage_ratios_to_prorrata_shim_exists() -> None:
     """``domain.usage_ratios`` and ``aeat.domain.vat._prorrata`` are
     distinct concepts. No module may translate usage-ratios values into
-    prorrata percentages — the ADR explicitly rejects that shim.
+    prorrata percentages: usage-ratios is the proportional-expense
+    allocation surface (LIRPF deductibility), prorrata is the LIVA
+    deduction mechanism. Bridging them in the same module is a
+    structural shim and is rejected here.
     """
 
     from pathlib import Path
@@ -665,11 +668,12 @@ def test_no_usage_ratios_to_prorrata_shim_exists() -> None:
 def test_no_parallel_prorrata_cli_surface_exists() -> None:
     """No ``aeat ... prorrata`` CLI verb survives.
 
-    The accepted operator path for prorrata is `aeat app modelo bindings
+    The canonical operator path for prorrata is `aeat app modelo bindings
     list --modelo 303` (or 390) which surfaces a "prorrata percentage
     missing" readiness category. A standalone `app prorrata`,
-    `app ledger prorrata`, or `app modelo prorrata` verb is rejected by
-    the ADR and must not appear in the entrypoints CLI tree.
+    `app ledger prorrata`, or `app modelo prorrata` verb would create a
+    parallel surface for a value that already has a binding-level entry
+    point and must not appear in the entrypoints CLI tree.
     """
 
     from pathlib import Path

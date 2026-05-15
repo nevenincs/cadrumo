@@ -87,3 +87,47 @@ def test_ratios_validate_reports_clean_when_empty(cli_runner: CliRunner) -> None
     result = cli_runner.invoke(ratios_app, ["validate"])
     assert result.exit_code == 0, result.output
     assert "profile_present\tFalse" in result.output
+
+
+def test_ratios_set_emits_ledger_ratios_set_event(cli_runner: CliRunner) -> None:
+    """`ratios set` records a typed LEDGER_RATIOS_SET event in the bucket
+    history so downstream auditors can replay the override sequence."""
+
+    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    set_result = cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "0.5"])
+    assert set_result.exit_code == 0, set_result.output
+
+    catalogue = BucketEventHistoryRepository().load()
+    matching = [
+        event
+        for event in catalogue.events.values()
+        if event.event_type is BucketEventType.LEDGER_RATIOS_SET
+        and event.object_id == "vehiculo_combustible"
+    ]
+    assert matching, [event.event_type for event in catalogue.events.values()]
+    assert matching[-1].payload["new"] == "0.5"
+    assert matching[-1].payload["prior"] == ""
+
+
+def test_ratios_unset_emits_ledger_ratios_unset_event(cli_runner: CliRunner) -> None:
+    """`ratios unset` records a typed LEDGER_RATIOS_UNSET event with the
+    prior ratio value so the operator-visible mutation cannot be replayed
+    only from the secure-object snapshot."""
+
+    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    cli_runner.invoke(ratios_app, ["set", "vehiculo_combustible", "0.5"])
+    unset_result = cli_runner.invoke(ratios_app, ["unset", "vehiculo_combustible"])
+    assert unset_result.exit_code == 0, unset_result.output
+
+    catalogue = BucketEventHistoryRepository().load()
+    matching = [
+        event
+        for event in catalogue.events.values()
+        if event.event_type is BucketEventType.LEDGER_RATIOS_UNSET
+        and event.object_id == "vehiculo_combustible"
+    ]
+    assert matching
+    assert matching[-1].payload["prior"] == "0.5"
+    assert matching[-1].payload["new"] == ""

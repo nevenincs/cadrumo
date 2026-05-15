@@ -134,7 +134,12 @@ class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
 
     @property
     def filing_date(self) -> date:
-        """Return the first-slice filing date selected by Phase 2."""
+        """Return the filing date used for first-slice selection.
+
+        Prefers ``invoice_issue_date`` when present, falling back to
+        ``operation_date`` so observations without invoices still get a
+        deterministic anchor.
+        """
 
         return self.invoice_issue_date if self.invoice_issue_date is not None else self.operation_date
 

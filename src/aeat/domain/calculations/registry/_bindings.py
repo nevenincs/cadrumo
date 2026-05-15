@@ -93,11 +93,9 @@ class CasillaObservation(BaseModel):
 class RegistryFilingObservation(BaseModel):
     """Observed casilla values from a filed declaration.
 
-    Primary storage is ``observations`` — a typed tuple of
-    :class:`CasillaObservation` carrying full formula provenance
-    (defect T-01 fix). The legacy ``casilla_values`` mapping is
-    derived on demand via a computed field so existing read-callers
-    continue to work without modification.
+    Storage is ``observations`` — a typed tuple of :class:`CasillaObservation`
+    carrying full formula provenance. The ``casilla_values`` computed field
+    provides a read-only mapping view for downstream consumers.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -110,7 +108,7 @@ class RegistryFilingObservation(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def casilla_values(self) -> Mapping[str, Decimal]:
-        """Compat view: casilla_id → Decimal derived from typed observations."""
+        """Read-only mapping view: casilla_id → Decimal derived from typed observations."""
         return {obs.casilla_id: obs.value for obs in self.observations}
 
 
@@ -254,9 +252,9 @@ def _selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
     - Test-constructed bindings via model_copy(update=...): selector may be a raw dict.
     """
     selector = binding.selector
-    if isinstance(selector, dict):
-        return {k: v for k, v in selector.items() if k != "source"}
-    return selector.model_dump(exclude={"source"}, exclude_none=True)
+    if isinstance(selector, BaseModel):
+        return selector.model_dump(exclude={"source"}, exclude_none=True)
+    return {k: v for k, v in selector.items() if k != "source"}
 
 
 class _PreviousFilingSelector(BaseModel):
@@ -1204,7 +1202,7 @@ def resolve_ledger_iva_aggregation_binding_values(
 #
 # The registry accesses only four attributes on each observation. A Protocol
 # avoids a cross-domain import (domain.calculations -> domain.renta) that
-# violated the hexagonal boundary (linkage-design-audit F7).
+# would violate the hexagonal direction.
 # ---------------------------------------------------------------------------
 
 # Casilla IDs covered by the first Renta expense slice (Modelo 100, period 0A).
@@ -1882,6 +1880,7 @@ class _RelatedPartySelector(BaseModel):
 
     fact: str = Field(min_length=1, max_length=64)
     row_field: _RelatedPartyRowField | None = None
+    grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
 
 
@@ -2011,6 +2010,7 @@ class _ForeignAssetSelector(BaseModel):
     fact: str = Field(min_length=1, max_length=64)
     row_field: _ForeignAssetRowField | None = None
     asset_classes: tuple[str, ...] = ()
+    grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
 
 
@@ -2146,6 +2146,7 @@ class _AtributionSelector(BaseModel):
 
     fact: str = Field(min_length=1, max_length=64)
     row_field: _AtributionRowField | None = None
+    grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
 
 
@@ -2253,6 +2254,7 @@ class _RefundSelector(BaseModel):
 
     fact: str = Field(min_length=1, max_length=64)
     row_field: _RefundRowField | None = None
+    grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
 
 

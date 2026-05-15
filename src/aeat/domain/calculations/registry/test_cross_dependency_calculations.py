@@ -8,7 +8,7 @@ import pytest
 
 from . import RegistryCalculationResult, calculate_registry_snapshot
 from ._authority import ValidatedRegistryAuthority
-from ._bindings import RegistryFilingObservation, resolve_previous_filing_binding_values
+from ._bindings import CasillaObservation, RegistryFilingObservation, resolve_previous_filing_binding_values
 from ._relations import (
     RegistryRelationSourceRequirement,
     relation_source_requirements,
@@ -328,7 +328,7 @@ def test_modelo_130_resolves_previous_year_modelo_100_filed_casillas_into_bindin
                 modelo="100",
                 filing_year=source_year,
                 period="0A",
-                casilla_values=source_values,
+                observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in source_values.items()),
             ),
         ),
         filing_year=filing_year,
@@ -514,7 +514,7 @@ def _observations_from_requirements(
             modelo=modelo,
             filing_year=filing_year,
             period=period,
-            casilla_values=casilla_values,
+            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
         )
         for (modelo, filing_year, period), casilla_values in sorted(observed.items())
     )

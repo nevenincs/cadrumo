@@ -1,7 +1,7 @@
 """Filesystem provisioning and path resolution for per-bucket directories.
 
 The per-bucket on-disk model lives at ``<aeat-root>/buckets/<bucket-id>/``
-and carries exactly three subdirectories per ADR-2 section 2:
+and carries exactly three subdirectories:
 
 - ``db/``    relational state (SQLite database files).
 - ``blobs/`` opaque artefact storage (sealed ciphertext blobs).

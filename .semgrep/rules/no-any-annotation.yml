@@ -3,8 +3,9 @@ rules:
     message: |
       `Any` annotation forbidden in src/aeat/domain/ and src/aeat/application/.
       Replace with a typed alternative: pydantic model, TypedDict, Union, or
-      `object` if the value is truly polymorphic. See defect-class T-11 in the
-      linkage-design-audit reference document.
+      `object` if the value is truly polymorphic. Type-system escapes in the
+      core domain and application layers undermine the strictness contract
+      enforced elsewhere.
     severity: ERROR
     languages:
       - python

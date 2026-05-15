@@ -1,15 +1,11 @@
 """Purchase invoice evidence records and the CRUD application service.
 
-Implements the locked verb shape from
-``2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr``
-and ``2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr``:
 ``aeat app ledger evidence {add|remove|update|view|list}`` operate over a
 :class:`PurchaseInvoiceEvidence` pydantic record.
 
 File-type scope is restricted to PDF and image inputs handled by the OCR
-path defined in the receipt-ocr-pdf-evidence ADR. Plaintext, email body,
-and Drive-URL evidence sources are out of scope and deferred to a future
-``evidence-source-expansion`` ADR. ``add`` refuses non-PDF/non-image
+path. Plaintext, email body, and Drive-URL evidence sources are out of
+scope. ``add`` refuses non-PDF/non-image
 source paths with a typed :class:`PurchaseInvoiceEvidenceInputError`.
 
 Persistence is a bucket-scoped JSON file under

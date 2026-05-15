@@ -40,7 +40,6 @@ from aeat.domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventType,
 )
-from aeat.domain.calculations.registry._bindings import CasillaObservation
 from aeat.domain.modelos._calculation_repository import (
     CalculationRevisionCatalogueRepository,
     upsert_calculation_revision,
@@ -148,10 +147,7 @@ def _seed_external_baseline(repos_tuple, *, casilla_values):
         state=CalculationRevisionState.FILED,
         inputs_snapshot=inputs,
         binding_overrides=overrides_map,
-        observations=tuple(
-            CasillaObservation(casilla_id=cid, value=val)
-            for cid, val in casilla_values.items()
-        ),
+        casilla_values=casilla_values,
         created_at=_T1,
         updated_at=_T1,
         verified_at=_T1,

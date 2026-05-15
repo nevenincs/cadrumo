@@ -665,6 +665,12 @@ def compute_from_pull(
     edits_by_relation = {edit.relation: edit for edit in pull.relation_edits}
     relation_values: dict[RelationId, Decimal] = {}
     for relation in snapshot.revision.relations:
+        # Skip relations that are not active for the snapshot's period.
+        # The runtime's `_reject_unknown_external_values` rejects any
+        # relation_value that does not appear in the active-relations
+        # set; supplying inactive values here would crash the compute.
+        if relation.target_periods and snapshot.period not in relation.target_periods:
+            continue
         edit = edits_by_relation.get(relation.id)
         if edit is None or edit.value is None:
             relation_values[relation.id] = Decimal("0")

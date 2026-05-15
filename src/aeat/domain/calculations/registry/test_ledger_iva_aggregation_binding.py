@@ -17,6 +17,7 @@ from pydantic import ValidationError
 
 from aeat.core.paths import PROJECT_ROOT
 from aeat.domain.calculations.registry import (
+    CasillaObservation,
     DataBindingDefinition,
     IvaLedgerObservation,
     ModeloRevision,
@@ -116,7 +117,7 @@ def _calculate_390_from_observations_and_303_filings(
                 modelo="303",
                 filing_year=filing_year,
                 period=period,
-                casilla_values=result.values,
+                observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in result.values.items()),
             )
             for period, result in quarterly_results.items()
         ),

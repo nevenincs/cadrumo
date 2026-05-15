@@ -59,6 +59,31 @@ def test_config_profile_use_refuses_unknown_profile(cli_runner: CliRunner) -> No
     assert result.exit_code != 0
 
 
+def test_config_profile_use_emits_profile_activated_event(cli_runner: CliRunner) -> None:
+    """`config profile use` records a typed PROFILE_ACTIVATED event in the
+    bucket-event-history catalogue so downstream auditors can replay
+    the activation timeline. Distinct from PROFILE_SELECTED (which
+    captures workflow-state-level selection).
+    """
+
+    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    _seed("operator")
+    result = cli_runner.invoke(profile_app, ["use", "operator"])
+    assert result.exit_code == 0, result.output
+
+    catalogue = BucketEventHistoryRepository().load()
+    matching = [
+        event
+        for event in catalogue.events.values()
+        if event.event_type is BucketEventType.PROFILE_ACTIVATED
+        and event.object_id == "operator"
+    ]
+    assert matching, [event.event_type for event in catalogue.events.values()]
+    assert matching[-1].payload["profile_id"] == "operator"
+    assert matching[-1].payload["active_profile"] == "operator"
+
+
 def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -> None:
     _seed("operator")
     result = cli_runner.invoke(profile_app, ["view"])

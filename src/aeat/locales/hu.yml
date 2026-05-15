@@ -237,6 +237,7 @@ cli:
         year_help: A modell adóéve (pl. 2026)
       casillas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
+        form_number_help: Cellák szűrése a BOE-nyomtatványon szereplő mezőszám alapján (pl. 46)
         input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound, computed,
           informational)
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)
@@ -332,6 +333,12 @@ cli:
         verify_help: Draft kalkulációs revízió verifikálása a verified-complete szerződés
           ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
+        invalid_work_unit_id: A work_unit_id 64 karakteres kisbetűs hex-karakterlánc
+          kell legyen (SHA-256 kivonat)
+        invalid_casilla_key: 'A --casilla kulcs nem érvényes CasillaId (alfanumerikus
+          plusz . _ : - elválasztók, max. 64 karakter)'
+        invalid_binding_key: 'A --binding kulcs nem érvényes BindingId (kisbetűs alfanumerikus
+          plusz . _ : - elválasztók, max. 128 karakter)'
         year_help: A munkaegység adóéve (pl. 2026)
   common:
     errors:
@@ -437,6 +444,11 @@ cli:
             a Google Sheets munkafüzetbe az `aeat-vault/` alá
           help: Séma-táblázat számítási felület (exportálás és visszaolvasás)
           pull:
+            assemble_observations_help: A behúzás után állítsa össze a Detalle fül
+              sor-cellaértékeit típusos megfigyelésekké (kedvezményezettek,
+              külföldi vagyon, kapcsolt felek közötti műveletek, atribución tagok,
+              visszatérítési műveletek) és bocsássa ki őket a payloadba a nyers
+              row_set_edits mellett
             compute_help: A behúzás után futtassa a lokális Decimal futtatókörnyezetet
               a behúzott bemenetekre és bocsássa ki a számított cella értékeket
             compute_refused_stale: 'megtagadva a számítás olyan munkafüzettel szemben

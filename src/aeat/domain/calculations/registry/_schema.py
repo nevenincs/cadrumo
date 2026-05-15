@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
@@ -10,6 +11,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from ....core.classification import SensitivityClass
 from ._errors import RegistryValidationError
 from ._ids import (
     ApplicationLinkId,
@@ -47,6 +49,43 @@ def _coerce_decimal(value: object) -> object:
 
 
 DecimalValue = Annotated[Decimal, BeforeValidator(_coerce_decimal)]
+
+_WORKBOOK_CELL_REF_RE = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
+
+
+def _validate_workbook_cell_ref_str(value: object) -> object:
+    if isinstance(value, str):
+        if not _WORKBOOK_CELL_REF_RE.match(value):
+            raise RegistryValidationError(f"invalid workbook cell reference {value!r}")
+    return value
+
+
+WorkbookCellRefStr = Annotated[str, BeforeValidator(_validate_workbook_cell_ref_str)]
+
+
+def _coerce_sensitivity_class(value: object) -> object:
+    if isinstance(value, SensitivityClass):
+        return value
+    if isinstance(value, str):
+        return SensitivityClass(value)
+    return value
+
+
+SensitivityClassField = Annotated[SensitivityClass, BeforeValidator(_coerce_sensitivity_class)]
+
+CalculationClass = Literal["filing", "informative", "summary"]
+ModeloCapability = Literal["borrador", "renta_ledger_default"]
+"""Discriminator for the calculation role of a ModeloDefinition.
+
+- ``filing``: The modelo computes and submits filing-grade amounts.
+  Most modelos fall into this class.
+- ``informative``: The modelo collects and reports data but does not
+  compute filing-grade amounts. Revisions must have empty ``formulas``
+  and empty ``relations``; every casilla must be ``manual`` or
+  ``informational``. Modelo 232 is the canonical example.
+- ``summary``: The modelo aggregates other modelos (e.g. 390 over 303)
+  and may declare cross-model relations but is not a filing modelo.
+"""
 
 ReviewStatus = Literal["reviewed"]
 DateAxis = Literal["filing_period", "devengo_date", "transaction_date", "invoice_date", "submission_date"]
@@ -449,7 +488,7 @@ class WorkbookParityReference(RegistryModel):
     fixture_id: str
     formula_coverage: Literal["formula_form", "static_layout", "record_design_layout", "unsupported_binary_xls"]
     runner_required: bool
-    output_cells: Mapping[str, str] = Field(default_factory=dict)
+    output_cells: Mapping[str, WorkbookCellRefStr] = Field(default_factory=dict)
     tolerance: DecimalValue = Decimal("0.00")
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -927,6 +966,7 @@ class CasillaDefinition(RegistryModel):
     binding: BindingId | None = None
     export_refs: tuple[ExportFieldId, ...] = ()
     constraints: CasillaConstraints | None = None
+    form_number: str | None = Field(default=None, min_length=1, max_length=16)
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -1079,6 +1119,7 @@ class ExportRecordDefinition(RegistryModel):
     required: bool = True
     repeat: Literal["binding_rows"] | None = None
     binding_record: str | None = None
+    row_field_casillas: Mapping[str, CasillaId] = Field(default_factory=dict)
     discriminator: RecordDiscriminator | None = None
     requires_positive_casilla: CasillaId | None = None
     fields: tuple[ExportFieldDefinition, ...] = Field(default_factory=tuple)
@@ -1152,9 +1193,16 @@ class ModeloDefinition(RegistryModel):
     tax_domain: str
     cadence: Literal["monthly", "quarterly", "annual", "ad_hoc", "profile_based"]
     jurisdiction: Literal["ES-AEAT"]
+    calculation_class: CalculationClass = "filing"
+    output_sensitivity: SensitivityClassField = SensitivityClass.FINANCIAL
+    capabilities: Annotated[frozenset[ModeloCapability], BeforeValidator(frozenset)] = frozenset()
     legal_refs: LegalRefs
     source_refs: SourceRefs
     revisions: Mapping[RevisionId, ModeloRevision]
+
+    def has_capability(self, name: ModeloCapability) -> bool:
+        """Return whether this modelo declares the given capability."""
+        return name in self.capabilities
 
     @model_validator(mode="after")
     def _validate_revisions(self) -> ModeloDefinition:

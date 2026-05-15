@@ -3,8 +3,8 @@
 Guards `src/aeat/adapters/outbound/google/` against the reintroduction
 of pre-teardown scaffold modules (`_oauth_legacy*`, `_gcloud*`) and
 asserts the v1 module list stays minimal — every file in the package
-must be one of the canonical v1 modules from the master plan's
-`P01.S00` description, plus the public `__init__.py`.
+must be one of the canonical v1 modules listed in this test, plus the
+public `__init__.py`.
 
 The test introspects the source tree directly (not via Python import)
 so it stays runnable even when the broader import chain is broken

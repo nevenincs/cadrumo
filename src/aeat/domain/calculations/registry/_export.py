@@ -127,27 +127,6 @@ def _export_fields_from_record_bindings(
     return tuple(fields)
 
 
-_ROW_FIELD_CASILLA_BY_RECORD: dict[str, dict[str, str]] = {
-    "operador": {
-        "country_code": "op.codigo-pais",
-        "party_tax_id": "op.nif-comunitario",
-        "party_legal_name": "op.apellidos-razon-social",
-        "clave": "op.clave-operacion",
-        "base_imponible": "op.base-imponible",
-    },
-    "rectificacion": {
-        "country_code": "op.codigo-pais",
-        "party_tax_id": "op.nif-comunitario",
-        "party_legal_name": "op.apellidos-razon-social",
-        "clave": "op.clave-operacion",
-        "rectified_year": "rect.ejercicio-rectificado",
-        "rectified_period": "rect.periodo-rectificado",
-        "base_imponible": "rect.base-rectificada",
-        "rectified_base_previous": "rect.base-anterior",
-    },
-}
-
-
 def _export_field_from_row_binding(
     record: ExportRecordDefinition,
     binding: DataBindingDefinition,
@@ -159,15 +138,21 @@ def _export_field_from_row_binding(
     row_field = binding.selector.get("row_field")
     if not isinstance(row_field, str):
         return None
-    casilla = _ROW_FIELD_CASILLA_BY_RECORD.get(record.binding_record, {}).get(row_field)
+    casilla = record.row_field_casillas.get(row_field)
     if casilla is None:
-        return None
+        raise RegistryValidationError(
+            f"export record {record.id!r} binding {binding.id!r} row_field {row_field!r}"
+            " has no casilla mapping in row_field_casillas"
+        )
     template = next(
         (field for field in record.fields if field.kind == "casilla" and field.casilla == casilla),
         None,
     )
     if template is None:
-        return None
+        raise RegistryValidationError(
+            f"export record {record.id!r} binding {binding.id!r} casilla {casilla!r}"
+            " has no matching template field in the record"
+        )
     return template.model_copy(
         update={
             "id": f"{record.id}.{binding.id}",

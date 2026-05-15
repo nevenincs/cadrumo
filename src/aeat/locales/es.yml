@@ -254,6 +254,7 @@ cli:
       casillas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
+        form_number_help: Filtrar casillas por número de casilla impreso en el BOE (p. ej. 46)
         input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
           computed, informational)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
@@ -356,6 +357,12 @@ cli:
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
+        invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
+          64 caracteres (resumen SHA-256)
+        invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
+          más separadores . _ : -, máx. 64 caracteres)'
+        invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
+          en minúsculas más separadores . _ : -, máx. 128 caracteres)'
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
   common:
     errors:
@@ -463,6 +470,11 @@ cli:
             y período a una hoja de Google Sheets dentro de `aeat-vault/`
           help: Superficie de cálculo esquema-a-hoja (exportar y recuperar)
           pull:
+            assemble_observations_help: Tras recuperar, reensambla las celdas de
+              filas de la pestaña Detalle en observaciones tipadas (perceptores,
+              bienes en el extranjero, operaciones vinculadas, miembros de
+              atribución, operaciones de devolución) y emítelas en el payload junto
+              a los row_set_edits brutos
             compute_help: Tras recuperar las ediciones, ejecuta el motor Decimal
               local contra ellas y emite los valores calculados de las casillas
             compute_refused_stale: 'rechazo a calcular contra un libro cuyas marcas

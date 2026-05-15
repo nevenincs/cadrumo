@@ -40,6 +40,31 @@ def test_unknown_modelo_surfaces_as_bad_parameter() -> None:
 
 
 # ---------------------------------------------------------------------------
+# casillas --form-number filter
+# ---------------------------------------------------------------------------
+
+
+def test_casillas_form_number_filter_matches_declared_casilla() -> None:
+    """``--form-number 46`` returns only the M303 casilla whose form_number equals '46'."""
+    result = invoke_cached_cli(["app", "modelo", "casillas", "303", "--form-number", "46"])
+    assert result.exit_code == 0, result.output
+    rows = [line for line in result.output.splitlines() if line.startswith("iva.resultado-regimen-general\t")]
+    assert rows, result.output
+
+
+def test_casillas_form_number_filter_no_match_returns_empty_table() -> None:
+    """``--form-number`` with a value not declared by any casilla returns an empty table."""
+    result = invoke_cached_cli(["app", "modelo", "casillas", "303", "--form-number", "9999"])
+    assert result.exit_code == 0, result.output
+    data_rows = [
+        line
+        for line in result.output.splitlines()
+        if line and not line.startswith("operation\t") and not line.startswith("casilla_id\t")
+    ]
+    assert not data_rows, result.output
+
+
+# ---------------------------------------------------------------------------
 # bindings list / preview surface
 # ---------------------------------------------------------------------------
 
@@ -55,11 +80,32 @@ def test_bindings_list_emits_readiness_category_for_every_row() -> None:
     )
     assert result.exit_code == 0, result.output
     assert "operation\tregistry.modelo.bindings.list" in result.output
-    assert "binding_id\tsource\treadiness\ttyped_enum" in result.output
+    assert "binding_id\tsource\treadiness\ttyped_enum\tborrador_capable" in result.output
     # Every modelo-303 binding currently sources from
     # ``ledger_iva_aggregation`` so every row's readiness column is
     # "ledger source".
     assert "ledger source" in result.output
+
+
+def test_bindings_list_emits_borrador_capable_column_per_row() -> None:
+    """``bindings list`` reports the ``borrador_capable`` flag per
+    binding so callers can tell at a glance which casillas the AEAT
+    borrador prefills versus those the operator must supply."""
+
+    result = invoke_cached_cli(
+        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "Q1"],
+    )
+    assert result.exit_code == 0, result.output
+    # The text-mode header carries the new column.
+    assert "borrador_capable" in result.output
+    # Every binding row ends in either ``True`` or ``False`` for the
+    # new column. Detect by matching the binding-id prefix on at
+    # least one row.
+    binding_lines = [line for line in result.output.splitlines() if line.startswith("303\t")]
+    assert binding_lines, result.output
+    for line in binding_lines:
+        last_column = line.rsplit("\t", 1)[-1]
+        assert last_column in {"True", "False"}, line
 
 
 def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None:
@@ -240,3 +286,315 @@ def test_evidence_kind_rejects_unrelated_token() -> None:
     raw = "aeat_bogus_evidence"
     with pytest.raises(ValueError, match="aeat_bogus_evidence"):
         ExternalEvidenceKind(raw.strip().replace("-", "_"))
+
+
+# ---------------------------------------------------------------------------
+# S05 — typed WorkUnitId validation at CLI ingress
+# ---------------------------------------------------------------------------
+
+
+def test_validate_work_unit_id_accepts_valid_hex64() -> None:
+    """A 64-character lowercase hex string is accepted and returned stripped."""
+    import typer as _typer
+
+    from aeat.entrypoints.cli._modelo import _validate_work_unit_id
+
+    valid = "a" * 64
+    result = _validate_work_unit_id(valid)
+    assert result == valid
+    assert isinstance(result, str)
+    _ = _typer  # ensure import is referenced
+
+
+def test_validate_work_unit_id_strips_whitespace() -> None:
+    """Leading/trailing whitespace is stripped before validation."""
+    from aeat.entrypoints.cli._modelo import _validate_work_unit_id
+
+    valid = "b" * 64
+    assert _validate_work_unit_id(f"  {valid}  ") == valid
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "short",
+        "G" * 64,  # uppercase -- not lowercase hex
+        "z" * 64,  # non-hex character
+        "a" * 63,  # one char short
+        "a" * 65,  # one char long
+        "",
+    ],
+)
+def test_validate_work_unit_id_rejects_malformed(bad: str) -> None:
+    """Malformed work_unit_id values raise ``typer.BadParameter``."""
+    import typer as _typer
+
+    from aeat.entrypoints.cli._modelo import _validate_work_unit_id
+
+    with pytest.raises(_typer.BadParameter):
+        _validate_work_unit_id(bad)
+
+
+# ---------------------------------------------------------------------------
+# S06 -- CasillaId / BindingId key validation at CLI ingress
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "spec",
+    [
+        "A=1",
+        "casilla01=2",
+        "A.B:C-D=3",
+        "x" * 64 + "=0",  # exactly 64-char key
+    ],
+)
+def test_parse_casilla_override_accepts_valid_keys(spec: str) -> None:
+    """Valid CasillaId keys are accepted by ``_parse_casilla_override``."""
+    from aeat.entrypoints.cli._modelo import _parse_casilla_override
+
+    key, _ = _parse_casilla_override(spec)
+    assert key
+
+
+@pytest.mark.parametrize(
+    "spec",
+    [
+        "=value",  # empty key
+        ".starts-with-dot=1",  # dot at start (fails _CASILLA_RE)
+        ("x" * 65) + "=0",  # key exceeds 64-char max
+    ],
+)
+def test_parse_casilla_override_rejects_invalid_keys(spec: str) -> None:
+    """Invalid CasillaId keys raise ``typer.BadParameter``."""
+    import typer as _typer
+
+    from aeat.entrypoints.cli._modelo import _parse_casilla_override
+
+    with pytest.raises(_typer.BadParameter):
+        _parse_casilla_override(spec)
+
+
+@pytest.mark.parametrize(
+    "spec",
+    [
+        "binding-id=1",
+        "a=v",
+        "modelo-303-iva-repercutido=100",
+    ],
+)
+def test_parse_binding_override_accepts_valid_keys(spec: str) -> None:
+    """Valid BindingId keys are accepted by ``_parse_binding_override``."""
+    from aeat.entrypoints.cli._modelo import _parse_binding_override
+
+    key, _ = _parse_binding_override(spec)
+    assert key
+
+
+@pytest.mark.parametrize(
+    "spec",
+    [
+        "=value",  # empty key
+        "UPPERCASE=1",  # uppercase not in _REF_RE
+        ".starts-dot=1",  # starts with dot
+        ("x" * 129) + "=0",  # key exceeds 128-char max
+    ],
+)
+def test_parse_binding_override_rejects_invalid_keys(spec: str) -> None:
+    """Invalid BindingId keys raise ``typer.BadParameter``."""
+    import typer as _typer
+
+    from aeat.entrypoints.cli._modelo import _parse_binding_override
+
+    with pytest.raises(_typer.BadParameter):
+        _parse_binding_override(spec)
+
+
+# ---------------------------------------------------------------------------
+# filing-record emitter surface — external_evidence + amends_filing_record_id
+# ---------------------------------------------------------------------------
+
+
+def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
+    """The JSON-format emitter for ``aeat app modelo filing-record show``
+    surfaces both ``external_evidence`` (kind / reference_id / imported_at)
+    and ``amends_filing_record_id`` so amendment chains are operator-discoverable
+    from the record's own listing surface, not only via the amend action."""
+
+    from datetime import UTC, datetime
+
+    from aeat.domain.modelos._codes import ModeloCode
+    from aeat.domain.modelos._filing_record import (
+        ExternalEvidence,
+        ExternalEvidenceKind,
+        FilingRecord,
+        FilingRecordStatus,
+        derive_filing_record_id,
+    )
+    from aeat.entrypoints.cli._modelo import _filing_record_payload
+
+    imported_at = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+    filed_at = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+    work_unit_id = "a" * 64
+    revision_id = "c" * 64
+    amends_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id="d" * 64,
+        filed_at=datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC),
+        filed_by="aeat-import",
+    )
+    record = FilingRecord(
+        filing_record_id=derive_filing_record_id(
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision_id,
+            filed_at=filed_at,
+            filed_by="operator-A",
+        ),
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id="default",
+        modelo=ModeloCode("130"),
+        filing_year=2026,
+        period="1T",
+        filed_at=filed_at,
+        filed_by="operator-A",
+        notes=None,
+        aeat_accepted=False,
+        status=FilingRecordStatus.CURRENT,
+        external_evidence=ExternalEvidence(
+            kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            reference_id="JUST-2026-130-1T-XYZ789",
+            imported_at=imported_at,
+        ),
+        amends_filing_record_id=amends_id,
+    )
+
+    payload = _filing_record_payload(record)
+
+    assert payload["amends_filing_record_id"] == amends_id
+    from typing import cast
+
+    evidence_raw = payload["external_evidence"]
+    assert isinstance(evidence_raw, dict)
+    evidence = cast(dict[str, object], evidence_raw)
+    assert evidence["kind"] == "aeat_justificante_pdf"
+    assert evidence["reference_id"] == "JUST-2026-130-1T-XYZ789"
+    assert evidence["imported_at"] == imported_at.isoformat()
+
+
+def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
+    """A locally-filed record (no external_evidence, no amends link)
+    surfaces those fields as ``None`` in JSON so downstream consumers
+    can rely on the schema shape without optional-key checks."""
+
+    from datetime import UTC, datetime
+
+    from aeat.domain.modelos._codes import ModeloCode
+    from aeat.domain.modelos._filing_record import (
+        FilingRecord,
+        FilingRecordStatus,
+        derive_filing_record_id,
+    )
+    from aeat.entrypoints.cli._modelo import _filing_record_payload
+
+    work_unit_id = "a" * 64
+    revision_id = "c" * 64
+    filed_at = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+    record = FilingRecord(
+        filing_record_id=derive_filing_record_id(
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision_id,
+            filed_at=filed_at,
+            filed_by="operator-A",
+        ),
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id="default",
+        modelo=ModeloCode("130"),
+        filing_year=2026,
+        period="1T",
+        filed_at=filed_at,
+        filed_by="operator-A",
+        notes=None,
+        aeat_accepted=False,
+        status=FilingRecordStatus.CURRENT,
+    )
+
+    payload = _filing_record_payload(record)
+
+    assert payload["external_evidence"] is None
+    assert payload["amends_filing_record_id"] is None
+
+
+def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode() -> None:
+    """The text-format emitter surfaces ``external_evidence.{kind, reference_id,
+    imported_at}`` and ``amends_filing_record_id`` as discrete tab-separated
+    lines so operators reading ``--format text`` see the amendment context."""
+
+    from datetime import UTC, datetime
+
+    from aeat.domain.modelos._codes import ModeloCode
+    from aeat.domain.modelos._filing_record import (
+        ExternalEvidence,
+        ExternalEvidenceKind,
+        FilingRecord,
+        FilingRecordStatus,
+        derive_filing_record_id,
+    )
+    from aeat.entrypoints.cli._modelo import _filing_record_lines
+
+    imported_at = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+    work_unit_id = "a" * 64
+    revision_id = "c" * 64
+    filed_at = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
+    amends_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id="d" * 64,
+        filed_at=datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC),
+        filed_by="aeat-import",
+    )
+    record = FilingRecord(
+        filing_record_id=derive_filing_record_id(
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision_id,
+            filed_at=filed_at,
+            filed_by="operator-A",
+        ),
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        bucket_id="default",
+        modelo=ModeloCode("130"),
+        filing_year=2026,
+        period="1T",
+        filed_at=filed_at,
+        filed_by="operator-A",
+        notes=None,
+        aeat_accepted=False,
+        status=FilingRecordStatus.CURRENT,
+        external_evidence=ExternalEvidence(
+            kind=ExternalEvidenceKind.AEAT_CSV_REGISTER,
+            reference_id="CSV-303-2026-Q1",
+            imported_at=imported_at,
+        ),
+        amends_filing_record_id=amends_id,
+    )
+
+    lines = _filing_record_lines(record)
+
+    assert "external_evidence.kind\taeat_csv_register" in lines
+    assert "external_evidence.reference_id\tCSV-303-2026-Q1" in lines
+    assert f"external_evidence.imported_at\t{imported_at.isoformat()}" in lines
+    assert f"amends_filing_record_id\t{amends_id}" in lines
+
+
+def test_work_calculate_help_exposes_by_actor_flag() -> None:
+    """``aeat app modelo work calculate --help`` advertises a ``--by ACTOR``
+    option so operators can attribute a calculation revision to a specific
+    actor; the default factory pulls the active profile display name when
+    ``--by`` is omitted."""
+
+    from aeat.tests.cli_runner import invoke_cached_cli
+
+    result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
+    assert result.exit_code == 0, result.output
+    assert "--by" in result.output

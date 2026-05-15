@@ -11,9 +11,7 @@ These tests validate the project-meta files that drive `just release`:
 
 The test lives in ``src/aeat/tests/`` rather than alongside any
 ``aeat.*`` runtime subpackage because it validates project-meta
-files that do not belong to a runtime module. The exception is
-documented in the ADR
-(``.vault/adr/2026-04-12-release-please-adr.md``).
+files that do not belong to a runtime module.
 
 Per the project pydantic mandate, the JSON payloads are parsed into
 strict pydantic v2 models so typos in either config file are caught
@@ -166,5 +164,5 @@ def test_no_release_please_github_actions_workflow() -> None:
     workflow = PROJECT_ROOT / ".github" / "workflows" / "release-please.yml"
     assert not workflow.exists(), (
         f"{workflow} must not exist: release-please runs LOCALLY only on this repo "
-        "(GitHub Actions is permanently disabled — see ADR 2026-04-12-release-please-adr)."
+        "(GitHub Actions is permanently disabled)."
     )

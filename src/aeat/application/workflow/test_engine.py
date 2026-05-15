@@ -350,6 +350,45 @@ class TestHappyPath:
             )
         )
         assert result.final_stage is WorkflowStage.DONE
+        assert result.resumed_from is None
+
+    def test_run_for_period_propagates_resumed_from_into_result(self) -> None:
+        """When the resume action passes a prior workflow ``run_id`` as
+        ``resumed_from=``, the produced :class:`WorkflowResult` records
+        the link so callers can trace the resume chain end-to-end."""
+
+        fx = _fixtures()
+        prior_run_id = "abcdef0123456789"
+        result = asyncio.run(
+            fx.engine().run_for_period(
+                fx.profile,
+                fx.obligation.modelo,
+                fx.obligation.period,
+                today=fx.today,
+                resumed_from=prior_run_id,
+            )
+        )
+        assert result.final_stage is WorkflowStage.DONE
+        assert result.resumed_from == prior_run_id
+
+    def test_run_for_period_rejects_malformed_resumed_from(self) -> None:
+        """``run_for_period`` rejects a ``resumed_from`` whose shape is not the
+        16-character lowercase hex run id produced by the engine itself."""
+
+        import pytest
+
+        fx = _fixtures()
+        for bad in ("not-hex", "ABCDEF0123456789", "abcdef012345678", "abcdef01234567890"):
+            with pytest.raises(ValueError, match="resumed_from"):
+                asyncio.run(
+                    fx.engine().run_for_period(
+                        fx.profile,
+                        fx.obligation.modelo,
+                        fx.obligation.period,
+                        today=fx.today,
+                        resumed_from=bad,
+                    )
+                )
 
 
 # ── Every abort reason ──────────────────────────────────────────────────

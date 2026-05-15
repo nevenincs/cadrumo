@@ -74,7 +74,7 @@ _PERIOD_2025 = Period.model_validate("2025")
 
 
 def test_casilla_aggregation_empty_observations_yields_empty_totals_and_provenance() -> None:
-    result = _casilla_aggregation(_PERIOD_2025, ())
+    result = _casilla_aggregation(_PERIOD_2025, (), modelo="100")
 
     assert result.modelo == "100"
     assert result.period == _PERIOD_2025
@@ -82,11 +82,11 @@ def test_casilla_aggregation_empty_observations_yields_empty_totals_and_provenan
     assert result.provenance == ()
 
 
-def test_casilla_aggregation_modelo_is_fixed_at_100() -> None:
-    """The aggregator is Modelo-100-specific; modelo is always '100'."""
+def test_casilla_aggregation_modelo_propagates_to_output() -> None:
+    """The modelo passed to the aggregator is reflected in the output."""
     obs = _observation("tx-1", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs])
+    result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
 
     assert result.modelo == "100"
 
@@ -95,7 +95,7 @@ def test_casilla_aggregation_preserves_period_argument() -> None:
     obs = _observation("tx-1", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
 
     other_period = Period.model_validate("2024")
-    result = _casilla_aggregation(other_period, [obs])
+    result = _casilla_aggregation(other_period, [obs], modelo="100")
 
     assert result.period == other_period
 
@@ -108,7 +108,7 @@ def test_casilla_aggregation_preserves_period_argument() -> None:
 def test_casilla_aggregation_single_observation_produces_one_total_and_one_provenance_row() -> None:
     obs = _observation("tx-1", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs])
+    result = _casilla_aggregation(_PERIOD_2025, [obs], modelo="100")
 
     assert set(result.casilla_values.keys()) == {"0186"}
     assert len(result.provenance) == 1
@@ -123,7 +123,7 @@ def test_casilla_aggregation_groups_observations_same_casilla_same_category_into
     obs_a = _observation("tx-a", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
     obs_b = _observation("tx-b", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("200.00"))
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs_a, obs_b])
+    result = _casilla_aggregation(_PERIOD_2025, [obs_a, obs_b], modelo="100")
 
     assert len(result.provenance) == 1
     assert result.provenance[0].casilla == "0186"
@@ -140,7 +140,7 @@ def test_casilla_aggregation_groups_same_casilla_different_categories_into_separ
     )
     obs_fiscal = _observation("tx-fiscal", category=SpendingCategory.ASESORIA_FISCAL, gross_amount=Decimal("79.00"))
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal])
+    result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
 
     # Both observations contribute to the same casilla key.
     assert set(result.casilla_values.keys()) == {"0199"}
@@ -165,7 +165,7 @@ def test_casilla_aggregation_provenance_rows_are_sorted_by_casilla_then_category
     obs_199 = _observation("tx-199", category=SpendingCategory.ASESORIA_CONTABLE, gross_amount=Decimal("121.00"))
 
     # Feed observations in random-ish order.
-    result = _casilla_aggregation(_PERIOD_2025, [obs_192, obs_199, obs_186])
+    result = _casilla_aggregation(_PERIOD_2025, [obs_192, obs_199, obs_186], modelo="100")
 
     keys = [(row.casilla, row.category_id) for row in result.provenance]
     assert keys == sorted(keys)
@@ -179,7 +179,7 @@ def test_casilla_aggregation_transaction_ids_within_one_row_are_sorted() -> None
     obs_a = _observation("tx-a", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("200.00"))
     obs_m = _observation("tx-m", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs_z, obs_a, obs_m])
+    result = _casilla_aggregation(_PERIOD_2025, [obs_z, obs_a, obs_m], modelo="100")
 
     assert len(result.provenance) == 1
     assert result.provenance[0].transaction_ids == ("tx-a", "tx-m", "tx-z")
@@ -201,7 +201,7 @@ def test_casilla_aggregation_subtotal_equals_sum_of_member_observations() -> Non
     obs_a = _observation("tx-a", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("300.00"))
     obs_b = _observation("tx-b", category=SpendingCategory.CUOTAS_AUTONOMOS_SS, gross_amount=Decimal("200.00"))
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs_a, obs_b])
+    result = _casilla_aggregation(_PERIOD_2025, [obs_a, obs_b], modelo="100")
 
     expected_subtotal = obs_a.deductible_amount + obs_b.deductible_amount
     assert result.provenance[0].subtotal == expected_subtotal
@@ -217,7 +217,7 @@ def test_casilla_aggregation_casilla_total_equals_sum_of_observations_for_that_c
     )
     obs_fiscal = _observation("tx-fiscal", category=SpendingCategory.ASESORIA_FISCAL, gross_amount=Decimal("79.00"))
 
-    result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal])
+    result = _casilla_aggregation(_PERIOD_2025, [obs_contable, obs_fiscal], modelo="100")
 
     expected_total = obs_contable.deductible_amount + obs_fiscal.deductible_amount
     assert result.casilla_values["0199"] == expected_total

@@ -5,8 +5,8 @@ previously survived a bucket switch on `KeyringMasterKeyProvider` and
 `FileFallbackMasterKeyProvider`. Each instance binds to exactly one
 `bucket_id`; the unlocked KEK and DEK are held in `bytearray` buffers
 so `close()` can overwrite the bytes in place before the references are
-dropped. ADR-1 section 5 names the session as the only object that
-holds cleartext key material on the master-key surface; ADR-2 section 7
+dropped. The session is the only object that holds cleartext key
+material on the master-key surface; the substrate invariant
 forbids any module-global mutable state that could survive a bucket
 switch.
 

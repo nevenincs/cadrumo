@@ -10,7 +10,7 @@ import pytest
 from aeat.core.paths import PROJECT_ROOT
 
 from . import RegistryCatalogues, RegistryLoadError, RegistryValidationError, load_modelo_file
-from ._bindings import RegistryFilingObservation
+from ._bindings import CasillaObservation, RegistryFilingObservation
 from ._loader import load_registry_tree
 from ._relations import relation_source_requirements, resolve_relation_values_from_observations
 from ._schema import ModeloDefinition, ModeloRevision
@@ -57,7 +57,7 @@ def _modelo_115_observations() -> tuple[RegistryFilingObservation, ...]:
             modelo="115",
             filing_year=2026,
             period=period,
-            casilla_values=casilla_values,
+            observations=tuple(CasillaObservation(casilla_id=cid, value=val) for cid, val in casilla_values.items()),
         )
         for period, casilla_values in values_by_period.items()
     )

@@ -106,8 +106,7 @@ SecureObjectListItem = SecureObjectRecord | SecureObjectUnreadable
 class SecureObjectRawRow(BaseModel):
     """One stored row surfaced without classification / version validation or decryption.
 
-    Used by the outbound sync coordinator (per ADR-3 ciphertext-layer
-    mirror) to walk every persisted object and mirror its on-wire
+    Used by the outbound sync coordinator to walk every persisted object and mirror its on-wire
     payload to a remote storage provider without ever touching the
     plaintext domain data. The repository keeps `payload` as the
     raw on-wire ciphertext bytes; mirroring consumers feed those bytes
@@ -188,7 +187,7 @@ class SecureObjectRepository:
         without attempting to decrypt the payload. The query bypasses
         the encrypted-column type decorators so rows sealed under a
         rotated master key still surface verbatim — this is what the
-        outbound sync coordinator's ciphertext-layer mirror (per ADR-3)
+        outbound sync coordinator's ciphertext-layer mirror
         consumes, mirroring on-wire ciphertext to a remote storage
         provider without ever decrypting domain data.
 

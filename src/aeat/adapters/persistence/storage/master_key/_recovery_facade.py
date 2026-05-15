@@ -1,14 +1,11 @@
 """Typed BIP-39 recovery facade for the per-bucket unlock pipeline.
 
 The substrate's BIP-39 mnemonic encoding, HKDF-derived recovery KEK, and
-AES-256-GCM wrap of the master DEK live in `_recovery.py` and were
-authored as part of an earlier sweep; ADR-1 section 4 mandates wiring
-those primitives through the new typed boundary rather than rewriting
-them. This module ships that boundary.
-
-The facade consumes and produces the strict pydantic v2 records
-introduced in P01: `RecoveryRecord` (the on-disk envelope shape) and
-`BucketSession` (the live in-memory state). The internals never leave
+AES-256-GCM wrap of the master DEK live in `_recovery.py`. This module
+exposes a typed boundary over those primitives so callers consume and
+produce the strict pydantic v2 records (`RecoveryRecord` for the
+on-disk envelope, `BucketSession` for the live in-memory state)
+without reaching into the substrate. The internals never leave
 `_recovery.py`.
 
 `mint_recovery_envelope` is called at enrollment: it generates a fresh
@@ -23,8 +20,8 @@ KEK, and decrypts the wrapped DEK from the `RecoveryRecord`. The
 plaintext mnemonic is never persisted.
 
 `open_session_from_recovery` composes `unwrap_recovery_envelope` with
-`BucketSession.open` so the CLI verb at P05.S05 yields a live session
-the wizard can re-wrap under a fresh passphrase-derived KEK.
+`BucketSession.open` so the recovery-flow CLI verb yields a live
+session the wizard can re-wrap under a fresh passphrase-derived KEK.
 """
 
 from __future__ import annotations
@@ -137,8 +134,8 @@ def verify_recovery_mnemonic(*, envelope: RecoveryRecord, mnemonic: str) -> bool
     """Return True iff the mnemonic correctly unwraps the envelope.
 
     Used by the `aeat config verify-recovery` periodic-custody-test
-    verb (P05.S04). Catches `RecoveryVerificationError` and surfaces a
-    boolean so the CLI renders the outcome without leaking detail.
+    verb. Catches `RecoveryVerificationError` and surfaces a boolean
+    so the CLI renders the outcome without leaking detail.
     """
 
     try:

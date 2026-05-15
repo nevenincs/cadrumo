@@ -264,6 +264,7 @@ class WorkflowEngine:
         *,
         fail_on_warning: bool = False,
         today: date | None = None,
+        resumed_from: str | None = None,
     ) -> WorkflowResult:
         """Drive the workflow for a caller-specified ``(modelo, period)``.
 
@@ -273,16 +274,31 @@ class WorkflowEngine:
             period: Target period identifier.
             fail_on_warning: See :meth:`run_next`.
             today: See :meth:`run_next`.
+            resumed_from: Optional prior workflow ``run_id`` that this
+                invocation continues. When set, the produced
+                :class:`WorkflowResult` carries the linkage so callers
+                can trace the resume chain. The engine does not validate
+                the prior run by itself; the upstream resume action
+                resolves and gates the prior context before invoking.
 
         Returns:
             A fully populated :class:`WorkflowResult`.
         """
+        if resumed_from is not None:
+            stripped = resumed_from.strip()
+            if len(stripped) != 16 or any(c not in "0123456789abcdef" for c in stripped):
+                raise ValueError(
+                    "resumed_from must be a 16-character lowercase hex run id; "
+                    f"got {resumed_from!r}",
+                )
+            resumed_from = stripped
         return await self._drive(
             profile=profile,
             target_modelo=modelo,
             target_period=period,
             fail_on_warning=fail_on_warning,
             today=today,
+            resumed_from=resumed_from,
         )
 
     # ------------------------------------------------------------------ driver
@@ -295,6 +311,7 @@ class WorkflowEngine:
         target_period: str | None,
         fail_on_warning: bool,
         today: date | None,
+        resumed_from: str | None = None,
     ) -> WorkflowResult:
         """Linearly walk the read-only stages, bailing on the first failure."""
         started_at = _utcnow()
@@ -409,6 +426,7 @@ class WorkflowEngine:
             submission_id=None,
             steps=tuple(steps),
             summary=summary,
+            resumed_from=resumed_from,
         )
 
     # ------------------------------------------------------------------ stages

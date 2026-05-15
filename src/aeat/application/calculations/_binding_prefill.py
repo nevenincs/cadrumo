@@ -174,7 +174,8 @@ def resolve_bindings_from_local_store(
                 binding_id=binding_id,
                 value=Decimal(value),
                 source_modelo=str(getattr(selector, "source_modelo", "") or ""),
-                source_filing_year=snapshot.filing_year + _selector_year_delta(getattr(selector, "filing_year_delta", 0)),
+                source_filing_year=snapshot.filing_year
+                + _selector_year_delta(getattr(selector, "filing_year_delta", 0)),
                 source_periods=source_periods,
                 resolved_at=when,
             )

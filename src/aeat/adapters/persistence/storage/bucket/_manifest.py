@@ -81,7 +81,7 @@ class KdfParams(BaseModel):
 class BucketManifest(BaseModel):
     """Plaintext manifest for one per-bucket directory.
 
-    Field semantics follow ADR-2 section 3. The manifest never carries
+    The manifest never carries
     sensitive bytes; see :class:`KdfParams` for the salt contract.
     """
 

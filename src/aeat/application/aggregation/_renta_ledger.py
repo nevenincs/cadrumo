@@ -88,7 +88,7 @@ class RentaLedgerExpenseAggregation(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    modelo: str = Field(default="100", min_length=1, max_length=16)
+    modelo: str = Field(min_length=1, max_length=16)
     period: Period
     profile_year: int = Field(ge=2000, le=2099)
     observations: Sequence[RentaDeductibleExpenseObservation] = Field(default_factory=tuple)
@@ -149,6 +149,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     profile_year: int | None = None,
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
     activity_key: str = "default",
+    modelo: str = "100",
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses."""
 
@@ -168,6 +169,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
         profile_year=profile_year,
         usage_ratios=usage_ratios,
         activity_key=activity_key,
+        modelo=modelo,
     )
 
 
@@ -180,6 +182,7 @@ def aggregate_renta_ledger_expenses(
     profile_year: int | None = None,
     usage_ratios: Mapping[SpendingCategory, Decimal] | None = None,
     activity_key: str = "default",
+    modelo: str = "100",
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations."""
 
@@ -376,8 +379,9 @@ def aggregate_renta_ledger_expenses(
                 )
             )
 
-    casilla_aggregation = _casilla_aggregation(resolved_period, observations)
+    casilla_aggregation = _casilla_aggregation(resolved_period, observations, modelo=modelo)
     return RentaLedgerExpenseAggregation(
+        modelo=modelo,
         period=resolved_period,
         profile_year=resolved_profile_year,
         observations=tuple(observations),
@@ -503,6 +507,8 @@ def _iva_amount_for(transaction: Transaction, evidence_payload: _PurchaseInvoice
 def _casilla_aggregation(
     period: Period,
     observations: Sequence[RentaDeductibleExpenseObservation],
+    *,
+    modelo: str,
 ) -> CasillaAggregation:
     totals: dict[str, Decimal] = {}
     provenance_rows: list[CasillaProvenance] = []
@@ -522,7 +528,7 @@ def _casilla_aggregation(
             )
         )
     return CasillaAggregation(
-        modelo="100",
+        modelo=modelo,
         period=period,
         casilla_values=totals,
         provenance=tuple(provenance_rows),

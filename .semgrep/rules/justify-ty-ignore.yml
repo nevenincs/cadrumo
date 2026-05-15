@@ -5,8 +5,8 @@ rules:
       `# pyright: ignore`, `# mypy: ignore`) must include an inline
       justification comment naming the rule and the rationale. Format:
       `<code>  # ty: ignore[rule-name]  # reason: <why>`.
-      Unjustified suppressions are forbidden per defect-class T-11 in
-      the linkage-design-audit reference document.
+      Unjustified suppressions hide upstream typing issues from reviewers
+      and let real bugs land silently.
     severity: ERROR
     languages:
       - generic

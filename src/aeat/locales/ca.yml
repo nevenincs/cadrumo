@@ -241,6 +241,7 @@ cli:
         year_help: Exercici fiscal del model (p. ex. 2026)
       casillas:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
+        form_number_help: Filtrar caselles pel número imprès al BOE (p. ex. 46)
         input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
           computed, informational)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
@@ -341,6 +342,12 @@ cli:
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
+        invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules de
+          64 caràcters (resum SHA-256)
+        invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
+          més separadors . _ : -, màx. 64 caràcters)'
+        invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric
+          en minúscules més separadors . _ : -, màx. 128 caràcters)'
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
   common:
     errors:
@@ -447,6 +454,11 @@ cli:
             i període a un full de Google Sheets dins de `aeat-vault/`
           help: Superfície de càlcul esquema-a-full (exportar i recuperar)
           pull:
+            assemble_observations_help: Després de recuperar, reensambla les cel·les
+              de files de la pestanya Detalle en observacions tipades (perceptors,
+              béns a l'estranger, operacions vinculades, membres d'atribució,
+              operacions de devolució) i emet-les al payload al costat dels
+              row_set_edits crus
             compute_help: Després de recuperar les edicions, executa el motor Decimal
               local sobre elles i emet els valors calculats de les caselles
             compute_refused_stale: 'rebutjant calcular contra un llibre les marques

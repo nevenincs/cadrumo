@@ -29,7 +29,7 @@ def _open_session(idle_minutes: int = 15) -> BucketSession:
 
 
 def test_default_idle_lock_minutes_is_fifteen() -> None:
-    """ADR-1 section 5 pins the default to 15 minutes."""
+    """Default idle-lock is 15 minutes."""
 
     assert DEFAULT_IDLE_LOCK_MINUTES == 15
 

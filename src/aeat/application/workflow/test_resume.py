@@ -162,3 +162,52 @@ def test_resume_refuses_run_without_obligation(tmp_path: Path) -> None:
 def test_resume_for_missing_run_id_surfaces_workflow_error(tmp_path: Path) -> None:
     with pytest.raises(WorkflowError, match=r"workflow run not found"):
         resume_modelo_workflow("missing-run-id-9")
+
+
+def test_resume_context_run_id_satisfies_engine_resumed_from_contract(tmp_path: Path) -> None:
+    """The resume action returns a ``resumed_from_run_id`` that matches the
+    engine's ``run_for_period(resumed_from=...)`` boundary contract: a
+    16-character lowercase hex string.
+
+    Locks the end-to-end shape of the resume → engine linkage so the
+    two halves stay compatible without requiring the full live
+    composite engine to run inside the resume unit suite.
+    """
+
+    run_id = "0" * 16
+    save_run(
+        _aborted_result(
+            run_id=run_id,
+            reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+            obligation=_obligation(),
+        ),
+    )
+    context = resume_modelo_workflow(run_id)
+
+    forwarded = context.resumed_from_run_id
+    assert len(forwarded) == 16
+    assert all(ch in "0123456789abcdef" for ch in forwarded)
+
+    # A WorkflowResult constructed with the forwarded id round-trips
+    # through the result-model validation that the engine emits at
+    # the end of run_for_period — proves the producer/consumer contract.
+    chained = WorkflowResult(
+        run_id="b" * 16,
+        started_at=_T,
+        ended_at=_T,
+        final_stage=WorkflowStage.DONE,
+        aborted_reason=None,
+        obligation=_obligation(),
+        steps=(
+            WorkflowStep(
+                stage=WorkflowStage.LOADING_PROFILE,
+                started_at=_T,
+                ended_at=_T,
+                success=True,
+                summary="resumed",
+            ),
+        ),
+        summary="resumed completion",
+        resumed_from=forwarded,
+    )
+    assert chained.resumed_from == run_id

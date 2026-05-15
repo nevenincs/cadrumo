@@ -1,10 +1,12 @@
 """Contract tests for the five detail-record observation types.
 
 Validates pydantic field constraints, validator semantics, and the
-deterministic row-builder helpers for the new observation surfaces
-landed in T4.1 (modelo 190 / 193 perceptors) and T4.2 (modelo 232
-related-party operations, 720 foreign assets, 184 atribución
-members, 360 refund operations).
+deterministic row-builder helpers for the observation surfaces feeding
+the per-record tipo-2 row-producer bindings on the IRPF retencion
+modelos (190 / 193 perceptors), the IS related-party operations modelo
+(232), the foreign-asset informative modelo (720), the régimen de
+atribución de rentas modelo (184), and the IVA refund operations
+modelo (360).
 """
 
 from __future__ import annotations

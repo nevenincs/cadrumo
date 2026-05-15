@@ -786,7 +786,11 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
         aggregation = binding.aggregation or {}
         if str(aggregation.get("op")) != "rows":
             continue
-        grouping = str(getattr(binding.selector, "grouping", "") or "")
+        # `binding.selector` is a Mapping; getattr returns the default
+        # for every Mapping regardless of key, so the lookup must go
+        # through `.get`. The previous getattr-form silently dropped
+        # every row-producer binding (entire Detalle tab empty).
+        grouping = str(binding.selector.get("grouping", "") or "")
         if not grouping:
             continue
         cohorts.setdefault(grouping, []).append(binding)
@@ -835,7 +839,12 @@ def _row_set_column_label(binding: DataBindingDefinition) -> str:
     binding id so the workbook still renders rather than 500-erroring.
     """
 
-    row_field = getattr(binding.selector, "row_field", None)
+    # `binding.selector` is a Mapping; getattr returns the default for
+    # every Mapping regardless of key, so the row_field lookup must go
+    # through `.get`. The previous getattr-form silently dropped every
+    # row_field name and surfaced the binding id as the operator-facing
+    # column header (regression caught by test_detail_record_modelo_coverage).
+    row_field = binding.selector.get("row_field")
     if isinstance(row_field, str) and row_field:
         return tr(f"sheets.detalle.headers.{row_field}", default=binding.id)
     return binding.id

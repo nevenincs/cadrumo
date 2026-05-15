@@ -23,7 +23,6 @@ from ...application.export import ExportSerializationFormat
 from ...core.config import Settings
 from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventObjectType, BucketEventType
-from ...domain.calculations.registry._bindings import CasillaObservation
 from ...domain.categories import SpendingCategory
 from ...domain.invoices import (
     Invoice,
@@ -188,7 +187,7 @@ def _persist_verified_revision_citing_transaction(engine: Engine, *, transaction
         inputs_snapshot={"01": "1"},
         binding_overrides={},
         source_transaction_ids=(transaction_id,),
-        observations=(CasillaObservation(casilla_id="01", value=Decimal("1")),),
+        casilla_values={"01": Decimal("1")},
         created_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
         verified_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),

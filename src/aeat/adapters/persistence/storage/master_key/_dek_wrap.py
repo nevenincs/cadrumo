@@ -2,7 +2,7 @@
 
 The substrate wraps a freshly-generated 32-byte data-encryption key
 (DEK) under a passphrase-derived 32-byte key-encryption key (KEK) using
-AES-256-GCM per ADR-1 section 3. The wrap binds to the bucket id
+AES-256-GCM. The wrap binds to the bucket id
 through AEAD additional-authenticated-data (AAD), so the wrapped DEK
 from one bucket cannot be silently swapped under another bucket's
 manifest at unlock.

@@ -240,6 +240,7 @@ cli:
         year_help: Tax year of the modelo (e.g. 2026)
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+        form_number_help: Filter casillas by BOE-printed form number (e.g. 46)
         input_kind_help: Filter casillas by input kind (manual, bound, computed, informational)
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
@@ -332,6 +333,12 @@ cli:
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
+        invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
+          (SHA-256 digest)
+        invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric plus
+          . _ : - separators, max 64 chars)'
+        invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
+          plus . _ : - separators, max 128 chars)'
         year_help: Tax year of the work unit (e.g. 2026)
   common:
     errors:
@@ -435,6 +442,10 @@ cli:
             to a Google Sheets workbook in the operator's `aeat-vault/`
           help: Schema-to-sheet calc surface (export and pull)
           pull:
+            assemble_observations_help: After pulling, reassemble Detalle-tab row-set
+              cells into typed observations (perceptors, foreign assets, related-party
+              operations, atribución members, refund operations) and emit them in the
+              payload alongside the raw row_set_edits
             compute_help: After pulling, run the local Decimal runtime against the
               pulled inputs and emit the computed casilla values
             compute_refused_stale: 'refusing to compute against a workbook whose

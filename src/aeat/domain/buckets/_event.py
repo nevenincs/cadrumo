@@ -70,6 +70,7 @@ class BucketEventType(StrEnum):
     MODELO_FILING_IMPORTED = "modelo.filing.imported"
     # Work-unit lifecycle
     MODELO_WORK_UNIT_DISCARDED = "modelo.work_unit.discarded"
+    MODELO_WORK_UNIT_RENAMED = "modelo.work_unit.renamed"
 
     # profile lifecycle
     PROFILE_BUCKET_CREATED = "profile.bucket.created"
@@ -78,6 +79,24 @@ class BucketEventType(StrEnum):
     PROFILE_VALUES_CLEARED = "profile.values.cleared"
     PROFILE_TOMBSTONED = "profile.tombstoned"
     PROFILE_DUPLICATED = "profile.duplicated"
+    PROFILE_EXPORTED = "profile.exported"
+    PROFILE_IMPORTED = "profile.imported"
+    PROFILE_ACTIVATED = "profile.activated"
+
+    # bucket maintenance lifecycle
+    BUCKET_EXPORTED = "bucket.exported"
+    BUCKET_IMPORTED = "bucket.imported"
+    BUCKET_RENAMED = "bucket.renamed"
+    BUCKET_DELETED = "bucket.deleted"
+
+    # ledger usage-ratio mutations
+    LEDGER_RATIOS_SET = "ledger.ratios.set"
+    LEDGER_RATIOS_UNSET = "ledger.ratios.unset"
+
+    # operator authentication + workspace bootstrap
+    AUTH_PROVIDER_CONFIGURED = "auth.provider.configured"
+    CONFIG_ENV_UPDATED = "config.env.updated"
+    SETUP_STATE_MIGRATED = "setup.state.migrated"
 
     # ledger transaction lifecycle
     LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"

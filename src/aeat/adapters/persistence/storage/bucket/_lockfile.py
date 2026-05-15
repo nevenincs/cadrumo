@@ -5,7 +5,7 @@ created via ``os.open`` with ``O_CREAT | O_EXCL | O_WRONLY``; the
 ``O_EXCL`` flag is atomic on every POSIX kernel and on Windows NTFS, so a
 second-process unlock against a held bucket fails fast with
 :class:`aeat.adapters.persistence.storage.bucket.BucketBusyError` per
-ADR-2 section 11.
+the substrate locking contract.
 
 The lockfile carries the holder's PID. A stale lock (PID is no longer a
 live process) is reclaimed lazily by the acquiring process so an abnormal

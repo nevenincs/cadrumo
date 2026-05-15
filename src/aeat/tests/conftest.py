@@ -1,6 +1,7 @@
 """Shared pytest fixtures and collection-time guards for the AEAT test suite.
 
-See ``src/aeat/tests/README.md`` and ``.vault/adr/2026-04-17-pytest-markers-adr.md``.
+See ``src/aeat/tests/README.md`` for the marker taxonomy and pytest
+posture this module enforces.
 
 This module enforces the following invariants at collection time:
 
@@ -153,11 +154,7 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     if live_paths:
         import_violations = _check_banned_live_imports(live_paths)
         if import_violations:
-            header = (
-                "Banned import in live-marked file "
-                "(see src/aeat/tests/README.md and "
-                ".vault/adr/2026-04-17-pytest-markers-adr.md):"
-            )
+            header = "Banned import in live-marked file (see src/aeat/tests/README.md):"
             message = header + "\n  " + "\n  ".join(import_violations)
             pytest.exit(message, returncode=2)
 

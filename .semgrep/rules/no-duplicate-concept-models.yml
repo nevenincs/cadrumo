@@ -2,13 +2,10 @@ rules:
   - id: no-duplicate-concept-models
     message: |
       Pydantic-model name collisions across packages signal duplicate-concept
-      drift (defect class T-04 in the linkage-design-audit reference). When a
-      new model class shares a name with an existing canonical model in a
-      different package, consolidate onto the canonical shape or rename to
-      disambiguate (e.g., `VerificationFinding` was disambiguated to
-      `ModeloVerificationFinding` and `EvidenceBundleCheckResult`).
-      This rule flags suspicious patterns at lint time; the
-      `scratch/pydantic_audit.py` tool is the authoritative inventory.
+      drift. When a new model class shares a name with an existing canonical
+      model in a different package, consolidate onto the canonical shape or
+      rename to disambiguate (e.g., `VerificationFinding` was disambiguated
+      to `ModeloVerificationFinding` and `EvidenceBundleCheckResult`).
     severity: WARNING
     languages:
       - python

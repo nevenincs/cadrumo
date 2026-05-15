@@ -22,7 +22,16 @@ Public surface:
 
 from __future__ import annotations
 
-from ._errors import BucketEventValidationError, BucketsError
+from ._errors import (
+    BucketBrowseError,
+    BucketDeleteRefusedError,
+    BucketEventValidationError,
+    BucketExportError,
+    BucketImportError,
+    BucketMaintenanceError,
+    BucketRenameError,
+    BucketsError,
+)
 from ._event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -37,6 +46,8 @@ from ._event_repository import (
 )
 
 __all__ = [
+    "BucketBrowseError",
+    "BucketDeleteRefusedError",
     "BucketEvent",
     "BucketEventHistoryCatalogue",
     "BucketEventHistoryPersistenceError",
@@ -44,6 +55,10 @@ __all__ = [
     "BucketEventObjectType",
     "BucketEventType",
     "BucketEventValidationError",
+    "BucketExportError",
+    "BucketImportError",
+    "BucketMaintenanceError",
+    "BucketRenameError",
     "BucketsError",
     "append_bucket_event",
     "derive_bucket_event_id",

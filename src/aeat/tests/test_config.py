@@ -271,8 +271,9 @@ class TestRepoRelativePathNormalisationCoverage:
     _EXEMPT_PATH_FIELDS: frozenset[str] = frozenset()
     """Path-typed `_dir`/`_path`/`_root` fields legitimately exempt from normalisation.
 
-    Empty today — every such field must be normalised. New exemptions require an
-    ADR amendment on the secure-persistence-foundation feature.
+    Empty today — every such field must be normalised. Adding a new
+    exemption is a deliberate departure from the secure-persistence
+    invariant and must be justified in the field's docstring.
     """
 
     @staticmethod
@@ -304,11 +305,18 @@ class TestRepoRelativePathNormalisationCoverage:
             "_normalize_repo_relative_paths in src/aeat/config.py: "
             f"{missing}. Either add each to the validator's field tuple or "
             "add it to TestRepoRelativePathNormalisationCoverage._EXEMPT_PATH_FIELDS "
-            "with an ADR-grade justification."
+            "with a documented justification."
         )
 
     def test_audit_flagged_drift_settings_are_normalised(self) -> None:
-        """The three settings the 2026-04-27 security audit named MUST be normalised."""
+        """Three Settings fields surfaced by a security audit MUST be normalised.
+
+        ``aeat_invoices_dir``, ``aeat_attachments_dir``, ``aeat_runs_dir``
+        all carry user-supplied filesystem paths that the rest of the
+        codebase joins with ``Path()``; without normalisation a relative
+        value would resolve against the process CWD and silently leak
+        files outside the configured local store.
+        """
         path_validator = self._validator_field_set("_normalize_repo_relative_paths")
         for field_name in ("aeat_invoices_dir", "aeat_attachments_dir", "aeat_runs_dir"):
             assert field_name in path_validator, (

@@ -138,7 +138,7 @@ def test_open_rejects_non_positive_idle_minutes() -> None:
 def test_module_has_no_classvar_typed_attributes() -> None:
     """Static AST guard: `BucketSession` keeps zero `ClassVar` state.
 
-    The ADR-2 section 7 invariant forbids module-global mutable state on
+    The substrate invariant forbids module-global mutable state on
     the master-key surface. This guard catches a regression that would
     re-introduce a process-lifetime cache by typing it `ClassVar[...]`.
     """

@@ -6,7 +6,7 @@ questions plus three fixed mode flags (``--profile``,
 ``--quiet``, ``--accept-defaults``). The closure walks the flow
 against a ``Prompter`` and persists the typed answers.
 
-Flag derivation per ADR section D:
+Flag derivation per question kind:
 
 * ``TEXT`` / ``SECRET`` / ``PATH`` → ``--<question-id>`` ``str``
   option (``Path`` for ``PATH``);

@@ -1,12 +1,11 @@
 # site_health fixture corpus
 
 Synthetic HTML fixtures for the `aeat.browser._site_health_parsers`
-parser suite (#95). Every file under this tree is hand-authored to
-mirror the real AEAT Sede Electrónica response shapes documented in
-`.vault/research/2026-04-13-aeat-mantenimiento-detection-research.md`
-section 5. No fixture is a verbatim copy of a production response;
-see `src/aeat/tests/fixtures/aeat-pages/README.md` for the project-wide scrub
-procedure this corpus follows.
+parser suite. Every file under this tree is hand-authored to mirror
+the real AEAT Sede Electrónica response shapes — no fixture is a
+verbatim copy of a production response; see
+`src/aeat/tests/fixtures/aeat-pages/README.md` for the project-wide
+scrub procedure this corpus follows.
 
 ## Layout
 

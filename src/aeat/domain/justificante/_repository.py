@@ -4,6 +4,15 @@ Justificante metadata captures AEAT verification identifiers, operator
 identity, timestamps, and verification URLs. The structured metadata is
 stored as encrypted byte objects in the primary SQL backend at AUDIT
 sensitivity; no plaintext metadata JSON or envelope file lands on disk.
+
+Sensitivity rationale: justificantes are AEAT-issued verification receipts
+whose sensitivity class is ``AUDIT`` for every modelo. The class is not
+modelo-specific — it is determined by the nature of the artefact (an
+AEAT-issued submission receipt carrying run-trace and NIF-bearing audit
+fields), not by the modelo's ``output_sensitivity`` declaration. The
+``ModeloDefinition.output_sensitivity`` field governs *output* artefacts
+(calculation drafts, export payloads); justificante metadata is an
+*audit-sink* artefact and is irreducibly AUDIT regardless of modelo.
 """
 
 from __future__ import annotations
@@ -55,6 +64,8 @@ class JustificanteRepository:
         record = self._objects.load(
             _JUSTIFICANTE_NAMESPACE,
             csv,
+            # rationale: justificante is an AEAT-issued audit-sink artefact; AUDIT
+            # sensitivity is irreducible and modelo-independent (see module docstring).
             expected_class=SensitivityClass.AUDIT,
             max_supported_version=_JUSTIFICANTE_ENVELOPE_VERSION,
         )
@@ -77,6 +88,8 @@ class JustificanteRepository:
         """Persist ``justificante`` in the encrypted database object store."""
 
         safe_repository_id(justificante.csv, context="csv")
+        # rationale: justificante is an AEAT-issued audit-sink artefact; AUDIT
+        # sensitivity is irreducible and modelo-independent (see module docstring).
         envelope = Envelope[Justificante](
             schema_version=_JUSTIFICANTE_ENVELOPE_VERSION,
             written_at=datetime.now(UTC),
@@ -108,6 +121,8 @@ class JustificanteRepository:
         csvs: list[str] = []
         for record in self._objects.list_records(
             _JUSTIFICANTE_NAMESPACE,
+            # rationale: justificante is an AEAT-issued audit-sink artefact; AUDIT
+            # sensitivity is irreducible and modelo-independent (see module docstring).
             expected_class=SensitivityClass.AUDIT,
             max_supported_version=_JUSTIFICANTE_ENVELOPE_VERSION,
         ):

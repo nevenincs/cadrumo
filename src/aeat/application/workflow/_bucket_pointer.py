@@ -1,13 +1,13 @@
 """Strict pydantic v2 record for the active-bucket pointer file.
 
 The pointer file lives at ``<aeat-root>/active-bucket`` and carries the
-canonical default for the active-bucket precedence chain (flag > env >
-pointer) defined in ADR-2 section 5. This record is the typed wrapper
-around the pointer file's plaintext content.
+canonical default for the active-bucket precedence chain
+(flag > env > pointer). This record is the typed wrapper around the
+pointer file's plaintext content.
 
 The on-disk representation is single-document TOML keyed by
-``bucket_id`` and ``schema_version``. P02.S04 materialises the
-write-then-rename atomic IO over this record; P04 wires the resolver.
+``bucket_id`` and ``schema_version``. An atomic write-then-rename
+helper materialises the pointer; a resolver consumes it at startup.
 """
 
 from __future__ import annotations
@@ -32,8 +32,7 @@ class BucketPointer(BaseModel):
 
         Emits a deterministic two-line document keyed by ``bucket_id`` and
         ``schema_version``. The output ends with a trailing newline so the
-        atomic write-then-rename helper in P02.S04 produces a POSIX-clean
-        file.
+        atomic write-then-rename helper produces a POSIX-clean file.
         """
 
         # Hand-formatted to keep the dependency footprint minimal and the
