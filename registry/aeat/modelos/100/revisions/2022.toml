@@ -6492,7 +6492,7 @@ id = "0248"
 number = "0248"
 label = "Importe de la deducción"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -6500,7 +6500,7 @@ id = "0249"
 number = "0249"
 label = "Importe del abono anticipado de la deducción correspondiente a 2022 (*)"
 section = ["resultados", "calculo_impuesto_res", "deduc_conyuge_disc_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9278,7 +9278,7 @@ label = "Cuota líquida estatal incrementada  ( [0585] = [0570] + [0568] + [0582
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2022-cuota-liquida-estatal-incrementada"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9288,7 +9288,7 @@ label = "Cuota líquida autonómica incrementada ( [0586] = [0571] + [0569] + [0
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2022-cuota-liquida-autonomica-incrementada"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9296,7 +9296,7 @@ id = "0587"
 number = "0587"
 label = "Cuota líquida incrementada total ( [0585] + [0586] )"
 section = ["resultados", "calculo_impuesto_res", "cuota_autoliquidacion_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9304,7 +9304,7 @@ id = "0588"
 number = "0588"
 label = "Por doble imposición internacional, por razón de las rentas obtenidas y gravadas en el extranjero"
 section = ["resultados", "calculo_impuesto_res", "cuota_autoliquidacion_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-80", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9312,7 +9312,7 @@ id = "0589"
 number = "0589"
 label = "Por doble imposición internacional en los supuestos de aplicación del régimen de transparencia fiscal internacional"
 section = ["resultados", "calculo_impuesto_res", "cuota_autoliquidacion_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-80", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9320,7 +9320,7 @@ id = "0590"
 number = "0590"
 label = "Por doble imposición en los supuestos de aplicación del régimen de imputación de rentas derivadas de la cesión de derechos de imagen"
 section = ["resultados", "calculo_impuesto_res", "cuota_autoliquidacion_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-80", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9360,7 +9360,7 @@ id = "0595"
 number = "0595"
 label = "Cuota resultante de la autoliquidación ( [0587] - [0588] - [0589] - [0590] - [0591] )"
 section = ["resultados", "calculo_impuesto_res", "cuota_autoliquidacion_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-79", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9466,7 +9466,7 @@ number = "0610"
 label = "Cuota diferencial"
 section = ["resultados", "calculo_impuesto_res", "cuota_diferencial_res"]
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-79", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9474,7 +9474,7 @@ id = "0611"
 number = "0611"
 label = "Importe de la deducción"
 section = ["resultados", "calculo_impuesto_res", "deduc_mater_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9482,7 +9482,7 @@ id = "0612"
 number = "0612"
 label = "Importe del abono anticipado de la deducción correspondiente a 2022"
 section = ["resultados", "calculo_impuesto_res", "deduc_mater_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9490,7 +9490,7 @@ id = "0613"
 number = "0613"
 label = "Incremento por gastos en guarderias o centros de educación infantil autorizados"
 section = ["resultados", "calculo_impuesto_res", "deduc_mater_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9578,7 +9578,7 @@ id = "0623"
 number = "0623"
 label = "Importe de la deducción"
 section = ["resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9586,7 +9586,7 @@ id = "0624"
 number = "0624"
 label = "Importe del abono anticipado de la deducción correspondiente a 2022 (*)"
 section = ["resultados", "calculo_impuesto_res", "deduc_descendiente_disc_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9692,7 +9692,7 @@ id = "0636"
 number = "0636"
 label = "Importe de la deducción"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9700,7 +9700,7 @@ id = "0637"
 number = "0637"
 label = "Importe del abono anticipado de la deducción correspondiente a 2022 (*)"
 section = ["resultados", "calculo_impuesto_res", "deduc_ascendiente_disc_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9900,7 +9900,7 @@ id = "0660"
 number = "0660"
 label = "Importe de la deducción"
 section = ["resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9908,7 +9908,7 @@ id = "0661"
 number = "0661"
 label = "Importe del abono anticipado de la deducción correspondiente a 2022 (*)"
 section = ["resultados", "calculo_impuesto_res", "deduc_familia_numerosa_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9916,7 +9916,7 @@ id = "0662"
 number = "0662"
 label = "Importe de la deducción"
 section = ["resultados", "calculo_impuesto_res", "deduc_monoparental_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9924,7 +9924,7 @@ id = "0663"
 number = "0663"
 label = "Importe del abono anticipado de la deducción correspondiente a 2022 (*)"
 section = ["resultados", "calculo_impuesto_res", "deduc_monoparental_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9932,7 +9932,7 @@ id = "0664"
 number = "0664"
 label = "Importe del cobro anticipado a regularizar en caso de descendientes sin derecho al mínimo por descendientes"
 section = ["resultados", "calculo_impuesto_res", "regularizacion_descendiente_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9949,7 +9949,7 @@ id = "0666"
 number = "0666"
 label = "Importe del cobro anticipado a regularizar en caso de ascendientes sin derecho al mínimo por ascendientes"
 section = ["resultados", "calculo_impuesto_res", "regularizacion_ascendiente_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-81-bis", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
@@ -9967,7 +9967,7 @@ number = "0670"
 label = "Resultado de la declaración ( [0610] - [0611] + [0612] - [0613] - [1912] + [1913] - [1915] + [1916] - [0623] + [0624] - [0636] + [0637] - [0248] + [0249] - [0660] + [0661] - [0662] + [0663] + [0664..."
 section = ["resultados", "calculo_impuesto_res"]
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-103", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2022".casillas]]
