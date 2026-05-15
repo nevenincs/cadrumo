@@ -72,14 +72,16 @@ def test_rejects_wrong_salt_length() -> None:
 
 def test_rejects_unknown_algorithm() -> None:
     with pytest.raises(ValidationError):
-        KdfParams(
-            algorithm="scrypt",  # ty: ignore[invalid-argument-type]
-            version=19,
-            memory_cost=19 * 1024,
-            time_cost=2,
-            parallelism=1,
-            salt=secrets.token_bytes(16),
-            output_length=32,
+        KdfParams.model_validate(
+            {
+                "algorithm": "scrypt",
+                "version": 19,
+                "memory_cost": 19 * 1024,
+                "time_cost": 2,
+                "parallelism": 1,
+                "salt": secrets.token_bytes(16),
+                "output_length": 32,
+            }
         )
 
 
@@ -93,13 +95,15 @@ def test_json_round_trip_preserves_salt() -> None:
 
 def test_rejects_unknown_keys() -> None:
     with pytest.raises(ValidationError):
-        KdfParams(
-            algorithm="argon2id",
-            version=19,
-            memory_cost=19 * 1024,
-            time_cost=2,
-            parallelism=1,
-            salt=secrets.token_bytes(16),
-            output_length=32,
-            unexpected=1,  # ty: ignore[unknown-argument]
+        KdfParams.model_validate(
+            {
+                "algorithm": "argon2id",
+                "version": 19,
+                "memory_cost": 19 * 1024,
+                "time_cost": 2,
+                "parallelism": 1,
+                "salt": secrets.token_bytes(16),
+                "output_length": 32,
+                "unexpected": 1,
+            }
         )

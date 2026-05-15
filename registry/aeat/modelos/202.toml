@@ -621,7 +621,9 @@ label = "Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en Territor
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "money"
 required = false
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
+constraints = { sign = "non_negative", legal_refs = ["ley-27-2014:art-40"], source_refs = ["aeat-modelo-202-instructions"] }
 export_refs = ["modelo-202-page-02-casilla-30"]
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2025", "aeat-modelo-202-instructions"]
@@ -1285,6 +1287,66 @@ signed = false
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2025"]
 
+# -----------------------------------------------------------------------------
+# Prior-period cumulative pagos-fraccionados carry-forward (LIS art. 40)
+# revision 2025-y-siguientes. Casilla 30 picks up the sum of casilla 34
+# (Cantidad a ingresar) across all prior pago periods in the ejercicio.
+# -----------------------------------------------------------------------------
+
+[[revisions."2025-y-siguientes".bindings]]
+id = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
+source = "previous_filing"
+selector = { source_modelo = "202", source_output = "34" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions."2025-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["pagos fraccionados"]
+
+[[revisions."2025-y-siguientes".relations]]
+id = "modelo-202-2025-y-siguientes-rel-self-pagos-2p"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "202"
+source_revision_selector = { filing_year_delta = 0 }
+source_output = "34"
+target_binding = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
+period_alignment = { mode = "prior_pagos_cumulative" }
+source_periods = ["1P"]
+target_periods = ["2P"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions."2025-y-siguientes".relations]]
+id = "modelo-202-2025-y-siguientes-rel-self-pagos-3p"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "202"
+source_revision_selector = { filing_year_delta = 0 }
+source_output = "34"
+target_binding = "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"
+period_alignment = { mode = "prior_pagos_cumulative" }
+source_periods = ["1P", "2P"]
+target_periods = ["3P"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions."2025-y-siguientes".dependency_classifications]]
+id = "modelo-202-2025-y-siguientes-dep-self-prior-pagos"
+source_modelo = "202"
+treatment = "factual_evidence"
+target_constructs = ["modelo-202-foundation"]
+relation_refs = [
+    "modelo-202-2025-y-siguientes-rel-self-pagos-2p",
+    "modelo-202-2025-y-siguientes-rel-self-pagos-3p",
+]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
 [[revisions."2025-y-siguientes".constructs]]
 id = "modelo-202-foundation"
 title = "Modelo 202 registry-backed fractional payment foundation"
@@ -1309,6 +1371,9 @@ formulas = [
 workbook_parity_refs = ["modelo-202-dr-xlsx-2025"]
 live_cross_references = ["modelo-202-static-documentation"]
 export_layouts = ["modelo-202-fichero-boe"]
+bindings = ["modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores"]
+relations = ["modelo-202-2025-y-siguientes-rel-self-pagos-2p", "modelo-202-2025-y-siguientes-rel-self-pagos-3p"]
+dependency_classifications = ["modelo-202-2025-y-siguientes-dep-self-prior-pagos"]
 application_links = [
     "modelo-202-portal",
     "modelo-202-calculation",
@@ -1821,7 +1886,9 @@ label = "Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en Territor
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "money"
 required = false
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
+constraints = { sign = "non_negative", legal_refs = ["ley-27-2014:art-40"], source_refs = ["aeat-modelo-202-instructions"] }
 export_refs = ["modelo-202-2023-2024-page-02-casilla-30"]
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
@@ -2217,6 +2284,66 @@ requires_snapshot = true
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2023", "aeat-modelo-202-instructions-2023-2024"]
 
+# -----------------------------------------------------------------------------
+# Prior-period cumulative pagos-fraccionados carry-forward (LIS art. 40)
+# revision 2023-2024. Casilla 30 picks up the sum of casilla 34
+# (Cantidad a ingresar) across all prior pago periods in the ejercicio.
+# -----------------------------------------------------------------------------
+
+[[revisions."2023-2024".bindings]]
+id = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
+source = "previous_filing"
+selector = { source_modelo = "202", source_output = "34" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions."2023-2024".bindings.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["pagos fraccionados"]
+
+[[revisions."2023-2024".relations]]
+id = "modelo-202-2023-2024-rel-self-pagos-2p"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "202"
+source_revision_selector = { filing_year_delta = 0 }
+source_output = "34"
+target_binding = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
+period_alignment = { mode = "prior_pagos_cumulative" }
+source_periods = ["1P"]
+target_periods = ["2P"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions."2023-2024".relations]]
+id = "modelo-202-2023-2024-rel-self-pagos-3p"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "202"
+source_revision_selector = { filing_year_delta = 0 }
+source_output = "34"
+target_binding = "modelo-202-2023-2024-pagos-fraccionados-anteriores"
+period_alignment = { mode = "prior_pagos_cumulative" }
+source_periods = ["1P", "2P"]
+target_periods = ["3P"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions."2023-2024".dependency_classifications]]
+id = "modelo-202-2023-2024-dep-self-prior-pagos"
+source_modelo = "202"
+treatment = "factual_evidence"
+target_constructs = ["modelo-202-2023-2024-foundation"]
+relation_refs = [
+    "modelo-202-2023-2024-rel-self-pagos-2p",
+    "modelo-202-2023-2024-rel-self-pagos-3p",
+]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
 [[revisions."2023-2024".constructs]]
 id = "modelo-202-2023-2024-foundation"
 title = "Modelo 202 registry-backed fractional payment construct (ejercicios 2023-2024)"
@@ -2239,6 +2366,9 @@ formulas = [
 workbook_parity_refs = ["modelo-202-2023-2024-dr-xlsx"]
 live_cross_references = ["modelo-202-2023-2024-static-documentation"]
 export_layouts = ["modelo-202-2023-2024-fichero-boe"]
+bindings = ["modelo-202-2023-2024-pagos-fraccionados-anteriores"]
+relations = ["modelo-202-2023-2024-rel-self-pagos-2p", "modelo-202-2023-2024-rel-self-pagos-3p"]
+dependency_classifications = ["modelo-202-2023-2024-dep-self-prior-pagos"]
 application_links = [
     "modelo-202-2023-2024-portal",
     "modelo-202-2023-2024-calculation",
@@ -2751,7 +2881,9 @@ label = "Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en Territor
 section = ["liquidacion", "modalidad_40_3_lis", "resultado"]
 data_type = "money"
 required = false
-input_kind = "manual"
+input_kind = "bound"
+binding = "modelo-202-2019-2022-pagos-fraccionados-anteriores"
+constraints = { sign = "non_negative", legal_refs = ["ley-27-2014:art-40"], source_refs = ["aeat-modelo-202-instructions"] }
 export_refs = ["modelo-202-2019-2022-page-02-casilla-30"]
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]
@@ -3147,6 +3279,66 @@ requires_snapshot = true
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
 source_refs = ["aeat-dr-202-2019", "aeat-modelo-202-instructions-2023-2024"]
 
+# -----------------------------------------------------------------------------
+# Prior-period cumulative pagos-fraccionados carry-forward (LIS art. 40)
+# revision 2019-2022. Casilla 30 picks up the sum of casilla 34
+# (Cantidad a ingresar) across all prior pago periods in the ejercicio.
+# -----------------------------------------------------------------------------
+
+[[revisions."2019-2022".bindings]]
+id = "modelo-202-2019-2022-pagos-fraccionados-anteriores"
+source = "previous_filing"
+selector = { source_modelo = "202", source_output = "34" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions."2019-2022".bindings.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["pagos fraccionados"]
+
+[[revisions."2019-2022".relations]]
+id = "modelo-202-2019-2022-rel-self-pagos-2p"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "202"
+source_revision_selector = { filing_year_delta = 0 }
+source_output = "34"
+target_binding = "modelo-202-2019-2022-pagos-fraccionados-anteriores"
+period_alignment = { mode = "prior_pagos_cumulative" }
+source_periods = ["1P"]
+target_periods = ["2P"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions."2019-2022".relations]]
+id = "modelo-202-2019-2022-rel-self-pagos-3p"
+kind = "previous_period"
+dependency_role = "direct_calculation"
+source_modelo = "202"
+source_revision_selector = { filing_year_delta = 0 }
+source_output = "34"
+target_binding = "modelo-202-2019-2022-pagos-fraccionados-anteriores"
+period_alignment = { mode = "prior_pagos_cumulative" }
+source_periods = ["1P", "2P"]
+target_periods = ["3P"]
+aggregation = { op = "sum" }
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions."2019-2022".dependency_classifications]]
+id = "modelo-202-2019-2022-dep-self-prior-pagos"
+source_modelo = "202"
+treatment = "factual_evidence"
+target_constructs = ["modelo-202-2019-2022-foundation"]
+relation_refs = [
+    "modelo-202-2019-2022-rel-self-pagos-2p",
+    "modelo-202-2019-2022-rel-self-pagos-3p",
+]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-105"]
+source_refs = ["aeat-modelo-202-instructions"]
+
 [[revisions."2019-2022".constructs]]
 id = "modelo-202-2019-2022-foundation"
 title = "Modelo 202 registry-backed fractional payment construct (ejercicios 2019-2022)"
@@ -3169,6 +3361,9 @@ formulas = [
 workbook_parity_refs = ["modelo-202-2019-2022-dr-xlsx"]
 live_cross_references = ["modelo-202-2019-2022-static-documentation"]
 export_layouts = ["modelo-202-2019-2022-fichero-boe"]
+bindings = ["modelo-202-2019-2022-pagos-fraccionados-anteriores"]
+relations = ["modelo-202-2019-2022-rel-self-pagos-2p", "modelo-202-2019-2022-rel-self-pagos-3p"]
+dependency_classifications = ["modelo-202-2019-2022-dep-self-prior-pagos"]
 application_links = [
     "modelo-202-2019-2022-portal",
     "modelo-202-2019-2022-calculation",

@@ -63,27 +63,31 @@ def test_round_trip_preserves_salt_bytes() -> None:
 
 def test_rejects_unknown_keys() -> None:
     with pytest.raises(ValidationError):
-        BucketManifest(
-            bucket_id="bucket-001",
-            label="Primary",
-            created_at=_now(),
-            last_unlocked_at=None,
-            kdf_params=_kdf(),
-            recovery_enrolled=False,
-            schema_version=1,
-            unexpected="nope",  # ty: ignore[unknown-argument]
+        BucketManifest.model_validate(
+            {
+                "bucket_id": "bucket-001",
+                "label": "Primary",
+                "created_at": _now(),
+                "last_unlocked_at": None,
+                "kdf_params": _kdf(),
+                "recovery_enrolled": False,
+                "schema_version": 1,
+                "unexpected": "nope",
+            }
         )
 
 
 def test_rejects_missing_bucket_id() -> None:
     with pytest.raises(ValidationError):
-        BucketManifest(  # ty: ignore[missing-argument]
-            label="Primary",
-            created_at=_now(),
-            last_unlocked_at=None,
-            kdf_params=_kdf(),
-            recovery_enrolled=False,
-            schema_version=1,
+        BucketManifest.model_validate(
+            {
+                "label": "Primary",
+                "created_at": _now(),
+                "last_unlocked_at": None,
+                "kdf_params": _kdf(),
+                "recovery_enrolled": False,
+                "schema_version": 1,
+            }
         )
 
 
