@@ -237,6 +237,7 @@ cli:
         year_help: A modell adóéve (pl. 2026)
       casillas:
         as_of_help: A megadott ISO dátumon (ÉÉÉÉ-HH-NN) érvényes modellrevízió feloldása
+        form_number_help: Cellák szűrése a BOE-nyomtatványon szereplő mezőszám alapján (pl. 46)
         input_kind_help: Cellák szűrése bemenettípus szerint (manual, bound, computed,
           informational)
         modelo_help: Adóbevallás kódja (pl. 303, 130, 100)

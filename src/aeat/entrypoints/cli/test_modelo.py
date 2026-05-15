@@ -40,6 +40,31 @@ def test_unknown_modelo_surfaces_as_bad_parameter() -> None:
 
 
 # ---------------------------------------------------------------------------
+# casillas --form-number filter
+# ---------------------------------------------------------------------------
+
+
+def test_casillas_form_number_filter_matches_declared_casilla() -> None:
+    """``--form-number 46`` returns only the M303 casilla whose form_number equals '46'."""
+    result = invoke_cached_cli(["app", "modelo", "casillas", "303", "--form-number", "46"])
+    assert result.exit_code == 0, result.output
+    rows = [line for line in result.output.splitlines() if line.startswith("iva.resultado-regimen-general\t")]
+    assert rows, result.output
+
+
+def test_casillas_form_number_filter_no_match_returns_empty_table() -> None:
+    """``--form-number`` with a value not declared by any casilla returns an empty table."""
+    result = invoke_cached_cli(["app", "modelo", "casillas", "303", "--form-number", "9999"])
+    assert result.exit_code == 0, result.output
+    data_rows = [
+        line
+        for line in result.output.splitlines()
+        if line and not line.startswith("operation\t") and not line.startswith("casilla_id\t")
+    ]
+    assert not data_rows, result.output
+
+
+# ---------------------------------------------------------------------------
 # bindings list / preview surface
 # ---------------------------------------------------------------------------
 
@@ -398,6 +423,7 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
 
     from datetime import UTC, datetime
 
+    from aeat.domain.modelos._codes import ModeloCode
     from aeat.domain.modelos._filing_record import (
         ExternalEvidence,
         ExternalEvidenceKind,
@@ -427,7 +453,7 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
         bucket_id="default",
-        modelo="130",
+        modelo=ModeloCode("130"),
         filing_year=2026,
         period="1T",
         filed_at=filed_at,
@@ -446,8 +472,11 @@ def test_filing_record_payload_renders_external_evidence_and_amends() -> None:
     payload = _filing_record_payload(record)
 
     assert payload["amends_filing_record_id"] == amends_id
-    evidence = payload["external_evidence"]
-    assert isinstance(evidence, dict)
+    from typing import cast
+
+    evidence_raw = payload["external_evidence"]
+    assert isinstance(evidence_raw, dict)
+    evidence = cast(dict[str, object], evidence_raw)
     assert evidence["kind"] == "aeat_justificante_pdf"
     assert evidence["reference_id"] == "JUST-2026-130-1T-XYZ789"
     assert evidence["imported_at"] == imported_at.isoformat()
@@ -460,6 +489,7 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
 
     from datetime import UTC, datetime
 
+    from aeat.domain.modelos._codes import ModeloCode
     from aeat.domain.modelos._filing_record import (
         FilingRecord,
         FilingRecordStatus,
@@ -480,7 +510,7 @@ def test_filing_record_payload_omits_evidence_fields_when_absent() -> None:
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
         bucket_id="default",
-        modelo="130",
+        modelo=ModeloCode("130"),
         filing_year=2026,
         period="1T",
         filed_at=filed_at,
@@ -503,6 +533,7 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
 
     from datetime import UTC, datetime
 
+    from aeat.domain.modelos._codes import ModeloCode
     from aeat.domain.modelos._filing_record import (
         ExternalEvidence,
         ExternalEvidenceKind,
@@ -532,7 +563,7 @@ def test_filing_record_lines_renders_external_evidence_and_amends_in_text_mode()
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
         bucket_id="default",
-        modelo="130",
+        modelo=ModeloCode("130"),
         filing_year=2026,
         period="1T",
         filed_at=filed_at,

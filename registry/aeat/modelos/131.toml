@@ -94,6 +94,9 @@ valid_to = 2023-12-31
 source_ref = "aeat-modelo-131-instructions"
 required_text = ["Casilla 06", "2 por 100", "casilla 05"]
 
+# Casilla IDs in this modelo are the same as the printed form numbers.
+# form_number is not declared individually because id == form_number for all casillas.
+
 [[revisions."2019-2023".casillas]]
 id = "01"
 number = "01"

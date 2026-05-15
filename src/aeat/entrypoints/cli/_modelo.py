@@ -182,6 +182,10 @@ def casillas(
         typer.Option("--input-kind", help=tr("cli.app.modelo.casillas.input_kind_help")),
     ] = None,
     required: Annotated[bool, typer.Option("--required", help=tr("cli.app.modelo.casillas.required_help"))] = False,
+    form_number: Annotated[
+        str | None,
+        typer.Option("--form-number", help=tr("cli.app.modelo.casillas.form_number_help")),
+    ] = None,
 ) -> None:
     report = _run_query(
         lambda: _service().casillas(
@@ -190,6 +194,7 @@ def casillas(
             as_of=_as_of(as_of),
             input_kind=input_kind,
             required=True if required else None,
+            form_number=form_number,
         )
     )
     _emit(
