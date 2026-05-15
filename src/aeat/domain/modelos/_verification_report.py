@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
@@ -198,7 +198,7 @@ class VerificationReportCatalogue(BaseModel):
     def values(self):
         return self.reports.values()
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[VerificationReport]:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         return iter(self.reports.values())
 
     def __len__(self) -> int:

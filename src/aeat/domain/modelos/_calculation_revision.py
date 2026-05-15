@@ -38,7 +38,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -334,7 +334,7 @@ class CalculationRevisionCatalogue(BaseModel):
         """Return every revision attached to one work unit."""
         return tuple(rev for rev in self.revisions.values() if rev.work_unit_id == work_unit_id)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[CalculationRevision]:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         return iter(self.revisions.values())
 
     def __len__(self) -> int:

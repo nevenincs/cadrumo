@@ -1177,6 +1177,25 @@ class RegistrySnapshot(RegistryModel):
     # enough for descriptive future event names without becoming a free-text
     # field — the matching constraint is enforced upstream in
     # PeriodSelector + FilingScheduleDefinition (which validate against
+    # each modelo's declared periods).
+    #
+    # Audit note on the layered max_length contract across the codebase:
+    #
+    #   - RegistrySnapshot.period (this field): max_length=32 — the
+    #     registry-side surface where event-period names live.
+    #   - Application-side serialization buffers (filing/_calculate.py,
+    #     filing/_export.py, aggregation/_service.py, etc.): max_length=16
+    #     — sufficient for every period name registered today
+    #     ("modificacion" is 12).
+    #   - Sede outbound models (sede/_declarations.py, sede/_schema.py):
+    #     max_length=8 — AEAT-side period codes from the sede HTML are
+    #     always ≤ 8 chars (e.g. "1T", "0A"). M036 events never traverse
+    #     these models (census events do not flow through the
+    #     filed-declaration sede surface).
+    #
+    # Verified end-to-end: M036's "modificacion" period builds a
+    # RegistrySnapshot, threads through the application/filing layer
+    # (16 ≥ 12), and never reaches the sede 8-cap models.
     # the modelo's declared periods).
     period: str = Field(min_length=1, max_length=32)
     legal: Mapping[LegalRefId, LegalReference]

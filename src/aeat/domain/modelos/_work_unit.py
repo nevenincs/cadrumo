@@ -20,7 +20,7 @@ identifier; ``name`` is a display-only attribute.
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping, ValuesView
+from collections.abc import Iterator, Mapping, ValuesView
 from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
@@ -275,7 +275,7 @@ class WorkUnitCatalogue(BaseModel):
             return cls(work_units=mapping)
         return cls(work_units={str(k): v for k, v in units.items()})
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[WorkUnit]:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate the loaded work units (not the keys)."""
         return iter(self.work_units.values())
 

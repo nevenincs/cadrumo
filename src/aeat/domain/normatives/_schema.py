@@ -12,6 +12,7 @@ enforced at load time on every title and summary.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from enum import StrEnum
 from typing import Annotated
@@ -229,7 +230,7 @@ class NormativeCatalogue(_NormativeStrictMutable):
                 )
         return self
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[NormativeReference]:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over every loaded :class:`NormativeReference`."""
         return iter(self.references.values())
 
