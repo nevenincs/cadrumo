@@ -408,6 +408,20 @@ class Settings(BaseSettings):
         description="Opt-in flag (set to '1') to run @pytest.mark.live_read tests against real external services",
     )
 
+    # ── Replay IPC ──────────────────────────────────────────────────────────
+    # Set by ``aeat.core.observability._replay.replay_run`` on the parent
+    # process before it re-enters the CLI, then read by ``run_context`` in
+    # the child invocation so the persisted trace can label its
+    # ``replay_of`` field with the original run id. Subprocess IPC writes
+    # still go through ``os.environ[REPLAY_ACTIVE_ENV_VAR] = run_id``
+    # (Settings is read-only and ``Settings()`` is re-instantiated by
+    # ``load_settings()`` on each call, so the write is visible to the
+    # next read).
+    aeat_replay_active: str = Field(
+        default="",
+        description="Subprocess-IPC marker carrying the original run_id when a CLI invocation is a replay re-entry",
+    )
+
     # ── Diagnostic logging ──────────────────────────────────────────────────
     aeat_log_dir: Path | None = Field(
         default=None,

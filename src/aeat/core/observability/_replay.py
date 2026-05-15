@@ -156,6 +156,14 @@ def replay_run(
 
     # Restore the prior value on exit so the process env is unchanged
     # for any caller that imports ``replay_run`` programmatically.
+    #
+    # NOTE: The os.environ READ/WRITE here is a documented exception to
+    # the "every AEAT-prefixed config flows through Settings" mandate.
+    # This is subprocess-IPC, not config: ``invoke(argv)`` re-enters the
+    # CLI which on next ``load_settings()`` reads
+    # ``Settings.aeat_replay_active`` — and the value comes from the
+    # os.environ mutation we perform below. Settings is read-only, so
+    # the write side has no Settings equivalent.
     previous = os.environ.get(REPLAY_ACTIVE_ENV_VAR)
     # Store the *original* run_id, not just "1", so the re-entered
     # run_context can label the new trace's ``replay_of`` field with
