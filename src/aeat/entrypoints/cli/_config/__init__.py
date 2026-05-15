@@ -504,10 +504,67 @@ def config_profile_use(
         updated = repository.update(lambda current: select_profile(current, profile_id=name))
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
+    _emit_profile_activated_event(profile_id=name, active_profile=updated.active_profile)
     _emit(
         ctx,
         {"active_profile": updated.active_profile},
         (f"active_profile\t{updated.active_profile or ''}",),
+    )
+
+
+def _emit_profile_activated_event(*, profile_id: str, active_profile: str | None) -> None:
+    """Append a PROFILE_ACTIVATED event to the bucket-event-history catalogue.
+
+    Records the operator-visible profile-activation transition so
+    downstream auditors can replay the activation timeline without
+    re-deriving it from secure-object snapshots. Distinct from
+    PROFILE_SELECTED (which records selection at workflow-state level)
+    so the catalogue carries the explicit activation event.
+    """
+
+    from datetime import UTC, datetime
+
+    from ....domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        BucketEventType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
+
+    if active_profile is None:
+        return
+
+    occurred_at = datetime.now(UTC)
+    payload = {"profile_id": profile_id, "active_profile": active_profile}
+    actor = "operator"
+    bucket_id = active_profile
+    event_id = derive_bucket_event_id(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.PROFILE_ACTIVATED,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=profile_id,
+        payload=payload,
+    )
+    repo = BucketEventHistoryRepository()
+    repo.save(
+        append_bucket_event(
+            repo.load(),
+            BucketEvent(
+                event_id=event_id,
+                bucket_id=bucket_id,
+                event_type=BucketEventType.PROFILE_ACTIVATED,
+                occurred_at=occurred_at,
+                actor=actor,
+                object_type=BucketEventObjectType.PROFILE,
+                object_id=profile_id,
+                payload_version=1,
+                payload=payload,
+            ),
+        )
     )
 
 
