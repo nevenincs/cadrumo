@@ -332,6 +332,12 @@ cli:
         verify_help: Draft kalkulációs revízió verifikálása a verified-complete szerződés
           ellen
         work_unit_id_help: A munkaegység stabil 64-karakteres SHA-256 azonosítója
+        invalid_work_unit_id: A work_unit_id 64 karakteres kisbetűs hex-karakterlánc
+          kell legyen (SHA-256 kivonat)
+        invalid_casilla_key: 'A --casilla kulcs nem érvényes CasillaId (alfanumerikus
+          plusz . _ : - elválasztók, max. 64 karakter)'
+        invalid_binding_key: 'A --binding kulcs nem érvényes BindingId (kisbetűs alfanumerikus
+          plusz . _ : - elválasztók, max. 128 karakter)'
         year_help: A munkaegység adóéve (pl. 2026)
   common:
     errors:

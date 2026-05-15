@@ -332,6 +332,12 @@ cli:
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
+        invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
+          (SHA-256 digest)
+        invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric plus
+          . _ : - separators, max 64 chars)'
+        invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
+          plus . _ : - separators, max 128 chars)'
         year_help: Tax year of the work unit (e.g. 2026)
   common:
     errors:

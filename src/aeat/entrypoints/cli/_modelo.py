@@ -839,12 +839,16 @@ def work_rename(
         str,
         typer.Option("--name", help=tr("cli.app.modelo.work.name_help")),
     ],
+    actor: Annotated[
+        str | None,
+        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
+    ] = None,
 ) -> None:
     """Update one work unit's display name (preserves work_unit_id)."""
 
     work_unit_id = _validate_work_unit_id(work_unit_id)
     try:
-        unit = rename_work_unit(work_unit_id, name)
+        unit = rename_work_unit(work_unit_id, name, actor=actor or _resolve_default_actor())
     except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
         raise typer.BadParameter(str(exc)) from exc
     payload = {
