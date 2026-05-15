@@ -8,6 +8,7 @@ jurisdiction = "ES-AEAT"
 legal_refs = [
     "orden-eha-769-2010:art-1",
     "orden-hac-174-2020:art-1",
+    "ley-58-2003:art-93",
 ]
 source_refs = [
     "aeat-dr-349-2020-current",
@@ -22,6 +23,7 @@ period_selector = { year_from = 2020, periods = ["01", "02", "03", "04", "05", "
 legal_refs = [
     "orden-eha-769-2010:art-1",
     "orden-hac-174-2020:art-1",
+    "ley-58-2003:art-93",
 ]
 source_refs = [
     "aeat-dr-349-2020-current",
@@ -40,7 +42,7 @@ required = true
 input_kind = "bound"
 binding = "vat-349-declarante-numero-operadores"
 export_refs = ["modelo-349-decl-numero-operadores"]
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".casillas]]
@@ -53,7 +55,7 @@ required = true
 input_kind = "bound"
 binding = "vat-349-declarante-importe-operaciones"
 export_refs = ["modelo-349-decl-importe-operaciones"]
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".casillas]]
@@ -66,7 +68,7 @@ required = true
 input_kind = "bound"
 binding = "vat-349-declarante-numero-rectificaciones"
 export_refs = ["modelo-349-decl-numero-rectificaciones"]
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".casillas]]
@@ -79,7 +81,7 @@ required = true
 input_kind = "bound"
 binding = "vat-349-declarante-importe-rectificaciones"
 export_refs = ["modelo-349-decl-importe-rectificaciones"]
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 
 # --- Per-operator detail fields (Tipo 2 operador intracomunitario) ---
@@ -92,7 +94,7 @@ section = ["operador", "identificacion"]
 data_type = "text"
 required = true
 input_kind = "manual"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
@@ -103,7 +105,7 @@ section = ["operador", "identificacion"]
 data_type = "text"
 required = true
 input_kind = "manual"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
@@ -114,7 +116,7 @@ section = ["operador", "identificacion"]
 data_type = "text"
 required = true
 input_kind = "manual"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
@@ -125,7 +127,7 @@ section = ["operador", "operacion"]
 data_type = "text"
 required = true
 input_kind = "manual"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
@@ -136,7 +138,7 @@ section = ["operador", "operacion"]
 data_type = "money"
 required = true
 input_kind = "manual"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 # --- Rectification detail fields (Tipo 2 rectificaciones) ---
@@ -149,7 +151,7 @@ section = ["rectificacion", "periodo"]
 data_type = "integer"
 required = true
 input_kind = "manual"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
@@ -160,7 +162,7 @@ section = ["rectificacion", "periodo"]
 data_type = "text"
 required = true
 input_kind = "manual"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
@@ -171,7 +173,7 @@ section = ["rectificacion", "importe"]
 data_type = "money"
 required = true
 input_kind = "manual"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".casillas]]
@@ -182,7 +184,7 @@ section = ["rectificacion", "importe"]
 data_type = "money"
 required = true
 input_kind = "manual"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 # --- Live cross-reference policy ---
@@ -205,7 +207,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = false
 requires_aeat_authorization = false
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".live_cross_references]]
@@ -228,7 +230,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = true
 requires_aeat_authorization = true
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 # Spanish-counterparty ROI verification via the AEAT GROI servlet at
@@ -263,7 +265,7 @@ synthetic_data_allowed = true
 requires_authentication = true
 requires_aeat_authorization = false
 oracle_id = "aeat-groi-spanish-roi-checker"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-vies-gestiones-procedure"]
 
 # Applicability gate: the GROI Spanish-ROI consult is only relevant
@@ -277,7 +279,7 @@ field = "does_intracomunitario"
 op = "equals"
 value = true
 explanation = "GROI Spanish-ROI counterparty check applies only when the taxpayer conducts declarable intracommunity operations."
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 # IXVI foreign-EU NIF-IVA verifier. AEAT publishes the IXVI servlet
@@ -312,7 +314,7 @@ synthetic_data_allowed = true
 requires_authentication = true
 requires_aeat_authorization = false
 oracle_id = "aeat-nif-iva-checker"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-vies-gestiones-procedure"]
 
 # Applicability gate: identical to the GROI binding — the IXVI
@@ -323,7 +325,7 @@ field = "does_intracomunitario"
 op = "equals"
 value = true
 explanation = "IXVI foreign-EU NIF-IVA verifier applies only when the taxpayer conducts declarable intracommunity operations."
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 # --- Workbook parity (PDF record-design only; no formula form) ---
@@ -335,7 +337,7 @@ fixture_id = "modelo-349-2020-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 # --- Application links ---
@@ -345,7 +347,7 @@ id = "modelo-349-portal"
 surface = "portal"
 consumer = "aeat.domain.portals.Portal.PORTAL_M349_INTRACOMUNITARIAS"
 requires_snapshot = true
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".application_links]]
@@ -353,7 +355,7 @@ id = "modelo-349-filed-declarations-observation"
 surface = "portal"
 consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
 requires_snapshot = true
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".application_links]]
@@ -361,7 +363,7 @@ id = "modelo-349-filing"
 surface = "filing"
 consumer = "aeat.application.filing"
 requires_snapshot = true
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".application_links]]
@@ -369,7 +371,7 @@ id = "modelo-349-deadline"
 surface = "deadline"
 consumer = "aeat.application.deadlines"
 requires_snapshot = true
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".application_links]]
@@ -377,7 +379,7 @@ id = "modelo-349-export"
 surface = "export"
 consumer = "aeat.application.filing"
 requires_snapshot = true
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".application_links]]
@@ -385,7 +387,7 @@ id = "modelo-349-extractor"
 surface = "extractor"
 consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
 requires_snapshot = true
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 
 # --- Extraction profiles ---
@@ -405,7 +407,7 @@ target_casillas = [
 confidence = "review_required"
 min_coverage = "0.5"
 failure_semantics = "fail_hard"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".extraction_profiles]]
@@ -423,7 +425,7 @@ target_casillas = [
 confidence = "strict"
 min_coverage = "1.0"
 failure_semantics = "fail_hard"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 # --- Filing schedules (profile-driven cadence) ---
@@ -433,7 +435,7 @@ id = "modelo-349-trimestral"
 period_kind = "quarterly"
 periods = ["1T", "2T", "3T", "4T"]
 profile_condition_mode = "all"
-legal_refs = ["orden-eha-769-2010:art-2"]
+legal_refs = ["orden-eha-769-2010:art-2", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
@@ -441,7 +443,7 @@ field = "does_intracomunitario"
 op = "equals"
 value = true
 explanation = "Modelo 349 aplica cuando existen operaciones intracomunitarias declarables."
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
@@ -449,7 +451,7 @@ field = "iva.intracommunity_operations_exceed_50000_eur"
 op = "equals"
 value = false
 explanation = "Modelo 349 trimestral cuando el importe total de entregas intracomunitarias y prestaciones de servicios no supera el umbral de 50.000 euros, IVA excluido, en el trimestre de referencia ni en los cuatro trimestres naturales anteriores."
-legal_refs = ["orden-eha-769-2010:art-2"]
+legal_refs = ["orden-eha-769-2010:art-2", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".filing_schedules]]
@@ -457,7 +459,7 @@ id = "modelo-349-mensual"
 period_kind = "monthly"
 periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 profile_condition_mode = "all"
-legal_refs = ["orden-eha-769-2010:art-2"]
+legal_refs = ["orden-eha-769-2010:art-2", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
@@ -465,7 +467,7 @@ field = "does_intracomunitario"
 op = "equals"
 value = true
 explanation = "Modelo 349 aplica cuando existen operaciones intracomunitarias declarables."
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".filing_schedules.profile_conditions]]
@@ -473,7 +475,7 @@ field = "iva.intracommunity_operations_exceed_50000_eur"
 op = "equals"
 value = true
 explanation = "Modelo 349 mensual cuando el importe total de entregas intracomunitarias y prestaciones de servicios supera el umbral de 50.000 euros, IVA excluido, en el trimestre de referencia o en cualquiera de los cuatro trimestres naturales anteriores."
-legal_refs = ["orden-eha-769-2010:art-2"]
+legal_refs = ["orden-eha-769-2010:art-2", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 # --- Invoice-source bindings (autonomo invoice-ledger aggregation) ---
@@ -483,7 +485,7 @@ id = "vat-349-declarante-numero-operadores"
 source = "invoice"
 selector = { fact = "operator_count", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "count_distinct" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -495,7 +497,7 @@ id = "vat-349-declarante-importe-operaciones"
 source = "invoice"
 selector = { fact = "base_sum", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications" }
 aggregation = { op = "sum" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -507,7 +509,7 @@ id = "vat-349-declarante-numero-rectificaciones"
 source = "invoice"
 selector = { fact = "operator_count", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications" }
 aggregation = { op = "count_distinct" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -519,7 +521,7 @@ id = "vat-349-declarante-importe-rectificaciones"
 source = "invoice"
 selector = { fact = "rectified_base_delta_sum", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications" }
 aggregation = { op = "sum" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "aeat-modelo-349-procedure", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -533,7 +535,7 @@ id = "vat-349-operador-row-codigo-pais"
 source = "invoice"
 selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -545,7 +547,7 @@ id = "vat-349-operador-row-nif"
 source = "invoice"
 selector = { fact = "row_field", row_field = "party_tax_id", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -557,7 +559,7 @@ id = "vat-349-operador-row-apellidos"
 source = "invoice"
 selector = { fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -569,7 +571,7 @@ id = "vat-349-operador-row-clave"
 source = "invoice"
 selector = { fact = "row_field", row_field = "clave", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -581,7 +583,7 @@ id = "vat-349-operador-row-base"
 source = "invoice"
 selector = { fact = "row_field", row_field = "base_imponible", grouping = "operator_clave", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "exclude_rectifications", record = "operador" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -595,7 +597,7 @@ id = "vat-349-rectificacion-row-codigo-pais"
 source = "invoice"
 selector = { fact = "row_field", row_field = "country_code", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -607,7 +609,7 @@ id = "vat-349-rectificacion-row-nif"
 source = "invoice"
 selector = { fact = "row_field", row_field = "party_tax_id", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -619,7 +621,7 @@ id = "vat-349-rectificacion-row-apellidos"
 source = "invoice"
 selector = { fact = "row_field", row_field = "party_legal_name", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -631,7 +633,7 @@ id = "vat-349-rectificacion-row-clave"
 source = "invoice"
 selector = { fact = "row_field", row_field = "clave", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -643,7 +645,7 @@ id = "vat-349-rectificacion-row-ejercicio"
 source = "invoice"
 selector = { fact = "row_field", row_field = "rectified_year", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -655,7 +657,7 @@ id = "vat-349-rectificacion-row-periodo"
 source = "invoice"
 selector = { fact = "row_field", row_field = "rectified_period", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -667,7 +669,7 @@ id = "vat-349-rectificacion-row-base-rectificada"
 source = "invoice"
 selector = { fact = "row_field", row_field = "base_imponible", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -679,7 +681,7 @@ id = "vat-349-rectificacion-row-base-anterior"
 source = "invoice"
 selector = { fact = "row_field", row_field = "rectified_base_previous", grouping = "operator_clave_period", claves = ["E", "M", "H", "A", "T", "S", "I", "R", "D", "C"], rectification_scope = "only_rectifications", record = "rectificacion" }
 aggregation = { op = "rows" }
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current", "boe-modelo-349-form-2010"]
 
 [[revisions."2020-y-siguientes".bindings.source_citations]]
@@ -690,7 +692,7 @@ required_text = ["BASE IMPONIBLE DECLARADA ANTERIORMENTE"]
 
 [[revisions."2020-y-siguientes".export_layouts]]
 id = "modelo-349-fichero-2020"
-legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 # Tipo 1 — Registro de declarante (500 bytes)
@@ -713,7 +715,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -727,7 +729,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -741,7 +743,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -755,7 +757,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -768,7 +770,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -781,7 +783,7 @@ required = false
 padding = "right_space"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -794,7 +796,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -807,7 +809,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -820,7 +822,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -833,7 +835,7 @@ required = false
 padding = "right_space"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -846,7 +848,7 @@ required = false
 padding = "right_space"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -859,7 +861,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -873,7 +875,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -887,7 +889,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -901,7 +903,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -915,7 +917,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -929,7 +931,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -942,7 +944,7 @@ required = false
 padding = "right_space"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -955,7 +957,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -968,7 +970,7 @@ required = false
 padding = "right_space"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -981,7 +983,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 # Tipo 2 — Registro de operador intracomunitario (500 bytes)
@@ -1011,7 +1013,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1025,7 +1027,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1039,7 +1041,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1053,7 +1055,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1066,7 +1068,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1080,7 +1082,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1094,7 +1096,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1108,7 +1110,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1122,7 +1124,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1136,7 +1138,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1149,7 +1151,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1162,7 +1164,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1175,7 +1177,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1188,7 +1190,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 # Tipo 2 — Registro de rectificaciones (500 bytes)
@@ -1218,7 +1220,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1232,7 +1234,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1246,7 +1248,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1260,7 +1262,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1273,7 +1275,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1287,7 +1289,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1301,7 +1303,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1315,7 +1317,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1329,7 +1331,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1342,7 +1344,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1356,7 +1358,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1370,7 +1372,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1384,7 +1386,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1398,7 +1400,7 @@ required = true
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1411,7 +1413,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1424,7 +1426,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".export_layouts.records.fields]]
@@ -1437,7 +1439,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["orden-eha-769-2010:art-1"]
+legal_refs = ["orden-eha-769-2010:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-349-2020-current"]
 
 [[revisions."2020-y-siguientes".constructs]]
@@ -1448,6 +1450,7 @@ legal_refs = [
     "orden-eha-769-2010:art-2",
     "orden-eha-769-2010:art-10",
     "orden-hac-174-2020:art-1",
+    "ley-58-2003:art-93",
 ]
 source_refs = [
     "aeat-dr-349-2020-current",
@@ -1566,7 +1569,7 @@ period = "2024-01"
 period_kind = "monthly"
 opens_on = 2024-02-01
 closes_on = 2024-02-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1576,7 +1579,7 @@ period = "2024-02"
 period_kind = "monthly"
 opens_on = 2024-03-01
 closes_on = 2024-03-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1586,7 +1589,7 @@ period = "2024-03"
 period_kind = "monthly"
 opens_on = 2024-04-01
 closes_on = 2024-04-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1596,7 +1599,7 @@ period = "2024-04"
 period_kind = "monthly"
 opens_on = 2024-05-01
 closes_on = 2024-05-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1606,7 +1609,7 @@ period = "2024-05"
 period_kind = "monthly"
 opens_on = 2024-06-01
 closes_on = 2024-06-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1616,7 +1619,7 @@ period = "2024-06"
 period_kind = "monthly"
 opens_on = 2024-07-01
 closes_on = 2024-07-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1626,7 +1629,7 @@ period = "2024-07"
 period_kind = "monthly"
 opens_on = 2024-08-01
 closes_on = 2024-09-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1636,7 +1639,7 @@ period = "2024-08"
 period_kind = "monthly"
 opens_on = 2024-09-01
 closes_on = 2024-09-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1646,7 +1649,7 @@ period = "2024-09"
 period_kind = "monthly"
 opens_on = 2024-10-01
 closes_on = 2024-10-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1656,7 +1659,7 @@ period = "2024-10"
 period_kind = "monthly"
 opens_on = 2024-11-01
 closes_on = 2024-11-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1666,7 +1669,7 @@ period = "2024-11"
 period_kind = "monthly"
 opens_on = 2024-12-01
 closes_on = 2024-12-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1676,7 +1679,7 @@ period = "2024-12"
 period_kind = "monthly"
 opens_on = 2025-01-01
 closes_on = 2025-01-30
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1686,7 +1689,7 @@ period = "2024-1T"
 period_kind = "quarterly"
 opens_on = 2024-04-01
 closes_on = 2024-04-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1696,7 +1699,7 @@ period = "2024-2T"
 period_kind = "quarterly"
 opens_on = 2024-07-01
 closes_on = 2024-07-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1706,7 +1709,7 @@ period = "2024-3T"
 period_kind = "quarterly"
 opens_on = 2024-10-01
 closes_on = 2024-10-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1716,7 +1719,7 @@ period = "2024-4T"
 period_kind = "quarterly"
 opens_on = 2025-01-01
 closes_on = 2025-01-30
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1726,7 +1729,7 @@ period = "2025-01"
 period_kind = "monthly"
 opens_on = 2025-02-01
 closes_on = 2025-02-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1736,7 +1739,7 @@ period = "2025-02"
 period_kind = "monthly"
 opens_on = 2025-03-01
 closes_on = 2025-03-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1746,7 +1749,7 @@ period = "2025-03"
 period_kind = "monthly"
 opens_on = 2025-04-01
 closes_on = 2025-04-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1756,7 +1759,7 @@ period = "2025-04"
 period_kind = "monthly"
 opens_on = 2025-05-01
 closes_on = 2025-05-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1766,7 +1769,7 @@ period = "2025-05"
 period_kind = "monthly"
 opens_on = 2025-06-01
 closes_on = 2025-06-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1776,7 +1779,7 @@ period = "2025-06"
 period_kind = "monthly"
 opens_on = 2025-07-01
 closes_on = 2025-07-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1786,7 +1789,7 @@ period = "2025-07"
 period_kind = "monthly"
 opens_on = 2025-08-01
 closes_on = 2025-09-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1796,7 +1799,7 @@ period = "2025-08"
 period_kind = "monthly"
 opens_on = 2025-09-01
 closes_on = 2025-09-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1806,7 +1809,7 @@ period = "2025-09"
 period_kind = "monthly"
 opens_on = 2025-10-01
 closes_on = 2025-10-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1816,7 +1819,7 @@ period = "2025-10"
 period_kind = "monthly"
 opens_on = 2025-11-01
 closes_on = 2025-11-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1826,7 +1829,7 @@ period = "2025-11"
 period_kind = "monthly"
 opens_on = 2025-12-01
 closes_on = 2025-12-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1836,7 +1839,7 @@ period = "2025-12"
 period_kind = "monthly"
 opens_on = 2026-01-01
 closes_on = 2026-01-30
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1846,7 +1849,7 @@ period = "2025-1T"
 period_kind = "quarterly"
 opens_on = 2025-04-01
 closes_on = 2025-04-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1856,7 +1859,7 @@ period = "2025-2T"
 period_kind = "quarterly"
 opens_on = 2025-07-01
 closes_on = 2025-07-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1866,7 +1869,7 @@ period = "2025-3T"
 period_kind = "quarterly"
 opens_on = 2025-10-01
 closes_on = 2025-10-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1876,7 +1879,7 @@ period = "2025-4T"
 period_kind = "quarterly"
 opens_on = 2026-01-01
 closes_on = 2026-01-30
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1886,7 +1889,7 @@ period = "2026-01"
 period_kind = "monthly"
 opens_on = 2026-02-01
 closes_on = 2026-02-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1896,7 +1899,7 @@ period = "2026-02"
 period_kind = "monthly"
 opens_on = 2026-03-01
 closes_on = 2026-03-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1906,7 +1909,7 @@ period = "2026-03"
 period_kind = "monthly"
 opens_on = 2026-04-01
 closes_on = 2026-04-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1916,7 +1919,7 @@ period = "2026-04"
 period_kind = "monthly"
 opens_on = 2026-05-01
 closes_on = 2026-05-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1926,7 +1929,7 @@ period = "2026-05"
 period_kind = "monthly"
 opens_on = 2026-06-01
 closes_on = 2026-06-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1936,7 +1939,7 @@ period = "2026-06"
 period_kind = "monthly"
 opens_on = 2026-07-01
 closes_on = 2026-07-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1946,7 +1949,7 @@ period = "2026-07"
 period_kind = "monthly"
 opens_on = 2026-08-01
 closes_on = 2026-09-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1956,7 +1959,7 @@ period = "2026-08"
 period_kind = "monthly"
 opens_on = 2026-09-01
 closes_on = 2026-09-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1966,7 +1969,7 @@ period = "2026-09"
 period_kind = "monthly"
 opens_on = 2026-10-01
 closes_on = 2026-10-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1976,7 +1979,7 @@ period = "2026-10"
 period_kind = "monthly"
 opens_on = 2026-11-01
 closes_on = 2026-11-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1986,7 +1989,7 @@ period = "2026-11"
 period_kind = "monthly"
 opens_on = 2026-12-01
 closes_on = 2026-12-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -1996,7 +1999,7 @@ period = "2026-12"
 period_kind = "monthly"
 opens_on = 2027-01-01
 closes_on = 2027-01-30
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -2006,7 +2009,7 @@ period = "2026-1T"
 period_kind = "quarterly"
 opens_on = 2026-04-01
 closes_on = 2026-04-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -2016,7 +2019,7 @@ period = "2026-2T"
 period_kind = "quarterly"
 opens_on = 2026-07-01
 closes_on = 2026-07-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -2026,7 +2029,7 @@ period = "2026-3T"
 period_kind = "quarterly"
 opens_on = 2026-10-01
 closes_on = 2026-10-20
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
 
 [[revisions."2020-y-siguientes".deadline_windows]]
@@ -2036,5 +2039,5 @@ period = "2026-4T"
 period_kind = "quarterly"
 opens_on = 2027-01-01
 closes_on = 2027-01-30
-legal_refs = ["orden-eha-769-2010:art-10"]
+legal_refs = ["orden-eha-769-2010:art-10", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]
