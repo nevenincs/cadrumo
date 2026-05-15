@@ -32,6 +32,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import Any
 
+from ....core.config import Settings as _Settings
 from ._errors import (
     StorageConflictError,
     StorageError,
@@ -45,7 +46,7 @@ from ._errors import (
 )
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
-_VAULT_FOLDER_NAME = "aeat-vault"
+_VAULT_FOLDER_NAME = _Settings().aeat_google_drive_vault_folder_name
 _FOLDER_MIME = "application/vnd.google-apps.folder"
 _BINARY_MIME = "application/octet-stream"
 _HMAC_PREFIX_LEN = 8
@@ -285,12 +286,7 @@ class GoogleDriveProvider:
             return cached
         service = self._get_service()
         vault_id = self._resolve_vault_folder()
-        query = (
-            f"'{vault_id}' in parents "
-            f"and name='{namespace}' "
-            f"and mimeType='{_FOLDER_MIME}' "
-            f"and trashed=false"
-        )
+        query = f"'{vault_id}' in parents and name='{namespace}' and mimeType='{_FOLDER_MIME}' and trashed=false"
         response = self._execute(
             service.files().list(q=query, fields="files(id,name,appProperties)", pageSize=10),
             action=f"resolve_namespace_{namespace}",
@@ -340,11 +336,7 @@ class GoogleDriveProvider:
 
         service = self._get_service()
         prefix = object_key_hmac[:_HMAC_PREFIX_LEN]
-        query = (
-            f"'{namespace_folder_id}' in parents "
-            f"and name contains '{prefix}--' "
-            f"and trashed=false"
-        )
+        query = f"'{namespace_folder_id}' in parents and name contains '{prefix}--' and trashed=false"
         response = self._execute(
             service.files().list(
                 q=query,
@@ -493,11 +485,7 @@ class GoogleDriveProvider:
     def iter_namespaces(self) -> Iterator[str]:
         service = self._get_service()
         vault_id = self._resolve_vault_folder()
-        query = (
-            f"'{vault_id}' in parents "
-            f"and mimeType='{_FOLDER_MIME}' "
-            f"and trashed=false"
-        )
+        query = f"'{vault_id}' in parents and mimeType='{_FOLDER_MIME}' and trashed=false"
         page_token: str | None = None
         while True:
             kwargs: dict[str, Any] = {"q": query, "fields": "files(id,name),nextPageToken", "pageSize": 100}

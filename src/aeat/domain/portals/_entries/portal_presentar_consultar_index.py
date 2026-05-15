@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_PRESENTAR_CONSULTAR_INDEX,
-    url="https://sede.agenciatributaria.gob.es/Sede/presentar-consultar-declaraciones-modelo.html",
+    path="/Sede/presentar-consultar-declaraciones-modelo.html",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.CALENDAR_REFERENCE,
     auth_methods=(AuthMethod.ANONYMOUS,),

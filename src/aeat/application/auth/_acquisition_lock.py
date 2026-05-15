@@ -207,8 +207,8 @@ def auth_lock_ttl_seconds(settings: Settings, kind: AuthProviderKind) -> int:
     """Return the acquisition-lock TTL for a provider."""
 
     if kind is AuthProviderKind.CLAVE_MOVIL:
-        return int(settings.aeat_clave_movil_timeout_ms / 1000) + 90
-    return 180
+        return int(settings.aeat_clave_movil_timeout_ms / 1000) + settings.aeat_auth_clave_movil_lock_buffer_s
+    return settings.aeat_auth_certificate_lock_ttl_s
 
 
 def _status_context(status: AuthAcquisitionLockStatus) -> dict[str, object]:

@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_CERT_SELECTION,
-    url="https://www1.agenciatributaria.gob.es/wlpl/BUCV-JDIT/SelectorCertificado",
+    path="/wlpl/BUCV-JDIT/SelectorCertificado",
     subdomain=Subdomain.WWW1,
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.CERTIFICATE,),

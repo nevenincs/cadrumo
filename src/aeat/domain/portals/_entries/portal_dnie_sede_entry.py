@@ -14,7 +14,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_DNIE_SEDE_ENTRY,
-    url="https://sede.agenciatributaria.gob.es/Sede/dnie-electronico.html",
+    path="/Sede/dnie-electronico.html",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.DNIE,),

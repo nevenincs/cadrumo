@@ -15,7 +15,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_PRE303_AYUDA,
-    url="https://sede.agenciatributaria.gob.es/Sede/iva/autoliquidacion-iva-modelo-303/pre303.html",
+    path="/Sede/iva/autoliquidacion-iva-modelo-303/pre303.html",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.BORRADOR,
     auth_methods=(

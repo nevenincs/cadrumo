@@ -23,13 +23,14 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .....core.config import Settings as _Settings
 from ._errors import BucketBusyError
 
 if TYPE_CHECKING:
     from ._layout import BucketPaths
 
 _LOCK_FILENAME = ".lock"
-_POLL_INTERVAL_SECONDS = 0.1
+_POLL_INTERVAL_SECONDS = _Settings().aeat_bucket_lock_poll_interval_s
 
 
 def lock_path(paths: BucketPaths) -> Path:

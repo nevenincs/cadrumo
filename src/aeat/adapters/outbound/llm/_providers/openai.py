@@ -16,7 +16,7 @@ from .._errors import LLMConfigError, LLMProviderError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
-_OPENAI_CHAT_URL = Settings.external_constants().online_services.llm_endpoints.openai_chat_completions
+_OPENAI_CHAT_URL = Settings().aeat_llm_openai_chat_completions_url
 
 _logger = get_logger(__name__)
 

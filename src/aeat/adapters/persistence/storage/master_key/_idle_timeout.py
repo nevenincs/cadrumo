@@ -22,11 +22,12 @@ from datetime import datetime, timedelta
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .....core.config import Settings as _Settings
 from ._bucket_session import BucketSession
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-DEFAULT_IDLE_LOCK_MINUTES = 15
+DEFAULT_IDLE_LOCK_MINUTES = _Settings().aeat_bucket_default_idle_lock_minutes
 
 
 class IdleEvaluation(BaseModel):

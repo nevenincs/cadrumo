@@ -39,6 +39,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core.config import Settings as _Settings
 from ....domain.calculations.registry._formula_runtime import (
     calculate_registry_snapshot,
 )
@@ -55,7 +56,7 @@ from ._records import (
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-_SHEETS_RECALC_DELAY_SECONDS = 2.0
+_SHEETS_RECALC_DELAY_SECONDS = _Settings().aeat_calc_sheets_recalc_delay_s
 
 
 class CasillaParity(BaseModel):

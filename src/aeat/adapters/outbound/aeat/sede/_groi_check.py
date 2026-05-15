@@ -61,8 +61,13 @@ from ._errors import SedeError, SedeFailureMode, SedeNavigationError, SedeParseE
 
 logger = get_logger(__name__)
 
-DEFAULT_GROI_TIMEOUT_MS: int = 30_000
-_SELECTOR_PROBE_TIMEOUT_MS: int = 2_500
+_TIMEOUT_DEFAULTS = Settings()
+DEFAULT_GROI_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_navigation_timeout_ms
+_SELECTOR_PROBE_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_selector_probe_timeout_ms
+_DEFAULT_VIEWPORT = {
+    "width": _TIMEOUT_DEFAULTS.aeat_browser_viewport_width,
+    "height": _TIMEOUT_DEFAULTS.aeat_browser_viewport_height,
+}
 
 # Form selectors verified against live HTML capture (2026-05-07):
 # ``<input id="nif" name="nif" type="text" maxlength="9" size="9">``
@@ -239,7 +244,7 @@ async def collect_groi_observations(
         context = await browser_session.create_context()
         page = cast(Any, await context.new_page())
         await _playwright_stage(
-            page.set_viewport_size({"width": 1366, "height": 900}),
+            page.set_viewport_size(_DEFAULT_VIEWPORT),
             stage="set-viewport",
             description="GROI viewport",
             timeout_ms=timeout_ms,

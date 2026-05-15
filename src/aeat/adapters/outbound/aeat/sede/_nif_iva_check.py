@@ -84,8 +84,13 @@ async def _locate(
 # form-fill + result-scrape stage gets this budget; the live driver runs
 # under the remote-state guard's pre-flighted operation list and the
 # total wall-clock budget is governed by the caller.
-DEFAULT_NIF_IVA_TIMEOUT_MS: int = 30_000
-_SELECTOR_PROBE_TIMEOUT_MS: int = 2_500
+_TIMEOUT_DEFAULTS = Settings()
+DEFAULT_NIF_IVA_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_navigation_timeout_ms
+_SELECTOR_PROBE_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_selector_probe_timeout_ms
+_DEFAULT_VIEWPORT = {
+    "width": _TIMEOUT_DEFAULTS.aeat_browser_viewport_width,
+    "height": _TIMEOUT_DEFAULTS.aeat_browser_viewport_height,
+}
 _COUNTRY_SELECTORS: tuple[str, ...] = (
     'select[name*="pais" i]',
     'select[id*="pais" i]',
@@ -253,7 +258,7 @@ async def collect_nif_iva_check_observations(
         context = await browser_session.create_context(storage_state={})
         page = cast(Any, await context.new_page())
         await _playwright_stage(
-            page.set_viewport_size({"width": 1366, "height": 900}),
+            page.set_viewport_size(_DEFAULT_VIEWPORT),
             stage="set-viewport",
             description="NIF-IVA viewport",
             timeout_ms=timeout_ms,

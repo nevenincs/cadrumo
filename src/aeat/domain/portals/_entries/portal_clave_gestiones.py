@@ -14,7 +14,7 @@ from ._common import build_entry
 
 ENTRY: PortalMetadata = build_entry(
     portal=Portal.PORTAL_CLAVE_GESTIONES,
-    url="https://sede.agenciatributaria.gob.es/Sede/clave-pin/gestiones.html",
+    path="/Sede/clave-pin/gestiones.html",
     subdomain=Subdomain.SEDE,
     category=PortalCategory.AUTH,
     auth_methods=(AuthMethod.CLAVE_PERMANENTE,),
