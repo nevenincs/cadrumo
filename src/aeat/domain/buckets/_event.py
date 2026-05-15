@@ -80,6 +80,11 @@ class BucketEventType(StrEnum):
     PROFILE_TOMBSTONED = "profile.tombstoned"
     PROFILE_DUPLICATED = "profile.duplicated"
 
+    # operator authentication + workspace bootstrap
+    AUTH_PROVIDER_CONFIGURED = "auth.provider.configured"
+    CONFIG_ENV_UPDATED = "config.env.updated"
+    SETUP_STATE_MIGRATED = "setup.state.migrated"
+
     # ledger transaction lifecycle
     LEDGER_TRANSACTION_CREATED = "ledger.transaction.created"
     LEDGER_TRANSACTION_IMPORTED = "ledger.transaction.imported"
