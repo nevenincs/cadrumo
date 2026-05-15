@@ -1,3 +1,23 @@
+[legal."ley-27-2014:art-12"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 12: correcciones de valor - amortizaciones. Define la deducibilidad de la amortizacion segun depreciacion efectiva, los cinco metodos validos (tabla lineal art-12.1.a, porcentaje constante degresivo, numeros digitos, plan aceptado por la Administracion, justificacion del importe) y la tabla de coeficientes maximos por tipo de elemento (obra civil 2-7 por ciento, edificios 2-4 por ciento, maquinaria 12 por ciento, equipos electronicos 20-33 por ciento, etc.). Base sustantiva de las casillas de amortizacion de M200, desarrollada en RIS art-3."
+required_text = [
+    "Correcciones de valor: amortizaciones",
+    "depreciación efectiva",
+    "coeficientes de amortización lineal",
+]
+
 [legal."ley-27-2014:art-16"]
 evidence_tier = "legal_authority"
 authority = "boe"
