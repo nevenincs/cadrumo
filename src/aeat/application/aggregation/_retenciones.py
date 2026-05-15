@@ -22,6 +22,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._errors import AggregationUnsupportedModeloError, t
+from ._grouping import group_and_collect_names
 
 
 class RetencionScheme(StrEnum):
@@ -33,16 +34,16 @@ class RetencionScheme(StrEnum):
     """
 
     # Modelo 111 schemes (quarterly retenciones IRPF on labor + activities)
-    WORK_INCOME = "rendimientos_trabajo"          # clave A
+    WORK_INCOME = "rendimientos_trabajo"  # clave A
     ECONOMIC_ACTIVITY = "actividades_economicas"  # clave G
-    PROFESSIONAL = "actividades_profesionales"    # clave H (subset of G)
-    PRIZE = "premios"                              # clave I (lottery, prize)
+    PROFESSIONAL = "actividades_profesionales"  # clave H (subset of G)
+    PRIZE = "premios"  # clave I (lottery, prize)
     # Modelo 115 schemes (urban rental withholding)
-    URBAN_RENTAL = "arrendamiento_urbano"          # locales de negocio
+    URBAN_RENTAL = "arrendamiento_urbano"  # locales de negocio
     # Modelo 123 schemes (capital mobiliario, dividends, interest)
-    CAPITAL_INTEREST = "intereses"                 # clave I (interest income)
-    CAPITAL_DIVIDEND = "dividendos"                # clave A (dividend income)
-    CAPITAL_OTHER = "otros_capital_mobiliario"     # clave C (other capital income)
+    CAPITAL_INTEREST = "intereses"  # clave I (interest income)
+    CAPITAL_DIVIDEND = "dividendos"  # clave A (dividend income)
+    CAPITAL_OTHER = "otros_capital_mobiliario"  # clave C (other capital income)
 
 
 _CANONICAL_SOURCE_KINDS = (
@@ -120,18 +121,16 @@ class RetencionesAggregation(BaseModel):
     total_retencion: Decimal = Field(ge=Decimal("0"))
 
     @model_validator(mode="after")
-    def _totals_match_rollups(self) -> "RetencionesAggregation":
+    def _totals_match_rollups(self) -> RetencionesAggregation:
         computed_base = sum((row.total_taxable_base for row in self.rollups), Decimal("0"))
         computed_ret = sum((row.total_retencion for row in self.rollups), Decimal("0"))
         if computed_base != self.total_taxable_base:
             raise ValueError(
-                f"total_taxable_base {self.total_taxable_base} does not match "
-                f"sum of rollups {computed_base}",
+                f"total_taxable_base {self.total_taxable_base} does not match sum of rollups {computed_base}",
             )
         if computed_ret != self.total_retencion:
             raise ValueError(
-                f"total_retencion {self.total_retencion} does not match "
-                f"sum of rollups {computed_ret}",
+                f"total_retencion {self.total_retencion} does not match sum of rollups {computed_ret}",
             )
         unique_perceptors = {row.perceptor_nif for row in self.rollups}
         if len(unique_perceptors) != self.total_perceptors:
@@ -142,22 +141,28 @@ class RetencionesAggregation(BaseModel):
         return self
 
 
-_MODELO_111_SCHEMES: frozenset[RetencionScheme] = frozenset({
-    RetencionScheme.WORK_INCOME,
-    RetencionScheme.ECONOMIC_ACTIVITY,
-    RetencionScheme.PROFESSIONAL,
-    RetencionScheme.PRIZE,
-})
+_MODELO_111_SCHEMES: frozenset[RetencionScheme] = frozenset(
+    {
+        RetencionScheme.WORK_INCOME,
+        RetencionScheme.ECONOMIC_ACTIVITY,
+        RetencionScheme.PROFESSIONAL,
+        RetencionScheme.PRIZE,
+    }
+)
 
-_MODELO_115_SCHEMES: frozenset[RetencionScheme] = frozenset({
-    RetencionScheme.URBAN_RENTAL,
-})
+_MODELO_115_SCHEMES: frozenset[RetencionScheme] = frozenset(
+    {
+        RetencionScheme.URBAN_RENTAL,
+    }
+)
 
-_MODELO_123_SCHEMES: frozenset[RetencionScheme] = frozenset({
-    RetencionScheme.CAPITAL_INTEREST,
-    RetencionScheme.CAPITAL_DIVIDEND,
-    RetencionScheme.CAPITAL_OTHER,
-})
+_MODELO_123_SCHEMES: frozenset[RetencionScheme] = frozenset(
+    {
+        RetencionScheme.CAPITAL_INTEREST,
+        RetencionScheme.CAPITAL_DIVIDEND,
+        RetencionScheme.CAPITAL_OTHER,
+    }
+)
 
 # Modelo 180/190/193 are annual summaries of 115/111/123 respectively;
 # they consume the same observation set widened over a full year period.
@@ -198,16 +203,16 @@ def _aggregate_for_modelo(
 ) -> RetencionesAggregation:
     """Shared per-modelo aggregation. Filters by scheme catalogue + rolls up."""
     filtered = _filter_observations_for_modelo(observations, modelo=modelo)
-    grouped: dict[tuple[str, str, RetencionScheme], list[RetencionObservation]] = {}
-    perceptor_names: dict[tuple[str, str], str] = {}
-    for obs in filtered:
-        key = (obs.source_kind, obs.perceptor_nif, obs.scheme)
-        grouped.setdefault(key, []).append(obs)
-        name_key = (obs.source_kind, obs.perceptor_nif)
-        if obs.perceptor_name and not perceptor_names.get(name_key):
-            perceptor_names[name_key] = obs.perceptor_name
+    grouped, perceptor_names = group_and_collect_names(
+        filtered,
+        group_key_fn=lambda obs: (obs.source_kind, obs.perceptor_nif, obs.scheme),
+        identity_key_fn=lambda obs: (obs.source_kind, obs.perceptor_nif),
+        name_fn=lambda obs: obs.perceptor_name,
+    )
     rollups: list[RetencionPerceptorRollup] = []
-    for (source_kind, nif, scheme), group in sorted(grouped.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2].value)):
+    for (source_kind, nif, scheme), group in sorted(
+        grouped.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2].value)
+    ):
         total_base = sum((g.taxable_base for g in group), Decimal("0"))
         total_ret = sum((g.retencion_amount for g in group), Decimal("0"))
         rollups.append(
@@ -313,10 +318,10 @@ def aggregate_retenciones_193(
 
 
 __all__ = [
-    "RetencionesAggregation",
     "RetencionObservation",
     "RetencionPerceptorRollup",
     "RetencionScheme",
+    "RetencionesAggregation",
     "aggregate_retenciones_111",
     "aggregate_retenciones_115",
     "aggregate_retenciones_123",
