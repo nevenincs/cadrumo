@@ -52,6 +52,26 @@ reviewed_at = 2026-05-06
 reviewed_by = "wgergely"
 notes = "LIRPF art 85: ventana 'en los diez periodos impositivos anteriores' que delimita la aplicacion del tipo reducido del 1,1 por ciento sobre el valor catastral revisado."
 
+[legal."rd-439-2007:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007-art-13.html#a13"
+document_id = "BOE-A-2007-6820"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a13"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "RIRPF art 13: gastos deducibles de los rendimientos del capital inmobiliario. Detalla las categorias de gasto que reducen el rendimiento integro del capital inmobiliario: intereses y gastos de financiacion, reparacion y conservacion, tributos no estatales, contraprestaciones por servicios, gastos de formalizacion, saldos de dudoso cobro, primas de seguro, suministros y amortizacion. Base reglamentaria del articulo 23 LIRPF y de la seccion rendimientos_capital_inmobiliario > gastos_deducibles del Modelo 100."
+required_text = [
+    "Gastos deducibles de los rendimientos del capital inmobiliario",
+    "intereses de los capitales ajenos",
+    "amortización",
+]
+
 [legal."rd-439-2007:art-108"]
 evidence_tier = "legal_authority"
 authority = "boe"
