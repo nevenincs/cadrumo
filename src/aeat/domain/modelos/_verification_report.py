@@ -198,7 +198,7 @@ class VerificationReportCatalogue(BaseModel):
     def values(self):
         return self.reports.values()
 
-    def __iter__(self) -> Iterator[VerificationReport]:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[VerificationReport]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         return iter(self.reports.values())
 
     def __len__(self) -> int:

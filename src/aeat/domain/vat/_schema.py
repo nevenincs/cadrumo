@@ -15,6 +15,7 @@ authoritative.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -356,7 +357,7 @@ class VATCatalogue(_VatStrictMutable):
                 )
         return self
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[VATRegulation]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over every loaded :class:`VATRegulation`."""
         return iter(self.regulations.values())
 

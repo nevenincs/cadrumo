@@ -1450,3 +1450,272 @@ def resolve_counterpart_binding_row_values(
                     )
                 resolved[(binding.id, row_index)] = value
     return resolved
+
+
+_WithholdingRowField = Literal[
+    "perceptor_tax_id",
+    "perceptor_legal_name",
+    "country_code",
+    "clave",
+    "subclave",
+    "percibido_dinerario",
+    "percibido_especie",
+    "retencion_practicada",
+    "ingreso_a_cuenta",
+]
+_WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
+_WITHHOLDING_FACTS = frozenset({"row_field", "perceptor_count", "percibido_sum", "retencion_sum"})
+
+
+class WithholdingObservation(BaseModel):
+    """Per-perceptor retencion / ingreso-a-cuenta observation for modelo 190 / 193."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    source_id: str = Field(min_length=1, max_length=128)
+    perceptor_tax_id: str = Field(min_length=1, max_length=64)
+    perceptor_legal_name: str = Field(default="", max_length=200)
+    country_code: str = Field(default="ES", min_length=2, max_length=2)
+    transaction_date: date
+    clave: str = Field(min_length=1, max_length=2)
+    subclave: str = Field(default="", max_length=4)
+    percibido_dinerario: Decimal = Decimal("0")
+    percibido_especie: Decimal = Decimal("0")
+    retencion_practicada: Decimal = Decimal("0")
+    ingreso_a_cuenta: Decimal = Decimal("0")
+
+    @field_validator("country_code")
+    @classmethod
+    def _country_code_uppercase(cls, value: str) -> str:
+        if value != value.upper() or not value.isalpha():
+            raise RegistryValidationError("country_code must be uppercase alphabetic")
+        return value
+
+    @field_validator("clave")
+    @classmethod
+    def _clave_uppercase(cls, value: str) -> str:
+        if value != value.upper():
+            raise RegistryValidationError("withholding clave must be uppercase")
+        return value
+
+    @field_validator("percibido_dinerario", "percibido_especie", "retencion_practicada", "ingreso_a_cuenta")
+    @classmethod
+    def _decimal_amount(cls, value: Decimal) -> Decimal:
+        if isinstance(value, bool) or not isinstance(value, Decimal):
+            raise RegistryValidationError("withholding amounts must be Decimal")
+        if value < Decimal("0"):
+            raise RegistryValidationError("withholding amounts must be non-negative")
+        return value
+
+
+class WithholdingObservationRequirement(BaseModel):
+    """Withholding-source slice declared by one or more withholding bindings."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    binding_ids: tuple[str, ...] = Field(min_length=1)
+    claves: tuple[str, ...] = ()
+
+    @field_validator("binding_ids", "claves")
+    @classmethod
+    def _values_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("withholding requirement tuple entries must be unique")
+        return value
+
+
+class _WithholdingSelector(BaseModel):
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    fact: str = Field(min_length=1, max_length=64)
+    claves: tuple[str, ...] = ()
+    row_field: _WithholdingRowField | None = None
+    grouping: _WithholdingGrouping | None = None
+    record: str | None = Field(default=None, min_length=1, max_length=64)
+
+
+def _withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelector:
+    try:
+        return _WithholdingSelector.model_validate(binding.selector)
+    except ValueError as exc:
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed withholding selector") from exc
+
+
+def _validated_withholding_selector(binding: DataBindingDefinition) -> _WithholdingSelector:
+    selector = _withholding_selector(binding)
+    if selector.fact not in _WITHHOLDING_FACTS:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} declares unsupported withholding fact {selector.fact!r}"
+        )
+    op = str((binding.aggregation or {}).get("op", "sum"))
+    if selector.fact == "perceptor_count" and op != "count_distinct":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} fact 'perceptor_count' requires aggregation op 'count_distinct'"
+        )
+    if selector.fact in {"percibido_sum", "retencion_sum"} and op != "sum":
+        raise RegistryValidationError(f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op 'sum'")
+    if selector.fact == "row_field":
+        if op != "rows":
+            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
+        if selector.row_field is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
+            )
+        if selector.grouping is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key"
+            )
+    return selector
+
+
+def withholding_binding_requirements(
+    revision: ModeloRevision,
+) -> tuple[WithholdingObservationRequirement, ...]:
+    """Return withholding slices needed by ``revision``'s withholding bindings."""
+
+    grouped: dict[tuple[str, ...], set[str]] = {}
+    for binding in revision.bindings:
+        if binding.source != "withholding":
+            continue
+        selector = _validated_withholding_selector(binding)
+        key = tuple(sorted(selector.claves))
+        grouped.setdefault(key, set()).add(binding.id)
+    return tuple(
+        WithholdingObservationRequirement(
+            binding_ids=tuple(sorted(binding_ids)),
+            claves=claves,
+        )
+        for claves, binding_ids in sorted(grouped.items())
+    )
+
+
+def _filter_withholding_observations(
+    observations: Iterable[WithholdingObservation],
+    selector: _WithholdingSelector,
+) -> Iterable[WithholdingObservation]:
+    clave_filter = set(selector.claves)
+    for observation in observations:
+        if clave_filter and observation.clave not in clave_filter:
+            continue
+        yield observation
+
+
+def resolve_withholding_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[WithholdingObservation],
+) -> dict[str, Decimal]:
+    """Resolve scalar withholding-source bindings into Decimal aggregates."""
+
+    available = tuple(observations)
+    resolved: dict[str, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source != "withholding":
+            continue
+        selector = _validated_withholding_selector(binding)
+        if selector.fact == "row_field":
+            continue
+        scope_filtered = tuple(_filter_withholding_observations(available, selector))
+        if selector.fact == "perceptor_count":
+            resolved[binding.id] = Decimal(len({obs.perceptor_tax_id for obs in scope_filtered}))
+        elif selector.fact == "percibido_sum":
+            resolved[binding.id] = sum(
+                (obs.percibido_dinerario + obs.percibido_especie for obs in scope_filtered),
+                Decimal("0"),
+            )
+        elif selector.fact == "retencion_sum":
+            resolved[binding.id] = sum(
+                (obs.retencion_practicada + obs.ingreso_a_cuenta for obs in scope_filtered),
+                Decimal("0"),
+            )
+        else:  # pragma: no cover — guarded by validator
+            raise RegistryValidationError(f"binding {binding.id!r} declares unsupported withholding fact")
+    return resolved
+
+
+def resolve_withholding_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[WithholdingObservation],
+) -> dict[tuple[str, int], Decimal | str]:
+    """Resolve row-producer withholding bindings into per-row indexed values."""
+
+    available = tuple(observations)
+    resolved: dict[tuple[str, int], Decimal | str] = {}
+    cohorts: dict[
+        tuple[_WithholdingGrouping, tuple[str, ...]],
+        list[tuple[DataBindingDefinition, _WithholdingSelector]],
+    ] = {}
+    for binding in revision.bindings:
+        if binding.source != "withholding":
+            continue
+        selector = _validated_withholding_selector(binding)
+        if selector.fact != "row_field":
+            continue
+        assert selector.grouping is not None
+        cohort_key = (selector.grouping, tuple(sorted(selector.claves)))
+        cohorts.setdefault(cohort_key, []).append((binding, selector))
+    for cohort_key, members in cohorts.items():
+        grouping = cohort_key[0]
+        _, sample_selector = members[0]
+        scope_filtered = tuple(_filter_withholding_observations(available, sample_selector))
+        rows = _build_withholding_rows(grouping, scope_filtered)
+        for binding, selector in members:
+            assert selector.row_field is not None
+            for row_index, row in enumerate(rows, start=1):
+                value = row.get(selector.row_field)
+                if value is None:
+                    raise RegistryValidationError(
+                        f"binding {binding.id!r} row_field {selector.row_field!r} not produced "
+                        f"for grouping {grouping!r}"
+                    )
+                resolved[(binding.id, row_index)] = value
+    return resolved
+
+
+def _build_withholding_rows(
+    grouping: _WithholdingGrouping,
+    observations: tuple[WithholdingObservation, ...],
+) -> tuple[Mapping[str, Decimal | str], ...]:
+    """Group withholding observations into rows keyed by perceptor (and optionally clave)."""
+
+    accum: dict[tuple[str, str, str, str], dict[str, Decimal | str]] = {}
+    for observation in observations:
+        if grouping == "per_perceptor":
+            key = (observation.country_code, observation.perceptor_tax_id, "", "")
+            row_clave = ""
+            row_subclave = ""
+        else:
+            key = (
+                observation.country_code,
+                observation.perceptor_tax_id,
+                observation.clave,
+                observation.subclave,
+            )
+            row_clave = observation.clave
+            row_subclave = observation.subclave
+        bucket = accum.setdefault(
+            key,
+            {
+                "country_code": observation.country_code,
+                "perceptor_tax_id": observation.perceptor_tax_id,
+                "perceptor_legal_name": observation.perceptor_legal_name,
+                "clave": row_clave,
+                "subclave": row_subclave,
+                "percibido_dinerario": Decimal("0"),
+                "percibido_especie": Decimal("0"),
+                "retencion_practicada": Decimal("0"),
+                "ingreso_a_cuenta": Decimal("0"),
+            },
+        )
+        prev_dinerario = bucket["percibido_dinerario"]
+        prev_especie = bucket["percibido_especie"]
+        prev_retencion = bucket["retencion_practicada"]
+        prev_ingreso = bucket["ingreso_a_cuenta"]
+        assert isinstance(prev_dinerario, Decimal)
+        assert isinstance(prev_especie, Decimal)
+        assert isinstance(prev_retencion, Decimal)
+        assert isinstance(prev_ingreso, Decimal)
+        bucket["percibido_dinerario"] = prev_dinerario + observation.percibido_dinerario
+        bucket["percibido_especie"] = prev_especie + observation.percibido_especie
+        bucket["retencion_practicada"] = prev_retencion + observation.retencion_practicada
+        bucket["ingreso_a_cuenta"] = prev_ingreso + observation.ingreso_a_cuenta
+    return tuple(accum[key] for key in sorted(accum.keys()))

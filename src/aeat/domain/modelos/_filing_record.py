@@ -279,7 +279,7 @@ class FilingRecordCatalogue(BaseModel):
     def values(self):
         return self.records.values()
 
-    def __iter__(self) -> Iterator[FilingRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[FilingRecord]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         return iter(self.records.values())
 
     def __len__(self) -> int:

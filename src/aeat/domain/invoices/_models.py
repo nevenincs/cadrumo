@@ -344,6 +344,9 @@ class Invoice(BaseModel):
     retention_amount: Decimal | None = None
     payment_id: str | None = None
 
+    def __hash__(self) -> int:
+        return hash(self.invoice_id)
+
     @model_validator(mode="before")
     @classmethod
     def _normalise_and_derive_invoice_id(cls, data: object) -> object:
@@ -554,7 +557,7 @@ class InvoiceCatalogue(BaseModel):
         """
         return cls.model_validate(tuple(invoices))
 
-    def __iter__(self) -> Iterator[Invoice]:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[Invoice]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over catalogue invoices."""
         return iter(self.invoices.values())
 

@@ -45,7 +45,7 @@ class _FakeOracle:
         verdict: ParityResult,
     ) -> None:
         self._oracle_id = oracle_id
-        self._surface_kind = surface_kind
+        self._surface_kind: OracleSurfaceKind = surface_kind
         self._operations = operations
         self._verdict = verdict
 

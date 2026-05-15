@@ -928,7 +928,7 @@ class WorkflowEngine:
             if cert_severity in (
                 CertificateHealthSeverity.EXPIRED,
                 CertificateHealthSeverity.CRITICAL,
-            ):
+            ) and cert_severity is not None:
                 expiry_summary = _summary_text(
                     f"Certificate pre-expiry gate: severity={cert_severity.value} "
                     f"days_until_expiry={days_until_expiry} "

@@ -804,7 +804,7 @@ class TransactionCatalogue(BaseModel):
         """
         return cls.model_validate(tuple(transactions))
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Transaction]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over catalogue transactions."""
         return iter(self.transactions.values())
 
