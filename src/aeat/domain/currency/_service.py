@@ -1,0 +1,68 @@
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+from typing import Protocol
+
+from ._models import (
+    CurrencyNormalizationStatus,
+    MonetaryAmount,
+    NormalizedAmount,
+)
+
+
+class ExchangeRateProvider(Protocol):
+    """Protocol for fetching exchange rates."""
+
+    def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
+        """Get the exchange rate to EUR for a given currency and date.
+
+        Returns the rate such that original_amount * rate = eur_amount.
+        Returns None if no rate is available.
+        """
+        ...
+
+
+class CurrencyNormalizationService:
+    """Service to normalize foreign currencies to EUR."""
+
+    def __init__(self, rate_provider: ExchangeRateProvider | None = None) -> None:
+        self._rate_provider = rate_provider
+
+    def normalize(self, amount: MonetaryAmount, rate_date: date) -> NormalizedAmount:
+        """Normalize an amount to EUR using the rate for the given date."""
+        if amount.currency == "EUR":
+            return NormalizedAmount(
+                original=amount,
+                eur_amount=amount.amount,
+                status=CurrencyNormalizationStatus.NATIVE_EUR,
+                rate=Decimal("1.0"),
+                rate_source="native",
+                rate_date=rate_date,
+            )
+
+        if not self._rate_provider:
+            return NormalizedAmount(
+                original=amount,
+                eur_amount=Decimal("0.0"),
+                status=CurrencyNormalizationStatus.MISSING_RATE,
+            )
+
+        rate = self._rate_provider.get_eur_rate(amount.currency, rate_date)
+        if rate is None:
+            return NormalizedAmount(
+                original=amount,
+                eur_amount=Decimal("0.0"),
+                status=CurrencyNormalizationStatus.MISSING_RATE,
+            )
+
+        eur_amount = amount.amount * rate
+
+        return NormalizedAmount(
+            original=amount,
+            eur_amount=eur_amount.quantize(Decimal("0.01")),
+            status=CurrencyNormalizationStatus.NORMALIZED,
+            rate=rate,
+            rate_source="provider",
+            rate_date=rate_date,
+        )

@@ -51,6 +51,41 @@ def _with_first_export_field(revision: ModeloRevision, field: ExportFieldDefinit
     return revision.model_copy(update={"export_layouts": (updated_layout, *revision.export_layouts[1:])})
 
 
+def _as_communication_revision(revision: ModeloRevision) -> ModeloRevision:
+    filing_link = next(link for link in revision.application_links if link.surface == "filing")
+    communication_link = filing_link.model_copy(
+        update={
+            "id": f"{filing_link.id}-communication",
+            "surface": "communication",
+            "consumer": "aeat.application.modelo",
+        }
+    )
+    application_links = tuple(
+        communication_link if link.id == filing_link.id else link
+        for link in revision.application_links
+        if link.id == filing_link.id or link.surface != "filing"
+    )
+    constructs = tuple(
+        construct.model_copy(
+            update={
+                "application_links": tuple(
+                    communication_link.id if link_id == filing_link.id else link_id
+                    for link_id in construct.application_links
+                ),
+                "filing_schedules": (),
+            }
+        )
+        for construct in revision.constructs
+    )
+    return revision.model_copy(
+        update={
+            "application_links": application_links,
+            "filing_schedules": (),
+            "constructs": constructs,
+        }
+    )
+
+
 def _copy_committed_modelo(path: Path) -> None:
     path.write_text(_MODELO_130_FILE.read_text(encoding="utf-8"), encoding="utf-8")
 
@@ -174,7 +209,7 @@ def test_modelo_file_rejects_empty_filing_grade_evidence(tmp_path: Path) -> None
     path = tmp_path / "130.toml"
     _copy_committed_modelo(path)
     text = path.read_text(encoding="utf-8").replace(
-        'legal_refs = ["rd-439-2007:art-110"]',
+        'legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]',
         "legal_refs = []",
         1,
     )
@@ -611,6 +646,109 @@ def test_validator_requires_application_link_for_formulas() -> None:
     mutated = revision.model_copy(update={"application_links": links})
 
     with pytest.raises(RegistryValidationError, match="formulas require a calculation application link"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas() -> None:
+    modelo, catalogues = _committed_modelo("036")
+    revision = next(iter(modelo.revisions.values()))
+    mutated = _as_communication_revision(revision)
+    modelo_145 = modelo.model_copy(update={"id": "145"})
+
+    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo_145, mutated))
+
+
+def test_validator_rejects_non_145_communication_link_for_casillas() -> None:
+    modelo, catalogues = _committed_modelo("036")
+    revision = _as_communication_revision(next(iter(modelo.revisions.values())))
+
+    with pytest.raises(RegistryValidationError, match="communication application links are only valid for Modelo 145"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, revision))
+
+
+def test_validator_rejects_communication_link_combined_with_filing() -> None:
+    modelo, catalogues = _committed_modelo("036")
+    revision = next(iter(modelo.revisions.values()))
+    filing_link = next(link for link in revision.application_links if link.surface == "filing")
+    communication_link = filing_link.model_copy(
+        update={"id": f"{filing_link.id}-communication", "surface": "communication"}
+    )
+    mutated = revision.model_copy(update={"application_links": (*revision.application_links, communication_link)})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="communication application links must not be combined with filing",
+    ):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_modelo_145_without_communication_link() -> None:
+    modelo, catalogues = _committed_modelo("036")
+    revision = next(iter(modelo.revisions.values()))
+    modelo_145 = modelo.model_copy(update={"id": "145"})
+
+    with pytest.raises(RegistryValidationError, match="Modelo 145 requires a communication application link"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo_145, revision))
+
+
+def test_validator_rejects_communication_link_with_deadline_surface() -> None:
+    modelo, catalogues = _committed_modelo("036")
+    revision = _as_communication_revision(next(iter(modelo.revisions.values())))
+    workflow_link = next(link for link in revision.application_links if link.surface == "workflow")
+    deadline_link = workflow_link.model_copy(update={"id": f"{workflow_link.id}-deadline", "surface": "deadline"})
+    mutated = revision.model_copy(update={"application_links": (*revision.application_links, deadline_link)})
+
+    with pytest.raises(RegistryValidationError, match="communication application links must not declare deadline"):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_communication_link_with_portal_surface() -> None:
+    modelo, catalogues = _committed_modelo("036")
+    revision = _as_communication_revision(next(iter(modelo.revisions.values())))
+    workflow_link = next(link for link in revision.application_links if link.surface == "workflow")
+    portal_link = workflow_link.model_copy(update={"id": f"{workflow_link.id}-portal", "surface": "portal"})
+    mutated = revision.model_copy(update={"application_links": (*revision.application_links, portal_link)})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="communication application links must not declare live or portal",
+    ):
+        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
+
+
+def test_validator_rejects_communication_link_with_filing_schedule() -> None:
+    modelo, catalogues = _committed_modelo("036")
+    revision = next(iter(modelo.revisions.values()))
+    filing_link = next(link for link in revision.application_links if link.surface == "filing")
+    communication_link = filing_link.model_copy(
+        update={
+            "id": f"{filing_link.id}-communication",
+            "surface": "communication",
+            "consumer": "aeat.application.modelo",
+        }
+    )
+    application_links = tuple(
+        communication_link if link.id == filing_link.id else link
+        for link in revision.application_links
+        if link.id == filing_link.id or link.surface != "filing"
+    )
+    constructs = tuple(
+        construct.model_copy(
+            update={
+                "application_links": tuple(
+                    communication_link.id if link_id == filing_link.id else link_id
+                    for link_id in construct.application_links
+                )
+            }
+        )
+        for construct in revision.constructs
+    )
+    mutated = revision.model_copy(update={"application_links": application_links, "constructs": constructs})
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="communication application links must not declare filing schedules",
+    ):
         RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(_with_revision(modelo, mutated))
 
 

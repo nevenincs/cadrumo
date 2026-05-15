@@ -46,6 +46,7 @@ from typing import Literal, Protocol
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator
 
+from ....core.config import Settings
 from ._errors import RegistryValidationError
 from ._live_parity import (
     LiveParityCatalogue,
@@ -61,7 +62,7 @@ GROI_ORACLE_ID = "aeat-groi-spanish-roi-checker"
 
 # Live-captured 2026-05-07. The host-pinning suffix
 # ``agenciatributaria.gob.es`` already covers www2; no allow-list change.
-AEAT_GROI_URL = AnyUrl("https://www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet")
+AEAT_GROI_URL = AnyUrl(Settings.external_constants().aeat.oracles.groi_check)
 
 
 class _GroiModel(BaseModel):

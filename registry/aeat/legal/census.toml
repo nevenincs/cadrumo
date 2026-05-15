@@ -1,0 +1,118 @@
+[legal."orden-eha-1274-2007:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1274-2007-art-1.html#a1"
+document_id = "BOE-A-2007-9508"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#a1"
+published_at = 2007-05-10
+effective_from = 2007-07-01
+consolidated_as_of = 2025-02-03
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Articulo 1 de la Orden EHA/1274/2007: aprobacion del Modelo 036 de declaracion censal de alta, modificacion y baja."
+required_text = [
+    "Aprobacion del modelo 036",
+    "declaracion censal de alta, modificacion y baja",
+    "Censo de empresarios, profesionales y retenedores",
+]
+
+[legal."orden-eha-1274-2007:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-eha-1274-2007-art-2.html#a2"
+document_id = "BOE-A-2007-9508"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-9508#a2"
+published_at = 2007-05-10
+effective_from = 2007-07-01
+consolidated_as_of = 2025-02-03
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Articulo 2 de la Orden EHA/1274/2007: obligados a presentar declaracion censal y declaracion de baja mediante Modelo 036."
+required_text = [
+    "Obligados a presentar declaracion censal",
+    "declaracion de alta",
+    "declaracion de baja",
+]
+
+[legal."orden-hac-1526-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1526-2024-art-1.html#a1"
+document_id = "BOE-A-2025-410"
+article = "1"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410#articulo-primero"
+published_at = 2025-01-09
+effective_from = 2025-02-03
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Articulo primero de la Orden HAC/1526/2024: modifica la Orden EHA/1274/2007 para mantener Modelo 036 y suprimir las superficies activas del Modelo 037."
+required_text = [
+    "modelo 036",
+    "Se suprimen los articulos 14, 15 y 16",
+    "Se suprime el anexo II",
+]
+
+[legal."orden-hac-1526-2024:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1526-2024-df-unica.html#df-unica"
+document_id = "BOE-A-2025-410"
+article = "disposicion final unica"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410#disposicionfinalunica"
+published_at = 2025-01-09
+effective_from = 2025-02-03
+review_status = "reviewed"
+reviewed_at = 2026-05-14
+reviewed_by = "wgergely"
+notes = "Disposicion final unica de la Orden HAC/1526/2024: entrada en vigor el 3 de febrero de 2025 para los Modelos 030 y 036."
+required_text = [
+    "Entrada en vigor",
+    "3 de febrero de 2025",
+    "modelos 030 y 036",
+]
+
+[sources."aeat-dr-036-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx"
+sha256 = "791479fbf9e905faf1e43fa0bfbff974d5edaf85d198495892fa8446a1da2ebd"
+bytes = 126664
+retrieved_at = 2026-05-03
+applies_from = 2025-02-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v43.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-modelo-036-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_036/aeat-modelo-036-procedure.html"
+sha256 = "fd5264e1a8c371eb2bad45347a0defa5cc79882051cd6e90d9980a70722f53bd"
+bytes = 36079
+retrieved_at = 2026-05-08
+applies_from = 2025-02-03
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G322.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-037-historical-suppression"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1526-2024-art-1.html"
+sha256 = "3a5d5ae50cb321677724003ef9eee7878dc6c66e477497a23260c931fde0451d"
+bytes = 444
+retrieved_at = 2026-05-14
+published_at = 2025-01-09
+applies_from = 2025-02-03
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-410"
+review_status = "reviewed"
