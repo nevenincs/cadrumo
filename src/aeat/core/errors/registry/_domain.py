@@ -1842,4 +1842,37 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.domain.filing.reconciliation._errors.ReconciliationError",
+        ErrorCode(
+            code="FAIL_RECONCILIATION",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.reconciliation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.filing.reconciliation._errors.DeclarationParseError",
+        ErrorCode(
+            code="FAIL_DECLARATION_PARSE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.declaration_parse",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.filing.reconciliation._errors.ReconciliationDriftError",
+        ErrorCode(
+            code="REFUSED_RECONCILIATION_DRIFT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.reconciliation_drift",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
