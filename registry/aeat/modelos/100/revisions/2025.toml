@@ -7689,6 +7689,7 @@ aggregation = { op = "copy" }
 typed_enum = "RentaCCAA"
 legal_refs = ["orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd", "boe-modelo-100-2025-form"]
+aeat_prefilled = true
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "boe-modelo-100-2025-form"
@@ -8025,6 +8026,7 @@ selector = { source_modelo = "111", source_output = "28", relation = "retencione
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]
+aeat_prefilled = true
 
 [[revisions."2025".bindings.source_citations]]
 source_ref = "boe-modelo-100-2025-form"
