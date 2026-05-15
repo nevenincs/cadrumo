@@ -1,3 +1,142 @@
+[legal."ley-27-2014:art-16"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-16.html#a16"
+document_id = "BOE-A-2014-12328"
+article = "16"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a16"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 16: limitacion en la deducibilidad de gastos financieros. Establece el limite del 30 por ciento del beneficio operativo del ejercicio para los gastos financieros netos deducibles, con un suelo absoluto de 1 millon de euros y traslado a los cinco anios siguientes del exceso no aplicado del limite."
+required_text = [
+    "Limitación en la deducibilidad de gastos financieros",
+    "30 por ciento del beneficio operativo",
+    "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-25"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-25.html#a25"
+document_id = "BOE-A-2014-12328"
+article = "25"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a25"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 25: reserva de capitalizacion. Establece la reduccion en la base imponible del 15 por ciento del incremento de los fondos propios (23 por ciento si la plantilla media aumenta), condicionada al mantenimiento durante 3 anios y a la dotacion de una reserva indisponible."
+required_text = [
+    "Reserva de capitalización",
+    "reducción en la base imponible",
+    "incremento de sus fondos propios",
+]
+
+[legal."ley-27-2014:art-26"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-26.html#a26"
+document_id = "BOE-A-2014-12328"
+article = "26"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a26"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 26: compensacion de bases imponibles negativas. Establece el limite del 70 por ciento de la base imponible previa para la compensacion de BINs con rentas positivas de ejercicios siguientes, con suelo absoluto de 1 millon de euros y plazo de prescripcion de 10 anios para la facultad de comprobacion."
+required_text = [
+    "Compensación de bases imponibles negativas",
+    "70 por ciento de la base imponible previa",
+    "1 millón de euros",
+]
+
+[legal."ley-27-2014:art-29"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-29.html#a29"
+document_id = "BOE-A-2014-12328"
+article = "29"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a29"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 29: el tipo de gravamen. Establece los tipos del Impuesto sobre Sociedades: 25 por ciento general; escala micro-empresa 17 por ciento (0-50.000) / 20 por ciento (resto); cooperativas fiscalmente protegidas -3 pp; entidades sin fines lucrativos 10 por ciento; nuevas creacion 15 por ciento (primeros dos ejercicios); entidades de credito y exploracion de hidrocarburos 30 por ciento."
+required_text = [
+    "El tipo de gravamen",
+    "25 por ciento",
+    "Sociedades cooperativas fiscalmente protegidas",
+]
+
+[legal."ley-27-2014:art-30"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-30.html#a30"
+document_id = "BOE-A-2014-12328"
+article = "30"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a30"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 30: cuota integra. Define la cuota integra como la cantidad resultante de aplicar a la base imponible el tipo de gravamen del articulo 29, con regla de proporcionalidad para periodos impositivos de duracion inferior al anio. La definicion sustantiva del Impuesto sobre Sociedades reside en este articulo."
+required_text = [
+    "Cuota íntegra",
+    "aplicar a la base imponible el tipo de gravamen",
+]
+
+[legal."ley-27-2014:art-39"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-39.html#a39"
+document_id = "BOE-A-2014-12328"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a39"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 39: normas comunes a las deducciones para incentivar la realizacion de determinadas actividades. Establece el plazo de 15 anios para aplicar deducciones no utilizadas por insuficiencia de cuota, el regimen de abono por insuficiencia de cuota para deducciones de I+D+i y animacion, y los limites anuales de 1 millon de euros (innovacion tecnologica) y 3 millones (conjunto)."
+required_text = [
+    "Normas comunes a las deducciones",
+    "15 años inmediatos y sucesivos",
+    "insuficiencia de cuota",
+]
+
+[legal."ley-27-2014:art-105"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-105.html#a105"
+document_id = "BOE-A-2014-12328"
+article = "105"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a105"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 105: reserva de nivelacion de bases imponibles. Permite a las entidades que cumplen las condiciones del articulo 101 (cifra de negocios inferior a 10 millones de euros) y aplican el tipo general minorar su base imponible positiva hasta el 10 por ciento de su importe, con tope de 1 millon de euros, computada tambien a efectos de pagos fraccionados (art 40.3) e incompatible con la reserva de capitalizacion del articulo 25."
+required_text = [
+    "Reserva de nivelación de bases imponibles",
+    "minorar su base imponible positiva hasta el 10 por ciento",
+    "1 millón de euros",
+]
+
 [legal."ley-27-2014:art-40"]
 evidence_tier = "legal_authority"
 authority = "boe"
