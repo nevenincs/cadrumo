@@ -10,11 +10,11 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider, override_master_key_provider
+from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentNotFoundError, AttachmentValidationError
 from ._models import Attachment
-from ._repository import AttachmentStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 

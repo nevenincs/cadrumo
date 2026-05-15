@@ -786,7 +786,7 @@ def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
         aggregation = binding.aggregation or {}
         if str(aggregation.get("op")) != "rows":
             continue
-        grouping = str(binding.selector.get("grouping", ""))
+        grouping = str(getattr(binding.selector, "grouping", "") or "")
         if not grouping:
             continue
         cohorts.setdefault(grouping, []).append(binding)
@@ -835,7 +835,7 @@ def _row_set_column_label(binding: DataBindingDefinition) -> str:
     binding id so the workbook still renders rather than 500-erroring.
     """
 
-    row_field = binding.selector.get("row_field")
+    row_field = getattr(binding.selector, "row_field", None)
     if isinstance(row_field, str) and row_field:
         return tr(f"sheets.detalle.headers.{row_field}", default=binding.id)
     return binding.id

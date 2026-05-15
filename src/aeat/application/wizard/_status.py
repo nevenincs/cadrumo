@@ -20,6 +20,7 @@ from ...domain.deadlines._models import (
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile._projections import record_to_path_values
 from ..workflow._models import WorkflowState
+from . import _compiler as _compiler  # side-effect: registers PROFILE_KEYS before _keys_validation
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardError
 from ._persistence import project_answers

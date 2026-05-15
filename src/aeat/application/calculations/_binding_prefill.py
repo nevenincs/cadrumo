@@ -102,13 +102,13 @@ def _gather_observations(
     for binding in snapshot.revision.bindings:
         if binding.source != "previous_filing":
             continue
-        selector = binding.selector or {}
-        source_modelo = str(selector.get("source_modelo", ""))
+        selector = binding.selector
+        source_modelo = str(getattr(selector, "source_modelo", "") or "")
         if not source_modelo:
             continue
-        delta = _selector_year_delta(selector.get("filing_year_delta", 0))
+        delta = _selector_year_delta(getattr(selector, "filing_year_delta", 0))
         target_year = snapshot.filing_year + delta
-        source_periods = _selector_periods(selector.get("source_periods", ()))
+        source_periods = _selector_periods(getattr(selector, "source_periods", ()))
         for payload in repository.iter_modelo(source_modelo):
             obs = payload.observation
             if obs.filing_year != target_year:
@@ -167,14 +167,14 @@ def resolve_bindings_from_local_store(
         binding = binding_index.get(binding_id)
         if binding is None:
             continue
-        selector = binding.selector or {}
-        source_periods = _selector_periods(selector.get("source_periods", ()))
+        selector = binding.selector
+        source_periods = _selector_periods(getattr(selector, "source_periods", ()))
         prefilled.append(
             PrefilledBinding(
                 binding_id=binding_id,
                 value=Decimal(value),
-                source_modelo=str(selector.get("source_modelo", "")),
-                source_filing_year=snapshot.filing_year + _selector_year_delta(selector.get("filing_year_delta", 0)),
+                source_modelo=str(getattr(selector, "source_modelo", "") or ""),
+                source_filing_year=snapshot.filing_year + _selector_year_delta(getattr(selector, "filing_year_delta", 0)),
                 source_periods=source_periods,
                 resolved_at=when,
             )

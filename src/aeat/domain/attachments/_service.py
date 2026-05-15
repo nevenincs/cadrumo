@@ -16,7 +16,7 @@ from pathlib import Path
 from ...core.logging import get_logger
 from ._enums import AttachmentKind, AttachmentSource
 from ._models import Attachment
-from ._repository import AttachmentStore
+from ._repository import AttachmentStoreProtocol as AttachmentStore
 
 _logger = get_logger(__name__)
 

@@ -108,6 +108,11 @@ class SiteHealthError(AeatError):
     subpackage) to break the circular import between
     :mod:`aeat.adapters.outbound.aeat.browser` (which raises it) and :mod:`aeat.application.workflow`
     (which consumes it).
+
+    The ``SiteHealthStatus`` import is guarded by ``TYPE_CHECKING`` so no
+    runtime adapter-layer import occurs; :data:`.importlinter` is configured
+    with ``exclude_type_checking_imports = True`` to keep this edge invisible
+    to the ``core-not-outer`` contract.
     """
 
     def __init__(self, *, status: SiteHealthStatus) -> None:

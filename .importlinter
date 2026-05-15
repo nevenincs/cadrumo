@@ -1,6 +1,10 @@
 [importlinter]
 root_package = aeat
 include_external_packages = False
+# Exclude TYPE_CHECKING-guarded imports from the import graph so that
+# type-annotation-only imports do not trigger layer-direction contracts.
+# Runtime behaviour is unaffected; only import-time side effects are analysed.
+exclude_type_checking_imports = True
 
 # ── Cross-package domain isolation ───────────────────────────────────────────
 # Domain peer-packages must not import each other's private internals.
@@ -21,22 +25,180 @@ forbidden_modules =
 ignore_imports =
     aeat.domain.calculations.registry.test_ledger_renta_expense_binding -> aeat.domain.renta
 
-# ── Deferred contracts (Wave 3 prerequisites) ────────────────────────────────
-# Three additional hexagonal-direction contracts were drafted during
-# Wave 2 P06.S19 but cannot be activated yet because the existing codebase
-# violates them in production code that requires structural refactor:
+# ── S21: Domain must not import application ───────────────────────────────────
+# Production domain modules must not import from the application layer.
+# The five violations (deadlines/_profiles, profile/_keys) were resolved in
+# Wave 3 P04 S16 and S17: _profiles.py now parses canonical tokens directly;
+# _keys.py now uses a register_profile_keys() injection point.
+# Test files that import application modules for fixture setup are permitted.
+
+[importlinter:contract:domain-not-application]
+name = Domain must not import application
+type = forbidden
+source_modules =
+    aeat.domain
+forbidden_modules =
+    aeat.application
+# Test files inside domain/ that import application for fixture setup are
+# permitted per project convention.
+ignore_imports =
+    aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
+    aeat.domain.invoices.test_reconciliation -> aeat.application.invoices
+    aeat.domain.modelos.test_work_unit -> aeat.application.modelo
+    aeat.domain.profile.conftest -> aeat.application.wizard._compiler
+
+# ── S22: Core must not import outer layers ────────────────────────────────────
+# Core is the innermost layer and must not import from domain, application,
+# adapters, or entrypoints. The production violations were resolved in
+# Wave 3 P04:
+# - core/errors/__init__.py: SiteHealthStatus TYPE_CHECKING import replaced
+#   with SiteHealthStatusProtocol declared in core.
+# - core/errors/_registry.py: entrypoints.cli._i18n import replaced with
+#   core.i18n.
+# - core/i18n/_render.py: application imports replaced with a registered
+#   callback (register_profile_language_resolver).
+# Core test files that pull application / domain fixtures for integration tests
+# are permitted per project convention.
+
+[importlinter:contract:core-not-outer]
+name = Core must not import outer layers
+type = forbidden
+source_modules =
+    aeat.core
+forbidden_modules =
+    aeat.domain
+    aeat.application
+    aeat.adapters
+    aeat.entrypoints
+# Core test files that import application/domain/adapters for integration tests.
+ignore_imports =
+    aeat.core.i18n.test_output_language -> aeat.application.user_profile._orchestration
+    aeat.core.i18n.test_output_language -> aeat.application.user_profile._testing
+    aeat.core.i18n.test_output_language -> aeat.application.workflow._persistence
+    aeat.core.i18n.test_output_language -> aeat.adapters.persistence.storage.sql
+    aeat.core.i18n.test_output_language -> aeat.domain.user_profile
+    aeat.core.test_external_constants -> aeat.domain.portals._categories
+
+# ── S23: Full layered architecture contract ───────────────────────────────────
+# The broad layered contract enforces hexagonal direction across all layers.
+# Layer order (outer → inner): entrypoints > adapters > application > domain > core
 #
-# 1. domain-not-application (5 production violations: deadlines/_profiles
-#    and profile/_keys importing application.wizard internals).
-# 2. core-not-outer (multiple production violations: core.errors importing
-#    adapters.outbound.aeat.browser._site_health; core.i18n._render reaching
-#    into application.user_profile and application.workflow through the
-#    locale rendering pipeline).
-# 3. layered (the broad layered contract; surfaces ~30 production violations
-#    plus dozens of live-test patterns).
+# Per the restructure ADR (2026-04-30 sec. 538), application/ is permitted to
+# import from adapters/ directly (outbound adapter wiring). The wildcard entry
+# blanket-permits all application→adapters edges; full inversion deferred.
 #
-# Each of these contracts is structurally desirable but activating them
-# requires refactoring the offending production paths. The work belongs in
-# Wave 3 alongside the typed-envelope promotion (defect class T-01) and
-# the registry referential-integrity gate (T-09). The current contract above
-# closes the F7 defect Wave 2 was scoped to address.
+# Test files across all layers are permitted to cross layer boundaries for
+# fixture setup; these are covered by individual entries below.
+#
+# Domain repositories that directly import the SQL persistence substrate are
+# grandfathered in via individual narrow entries.
+
+[importlinter:contract:layered]
+name = AEAT layered architecture
+type = layers
+layers =
+    aeat.entrypoints
+    aeat.adapters
+    aeat.application
+    aeat.domain
+    aeat.core
+exhaustive = false
+ignore_imports =
+    # ── application → adapters (permitted by architecture ADR sec. 538) ──
+    # application/ may import adapters/ for outbound wiring; full inversion
+    # would require a major refactor and is deferred.
+    aeat.application.** -> aeat.adapters.**
+    # ── application → entrypoints (test live-gate sentinels) ──
+    aeat.application.workflow.test_live -> aeat.entrypoints.cli._live
+    aeat.application.setup.test_cli -> aeat.tests.cli_runner
+    aeat.application.test_config_parity -> aeat.tests.cli_runner
+    aeat.application.aggregation.test_renta_ledger -> aeat.entrypoints.cli._common
+    # ── adapters → entrypoints (live-test sentinel imports) ──
+    aeat.adapters.outbound.aeat.browser.test_live_evasion -> aeat.entrypoints.cli._live
+    aeat.adapters.outbound.aeat.sede.test_declarations_live -> aeat.entrypoints.cli._live
+    aeat.adapters.outbound.aeat.sede.test_groi_check_live -> aeat.entrypoints.cli._live
+    aeat.adapters.outbound.aeat.sede.test_groi_dependency_chain_live -> aeat.entrypoints.cli._live
+    aeat.adapters.outbound.aeat.sede.test_groi_oracle_live -> aeat.entrypoints.cli._live
+    aeat.adapters.outbound.aeat.sede.test_renta_web_open_capture_replay -> aeat.entrypoints.cli._live
+    aeat.adapters.outbound.aeat.sede.test_renta_web_open_explore_dom -> aeat.entrypoints.cli._live
+    aeat.adapters.outbound.aeat.sede.test_renta_web_open_live -> aeat.entrypoints.cli._live
+    aeat.adapters.outbound.aeat.sede.test_renta_web_open_safety_live_proof -> aeat.entrypoints.cli._live
+    aeat.adapters.outbound.aeat.verify.test_verify_live -> aeat.entrypoints.cli._live
+    # ── domain → adapters (repositories backed by persistence substrate) ──
+    # Many domain repositories directly import the SQL persistence substrate.
+    # Full inversion (Protocol + adapter injection) deferred to a future refactor.
+    aeat.domain.attachments.test_repository -> aeat.adapters.persistence.storage
+    aeat.domain.attachments.test_repository -> aeat.adapters.persistence.storage.attachment
+    aeat.domain.attachments.test_repository -> aeat.adapters.persistence.storage.sql.engine
+    aeat.domain.buckets._event_repository -> aeat.adapters.persistence.storage
+    aeat.domain.buckets._event_repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.buckets._event_repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage
+    aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.filing._complementaria_repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.filing._repository -> aeat.adapters.persistence.storage
+    aeat.domain.filing._repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.filing._repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.invoices._repository -> aeat.adapters.persistence.storage
+    aeat.domain.invoices._repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.invoices._repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.invoices.test_reconciliation -> aeat.adapters.persistence.storage
+    aeat.domain.invoices.test_repository -> aeat.adapters.persistence.storage
+    aeat.domain.justificante._repository -> aeat.adapters.persistence.storage
+    aeat.domain.justificante._repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.justificante._repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.justificante._test_repository -> aeat.adapters.persistence.storage
+    aeat.domain.justificante._test_repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.justificante._test_repository -> aeat.adapters.persistence.storage.sql.engine
+    aeat.domain.justificante._test_repository -> aeat.adapters.persistence.storage.sql.secure_objects
+    aeat.domain.modelos._calculation_repository -> aeat.adapters.persistence.storage
+    aeat.domain.modelos._calculation_repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.modelos._calculation_repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.modelos._filing_repository -> aeat.adapters.persistence.storage
+    aeat.domain.modelos._filing_repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.modelos._filing_repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.modelos._repository -> aeat.adapters.persistence.storage
+    aeat.domain.modelos._repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.modelos._repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.modelos._verification_repository -> aeat.adapters.persistence.storage
+    aeat.domain.modelos._verification_repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.modelos._verification_repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.modelos.test_work_unit -> aeat.adapters.persistence.storage
+    aeat.domain.modelos.test_work_unit -> aeat.adapters.persistence.storage.sql
+    aeat.domain.modelos.test_work_unit -> aeat.adapters.persistence.storage.sql._orm
+    aeat.domain.rental._repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.rental._repository -> aeat.adapters.persistence.storage.sql._orm
+    aeat.domain.rental._test_aggregates -> aeat.adapters.persistence.storage
+    aeat.domain.rental._test_aggregates -> aeat.adapters.persistence.storage.crypto._crypto
+    aeat.domain.rental._test_aggregates -> aeat.adapters.persistence.storage.sql._orm
+    aeat.domain.rental._test_repository -> aeat.adapters.persistence.storage
+    aeat.domain.rental._test_repository -> aeat.adapters.persistence.storage.crypto._crypto
+    aeat.domain.rental._test_repository -> aeat.adapters.persistence.storage.sql._orm
+    aeat.domain.submission._engine -> aeat.adapters.persistence.storage.errors
+    aeat.domain.submission._repository -> aeat.adapters.persistence.storage
+    aeat.domain.submission._repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.submission._repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.envelope._envelope
+    aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.errors
+    aeat.domain.transactions._repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.transactions.test_repository -> aeat.adapters.persistence.storage
+    aeat.domain.transactions.test_repository -> aeat.adapters.persistence.storage.sql
+    aeat.domain.transactions.test_repository -> aeat.adapters.persistence.storage.sql._orm
+    aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage
+    aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.errors
+    aeat.domain.usage_ratios._service -> aeat.adapters.persistence.storage.sql
+    aeat.domain.usage_ratios.test_service -> aeat.adapters.persistence.storage
+    aeat.domain.usage_ratios.test_service -> aeat.adapters.persistence.storage.sql.engine
+    aeat.domain.usage_ratios.test_service -> aeat.adapters.persistence.storage.sql.secure_objects
+    # ── domain test cross-layer edges ──
+    aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
+    aeat.domain.invoices.test_reconciliation -> aeat.application.invoices
+    aeat.domain.modelos.test_work_unit -> aeat.application.modelo
+    aeat.domain.profile.conftest -> aeat.application.wizard._compiler
+    # ── core test files ──
+    aeat.core.i18n.test_output_language -> aeat.application.user_profile._orchestration
+    aeat.core.i18n.test_output_language -> aeat.application.user_profile._testing
+    aeat.core.i18n.test_output_language -> aeat.application.workflow._persistence
+    aeat.core.i18n.test_output_language -> aeat.adapters.persistence.storage.sql
+    aeat.core.i18n.test_output_language -> aeat.domain.user_profile
+    aeat.core.test_external_constants -> aeat.domain.portals._categories

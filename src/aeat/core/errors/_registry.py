@@ -277,7 +277,7 @@ def resolve_error_message(error: BaseException, code: ErrorCode | None = None) -
     """
 
     resolved_code = code or get_registered_error_code(error)
-    from ...entrypoints.cli._i18n import tr
+    from ..i18n import tr
 
     interpolation = _coerce_interpolation_kwargs(getattr(error, "context", None))
     translated_message = getattr(error, "translated_message", None)
