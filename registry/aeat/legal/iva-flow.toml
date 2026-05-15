@@ -56,3 +56,63 @@ required_text = [
     "podrán deducir",
     "soportado por repercusión directa",
 ]
+
+[legal."ley-37-1992:art-21"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-21.html#a21"
+document_id = "BOE-A-1992-28740"
+article = "21"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a21"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIVA art 21: exenciones en las exportaciones de bienes. Cubre entregas a fuera de la Comunidad por el transmitente o por el adquirente no establecido, regimen de viajeros (residentes fuera de la UE), tiendas libres de impuestos, trabajos sobre bienes muebles para exportacion y entregas a Organismos reconocidos. Es la base sustantiva del Modelo 308 cuando este lo invoca."
+required_text = [
+    "Exenciones en las exportaciones de bienes",
+    "expedidos o transportados fuera de la Comunidad",
+    "entregas de bienes a viajeros",
+]
+
+[legal."ley-37-1992:art-117-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-117-bis.html#a117bis"
+document_id = "BOE-A-1992-28740"
+article = "117 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a117bis"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIVA art 117 bis: solicitudes de devolucion de empresarios o profesionales establecidos en el territorio de aplicacion del Impuesto, Islas Canarias, Ceuta y Melilla, correspondientes a cuotas soportadas por operaciones efectuadas en la Comunidad con excepcion de las realizadas en el territorio de aplicacion del Impuesto. Base sustantiva del Modelo 360 (devolucion 8a Directiva)."
+required_text = [
+    "Solicitudes de devolución",
+    "empresarios o profesionales que estén establecidos en el territorio de aplicación del Impuesto",
+    "presentación por vía electrónica de una solicitud",
+]
+
+[legal."rd-1624-1992:art-30-bis"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992-art-30-bis.html#a30bis"
+document_id = "BOE-A-1992-28925"
+article = "30 bis"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a30bis"
+published_at = 1992-12-31
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "Reglamento del IVA art 30 bis: devolucion de cuotas deducibles a los sujetos pasivos que ejerzan la actividad de transporte de viajeros o de mercancias por carretera tributando por el regimen simplificado. Articulo invocado en el official_name del Modelo 308 como el reglamentario de la solicitud de devolucion."
+required_text = [
+    "Devolución de cuotas deducibles",
+    "transporte de viajeros o de mercancías por carretera",
+    "régimen simplificado",
+]
