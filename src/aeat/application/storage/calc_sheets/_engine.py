@@ -825,17 +825,6 @@ def _collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
     return tuple(row_sets)
 
 
-def _column_index_to_letters_engine(column: int) -> str:
-    """A1-style column letters for row-set column allocation (1-based)."""
-
-    if column < 1:
-        raise ValueError("column index must be 1-based and positive")
-    letters: list[str] = []
-    remaining = column
-    while remaining > 0:
-        remaining, ordinal = divmod(remaining - 1, 26)
-        letters.append(chr(ord("A") + ordinal))
-    return "".join(reversed(letters))
 
 
 def _row_set_column_label(binding: DataBindingDefinition) -> str:

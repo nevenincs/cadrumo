@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 import pytest
 
 from ...core.config import Settings
-from . import AuthProviderKind
+from . import AuthProviderDescription, AuthProviderKind
 from ._acquisition_lock import inspect_auth_acquisition_lock
 from ._sessions import AuthSessionUnavailableError, ensure_authenticated_aeat_session
 
@@ -20,6 +20,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 class _Provider:
+    kind: AuthProviderKind = AuthProviderKind.CLAVE_MOVIL
+
     def __init__(
         self,
         *,
@@ -32,6 +34,9 @@ class _Provider:
         self.authenticate_calls = 0
         self.verify_calls = 0
         self.close_calls = 0
+
+    def describe(self) -> AuthProviderDescription:
+        return AuthProviderDescription(kind=self.kind, label="_Provider", configured=True, available=True)
 
     async def probe_persisted_session(self) -> tuple[object, object]:
         self.probe_calls += 1
@@ -91,7 +96,7 @@ async def test_ensure_reuses_persisted_session_without_acquiring_lock(tmp_path: 
     result = await ensure_authenticated_aeat_session(
         settings,
         kind=AuthProviderKind.CLAVE_MOVIL,
-        provider_factory=_factory([provider]),
+        provider_factory=_factory([provider]),  # pyright: ignore[reportArgumentType]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
     )
 
     assert result.session is session
@@ -115,7 +120,7 @@ async def test_ensure_acquires_lock_then_authenticates_after_probe_failure(tmp_p
     result = await ensure_authenticated_aeat_session(
         settings,
         kind=AuthProviderKind.CLAVE_MOVIL,
-        provider_factory=_factory([first_probe, second_probe, auth_provider]),
+        provider_factory=_factory([first_probe, second_probe, auth_provider]),  # pyright: ignore[reportArgumentType]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
     )
 
     assert result.session is session
@@ -140,7 +145,7 @@ async def test_ensure_fresh_skips_persisted_probe(tmp_path: Path) -> None:
         settings,
         kind=AuthProviderKind.CLAVE_MOVIL,
         fresh=True,
-        provider_factory=_factory([auth_provider]),
+        provider_factory=_factory([auth_provider]),  # pyright: ignore[reportArgumentType]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
     )
 
     assert result.session is session

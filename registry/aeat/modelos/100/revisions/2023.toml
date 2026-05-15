@@ -5823,7 +5823,7 @@ id = "0153"
 number = "0153"
 label = "Retenciones e ingresos a cuenta"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-101", "rd-439-2007:art-100", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -9443,7 +9443,7 @@ id = "0592"
 number = "0592"
 label = "Suma de retenciones e ingresos a cuenta atribuidos del capital mobiliario  (suma de las casillas [1597])"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -9451,7 +9451,7 @@ id = "0593"
 number = "0593"
 label = "Suma de retenciones e ingresos a cuenta atribuidos del capital inmobiliario  (suma de las casillas [1598])"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -9459,7 +9459,7 @@ id = "0594"
 number = "0594"
 label = "Suma de retenciones e ingresos a cuenta atribuidos de actividades económicas  (suma de las casillas [1599])"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -9475,7 +9475,7 @@ id = "0596"
 number = "0596"
 label = "Por rendimientos del trabajo"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-99"]
+legal_refs = ["ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-101", "rd-439-2007:art-80", "rd-439-2007:art-86", "ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -9483,7 +9483,7 @@ id = "0597"
 number = "0597"
 label = "Por rendimientos del capital mobiliario"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-99"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-101", "rd-439-2007:art-90", "ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -9492,7 +9492,7 @@ number = "0598"
 label = "Suma de retenciones e ingresos a cuenta  (suma de las casillas [0153])"
 section = ["resultados", "inmuebles_res"]
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-99"]
+legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-101", "rd-439-2007:art-100", "ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -9500,7 +9500,7 @@ id = "0599"
 number = "0599"
 label = "Por rendimientos de actividades económicas (*)"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["rd-439-2007:art-95", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -9508,7 +9508,7 @@ id = "0600"
 number = "0600"
 label = "Suma de retenciones e ingresos a cuenta atribuidos de ganancias y pérdidas patrimoniales imputables a 2023 (suma de las casillas [1600])"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-99"]
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -9516,7 +9516,7 @@ id = "0601"
 number = "0601"
 label = "Suma de retenciones e ingresos a cuenta imputados: (suma de las casillas [0264] )"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-99"]
+legal_refs = ["ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]
@@ -9532,7 +9532,7 @@ id = "0603"
 number = "0603"
 label = "Por ganancias patrimoniales, incluidos premios"
 section = ["resultados", "calculo_impuesto_res", "retenciones_res"]
-legal_refs = ["ley-35-2006:art-99"]
+legal_refs = ["ley-35-2006:art-33", "ley-35-2006:art-34", "ley-35-2006:art-37", "ley-35-2006:art-99"]
 source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-dr-100-2023-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2023".casillas]]

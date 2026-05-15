@@ -42,10 +42,17 @@ if TYPE_CHECKING:
 
 
 class _RegistryReconciliationSubview(Protocol):
-    schema_version: str
-    period_selector_periods: tuple[str, ...]
-    verification_expectation_ids: tuple[str, ...]
-    reconciliation_total_casillas: Mapping[str, str]
+    @property
+    def schema_version(self) -> str: ...
+
+    @property
+    def period_selector_periods(self) -> tuple[str, ...]: ...
+
+    @property
+    def verification_expectation_ids(self) -> tuple[str, ...]: ...
+
+    @property
+    def reconciliation_total_casillas(self) -> Mapping[str, str]: ...
 
 
 class _RegistryReconciliationProvider(Protocol):
