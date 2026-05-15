@@ -8,6 +8,7 @@ jurisdiction = "ES-AEAT"
 legal_refs = [
     "orden-eha-3434-2007:art-2",
     "orden-eha-3434-2007:art-8",
+    "rd-1624-1992:art-71",
 ]
 source_refs = [
     "aeat-dr-353-2026",
@@ -22,6 +23,7 @@ period_selector = { year_from = 2008, periods = ["01", "02", "03", "04", "05", "
 legal_refs = [
     "orden-eha-3434-2007:art-2",
     "orden-eha-3434-2007:art-8",
+    "rd-1624-1992:art-71",
 ]
 source_refs = [
     "aeat-dr-353-2026",
@@ -36,7 +38,7 @@ fixture_id = "modelo-353-2026-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2008-y-siguientes".verification_expectations]]
@@ -51,7 +53,7 @@ discrepancy_causes = [
     "rounding",
     "correctness_divergence",
 ]
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 # Ledger IVA aggregation bindings for the aggregated group declaration. The
@@ -63,7 +65,7 @@ id = "modelo-353-iva-repercutido-general-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["domestic_general_21"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".bindings.source_citations]]
@@ -75,7 +77,7 @@ id = "modelo-353-iva-repercutido-reducido-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["domestic_reduced_10"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".bindings.source_citations]]
@@ -87,7 +89,7 @@ id = "modelo-353-iva-repercutido-super-reducido-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["domestic_super_reduced_4"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".bindings.source_citations]]
@@ -99,7 +101,7 @@ id = "modelo-353-iva-soportado-interiores-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".bindings.source_citations]]
@@ -111,7 +113,7 @@ id = "modelo-353-iva-autorepercutido-intracomunitaria-cuota"
 source = "ledger_iva_aggregation"
 selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "autorepercutido", fact = "iva_amount_sum" }
 aggregation = { op = "sum" }
-legal_refs = ["ley-37-1992:art-84", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-84", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".bindings.source_citations]]
@@ -127,7 +129,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-353-iva-repercutido-general-cuota"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2008-y-siguientes".casillas]]
@@ -139,7 +141,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-353-iva-repercutido-reducido-cuota"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2008-y-siguientes".casillas]]
@@ -151,7 +153,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-353-iva-repercutido-super-reducido-cuota"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2008-y-siguientes".casillas]]
@@ -163,7 +165,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-353-iva-soportado-interiores-cuota"
-legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2008-y-siguientes".casillas]]
@@ -175,7 +177,7 @@ data_type = "money"
 required = false
 input_kind = "bound"
 binding = "modelo-353-iva-autorepercutido-intracomunitaria-cuota"
-legal_refs = ["ley-37-1992:art-84", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-84", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2008-y-siguientes".casillas]]
@@ -187,7 +189,7 @@ data_type = "money"
 required = false
 input_kind = "computed"
 formula = "modelo-353-iva-cuota-devengada-total"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2008-y-siguientes".casillas]]
@@ -199,7 +201,7 @@ data_type = "money"
 required = false
 input_kind = "computed"
 formula = "modelo-353-iva-cuota-deducible-total"
-legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2008-y-siguientes".casillas]]
@@ -211,7 +213,7 @@ data_type = "money"
 required = false
 input_kind = "computed"
 formula = "modelo-353-iva-resultado-regimen-general"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2008-y-siguientes".formulas]]
@@ -224,7 +226,7 @@ expression = { op = "add", args = [
     { casilla = "iva.autorepercutido.intracomunitaria" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".formulas.source_citations]]
@@ -239,7 +241,7 @@ expression = { op = "add", args = [
     { casilla = "iva.autorepercutido.intracomunitaria" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".formulas.source_citations]]
@@ -254,7 +256,7 @@ expression = { op = "subtract", args = [
     { casilla = "iva.cuota-deducible-total" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".formulas.source_citations]]
@@ -269,7 +271,7 @@ section = ["declarante"]
 data_type = "integer"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2008-y-siguientes".casillas]]
@@ -280,7 +282,7 @@ section = ["declarante"]
 data_type = "text"
 required = true
 input_kind = "informational"
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026"]
 
 [[revisions."2008-y-siguientes".live_cross_references]]
@@ -301,7 +303,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = false
 requires_aeat_authorization = false
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".live_cross_references]]
@@ -324,7 +326,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = true
 requires_aeat_authorization = true
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-353-procedure"]
 
 [[revisions."2008-y-siguientes".application_links]]
@@ -332,7 +334,7 @@ id = "modelo-353-portal"
 surface = "portal"
 consumer = "portal_m353_iva_grupo_agregado"
 requires_snapshot = true
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-353-procedure"]
 
 [[revisions."2008-y-siguientes".application_links]]
@@ -340,7 +342,7 @@ id = "modelo-353-filing"
 surface = "filing"
 consumer = "aeat.application.filing"
 requires_snapshot = true
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-353-procedure"]
 
 [[revisions."2008-y-siguientes".application_links]]
@@ -348,7 +350,7 @@ id = "modelo-353-extractor"
 surface = "extractor"
 consumer = "aeat.adapters.inbound.declaracion.parse_declaracion"
 requires_snapshot = true
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-353-procedure"]
 
 [[revisions."2008-y-siguientes".application_links]]
@@ -356,7 +358,7 @@ id = "modelo-353-verification"
 surface = "verification"
 consumer = "aeat.application.verification"
 requires_snapshot = true
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-353-procedure"]
 
 [[revisions."2008-y-siguientes".application_links]]
@@ -364,7 +366,7 @@ id = "modelo-353-review"
 surface = "review"
 consumer = "aeat.application.filing.review"
 requires_snapshot = true
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-353-procedure"]
 
 [[revisions."2008-y-siguientes".application_links]]
@@ -372,7 +374,7 @@ id = "modelo-353-approval"
 surface = "approval"
 consumer = "aeat.application.filing.approval"
 requires_snapshot = true
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-353-procedure"]
 
 [[revisions."2008-y-siguientes".application_links]]
@@ -380,7 +382,7 @@ id = "modelo-353-reconciliation"
 surface = "reconciliation"
 consumer = "aeat.application.reconciliation"
 requires_snapshot = true
-legal_refs = ["orden-eha-3434-2007:art-2", "ley-37-1992:art-88", "ley-37-1992:art-92"]
+legal_refs = ["orden-eha-3434-2007:art-2", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".application_links]]
@@ -388,7 +390,7 @@ id = "modelo-353-workflow"
 surface = "workflow"
 consumer = "aeat.application.workflow"
 requires_snapshot = true
-legal_refs = ["orden-eha-3434-2007:art-2"]
+legal_refs = ["orden-eha-3434-2007:art-2", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-353-procedure"]
 
 [[revisions."2008-y-siguientes".application_links]]
@@ -396,7 +398,7 @@ id = "modelo-353-deadline"
 surface = "deadline"
 consumer = "aeat.domain.deadlines"
 requires_snapshot = true
-legal_refs = ["orden-eha-3434-2007:art-8"]
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".application_links]]
@@ -404,7 +406,7 @@ id = "modelo-353-calculation"
 surface = "calculation"
 consumer = "aeat.domain.calculations.registry"
 requires_snapshot = true
-legal_refs = ["orden-eha-3434-2007:art-2", "ley-37-1992:art-88", "ley-37-1992:art-92"]
+legal_refs = ["orden-eha-3434-2007:art-2", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-353-2026", "boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".filing_schedules]]
@@ -412,7 +414,7 @@ id = "modelo-353-mensual"
 period_kind = "monthly"
 periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 profile_condition_mode = "all"
-legal_refs = ["orden-eha-3434-2007:art-8"]
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form", "aeat-modelo-353-procedure"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
@@ -422,7 +424,7 @@ period = "2025-01"
 period_kind = "monthly"
 opens_on = 2025-02-01
 closes_on = 2025-02-28
-legal_refs = ["orden-eha-3434-2007:art-8"]
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
@@ -432,7 +434,7 @@ period = "2025-06"
 period_kind = "monthly"
 opens_on = 2025-07-01
 closes_on = 2025-07-30
-legal_refs = ["orden-eha-3434-2007:art-8"]
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
@@ -442,7 +444,7 @@ period = "2025-12"
 period_kind = "monthly"
 opens_on = 2026-01-01
 closes_on = 2026-01-30
-legal_refs = ["orden-eha-3434-2007:art-8"]
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".deadline_windows]]
@@ -452,7 +454,7 @@ period = "2026-01"
 period_kind = "monthly"
 opens_on = 2026-02-01
 closes_on = 2026-02-28
-legal_refs = ["orden-eha-3434-2007:art-8"]
+legal_refs = ["orden-eha-3434-2007:art-8", "rd-1624-1992:art-71"]
 source_refs = ["boe-modelo-353-2007-form"]
 
 [[revisions."2008-y-siguientes".constructs]]
@@ -464,6 +466,7 @@ legal_refs = [
     "ley-37-1992:art-84",
     "ley-37-1992:art-88",
     "ley-37-1992:art-92",
+    "rd-1624-1992:art-71",
 ]
 source_refs = [
     "aeat-dr-353-2026",
