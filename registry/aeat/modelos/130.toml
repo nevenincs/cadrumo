@@ -346,8 +346,8 @@ source_revision_selector = { filing_year_delta = 0 }
 source_output = "saldo-negativo-fin-periodo"
 target_binding = "modelo-130-resultados-negativos-anteriores"
 period_alignment = { mode = "previous_quarter" }
-source_period_offset_from_target = -1
 target_periods = ["2T", "3T", "4T"]
+source_periods = ["1T", "2T", "3T"]
 aggregation = { op = "copy" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1"]
 source_refs = ["aeat-modelo-130-instructions"]

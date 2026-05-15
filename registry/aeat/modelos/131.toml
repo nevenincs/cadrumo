@@ -841,8 +841,8 @@ source_revision_selector = { filing_year_delta = 0 }
 source_output = "saldo-negativo-fin-periodo"
 target_binding = "modelo-131-2019-2023-resultados-negativos-anteriores"
 period_alignment = { mode = "previous_quarter" }
-source_period_offset_from_target = -1
 target_periods = ["2T", "3T", "4T"]
+source_periods = ["1T", "2T", "3T"]
 aggregation = { op = "copy" }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]
@@ -2580,7 +2580,7 @@ input_kind = "computed"
 formula = "modelo-131-2024-saldo-negativo-fin-periodo"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024-v101"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
 
 [[revisions."2024".bindings]]
 id = "modelo-131-2024-resultados-negativos-anteriores"
@@ -2603,7 +2603,7 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024-v101"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2024"]
 
 [[revisions."2024".formulas.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
@@ -2618,8 +2618,8 @@ source_revision_selector = { filing_year_delta = 0 }
 source_output = "saldo-negativo-fin-periodo"
 target_binding = "modelo-131-2024-resultados-negativos-anteriores"
 period_alignment = { mode = "previous_quarter" }
-source_period_offset_from_target = -1
 target_periods = ["2T", "3T", "4T"]
+source_periods = ["1T", "2T", "3T"]
 aggregation = { op = "copy" }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]
@@ -4285,7 +4285,7 @@ input_kind = "computed"
 formula = "modelo-131-2025-saldo-negativo-fin-periodo"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025-v101"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
 
 [[revisions."2025".bindings]]
 id = "modelo-131-2025-resultados-negativos-anteriores"
@@ -4308,7 +4308,7 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025-v101"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2025"]
 
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
@@ -4323,8 +4323,8 @@ source_revision_selector = { filing_year_delta = 0 }
 source_output = "saldo-negativo-fin-periodo"
 target_binding = "modelo-131-2025-resultados-negativos-anteriores"
 period_alignment = { mode = "previous_quarter" }
-source_period_offset_from_target = -1
 target_periods = ["2T", "3T", "4T"]
+source_periods = ["1T", "2T", "3T"]
 aggregation = { op = "copy" }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]
@@ -6035,7 +6035,7 @@ input_kind = "computed"
 formula = "modelo-131-2026-saldo-negativo-fin-periodo"
 constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026-v101"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
 
 [[revisions."2026".bindings]]
 id = "modelo-131-2026-resultados-negativos-anteriores"
@@ -6058,7 +6058,7 @@ expression = { op = "max", args = [
 ] }
 rounding = "money-2"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026-v101"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2026"]
 
 [[revisions."2026".formulas.source_citations]]
 source_ref = "aeat-modelo-131-instructions"
@@ -6073,8 +6073,8 @@ source_revision_selector = { filing_year_delta = 0 }
 source_output = "saldo-negativo-fin-periodo"
 target_binding = "modelo-131-2026-resultados-negativos-anteriores"
 period_alignment = { mode = "previous_quarter" }
-source_period_offset_from_target = -1
 target_periods = ["2T", "3T", "4T"]
+source_periods = ["1T", "2T", "3T"]
 aggregation = { op = "copy" }
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-instructions"]

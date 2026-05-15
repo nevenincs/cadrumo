@@ -474,8 +474,8 @@ source_revision_selector = { filing_year_delta = 0 }
 source_output = "iva.compensacion-disponible-fin-periodo"
 target_binding = "modelo-303-compensacion-anteriores"
 period_alignment = { mode = "previous_quarter" }
-source_period_offset_from_target = -1
 target_periods = ["2T", "3T", "4T"]
+source_periods = ["1T", "2T", "3T"]
 aggregation = { op = "copy" }
 legal_refs = ["ley-37-1992:art-99", "rd-1624-1992:art-71"]
 source_refs = ["aeat-modelo-303-procedure"]
