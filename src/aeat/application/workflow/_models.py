@@ -318,6 +318,7 @@ class WorkflowResult(BaseModel):
     submission_id: str | None = None
     steps: tuple[WorkflowStep, ...]
     summary: str
+    resumed_from: str | None = None
 
     @model_validator(mode="after")
     def _check_terminal_consistency(self) -> WorkflowResult:
