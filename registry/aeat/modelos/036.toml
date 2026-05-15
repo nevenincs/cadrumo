@@ -5,6 +5,7 @@ official_name = "Modelo 036. Declaracion censal de alta, modificacion y baja en 
 tax_domain = "census"
 cadence = "ad_hoc"
 jurisdiction = "ES-AEAT"
+output_sensitivity = "identity"
 legal_refs = [
     "rd-1065-2007:art-9",
     "rd-1065-2007:art-10",

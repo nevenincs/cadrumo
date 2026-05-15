@@ -5,6 +5,7 @@ official_name = "Modelo 193. Declaracion informativa. Retenciones e ingresos a c
 tax_domain = "cross_tax"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
 legal_refs = [
     "ley-35-2006:art-25",
     "ley-35-2006:art-99",
