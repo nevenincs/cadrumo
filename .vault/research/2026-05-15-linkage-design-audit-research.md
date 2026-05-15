@@ -256,7 +256,7 @@ Status legend: `open`, `check-written`, `fixed`, `wontfix-document`.
 | R045 | `domain/calculations/registry/_errors.py` | `RegistryValidationError` / `RegistrySnapshotError` — no typed `context` | G | F14 | open |
 | R046 | `entrypoints/cli/_modelo.py:500-518` | `aeat app modelo formulas` text omits `legal_refs` | G | F6 | open |
 | R047 | `entrypoints/cli/_review.py:16-37,40-63` and `_operator.py:126-182` | `review queue/view` strips `FilingValidationFinding.source` | G | F6 | open |
-| R048 | `application/diagnostics.py:144-217` | `aeat config repair` five checks, zero cross-domain | C,G | F2 | open |
+| R048 | `application/diagnostics.py:144-217` | `aeat config repair` five checks, zero cross-domain | C,G | F2 | fixed (Wave 3) |
 | R049 | `application/repair_integrity.py:1-180` | Repairs only `secure_objects` decryptability; no linkage repair | C,H | F2 | open |
 | R050 | `entrypoints/cli/_modelo.py:937-1020` | CLI work calculate accepts no `--relation` flag | H | F11 | open |
 | R051 | `entrypoints/cli/_modelo.py:1000` and `application/modelo/_actions.py:785` | `relation_values` defaults to empty dict | H | F11 | open |
