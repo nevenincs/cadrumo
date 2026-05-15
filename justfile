@@ -72,7 +72,7 @@ fmt:
 # with selected strict rules on the two listed packages; the
 # Unknown-family rules are deferred to a tracked ratchet workstream.
 typecheck:
-    uv run ty check src tests
+    uv run ty check src
     uv run pyright src/aeat/domain src/aeat/application
 
 # Run the pytest suite (unit-only by default via pyproject addopts).

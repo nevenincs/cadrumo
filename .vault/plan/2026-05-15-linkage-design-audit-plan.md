@@ -30,7 +30,7 @@ file recorded; top 20 worst offenders identified.
 - [x] `P01.S01` - build suppression inventory tool; `scratch/suppression_inventory.py`.
 - [x] `P01.S02` - run inventory and produce master catalogue; `scratch/out/suppressions.json`.
 - [x] `P01.S03` - categorise sites by package and external API; `scratch/out/summary.json`.
-- [ ] `P01.S04` - build pydantic-model audit tool for Wave 2 prep; `scratch/pydantic_audit.py`.
+- [x] `P01.S04` - build pydantic-model audit tool for Wave 2 prep; `scratch/pydantic_audit.py`.
 
 ### Phase `P02` - external-API type acquisition
 

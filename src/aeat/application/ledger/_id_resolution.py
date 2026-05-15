@@ -77,7 +77,7 @@ def resolve_transaction_id(prefix: str, transaction_ids: Iterable[str]) -> str:
         raise TransactionIdPrefixError(f"transaction id prefix {prefix!r} contains non-hex characters")
     if len(normalized) > _FULL_ID_LENGTH:
         raise TransactionIdPrefixError(f"transaction id prefix {prefix!r} is longer than {_FULL_ID_LENGTH} characters")
-    matches = tuple(sorted(tx_id for tx_id in transaction_ids if tx_id.startswith(normalized)))
+    matches: tuple[str, ...] = tuple(sorted(tx_id for tx_id in transaction_ids if tx_id.startswith(normalized)))
     if not matches:
         raise TransactionIdPrefixError(f"no transaction matches id prefix {prefix!r}")
     if len(matches) > 1:

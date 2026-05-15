@@ -323,6 +323,71 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-193-2011-form", "aeat-modelo-193-procedure"]
 
+# -----------------------------------------------------------------------------
+# Per-perceptor tipo-2 row-producer bindings (Orden EHA/3377/2011 Anexo II
+# diseno de registro tipo 2 — capital mobiliario perceptors).
+# -----------------------------------------------------------------------------
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-193-perceptor-row-nif"
+source = "withholding"
+selector = { fact = "row_field", row_field = "perceptor_tax_id", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-193-perceptor-row-name"
+source = "withholding"
+selector = { fact = "row_field", row_field = "perceptor_legal_name", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-193-perceptor-row-clave"
+source = "withholding"
+selector = { fact = "row_field", row_field = "clave", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-193-perceptor-row-percibido"
+source = "withholding"
+selector = { fact = "row_field", row_field = "percibido_dinerario", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-193-perceptor-row-retencion"
+source = "withholding"
+selector = { fact = "row_field", row_field = "retencion_practicada", grouping = "per_perceptor_clave", record = "perceptor" }
+aggregation = { op = "rows" }
+legal_refs = ["orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-193-procedure"
+required_text = ["modelo 193"]
+
 [[revisions."2024-y-siguientes".constructs]]
 id = "modelo-193-annual-summary"
 title = "Modelo 193 annual summary from Modelo 123 quarterly filings"
@@ -330,7 +395,16 @@ legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "rd-439-2007:art-109",
 source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure", "boe-modelo-193-2011-form"]
 casillas = ["decl.total-perceptores", "decl.base-total", "decl.retenciones-total"]
 formulas = ["modelo-193-total-perceptores", "modelo-193-base-total", "modelo-193-retenciones-total"]
-bindings = ["modelo-193-123-perceptores-anual", "modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"]
+bindings = [
+    "modelo-193-123-perceptores-anual",
+    "modelo-193-123-base-anual",
+    "modelo-193-123-retenciones-anual",
+    "modelo-193-perceptor-row-nif",
+    "modelo-193-perceptor-row-name",
+    "modelo-193-perceptor-row-clave",
+    "modelo-193-perceptor-row-percibido",
+    "modelo-193-perceptor-row-retencion",
+]
 relations = ["modelo-193-rel-123-perceptores-anual", "modelo-193-rel-123-base-anual", "modelo-193-rel-123-retenciones-anual"]
 extraction_profiles = ["modelo-193-declaracion-pdf"]
 live_cross_references = ["modelo-193-filed-declarations-read"]

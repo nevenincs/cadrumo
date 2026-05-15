@@ -85,6 +85,9 @@ class WorkbookCellRef(WorkbookParityModel):
     coordinate: str
     formula: str | None = None
 
+    def __hash__(self) -> int:
+        return hash((self.sheet, self.coordinate, self.formula))
+
 
 class WorkbookArtefactReport(WorkbookParityModel):
     """Discovery report for one AEAT workbook artefact."""

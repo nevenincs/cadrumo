@@ -157,7 +157,9 @@ def test_merge_amount_round_trips_parent_amount(secure_engine: Engine) -> None:
     supplied amount across split+merge, not that any formula matches."""
     transaction_repository, event_repository = _repositories(secure_engine)
     parent_result, split = _split_setup(transaction_repository, event_repository)
-    original_amount = transaction_repository.load().get(parent_result.ref.transaction_id).raw.amount
+    _parent = transaction_repository.load().get(parent_result.ref.transaction_id)
+    assert _parent is not None, "parent transaction must be present after split"
+    original_amount = _parent.raw.amount
 
     merge = merge_transactions(
         bucket_id="bucket-a",

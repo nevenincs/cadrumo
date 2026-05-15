@@ -97,9 +97,11 @@ class LLMClassifier(Protocol):
     @property
     def decided_by(self) -> str:
         """Return the ``classified_by`` identifier this classifier emits."""
+        ...
 
     def classify(self, transaction: Transaction) -> LLMClassificationResponse:
         """Return one classification decision for ``transaction``."""
+        ...
 
 
 # ── parametric prompt builder ─────────────────────────────────────

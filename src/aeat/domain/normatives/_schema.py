@@ -230,7 +230,7 @@ class NormativeCatalogue(_NormativeStrictMutable):
                 )
         return self
 
-    def __iter__(self) -> Iterator[NormativeReference]:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
+    def __iter__(self) -> Iterator[NormativeReference]:  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over every loaded :class:`NormativeReference`."""
         return iter(self.references.values())
 
