@@ -39,6 +39,8 @@ valid_from = 2025-01-01
 # ---------------------------------------------------------------------------
 # Modalidad articulo 40.2 LIS — pago fraccionado sobre la cuota integra.
 # ---------------------------------------------------------------------------
+# Casilla IDs in this modelo are the same as the printed form numbers.
+# form_number is not declared individually because id == form_number for all casillas.
 
 [[revisions."2025-y-siguientes".casillas]]
 id = "01"

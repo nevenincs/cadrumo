@@ -76,6 +76,7 @@ class ModeloCasillaRow(BaseModel):
     required: bool
     formula: str | None
     binding: str | None
+    form_number: str | None
     legal_refs: tuple[str, ...]
     source_refs: tuple[str, ...]
 
@@ -196,6 +197,7 @@ class RegistryQueryService:
         as_of: date | None = None,
         input_kind: Literal["manual", "bound", "computed", "informational"] | None = None,
         required: bool | None = None,
+        form_number: str | None = None,
     ) -> ModeloCasillasReport:
         definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
         rows = [
@@ -209,12 +211,14 @@ class RegistryQueryService:
                 required=casilla.required,
                 formula=str(casilla.formula) if casilla.formula is not None else None,
                 binding=str(casilla.binding) if casilla.binding is not None else None,
+                form_number=casilla.form_number,
                 legal_refs=tuple(str(ref) for ref in casilla.legal_refs),
                 source_refs=tuple(str(ref) for ref in casilla.source_refs),
             )
             for casilla in revision.casillas
             if (input_kind is None or casilla.input_kind == input_kind)
             and (required is None or casilla.required is required)
+            and (form_number is None or casilla.form_number == form_number)
         ]
         return ModeloCasillasReport(
             code=str(definition.id),

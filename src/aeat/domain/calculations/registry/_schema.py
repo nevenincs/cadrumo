@@ -966,6 +966,7 @@ class CasillaDefinition(RegistryModel):
     binding: BindingId | None = None
     export_refs: tuple[ExportFieldId, ...] = ()
     constraints: CasillaConstraints | None = None
+    form_number: str | None = Field(default=None, min_length=1, max_length=16)
     legal_refs: LegalRefs
     source_refs: SourceRefs
 

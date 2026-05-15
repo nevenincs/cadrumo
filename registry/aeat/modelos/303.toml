@@ -225,6 +225,7 @@ data_type = "money"
 required = false
 input_kind = "computed"
 formula = "modelo-303-iva-resultado-regimen-general"
+form_number = "46"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 

@@ -42,6 +42,9 @@ valid_from = 2019-01-01
 source_ref = "aeat-modelo-115-180-folleto-actividades"
 required_text = ["arrendamiento o subarrendamiento de bienes inmuebles urbanos"]
 
+# Casilla IDs in this modelo are the same as the printed form numbers.
+# form_number is not declared individually because id == form_number for all casillas.
+
 [[revisions."2019-y-siguientes".casillas]]
 id = "01"
 number = "01"
