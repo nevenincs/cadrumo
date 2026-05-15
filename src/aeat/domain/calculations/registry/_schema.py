@@ -186,9 +186,7 @@ class LegalReference(RegistryModel):
             )
         path_part, _, anchor_part = self.corpus_ref.partition("#")
         if not path_part or not anchor_part:
-            raise RegistryValidationError(
-                f"legal reference {self.id!r} corpus_ref must have non-empty path and anchor"
-            )
+            raise RegistryValidationError(f"legal reference {self.id!r} corpus_ref must have non-empty path and anchor")
         return self
 
 
@@ -855,11 +853,10 @@ class CasillaConstraints(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_bounds(self) -> CasillaConstraints:
-        if self.min_value is not None and self.max_value is not None:
-            if self.min_value > self.max_value:
-                raise RegistryValidationError(
-                    f"casilla constraints: min_value {self.min_value} > max_value {self.max_value}"
-                )
+        if self.min_value is not None and self.max_value is not None and self.min_value > self.max_value:
+            raise RegistryValidationError(
+                f"casilla constraints: min_value {self.min_value} > max_value {self.max_value}"
+            )
         if self.sign == "non_negative" and self.max_value is not None and self.max_value < Decimal("0"):
             raise RegistryValidationError(
                 "casilla constraints: sign='non_negative' is incompatible with negative max_value"
