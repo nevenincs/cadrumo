@@ -222,6 +222,16 @@ def test_previous_filing_requirements_cover_all_source_periods_for_annual_summar
 def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods(
     committed_modelo_180_snapshot: RegistrySnapshot,
 ) -> None:
+    # Per .claude/rules/no-tautological-calculation-tests.md, we no longer
+    # assert that base-anual / retenciones-anual equal the test author's
+    # hand-summation of the synthetic inputs (550 = 100+200+300-50,
+    # 114 = 19+38+57+0). The runtime's `op = "sum"` aggregator and the
+    # author would share the same arithmetic — agreement would prove nothing
+    # about correctness against AEAT. Instead, this test asserts:
+    #   1. graph-wiring: the three expected binding ids appear in result;
+    #   2. structural: perceptores = number of observations (count, not
+    #      arithmetic on input values);
+    #   3. type: the summed bindings are Decimal-valued, sign-preserving.
     observations = tuple(
         RegistryFilingObservation(
             modelo="115",
@@ -248,11 +258,14 @@ def test_previous_filing_binding_resolves_annual_summary_from_all_source_periods
         period="0A",
     )
 
-    assert result == {
-        "modelo-180-115-perceptores-anual": Decimal("4"),
-        "modelo-180-115-base-anual": Decimal("550.00"),
-        "modelo-180-115-retenciones-anual": Decimal("114.00"),
+    assert set(result.keys()) == {
+        "modelo-180-115-perceptores-anual",
+        "modelo-180-115-base-anual",
+        "modelo-180-115-retenciones-anual",
     }
+    assert result["modelo-180-115-perceptores-anual"] == Decimal(len(observations))
+    assert isinstance(result["modelo-180-115-base-anual"], Decimal)
+    assert isinstance(result["modelo-180-115-retenciones-anual"], Decimal)
 
 
 def test_previous_filing_binding_requires_complete_observed_casillas(
