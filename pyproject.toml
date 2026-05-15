@@ -177,6 +177,7 @@ dev = [
   "types-pyyaml>=6.0.12.20260510",
   "types-xlrd>=2.0.0.20260408",
   "types-pywin32>=311.0.0.20260508",
+  "google-api-python-client-stubs>=1.36",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
@@ -372,15 +373,11 @@ all = "error"
 [tool.ty.analysis]
 # Hand-written stubs under `stubs/` cover packages without `py.typed`
 # and without `types-*` distributions on PyPI (currently `pypdfium2` and
-# `playwright_stealth`). The remaining names below are packages whose
-# surface is too large to stub locally and whose authors have not opted
-# into typing.
-allowed-unresolved-imports = [
-  "playwright",
-  "typer",
-  "rich",
-  "bs4",
-]
+# `playwright_stealth`). All other previously-listed unresolved imports
+# (playwright, typer, rich, bs4) now ship `py.typed` themselves.
+# `google-api-python-client-stubs` (installed as a dev dep) covers
+# google-api-python-client / googleapiclient surface.
+allowed-unresolved-imports = []
 
 # ── mypy ─────────────────────────────────────────────────────────────────────
 # The project does not run mypy in CI (ty is the canonical checker) but
@@ -393,7 +390,10 @@ explicit_package_bases = true
 namespace_packages = true
 
 [[tool.mypy.overrides]]
-module = ["playwright.*", "typer.*", "rich.*", "bs4.*", "i18n.*", "ofxparse.*"]
+# Only packages that still lack py.typed and have no community stubs.
+# playwright, typer, rich, bs4 all ship py.typed; google-api-python-client
+# is covered by google-api-python-client-stubs (installed as a dev dep).
+module = ["i18n.*", "ofxparse.*"]
 ignore_missing_imports = true
 
 # ── pyrefly ──────────────────────────────────────────────────────────────────
