@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import tomllib
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, cast
 
 from pydantic import ValidationError
 
-from ...core.i18n import Translatable as tr  # noqa: N813
+from ...core.i18n import Translatable as tr
 from ...core.paths import PROJECT_ROOT
 from ._schema import VATCatalogue, VATCategory, VatCitation, VatCitationSource, VATRegulation
 from .errors import VatCatalogueError
@@ -49,7 +48,7 @@ def _load_vat_catalogue_cached(path: str, byte_count: int, modified_ns: int) -> 
         if not isinstance(raw_regulation, dict):
             raise VatCatalogueError(f"{target}: regulations[{index}] must be a table")
         try:
-            regulation = _parse_regulation(cast("Mapping[str, Any]", raw_regulation))
+            regulation = _parse_regulation(raw_regulation)
         except (ValidationError, ValueError) as exc:
             raise VatCatalogueError(f"{target}: invalid regulations[{index}]: {exc}") from exc
         if regulation.category in regulations:
@@ -104,37 +103,57 @@ def resolve_catalogue(*, on: date) -> VATCatalogue:
     return catalogue
 
 
-def _parse_regulation(raw_regulation: Mapping[str, Any]) -> VATRegulation:
-    category = VATCategory(str(raw_regulation.get("category")))
+def _to_str_dict(raw: Mapping) -> dict[str, object]:
+    """Convert a Mapping with unknown key types to a str-keyed dict."""
+    result: dict[str, object] = {}
+    for k, v in raw.items():
+        if not isinstance(k, str):
+            raise VatCatalogueError("TOML table keys must be strings")
+        result[k] = v
+    return result
+
+
+def _parse_regulation(raw_regulation: object) -> VATRegulation:
+    if not isinstance(raw_regulation, dict):
+        raise VatCatalogueError("regulation entry must be a table")
+    data = _to_str_dict(raw_regulation)
+    category = VATCategory(str(data.get("category")))
+    raw_citations = data.get("citations", ())
+    if not isinstance(raw_citations, list | tuple):
+        raise VatCatalogueError("citations must be a list")
+    raw_boe = data.get("boe_references")
+    boe_refs: Sequence[object] = raw_boe if isinstance(raw_boe, list) else []
+    raw_manual = data.get("manual_references")
+    manual_refs: Sequence[object] = raw_manual if isinstance(raw_manual, list) else []
     return VATRegulation.model_validate(
         {
             "category": category,
-            "label": tr(str(raw_regulation.get("label"))),
-            "description": tr(str(raw_regulation.get("description"))),
-            "triggers_when": tr(str(raw_regulation.get("triggers_when"))),
-            "iva_treatment": tr(str(raw_regulation.get("iva_treatment"))),
-            "requires_reverse_charge": raw_regulation.get("requires_reverse_charge"),
-            "requires_supplier_vat_id": raw_regulation.get("requires_supplier_vat_id"),
-            "boe_references": tuple(raw_regulation.get("boe_references", ())),
-            "manual_references": tuple(raw_regulation.get("manual_references", ())),
-            "citations": tuple(
-                _parse_citation(cast("Mapping[str, Any]", raw_citation))
-                for raw_citation in raw_regulation.get("citations", ())
-            ),
-            "notes": raw_regulation.get("notes", ""),
+            "label": tr(str(data.get("label"))),
+            "description": tr(str(data.get("description"))),
+            "triggers_when": tr(str(data.get("triggers_when"))),
+            "iva_treatment": tr(str(data.get("iva_treatment"))),
+            "requires_reverse_charge": data.get("requires_reverse_charge"),
+            "requires_supplier_vat_id": data.get("requires_supplier_vat_id"),
+            "boe_references": tuple(boe_refs),
+            "manual_references": tuple(manual_refs),
+            "citations": tuple(_parse_citation(raw_citation) for raw_citation in raw_citations),
+            "notes": data.get("notes", ""),
         }
     )
 
 
-def _parse_citation(raw_citation: Mapping[str, Any]) -> VatCitation:
-    source = VatCitationSource(str(raw_citation.get("source")))
+def _parse_citation(raw_citation: object) -> VatCitation:
+    if not isinstance(raw_citation, dict):
+        raise VatCatalogueError("citation entry must be a table")
+    data = _to_str_dict(raw_citation)
+    source = VatCitationSource(str(data.get("source")))
     return VatCitation.model_validate(
         {
             "source": source,
-            "article": raw_citation.get("article"),
-            "url": raw_citation.get("url"),
-            "quoted_text": tr(str(raw_citation.get("quoted_text"))),
-            "retrieval_date": raw_citation.get("retrieval_date"),
+            "article": data.get("article"),
+            "url": data.get("url"),
+            "quoted_text": tr(str(data.get("quoted_text"))),
+            "retrieval_date": data.get("retrieval_date"),
         }
     )
 

@@ -29,7 +29,7 @@ import json
 from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Any
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
@@ -163,7 +163,7 @@ class FilingRecord(BaseModel):
 
     @field_validator("modelo", mode="before")
     @classmethod
-    def _coerce_modelo(cls, value: Any) -> ModeloCode:
+    def _coerce_modelo(cls, value: object) -> ModeloCode:
         if isinstance(value, ModeloCode):
             return value
         if isinstance(value, str):

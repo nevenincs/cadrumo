@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 import pytest
 
 from aeat.adapters.persistence.storage.master_key._zeroise import zeroise
@@ -48,11 +46,10 @@ def test_zeroise_does_not_replace_buffer_object() -> None:
 
 def test_zeroise_rejects_immutable_bytes() -> None:
     """Python cannot overwrite immutable `bytes`; the contract is enforced."""
-
     with pytest.raises(TypeError, match="bytearray"):
-        zeroise(cast(bytearray, b"\x01" * 32))
+        zeroise(b"\x01" * 32)
 
 
 def test_zeroise_rejects_non_bytes_like() -> None:
     with pytest.raises(TypeError, match="bytearray"):
-        zeroise(cast(bytearray, "password"))
+        zeroise("password")

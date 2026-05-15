@@ -37,7 +37,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from playwright.async_api import Locator, Page, ViewportSize
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -64,7 +67,7 @@ logger = get_logger(__name__)
 _TIMEOUT_DEFAULTS = Settings()
 DEFAULT_GROI_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_navigation_timeout_ms
 _SELECTOR_PROBE_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_selector_probe_timeout_ms
-_DEFAULT_VIEWPORT = {
+_DEFAULT_VIEWPORT: ViewportSize = {
     "width": _TIMEOUT_DEFAULTS.aeat_browser_viewport_width,
     "height": _TIMEOUT_DEFAULTS.aeat_browser_viewport_height,
 }
@@ -93,13 +96,13 @@ _playwright_stage = build_playwright_stage_runner(
 
 
 async def _locate(
-    page: Any,
+    page: Page,
     selectors: tuple[str, ...],
     *,
     stage: str,
     description: str,
     timeout_ms: int,
-) -> Any:
+) -> Locator:
     return await first_visible_locator(
         page,
         selectors,
@@ -242,7 +245,12 @@ async def collect_groi_observations(
     context = None
     try:
         context = await browser_session.create_context()
-        page = cast(Any, await context.new_page())
+        from playwright.async_api import Page as _Page
+
+        _raw_page = await context.new_page()
+        if not isinstance(_raw_page, _Page):
+            raise TypeError(f"BrowserContext.new_page() did not return a Playwright Page; got {type(_raw_page)}")
+        page: _Page = _raw_page
         await _playwright_stage(
             page.set_viewport_size(_DEFAULT_VIEWPORT),
             stage="set-viewport",
@@ -286,7 +294,7 @@ async def collect_groi_observations(
         await browser_session.close()
 
 
-async def _open_groi_form(page: Any, *, timeout_ms: int) -> None:
+async def _open_groi_form(page: Page, *, timeout_ms: int) -> None:
     """Wait for the NIF input + submit button + verify the form's action URL.
 
     Read-only mandate: before any submit click runs, this check confirms
@@ -320,7 +328,7 @@ async def _open_groi_form(page: Any, *, timeout_ms: int) -> None:
 _EXPECTED_FORM_ACTION = "ConsultaOperadorSedeGroiServlet"
 
 
-async def _assert_form_action_is_consult_endpoint(page: Any, *, timeout_ms: int) -> None:
+async def _assert_form_action_is_consult_endpoint(page: Page, *, timeout_ms: int) -> None:
     form = page.locator("form").first
     action = await _playwright_stage(
         form.get_attribute("action", timeout=timeout_ms),
@@ -348,7 +356,7 @@ async def _assert_form_action_is_consult_endpoint(page: Any, *, timeout_ms: int)
 
 
 async def _check_single_nif(
-    page: Any,
+    page: Page,
     *,
     nif: str,
     timeout_ms: int,

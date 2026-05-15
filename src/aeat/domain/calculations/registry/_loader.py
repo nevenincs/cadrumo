@@ -206,9 +206,7 @@ def _load_catalogue_file_cached(path: str, byte_count: int, modified_ns: int) ->
             try:
                 parameters[param_id] = LegalParameter.model_validate({"id": param_id, **payload})
             except ValidationError as exc:
-                raise RegistryLoadError(
-                    f"{source_path}: invalid legal parameter {param_id!r}: {exc}"
-                ) from exc
+                raise RegistryLoadError(f"{source_path}: invalid legal parameter {param_id!r}: {exc}") from exc
     return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
 
 

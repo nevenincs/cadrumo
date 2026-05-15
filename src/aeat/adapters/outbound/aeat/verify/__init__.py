@@ -24,7 +24,7 @@ without spinning up a real browser.
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
-from typing import Protocol, cast
+from typing import Protocol, runtime_checkable
 
 from pydantic import AnyUrl
 
@@ -75,6 +75,7 @@ class VerifyBrowserContextLike(Protocol):
     async def close(self) -> None: ...
 
 
+@runtime_checkable
 class VerifyBrowserSessionLike(Protocol):
     """Subset of :class:`aeat.adapters.outbound.aeat.browser.BrowserSession` consumed by :func:`verify_csv`."""
 
@@ -98,7 +99,10 @@ async def _build_default_browser_session() -> VerifyBrowserSessionLike:
     from ..browser import default_browser_session_factory
 
     settings = load_settings()
-    return cast(VerifyBrowserSessionLike, await default_browser_session_factory(settings))
+    session = await default_browser_session_factory(settings)
+    if not isinstance(session, VerifyBrowserSessionLike):
+        raise TypeError(f"default_browser_session_factory returned an incompatible type: {type(session)}")
+    return session
 
 
 DEFAULT_BROWSER_SESSION_FACTORY: VerifyBrowserSessionFactory = _build_default_browser_session

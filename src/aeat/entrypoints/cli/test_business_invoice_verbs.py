@@ -104,11 +104,11 @@ def test_payable_invoice_update_changes_fields(cli_runner: CliRunner) -> None:
         ],
     )
     list_result = cli_runner.invoke(payable_invoice_app, ["list"])
-    full_id = [
+    full_id = next(
         line.split("\t")[0]
         for line in list_result.output.splitlines()
         if line and not line.startswith(("bucket", "count"))
-    ][0]
+    )
     result = cli_runner.invoke(
         payable_invoice_app,
         ["update", full_id, "--counterparty-name", "Acme S.L."],
@@ -131,11 +131,11 @@ def test_payable_invoice_remove_requires_yes(cli_runner: CliRunner) -> None:
         ],
     )
     list_result = cli_runner.invoke(payable_invoice_app, ["list"])
-    full_id = [
+    full_id = next(
         line.split("\t")[0]
         for line in list_result.output.splitlines()
         if line and not line.startswith(("bucket", "count"))
-    ][0]
+    )
     refused = cli_runner.invoke(payable_invoice_app, ["remove", full_id])
     assert refused.exit_code != 0
     confirmed = cli_runner.invoke(payable_invoice_app, ["remove", full_id, "--yes"])

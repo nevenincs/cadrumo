@@ -30,13 +30,15 @@ from typing import TYPE_CHECKING, Literal
 import pikepdf
 from pikepdf import (
     ContentStreamInstruction,
-    Object as PikepdfObject,
     Operator,
     Page,
     Pdf,
     String,
     parse_content_stream,
     unparse_content_stream,
+)
+from pikepdf import (
+    Object as PikepdfObject,
 )
 
 if TYPE_CHECKING:

@@ -562,14 +562,12 @@ def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
     other module that declares a Pydantic class named
     ``WorkUnit`` competes with the canonical surface."""
 
-    from pathlib import Path
-
     from aeat.core.paths import PROJECT_ROOT
 
     source_root = PROJECT_ROOT / "src" / "aeat"
     canonical = source_root / "domain" / "modelos" / "_work_unit.py"
     forbidden = "class WorkUnit("
-    offenders: list[Path] = []
+    offenders = []
     for py_file in source_root.rglob("*.py"):
         if py_file == canonical:
             continue
@@ -586,14 +584,12 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     module referencing a competing namespace string is a shadow
     storage location."""
 
-    from pathlib import Path
-
     from aeat.core.paths import PROJECT_ROOT
 
     source_root = PROJECT_ROOT / "src" / "aeat"
     canonical = source_root / "domain" / "modelos" / "_repository.py"
     forbidden_namespace = '"aeat.domain.modelos.work_units"'
-    offenders: list[Path] = []
+    offenders = []
     for py_file in source_root.rglob("*.py"):
         if py_file == canonical:
             continue

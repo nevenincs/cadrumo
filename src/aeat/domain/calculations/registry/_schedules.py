@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast
 
 from ._errors import RegistryValidationError
 from ._schema import FilingScheduleDefinition, ModeloRevision, ProfilePredicateDefinition
@@ -68,19 +67,26 @@ def profile_condition_matches(
     raise RegistryValidationError(f"profile condition uses unsupported op {condition.op!r}")
 
 
-def _resolve_profile_fact(profile_facts: Mapping[str, object] | object, field: str) -> Any:
-    if isinstance(profile_facts, Mapping):
-        mapping = cast("Mapping[str, object]", profile_facts)
-        if field in mapping:
-            return mapping[field]
+def _mapping_get(m: Mapping, key: str) -> object:
+    """Access a Mapping with a string key using iteration to avoid Unknown key issues."""
+    for k, v in m.items():
+        if k == key:
+            return v
+    return None
+
+
+def _resolve_profile_fact(profile_facts: object, field: str) -> object:
+    if isinstance(profile_facts, Mapping) and field in profile_facts:
+        return _mapping_get(profile_facts, field)
     if field == "iva.regime" and hasattr(profile_facts, "iva_regime"):
-        return profile_facts.iva_regime
-    current: Any = profile_facts
+        _attr = "iva_regime"
+        return getattr(profile_facts, _attr)
+    current: object = profile_facts
     for part in field.split("."):
         if isinstance(current, Mapping):
             if part not in current:
                 raise RegistryValidationError(f"profile facts missing {field!r}")
-            current = current[part]
+            current = _mapping_get(current, part)
             continue
         if not hasattr(current, part):
             raise RegistryValidationError(f"profile facts missing {field!r}")

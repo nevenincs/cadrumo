@@ -24,7 +24,10 @@ Composition order:
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from google.oauth2.credentials import Credentials
 
 from ....core.config import Settings, load_settings
 from ._errors import StorageError, StorageValidationError
@@ -51,7 +54,7 @@ def _parse_kind(raw: str) -> ProviderKind:
         ) from exc
 
 
-def _build_google_credentials(*, profile: str) -> Any:
+def _build_google_credentials(*, profile: str) -> Credentials:
     """Hydrate `google.oauth2.credentials.Credentials` from the per-profile records.
 
     Imports the upstream library lazily so unit tests for the local /

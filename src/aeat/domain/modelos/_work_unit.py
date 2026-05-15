@@ -23,7 +23,7 @@ import hashlib
 from collections.abc import Mapping, ValuesView
 from datetime import datetime
 from enum import StrEnum
-from typing import Annotated, Any, cast
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
@@ -185,7 +185,7 @@ class WorkUnit(BaseModel):
 
     @field_validator("modelo", mode="before")
     @classmethod
-    def _coerce_modelo(cls, value: Any) -> ModeloCode:
+    def _coerce_modelo(cls, value: object) -> ModeloCode:
         """Accept a raw modelo string and coerce it into ``ModeloCode``.
 
         Pydantic's strict mode rejects implicit ``str`` → ``ModeloCode``
@@ -264,15 +264,16 @@ class WorkUnitCatalogue(BaseModel):
     @classmethod
     def from_work_units(cls, units: Mapping[str, WorkUnit] | tuple[WorkUnit, ...]) -> WorkUnitCatalogue:
         """Build a catalogue from an iterable / mapping of work units."""
-        if isinstance(units, Mapping):
-            mapping_units = cast(Mapping[str, WorkUnit], units)
-            return cls(work_units=dict(mapping_units))
-        mapping: dict[str, WorkUnit] = {}
-        for unit in units:
-            if unit.work_unit_id in mapping:
-                raise ModeloValidationError(f"duplicate work_unit_id {unit.work_unit_id!r}")
-            mapping[unit.work_unit_id] = unit
-        return cls(work_units=mapping)
+        if isinstance(units, tuple):
+            mapping: dict[str, WorkUnit] = {}
+            for unit in units:
+                if not isinstance(unit, WorkUnit):
+                    raise ModeloValidationError(f"expected WorkUnit, got {type(unit).__name__}")
+                if unit.work_unit_id in mapping:
+                    raise ModeloValidationError(f"duplicate work_unit_id {unit.work_unit_id!r}")
+                mapping[unit.work_unit_id] = unit
+            return cls(work_units=mapping)
+        return cls(work_units={str(k): v for k, v in units.items()})
 
     def __iter__(self):
         """Iterate the loaded work units (not the keys)."""

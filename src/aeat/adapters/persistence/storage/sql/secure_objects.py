@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import datetime
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from .....core.classification import SensitivityClass
 from .....core.logging import get_logger
@@ -680,7 +680,7 @@ class SecureObjectRepository:
 
     def _save_internal_in_session(
         self,
-        session: Any,
+        session: Session,
         *,
         namespace: str,
         key: str | bytes,

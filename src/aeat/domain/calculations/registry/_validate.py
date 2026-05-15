@@ -197,16 +197,9 @@ class RegistryValidator:
             self._source_root_key(),
         )
         cached = _REGISTRY_VALIDATION_CACHE.get(cache_key)
-        if (
-            cached is not None
-            and cached[0] == modelo_tuple
-            and cached[1] is self._legal
-            and cached[2] is self._sources
-        ):
+        if cached is not None and cached[0] == modelo_tuple and cached[1] is self._legal and cached[2] is self._sources:
             if cached[3]:
-                raise RegistryValidationError(
-                    "registry validation failed:\n" + "\n".join(f" - {f}" for f in cached[3])
-                )
+                raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in cached[3]))
             return
 
         failures: list[str] = list(self._validate_catalogues())

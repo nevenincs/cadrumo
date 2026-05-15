@@ -126,4 +126,4 @@ class TestLabelHitShape:
             match_count=1,
         )
         with pytest.raises(AttributeError, match=r"frozen|cannot|casilla_id"):
-            setattr(hit, "casilla_id", "02")
+            hit.casilla_id = "02"

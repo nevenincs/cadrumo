@@ -18,7 +18,7 @@ Modelo filing linkage is resolved from validated calculation registry data.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ._categories import AuthMethod, PortalCategory, Subdomain, UrlStability
 from ._codes import Portal
@@ -48,8 +48,7 @@ _LAZY_NAMES: frozenset[str] = frozenset(
 )
 
 
-def __getattr__(name: str) -> Any:
-    # Any: PEP 562 module-level __getattr__ must return Any; concrete types known via TYPE_CHECKING.
+def __getattr__(name: str) -> object:
     """Lazily materialise the registry surface on first access."""
     if name not in _LAZY_NAMES:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

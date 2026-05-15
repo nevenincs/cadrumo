@@ -128,7 +128,7 @@ def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -
     aeat_exe = shutil.which("aeat")
     assert aeat_exe is not None
 
-    result = subprocess.run(  # noqa: S603
+    result = subprocess.run(
         [aeat_exe],
         cwd=Path.cwd(),
         env=_console_env(tmp_path),
@@ -155,7 +155,7 @@ def test_installed_console_config_init_fails_fast_without_prompt_host(tmp_path: 
     aeat_exe = shutil.which("aeat")
     assert aeat_exe is not None
 
-    result = subprocess.run(  # noqa: S603
+    result = subprocess.run(
         [aeat_exe, "config", "init"],
         cwd=Path.cwd(),
         env=_console_env(tmp_path),

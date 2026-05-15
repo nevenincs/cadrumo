@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Iterator, Mapping
 from datetime import datetime
 from types import MappingProxyType
-from typing import Any, Self
+from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
@@ -42,7 +42,7 @@ def _normalize_hex_digest(value: str, *, field_name: str) -> str:
     return normalized
 
 
-def _dedupe_preserve_order(values: Iterable[str], *, field_name: str) -> tuple[str, ...]:
+def _dedupe_preserve_order(values: Iterable[object], *, field_name: str) -> tuple[str, ...]:
     """Trim, validate, and deduplicate linked-ID tuples preserving first-seen order.
 
     Args:
@@ -156,7 +156,7 @@ class Attachment(BaseModel):
 
     @field_validator("captured_at", mode="before")
     @classmethod
-    def _parse_captured_at(cls, value: Any) -> datetime:
+    def _parse_captured_at(cls, value: object) -> datetime:
         """Parse ISO-8601 strings into aware datetimes and reject naive values."""
         if isinstance(value, str):
             parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -170,7 +170,7 @@ class Attachment(BaseModel):
 
     @field_validator("linked_transaction_ids", mode="before")
     @classmethod
-    def _normalize_linked_transactions(cls, value: Any) -> tuple[str, ...]:
+    def _normalize_linked_transactions(cls, value: object) -> tuple[str, ...]:
         """Normalize linked-transaction tuples with dedup and trimming."""
         if value is None:
             return ()
@@ -182,7 +182,7 @@ class Attachment(BaseModel):
 
     @field_validator("linked_invoice_ids", mode="before")
     @classmethod
-    def _normalize_linked_invoices(cls, value: Any) -> tuple[str, ...]:
+    def _normalize_linked_invoices(cls, value: object) -> tuple[str, ...]:
         """Normalize linked-invoice tuples with dedup and trimming."""
         if value is None:
             return ()
@@ -194,7 +194,7 @@ class Attachment(BaseModel):
 
     @field_validator("metadata", mode="before")
     @classmethod
-    def _normalize_metadata(cls, value: Any) -> Mapping[str, str]:
+    def _normalize_metadata(cls, value: object) -> Mapping[str, str]:
         """Validate the ``metadata`` escape hatch: strings only, non-empty keys."""
         if value is None:
             return MappingProxyType({})
@@ -246,7 +246,7 @@ class AttachmentCatalogue(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _coerce_catalogue_input(cls, data: Any) -> Any:
+    def _coerce_catalogue_input(cls, data: object) -> object:
         """Accept either a bare mapping or an iterable of attachments."""
         if isinstance(data, cls):
             return data
@@ -287,7 +287,7 @@ class AttachmentCatalogue(BaseModel):
         return dict(value)
 
     @classmethod
-    def from_attachments(cls, attachments: Iterable[Attachment | Mapping[str, Any]]) -> Self:
+    def from_attachments(cls, attachments: Iterable[Attachment | Mapping[str, object]]) -> Self:
         """Build a catalogue from an iterable, rejecting duplicates explicitly.
 
         Args:
@@ -298,7 +298,7 @@ class AttachmentCatalogue(BaseModel):
         """
         return cls.model_validate(tuple(attachments))
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Attachment]:  # pyright: ignore[reportIncompatibleMethodOverride]  # reason: intentional pydantic catalogue iteration shim — yields domain items not field-value tuples
         """Iterate over catalogue attachments."""
         return iter(self.attachments.values())
 

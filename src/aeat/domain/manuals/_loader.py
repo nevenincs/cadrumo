@@ -28,7 +28,6 @@ import json
 from collections.abc import Iterable, Iterator
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -100,7 +99,7 @@ def _read_text_cached(path: str, byte_count: int, modified_ns: int) -> str:
     return Path(path).read_text(encoding="utf-8")
 
 
-def _load_json(path: Path) -> Any:
+def _load_json(path: Path) -> object:
     """Read and parse a JSON file, raising :exc:`ManualParseError` on failure."""
     raw = _read_text(path)
     try:
@@ -235,9 +234,7 @@ def _load_section_cached(section_fingerprint: tuple[str, int, int], section_id: 
     except (ValueError, ValidationError) as exc:
         raise ManualParseError(f"{section_path}: section validation failed: {exc}") from exc
     if section.section_id != section_id:
-        raise ManualParseError(
-            f"{section_path}: section_id mismatch ({section.section_id!r} vs ref {section_id!r})"
-        )
+        raise ManualParseError(f"{section_path}: section_id mismatch ({section.section_id!r} vs ref {section_id!r})")
     return section
 
 

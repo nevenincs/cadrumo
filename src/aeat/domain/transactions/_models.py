@@ -597,9 +597,12 @@ class Transaction(BaseModel):
         """Compute or validate ``transaction_id`` from the wrapped raw record."""
         if isinstance(data, cls):
             return data
-        if not isinstance(data, Mapping) or "raw" not in data:
+        if not isinstance(data, Mapping):
             return data
-        raw = data["raw"]
+        payload = dict(data)
+        if "raw" not in payload:
+            return data
+        raw = payload["raw"]
         if isinstance(raw, RawTransaction):
             raw_transaction = raw
         else:
@@ -610,10 +613,9 @@ class Transaction(BaseModel):
                     json.dumps(raw, default=_json_default, ensure_ascii=True)
                 )
         derived = derive_transaction_id(raw_transaction)
-        existing = data.get("transaction_id")
+        existing = payload.get("transaction_id")
         if existing is not None and str(existing).strip() != derived:
             raise TransactionValidationError("transaction_id must match the stable hash derived from raw")
-        payload = dict(data)
         payload["raw"] = raw_transaction
         if isinstance(payload.get("direction"), str):
             payload["direction"] = TransactionDirection(payload["direction"])
@@ -682,7 +684,7 @@ class Transaction(BaseModel):
     def _validate_tax_amounts(cls, value: Decimal | None, info: core_schema.ValidationInfo) -> Decimal | None:
         """Reject negative tax substrate values."""
 
-        return _validate_non_negative_decimal(value, field_name=info.field_name)
+        return _validate_non_negative_decimal(value, field_name=info.field_name or "")
 
     @field_validator("notes", "classification_reason")
     @classmethod

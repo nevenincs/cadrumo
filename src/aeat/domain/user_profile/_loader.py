@@ -5,7 +5,6 @@ from __future__ import annotations
 import tomllib
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
 
 from pydantic import ValidationError
 
@@ -16,7 +15,7 @@ from ._schema import ProfileSchemaDefinition
 DEFAULT_USER_PROFILE_SCHEMA_PATH = PROJECT_ROOT / "registry" / "aeat" / "user_profile" / "schema.toml"
 
 
-def _read_toml(path: Path) -> dict[str, Any]:
+def _read_toml(path: Path) -> dict[str, object]:
     try:
         with path.open("rb") as fh:
             return tomllib.load(fh)
@@ -26,12 +25,16 @@ def _read_toml(path: Path) -> dict[str, Any]:
         raise UserProfileSchemaLoadError(f"{path}: cannot read TOML: {exc}") from exc
 
 
-def _freeze_toml(value: Any) -> Any:
+def _freeze_toml_value(value: object) -> object:
     if isinstance(value, list):
-        return tuple(_freeze_toml(item) for item in value)
+        return tuple(_freeze_toml_value(item) for item in value)
     if isinstance(value, dict):
-        return {key: _freeze_toml(item) for key, item in value.items()}
+        return {key: _freeze_toml_value(item) for key, item in value.items()}
     return value
+
+
+def _freeze_toml(data: dict[str, object]) -> dict[str, object]:
+    return {key: _freeze_toml_value(value) for key, value in data.items()}
 
 
 def load_user_profile_schema(path: Path = DEFAULT_USER_PROFILE_SCHEMA_PATH) -> ProfileSchemaDefinition:

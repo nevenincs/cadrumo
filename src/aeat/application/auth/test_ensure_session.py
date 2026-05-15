@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...adapters.outbound.aeat.auth import BrowserSessionFactory
 
 import pytest
 
@@ -69,7 +72,9 @@ def _assertion(valid: bool = True) -> object:
 
 
 def _factory(providers: list[_Provider]):
-    def build(kind: AuthProviderKind, settings: Settings, browser_session_factory: Any | None) -> _Provider:
+    def build(
+        kind: AuthProviderKind, settings: Settings, browser_session_factory: BrowserSessionFactory | None
+    ) -> _Provider:
         del kind, settings, browser_session_factory
         return providers.pop(0)
 

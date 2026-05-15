@@ -20,7 +20,7 @@ Playwright walkers without falsifying their record shape.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -52,11 +52,7 @@ from ...domain.submission import SubmissionPreflightError
 from ...tests import FIXTURES_DIR
 from ..filing.runtime import build_runtime_schema_provider
 from . import (
-    CertificateBundleProtocol,
-    DeadlineEngineProtocol,
-    FilingDraftBuilderProtocol,
-    FilingInputsProviderProtocol,
-    SubmissionEngineProtocol,
+    RegistryFilingDraftProtocol,
     WorkflowAbortReason,
     WorkflowEngine,
     WorkflowStage,
@@ -86,9 +82,9 @@ class _ConcreteDraft:
     period: str = "2026Q1"
     profile_tax_id: str = "X1234567L"
     schema_version: str = field(default_factory=_registry_schema_version)
-    status: DraftStatus = DraftStatus.APPROVED
-    values: Mapping[str, str] = field(default_factory=lambda: {"01": "1000"})
-    findings: tuple[FilingFinding, ...] = ()
+    status: object = DraftStatus.APPROVED
+    values: Mapping[str, str] | Iterable[object] = field(default_factory=lambda: {"01": "1000"})
+    findings: tuple[object, ...] = ()
 
 
 @dataclass
@@ -128,7 +124,7 @@ class _ConcreteDraftBuilder:
         profile: AutonomoProfile,
         inputs: Mapping[str, object],
         fail_on_warning: bool = False,
-    ) -> _ConcreteDraft:
+    ) -> RegistryFilingDraftProtocol:
         if self.raise_exc is not None:
             raise self.raise_exc
         return self.draft
@@ -139,7 +135,7 @@ class _ConcreteSubmissionEngine:
     preflight_exc: BaseException | None = None
     preflight_calls: list[date] = field(default_factory=list)
 
-    def preflight(self, draft: _ConcreteDraft, *, today: date) -> None:
+    def preflight(self, draft: RegistryFilingDraftProtocol, *, today: date) -> None:
         self.preflight_calls.append(today)
         if self.preflight_exc is not None:
             raise self.preflight_exc
@@ -273,12 +269,12 @@ class _Fixtures:
 
     def engine(self) -> WorkflowEngine:
         return WorkflowEngine(
-            deadline_engine=cast(DeadlineEngineProtocol, self.deadline_engine),
-            filing_draft_builder=cast(FilingDraftBuilderProtocol, self.draft_builder),
-            submission_engine=cast(SubmissionEngineProtocol, self.submission_engine),
+            deadline_engine=self.deadline_engine,
+            filing_draft_builder=self.draft_builder,
+            submission_engine=self.submission_engine,
             session=self.session,
-            certificate_bundle=cast(CertificateBundleProtocol, self.certificate_bundle),
-            inputs_provider=cast(FilingInputsProviderProtocol, self.inputs_provider),
+            certificate_bundle=self.certificate_bundle,
+            inputs_provider=self.inputs_provider,
             settings=self.settings,
             expedientes_source=self.expedientes_source,
             notifications_source=self.notifications_source,

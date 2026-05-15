@@ -33,7 +33,6 @@ from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
 
 import pytest
 
@@ -72,8 +71,6 @@ from aeat.application.modelo import (
 )
 from aeat.application.workflow import (
     DeadlineEngineAdapter,
-    FilingInputsProviderProtocol,
-    SubmissionEngineProtocol,
     WorkflowEngine,
 )
 from aeat.core.config import Settings
@@ -361,13 +358,10 @@ def _workflow_gate(
                 actor="operator-A",
                 clock=clock,
             ),
-            submission_engine=cast(SubmissionEngineProtocol, submission_engine),
+            submission_engine=submission_engine,
             session=None,
             certificate_bundle=None,
-            inputs_provider=cast(
-                FilingInputsProviderProtocol,
-                _RevisionInputsProvider(revision=revision, work_unit=work_unit),
-            ),
+            inputs_provider=_RevisionInputsProvider(revision=revision, work_unit=work_unit),
             settings=Settings(),
         ),
     )

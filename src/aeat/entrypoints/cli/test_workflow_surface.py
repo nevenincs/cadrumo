@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
 
 import pytest
+from click.testing import Result
 from typer.testing import CliRunner
 
 from aeat.application.diagnostics import build_cli_version_report
@@ -25,7 +25,7 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
-def _json_output(result: Any) -> str:
+def _json_output(result: Result) -> str:
     import re
 
     # print(f"DEBUG: result.output={result.output!r}")

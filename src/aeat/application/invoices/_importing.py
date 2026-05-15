@@ -7,7 +7,6 @@ import json
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -43,8 +42,9 @@ def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple
     for candidate in candidates:
         payload = dict(candidate)
         payload.setdefault("kind", kind.value)
-        if isinstance(payload.get("kind"), str):
-            payload["kind"] = payload["kind"].upper()
+        raw_kind = payload.get("kind")
+        if isinstance(raw_kind, str):
+            payload["kind"] = raw_kind.upper()
 
         payload.setdefault("currency", "EUR")
         payload.setdefault("counterparty_country", "ES")
@@ -95,7 +95,7 @@ def import_invoices_from_path(
     return result
 
 
-def _decode_invoice_payload(raw: str) -> tuple[Mapping[str, Any], ...]:
+def _decode_invoice_payload(raw: str) -> tuple[Mapping[str, object], ...]:
     raw_stripped = raw.lstrip()
     if raw_stripped.startswith("[") or raw_stripped.startswith("{"):
         decoded = json.loads(raw)
@@ -109,7 +109,7 @@ def _decode_invoice_payload(raw: str) -> tuple[Mapping[str, Any], ...]:
     return tuple(dict(row) for row in reader)
 
 
-def _synthesise_single_line_if_needed(payload: dict[str, Any]) -> None:
+def _synthesise_single_line_if_needed(payload: dict[str, object]) -> None:
     if "lines" in payload or "base_total" not in payload or "iva_rate" not in payload:
         return
     base = Decimal(str(payload["base_total"]))

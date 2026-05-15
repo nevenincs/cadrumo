@@ -6,7 +6,7 @@ import hashlib
 from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Final, Literal, cast
+from typing import Final, Literal
 
 from ....domain.calculations.registry._schema import (
     CasillaDefinition,
@@ -349,10 +349,10 @@ def _tariff_tables(
             )
         else:
             scalar = _resolve_scalar(definition, today)
-            scalar_data_type = cast(
-                Literal["decimal", "money", "integer", "ratio"],
-                definition.data_type,
-            )
+            raw_dt = definition.data_type
+            if raw_dt not in ("decimal", "money", "integer", "ratio"):
+                continue
+            scalar_data_type: Literal["decimal", "money", "integer", "ratio"] = raw_dt
             tables.append(
                 SheetTariffTable(
                     parameter=parameter_id,

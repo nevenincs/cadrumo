@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Annotated, Literal, cast
+from typing import Annotated, Literal
 
 import typer
 
@@ -18,9 +18,13 @@ _VerifyVerdict = Literal["valid", "invalid", "unknown"]
 def _verify_expected(value: str | None) -> _VerifyVerdict | None:
     if value is None:
         return None
-    if value not in {"valid", "invalid", "unknown"}:
-        raise typer.BadParameter("expected must be one of: valid, invalid, unknown")
-    return cast(_VerifyVerdict, value)
+    if value == "valid":
+        return "valid"
+    if value == "invalid":
+        return "invalid"
+    if value == "unknown":
+        return "unknown"
+    raise typer.BadParameter("expected must be one of: valid, invalid, unknown")
 
 
 app = typer.Typer(
