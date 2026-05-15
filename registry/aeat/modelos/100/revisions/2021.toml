@@ -8508,7 +8508,7 @@ label = "Aplicación de la escala general y autonómica del Impuesto al importe 
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-cuota-escala-estatal-sobre-base-liquidable-general"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8516,7 +8516,7 @@ id = "0529"
 number = "0529"
 label = "Aplicación de la escala general y autonómica del Impuesto al importe de la casilla [0505]. Importes resultantes: Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8526,7 +8526,7 @@ label = "Aplicación de la escala general del Impuesto al importe de la casilla 
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-cuota-escala-estatal-sobre-minimo-personal-familiar"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8534,7 +8534,7 @@ id = "0531"
 number = "0531"
 label = "Aplicación de la escala autonómica del Impuesto al importe de la casilla [0523]. Importe resultante: Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8544,7 +8544,7 @@ label = "Cuotas correspondientes a la base liquidable general: ( [0532] = [0528]
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-cuota-base-liquidable-general-estatal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8554,7 +8554,7 @@ label = "Cuotas correspondientes a la base liquidable general: ( [0532] = [0528]
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-cuota-base-liquidable-general-autonomica"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8564,7 +8564,7 @@ label = "Tipos medios de gravamen ( [0534] = [0532] x 100 / [0505] ); ( [0535] =
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-tipo-medio-gravamen-estatal-base-liquidable-general"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8574,7 +8574,7 @@ label = "Tipos medios de gravamen ( [0534] = [0532] x 100 / [0505] ); ( [0535] =
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-tipo-medio-gravamen-autonomico-base-liquidable-general"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8582,7 +8582,7 @@ id = "0536"
 number = "0536"
 label = "Aplicación de la escala general y autonómica del Impuesto al importe de la casilla [0510]. Importes resultantes: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8590,7 +8590,7 @@ id = "0537"
 number = "0537"
 label = "Aplicación de la escala general y autonómica del Impuesto al importe de la casilla [0510]. Importes resultantes: Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8598,7 +8598,7 @@ id = "0538"
 number = "0538"
 label = "Aplicación de la escala general del Impuesto al importe de la casilla [0522]. Importe resultante: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8606,7 +8606,7 @@ id = "0539"
 number = "0539"
 label = "Aplicación de la escala autonómica del Impuesto al importe de la casilla [0524]. Importe resultante: Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8614,7 +8614,7 @@ id = "0540"
 number = "0540"
 label = "Cuotas correspondientes a la base liquidable del ahorro: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8622,7 +8622,7 @@ id = "0541"
 number = "0541"
 label = "Cuotas correspondientes a la base liquidable del ahorro: Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8632,7 +8632,7 @@ label = "Tipos medios de gravamen ( [0542] = [0540] x 100 / [0510] ); ( [0543] =
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-tipo-medio-gravamen-estatal-base-liquidable-ahorro"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8642,7 +8642,7 @@ label = "Tipos medios de gravamen ( [0542] = [0540] x 100 / [0510] ); ( [0543] =
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-tipo-medio-gravamen-autonomico-base-liquidable-ahorro"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8652,7 +8652,7 @@ label = "Cuota íntegra estatal: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-cuota-integra-estatal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8662,7 +8662,7 @@ label = "Cuota íntegra autonómica: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-cuota-integra-autonomica"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8672,7 +8672,7 @@ label = "Deducción por inversión en vivienda habitual: (traslade los importes 
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deducciones-actividades-economicas-estatal-suma"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8682,7 +8682,7 @@ label = "Deducción por inversión en vivienda habitual: (traslade los importes 
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deducciones-actividades-economicas-autonomica-suma"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8690,7 +8690,7 @@ id = "0549"
 number = "0549"
 label = "Deducción por inversión en empresas de nueva o reciente creación: (traslade los importes de estas mismas casillas del anexo A.1): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-68.1"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-68.1"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8700,7 +8700,7 @@ label = "Por inversiones o gastos de interés cultural (traslade los importes de
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deduccion-cultural-estatal-50-porciento"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-68.5", "ley-35-2006:art-69"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-68.5", "ley-35-2006:art-69"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8710,7 +8710,7 @@ label = "Por inversiones o gastos de interés cultural (traslade los importes de
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deduccion-cultural-autonomica-50-porciento"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8720,7 +8720,7 @@ label = "Por donativos y otras aportaciones (traslade los importes de estas mism
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deduccion-donativos-estatal-50-porciento"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-68.3", "ley-35-2006:art-69"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-68.3", "ley-35-2006:art-69"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8730,7 +8730,7 @@ label = "Por donativos y otras aportaciones (traslade los importes de estas mism
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deduccion-donativos-autonomica-50-porciento"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8738,7 +8738,7 @@ id = "0554"
 number = "0554"
 label = "Por incentivos y estímulos a la inversión empresarial (traslade los importes de estas mismas casillas del anexo A.5): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8746,7 +8746,7 @@ id = "0555"
 number = "0555"
 label = "Por incentivos y estímulos a la inversión empresarial (traslade los importes de estas mismas casillas del anexo A.5): Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8754,7 +8754,7 @@ id = "0556"
 number = "0556"
 label = "Por dotaciones a la Reserva para Inversiones en Canarias (Ley 19/1994): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8762,7 +8762,7 @@ id = "0557"
 number = "0557"
 label = "Por dotaciones a la Reserva para Inversiones en Canarias (Ley 19/1994): Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8770,7 +8770,7 @@ id = "0558"
 number = "0558"
 label = "Por rendimientos derivados de la venta de bienes corporales producidos en Canarias (Ley 19/1994): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8778,7 +8778,7 @@ id = "0559"
 number = "0559"
 label = "Por rendimientos derivados de la venta de bienes corporales producidos en Canarias (Ley 19/1994): Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8788,7 +8788,7 @@ label = "Por rentas obtenidas en Ceuta o Melilla (traslade los importes de estas
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deduccion-ceuta-melilla-estatal-50-porciento"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8798,7 +8798,7 @@ label = "Por rentas obtenidas en Ceuta o Melilla (traslade los importes de estas
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deduccion-ceuta-melilla-autonomica-50-porciento"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8808,7 +8808,7 @@ label = "Por alquiler de la vivienda habitual. Régimen transitorio (traslade el
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deduccion-alquiler-vivienda-estatal-50-porciento"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8818,7 +8818,7 @@ label = "Por alquiler de la vivienda habitual. Régimen transitorio (traslade el
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deduccion-alquiler-vivienda-autonomica-50-porciento"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8826,7 +8826,7 @@ id = "0564"
 number = "0564"
 label = "Suma de deducciones autonómicas (traslade el importe de esta misma casilla del anexo B.1, B.2, B.3, B.4, B.5 ó B.6, según corresponda)"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8834,7 +8834,7 @@ id = "0565"
 number = "0565"
 label = "Deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Economico Europeo  (traslade los importes de estas mismas casill..."
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8842,7 +8842,7 @@ id = "0566"
 number = "0566"
 label = "Deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Economico Europeo  (traslade los importes de estas mismas casill..."
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8852,7 +8852,7 @@ label = "Por obras de mejora de la eficiencia energética de viviendas (traslade
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deduccion-eficiencia-energetica-vivienda-suma"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8862,7 +8862,7 @@ label = "Cuota líquida estatal: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-cuota-liquida-estatal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8872,7 +8872,7 @@ label = "Cuota líquida autonómica: Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-cuota-liquida-autonomica"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8880,7 +8880,7 @@ id = "0572"
 number = "0572"
 label = "Importe de las deducciones a las que se ha perdido el derecho en 2021: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8888,7 +8888,7 @@ id = "0573"
 number = "0573"
 label = "Intereses de demora correspondientes a las deducciones anteriores: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8896,7 +8896,7 @@ id = "0574"
 number = "0574"
 label = "Importe de las deducciones a las que se ha perdido el derecho en 2021. Parte estatal (*): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8905,7 +8905,7 @@ number = "0575"
 label = "Si la regularización está motivada por haberse producido las circunstancias previstas en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de la Ley del Impuesto, marque con una {2}X{2} esta casilla: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 data_type = "boolean"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8913,7 +8913,7 @@ id = "0576"
 number = "0576"
 label = "Intereses de demora correspondientes a las deducciones anteriores: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8921,7 +8921,7 @@ id = "0577"
 number = "0577"
 label = "Importe de las deducciones a las que se ha perdido el derecho en 2021. Parte autonómica (*): Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8929,7 +8929,7 @@ id = "0578"
 number = "0578"
 label = "Intereses de demora correspondientes a las deducciones anteriores: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8937,7 +8937,7 @@ id = "0579"
 number = "0579"
 label = "Importe de las deducciones autonómicas a las que se ha perdido el derecho en 2021: Parte autonómica"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8946,7 +8946,7 @@ number = "0580"
 label = "Si la regularización está motivada por haberse producido las circunstancias previstas en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de la Ley del Impuesto, marque con una {2}X{2} esta casilla: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 data_type = "boolean"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8954,7 +8954,7 @@ id = "0581"
 number = "0581"
 label = "Intereses de demora correspondientes a las deducciones anteriores: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8964,7 +8964,7 @@ label = "Cuota líquida estatal incrementada: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-cuota-liquida-estatal-incrementada"
-legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-50", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -8974,7 +8974,7 @@ label = "Cuota líquida autonómica incrementada ( [0586] = [0571] + [0577] + [0
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-cuota-liquida-autonomica-incrementada"
-legal_refs = ["ley-35-2006:art-50", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-50", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -9989,7 +9989,7 @@ id = "0721"
 number = "0721"
 label = "Importe de la deducción"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -10842,7 +10842,7 @@ label = "Importe total de las deducciones por incentivos y estímulos a la inver
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
 input_kind = "computed"
 formula = "renta-2021-deduccion-incentivos-inversion-empresarial-total"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
