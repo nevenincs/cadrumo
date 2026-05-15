@@ -17,8 +17,8 @@ from decimal import Decimal
 import pytest
 
 from ...core.paths import PROJECT_ROOT
-from ...domain.calculations.registry._loader import load_registry_tree
 from ...domain.calculations.registry._errors import RegistryValidationError
+from ...domain.calculations.registry._loader import load_registry_tree
 from ._row_set_assembly import (
     assemble_atribucion_observations,
     assemble_foreign_asset_observations,
@@ -215,6 +215,8 @@ def test_assemble_returns_empty_for_empty_cells() -> None:
 
 
 def test_assemble_observations_for_grouping_dispatches_per_perceptor_clave() -> None:
+    from ...domain.calculations.registry._bindings import WithholdingObservation
+
     revision = _modelo("190", "2025-y-siguientes")
     cells = (
         _Cell("modelo-190-perceptor-row-nif", 1, "12345678A"),
@@ -230,7 +232,9 @@ def test_assemble_observations_for_grouping_dispatches_per_perceptor_clave() -> 
 
     assert source_kind == "withholding"
     assert len(observations) == 1
-    assert observations[0].perceptor_tax_id == "12345678A"
+    obs = observations[0]
+    assert isinstance(obs, WithholdingObservation)
+    assert obs.perceptor_tax_id == "12345678A"
 
 
 def test_assemble_observations_for_grouping_dispatches_foreign_asset() -> None:
