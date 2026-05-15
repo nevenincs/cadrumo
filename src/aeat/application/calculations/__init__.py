@@ -25,20 +25,24 @@ from ._observations_repository import (
 )
 from ._relation_prefill import resolve_relations_from_local_store
 from ._row_set_assembly import (
+    AssembledObservations,
     assemble_atribucion_observations,
     assemble_foreign_asset_observations,
+    assemble_observations_for_grouping,
     assemble_refund_observations,
     assemble_related_party_observations,
     assemble_withholding_observations,
 )
 
 __all__ = [
+    "AssembledObservations",
     "BindingPrefillReport",
     "CalculationObservationRepository",
     "MultiYearResolver",
     "PrefilledBinding",
     "assemble_atribucion_observations",
     "assemble_foreign_asset_observations",
+    "assemble_observations_for_grouping",
     "assemble_refund_observations",
     "assemble_related_party_observations",
     "assemble_withholding_observations",

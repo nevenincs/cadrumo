@@ -441,6 +441,10 @@ cli:
             to a Google Sheets workbook in the operator's `aeat-vault/`
           help: Schema-to-sheet calc surface (export and pull)
           pull:
+            assemble_observations_help: After pulling, reassemble Detalle-tab row-set
+              cells into typed observations (perceptors, foreign assets, related-party
+              operations, atribución members, refund operations) and emit them in the
+              payload alongside the raw row_set_edits
             compute_help: After pulling, run the local Decimal runtime against the
               pulled inputs and emit the computed casilla values
             compute_refused_stale: 'refusing to compute against a workbook whose

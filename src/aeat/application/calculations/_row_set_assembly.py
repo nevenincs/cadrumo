@@ -41,12 +41,80 @@ from ...domain.calculations.registry._errors import RegistryValidationError
 from ...domain.calculations.registry._schema import ModeloRevision
 
 __all__ = [
+    "AssembledObservations",
     "assemble_atribucion_observations",
     "assemble_foreign_asset_observations",
+    "assemble_observations_for_grouping",
     "assemble_refund_observations",
     "assemble_related_party_observations",
     "assemble_withholding_observations",
 ]
+
+
+# Mapping from a row-set's ``grouping`` selector value to the assembler
+# that consumes its cells. The set of supported groupings is closed:
+# any grouping not in this map signals a registry binding declared
+# without a matching application-layer ingestor.
+_GROUPING_DISPATCH: Mapping[str, str] = {
+    "per_perceptor": "withholding",
+    "per_perceptor_clave": "withholding",
+    "per_related_party_operation": "related_party",
+    "per_foreign_asset": "foreign_asset",
+    "per_atribucion_member": "atribucion",
+    "per_refund_operation": "refund",
+}
+
+
+# Tuple of typed observations dispatched by source-kind name. Returned
+# by ``assemble_observations_for_grouping`` as a discriminated union
+# the caller pattern-matches on. The string discriminator avoids
+# pinning ``isinstance`` checks against five separate observation
+# classes at every call site.
+AssembledObservations = (
+    tuple[str, tuple[WithholdingObservation, ...]]
+    | tuple[str, tuple[RelatedPartyOperationObservation, ...]]
+    | tuple[str, tuple[ForeignAssetObservation, ...]]
+    | tuple[str, tuple[AtributionMemberObservation, ...]]
+    | tuple[str, tuple[RefundOperationObservation, ...]]
+)
+
+
+def assemble_observations_for_grouping(
+    grouping: str,
+    cells: Iterable[_RowCellShape],
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+) -> AssembledObservations:
+    """Dispatch the right assembler based on the row-set's grouping value.
+
+    Returns a 2-tuple ``(source_kind, observations)`` where
+    ``source_kind`` identifies the assembler that ran (``withholding`` /
+    ``related_party`` / ``foreign_asset`` / ``atribucion`` /
+    ``refund``). Raises :class:`RegistryValidationError` for groupings
+    that have no matching assembler — those are registry layout
+    declarations the application layer cannot consume yet.
+    """
+
+    source_kind = _GROUPING_DISPATCH.get(grouping)
+    if source_kind is None:
+        raise RegistryValidationError(
+            f"row-set grouping {grouping!r} has no application-layer assembler; "
+            f"declared but unassemblable groupings are: "
+            f"{sorted(set(_GROUPING_DISPATCH) ^ {grouping})}"
+        )
+    if source_kind == "withholding":
+        return (source_kind, assemble_withholding_observations(cells, revision, filing_year=filing_year))
+    if source_kind == "related_party":
+        return (source_kind, assemble_related_party_observations(cells, revision, filing_year=filing_year))
+    if source_kind == "foreign_asset":
+        return (source_kind, assemble_foreign_asset_observations(cells, revision, filing_year=filing_year))
+    if source_kind == "atribucion":
+        return (source_kind, assemble_atribucion_observations(cells, revision, filing_year=filing_year))
+    if source_kind == "refund":
+        return (source_kind, assemble_refund_observations(cells, revision, filing_year=filing_year))
+    # Unreachable: dispatch table is exhaustive.
+    raise RegistryValidationError(f"row-set grouping {grouping!r} dispatch fell through")
 
 
 class _RowCellShape(Protocol):
