@@ -245,7 +245,7 @@ category. Investigation determines correct categorisation and Phase
 assignment.
 
 - [ ] `P10.S01` - categorise 'other' bucket sites; `scratch/out/other_sites.md`.
-- [ ] `P10.S02` - dispatch to correct Phase or address inline.
+- [ ] `P10.S02` - dispatch to correct Phase or address inline; per-file.
 
 ### Phase `P11` - dual-checker strictness gate
 
@@ -257,8 +257,8 @@ different issues.
 - [ ] `P11.S01` - add `pyright` as dev dependency and config; `pyproject.toml`, `pyrightconfig.json`.
 - [ ] `P11.S02` - run pyright strict on `domain/`; capture initial error report.
 - [ ] `P11.S03` - run pyright strict on `application/`; capture initial error report.
-- [ ] `P11.S04` - resolve pyright-only findings batch by batch.
-- [ ] `P11.S05` - wire pyright into CI alongside ty.
+- [ ] `P11.S04` - resolve pyright-only findings batch by batch; per-file.
+- [ ] `P11.S05` - wire pyright into CI alongside ty; CI config.
 
 ### Phase `P12` - regression gates
 
@@ -270,8 +270,8 @@ semgrep rules. Aligns with the prior-art research recommendation for
 - [ ] `P12.S02` - add semgrep rule rejecting new `dict[str, Any]` declarations in domain and application; `.semgrep/rules/`.
 - [ ] `P12.S03` - add semgrep rule rejecting new `cast()` calls in domain and application; `.semgrep/rules/`.
 - [ ] `P12.S04` - add semgrep rule requiring inline justification comment on any new `# ty: ignore`; `.semgrep/rules/`.
-- [ ] `P12.S05` - wire semgrep into CI as gating check.
-- [ ] `P12.S06` - close out Wave 1 by re-running suppression inventory; expected baseline near zero.
+- [ ] `P12.S05` - wire semgrep into CI as gating check; CI config.
+- [ ] `P12.S06` - close out Wave 1 by re-running suppression inventory; `scratch/out/`.
 
 <!-- IMPORTANT: This document must be updated between execution runs to
      track progress. -->
@@ -315,23 +315,56 @@ semgrep rules. Aligns with the prior-art research recommendation for
 
 ## Parallelization
 
-State which Steps, Phases, or Waves can be executed in parallel and
-which carry hard ordering. At `L1` and `L2`, parallelism is decided
-per-Step or per-Phase. At `L3` and `L4`, Waves are sequenced by
-default (one Wave must land before the next can begin); Phases
-within a single Wave may be parallelised when they share no hard
-interdependency.
+Sequencing has two hard ordering constraints:
+
+- P01 must complete before any other Phase (the inventory drives all
+  batching decisions). P01 is complete except for P01.S04 (pydantic
+  audit tool) which is Wave 2 prep and can run alongside Wave 1.
+- P02 (external-API stub acquisition) must complete before P06
+  (adapter-internal sweep) and any Phase touching `adapters/outbound/`.
+  Otherwise the adapter agents would lack the typed shims they need to
+  reference.
+- P11 (strictness gate) and P12 (regression gates) sequence last; they
+  measure and lock in the result of all earlier Phases.
+
+Parallel-eligible phases once P01 + P02 land:
+
+- P03 (test-file rewrites) runs in parallel with P04 / P05 / P06 /
+  P07 / P08; tests do not share files with production sweeps.
+- P04 / P05 / P07 / P08 run in parallel; their file scopes are
+  disjoint.
+- P06 must wait for P02; once P02 lands, P06 runs in parallel with the
+  others.
+- P09 and P10 are small investigation Phases; run alongside the
+  larger sweeps without blocking.
+
+Recommended dispatch: Phase P02 first (small, unblocks everything else),
+then P03 + P04 + P05 + P06 + P07 + P08 + P09 + P10 in parallel, then
+P11 and P12 sequentially as the gate.
 
 ## Verification
 
-State the mission success criteria for this plan. Each criterion
-should be a verifiable check (test passes, surface conforms,
-reviewer signs off) rather than a free-form assertion.
+Mission-success criteria, each mechanically checkable:
 
-The plan is complete when every Step in every Wave is closed
-(`- [x]`). At `L4`, the Epic-completion check additionally requires
-the declared project-management association to report the Epic
-complete.
+- The suppression inventory tool reports zero `cast()` calls and zero
+  `Any` annotations under `src/aeat/domain/` and `src/aeat/application/`.
+- The inventory reports zero `dict[str, Any]` / `Mapping[str, Any]`
+  annotations under `src/aeat/domain/`, `src/aeat/application/`,
+  `src/aeat/core/`, `src/aeat/entrypoints/`, and adapter-internal
+  files (i.e., adapters not at an external API boundary).
+- Remaining `cast` / `Any` / `dict[str, Any]` sites all sit inside
+  files inside `src/aeat/adapters/outbound/` that are direct external
+  API touchpoints (Playwright, Google Drive, Google Sheets, LLM,
+  tomllib).
+- `uv run --no-sync ty check` passes with the same `all = "error"`
+  configuration.
+- `uv run --no-sync pyright --strict src/aeat/domain src/aeat/application`
+  passes.
+- The 19 deliberate test suppressions are replaced with `pytest.raises`
+  or named-function patterns; no `# ty: ignore` or `# noqa` survives
+  in test files.
+- CI gates green; semgrep rules in `.semgrep/rules/` reject any new
+  suppression-equivalent annotation.
 
-For tier-specific verification cadence, see the convention ADR
-authorising this plan via the `related:` frontmatter.
+The plan is complete when every Step is closed (`- [x]`) and the
+verification checks pass on the merged branch.
