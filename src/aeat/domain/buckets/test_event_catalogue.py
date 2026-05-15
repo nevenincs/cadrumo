@@ -330,3 +330,18 @@ def test_catalogue_is_frozen_and_extra_forbid() -> None:
     )
     with pytest.raises(ValidationError, match=r"extra_forbidden|Extra inputs"):
         BucketEventHistoryCatalogue.model_validate({"events": {event.event_id: event}, "extra": "no"})
+
+
+def test_bucket_event_type_includes_workspace_bootstrap_kinds() -> None:
+    """Workspace bootstrap and operator-auth lifecycle have dedicated
+    canonical event-type slots so emitters at the application layer
+    can route through the bucket-event-history catalogue rather than
+    the legacy ``WorkflowState.bucket_events`` tuple. Pinning these
+    enum members keeps the bootstrap surface from regressing back
+    into free-string actions."""
+
+    from aeat.domain.buckets._event import BucketEventType
+
+    assert BucketEventType.AUTH_PROVIDER_CONFIGURED.value == "auth.provider.configured"
+    assert BucketEventType.CONFIG_ENV_UPDATED.value == "config.env.updated"
+    assert BucketEventType.SETUP_STATE_MIGRATED.value == "setup.state.migrated"
