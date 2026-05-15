@@ -4204,7 +4204,7 @@ label = "Cuota resultante de la autoliquidacion"
 section = ["resultado_declaracion"]
 input_kind = "computed"
 formula = "renta-2025-cuota-resultante-autoliquidacion"
-legal_refs = ["ley-35-2006:art-79", "ley-35-2006:art-99", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-79", "orden-hac-277-2026:art-3"]
 source_refs = ["aeat-dr-100-2025-dictionary", "boe-modelo-100-2025-form"]
 
 [[revisions."2025".casillas]]
@@ -11959,7 +11959,7 @@ id = "0568"
 number = "0568"
 label = "Incremento de las cuotas líquidas por pérdida del derecho a la aplicación del incentivo fiscal regulado en el apartado c) del artículo 33.3 de la Ley del Impuesto (*): Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -11995,7 +11995,7 @@ id = "0572"
 number = "0572"
 label = "Importe de las deducciones a las que se ha perdido el derecho en 2025: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -12003,7 +12003,7 @@ id = "0573"
 number = "0573"
 label = "Intereses de demora correspondientes a las deducciones anteriores: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -12011,7 +12011,7 @@ id = "0574"
 number = "0574"
 label = "Importe de las deducciones a las que se ha perdido el derecho en 2025. Parte estatal: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -12028,7 +12028,7 @@ id = "0576"
 number = "0576"
 label = "Intereses de demora correspondientes a las deducciones anteriores: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
@@ -12077,7 +12077,7 @@ id = "0582"
 number = "0582"
 label = "Intereses de demora correspondientes a la regularización anterior: Parte estatal"
 section = ["resultados", "calculo_impuesto_res", "gravamenes_res"]
-legal_refs = ["ley-35-2006:art-62", "ley-35-2006:art-66", "ley-35-2006:art-67", "ley-35-2006:art-73", "ley-35-2006:art-77", "ley-35-2006:art-17", "ley-35-2006:art-18", "ley-35-2006:art-19", "ley-35-2006:art-20", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-25", "ley-35-2006:art-26", "ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32", "ley-35-2006:art-99", "rd-439-2007:art-109", "orden-hac-277-2026:art-3"]
+legal_refs = ["ley-35-2006:art-67", "ley-35-2006:art-77"]
 source_refs = ["aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-input-dictionary", "aeat-dr-100-2025-xsd", "aeat-renta-2025-manual-parte1", "aeat-renta-2025-manual-deducciones-autonomicas", "boe-modelo-100-2025-form", "aeat-modelo-100-procedure", "aeat-renta-web-open"]
 
 [[revisions."2025".casillas]]
