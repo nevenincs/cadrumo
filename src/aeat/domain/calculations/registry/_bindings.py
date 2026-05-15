@@ -139,6 +139,11 @@ def previous_filing_observation_requirements(
     for binding in revision.bindings:
         if binding.source != "previous_filing":
             continue
+        if not _is_direct_previous_filing_binding(binding):
+            # Relation-driven bindings (no source_casillas in the
+            # selector) are resolved by the relation system and do
+            # NOT generate direct observation requirements.
+            continue
         selector = _previous_filing_selector(binding)
         expected_year = filing_year + selector.filing_year_delta
         for required_period in selector.required_periods:
@@ -171,6 +176,12 @@ def resolve_previous_filing_binding_values(
     resolved: dict[str, Decimal] = {}
     for binding in revision.bindings:
         if binding.source != "previous_filing":
+            continue
+        if not _is_direct_previous_filing_binding(binding):
+            # Relation-driven bindings are resolved by the relation
+            # system; skip them here so a workbook that only goes
+            # through the relation path does not fail with a missing
+            # source_casillas error.
             continue
         selector = _previous_filing_selector(binding)
         expected_year = filing_year + selector.filing_year_delta
@@ -250,6 +261,22 @@ def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousFiling
         return _PreviousFilingSelector.model_validate(binding.selector)
     except ValueError as exc:
         raise RegistryValidationError(f"binding {binding.id!r} has malformed previous-filing selector") from exc
+
+
+def _is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
+    """Return ``True`` when the binding declares a direct observation selector.
+
+    A direct previous-filing binding declares ``source_casillas`` plus a
+    period anchor (``period`` or ``source_periods``) in its selector and
+    is consumed by :func:`resolve_previous_filing_binding_values`.
+
+    A binding lacking ``source_casillas`` is relation-driven: it is the
+    target of one or more :class:`RelationDefinition` records that
+    supply the source casilla + period at resolve time. The direct
+    resolver skips these to avoid spurious malformed-selector errors.
+    """
+
+    return "source_casillas" in binding.selector
 
 
 def _aggregate_previous_filing_binding(binding: DataBindingDefinition, values: list[Decimal]) -> Decimal:

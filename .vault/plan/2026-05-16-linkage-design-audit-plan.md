@@ -81,6 +81,9 @@ varying consolidation cost.
 - [x] `P05.S17` - placeholder for first triaged duplicate family; `scratch/out/wave2_consolidation_catalogue.md`.
 - [x] `P05.S21` - consolidate ProfileExportBundle onto UserProfilePortableExport (domain); `src/aeat/domain/user_profile/_values.py`.
 - [x] `P05.S22` - rename VerificationFinding name collision: modelos -> ModeloVerificationFinding, evidence -> EvidenceBundleCheckResult; `src/aeat/domain/modelos/_verification_report.py`.
+- [x] `P05.S23` - reclassify WorkUnitHistoryEvent/BucketEvent as HIERARCHICAL; `WorkUnitHistoryEvent is an intentional projection stripping bucket_id and payload_version; `src/aeat/application/modelo/_history.py`.
+- [x] `P05.S24` - add PullMetadata.to_sheet_export_metadata() projection bridge onto canonical SheetExportMetadata shape; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
+- [x] `P05.S25` - add OperatorEdit.to_operator_input() projection bridge onto canonical OperatorInput shape; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
 
 ### Phase `P06` - regression gates for shape duplication
 
@@ -88,6 +91,6 @@ Add semgrep rule flagging new pydantic models whose name matches an
 existing canonical concept across packages. Add import-linter
 `forbidden` contracts preventing reconstruction of deprecated shapes.
 
-- [ ] `P06.S18` - add semgrep rule flagging duplicate-name candidates; `.semgrep/rules/no-duplicate-concept-models.yml`.
+- [x] `P06.S18` - add semgrep rule flagging duplicate-name candidates; `.semgrep/rules/no-duplicate-concept-models.yml`.
 - [ ] `P06.S19` - extend import-linter contracts to prevent regression; `.importlinter`.
 - [ ] `P06.S20` - close out Wave 2 by re-running pydantic audit; `scratch/out/pydantic_audit/`.

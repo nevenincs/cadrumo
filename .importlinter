@@ -23,12 +23,50 @@ forbidden_modules =
 ignore_imports =
     aeat.domain.calculations.registry.test_ledger_renta_expense_binding -> aeat.domain.renta
 
-# ── Layered architecture (hexagonal direction) ───────────────────────────────
-# Stub — enabling the layered contract surfaces ~30 legitimate architectural
-# violations plus many test-pattern edges (live-test files importing CLI
-# entrypoints). Wave 2 Phase P06.S19 lands the production-only layered
-# contract with proper test-file exclusions. The stub below documents the
-# intended layering and is commented out until then.
+# ── Domain must not import application (hexagonal direction) ────────────────
+# Domain is the hexagonal core; application orchestrates. Domain importing
+# application reverses the dependency direction. Test files inside domain
+# that exercise application orchestration are excepted by edge.
+
+[importlinter:contract:domain-not-application]
+name = Domain must not import application
+type = forbidden
+source_modules =
+    aeat.domain
+forbidden_modules =
+    aeat.application
+ignore_imports =
+    aeat.domain.invoices.test_reconciliation -> aeat.application.invoices
+    aeat.domain.modelos.test_work_unit -> aeat.application.modelo
+
+# ── Core must not import outer layers ────────────────────────────────────────
+# Core is the shared infrastructure layer. It must not depend on domain,
+# application, adapters, or entrypoints. Core tests that exercise outer
+# layers are excepted by edge.
+
+[importlinter:contract:core-not-outer]
+name = Core must not import outer layers
+type = forbidden
+source_modules =
+    aeat.core
+forbidden_modules =
+    aeat.domain
+    aeat.application
+    aeat.adapters
+    aeat.entrypoints
+ignore_imports =
+    aeat.core.test_external_constants -> aeat.domain.portals._categories
+    aeat.core.i18n.test_output_language -> aeat.domain.user_profile
+    aeat.core.errors._registry -> aeat.entrypoints.cli._i18n
+    aeat.core.errors.test_registry -> aeat.entrypoints.cli._i18n
+
+# ── Layered architecture (hexagonal direction) - deferred ────────────────────
+# The full layered contract surfaces additional violations beyond the
+# focused forbidden contracts above (e.g., domain.attachments._repository
+# importing adapters.persistence.storage, and many live-test files in
+# adapters that import entrypoints.cli._live). Resolving these requires
+# either refactor (the attachments repository case) or sustained test-file
+# exclusions. Defer to a future Wave 3 phase.
 #
 # [importlinter:contract:layered]
 # name = AEAT layered architecture

@@ -347,12 +347,24 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 [[revisions."2009-y-siguientes".formulas]]
 id = "modelo-303-iva-prorrata-porcentaje"
 target = "iva.prorrata-porcentaje"
-expression = { op = "divide", args = [
-    { op = "multiply", args = [
-        { casilla = "iva.prorrata-volumen-con-derecho" },
-        { literal = "100" },
+# Per LIVA art. 104.4 the prorrata is rounded UP to the nearest integer.
+# When the operator declares zero total operations, the denominator is
+# zero — the percentage is undefined. We default to 0 (no deduction)
+# rather than 100, since under-deduction is reversible by the operator
+# whereas over-deduction would expose them to an AEAT regularización.
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [
+        { casilla = "iva.prorrata-volumen-total" },
+        { literal = "0" },
     ] },
-    { casilla = "iva.prorrata-volumen-total" },
+    { op = "divide", args = [
+        { op = "multiply", args = [
+            { casilla = "iva.prorrata-volumen-con-derecho" },
+            { literal = "100" },
+        ] },
+        { casilla = "iva.prorrata-volumen-total" },
+    ] },
+    { literal = "0" },
 ] }
 rounding = "integer"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
