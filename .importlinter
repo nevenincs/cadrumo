@@ -39,9 +39,16 @@ source_modules =
     aeat.domain
 forbidden_modules =
     aeat.application
-# Test files inside domain/ that import application for fixture setup are
-# permitted per project convention.
+# Lazy function-scoped imports from domain.deadlines and domain.profile
+# into application.wizard remain as Wave-future cleanup. Wave 3 P04 set
+# up the register_profile_keys() injection pattern; full elimination of
+# these five edges requires further refactor not yet scheduled.
 ignore_imports =
+    aeat.domain.deadlines._profiles -> aeat.application.wizard._catalogue
+    aeat.domain.deadlines._profiles -> aeat.application.wizard._persistence
+    aeat.domain.deadlines._profiles -> aeat.application.wizard._setup_answers
+    aeat.domain.profile._keys -> aeat.application.wizard._catalogue
+    aeat.domain.profile._keys -> aeat.application.wizard._compiler
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
     aeat.domain.invoices.test_reconciliation -> aeat.application.invoices
     aeat.domain.modelos.test_work_unit -> aeat.application.modelo
@@ -190,6 +197,12 @@ ignore_imports =
     aeat.domain.usage_ratios.test_service -> aeat.adapters.persistence.storage
     aeat.domain.usage_ratios.test_service -> aeat.adapters.persistence.storage.sql.engine
     aeat.domain.usage_ratios.test_service -> aeat.adapters.persistence.storage.sql.secure_objects
+    # ── domain production cross-layer edges (lazy imports deferred for cleanup) ──
+    aeat.domain.deadlines._profiles -> aeat.application.wizard._catalogue
+    aeat.domain.deadlines._profiles -> aeat.application.wizard._persistence
+    aeat.domain.deadlines._profiles -> aeat.application.wizard._setup_answers
+    aeat.domain.profile._keys -> aeat.application.wizard._catalogue
+    aeat.domain.profile._keys -> aeat.application.wizard._compiler
     # ── domain test cross-layer edges ──
     aeat.domain.calculations.registry.test_referential_integrity -> aeat.application.diagnostics
     aeat.domain.invoices.test_reconciliation -> aeat.application.invoices

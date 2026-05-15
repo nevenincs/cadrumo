@@ -4,11 +4,10 @@ rules:
       `cast()` is discouraged in src/aeat/domain/ and src/aeat/application/.
       Prefer `isinstance` narrowing, a `TYPE_CHECKING` import guard, or a
       typed pydantic validator. If the cast bridges an external untyped
-      API, push it to the adapter boundary. See defect-class T-11 in the
-      linkage-design-audit reference document.
-      Genuinely irreducible casts (Literal narrowing from `in` check,
-      structural Protocol bridging) must carry an inline justification
-      comment naming the rule and the reason.
+      API, push it to the adapter boundary. Genuinely irreducible casts
+      (Literal narrowing from `in` check, structural Protocol bridging)
+      must carry an inline justification comment naming the rule and the
+      reason.
     severity: ERROR
     languages:
       - python
