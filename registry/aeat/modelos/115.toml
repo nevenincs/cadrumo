@@ -5,7 +5,7 @@ official_name = "Retenciones e ingresos a cuenta. Rentas o rendimientos proceden
 tax_domain = "irpf"
 cadence = "quarterly"
 jurisdiction = "ES-AEAT"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = [
     "aeat-dr-115-2019-v13",
     "aeat-modelo-115-obligaciones-retenedor",
@@ -14,10 +14,10 @@ source_refs = [
 ]
 
 [revisions."2019-y-siguientes"]
-label = "Orden EHA/3435/2007, ejercicios 2019 y siguientes"
+label = "Modelo 115 vigente (Orden de 20 de noviembre de 2000, BOE-A-2000-21430), ejercicios 2019 y siguientes"
 valid_from = 2019-01-01
 period_selector = { year_from = 2019, periods = ["1T", "2T", "3T", "4T"] }
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = [
     "aeat-dr-115-2019-v13",
     "aeat-modelo-115-obligaciones-retenedor",
@@ -29,7 +29,7 @@ source_refs = [
 id = "irpf.urban_rental_withholding_rate"
 data_type = "ratio"
 unit = "percent"
-legal_refs = ["rd-439-2007:art-100"]
+legal_refs = ["rd-439-2007:art-100", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".parameters.values]]
@@ -50,7 +50,7 @@ data_type = "integer"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-115-casilla-01"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -62,7 +62,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-115-casilla-02"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -75,7 +75,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-115-retenciones"
 export_refs = ["modelo-115-casilla-03"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -87,7 +87,7 @@ data_type = "money"
 required = false
 input_kind = "manual"
 export_refs = ["modelo-115-casilla-04"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-obligaciones-retenedor"]
 
 [[revisions."2019-y-siguientes".casillas]]
@@ -100,7 +100,7 @@ required = false
 input_kind = "computed"
 formula = "modelo-115-resultado-ingresar"
 export_refs = ["modelo-115-casilla-05"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".formulas]]
@@ -108,7 +108,7 @@ id = "modelo-115-retenciones"
 target = "03"
 expression = { op = "percent", args = [{ casilla = "02" }, { parameter = "irpf.urban_rental_withholding_rate" }] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-100"]
+legal_refs = ["rd-439-2007:art-100", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -120,7 +120,7 @@ id = "modelo-115-resultado-ingresar"
 target = "05"
 expression = { op = "subtract", args = [{ casilla = "03" }, { casilla = "04" }] }
 rounding = "money-2"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]
@@ -129,7 +129,7 @@ required_text = ["con el ingreso del importe correspondiente", "modelo 115 deber
 
 [[revisions."2019-y-siguientes".export_layouts]]
 id = "modelo-115-fichero-boe"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records]]
@@ -150,7 +150,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -164,7 +164,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -178,7 +178,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -192,7 +192,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -206,7 +206,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -220,7 +220,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -234,7 +234,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -247,7 +247,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -261,7 +261,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -274,7 +274,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -288,7 +288,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -301,7 +301,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -315,7 +315,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records]]
@@ -336,7 +336,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -350,7 +350,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -364,7 +364,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -378,7 +378,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -391,7 +391,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -405,7 +405,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -419,7 +419,7 @@ required = true
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -433,7 +433,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -447,7 +447,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -461,7 +461,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -475,7 +475,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -489,7 +489,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -503,7 +503,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -517,7 +517,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -531,7 +531,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -545,7 +545,7 @@ required = false
 padding = "left_zero"
 justification = "right"
 signed = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -559,7 +559,7 @@ required = false
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -573,7 +573,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -587,7 +587,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -600,7 +600,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -614,7 +614,7 @@ required = false
 padding = "right_space"
 justification = "left"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records.fields]]
@@ -628,7 +628,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".export_layouts.records]]
@@ -649,7 +649,7 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
-legal_refs = ["rd-439-2007:art-109"]
+legal_refs = ["rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".extraction_profiles]]
@@ -662,7 +662,7 @@ target_casillas = ["01", "02", "03", "04", "05"]
 confidence = "strict"
 min_coverage = "1"
 failure_semantics = "fail_hard"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 
 [[revisions."2019-y-siguientes".extraction_profiles]]
@@ -675,7 +675,7 @@ target_casillas = ["01", "02", "03", "04", "05"]
 confidence = "strict"
 min_coverage = "1"
 failure_semantics = "fail_hard"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 
 [[revisions."2019-y-siguientes".live_cross_references]]
@@ -687,7 +687,7 @@ forbidden_actions = ["presentar", "firmar", "guardar", "pagar", "domiciliar", "m
 synthetic_data_allowed = false
 requires_authentication = false
 requires_aeat_authorization = false
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".live_cross_references]]
@@ -710,7 +710,7 @@ forbidden_actions = [
 synthetic_data_allowed = false
 requires_authentication = true
 requires_aeat_authorization = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".workbook_parity_refs]]
@@ -720,7 +720,7 @@ fixture_id = "modelo-115-2019-record-design-layout"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.01"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".verification_expectations]]
@@ -731,13 +731,13 @@ tolerance = "0.01"
 rounding = "money-2"
 min_coverage = "1"
 discrepancy_causes = ["extraction_unreliable", "unmodelled_rule", "rounding", "correctness_divergence"]
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".constructs]]
 id = "modelo-115-quarterly-rental-withholding"
 title = "Modelo 115 quarterly urban rental withholding filing"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = [
     "aeat-dr-115-2019-v13",
     "aeat-modelo-115-obligaciones-retenedor",
@@ -773,7 +773,7 @@ id = "modelo-115-calculation"
 surface = "calculation"
 consumer = "aeat.domain.calculations.registry"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -781,7 +781,7 @@ id = "modelo-115-filing"
 surface = "filing"
 consumer = "aeat.application.filing"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -789,7 +789,7 @@ id = "modelo-115-export"
 surface = "export"
 consumer = "aeat.application.filing.export"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -797,7 +797,7 @@ id = "modelo-115-verification"
 surface = "verification"
 consumer = "aeat.application.verification"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -805,7 +805,7 @@ id = "modelo-115-review"
 surface = "review"
 consumer = "aeat.application.filing.review"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -813,7 +813,7 @@ id = "modelo-115-approval"
 surface = "approval"
 consumer = "aeat.application.workflow.approval"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -821,7 +821,7 @@ id = "modelo-115-reconciliation"
 surface = "reconciliation"
 consumer = "aeat.application.reconciliation"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -829,7 +829,7 @@ id = "modelo-115-extractor"
 surface = "extractor"
 consumer = "aeat.adapters.inbound.declaracion"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -837,7 +837,7 @@ id = "modelo-115-portal-cross-reference"
 surface = "portal"
 consumer = "portal_m115_retenciones_arrendamientos"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-obligaciones-retenedor"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -845,7 +845,7 @@ id = "modelo-115-filed-declarations-observation"
 surface = "portal"
 consumer = "aeat.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -853,7 +853,7 @@ id = "modelo-115-deadline"
 surface = "deadline"
 consumer = "aeat.domain.deadlines"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".application_links]]
@@ -861,7 +861,7 @@ id = "modelo-115-workflow"
 surface = "workflow"
 consumer = "aeat.application.workflow"
 requires_snapshot = true
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-dr-115-2019-v13", "aeat-modelo-115-guia-censal"]
 
 [[revisions."2019-y-siguientes".deadline_windows]]
@@ -872,7 +872,7 @@ period_kind = "quarterly"
 opens_on = 2026-04-01
 closes_on = 2026-04-20
 applicability_condition_mode = "any"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
@@ -880,7 +880,7 @@ field = "pays_rent_with_retencion"
 op = "equals"
 value = true
 explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".deadline_windows]]
@@ -891,7 +891,7 @@ period_kind = "quarterly"
 opens_on = 2026-07-01
 closes_on = 2026-07-20
 applicability_condition_mode = "any"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
@@ -899,7 +899,7 @@ field = "pays_rent_with_retencion"
 op = "equals"
 value = true
 explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".deadline_windows]]
@@ -910,7 +910,7 @@ period_kind = "quarterly"
 opens_on = 2026-10-01
 closes_on = 2026-10-20
 applicability_condition_mode = "any"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
@@ -918,7 +918,7 @@ field = "pays_rent_with_retencion"
 op = "equals"
 value = true
 explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".deadline_windows]]
@@ -929,7 +929,7 @@ period_kind = "quarterly"
 opens_on = 2027-01-01
 closes_on = 2027-01-20
 applicability_condition_mode = "any"
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
 
 [[revisions."2019-y-siguientes".deadline_windows.applicability_conditions]]
@@ -937,5 +937,5 @@ field = "pays_rent_with_retencion"
 op = "equals"
 value = true
 explanation = "Autonomo que satisface rentas por arrendamiento o subarrendamiento de inmuebles urbanos sujetas a retencion."
-legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "rd-439-2007:art-109", "orden-2000-11-20:apartado-primero"]
 source_refs = ["aeat-modelo-115-guia-censal", "aeat-modelo-115-180-folleto-actividades"]
