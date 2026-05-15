@@ -1,10 +1,14 @@
-"""Application-owned Modelo 100 borrador binding resolution.
+"""Application-owned borrador binding resolution.
 
 The CLI may parse a snapshot id, but the decision to consume values from
-a captured Modelo 100 borrador belongs here: the application layer checks
-the work-unit axis, snapshot state, registry eligibility, and precedence
+a captured borrador belongs here: the application layer checks the
+work-unit axis, snapshot state, registry eligibility, and precedence
 against caller-supplied binding overrides before the calculation engine
 receives any values.
+
+Only modelos that declare the ``"borrador"`` capability in their registry
+manifest are eligible. Adding support for a new modelo requires only a
+TOML edit — no code change.
 """
 
 from __future__ import annotations
@@ -24,7 +28,6 @@ from ..live import (
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-_MODELO_100 = "100"
 
 
 class Modelo100BorradorBindingError(ModeloError):
@@ -94,10 +97,11 @@ def resolve_modelo_100_borrador_bindings(
     if command.borrador_snapshot_id is None:
         return Modelo100BorradorBindingResult()
 
-    target_modelo = command.modelo.strip()
-    if target_modelo != _MODELO_100:
+    if not registry_snapshot.modelo.has_capability("borrador"):
+        target_modelo = command.modelo.strip()
         raise Modelo100BorradorBindingError(
-            f"borrador binding is exclusive to modelo 100; got modelo={target_modelo!r}"
+            f"borrador binding is not supported for modelo {target_modelo!r}; "
+            f"the modelo registry manifest must declare the 'borrador' capability"
         )
     _assert_registry_snapshot_axis(command=command, registry_snapshot=registry_snapshot)
     repository = snapshot_repository or Borrador100SnapshotRepository(bucket_id=command.bucket_id)
@@ -176,7 +180,7 @@ def _assert_registry_snapshot_axis(
     command: Modelo100BorradorBindingCommand,
     registry_snapshot: RegistrySnapshot,
 ) -> None:
-    if registry_snapshot.modelo.id != _MODELO_100 or registry_snapshot.modelo.id != command.modelo.strip():
+    if registry_snapshot.modelo.id != command.modelo.strip():
         raise Modelo100BorradorBindingError(
             "registry snapshot modelo does not match borrador binding command: "
             f"snapshot modelo={registry_snapshot.modelo.id!r}; command modelo={command.modelo.strip()!r}"
