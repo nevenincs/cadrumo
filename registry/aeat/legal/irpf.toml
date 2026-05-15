@@ -1716,6 +1716,26 @@ required_text = [
     "saldos negativos",
 ]
 
+[legal."ley-35-2006:art-57"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-57.html#a57"
+document_id = "BOE-A-2006-20764"
+article = "57"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a57"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIRPF art 57: minimo del contribuyente. Establece el minimo personal del contribuyente con caracter general (5.550 euros anuales), con incrementos por edad: +1.150 euros anuales para contribuyentes mayores de 65 anios, y +1.400 euros adicionales para mayores de 75 anios. Base sustantiva de las casillas del minimo-del-contribuyente de Modelo 100 (0511 y similares)."
+required_text = [
+    "Mínimo del contribuyente",
+    "5.550 euros anuales",
+    "1.150 euros anuales",
+]
+
 [legal."ley-35-2006:art-56"]
 evidence_tier = "legal_authority"
 authority = "boe"
