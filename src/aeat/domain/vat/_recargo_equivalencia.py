@@ -30,9 +30,7 @@ the four IVA tiers per LIVA art. 161:
 
 from __future__ import annotations
 
-import tomllib
 from decimal import Decimal
-from pathlib import Path
 from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -64,8 +62,6 @@ class LivaArt161RecargoRates(BaseModel):
     tabaco_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
 
 
-_PARAMETER_TABLE_PATH: Final[Path] = PROJECT_ROOT / "registry" / "aeat" / "legal" / "iva-recargo-equivalencia.toml"
-
 _GENERAL_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-general"
 _REDUCIDO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-reducido"
 _SUPER_REDUCIDO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-super-reducido"
@@ -73,22 +69,31 @@ _TABACO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-tabaco"
 
 
 def _load_rates() -> LivaArt161RecargoRates:
-    """Read the four LIVA art. 161 rate parameters from the registry TOML.
+    """Read the four LIVA art. 161 rate parameters from the registry catalogue.
+
+    Routes through ``aeat.domain.calculations.registry.load_registry_tree``
+    so parameters land in the validated :class:`RegistryCatalogues.parameters`
+    surface (single config-resolution path). The legacy direct
+    ``tomllib.load`` of ``registry/aeat/legal/iva-recargo-equivalencia.toml``
+    is replaced — bypassing the loader was the same architectural drift
+    pattern as direct ``os.environ`` reads.
 
     Raises:
-        FileNotFoundError: If the parameter TOML is missing.
         VatCatalogueError: If any of the four expected parameter ids is absent.
         VatValidationError: If any value cannot be parsed as a Decimal.
     """
-    with _PARAMETER_TABLE_PATH.open("rb") as handle:
-        data = tomllib.load(handle)
+    # load_legal_parameters_only is the cycle-safe entry point — the full
+    # load_registry_tree path pulls in registry._bindings which imports
+    # from aeat.domain.vat, triggering a circular import at this very
+    # module's import time.
+    from ..calculations.registry._loader import load_legal_parameters_only
 
-    parameters = data.get("parameters", {})
+    parameters = load_legal_parameters_only(PROJECT_ROOT / "registry" / "aeat")
     try:
-        general_raw = parameters[_GENERAL_PARAM_ID]["value"]
-        reducido_raw = parameters[_REDUCIDO_PARAM_ID]["value"]
-        super_reducido_raw = parameters[_SUPER_REDUCIDO_PARAM_ID]["value"]
-        tabaco_raw = parameters[_TABACO_PARAM_ID]["value"]
+        general_raw = parameters[_GENERAL_PARAM_ID].value
+        reducido_raw = parameters[_REDUCIDO_PARAM_ID].value
+        super_reducido_raw = parameters[_SUPER_REDUCIDO_PARAM_ID].value
+        tabaco_raw = parameters[_TABACO_PARAM_ID].value
     except KeyError as exc:
         raise VatCatalogueError(
             f"registry/aeat/legal/iva-recargo-equivalencia.toml is missing LIVA art. 161 parameter {exc.args[0]!r}"
@@ -96,10 +101,10 @@ def _load_rates() -> LivaArt161RecargoRates:
 
     try:
         return LivaArt161RecargoRates(
-            general_rate=Decimal(str(general_raw)),
-            reducido_rate=Decimal(str(reducido_raw)),
-            super_reducido_rate=Decimal(str(super_reducido_raw)),
-            tabaco_rate=Decimal(str(tabaco_raw)),
+            general_rate=Decimal(general_raw),
+            reducido_rate=Decimal(reducido_raw),
+            super_reducido_rate=Decimal(super_reducido_raw),
+            tabaco_rate=Decimal(tabaco_raw),
         )
     except (ValueError, TypeError) as exc:
         raise VatValidationError(f"failed to parse recargo rates as Decimal: {exc}") from exc

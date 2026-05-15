@@ -212,6 +212,41 @@ def _load_catalogue_file_cached(path: str, byte_count: int, modified_ns: int) ->
     return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
 
 
+def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:
+    """Load only the legal-parameter catalogue from ``root/legal/*.toml``.
+
+    Lightweight cycle-safe entry point. Consumers in ``aeat.domain.vat``
+    and ``aeat.domain.rental`` need parameter values at module-import
+    time, but the full :func:`load_registry_tree` path pulls in
+    ``_bindings`` which itself imports from ``aeat.domain.vat`` — a
+    circular import.
+
+    This function reuses :func:`load_catalogue_file` (already
+    Pydantic-validated and ``lru_cache``-deduplicated) and walks only
+    ``root/legal/*.toml``. Modelo parsing, binding validation, and
+    cross-catalogue checks do not run; for that, callers must use
+    :func:`load_registry_tree`.
+
+    Args:
+        root: Repository ``registry/aeat`` directory.
+
+    Returns:
+        Frozen mapping of parameter-id → :class:`LegalParameter`.
+        Duplicates across files raise :class:`RegistryLoadError`.
+    """
+
+    resolved = root.resolve()
+    legal_dir = resolved / "legal"
+    parameters: dict[str, LegalParameter] = {}
+    for path in sorted(legal_dir.glob("*.toml")):
+        catalogue = load_catalogue_file(path)
+        overlap = set(parameters).intersection(catalogue.parameters)
+        if overlap:
+            raise RegistryLoadError(f"{path}: duplicate parameter ids {sorted(overlap)!r}")
+        parameters.update(catalogue.parameters)
+    return parameters
+
+
 def load_registry_tree(root: Path) -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     """Load all registry files from ``root``.
 
