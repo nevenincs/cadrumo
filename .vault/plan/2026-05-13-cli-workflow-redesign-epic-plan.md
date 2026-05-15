@@ -1734,22 +1734,22 @@ This Phase delivers de-shim and de-stub cleanup for currency normalization layer
 This Phase delivers real behavior verification for currency normalization layer as required by `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr`.
 
 - [x] `W28.P139.S0829` - Add service contract tests for currency normalization layer; `tests/domain/currency`.
-- [x] `W28.P139.S0830` - Add persistence or registry integration tests for currency normalization layer; `tests/domain/currency`.
-- [x] `W28.P139.S0831` - Add negative tests proving rejected aliases do not reach currency normalization layer; `tests/entrypoints/cli`.
-- [x] `W28.P139.S0832` - Add command behavior tests that exercise currency normalization layer through real services; `tests/entrypoints/cli`.
-- [x] `W28.P139.S0833` - Add end-to-end workflow coverage for currency normalization layer; `tests`.
+- [ ] `W28.P139.S0830` - Add persistence or registry integration tests for currency normalization layer; `tests/domain/currency`.
+- [ ] `W28.P139.S0831` - Add negative tests proving rejected aliases do not reach currency normalization layer; `tests/entrypoints/cli`.
+- [ ] `W28.P139.S0832` - Add command behavior tests that exercise currency normalization layer through real services; `tests/entrypoints/cli`.
+- [ ] `W28.P139.S0833` - Add end-to-end workflow coverage for currency normalization layer; `tests`.
 - [x] `W28.P139.S0834` - Run the targeted test slice for currency normalization layer without skips or xfails; `tests/domain/currency`.
 
 ### Phase `W28.P140` - thin cli exposure
 
 This Phase delivers thin cli exposure for currency normalization layer as required by `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr`.
 
-- [x] `W28.P140.S0835` - Expose accepted command handlers for currency normalization layer under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
-- [x] `W28.P140.S0836` - Keep argument parsing for currency normalization layer separate from backend behavior; `src/aeat/entrypoints/cli`.
-- [x] `W28.P140.S0837` - Delegate currency normalization layer execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [x] `W28.P140.S0838` - Render currency normalization layer results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
-- [x] `W28.P140.S0839` - Handle currency normalization layer failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [x] `W28.P140.S0840` - Validate help text for currency normalization layer uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [ ] `W28.P140.S0835` - Expose accepted command handlers for currency normalization layer under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [ ] `W28.P140.S0836` - Keep argument parsing for currency normalization layer separate from backend behavior; `src/aeat/entrypoints/cli`.
+- [ ] `W28.P140.S0837` - Delegate currency normalization layer execution to centralized backend services; `src/aeat/entrypoints/cli`.
+- [ ] `W28.P140.S0838` - Render currency normalization layer results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [ ] `W28.P140.S0839` - Handle currency normalization layer failures through the central command error boundary; `src/aeat/entrypoints/cli`.
+- [ ] `W28.P140.S0840` - Validate help text for currency normalization layer uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W29` - receipt ocr pdf evidence
 
@@ -2642,7 +2642,7 @@ This Phase delivers thin cli exposure for filing record and submission status as
 - [x] `W43.P215.S1285` - Expose accepted command handlers for filing record and submission status under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
 - [x] `W43.P215.S1286` - Keep argument parsing for filing record and submission status separate from backend behavior; `src/aeat/entrypoints/cli`.
 - [x] `W43.P215.S1287` - Delegate filing record and submission status execution to centralized backend services; `src/aeat/entrypoints/cli`.
-- [x] `W43.P215.S1288` - Render filing record and submission status results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
+- [ ] `W43.P215.S1288` - Render filing record and submission status results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
 - [x] `W43.P215.S1289` - Handle filing record and submission status failures through the central command error boundary; `src/aeat/entrypoints/cli`.
 - [x] `W43.P215.S1290` - Validate help text for filing record and submission status uses accepted vocabulary only; `tests/entrypoints/cli`.
 
@@ -2698,7 +2698,7 @@ This Phase delivers real behavior verification for actor attribution for mutatio
 
 This Phase delivers thin cli exposure for actor attribution for mutations as required by `2026-05-13-cli-workflow-redesign-actor-attribution-adr`.
 
-- [x] `W44.P220.S1315` - Expose accepted command handlers for actor attribution for mutations under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
+- [ ] `W44.P220.S1315` - Expose accepted command handlers for actor attribution for mutations under `aeat config` or `aeat app`; `src/aeat/entrypoints/cli`.
 - [x] `W44.P220.S1316` - Keep argument parsing for actor attribution for mutations separate from backend behavior; `src/aeat/entrypoints/cli`.
 - [x] `W44.P220.S1317` - Delegate actor attribution for mutations execution to centralized backend services; `src/aeat/entrypoints/cli`.
 - [x] `W44.P220.S1318` - Render actor attribution for mutations results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
@@ -3046,17 +3046,17 @@ This Phase delivers real behavior verification for census modelo foundation as r
 - [x] `W50.P249.S1491` - Add negative tests proving rejected aliases do not reach census modelo foundation (Added CLI negative coverage proving shortened census modelo aliases and year-prefixed census event aliases fail at the registry query boundary without resolving through the census foundation service.); `tests/entrypoints/cli`.
 - [x] `W50.P249.S1492` - Add command behavior tests that exercise census modelo foundation through real services (Added isolated real-CLI work-create coverage that persists active Modelo 036 work units for exact census event periods, verifies persisted periods via work list, and proves historical 037 plus census alias inputs are rejected without persisted work units.); `tests/entrypoints/cli`.
 - [x] `W50.P249.S1493` - Add end-to-end workflow coverage for census modelo foundation (Added active Modelo 036 import-backed filing history coverage using real encrypted repositories: create work unit, import external filing evidence, verify work-unit and revision pointers, and assert exact filing-imported history payload fields.); `tests`.
-- [x] `W50.P249.S1494` - Run the targeted test slice for census modelo foundation without skips or xfails (Ran the registry-domain census foundation slice under `src/aeat/domain/calculations/registry` with `-rA`: 51 passed, no skips or xfails; also ran broader W50.P249 census/application/CLI slice: 128 passed.); `tests/domain/calculations/registry`.
+- [x] `W50.P249.S1494` - Run the targeted test slice for census modelo foundation without skips or xfails (Ran the registry-domain census foundation slice under `src/aeat/domain/calculations/registry` with `-rA`: 51 passed, no skips or xfails; `also ran broader W50.P249 census/application/CLI slice: 128 passed.); `tests/domain/calculations/registry`.
 
 ### Phase `W50.P250` - thin cli exposure
 
 This Phase delivers thin cli exposure for census modelo foundation as required by `2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-adr`.
 
-- [x] `W50.P250.S1495` - Expose accepted command handlers for census modelo foundation under `aeat config` or `aeat app` (Verified accepted handlers already exist under `aeat app modelo`: registry-backed bindings list/preview, work create/list/history, and central app registration; no new census-specific CLI command was added because it would duplicate backend foundation logic.); `src/aeat/entrypoints/cli`.
-- [x] `W50.P250.S1496` - Keep argument parsing for census modelo foundation separate from backend behavior (Added a boundary AST guard proving `app modelo` work/bindings commands pass raw `modelo` and `period` scope values to backend/query services and reject CLI-local strip/padding/replacement normalization for those scope arguments; verified existing real CLI tests still prove accepted 036 periods and rejected 037/alias inputs.); `src/aeat/entrypoints/cli`.
+- [x] `W50.P250.S1495` - Expose accepted command handlers for census modelo foundation under `aeat config` or `aeat app` (Verified accepted handlers already exist under `aeat app modelo`: registry-backed bindings list/preview, work create/list/history, and central app registration; `no new census-specific CLI command was added because it would duplicate backend foundation logic.); `src/aeat/entrypoints/cli`.
+- [x] `W50.P250.S1496` - Keep argument parsing for census modelo foundation separate from backend behavior (Added a boundary AST guard proving `app modelo` work/bindings commands pass raw `modelo` and `period` scope values to backend/query services and reject CLI-local strip/padding/replacement normalization for those scope arguments; `verified existing real CLI tests still prove accepted 036 periods and rejected 037/alias inputs.); `src/aeat/entrypoints/cli`.
 - [x] `W50.P250.S1497` - Delegate census modelo foundation execution to centralized backend services (Added a boundary AST guard proving accepted census-facing `app modelo` paths delegate to `RegistryQueryService`, `create_work_unit`, and `assemble_work_unit_history`, while the service factory loads the registry authority and contains no census-specific execution branch.); `src/aeat/entrypoints/cli`.
 - [x] `W50.P250.S1498` - Render census modelo foundation results with `_emit` or schema emitters (Added a boundary AST guard proving accepted census-facing bindings/work commands render through `_emit` and reject direct `typer.echo`, `print`, Rich/Console, direct JSON dumping, or direct schema-emitter bypasses in those command handlers.); `src/aeat/entrypoints/cli`.
-- [x] `W50.P250.S1499` - Handle census modelo foundation failures through the central command error boundary (Verified historical 037 work-create foundation refusal emits the registered JSON stderr error envelope through the decorated Typer command tree, leaves stdout empty, and prints no traceback; generic bindings input failures remain clean Typer user-input errors and are not census foundation resolver failures.); `src/aeat/entrypoints/cli`.
+- [x] `W50.P250.S1499` - Handle census modelo foundation failures through the central command error boundary (Verified historical 037 work-create foundation refusal emits the registered JSON stderr error envelope through the decorated Typer command tree, leaves stdout empty, and prints no traceback; `generic bindings input failures remain clean Typer user-input errors and are not census foundation resolver failures.); `src/aeat/entrypoints/cli`.
 - [x] `W50.P250.S1500` - Validate help text for census modelo foundation uses accepted vocabulary only (Verified help for census-facing work create and bindings commands describes only accepted Modelo 036 event workflow vocabulary and excludes 037, setup-wizard, portal-only, integer-code, live-submission, compatibility, shim, stub, fake, alias, and placeholder wording.); `tests/entrypoints/cli`.
 
 ## Wave `W51` - modelo 145 foundation
@@ -3432,12 +3432,12 @@ This Phase delivers backend implementation for evidence bundle lifecycle as requ
 
 This Phase delivers shadow duplicate removal for evidence bundle lifecycle as required by `2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr`.
 
-- [x] `W57.P282.S1687` - Audit duplicate implementations that overlap evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [x] `W57.P282.S1688` - Delete duplicate backend branches that compete with evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [x] `W57.P282.S1689` - Remove stale aliases that bypass the canonical service for evidence bundle lifecycle; `src/aeat/entrypoints/cli`.
-- [x] `W57.P282.S1690` - Migrate internal callers to the canonical service for evidence bundle lifecycle; `src/aeat/application/evidence`.
-- [x] `W57.P282.S1691` - Remove stale fixtures and tests that encode duplicate behavior for evidence bundle lifecycle; `tests/application/evidence`.
-- [x] `W57.P282.S1692` - Update boundary inventory entries that describe duplicate behavior for evidence bundle lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
+- [ ] `W57.P282.S1687` - Audit duplicate implementations that overlap evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [ ] `W57.P282.S1688` - Delete duplicate backend branches that compete with evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [ ] `W57.P282.S1689` - Remove stale aliases that bypass the canonical service for evidence bundle lifecycle; `src/aeat/entrypoints/cli`.
+- [ ] `W57.P282.S1690` - Migrate internal callers to the canonical service for evidence bundle lifecycle; `src/aeat/application/evidence`.
+- [ ] `W57.P282.S1691` - Remove stale fixtures and tests that encode duplicate behavior for evidence bundle lifecycle; `tests/application/evidence`.
+- [ ] `W57.P282.S1692` - Update boundary inventory entries that describe duplicate behavior for evidence bundle lifecycle; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W57.P283` - de-shim and de-stub cleanup
 
@@ -3456,10 +3456,10 @@ This Phase delivers real behavior verification for evidence bundle lifecycle as 
 
 - [x] `W57.P284.S1699` - Add service contract tests for evidence bundle lifecycle; `tests/application/evidence`.
 - [x] `W57.P284.S1700` - Add persistence or registry integration tests for evidence bundle lifecycle; `tests/application/evidence`.
-- [x] `W57.P284.S1701` - Add negative tests proving rejected aliases do not reach evidence bundle lifecycle; `tests/entrypoints/cli`.
-- [x] `W57.P284.S1702` - Add command behavior tests that exercise evidence bundle lifecycle through real services; `tests/entrypoints/cli`.
-- [x] `W57.P284.S1703` - Add end-to-end workflow coverage for evidence bundle lifecycle; `tests`.
-- [x] `W57.P284.S1704` - Run the targeted test slice for evidence bundle lifecycle without skips or xfails; `tests/application/evidence`.
+- [ ] `W57.P284.S1701` - Add negative tests proving rejected aliases do not reach evidence bundle lifecycle; `tests/entrypoints/cli`.
+- [ ] `W57.P284.S1702` - Add command behavior tests that exercise evidence bundle lifecycle through real services; `tests/entrypoints/cli`.
+- [ ] `W57.P284.S1703` - Add end-to-end workflow coverage for evidence bundle lifecycle; `tests`.
+- [ ] `W57.P284.S1704` - Run the targeted test slice for evidence bundle lifecycle without skips or xfails; `tests/application/evidence`.
 
 ### Phase `W57.P285` - thin cli exposure
 
@@ -3470,7 +3470,7 @@ This Phase delivers thin cli exposure for evidence bundle lifecycle as required 
 - [x] `W57.P285.S1707` - Delegate evidence bundle lifecycle execution to centralized backend services; `src/aeat/entrypoints/cli`.
 - [x] `W57.P285.S1708` - Render evidence bundle lifecycle results with `_emit` or schema emitters; `src/aeat/entrypoints/cli`.
 - [x] `W57.P285.S1709` - Handle evidence bundle lifecycle failures through the central command error boundary; `src/aeat/entrypoints/cli`.
-- [x] `W57.P285.S1710` - Validate help text for evidence bundle lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`.
+- [ ] `W57.P285.S1710` - Validate help text for evidence bundle lifecycle uses accepted vocabulary only; `tests/entrypoints/cli`.
 
 ## Wave `W58` - workflow engine harvest
 
@@ -3767,7 +3767,7 @@ This Phase proves declaration verification through real modelo services.
 
 - [x] `W63.P311.S1851` - Add real service tests for declaration PDF parsing into verification verdicts; `tests/application/verification`.
 - [x] `W63.P311.S1852` - Add bucket persistence tests for declaration-derived filing evidence and events; `tests/application/modelo`.
-- [x] `W63.P311.S1853` - Expose declaration verification through `aeat app modelo verify` and `aeat app modelo reconcile` only; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W63.P311.S1853` - Expose declaration verification through `aeat app modelo verify` and `aeat app modelo reconcile` only; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W63.P311.S1854` - Validate CLI handlers delegate entirely to backend services and render through `_emit`; `tests/entrypoints/cli`.
 
 ## Wave `W64` - justificante filing record harvest
@@ -3922,7 +3922,7 @@ This Phase proves exports through real serializers and approved app commands.
 
 - [x] `W68.P326.S1911` - Add service tests for modelo revision export manifests and serializer outputs; `tests/application/modelo`.
 - [x] `W68.P326.S1912` - Add service tests for ledger BOE libro exporters with real ledger data; `tests/application/ledger`.
-- [x] `W68.P326.S1913` - Expose exports only through `aeat app modelo export` and `aeat app ledger export`; `src/aeat/entrypoints/cli`.
+- [ ] `W68.P326.S1913` - Expose exports only through `aeat app modelo export` and `aeat app ledger export`; `src/aeat/entrypoints/cli`.
 - [x] `W68.P326.S1914` - Validate help text and errors never imply live AEAT submission; `tests/entrypoints/cli`.
 
 ## Wave `W69` - attachment evidence storage harvest
@@ -4149,8 +4149,8 @@ Retire legacy verbs and migrate internal callers.
 
 Ship missing locked verbs and clean help/i18n surfaces.
 
-- [x] `W72.P347.S2014` - Ship link, check, preflight verbs in aeat app ledger wired to existing backend services; `src/aeat/entrypoints/cli`.
-- [x] `W72.P347.S2015` - Ship reconcile and history verbs in aeat app modelo wired to existing application services; `src/aeat/entrypoints/cli`.
+- [ ] `W72.P347.S2014` - Ship link, check, preflight verbs in aeat app ledger wired to existing backend services; `src/aeat/entrypoints/cli`.
+- [ ] `W72.P347.S2015` - Ship reconcile and history verbs in aeat app modelo wired to existing application services; `src/aeat/entrypoints/cli`.
 - [x] `W72.P347.S2016` - Remove legacy verb spellings from help text and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
 - [x] `W72.P347.S2017` - Remove legacy verb references from refusal-message strings; `src/aeat/core/i18n`.
 - [x] `W72.P347.S2018` - Record the removed shim surfaces in the boundary inventory; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
@@ -4159,17 +4159,17 @@ Ship missing locked verbs and clean help/i18n surfaces.
 
 Add CLI surface and end-to-end tests for the reconciled grammar.
 
-- [x] `W72.P348.S2019` - Add CLI surface tests for link, check, preflight, reconcile, history exercising real backend services; `tests/entrypoints/cli`.
+- [ ] `W72.P348.S2019` - Add CLI surface tests for link, check, preflight, reconcile, history exercising real backend services; `tests/entrypoints/cli`.
 - [x] `W72.P348.S2020` - Add negative tests proving retired verbs are unknown commands; `tests/entrypoints/cli`.
 - [x] `W72.P348.S2021` - Add an end-to-end test exercising the full modelo lifecycle through the reconciled verb tree; `tests`.
-- [x] `W72.P348.S2022` - Add a regression test asserting the reconciled aeat app ledger verb count matches the W71 canonical spine plus ratified axes; `tests/entrypoints/cli`.
+- [ ] `W72.P348.S2022` - Add a regression test asserting the reconciled aeat app ledger verb count matches the W71 canonical spine plus ratified axes; `tests/entrypoints/cli`.
 - [x] `W72.P348.S2023` - Run the W71 contract-conformance harness and assert app modelo and app ledger noun-groups pass; `tests/entrypoints/cli`.
 
 ### Phase `W72.P349` - thin cli exposure
 
 Validate help vocabulary and update apex cross-references.
 
-- [x] `W72.P349.S2024` - Validate aeat app modelo help and aeat app ledger help enumerate canonical CRUD plus ratified axes; `src/aeat/entrypoints/cli`.
+- [ ] `W72.P349.S2024` - Validate aeat app modelo help and aeat app ledger help enumerate canonical CRUD plus ratified axes; `src/aeat/entrypoints/cli`.
 - [x] `W72.P349.S2025` - Validate i18n translations align across es/en/ca/hu; `src/aeat/core/i18n`.
 - [x] `W72.P349.S2026` - Update apex ADR §4.3 to ratify the reconciled grammar and mark R02 and R03 closed by W72; `.vault/adr`.
 - [x] `W72.P349.S2027` - Update plan rows for W23, W46, W58 with cross-references where prior rows are now superseded by W72; `.vault/plan`.
@@ -4241,7 +4241,7 @@ Implement dual-axis grammar: record CRUD plus key-value set/get/unset.
 - [x] `W74.P355.S2055` - Implement ProfileLifecycleService with canonical CRUD methods over profile records (add, remove, update, view, list); `src/aeat/application/profile`.
 - [x] `W74.P355.S2056` - Ratify set/get/unset as canonical key-value verbs for profile values per the W71 exception; `src/aeat/application/profile`.
 - [x] `W74.P355.S2057` - Implement use NAME as an alias for set active NAME and emit confirmation event per apex active-profile-safety lock; `src/aeat/application/profile`.
-- [x] `W74.P355.S2058` - Implement duplicate, export, import, validate, preflight per the config-cli-profile-surface ADR; `src/aeat/application/profile`.
+- [ ] `W74.P355.S2058` - Implement duplicate, export, import, validate, preflight per the config-cli-profile-surface ADR; `src/aeat/application/profile`.
 
 ### Phase `W74.P356` - shadow duplicate removal
 
@@ -4260,14 +4260,14 @@ Retire setup-profile path and wire bucket events.
 - [x] `W74.P357.S2064` - Remove aeat setup profile from public help and reroute via mistype-suggestion footer to aeat config profile; `src/aeat/core/i18n`.
 - [x] `W74.P357.S2065` - Update the no-active-profile error recovery hint to point at aeat config profile use NAME; `src/aeat/entrypoints/cli/_common.py`.
 - [x] `W74.P357.S2066` - Remove deprecated profile command spellings from help text and i18n; `src/aeat/core/i18n`.
-- [x] `W74.P357.S2067` - Wire bucket events for every mutating verb (profile.created, profile.removed, profile.updated, profile.duplicated, profile.exported, profile.imported, profile.activated); `src/aeat/domain/buckets`.
+- [ ] `W74.P357.S2067` - Wire bucket events for every mutating verb (profile.created, profile.removed, profile.updated, profile.duplicated, profile.exported, profile.imported, profile.activated); `src/aeat/domain/buckets`.
 - [x] `W74.P357.S2068` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W74.P358` - real behavior verification
 
 Test the full verb tree and the dual-axis contract.
 
-- [x] `W74.P358.S2069` - Add service-contract tests for ProfileLifecycleService covering all CRUD verbs plus use, duplicate, export, import, validate, preflight; `tests/application/profile`.
+- [ ] `W74.P358.S2069` - Add service-contract tests for ProfileLifecycleService covering all CRUD verbs plus use, duplicate, export, import, validate, preflight; `tests/application/profile`.
 - [x] `W74.P358.S2070` - Add tests for list with-status showing draft, verified-unfiled, and last-filed counts per profile; `tests/application/profile`.
 - [x] `W74.P358.S2071` - Add CLI surface tests for the full profile verb tree; `tests/entrypoints/cli`.
 - [x] `W74.P358.S2072` - Add a regression test asserting aeat setup profile is unknown and aeat config profile use works as alias for set active; `tests/entrypoints/cli`.
@@ -4277,7 +4277,7 @@ Test the full verb tree and the dual-axis contract.
 
 Register the profile verb tree and update apex cross-references.
 
-- [x] `W74.P359.S2074` - Register the full profile verb tree under aeat config profile and render every command via _emit; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W74.P359.S2074` - Register the full profile verb tree under aeat config profile and render every command via _emit; `src/aeat/entrypoints/cli/_config`.
 - [x] `W74.P359.S2075` - Apply central command error boundary; `src/aeat/entrypoints/cli`.
 - [x] `W74.P359.S2076` - Wire help text and i18n and validate canonical vocabulary; `src/aeat/core/i18n`.
 - [x] `W74.P359.S2077` - Update apex ADR §3.2 to reflect dual-axis grammar and mark R05 closed by W74; `.vault/adr`.
@@ -4401,9 +4401,9 @@ Ratify ratios verbs and implement BucketMaintenanceService.
 
 - [x] `W77.P370.S2129` - Read the app-ledger-ratios-shape, bucket, and ledger-ratios-eligible-and-validate ADRs; `.vault/adr`.
 - [x] `W77.P370.S2130` - Ratify aeat app ledger ratios list set unset as canonical key-value-exception verbs per W71 and add eligible and validate per the 2026-05-13 ADR extension; `src/aeat/application/ledger`.
-- [x] `W77.P370.S2131` - Implement BucketMaintenanceService with verbs browse, search, export, import, rename, delete documented as lifecycle operations; `src/aeat/application`.
-- [x] `W77.P370.S2132` - Add Pydantic command and result contracts and ensure destructive operations require explicit yes flag; `src/aeat/application`.
-- [x] `W77.P370.S2133` - Add bucket.exported, bucket.imported, bucket.renamed, bucket.deleted enum members; `src/aeat/domain/buckets`.
+- [ ] `W77.P370.S2131` - Implement BucketMaintenanceService with verbs browse, search, export, import, rename, delete documented as lifecycle operations; `src/aeat/application`.
+- [ ] `W77.P370.S2132` - Add Pydantic command and result contracts and ensure destructive operations require explicit yes flag; `src/aeat/application`.
+- [ ] `W77.P370.S2133` - Add bucket.exported, bucket.imported, bucket.renamed, bucket.deleted enum members; `src/aeat/domain/buckets`.
 
 ### Phase `W77.P371` - shadow duplicate removal
 
@@ -4420,7 +4420,7 @@ Retire archive root and audit bucket app for gaps.
 Wire events and reject retired roots.
 
 - [x] `W77.P372.S2139` - Remove aeat financial profile ratios references and reroute via mistype-suggestion footer; `src/aeat/core/i18n`.
-- [x] `W77.P372.S2140` - Wire ledger.ratios.set and ledger.ratios.unset event emission per ADR; `src/aeat/application/ledger`.
+- [ ] `W77.P372.S2140` - Wire ledger.ratios.set and ledger.ratios.unset event emission per ADR; `src/aeat/application/ledger`.
 - [x] `W77.P372.S2141` - Reject aeat archive and aeat data ledgers paths at root; `src/aeat/entrypoints/cli`.
 - [x] `W77.P372.S2142` - Update help text and i18n; `src/aeat/core/i18n`.
 - [x] `W77.P372.S2143` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
@@ -4430,20 +4430,20 @@ Wire events and reject retired roots.
 Test ratios, bucket maintenance, and destructive-action safeguards.
 
 - [x] `W77.P373.S2144` - Add service-contract tests for ledger ratios covering list, set, unset, eligible, validate; `tests/application/ledger`.
-- [x] `W77.P373.S2145` - Add service-contract tests for BucketMaintenanceService; `tests/application`.
-- [x] `W77.P373.S2146` - Add CLI surface tests for aeat app ledger ratios and aeat config bucket maintenance verbs; `tests/entrypoints/cli`.
-- [x] `W77.P373.S2147` - Add destructive-action safeguard tests asserting delete refuses without explicit yes; `tests/entrypoints/cli`.
-- [x] `W77.P373.S2148` - Run the W71 contract-conformance harness with key-value-exception and lifecycle-state-verb annotations; `tests/entrypoints/cli`.
+- [ ] `W77.P373.S2145` - Add service-contract tests for BucketMaintenanceService; `tests/application`.
+- [ ] `W77.P373.S2146` - Add CLI surface tests for aeat app ledger ratios and aeat config bucket maintenance verbs; `tests/entrypoints/cli`.
+- [ ] `W77.P373.S2147` - Add destructive-action safeguard tests asserting delete refuses without explicit yes; `tests/entrypoints/cli`.
+- [ ] `W77.P373.S2148` - Run the W71 contract-conformance harness with key-value-exception and lifecycle-state-verb annotations; `tests/entrypoints/cli`.
 
 ### Phase `W77.P374` - thin cli exposure
 
 Register ratios and bucket maintenance verbs and update apex.
 
 - [x] `W77.P374.S2149` - Register ratios_app under ledger_app and add eligible and validate verbs; `src/aeat/entrypoints/cli/_ledger.py`.
-- [x] `W77.P374.S2150` - Register browse, search, export, import, rename, delete verbs under bucket_app; `src/aeat/entrypoints/cli/_config`.
+- [ ] `W77.P374.S2150` - Register browse, search, export, import, rename, delete verbs under bucket_app; `src/aeat/entrypoints/cli/_config`.
 - [x] `W77.P374.S2151` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
-- [x] `W77.P374.S2152` - Update apex ADR §3.4 and §4.2 to document the dual annotation and mark R08 closed by W77; `.vault/adr`.
-- [x] `W77.P374.S2153` - Amend app-ledger-ratios-shape and bucket child ADRs; `.vault/adr`.
+- [ ] `W77.P374.S2152` - Update apex ADR §3.4 and §4.2 to document the dual annotation and mark R08 closed by W77; `.vault/adr`.
+- [ ] `W77.P374.S2153` - Amend app-ledger-ratios-shape and bucket child ADRs; `.vault/adr`.
 
 ## Wave `W78` - Reconciliation: modelo lifecycle drift fixes
 
@@ -4618,8 +4618,8 @@ Adjudicate overview shape and wire festivos.
 - [x] `W81.P390.S2229` - Read the app-overview-shape and festivos-deadline-shift ADRs and adjudicate the flag-on-status vs separate-verbs decision; `.vault/adr`.
 - [x] `W81.P390.S2230` - Implement the per-verdict shape in application overview either expanding the status calendar flag into a discrete calendar verb or ratifying the flag pattern; `src/aeat/application/overview`.
 - [x] `W81.P390.S2231` - Wire domain deadlines _festivos shift_deadline into OverviewCalendarEntry and add adjusted_closes_on, shift_reason, holiday_refs, jurisdictions fields; `src/aeat/application/overview`.
-- [x] `W81.P390.S2232` - Add next_due field to agenda payload per apex §4.1; `src/aeat/application/overview`.
-- [x] `W81.P390.S2233` - Implement backlog and explain verbs per the adjudication; `src/aeat/application/overview`.
+- [ ] `W81.P390.S2232` - Add next_due field to agenda payload per apex §4.1; `src/aeat/application/overview`.
+- [ ] `W81.P390.S2233` - Implement backlog and explain verbs per the adjudication; `src/aeat/application/overview`.
 
 ### Phase `W81.P391` - shadow duplicate removal
 
@@ -4648,14 +4648,14 @@ Test festivos integration, carve-out, agenda payload, CLI surface.
 - [x] `W81.P393.S2244` - Add tests asserting shift_deadline is invoked when assembling OverviewCalendarEntry and output carries adjusted dates and shift reason; `tests/application/overview`.
 - [x] `W81.P393.S2245` - Add tests asserting Modelo 369 carve-out MODELOS_WITHOUT_SHIFT is respected; `tests/application/overview`.
 - [x] `W81.P393.S2246` - Add tests asserting next_due appears in agenda payload; `tests/application/overview`.
-- [x] `W81.P393.S2247` - Add CLI surface tests for every overview verb per the adjudicated grammar; `tests/entrypoints/cli`.
-- [x] `W81.P393.S2248` - Add negative tests asserting aeat deadlines verbs are unknown; `tests/entrypoints/cli`.
+- [ ] `W81.P393.S2247` - Add CLI surface tests for every overview verb per the adjudicated grammar; `tests/entrypoints/cli`.
+- [ ] `W81.P393.S2248` - Add negative tests asserting aeat deadlines verbs are unknown; `tests/entrypoints/cli`.
 
 ### Phase `W81.P394` - thin cli exposure
 
 Register overview verb tree and update apex cross-references.
 
-- [x] `W81.P394.S2249` - Register the reconciled overview verb tree; `src/aeat/entrypoints/cli`.
+- [ ] `W81.P394.S2249` - Register the reconciled overview verb tree; `src/aeat/entrypoints/cli`.
 - [x] `W81.P394.S2250` - Apply central error boundary and render via _emit; `src/aeat/entrypoints/cli`.
 - [x] `W81.P394.S2251` - Wire help text and i18n; `src/aeat/core/i18n`.
 - [x] `W81.P394.S2252` - Update apex ADR §4.1 to reflect the reconciled grammar and mark R17, R18 closed by W81; `.vault/adr`.
@@ -4725,7 +4725,7 @@ Build the atomic initialize_workspace service and wire events.
 
 - [x] `W83.P400.S2279` - Read the config-init-shape and aeat-cli-config-vs-setup-namespace ADRs; `.vault/adr`.
 - [x] `W83.P400.S2280` - Implement application setup service exposing initialize_workspace that atomically creates first bucket, profile record, active selection, validates readiness, runs internal setup-state migration; `src/aeat/application/setup`.
-- [x] `W83.P400.S2281` - Wire emission of bucket.created, profile.created, profile.activated, profile.updated, auth.provider.configured, optional config.env.updated, setup.state.migrated events; `src/aeat/application/setup`.
+- [ ] `W83.P400.S2281` - Wire emission of bucket.created, profile.created, profile.activated, profile.updated, auth.provider.configured, optional config.env.updated, setup.state.migrated events; `src/aeat/application/setup`.
 - [x] `W83.P400.S2282` - Salvage typed answers, prompter abstraction, verifier checks from SetupWizard per apex §8 - the wizard command surface is retired in favor of the atomic service; `src/aeat/application/setup`.
 - [x] `W83.P400.S2283` - Close the aeat config auth setup orphan reference W11 P051 blocker by either shipping the verb or removing the diagnostic next-action that points at it; `src/aeat/application/config`.
 
@@ -4787,7 +4787,7 @@ Enforce four-source taxonomy and ship missing aggregators.
 
 Audit registry TOMLs and fix test collection errors.
 
-- [x] `W84.P406.S2309` - Audit every modelo registry TOML for bare invoice source declarations and migrate to canonical source kinds; `registry/aeat/modelos`.
+- [ ] `W84.P406.S2309` - Audit every modelo registry TOML for bare invoice source declarations and migrate to canonical source kinds; `registry/aeat/modelos`.
 - [x] `W84.P406.S2310` - Remove any shadow aggregation paths that bypass the four-source taxonomy; `src/aeat/application/aggregation`.
 - [x] `W84.P406.S2311` - Fix test collection errors in test_renta_ledger files per audit observation; `src/aeat/application/aggregation`.
 - [x] `W84.P406.S2312` - Confirm _renta_ledger and _iva_ledger aggregators use only canonical source kinds; `src/aeat/application/aggregation`.
@@ -4854,7 +4854,7 @@ Wire audit verbs, reconcile, and remove placeholder stubs.
 - [x] `W85.P412.S2339` - Remove any borrador-import refusal stubs replaced by the app live borrador 100 surface per apex §8 lock; `src/aeat/application`.
 - [x] `W85.P412.S2340` - Remove any rental-stub references and ensure aeat app ledger rental verbs delegate to application rental; `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W85.P412.S2341` - Wire aeat app modelo audit show, check, export, replay verbs to application evidence and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
-- [x] `W85.P412.S2342` - Wire aeat app modelo reconcile from-justificante PATH CLI verb to existing reconciler closing W64; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W85.P412.S2342` - Wire aeat app modelo reconcile from-justificante PATH CLI verb to existing reconciler closing W64; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W85.P412.S2343` - Record removed shim surfaces; `src/aeat/entrypoints/cli/test_backend_boundary.py`.
 
 ### Phase `W85.P413` - real behavior verification
@@ -4871,7 +4871,7 @@ Test foundations, evidence bundle, harvest wrappers.
 
 Register lifecycle and harvest verbs and update apex.
 
-- [x] `W85.P414.S2349` - Register Modelo 036 lifecycle verbs (alta, modificacion, baja) under aeat app modelo and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W85.P414.S2349` - Register Modelo 036 lifecycle verbs (alta, modificacion, baja) under aeat app modelo and render via _emit; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W85.P414.S2350` - Register aeat app modelo audit verbs, aeat app ledger rental verbs, aeat app modelo reconcile from-justificante, VAT-criteria flags on aeat app ledger classify; `src/aeat/entrypoints/cli`.
 - [x] `W85.P414.S2351` - Wire help text and i18n for every new verb and flag; `src/aeat/core/i18n`.
 - [x] `W85.P414.S2352` - Update apex ADR §5, §7, §8 to reflect R23/R24 closeouts and record R22 as deferred pending live-AEAT reconciliation research; `.vault/adr`.
