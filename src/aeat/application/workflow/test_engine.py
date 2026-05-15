@@ -350,6 +350,26 @@ class TestHappyPath:
             )
         )
         assert result.final_stage is WorkflowStage.DONE
+        assert result.resumed_from is None
+
+    def test_run_for_period_propagates_resumed_from_into_result(self) -> None:
+        """When the resume action passes a prior workflow ``run_id`` as
+        ``resumed_from=``, the produced :class:`WorkflowResult` records
+        the link so callers can trace the resume chain end-to-end."""
+
+        fx = _fixtures()
+        prior_run_id = "abcdef0123456789"
+        result = asyncio.run(
+            fx.engine().run_for_period(
+                fx.profile,
+                fx.obligation.modelo,
+                fx.obligation.period,
+                today=fx.today,
+                resumed_from=prior_run_id,
+            )
+        )
+        assert result.final_stage is WorkflowStage.DONE
+        assert result.resumed_from == prior_run_id
 
 
 # ── Every abort reason ──────────────────────────────────────────────────
