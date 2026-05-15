@@ -90,7 +90,6 @@ from ..filing import (
 from ..live import Borrador100SnapshotRepository
 from ..workflow import (
     DeadlineEngineAdapter,
-    FilingDraftBuilderProtocol,
     RegistryFilingDraftProtocol,
     WorkflowEngine,
     WorkflowResult,

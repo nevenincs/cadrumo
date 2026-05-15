@@ -464,7 +464,7 @@ def pull_operator_edits(
         relation_edits.append(RelationEdit(relation=relation_id, value=coerced))
 
     # Read row-set detail rows from the Detalle tab. Each row-set
-    # reserves first_data_row + 50 rows × N columns; we issue one
+    # reserves first_data_row + 50 rows by N columns; we issue one
     # batchGet covering each row-set's full data block and capture
     # any non-blank cell as a RowSetCellEdit.
     row_set_edits, row_set_cells_read = _read_row_set_edits(snapshot, sheets, spreadsheet_id)
@@ -505,9 +505,7 @@ def _read_row_set_edits(
         end_col_letters = _column_index_to_letters(last_column)
         start_row = row_set.first_data_row
         end_row = row_set.first_data_row + 49
-        block_ranges.append(
-            f"'{row_set.tab.value}'!{start_col_letters}{start_row}:{end_col_letters}{end_row}"
-        )
+        block_ranges.append(f"'{row_set.tab.value}'!{start_col_letters}{start_row}:{end_col_letters}{end_row}")
 
     response = _execute(
         sheets.spreadsheets()
@@ -541,11 +539,7 @@ def _read_row_set_edits(
                 if coerced is None:
                     continue
                 cells_read += 1
-                coerced_value: Decimal | str | None
-                if isinstance(coerced, bool):
-                    coerced_value = str(coerced)
-                else:
-                    coerced_value = coerced
+                coerced_value: Decimal | str | None = str(coerced) if isinstance(coerced, bool) else coerced
                 cells.append(
                     RowSetCellEdit(
                         binding=binding_id,

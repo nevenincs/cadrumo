@@ -100,11 +100,7 @@ def _collect_aeat_string_bindings(tree: ast.Module) -> dict[str, str]:
                         constants[target.id] = value
         elif isinstance(node, ast.AnnAssign) and node.value is not None and isinstance(node.value, ast.Constant):
             value = node.value.value
-            if (
-                isinstance(value, str)
-                and _AEAT_KEY_PATTERN.fullmatch(value)
-                and isinstance(node.target, ast.Name)
-            ):
+            if isinstance(value, str) and _AEAT_KEY_PATTERN.fullmatch(value) and isinstance(node.target, ast.Name):
                 constants[node.target.id] = value
     return constants
 
@@ -145,11 +141,7 @@ def _is_string_with_aeat_format_template(node: ast.expr) -> bool:
     """
     if isinstance(node, ast.JoinedStr):
         for value in node.values:
-            return (
-                isinstance(value, ast.Constant)
-                and isinstance(value.value, str)
-                and value.value.startswith("AEAT_")
-            )
+            return isinstance(value, ast.Constant) and isinstance(value.value, str) and value.value.startswith("AEAT_")
     return False
 
 

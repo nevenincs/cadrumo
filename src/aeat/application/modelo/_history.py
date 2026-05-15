@@ -108,9 +108,7 @@ def assemble_work_unit_history(
         )
 
     revision_ids = {
-        revision.calculation_revision_id
-        for revision in revisions.values()
-        if revision.work_unit_id == work_unit_id
+        revision.calculation_revision_id for revision in revisions.values() if revision.work_unit_id == work_unit_id
     }
     verifications = vr_repo.load()
     for report in verifications.values():

@@ -1686,3 +1686,247 @@ class RegistryValidator:
                 )
             )
         return failures
+
+
+def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
+    """Assert every typed-ID reference in the snapshot points at an existing entity.
+
+    Walks all 21 typed-ID reference fields across the snapshot's revision and
+    raises :class:`RegistryValidationError` listing every dangling reference.
+    This is an existence gate only -- it does not alter any field types.
+
+    For union fields declared as ``TypedId | str`` (the F1 escape), the value
+    is treated as a candidate typed-ID and checked regardless of which arm is
+    active.
+    """
+    revision = snapshot.revision
+    prefix = f"snapshot modelo {snapshot.modelo.id} revision {revision.id}"
+    failures: list[str] = []
+
+    casilla_ids: set[str] = {c.id for c in revision.casillas}
+    formula_ids: set[str] = {f.id for f in revision.formulas}
+    parameter_ids: set[str] = {p.id for p in revision.parameters}
+    binding_ids: set[str] = {b.id for b in revision.bindings}
+    relation_ids: set[str] = {r.id for r in revision.relations}
+    export_layout_ids: set[str] = {lay.id for lay in revision.export_layouts}
+    export_field_ids: set[str] = {
+        field.id for lay in revision.export_layouts for rec in lay.records for field in rec.fields
+    }
+    extraction_profile_ids: set[str] = {p.id for p in revision.extraction_profiles}
+    cross_reference_ids: set[str] = {cr.id for cr in revision.live_cross_references}
+    workbook_parity_ids: set[str] = {w.id for w in revision.workbook_parity_refs}
+    verification_expectation_ids: set[str] = {e.id for e in revision.verification_expectations}
+    application_link_ids: set[str] = {lk.id for lk in revision.application_links}
+    deadline_window_ids: set[str] = {dw.id for dw in revision.deadline_windows}
+    support_removal_decision_ids: set[str] = {d.id for d in revision.support_removal_decisions}
+    construct_ids: set[str] = {c.id for c in revision.constructs}
+    dependency_classification_ids: set[str] = {dc.id for dc in revision.dependency_classifications}
+    legal_ids: set[str] = set(snapshot.legal)
+    source_ids: set[str] = set(snapshot.sources)
+
+    def _chk(field_path: str, value: str, id_set: set[str]) -> None:
+        if value not in id_set:
+            failures.append(f"{prefix}: {field_path} references unknown id {value!r}")
+
+    def _chk_opt(field_path: str, value: str | None, id_set: set[str]) -> None:
+        if value is not None and value not in id_set:
+            failures.append(f"{prefix}: {field_path} references unknown id {value!r}")
+
+    def _chk_tuple(field_path: str, values: tuple[str, ...], id_set: set[str]) -> None:
+        for value in values:
+            if value not in id_set:
+                failures.append(f"{prefix}: {field_path} references unknown id {value!r}")
+
+    # ModeloDefinition top-level refs
+    _chk_tuple("modelo.legal_refs", snapshot.modelo.legal_refs, legal_ids)
+    _chk_tuple("modelo.source_refs", snapshot.modelo.source_refs, source_ids)
+
+    # ModeloRevision top-level refs
+    _chk_tuple("revision.legal_refs", revision.legal_refs, legal_ids)
+    _chk_tuple("revision.source_refs", revision.source_refs, source_ids)
+
+    # CasillaId references
+    for casilla in revision.casillas:
+        cp = f"casilla {casilla.id}"
+        _chk_opt(f"{cp}.formula", casilla.formula, formula_ids)
+        _chk_opt(f"{cp}.binding", casilla.binding, binding_ids)
+        _chk_tuple(f"{cp}.export_refs", casilla.export_refs, export_field_ids)
+        _chk_tuple(f"{cp}.legal_refs", casilla.legal_refs, legal_ids)
+        _chk_tuple(f"{cp}.source_refs", casilla.source_refs, source_ids)
+        if casilla.constraints is not None:
+            _chk_tuple(f"{cp}.constraints.legal_refs", casilla.constraints.legal_refs, legal_ids)
+            _chk_tuple(f"{cp}.constraints.source_refs", casilla.constraints.source_refs, source_ids)
+
+    # FormulaId references
+    for formula in revision.formulas:
+        fp = f"formula {formula.id}"
+        _chk(f"{fp}.target", formula.target, casilla_ids)
+        _chk_tuple(f"{fp}.legal_refs", formula.legal_refs, legal_ids)
+        _chk_tuple(f"{fp}.source_refs", formula.source_refs, source_ids)
+        for citation in formula.source_citations:
+            _chk(f"{fp}.source_citations.{citation.source_ref}", citation.source_ref, source_ids)
+
+    # ParameterId references
+    for parameter in revision.parameters:
+        pp = f"parameter {parameter.id}"
+        _chk_tuple(f"{pp}.legal_refs", parameter.legal_refs, legal_ids)
+        _chk_tuple(f"{pp}.source_refs", parameter.source_refs, source_ids)
+        for citation in parameter.source_citations:
+            _chk(f"{pp}.source_citations.{citation.source_ref}", citation.source_ref, source_ids)
+
+    # BindingId references
+    for binding in revision.bindings:
+        bp = f"binding {binding.id}"
+        _chk_tuple(f"{bp}.legal_refs", binding.legal_refs, legal_ids)
+        _chk_tuple(f"{bp}.source_refs", binding.source_refs, source_ids)
+        for citation in binding.source_citations:
+            _chk(f"{bp}.source_citations.{citation.source_ref}", citation.source_ref, source_ids)
+
+    # RelationId references
+    for relation in revision.relations:
+        rp = f"relation {relation.id}"
+        _chk(f"{rp}.target_binding", relation.target_binding, binding_ids)
+        _chk_tuple(f"{rp}.legal_refs", relation.legal_refs, legal_ids)
+        _chk_tuple(f"{rp}.source_refs", relation.source_refs, source_ids)
+        # source_output is CasillaId | str; cross-model outputs are not in this
+        # snapshot's casilla set -- checked at registry-validate time instead.
+
+    # ExtractionProfileId references
+    for profile in revision.extraction_profiles:
+        ep = f"extraction_profile {profile.id}"
+        _chk_tuple(f"{ep}.target_casillas", profile.target_casillas, casilla_ids)
+        _chk_tuple(f"{ep}.legal_refs", profile.legal_refs, legal_ids)
+        _chk_tuple(f"{ep}.source_refs", profile.source_refs, source_ids)
+
+    # CrossReferenceId references
+    for cross_ref in revision.live_cross_references:
+        crp = f"cross_reference {cross_ref.id}"
+        _chk_tuple(f"{crp}.legal_refs", cross_ref.legal_refs, legal_ids)
+        _chk_tuple(f"{crp}.source_refs", cross_ref.source_refs, source_ids)
+        for pred in cross_ref.applicability_predicates:
+            _chk_tuple(f"{crp}.applicability_predicates.{pred.field}.legal_refs", pred.legal_refs, legal_ids)
+            _chk_tuple(f"{crp}.applicability_predicates.{pred.field}.source_refs", pred.source_refs, source_ids)
+
+    # WorkbookParityRefId references
+    for workbook in revision.workbook_parity_refs:
+        wp = f"workbook_parity_ref {workbook.id}"
+        _chk(f"{wp}.workbook_source", workbook.workbook_source, source_ids)
+        _chk_tuple(f"{wp}.legal_refs", workbook.legal_refs, legal_ids)
+        _chk_tuple(f"{wp}.source_refs", workbook.source_refs, source_ids)
+
+    # VerificationExpectationId references
+    for expectation in revision.verification_expectations:
+        vep = f"verification_expectation {expectation.id}"
+        _chk_tuple(f"{vep}.computed_casillas", expectation.computed_casillas, casilla_ids)
+        for total_kind, casilla_id in expectation.reconciliation_totals.items():
+            _chk(f"{vep}.reconciliation_totals.{total_kind}", casilla_id, casilla_ids)
+        _chk_tuple(f"{vep}.legal_refs", expectation.legal_refs, legal_ids)
+        _chk_tuple(f"{vep}.source_refs", expectation.source_refs, source_ids)
+
+    # ApplicationLinkId references
+    for link in revision.application_links:
+        lp = f"application_link {link.id}"
+        _chk_tuple(f"{lp}.legal_refs", link.legal_refs, legal_ids)
+        _chk_tuple(f"{lp}.source_refs", link.source_refs, source_ids)
+
+    # DeadlineWindowId references
+    for window in revision.deadline_windows:
+        dwp = f"deadline_window {window.id}"
+        _chk_tuple(f"{dwp}.legal_refs", window.legal_refs, legal_ids)
+        _chk_tuple(f"{dwp}.source_refs", window.source_refs, source_ids)
+        for condition in window.applicability_conditions:
+            _chk_tuple(f"{dwp}.applicability_conditions.{condition.field}.legal_refs", condition.legal_refs, legal_ids)
+            _chk_tuple(f"{dwp}.applicability_conditions.{condition.field}.source_refs", condition.source_refs, source_ids)
+
+    # FilingScheduleId (str-keyed) references
+    for schedule in revision.filing_schedules:
+        fsp = f"filing_schedule {schedule.id}"
+        _chk_tuple(f"{fsp}.legal_refs", schedule.legal_refs, legal_ids)
+        _chk_tuple(f"{fsp}.source_refs", schedule.source_refs, source_ids)
+        for condition in schedule.profile_conditions:
+            _chk_tuple(f"{fsp}.profile_conditions.{condition.field}.legal_refs", condition.legal_refs, legal_ids)
+            _chk_tuple(f"{fsp}.profile_conditions.{condition.field}.source_refs", condition.source_refs, source_ids)
+
+    # SupportRemovalDecisionId references
+    for decision in revision.support_removal_decisions:
+        dp = f"support_removal_decision {decision.id}"
+        _chk_tuple(f"{dp}.legal_refs", decision.legal_refs, legal_ids)
+        _chk_tuple(f"{dp}.source_refs", decision.source_refs, source_ids)
+
+    # ConstructId references
+    for construct in revision.constructs:
+        ctp = f"construct {construct.id}"
+        _chk_tuple(f"{ctp}.casillas", construct.casillas, casilla_ids)
+        _chk_tuple(f"{ctp}.formulas", construct.formulas, formula_ids)
+        _chk_tuple(f"{ctp}.parameters", construct.parameters, parameter_ids)
+        _chk_tuple(f"{ctp}.bindings", construct.bindings, binding_ids)
+        _chk_tuple(f"{ctp}.relations", construct.relations, relation_ids)
+        _chk_tuple(f"{ctp}.export_layouts", construct.export_layouts, export_layout_ids)
+        _chk_tuple(f"{ctp}.extraction_profiles", construct.extraction_profiles, extraction_profile_ids)
+        _chk_tuple(f"{ctp}.live_cross_references", construct.live_cross_references, cross_reference_ids)
+        _chk_tuple(f"{ctp}.workbook_parity_refs", construct.workbook_parity_refs, workbook_parity_ids)
+        _chk_tuple(
+            f"{ctp}.verification_expectations", construct.verification_expectations, verification_expectation_ids
+        )
+        _chk_tuple(f"{ctp}.application_links", construct.application_links, application_link_ids)
+        _chk_tuple(f"{ctp}.deadline_windows", construct.deadline_windows, deadline_window_ids)
+        _chk_tuple(
+            f"{ctp}.support_removal_decisions", construct.support_removal_decisions, support_removal_decision_ids
+        )
+        _chk_tuple(f"{ctp}.dependency_classifications", construct.dependency_classifications, dependency_classification_ids)
+        _chk_tuple(f"{ctp}.legal_refs", construct.legal_refs, legal_ids)
+        _chk_tuple(f"{ctp}.source_refs", construct.source_refs, source_ids)
+
+    # DependencyClassificationId references
+    for classification in revision.dependency_classifications:
+        dcp = f"dependency_classification {classification.id}"
+        _chk_tuple(f"{dcp}.target_constructs", classification.target_constructs, construct_ids)
+        _chk_tuple(f"{dcp}.relation_refs", classification.relation_refs, relation_ids)
+        _chk_tuple(f"{dcp}.legal_refs", classification.legal_refs, legal_ids)
+        _chk_tuple(f"{dcp}.source_refs", classification.source_refs, source_ids)
+
+    # AlgorithmProviderDefinition refs (id is str, not a typed alias)
+    for provider in revision.algorithm_providers:
+        avp = f"algorithm_provider {provider.id}"
+        _chk_tuple(f"{avp}.legal_refs", provider.legal_refs, legal_ids)
+        _chk_tuple(f"{avp}.source_refs", provider.source_refs, source_ids)
+
+    # AlgorithmBindingDefinition refs (id is str, not a typed alias)
+    provider_ids: set[str] = {p.id for p in revision.algorithm_providers}
+    resolvable_ids = casilla_ids | binding_ids | parameter_ids | relation_ids
+    for alg_binding in revision.algorithm_bindings:
+        abp = f"algorithm_binding {alg_binding.id}"
+        if alg_binding.provider not in provider_ids:
+            failures.append(f"{prefix}: {abp}.provider references unknown id {alg_binding.provider!r}")
+        # target is CasillaId | str; treat as CasillaId candidate.
+        _chk(f"{abp}.target", alg_binding.target, casilla_ids)
+        for input_name, input_id in alg_binding.inputs.items():
+            if input_id not in resolvable_ids:
+                failures.append(f"{prefix}: {abp}.inputs.{input_name} references unknown id {input_id!r}")
+        for output_name, output_id in alg_binding.outputs.items():
+            _chk(f"{abp}.outputs.{output_name}", output_id, casilla_ids)
+        _chk_tuple(f"{abp}.constants", alg_binding.constants, parameter_ids)
+        _chk_tuple(f"{abp}.legal_refs", alg_binding.legal_refs, legal_ids)
+        _chk_tuple(f"{abp}.source_refs", alg_binding.source_refs, source_ids)
+
+    # ExportLayoutId / RecordId / ExportFieldId references
+    for layout in revision.export_layouts:
+        lyp = f"export_layout {layout.id}"
+        _chk_tuple(f"{lyp}.legal_refs", layout.legal_refs, legal_ids)
+        _chk_tuple(f"{lyp}.source_refs", layout.source_refs, source_ids)
+        if layout.dictionary_source_ref is not None:
+            _chk(f"{lyp}.dictionary_source_ref", layout.dictionary_source_ref, source_ids)
+        for record in layout.records:
+            rcp = f"{lyp}.record {record.id}"
+            _chk_opt(f"{rcp}.requires_positive_casilla", record.requires_positive_casilla, casilla_ids)
+            for field in record.fields:
+                efp = f"{rcp}.field {field.id}"
+                _chk_opt(f"{efp}.casilla", field.casilla, casilla_ids)
+                _chk_opt(f"{efp}.binding", field.binding, binding_ids)
+                _chk_tuple(f"{efp}.legal_refs", field.legal_refs, legal_ids)
+                _chk_tuple(f"{efp}.source_refs", field.source_refs, source_ids)
+
+    if failures:
+        raise RegistryValidationError(
+            "referential integrity check failed:\n" + "\n".join(f" - {f}" for f in sorted(failures))
+        )

@@ -82,7 +82,7 @@ class CCAA(StrEnum):
     MURCIA = "murcia"
 
     @classmethod
-    def from_iso_code(cls, code: str) -> "CCAA":
+    def from_iso_code(cls, code: str) -> CCAA:
         """Return the canonical member for a 3-letter ISO-like CCAA code.
 
         The code set corresponds to the values used by the former
@@ -98,13 +98,11 @@ class CCAA(StrEnum):
         member_name = _ISO_CODE_MAP.get(upper)
         if member_name is None:
             valid = ", ".join(sorted(_ISO_CODE_MAP))
-            raise KeyError(
-                f"unknown ISO CCAA code {code!r}; recognised codes: {valid}"
-            )
+            raise KeyError(f"unknown ISO CCAA code {code!r}; recognised codes: {valid}")
         return cls[member_name]
 
     @classmethod
-    def from_label(cls, label: str) -> "CCAA":
+    def from_label(cls, label: str) -> CCAA:
         """Parse a free-form label into the canonical member.
 
         Accepts both the canonical lowercase token (``"andalucia"``) and
@@ -127,9 +125,7 @@ class CCAA(StrEnum):
         if member_name is not None:
             return cls[member_name]
         valid = ", ".join(sorted(m.value for m in cls))
-        raise ValueError(
-            f"unknown CCAA label {label!r}; valid values: {valid}"
-        )
+        raise ValueError(f"unknown CCAA label {label!r}; valid values: {valid}")
 
 
 __all__ = ["CCAA"]

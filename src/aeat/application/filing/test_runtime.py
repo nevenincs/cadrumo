@@ -66,8 +66,7 @@ def test_legal_refs_survive_projection() -> None:
         assert isinstance(schema, RegistryCasillaSchema)
         expected = source.get(schema.id, ())
         assert schema.legal_refs == expected, (
-            f"legal_refs mismatch for casilla {schema.id}: "
-            f"projected={schema.legal_refs!r}, source={expected!r}"
+            f"legal_refs mismatch for casilla {schema.id}: projected={schema.legal_refs!r}, source={expected!r}"
         )
 
 
@@ -85,6 +84,5 @@ def test_source_refs_survive_projection() -> None:
         assert isinstance(schema, RegistryCasillaSchema)
         expected = source.get(schema.id, ())
         assert schema.source_refs == expected, (
-            f"source_refs mismatch for casilla {schema.id}: "
-            f"projected={schema.source_refs!r}, source={expected!r}"
+            f"source_refs mismatch for casilla {schema.id}: projected={schema.source_refs!r}, source={expected!r}"
         )
