@@ -1,3 +1,103 @@
+[legal."ley-27-2014:art-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-15.html#a15"
+document_id = "BOE-A-2014-12328"
+article = "15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a15"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 15: gastos no deducibles. Enumera los gastos que la LIS expresamente excluye de la deducibilidad fiscal: retribucion de fondos propios (incluidos prestamos participativos intra-grupo), IS contabilizado, multas y sanciones, recargos del periodo ejecutivo y extemporaneos, perdidas del juego, donativos y liberalidades (con excepcion de atenciones a clientes limitadas al 1 por ciento del INCN), actuaciones contrarias al ordenamiento juridico, gastos con paraisos fiscales. Base sustantiva de las correcciones positivas al resultado contable en M200."
+required_text = [
+    "Gastos no deducibles",
+    "retribución de los fondos propios",
+    "multas y sanciones",
+]
+
+[legal."ley-27-2014:art-21"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-21.html#a21"
+document_id = "BOE-A-2014-12328"
+article = "21"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a21"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 21: exencion sobre dividendos y rentas derivadas de la transmision de valores representativos de los fondos propios de entidades residentes y no residentes en territorio espanol. Establece el regimen de participation exemption: dividendos y ganancias por transmision de acciones quedan exentos cuando se cumple el umbral del 5 por ciento de participacion sostenida durante un anio, con requisito adicional para no residentes de tributacion minima al 10 por ciento nominal. Base sustantiva de las correcciones negativas por dividendos exentos en M200."
+required_text = [
+    "Exención sobre dividendos",
+    "5 por ciento",
+    "manera ininterrumpida durante el año anterior",
+]
+
+[legal."ley-27-2014:art-22"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-22.html#a22"
+document_id = "BOE-A-2014-12328"
+article = "22"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a22"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 22: exencion de las rentas obtenidas en el extranjero a traves de un establecimiento permanente. Establece la exencion para rentas positivas obtenidas por EPs no residentes cuando el EP haya estado sujeto al impuesto extranjero a un tipo nominal de al menos el 10 por ciento, junto con la exencion en transmision o cese del EP. Las rentas negativas no se integran salvo en caso de cese (con minorizacion por rentas positivas previamente exentas o deducidas). Base sustantiva de las correcciones por rentas-EP-no-residente en M200."
+required_text = [
+    "Exención de las rentas obtenidas en el extranjero",
+    "establecimiento permanente",
+    "10 por ciento",
+]
+
+[legal."ley-27-2014:art-31"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-31.html#a31"
+document_id = "BOE-A-2014-12328"
+article = "31"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a31"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 31: deduccion para evitar la doble imposicion juridica - impuesto soportado por el contribuyente. Permite deducir de la cuota integra la menor de dos cantidades: el impuesto efectivamente satisfecho en el extranjero (con tope del convenio CDI si aplica), o la cuota integra que en Espana correspondería pagar por las mismas rentas. Las cantidades no deducidas se trasladan a periodos siguientes; comprobacion prescribe a los 10 anios. Base sustantiva de la deduccion por doble imposicion juridica internacional en M200."
+required_text = [
+    "Deducción para evitar la doble imposición jurídica",
+    "menor de las dos cantidades",
+    "impuesto satisfecho en el extranjero",
+]
+
+[legal."ley-27-2014:art-32"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-32.html#a32"
+document_id = "BOE-A-2014-12328"
+article = "32"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a32"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-15
+reviewed_by = "wgergely"
+notes = "LIS art 32: deduccion para evitar la doble imposicion economica internacional - dividendos y participaciones en beneficios. Permite deducir el impuesto efectivamente pagado por la entidad no residente sobre los beneficios distribuidos como dividendos, condicionado a participacion minima del 5 por ciento mantenida ininterrumpidamente durante un anio y a la inclusion de la cuantia en la base imponible. Base sustantiva del underlying-tax-credit (deduccion DIE) en M200."
+required_text = [
+    "Deducción para evitar la doble imposición económica internacional",
+    "dividendos",
+    "5 por ciento",
+]
+
 [legal."ley-27-2014:art-12"]
 evidence_tier = "legal_authority"
 authority = "boe"
