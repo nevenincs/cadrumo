@@ -4298,7 +4298,7 @@ number = "0002"
 label = "En el caso de los rendimientos derivados de la cesión de la explotación de los derechos de autor, si opta por imputar el anticipo a cuenta de los mismos a medida que vayan devengándose los derechos..."
 section = ["toma_datos_ampliada", "rdto_trabajo"]
 data_type = "boolean"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4306,7 +4306,7 @@ id = "0003"
 number = "0003"
 label = "Retribuciones dinerarias (incluidas pensiones compensatorias y anualidades por alimentos no exentas). Importe íntegro"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4314,7 +4314,7 @@ id = "0004"
 number = "0004"
 label = "Valoración"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4322,7 +4322,7 @@ id = "0005"
 number = "0005"
 label = "Ingresos a cuenta"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4330,7 +4330,7 @@ id = "0006"
 number = "0006"
 label = "Ing. a cuenta repercutidos"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4340,7 +4340,7 @@ label = "Importe íntegro {0}([0004]+[0005]-[0006])"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
 input_kind = "computed"
 formula = "renta-2021-trabajo-especie-importe-integro"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4348,7 +4348,7 @@ id = "0008"
 number = "0008"
 label = "Contribuciones empresariales a planes de pensiones, planes de previsión social empresarial y mutualidades de previsión social (excepto a seguros colectivos de dependencia). Importes imputados al co..."
 section = ["toma_datos_ampliada", "rdto_trabajo"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4356,7 +4356,7 @@ id = "0009"
 number = "0009"
 label = "Contribuciones empresariales a seguros colectivos de dependencia. Importes imputados al contribuyente"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4364,7 +4364,7 @@ id = "0010"
 number = "0010"
 label = "Aportaciones al patrimonio protegido de personas discapacitadas del que es titular el contribuyente. Importe computable"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4373,7 +4373,7 @@ number = "0011"
 label = "Reducciones (artículo 18, apartados 2 y 3, y disposiciones transitorias 11.ª, 12.ª y 25.ª de la Ley del Impuesto)"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4384,7 +4384,7 @@ section = ["toma_datos_ampliada", "rdto_trabajo"]
 input_kind = "computed"
 formula = "renta-2021-trabajo-total-ingresos-integros-computables"
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4392,7 +4392,7 @@ id = "0013"
 number = "0013"
 label = "Cotizaciones a la Seguridad Social o a mutualidades generales obligatorias de funcionarios, detracciones por derechos pasivos y cotizaciones a los colegios de huérfanos o entidades similares"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4400,7 +4400,7 @@ id = "0014"
 number = "0014"
 label = "Cuotas satisfechas a sindicatos"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4408,7 +4408,7 @@ id = "0015"
 number = "0015"
 label = "Cuotas satisfechas a colegios profesionales (si la colegiación es obligatoria y con un máximo de 500 euros anuales)"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4416,7 +4416,7 @@ id = "0016"
 number = "0016"
 label = "Gastos de defensa jurídica derivados directamente de litigios con el empleador (máximo 300 euros anuales)"
 section = ["toma_datos_ampliada", "rdto_trabajo"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4427,7 +4427,7 @@ section = ["toma_datos_ampliada", "rdto_trabajo"]
 input_kind = "computed"
 formula = "renta-2021-trabajo-rendimiento-neto-previo"
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4438,7 +4438,7 @@ section = ["resultados", "rdto_trabajo_res"]
 input_kind = "computed"
 formula = "renta-2021-trabajo-suma-rendimientos-netos-previos"
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4446,7 +4446,7 @@ id = "0019"
 number = "0019"
 label = "Otros gastos deducibles (*)"
 section = ["resultados", "rdto_trabajo_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4454,7 +4454,7 @@ id = "0020"
 number = "0020"
 label = "Incremento para contribuyentes desempleados que acepten un puesto de trabajo que exija el traslado de su residencia a un nuevo municipio (*)"
 section = ["resultados", "rdto_trabajo_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4462,7 +4462,7 @@ id = "0021"
 number = "0021"
 label = "Incremento para trabajadores activos que sean personas con discapacidad (*)"
 section = ["resultados", "rdto_trabajo_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4473,7 +4473,7 @@ section = ["resultados", "rdto_trabajo_res"]
 input_kind = "computed"
 formula = "renta-2021-trabajo-rendimiento-neto"
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4481,7 +4481,7 @@ id = "0023"
 number = "0023"
 label = "Cuantía aplicable con carácter general"
 section = ["resultados", "rdto_trabajo_res"]
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
@@ -4492,7 +4492,7 @@ section = ["resultados", "rdto_trabajo_res"]
 input_kind = "computed"
 formula = "renta-2021-trabajo-rendimiento-neto-reducido"
 data_type = "decimal"
-legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28", "ley-35-2006:art-30", "ley-35-2006:art-31", "ley-35-2006:art-32"]
+legal_refs = ["ley-35-2006:art-17"]
 source_refs = ["aeat-dr-100-2021-dictionary", "aeat-dr-100-2021-input-dictionary", "aeat-dr-100-2021-xsd", "aeat-modelo-100-procedure"]
 
 [[revisions."2021".casillas]]
