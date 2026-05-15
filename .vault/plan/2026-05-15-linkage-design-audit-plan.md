@@ -42,7 +42,7 @@ ty and pyright resolve the typed surface after each change.
 - [x] `P02.S06` - remove over-conservative unresolved-import entries; `pyproject.toml`.
 - [x] `P02.S07` - extend `playwright_stealth` stub if surface gaps remain; `stubs/playwright_stealth/__init__.pyi`.
 - [x] `P02.S08` - investigate single tomllib dict-any site; `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`.
-- [ ] `P02.S09` - re-run inventory to confirm external-API site count drops; `scratch/out/summary.json`.
+- [x] `P02.S09` - re-run inventory to confirm external-API site count drops; `scratch/out/summary.json`.
 
 ### Phase `P03` - test-file deliberate-suppression rewrite
 

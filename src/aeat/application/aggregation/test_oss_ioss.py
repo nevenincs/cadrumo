@@ -111,17 +111,19 @@ def test_candidate_is_strict_and_frozen_and_rejects_extras() -> None:
 
     candidate = _candidate()
     with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
-        OssIossLedgerCandidate(
-            ledger_id="ledger-1",
-            transaction_date=_SUPPLY_DATE,
-            regime=OssIossRegime.UNION_SCHEME,
-            destination_member_state=EUMemberState.DE,
-            rate_kind=VATRateKind.GENERAL,
-            invoice_direction=InvoiceDirection.ISSUED,
-            transaction_kind=TransactionKind.OSS_UNION_SERVICES,
-            base_amount=Decimal("100"),
-            iva_amount=Decimal("19"),
-            unknown_axis="extra-value",  # ty: ignore[unknown-argument]
+        OssIossLedgerCandidate.model_validate(
+            {
+                "ledger_id": "ledger-1",
+                "transaction_date": _SUPPLY_DATE,
+                "regime": OssIossRegime.UNION_SCHEME,
+                "destination_member_state": EUMemberState.DE,
+                "rate_kind": VATRateKind.GENERAL,
+                "invoice_direction": InvoiceDirection.ISSUED,
+                "transaction_kind": TransactionKind.OSS_UNION_SERVICES,
+                "base_amount": Decimal("100"),
+                "iva_amount": Decimal("19"),
+                "unknown_axis": "extra-value",
+            }
         )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         candidate.base_amount = Decimal("200")

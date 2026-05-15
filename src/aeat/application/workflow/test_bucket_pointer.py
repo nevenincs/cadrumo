@@ -40,10 +40,12 @@ def test_rejects_non_positive_schema_version() -> None:
 
 def test_rejects_unknown_keys() -> None:
     with pytest.raises(ValidationError):
-        BucketPointer(
-            bucket_id="bucket-001",
-            schema_version=1,
-            unexpected="nope",  # ty: ignore[unknown-argument]
+        BucketPointer.model_validate(
+            {
+                "bucket_id": "bucket-001",
+                "schema_version": 1,
+                "unexpected": "nope",
+            }
         )
 
 
