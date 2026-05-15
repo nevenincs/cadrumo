@@ -125,6 +125,6 @@ fallback returns.
 
 TODO: Phase intent paragraph required by the convention ADR.
 
-- [ ] `P11.S39` - re-run linkage health dashboard and capture final state; `scratch/out/linkage_health.json`.
-- [ ] `P11.S40` - update Issue Taxonomy v1 reference with final coverage; `.vault/reference/2026-05-15-linkage-design-audit-reference.md`.
-- [ ] `P11.S41` - write Wave 4 close-out audit; `.vault/audit/`.
+- [x] `P11.S39` - re-run linkage health dashboard and capture final state; `scratch/out/linkage_health.json`.
+- [x] `P11.S40` - update Issue Taxonomy v1 reference with final coverage; `.vault/reference/2026-05-15-linkage-design-audit-reference.md`.
+- [x] `P11.S41` - write Wave 4 close-out audit; `.vault/audit/`.
