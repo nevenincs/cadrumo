@@ -2,7 +2,6 @@
 
 Persists :class:`RegistryFilingObservation` records at
 ``SensitivityClass.AUDIT`` keyed by ``(modelo, filing_year, period)``.
-Flagged as untested in the persistence-boundary identity audit.
 
 Anti-tautology: the populated observation carries two
 ``CasillaObservation`` entries with full provenance (formula_id,

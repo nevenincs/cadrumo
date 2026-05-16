@@ -2650,8 +2650,8 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
     handler-call-time helpers see. Without this projection the gate
     would reject any registry binding whose loaded selector still
     carries the (test-injected or legacy) ``source`` key, while the
-    handler would accept it — a stricter-than-runtime drift the
-    audit caught.
+    handler would accept it — a stricter-than-runtime drift that
+    must not land in production.
 
     Counterpart-source bindings (``ledger_transaction``,
     ``purchase_invoice_evidence``, ``payable_invoice``,

@@ -206,11 +206,11 @@ def test_alphanumeric_zero_padded_field_round_trips() -> None:
 def test_currency_blank_input_rejected_at_decode() -> None:
     """A blank CURRENCY field is rejected with ExportFormatError.
 
-    Audit export/import F1 — the previous implementation silently
-    decoded blank bytes to ``Decimal("0.00")``, indistinguishable
-    from a legitimate zero. Wire-format error must surface as a
-    typed parse refusal so operators don't silently consume
-    blank-as-zero data.
+    A blank CURRENCY field is a wire-format error per the fichero-
+    BOE spec (zero-padded ASCII digits required). The decode path
+    must surface this as a typed parse refusal rather than silently
+    consuming blank bytes as ``Decimal("0.00")`` indistinguishable
+    from a legitimate zero.
     """
 
     from ._deserialise import deserialise
@@ -236,9 +236,9 @@ def test_currency_blank_input_rejected_at_decode() -> None:
 def test_currency_inline_sign_blank_magnitude_rejected_at_decode() -> None:
     """A blank INLINE_SIGN CURRENCY magnitude is rejected.
 
-    Same audit finding as the unsigned case: ``N           `` (sign
-    marker + blank magnitude) must fail rather than silently decode
-    to a negative-zero.
+    Same contract as the unsigned-CURRENCY case: ``N           ``
+    (sign marker + blank magnitude) must fail rather than silently
+    decode to a negative-zero.
     """
 
     from ._deserialise import deserialise

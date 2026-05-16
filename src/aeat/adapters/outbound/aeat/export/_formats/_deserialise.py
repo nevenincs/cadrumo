@@ -77,14 +77,12 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
     negatives, ``" "`` for non-negatives) and the remaining bytes carry
     the zero-padded absolute magnitude.
 
-    Audit export/import F1 — the previous implementation silently
-    decoded all-whitespace input to ``Decimal("0.00")``, leaving an
-    operator with no way to distinguish "filed as zero" from "field
-    was blank on the wire". The fichero-BOE spec requires every
-    CURRENCY field to be zero-padded with ASCII digits; blank bytes
-    are a wire-format error. Reject them explicitly so a malformed
-    payload surfaces as ``ExportFormatError`` at parse time instead
-    of as a silent ``0.00`` value the operator cannot inspect.
+    The fichero-BOE spec requires every CURRENCY field to be zero-
+    padded with ASCII digits; blank bytes are a wire-format error.
+    Reject blank input explicitly so a malformed payload surfaces as
+    ``ExportFormatError`` at parse time, instead of silently decoding
+    to ``Decimal("0.00")`` and leaving the operator unable to
+    distinguish "filed as zero" from "field was blank on the wire".
     """
     if inline_sign:
         if not raw:

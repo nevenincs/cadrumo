@@ -2,8 +2,7 @@
 
 Persists :class:`FilingRecordCatalogue` under
 ``aeat.domain.modelos.filing_records`` at
-``SensitivityClass.FINANCIAL``. Flagged as untested in the
-persistence-boundary identity audit.
+``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates two filing records on the same
 ``(bucket, modelo, year, period)`` tuple — one ``SUPERSEDED`` with

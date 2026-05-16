@@ -2,8 +2,7 @@
 
 ``save_run`` / ``load_run`` persist :class:`WorkflowResult` records at
 ``SensitivityClass.FINANCIAL`` under the ``aeat.application.workflow.runs``
-namespace. Flagged as untested in the persistence-boundary identity
-audit.
+namespace.
 
 Anti-tautology discipline: final_stage flipped to ABORTED so
 ``aborted_reason`` must be populated (the model_validator enforces

@@ -2,8 +2,7 @@
 
 ``LLMCache`` persists :class:`CachedEntry` records under the
 ``aeat.outbound.llm.cache`` namespace at
-``SensitivityClass.DIAGNOSTIC``. Flagged as untested in the persistence-
-boundary identity audit.
+``SensitivityClass.DIAGNOSTIC``.
 
 Anti-tautology: the fixture populates every defaultable field on
 ``LLMRequest`` and ``LLMResponse`` with non-default, non-zero values

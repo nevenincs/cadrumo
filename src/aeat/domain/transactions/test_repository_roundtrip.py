@@ -2,8 +2,7 @@
 
 Persists :class:`TransactionCatalogue` under
 ``aeat.domain.transactions.bucket`` (per profile bucket) at
-``SensitivityClass.FINANCIAL``. Flagged as untested in the
-persistence-boundary identity audit.
+``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: builds a two-transaction catalogue with non-default
 ``business_classification`` (``MIXED`` with explicit ``business_pct``),

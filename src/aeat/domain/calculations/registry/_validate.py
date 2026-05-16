@@ -303,7 +303,7 @@ class RegistryValidator:
         # level. Without this loop, callers that exercise
         # ``validate_registry`` directly (rather than going through
         # ``_build_validated_snapshot``) would skip the discriminator
-        # check entirely. Audit finding F4 on selector-binding drift.
+        # check entirely.
         from ._bindings import validate_binding_selector_shape
 
         for modelo in modelo_tuple:

@@ -3,8 +3,7 @@
 Persists :class:`AssetsLedgerDocument` under
 ``aeat.persistence.profile.assets`` and :class:`AmortizationLedger`
 under ``aeat.persistence.profile.assets.amortization``, both at
-``SensitivityClass.FINANCIAL``. Flagged as untested in the
-persistence-boundary identity audit.
+``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates every defaultable field on
 ``AssetRecord`` with non-default values (taxable_base / vat_amount /

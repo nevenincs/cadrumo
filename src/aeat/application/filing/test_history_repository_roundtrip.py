@@ -2,8 +2,7 @@
 
 ``FilingHistoryRepository`` persists :class:`FilingHistory` (a typed
 tuple of ``FilingHistoryEntry`` rows) per modelo at
-``SensitivityClass.AUDIT``. Flagged as untested in the persistence-
-boundary identity audit.
+``SensitivityClass.AUDIT``.
 """
 
 from __future__ import annotations
