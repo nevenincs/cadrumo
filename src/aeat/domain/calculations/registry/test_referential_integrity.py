@@ -322,27 +322,24 @@ def test_dangling_casilla_formula_reference() -> None:
     """casilla.formula pointing at nonexistent FormulaId raises."""
     casilla = _minimal_casilla("01").model_copy(update={"input_kind": "computed", "formula": "nonexistent.formula"})
     revision = _minimal_revision(casillas=(casilla,))
-    snapshot = _build_minimal_snapshot(revision)
     with pytest.raises(RegistryValidationError, match=r"casilla 01.formula"):
-        _check_all_id_references(snapshot)
+        _build_minimal_snapshot(revision)
 
 
 def test_dangling_casilla_binding_reference() -> None:
     """casilla.binding pointing at nonexistent BindingId raises."""
     casilla = _minimal_casilla("01").model_copy(update={"input_kind": "bound", "binding": "nonexistent.binding"})
     revision = _minimal_revision(casillas=(casilla,))
-    snapshot = _build_minimal_snapshot(revision)
     with pytest.raises(RegistryValidationError, match=r"casilla 01.binding"):
-        _check_all_id_references(snapshot)
+        _build_minimal_snapshot(revision)
 
 
 def test_dangling_casilla_export_refs() -> None:
     """casilla.export_refs pointing at nonexistent ExportFieldId raises."""
     casilla = _minimal_casilla("01").model_copy(update={"export_refs": ("nonexistent.export.field",)})
     revision = _minimal_revision(casillas=(casilla,))
-    snapshot = _build_minimal_snapshot(revision)
     with pytest.raises(RegistryValidationError, match=r"casilla 01.export_refs"):
-        _check_all_id_references(snapshot)
+        _build_minimal_snapshot(revision)
 
 
 def test_dangling_casilla_legal_refs() -> None:
@@ -375,9 +372,8 @@ def test_dangling_formula_target() -> None:
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(formulas=(formula,))
-    snapshot = _build_minimal_snapshot(revision)
     with pytest.raises(RegistryValidationError, match=r"formula test.formula.target"):
-        _check_all_id_references(snapshot)
+        _build_minimal_snapshot(revision)
 
 
 def test_dangling_formula_legal_refs() -> None:
@@ -447,9 +443,8 @@ def test_dangling_relation_target_binding() -> None:
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(relations=(relation,))
-    snapshot = _build_minimal_snapshot(revision)
     with pytest.raises(RegistryValidationError, match=r"relation test.relation.target_binding"):
-        _check_all_id_references(snapshot)
+        _build_minimal_snapshot(revision)
 
 
 def test_dangling_extraction_profile_target_casilla() -> None:
@@ -468,9 +463,8 @@ def test_dangling_extraction_profile_target_casilla() -> None:
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(extraction_profiles=(profile,))
-    snapshot = _build_minimal_snapshot(revision)
     with pytest.raises(RegistryValidationError, match=r"extraction_profile test.profile.target_casillas"):
-        _check_all_id_references(snapshot)
+        _build_minimal_snapshot(revision)
 
 
 def test_dangling_cross_reference_legal_refs() -> None:
@@ -524,9 +518,8 @@ def test_dangling_verification_expectation_computed_casillas() -> None:
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(verification_expectations=(expectation,))
-    snapshot = _build_minimal_snapshot(revision)
     with pytest.raises(RegistryValidationError, match=r"verification_expectation test.expectation.computed_casillas"):
-        _check_all_id_references(snapshot)
+        _build_minimal_snapshot(revision)
 
 
 def test_dangling_application_link_legal_refs() -> None:
@@ -598,9 +591,8 @@ def test_dangling_construct_casilla_ref() -> None:
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(constructs=(construct,))
-    snapshot = _build_minimal_snapshot(revision)
     with pytest.raises(RegistryValidationError, match=r"construct ct.test.casillas"):
-        _check_all_id_references(snapshot)
+        _build_minimal_snapshot(revision)
 
 
 def test_dangling_dependency_classification_target_construct() -> None:
@@ -614,9 +606,8 @@ def test_dangling_dependency_classification_target_construct() -> None:
         source_refs=(_DUMMY_SOURCE_ID,),
     )
     revision = _minimal_revision(dependency_classifications=(classification,))
-    snapshot = _build_minimal_snapshot(revision)
     with pytest.raises(RegistryValidationError, match=r"dependency_classification dc.test.target_constructs"):
-        _check_all_id_references(snapshot)
+        _build_minimal_snapshot(revision)
 
 
 def test_dangling_export_layout_legal_refs() -> None:
@@ -663,9 +654,8 @@ def test_dangling_export_field_casilla_ref() -> None:
         records=(record,),
     )
     revision = _minimal_revision(casillas=(casilla,), export_layouts=(layout,))
-    snapshot = _build_minimal_snapshot(revision)
     with pytest.raises(RegistryValidationError, match=r"field el.test.field-01.casilla"):
-        _check_all_id_references(snapshot)
+        _build_minimal_snapshot(revision)
 
 
 def test_dangling_revision_legal_refs() -> None:

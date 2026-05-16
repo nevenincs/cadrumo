@@ -420,7 +420,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
         )
     except RegistryValidationError as exc:
         return DiagnosticCheck(
-            name="registry.cross_domain_integrity",
+            name="registry.integrity",
             status="fail",
             summary="registry snapshot build surfaced integrity failures",
             detail=str(exc),
@@ -428,13 +428,13 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
         )
     except Exception as exc:  # pragma: no cover - defensive: registry not loadable
         return DiagnosticCheck(
-            name="registry.cross_domain_integrity",
+            name="registry.integrity",
             status="warn",
             summary="cross-domain integrity check skipped",
             detail=f"{type(exc).__name__}: {exc}",
         )
     return DiagnosticCheck(
-        name="registry.cross_domain_integrity",
+        name="registry.integrity",
         status="ok",
         summary="snapshot-build gates clean (typed IDs + renta routing + selector shapes)",
     )
