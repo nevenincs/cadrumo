@@ -864,7 +864,8 @@ cli:
     app_help: Review the active tax workspace
     backlog:
       allow_incomplete_help: Render the backlog even when profile data is incomplete.
-      from_help: Inclusive start date (ISO YYYY-MM-DD); defaults to 365 days before today.
+      from_help: Inclusive start date (ISO YYYY-MM-DD); defaults to 365 days before
+        today.
       help: List past-due obligations the operator has not yet filed. Sorted oldest
         first so the most-overdue items triage first. Local-only; never contacts AEAT.
       to_help: Inclusive end date (ISO YYYY-MM-DD); defaults to today.
@@ -881,6 +882,13 @@ cli:
       computed under defaults.'
     calendar_requires_dates: Use --from and --to when showing the calendar
     drafts: Drafts
+    explain:
+      help: Decompose a modelo's applicability against the active profile. Surfaces
+        the binary applicable flag, the registry-backed rationale text, and the
+        profile facts the decision depends on. Local-only; never contacts AEAT.
+      modelo_help: AEAT modelo identifier (e.g. 303, 130, 100).
+      year_help: Fiscal year for the applicability evaluation; defaults to the current
+        year.
     from_help: Calendar start date (YYYY-MM-DD)
     header: "Model\tPeriod\tState\tOpens\tCloses"
     period: Period
