@@ -141,20 +141,3 @@ def _load_authority(root: Path, source_root: Path) -> ValidatedRegistryAuthority
     return authority
 
 
-def default_registry_authority() -> ValidatedRegistryAuthority:
-    """Return the process-wide registry authority via the resource registry.
-
-    Delegates to :func:`aeat.core.resources.resources` so the
-    authority instance is shared with every other consumer that
-    goes through ``resources().modelos``. The previous
-    ``@cache`` decorator was redundant once the registry took
-    ownership of the authority lifecycle; the
-    :class:`ModeloRepository` caches the authority on the
-    registry's behalf.
-    """
-
-    from ....core.resources import resources
-
-    authority = resources().modelos.authority
-    assert isinstance(authority, ValidatedRegistryAuthority)
-    return authority

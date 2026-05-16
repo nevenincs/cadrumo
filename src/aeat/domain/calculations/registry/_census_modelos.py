@@ -1,6 +1,7 @@
 """Registry-owned census modelo foundation map."""
 
 from __future__ import annotations
+from ....core.resources import resources
 
 from dataclasses import dataclass
 from enum import StrEnum
@@ -10,7 +11,7 @@ from typing import Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 from ....core.logging import get_logger
-from ._authority import ValidatedRegistryAuthority, default_registry_authority
+from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
 
 CENSUS_MODELO_SERVICE_OWNER = "aeat.domain.calculations.registry"
@@ -231,7 +232,7 @@ def census_modelo_ownership(modelo: str) -> CensusModeloOwnership:
 
     if not isinstance(modelo, str):
         raise RegistryValidationError("census modelo code must be a string")
-    authority = default_registry_authority()
+    authority = resources().modelos.authority
     if modelo == _ACTIVE_CENSUS_MODELO:
         return _active_036_ownership_from_registry(authority)
     if modelo == _HISTORICAL_CENSUS_MODELO:

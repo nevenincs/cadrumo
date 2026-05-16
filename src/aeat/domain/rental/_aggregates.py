@@ -26,7 +26,7 @@ from ._amortization_ledger import compute_amortization_for_year
 from ._enums import UseType
 from ._errors import RentalAggregationError
 from ._expense_rollup import CarryForwardEntry, compute_gastos_for_year
-from ._imputacion_parameters import LIRPF_ART_85_IMPUTACION
+from ._imputacion_parameters import load_imputacion_parameters
 from ._models import RentalContract, RentalFinca
 from ._repository import (
     RentalAmortizationLedgerRepository,
@@ -40,22 +40,6 @@ from ._tier_resolver import TierResolution, resolve_reduccion
 _log = get_logger(__name__)
 _CENT = Decimal("0.01")
 
-IMPUTACION_RATE_RECENT_REVISION: Decimal = LIRPF_ART_85_IMPUTACION.recent_revision_rate
-"""LIRPF art. 85: registry-backed reduced rate when valor catastral was
-revised in the lookback window. Sourced from
-``registry/aeat/legal/irpf.toml`` parameter
-``lirpf-art-85:imputacion-rate-recent-revision``."""
-
-IMPUTACION_RATE_OLD_OR_NO_REVISION: Decimal = LIRPF_ART_85_IMPUTACION.old_or_no_revision_rate
-"""LIRPF art. 85: registry-backed default rate when no qualifying recent
-catastral revision applies. Sourced from
-``registry/aeat/legal/irpf.toml`` parameter
-``lirpf-art-85:imputacion-rate-old-or-no-revision``."""
-
-CATASTRAL_REVISION_LOOKBACK_YEARS: int = LIRPF_ART_85_IMPUTACION.catastral_revision_lookback_years
-"""LIRPF art. 85: registry-backed lookback window in years. Sourced from
-``registry/aeat/legal/irpf.toml`` parameter
-``lirpf-art-85:catastral-revision-lookback-years``."""
 
 
 def _round_to_cents(value: Decimal) -> Decimal:
@@ -431,13 +415,14 @@ def _compute_imputacion(
         return Decimal("0.00")
     if finca.disposal_date is not None and finca.disposal_date.year < period_year:
         return Decimal("0.00")
+    imputacion = load_imputacion_parameters()
     rate = (
-        IMPUTACION_RATE_RECENT_REVISION
+        imputacion.recent_revision_rate
         if (
             finca.valor_catastral_revision_year is not None
-            and (period_year - finca.valor_catastral_revision_year) <= CATASTRAL_REVISION_LOOKBACK_YEARS
+            and (period_year - finca.valor_catastral_revision_year) <= imputacion.catastral_revision_lookback_years
         )
-        else IMPUTACION_RATE_OLD_OR_NO_REVISION
+        else imputacion.old_or_no_revision_rate
     )
     # silence unused-arg warnings: contract / income repos are reserved for
     # future partial-year pro-rate; current impl only needs the finca metadata.

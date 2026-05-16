@@ -36,9 +36,9 @@ from aeat.core.resources import bundled_path
 from aeat.domain.invoices import IvaRate
 from aeat.domain.invoices._enums import iva_rate_percentage
 from aeat.domain.vat import (
-    LIVA_ART_161_RECARGO,
     EUMemberState,
     VATRateKind,
+    load_recargo_rates,
     lookup_rate,
 )
 
@@ -155,22 +155,22 @@ def test_liva_art_161_corpus_excerpt_quotes_all_four_recargo_rates() -> None:
 
 def test_liva_art_161_substrate_general_recargo_matches_5_2_per_cent() -> None:
     """LIVA art 161 1° — 5,2% applied to 21% IVA tier supplies."""
-    assert LIVA_ART_161_RECARGO.general_rate == Decimal("0.052")
+    assert load_recargo_rates().general_rate == Decimal("0.052")
 
 
 def test_liva_art_161_substrate_reduced_recargo_matches_1_4_per_cent() -> None:
     """LIVA art 161 2° — 1,4% applied to 10% IVA tier (art 91 Uno)."""
-    assert LIVA_ART_161_RECARGO.reducido_rate == Decimal("0.014")
+    assert load_recargo_rates().reducido_rate == Decimal("0.014")
 
 
 def test_liva_art_161_substrate_super_reduced_recargo_matches_0_5_per_cent() -> None:
     """LIVA art 161 3° — 0,5% applied to 4% IVA tier (art 91 Dos)."""
-    assert LIVA_ART_161_RECARGO.super_reducido_rate == Decimal("0.005")
+    assert load_recargo_rates().super_reducido_rate == Decimal("0.005")
 
 
 def test_liva_art_161_substrate_tabaco_recargo_matches_1_75_per_cent() -> None:
     """LIVA art 161 4° — 1,75% on labores del tabaco (Impuesto Especial)."""
-    assert LIVA_ART_161_RECARGO.tabaco_rate == Decimal("0.0175")
+    assert load_recargo_rates().tabaco_rate == Decimal("0.0175")
 
 
 def test_liva_art_161_recargo_matches_iva_tier_alignment() -> None:
@@ -191,9 +191,9 @@ def test_liva_art_161_recargo_matches_iva_tier_alignment() -> None:
     )
 
     # Recargo tiers resolve to 5.2/1.4/0.5 per LIVA art 161
-    assert LIVA_ART_161_RECARGO.general_rate * Decimal("100") == Decimal("5.200")
-    assert LIVA_ART_161_RECARGO.reducido_rate * Decimal("100") == Decimal("1.400")
-    assert LIVA_ART_161_RECARGO.super_reducido_rate * Decimal("100") == Decimal("0.500")
+    assert load_recargo_rates().general_rate * Decimal("100") == Decimal("5.200")
+    assert load_recargo_rates().reducido_rate * Decimal("100") == Decimal("1.400")
+    assert load_recargo_rates().super_reducido_rate * Decimal("100") == Decimal("0.500")
 
 
 # ---------------------------------------------------------------------------
@@ -210,11 +210,12 @@ def test_lirpf_art_85_corpus_excerpt_quotes_imputation_rates() -> None:
 
 
 def test_lirpf_art_85_imputacion_substrate_matches_boe_text() -> None:
-    from aeat.domain.rental._imputacion_parameters import LIRPF_ART_85_IMPUTACION
+    from aeat.domain.rental._imputacion_parameters import load_imputacion_parameters
 
-    assert LIRPF_ART_85_IMPUTACION.recent_revision_rate == Decimal("0.011")  # 1.1 %
-    assert LIRPF_ART_85_IMPUTACION.old_or_no_revision_rate == Decimal("0.02")  # 2 %
-    assert LIRPF_ART_85_IMPUTACION.catastral_revision_lookback_years == 10
+    parameters = load_imputacion_parameters()
+    assert parameters.recent_revision_rate == Decimal("0.011")  # 1.1 %
+    assert parameters.old_or_no_revision_rate == Decimal("0.02")  # 2 %
+    assert parameters.catastral_revision_lookback_years == 10
 
 
 # ---------------------------------------------------------------------------

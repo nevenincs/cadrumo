@@ -1,6 +1,7 @@
 """Tests for the declaración parser boundary."""
 
 from __future__ import annotations
+from aeat.core.resources import resources
 
 from decimal import Decimal
 from pathlib import Path
@@ -11,7 +12,6 @@ from reportlab.pdfgen import canvas
 
 from aeat.tests import FIXTURES_DIR
 
-from ....domain.calculations.registry import default_registry_authority
 from . import DeclaracionParseError, parse_declaracion
 
 pytestmark = [
@@ -138,7 +138,7 @@ def _modelo_130_snapshot():
 
 
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
-    return default_registry_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
+    return resources().modelos.authority.snapshot(modelo_id, filing_year=filing_year, period=period)
 
 
 def _write_declaration_pdf(

@@ -111,45 +111,16 @@ def _load_rates() -> LivaArt161RecargoRates:
         raise VatValidationError(f"failed to parse recargo rates as Decimal: {exc}") from exc
 
 
-_LIVA_ART_161_RECARGO_CACHE: list[LivaArt161RecargoRates] = []
+def load_recargo_rates() -> LivaArt161RecargoRates:
+    """Public accessor for the LIVA art. 161 recargo de equivalencia rates.
 
-
-def _get_liva_art_161_recargo() -> LivaArt161RecargoRates:
-    """Return the cached LIVA art. 161 recargo rates, loading on first access.
-
-    Module-level eager loading of ``_load_rates()`` triggered a real
-    circular import: the load path pulls in
-    ``aeat.domain.calculations.registry._bindings``, which imports
-    enums (``EUMemberState`` etc) back from ``aeat.domain.vat`` — but
-    this module is itself part of ``aeat.domain.vat``'s import chain,
-    so ``vat`` is mid-initialisation when ``_bindings`` tries to read
-    from it. Lazy first-access loading sidesteps the cycle without
-    weakening the public contract: every consumer that previously read
-    the module constant now reads through the property accessor.
+    Reads the four art. 161 rate parameters from the bundled
+    legal-parameter catalogue and returns the typed
+    :class:`LivaArt161RecargoRates` record. Use
+    :func:`recargo_rate_for` for the convenient ``VATRateKind``-
+    keyed lookup; tobacco callers read ``.tabaco_rate`` directly.
     """
-
-    if not _LIVA_ART_161_RECARGO_CACHE:
-        _LIVA_ART_161_RECARGO_CACHE.append(_load_rates())
-    return _LIVA_ART_161_RECARGO_CACHE[0]
-
-
-def __getattr__(name: str) -> object:
-    """Module-level lazy accessor for the legacy ``LIVA_ART_161_RECARGO`` constant.
-
-    Callers that read the constant trigger the cycle-safe lazy load
-    transparently. The lookup matches Python's PEP 562 module
-    ``__getattr__`` contract.
-    """
-
-    if name == "LIVA_ART_161_RECARGO":
-        return _get_liva_art_161_recargo()
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-"""Module-level frozen record loaded once at import time.
-
-Consumers reference ``LIVA_ART_161_RECARGO.general_rate`` etc. for the
-recargo de equivalencia rates instead of carrying numeric literals.
-The :func:`recargo_rate_for` helper is the convenient lookup keyed by
-:class:`VATRateKind` tier."""
+    return _load_rates()
 
 
 def recargo_rate_for(rate_kind: VATRateKind) -> Decimal | None:
@@ -168,7 +139,7 @@ def recargo_rate_for(rate_kind: VATRateKind) -> Decimal | None:
     callers that handle labores del tabaco read
     ``LIVA_ART_161_RECARGO.tabaco_rate`` directly.
     """
-    rates = _get_liva_art_161_recargo()
+    rates = _load_rates()
     if rate_kind is VATRateKind.GENERAL:
         return rates.general_rate
     if rate_kind is VATRateKind.REDUCED:
@@ -178,8 +149,8 @@ def recargo_rate_for(rate_kind: VATRateKind) -> Decimal | None:
     return None
 
 
-__all__ = [  # noqa: F822 (LIVA_ART_161_RECARGO is lazy via __getattr__)
-    "LIVA_ART_161_RECARGO",
+__all__ = [
     "LivaArt161RecargoRates",
+    "load_recargo_rates",
     "recargo_rate_for",
 ]
