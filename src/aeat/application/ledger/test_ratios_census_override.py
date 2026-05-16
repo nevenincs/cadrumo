@@ -14,7 +14,11 @@ from decimal import Decimal
 import pytest
 
 from ...domain.categories import SpendingCategory
-from ._ratios import RatiosCensusOverrideWarning, census_override_warning
+from ._ratios import (
+    RatiosCensusOverrideWarning,
+    census_business_pct_for,
+    census_override_warning,
+)
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -58,6 +62,41 @@ def test_no_warning_when_override_matches_census_derived_value() -> None:
 
     assert result_suministros is None
     assert result_ownership is None
+
+
+def test_business_pct_is_none_when_census_unset() -> None:
+    assert (
+        census_business_pct_for(
+            SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ,
+            None,
+        )
+        is None
+    )
+
+
+def test_business_pct_is_none_for_non_home_office_category() -> None:
+    assert (
+        census_business_pct_for(
+            SpendingCategory.TELEFONIA_MOVIL,
+            Decimal("0.20"),
+        )
+        is None
+    )
+
+
+def test_business_pct_returns_census_derived_value_for_home_office() -> None:
+    raw = Decimal("0.20")
+    suministros = census_business_pct_for(
+        SpendingCategory.SUMINISTROS_HOME_OFFICE_AGUA,
+        raw,
+    )
+    ownership = census_business_pct_for(
+        SpendingCategory.COMUNIDAD_VIVIENDA_AFECTO,
+        raw,
+    )
+
+    assert suministros == raw
+    assert ownership == raw
 
 
 def test_warning_carries_census_derived_ratio() -> None:
