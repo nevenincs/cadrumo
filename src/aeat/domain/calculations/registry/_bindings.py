@@ -505,7 +505,7 @@ class _InvoiceSelector(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    fact: _InvoiceFact
     claves: tuple[str, ...] = ()
     rectification_scope: _RectificationScope = "any"
     vat_regime: str | None = Field(default=None, max_length=64)
@@ -564,12 +564,10 @@ def invoice_binding_requirements(
     return tuple(requirements)
 
 
-_INVOICE_FACTS = {
-    "operator_count",
-    "base_sum",
-    "rectified_base_delta_sum",
-    "row_field",
-}
+_InvoiceFact = Literal["operator_count", "base_sum", "rectified_base_delta_sum", "row_field"]
+_INVOICE_FACTS: frozenset[_InvoiceFact] = frozenset(
+    {"operator_count", "base_sum", "rectified_base_delta_sum", "row_field"}
+)
 
 _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
     {"rectified_year", "rectified_period", "rectified_base_previous"}
@@ -1701,10 +1699,17 @@ class WithholdingObservationRequirement(BaseModel):
         return value
 
 
+_WithholdingFact = Literal["row_field", "perceptor_count", "percibido_sum", "retencion_sum"]
+
+
 class _WithholdingSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    # Promoted from ``str`` to a typed Literal so the snapshot-build
+    # shape gate rejects unknown fact values, mirroring the runtime
+    # check the handler does against _WITHHOLDING_FACTS. Audit
+    # selector-drift F2.
+    fact: _WithholdingFact
     claves: tuple[str, ...] = ()
     row_field: _WithholdingRowField | None = None
     grouping: _WithholdingGrouping | None = None
@@ -1945,7 +1950,11 @@ class RelatedPartyOperationObservation(BaseModel):
 class _RelatedPartySelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    # Only ``row_field`` is a legal fact for related-party-operation
+    # bindings; every handler raises on anything else. Promoting to a
+    # Literal at the type level mirrors the runtime check at the
+    # snapshot-build gate. Audit selector-drift F2.
+    fact: Literal["row_field"]
     row_field: _RelatedPartyRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
@@ -2074,7 +2083,7 @@ class ForeignAssetObservation(BaseModel):
 class _ForeignAssetSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    fact: Literal["row_field"]
     row_field: _ForeignAssetRowField | None = None
     asset_classes: tuple[str, ...] = ()
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
@@ -2211,7 +2220,7 @@ class AtributionMemberObservation(BaseModel):
 class _AtributionSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    fact: Literal["row_field"]
     row_field: _AtributionRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
@@ -2319,7 +2328,7 @@ class RefundOperationObservation(BaseModel):
 class _RefundSelector(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    fact: str = Field(min_length=1, max_length=64)
+    fact: Literal["row_field"]
     row_field: _RefundRowField | None = None
     grouping: str | None = Field(default=None, min_length=1, max_length=64)
     record: str | None = Field(default=None, min_length=1, max_length=64)
