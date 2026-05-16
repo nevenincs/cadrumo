@@ -156,20 +156,51 @@ shape.
   downstream calculation MUST declare `legal_refs` in its schema entry
   pointing to the primary BOE / LIRPF / LIVA / RIRPF / RIVA / Ley
   General Tributaria source that fixes any cap, threshold, or
-  applicability rule. Examples:
-  - `vivienda_office.office_m2 / total_m2` ratio cap (the home-office
-    deduction has a hard ceiling per Art. 22 RIRPF / Art. 30.2.5
-    LIRPF — verify the exact 30 % default in the W85 research doc).
-  - `census.elected_withholding_pct` enum values (1 % / 7 % / 15 %)
-    each cite the LIRPF article that defines them (Art. 95 LIRPF +
-    Art. 101 RIRPF for the standard 15 % retention, the 7 % new-
-    autónomo reduction, and the 1 % módulos transport carve-out).
-  - `iva.roi_enrolled` cites Art. 25 LIVA + RIVA Art. 3.
+  applicability rule. Confirmed primary citations from the W85
+  research doc:
+  - `vivienda_office.office_m2 / total_m2` is the raw afectacion
+    proportion. LIRPF Art. 30.2 rule 5 (Ley 6/2017 effective
+    2018-01-01, BOE-A-2017-12544) governs how this ratio is applied:
+    the raw ratio is used directly for ownership and amortization
+    costs of the home, and is multiplied by 0.30 (a statutory factor,
+    NOT a ceiling on the proportion) when deducting suministros
+    (utilities). The engine MUST compute these two variants at
+    calculation time; the schema stores the raw m2 inputs and the
+    derived raw ratio only. There is no statutory cap on the raw
+    ratio itself; the AEAT 2022 IRPF manual confirms this reading.
+  - `census.elected_withholding_pct` enum values cite LIRPF Art.
+    101.5 plus RIRPF Art. 95.1 and Art. 95.2 (BOE-A-2007-6820 as
+    amended by BOE-A-2023-2023). The 15 % is the standard
+    professional retention; the 7 % is the nuevos-profesionales rate
+    for the year of alta plus the two following calendar years;
+    the 1 % is the modulos transport carve-out per the annual
+    Orden de Modulos (Orden HAC/1425/2025 for fiscal year 2026,
+    BOE-A-2025-25272).
+  - `iva.roi_enrolled` cites LIVA Art. 25 plus RIVA Art. 3
+    (BOE-A-1992-28740 as amended).
+  - `iva.oss_enrolled` cites LIVA Art. 163 unvicies (BOE-A-1992-28740
+    as amended by Ley 4/2020).
+  - `census.activity_start_date` and `census.activity_end_date`
+    cite RGAT Arts. 9 and 11 (BOE-A-2007-15984).
+  - `census.establecimiento_type` cites LIRPF Arts. 28 through 30
+    (BOE-A-2006-20764).
+  - `irpf.uses_objective_estimation` cites LIRPF Art. 31
+    (BOE-A-2006-20764) plus the annual Orden de Modulos
+    (Orden HAC/1425/2025 for fiscal year 2026, BOE-A-2025-25272).
+  - `contact.fiscal_address_cadastral_reference` cites RDLeg 1/2004
+    (BOE-A-2004-4163).
+  - `contact.fiscal_address_is_habitual_vivienda` cites LIRPF Art.
+    68.1.3 (BOE-A-2006-20764). The deduction itself is suppressed
+    for vivienda acquisitions from 2013 onward but the habitual-
+    residence concept remains operative for afectacion parcial.
+
   A registry validator added in this wave fails CI if a new census
-  field lands without a `legal_refs` entry. Caps and thresholds are
-  ENFORCED by the engine, not merely documented; the
-  `business_ratio` for HOME_OFFICE categories is clamped to the
-  legally-derived ceiling.
+  field lands without a `legal_refs` entry. The legally-grounded
+  computation rules (the suministros 0.30 multiplier, the
+  nuevos-profesionales three-year window for the 7 % withholding
+  rate, the annual Orden de Modulos for modulos eligibility, etc.)
+  are ENFORCED by the engine at calculation time; the schema carries
+  the raw inputs and the engine applies the statutory arithmetic.
 
 ### New BucketEventType members
 
