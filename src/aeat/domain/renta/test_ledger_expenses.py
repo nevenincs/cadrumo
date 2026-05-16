@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from ...core.i18n import Translatable as tr
 from ..categories import (
-    resolve_category_profiles(2025),
+    resolve_category_profiles,
     CategoryCitation,
     CategoryCitationSource,
     CategoryProfile,
