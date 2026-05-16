@@ -23,12 +23,17 @@ from ..categories import (
     effective_usage_ratio,
     resolve_category_profiles,
 )
-from ._errors import UsageRatioPersistenceError, UsageRatioValidationError
+from ._errors import (
+    CensusRatioMismatchError,
+    UsageRatioPersistenceError,
+    UsageRatioValidationError,
+)
 from ._model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 
 __all__ = [
     "derive_home_office_ratios_from_census",
     "load_usage_ratios",
+    "load_usage_ratios_with_census_guard",
     "save_usage_ratios",
     "usage_ratios_object_key",
 ]
@@ -144,6 +149,90 @@ _HOME_OFFICE_FAMILIES = (
     SpendingCategoryFamily.HOME_OFFICE_SUMINISTROS,
     SpendingCategoryFamily.HOME_OFFICE_OWNERSHIP,
 )
+
+
+def _home_office_categories() -> frozenset:
+    return frozenset(
+        category
+        for family in _HOME_OFFICE_FAMILIES
+        for category in categories_for_family(family)
+    )
+
+
+def load_usage_ratios_with_census_guard(
+    *,
+    bucket_id: str,
+    raw_afectacion_ratio: Decimal | None,
+    year: int = 2025,
+    objects: SecureObjectRepository | None = None,
+) -> UsageRatioProfile:
+    """Load a usage-ratio profile and refuse on census disagreement.
+
+    Calls :func:`load_usage_ratios` and then enforces the binding-
+    census invariant for HOME_OFFICE_SUMINISTROS and
+    HOME_OFFICE_OWNERSHIP categories: every persisted override must
+    equal the census-derived value
+    (``raw_afectacion_ratio * statutory_multiplier``). When the
+    operator has not yet captured a census snapshot, any persisted
+    HOME_OFFICE override is refused as well, since there is no
+    legally-grounded reference to validate against.
+
+    The refusal is a clean break: no auto-migration, no silent
+    coercion, no warning-and-continue. The calling surface
+    (calculate / verify / file / build_draft / approve_draft /
+    export_draft) must therefore surface the underlying
+    :exc:`CensusRatioMismatchError` to the operator so they can
+    re-run ``aeat config profile census refresh + apply`` or unset
+    the diverging override.
+
+    Args:
+        bucket_id: Active workflow bucket id.
+        raw_afectacion_ratio: ``office_m2 / total_m2`` from the bound
+            census snapshot, or ``None`` if the operator has not yet
+            applied a census.
+        year: Registry year whose proportionality rules drive the
+            derivation.
+        objects: Optional injected repository (testing seam).
+
+    Returns:
+        The persisted :class:`UsageRatioProfile` when no HOME_OFFICE
+        override disagrees with the census.
+
+    Raises:
+        :exc:`CensusRatioMismatchError`: when at least one persisted
+            HOME_OFFICE override disagrees, or when any persisted
+            HOME_OFFICE override exists with ``raw_afectacion_ratio``
+            unset.
+    """
+
+    profile = load_usage_ratios(bucket_id=bucket_id, objects=objects)
+    home_office = _home_office_categories()
+    persisted_home_office = {
+        category: ratio for category, ratio in profile.ratios.items() if category in home_office
+    }
+    if not persisted_home_office:
+        return profile
+    if raw_afectacion_ratio is None:
+        offending = sorted(c.value for c in persisted_home_office)
+        raise CensusRatioMismatchError(
+            f"persisted HOME_OFFICE overrides require an applied census; "
+            f"offending categories: {offending}"
+        )
+    derived = derive_home_office_ratios_from_census(raw_afectacion_ratio, year=year)
+    mismatches = {
+        category: (persisted, derived.ratios[category])
+        for category, persisted in persisted_home_office.items()
+        if persisted != derived.ratios[category]
+    }
+    if mismatches:
+        rendered = ", ".join(
+            f"{category.value} persisted={persisted} census={census}"
+            for category, (persisted, census) in sorted(mismatches.items(), key=lambda kv: kv[0].value)
+        )
+        raise CensusRatioMismatchError(
+            f"persisted HOME_OFFICE overrides disagree with the bound census: {rendered}"
+        )
+    return profile
 
 
 def derive_home_office_ratios_from_census(
