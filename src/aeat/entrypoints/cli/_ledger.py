@@ -688,6 +688,197 @@ _LEDGER_HISTORY_EVENT_TYPES: tuple[BucketEventType, ...] = (
 
 
 @app.command(
+    "link",
+    help=tr(
+        "cli.ledger.link.help",
+        default=(
+            "Bind a ledger transaction to an invoice and/or a purchase-invoice "
+            "evidence record in a single canonical call. Refuses cross-bucket "
+            "links. Local-only; never contacts AEAT."
+        ),
+    ),
+)
+def ledger_link(
+    ctx: typer.Context,
+    transaction_id: str = typer.Option(
+        ...,
+        "--id",
+        help=tr("cli.ledger.link.id_help", default="Ledger transaction id (SHA-256 or unambiguous prefix)."),
+    ),
+    invoice_id: str | None = typer.Option(
+        None,
+        "--invoice-id",
+        help=tr(
+            "cli.ledger.link.invoice_id_help",
+            default="Invoice id to bind bidirectionally to the transaction.",
+        ),
+    ),
+    evidence_id: str | None = typer.Option(
+        None,
+        "--evidence-id",
+        help=tr(
+            "cli.ledger.link.evidence_id_help",
+            default="Purchase-invoice evidence record id to attach to the transaction.",
+        ),
+    ),
+    actor: str | None = typer.Option(
+        None,
+        "--by",
+        help=tr("cli.ledger.link.actor_help", default="Operator label recorded on bucket events."),
+    ),
+) -> None:
+    """Bind a transaction to invoice / evidence references in one call."""
+
+    from ...application.invoices import link_invoice_transaction_repositories
+    from ...domain.invoices._errors import InvoiceLinkError
+
+    if invoice_id is None and evidence_id is None:
+        raise _bad(
+            tr(
+                "cli.ledger.link.errors.missing_target",
+                default="Supply at least one of --invoice-id or --evidence-id.",
+            ),
+        )
+
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    bucket_id = transaction_repository.bucket_id
+    actor_label = (actor or "operator").strip() or "operator"
+
+    invoice_event_ids: tuple[str, ...] = ()
+    if invoice_id is not None:
+        try:
+            invoice_result = link_invoice_transaction_repositories(
+                bucket_id=bucket_id,
+                invoice_id=invoice_id,
+                transaction_id=resolved_id,
+                transaction_repository=transaction_repository,
+            )
+        except InvoiceLinkError as exc:
+            raise _bad(str(exc)) from exc
+        if invoice_result.invoice.bucket_id not in (None, bucket_id):
+            raise _bad(
+                tr(
+                    "cli.ledger.link.errors.cross_bucket_invoice",
+                    default="Invoice belongs to a different bucket than the active profile.",
+                ),
+            )
+
+    evidence_result_payload: dict[str, object] = {}
+    if evidence_id is not None:
+        evidence_patch = ManualLedgerTransactionPatch(purchase_invoice_evidence_id=evidence_id)
+        evidence_result = update_manual_transaction_fields(
+            bucket_id=bucket_id,
+            transaction_id=resolved_id,
+            patch=evidence_patch,
+            actor=actor_label,
+            source_command="aeat app ledger link",
+        )
+        evidence_result_payload = ledger_transaction_result_payload(evidence_result)
+
+    payload: dict[str, object] = {
+        "operation": "ledger.link",
+        "bucket_id": bucket_id,
+        "transaction_id": resolved_id,
+        "invoice_id": invoice_id,
+        "evidence_id": evidence_id,
+        "actor": actor_label,
+    }
+    if evidence_result_payload:
+        payload["evidence_update"] = evidence_result_payload
+    lines = [
+        "operation\tledger.link",
+        f"bucket\t{bucket_id}",
+        f"transaction_id\t{resolved_id}",
+        f"actor\t{actor_label}",
+    ]
+    if invoice_id is not None:
+        lines.append(f"invoice_id\t{invoice_id}")
+    if evidence_id is not None:
+        lines.append(f"evidence_id\t{evidence_id}")
+    _emit(ctx, payload, lines)
+
+
+@app.command(
+    "check",
+    help=tr(
+        "cli.ledger.check.help",
+        default=(
+            "Probe ledger transactions in the active bucket and report anomaly rows "
+            "(currently the same readiness checks as `preflight` aggregated over the "
+            "default current period). Local-only; never contacts AEAT."
+        ),
+    ),
+)
+def ledger_check(
+    ctx: typer.Context,
+    period: str | None = typer.Option(
+        None,
+        "--period",
+        help=tr(
+            "cli.ledger.check.period_help",
+            default="Optional canonical period (defaults to all-period audit).",
+        ),
+    ),
+) -> None:
+    """Surface ledger anomalies for the active bucket without mutating state."""
+
+    from ...application.ledger._preflight import preflight_transaction_catalogue
+
+    transaction_repository = _tx_repo(_state())
+    catalogue = transaction_repository.load()
+    if period is None:
+        # Aggregate per-period readiness across every period a transaction
+        # touches, derived from the active bucket's transaction date range.
+        years = sorted(
+            {
+                (tx.raw.value_date or tx.raw.booked_date).year
+                for tx in catalogue.values()
+                if (tx.raw.value_date or tx.raw.booked_date) is not None
+            },
+        )
+        if not years:
+            payload = {
+                "bucket_id": transaction_repository.bucket_id,
+                "period": None,
+                "checked_transaction_count": 0,
+                "issues": [],
+                "ready": True,
+            }
+            lines = [
+                f"bucket\t{transaction_repository.bucket_id}",
+                "checked\t0",
+                "issues\t0",
+                "ready\ttrue",
+            ]
+            _emit(ctx, payload, lines)
+            return
+        # Pick the latest year as the "current" probe; callers wanting
+        # finer granularity should use --period.
+        period_to_check = str(years[-1])
+    else:
+        period_to_check = _canonical_period(period)
+
+    report = preflight_transaction_catalogue(
+        bucket_id=transaction_repository.bucket_id,
+        period=period_to_check,
+        transactions=catalogue,
+    )
+    payload = report.model_dump(mode="json")
+    lines = [
+        f"bucket\t{report.bucket_id}",
+        f"period\t{period_to_check}",
+        f"checked\t{report.checked_transaction_count}",
+        f"issues\t{len(report.issues)}",
+        f"ready\t{str(report.ready).lower()}",
+    ]
+    for issue in report.issues:
+        lines.append(f"issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
+    _emit(ctx, payload, lines)
+
+
+@app.command(
     "preflight",
     help=tr(
         "cli.ledger.preflight.help",

@@ -657,6 +657,11 @@ cli:
       id_help: Ledger transaction id to attach evidence to
       purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
         transaction
+    check:
+      help: Probe ledger transactions in the active bucket and report anomaly rows
+        (currently the same readiness checks as `preflight` aggregated over the
+        default current period). Local-only; never contacts AEAT.
+      period_help: Optional canonical period (defaults to all-period audit).
     classify:
       actor_help: Operator name recorded on the bucket event
       category_help: Spending or income category id
@@ -739,6 +744,17 @@ cli:
       valid: Valid
       warnings: Warnings
       'yes': 'Yes'
+    link:
+      actor_help: Operator label recorded on bucket events.
+      errors:
+        cross_bucket_invoice: Invoice belongs to a different bucket than the active profile.
+        missing_target: Supply at least one of --invoice-id or --evidence-id.
+      evidence_id_help: Purchase-invoice evidence record id to attach to the transaction.
+      help: Bind a ledger transaction to an invoice and/or a purchase-invoice evidence
+        record in a single canonical call. Refuses cross-bucket links. Local-only;
+        never contacts AEAT.
+      id_help: Ledger transaction id (SHA-256 or unambiguous prefix).
+      invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
       header: ACCOUNTING LEDGER TRANSACTIONS
       help: List ledger transactions in the active profile bucket
