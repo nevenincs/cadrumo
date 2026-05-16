@@ -34,10 +34,10 @@ from __future__ import annotations
 import asyncio
 import json
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final, NoReturn, Protocol, cast, runtime_checkable
+from typing import TYPE_CHECKING, Final, NoReturn, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 
@@ -296,7 +296,7 @@ class BrowserContextLike(Protocol):
     """
 
     async def new_page(self) -> BrowserPageLike: ...
-    async def storage_state(self) -> Any: ...
+    async def storage_state(self) -> Mapping[str, object]: ...
     async def close(self) -> None: ...
 
 
@@ -314,7 +314,7 @@ class BrowserSessionLike(Protocol):
         *,
         provisioner: object | None = None,
         storage_state_path: Path | None = None,
-        storage_state: dict[str, Any] | None = None,
+        storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContextLike: ...
 
 
@@ -917,7 +917,7 @@ class AeatAuthenticator:
             raise AeatLoginAssertionError("no active browser context; cannot capture storage_state")
 
         storage_state_path = session.storage_state_path or self._resolve_storage_state_path(self._browser_session)
-        storage_state = cast(dict[str, Any], await context.storage_state())
+        storage_state: Mapping[str, object] = await context.storage_state()
         storage_state_sha256 = _session_store.storage_state_sha256(storage_state)
         certificate_thumbprint = session.certificate_thumbprint
         certificate_subject = session.certificate_subject
