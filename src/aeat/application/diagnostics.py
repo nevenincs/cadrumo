@@ -201,6 +201,8 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     secure_objects = _probe_secure_objects_integrity()
     checks.append(_secure_objects_integrity_check(secure_objects))
 
+    checks.append(_registry_cross_domain_integrity_check(root))
+
     stale_sync = _windows_stale_sync_check()
     if stale_sync is not None:
         checks.append(stale_sync)
@@ -386,6 +388,55 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
         ),
         detail=affected,
         next_action="aeat config repair quarantine --yes",
+    )
+
+
+def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticCheck:
+    """Cross-domain integrity check by exercising the snapshot-build gate.
+
+    Loads the registry authority (which runs ``validate_registry``
+    at construction time) and attempts to build a representative
+    snapshot for modelo 100. The snapshot-build path wires
+    :func:`_check_all_id_references` (typed-ID existence checks +
+    renta first-slice routing target check + per-binding selector-
+    shape gate); any divergence between code-side typed contracts
+    and registry data surfaces here as a typed failure.
+
+    A failure routes the operator to a structured diagnostic rather
+    than a runtime KeyError mid-calculation.
+    """
+
+    from datetime import date
+
+    from ..domain.calculations.registry._errors import RegistryValidationError
+
+    try:
+        authority = ValidatedRegistryAuthority.load(registry_root, source_root=PROJECT_ROOT)
+        authority.snapshot(
+            "100",
+            filing_year=2025,
+            period="0A",
+            on=date(2025, 12, 31),
+        )
+    except RegistryValidationError as exc:
+        return DiagnosticCheck(
+            name="registry.cross_domain_integrity",
+            status="fail",
+            summary="registry snapshot build surfaced integrity failures",
+            detail=str(exc),
+            next_action="inspect the affected registry TOML files; integrity gates run at every snapshot.",
+        )
+    except Exception as exc:  # pragma: no cover - defensive: registry not loadable
+        return DiagnosticCheck(
+            name="registry.cross_domain_integrity",
+            status="warn",
+            summary="cross-domain integrity check skipped",
+            detail=f"{type(exc).__name__}: {exc}",
+        )
+    return DiagnosticCheck(
+        name="registry.cross_domain_integrity",
+        status="ok",
+        summary="snapshot-build gates clean (typed IDs + renta routing + selector shapes)",
     )
 
 
