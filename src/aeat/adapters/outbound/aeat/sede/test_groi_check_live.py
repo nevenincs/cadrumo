@@ -23,6 +23,8 @@ import asyncio
 
 import pytest
 
+from aeat.application.workflow._models import require_active_bucket_id
+
 from aeat.adapters.outbound.aeat.browser import default_browser_session_factory
 from aeat.adapters.outbound.aeat.sede._groi_check import (
     GroiSedeDriver,
@@ -67,7 +69,7 @@ def test_groi_verdict_parser_recognises_live_telefonica_certification() -> None:
 
 async def _assert_form_shape() -> None:
     settings = Settings()
-    storage_state_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-clave-movil-storage.json"
+    storage_state_path = settings.aeat_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
     session = await default_browser_session_factory(settings)
     context = None
     try:
@@ -104,7 +106,7 @@ async def _assert_form_shape() -> None:
 
 async def _query_live_body_text(nif: str) -> str:
     settings = Settings()
-    storage_state_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-clave-movil-storage.json"
+    storage_state_path = settings.aeat_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
     session = await default_browser_session_factory(settings)
     context = None
     try:

@@ -588,8 +588,10 @@ class ClaveMovilAuthProvider:
     # ── Encrypted session state ────────────────────────────────────────────
 
     def _storage_state_path(self) -> Path:
+        from ....application.workflow._models import require_active_bucket_id
+
         token_dir = self._settings.aeat_token_dir
-        profile = self._settings.aeat_default_profile_name
+        profile = require_active_bucket_id()
         return token_dir / f"{profile}-clave-movil-storage.json"
 
     @staticmethod

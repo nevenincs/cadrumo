@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import Final
 
@@ -177,6 +178,54 @@ class CensusSyncService:
             census_facts=facts,
         )
 
+    async def refresh_census_from_sede(
+        self,
+        *,
+        profile_id: str,
+    ) -> CensusSnapshot:
+        """Drive the live G313 Playwright fetch and persist the snapshot.
+
+        Acquires (or refreshes) an authenticated :class:`AeatSession`,
+        navigates to the documented G313 launcher, parses the response
+        into a :class:`CensusFactSet`, projects it into the dotted
+        snapshot mapping, and captures via :meth:`refresh_census`.
+
+        Raises:
+            :exc:`CensusNotAvailableError`: when AEAT publishes no
+                census for the operator's NIF (empty CensusFactSet).
+            Any auth-layer or sede-layer error: propagated for the CLI
+                handler to surface.
+        """
+
+        from ...adapters.outbound.aeat.sede._census_live import (
+            G313_LAUNCHER_URL,
+            census_fact_set_to_mapping,
+            fetch_g313_census,
+        )
+        from ...core.access_gate import AeatAccessGate
+        from ...core.config import load_settings
+        from ..auth import ensure_authenticated_aeat_session
+
+        settings = load_settings()
+        AeatAccessGate(settings).require_live_read()
+        result = await ensure_authenticated_aeat_session(
+            settings,
+            operation="live-census-read",
+        )
+        fact_set = await fetch_g313_census(result.session, settings=settings)
+        facts = census_fact_set_to_mapping(fact_set)
+        if not facts:
+            raise CensusNotAvailableError(
+                f"sede G313 returned no parseable census for profile {profile_id!r}; "
+                "confirm your certificate / cl@ve is registered against this NIF",
+            )
+        return self._snapshots.capture(
+            profile_id=profile_id,
+            captured_at=datetime.now(UTC),
+            source_url=G313_LAUNCHER_URL,
+            census_facts=facts,
+        )
+
     def show_census(
         self,
         *,
@@ -277,6 +326,38 @@ class CensusSyncService:
         if not self._profiles.exists(profile_id):
             return None
         return self._profiles.load(profile_id)
+
+    def bound_raw_afectacion_ratio(self, *, profile_id: str) -> Decimal | None:
+        """Return ``office_m2 / total_m2`` from the active census snapshot.
+
+        Used by the ledger ratios CLI and the manual-transaction
+        classify path to apply the legally-effective
+        :func:`aeat.application.ledger._ratios.census_override_warning`
+        and :func:`aeat.application.ledger._ratios.census_business_pct_for`
+        helpers without each consumer re-implementing the snapshot
+        lookup. Returns ``None`` when no ACTIVE snapshot exists OR when
+        either ``vivienda_office.total_m2`` / ``vivienda_office.office_m2``
+        is absent / non-decimal / zero.
+        """
+
+        snapshot = self._snapshots.latest_active(profile_id=profile_id)
+        if snapshot is None:
+            return None
+        total_raw = snapshot.census_facts.get("vivienda_office.total_m2")
+        office_raw = snapshot.census_facts.get("vivienda_office.office_m2")
+        if total_raw is None or office_raw is None:
+            return None
+        try:
+            total = Decimal(total_raw)
+            office = Decimal(office_raw)
+        except (InvalidOperation, ValueError):
+            return None
+        if total <= Decimal("0") or office < Decimal("0"):
+            return None
+        ratio = office / total
+        if ratio > Decimal("1"):
+            return None
+        return ratio
 
 
 def _profile_facts_by_path(profile: UserProfileRecord | None) -> dict[str, str]:

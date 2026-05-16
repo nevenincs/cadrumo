@@ -30,6 +30,12 @@ from ._orchestration import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
+# The application-level conftest already redirects
+# Settings.aeat_local_storage_root to tmp_path for every test, so the
+# orchestration's pointer-file write stays inside the sandbox without
+# any per-file fixture wiring here.
+
+
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     provider = EphemeralMasterKeyProvider()

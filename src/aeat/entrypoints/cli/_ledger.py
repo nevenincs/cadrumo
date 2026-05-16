@@ -226,6 +226,12 @@ def ledger_add(
     """Create one manual ledger transaction through the bucket-scoped backend."""
     current_state = _state()
     transaction_repository = _tx_repo(current_state)
+    resolved_business_pct = _resolve_business_pct_with_census(
+        bucket_id=transaction_repository.bucket_id,
+        active_profile=current_state.active_profile,
+        category_id=category_id,
+        operator_supplied=_parse_decimal(business_pct, label="business-pct"),
+    )
     command = ManualLedgerTransactionCommand(
         bucket_id=transaction_repository.bucket_id,
         booked_date=_parse_iso_date(booked_date, label="date"),
@@ -236,7 +242,7 @@ def ledger_add(
         counterparty=counterparty,
         description=description,
         business_classification=business_classification,
-        business_pct=_parse_decimal(business_pct, label="business-pct"),
+        business_pct=resolved_business_pct,
         category_id=category_id,
         taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
         iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
@@ -1334,6 +1340,26 @@ def _ratios_bucket_id() -> str:
         raise _bad(tr("cli.config.errors.no_active_profile")) from exc
 
 
+def _ratios_bucket_and_profile() -> tuple[str, str | None]:
+    """Return ``(bucket_id, active_profile_id)`` from workflow state.
+
+    ``active_profile_id`` is ``None`` when the workflow has a bucket
+    selected but no active profile (e.g. mid-init); ratios mutations
+    are still allowed in that state but census-override warnings stay
+    silent because there is no profile to look up snapshots against.
+    """
+
+    from ...application.workflow._models import active_bucket_id_or_raise
+    from ...application.workflow._persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    try:
+        bucket_id = active_bucket_id_or_raise(state)
+    except Exception as exc:  # NoActiveProfileError + downstream raises
+        raise _bad(tr("cli.config.errors.no_active_profile")) from exc
+    return bucket_id, state.active_profile
+
+
 def _emit_ratios_event(
     *,
     bucket_id: str,
@@ -1396,6 +1422,106 @@ def _emit_ratios_event(
     )
 
 
+def _resolve_business_pct_with_census(
+    *,
+    bucket_id: str,
+    active_profile: str | None,
+    category_id: str | None,
+    operator_supplied,
+):
+    """Stamp the census-derived business_pct when the operator omits one.
+
+    Operator-supplied values always win — the helper only fills the
+    gap when ``business_pct`` is not given AND the transaction targets
+    a HOME_OFFICE category that the census actually governs. Returns
+    the operator-supplied value unchanged on every other path, so non-
+    HOME_OFFICE transactions and explicit-override flows are not
+    perturbed.
+    """
+
+    from decimal import Decimal
+
+    from ...application.ledger._ratios import census_business_pct_for
+    from ...application.profile import CensusSyncService
+    from ...domain.categories import SpendingCategory
+
+    if operator_supplied is not None:
+        return operator_supplied
+    if category_id is None or active_profile is None:
+        return operator_supplied
+    try:
+        category_enum = SpendingCategory(category_id.strip())
+    except ValueError:
+        return operator_supplied
+    sync_service = CensusSyncService(bucket_id=bucket_id)
+    raw_afectacion: Decimal | None = sync_service.bound_raw_afectacion_ratio(profile_id=active_profile)
+    if raw_afectacion is None:
+        return operator_supplied
+    return census_business_pct_for(category_enum, raw_afectacion)
+
+
+def _emit_ratios_census_override_warning(
+    *,
+    bucket_id: str,
+    warning,
+) -> None:
+    """Append LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING to the bucket catalogue.
+
+    Fires when a HOME_OFFICE per-category override diverges from the
+    legally-binding census-derived value (LIRPF Art. 30.2 rule 5 for
+    suministros; raw afectación for ownership). The set operation
+    itself is not refused — the operator may legitimately model a
+    planned change — but downstream auditors get a typed record of
+    the divergence.
+    """
+
+    from datetime import UTC, datetime
+
+    from ...domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
+
+    occurred_at = datetime.now(UTC)
+    payload = {
+        "category": warning.category.value,
+        "override_ratio": str(warning.override_ratio),
+        "census_derived_ratio": str(warning.census_derived_ratio),
+        "raw_afectacion_ratio": str(warning.raw_afectacion_ratio),
+    }
+    actor = "operator"
+    event_id = derive_bucket_event_id(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=warning.category.value,
+        payload=payload,
+    )
+    repo = BucketEventHistoryRepository()
+    catalogue = repo.load()
+    repo.save(
+        append_bucket_event(
+            catalogue,
+            BucketEvent(
+                event_id=event_id,
+                bucket_id=bucket_id,
+                event_type=BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING,
+                occurred_at=occurred_at,
+                actor=actor,
+                object_type=BucketEventObjectType.PROFILE,
+                object_id=warning.category.value,
+                payload=payload,
+                payload_version=1,
+            ),
+        ),
+    )
+
+
 def _resolve_category(raw: str):
     from ...domain.categories import SpendingCategory
 
@@ -1437,11 +1563,13 @@ def ratios_set(
         ..., help=tr("cli.app.ledger.ratios.ratio_help", default="Override ratio in the closed interval [0, 1].")
     ),
 ) -> None:
+    from ...application.ledger._ratios import census_override_warning
+    from ...application.profile import CensusSyncService
     from ...domain.usage_ratios import load_usage_ratios, save_usage_ratios
 
     category_enum = _resolve_category(category)
     parsed = _parse_required_decimal(ratio, label="ratio")
-    bucket_id = _ratios_bucket_id()
+    bucket_id, profile_id = _ratios_bucket_and_profile()
     profile = load_usage_ratios(bucket_id=bucket_id)
     prior = profile.ratios.get(category_enum)
     updated = profile.with_ratio(category_enum, parsed)
@@ -1453,6 +1581,16 @@ def ratios_set(
         prior=prior,
         new=parsed,
     )
+    if profile_id is not None:
+        sync_service = CensusSyncService(bucket_id=bucket_id)
+        raw_afectacion = sync_service.bound_raw_afectacion_ratio(profile_id=profile_id)
+        warning = census_override_warning(
+            category=category_enum,
+            override_ratio=parsed,
+            raw_afectacion_ratio=raw_afectacion if raw_afectacion is not None else parsed,
+        ) if raw_afectacion is not None else None
+        if warning is not None:
+            _emit_ratios_census_override_warning(bucket_id=bucket_id, warning=warning)
     payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": str(parsed)}
     _emit(
         ctx,

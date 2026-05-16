@@ -110,53 +110,20 @@ class LocaleManager:
         namespace_prefixes: tuple[str, ...] = (),
     ) -> dict[str, LocaleNode]:
         """Build a sorted, nested dictionary strictly conforming to the required keys."""
-        # 1. Gather all values from existing data to preserve translations
-        existing_flat = {}
-        for key in keys:
-            parts = key.split(".")
-            curr = existing_data
-            missing = False
-            for p in parts:
-                if not isinstance(curr, dict) or p not in curr:
-                    missing = True
-                    break
-                curr = curr[p]
+        existing_flat = _collect_required_leaves(keys, existing_data)
+        for key, value in _flatten_leaf_values(existing_data).items():
+            if key in existing_flat or not _covered_by_namespace(key, namespace_prefixes):
+                continue
+            existing_flat[key] = value
 
-            if not missing and not isinstance(curr, dict):
-                existing_flat[key] = curr
-            else:
-                existing_flat[key] = key  # Default to its own dot-notated path
-        existing_flat.update(
-            {
-                key: value
-                for key, value in _flatten_leaf_values(existing_data).items()
-                if key not in existing_flat and _covered_by_namespace(key, namespace_prefixes)
-            }
-        )
-
-        def _set_nested(root: dict[str, LocaleNode], dotted_key: str, value: LocaleNode) -> None:
-            """Write ``value`` at ``dotted_key`` inside ``root``, creating sub-dicts as needed."""
-            parts = dotted_key.split(".")
-            curr: dict[str, LocaleNode] = root
-            for part in parts[:-1]:
-                if part not in curr or not isinstance(curr[part], dict):
-                    curr[part] = {}
-                child = curr[part]
-                assert isinstance(child, dict)  # narrowing: we just ensured it above
-                curr = child
-            curr[parts[-1]] = value
-
-        # 2. Rebuild the nested structure from scratch to prune extras and ensure type safety
         new_data: dict[str, LocaleNode] = {}
         for key in sorted(keys):
-            if key not in existing_flat:
-                continue
-            _set_nested(new_data, key, existing_flat[key])
+            if key in existing_flat:
+                _set_nested_leaf(new_data, key, existing_flat[key])
         for key in sorted(existing_flat):
             if key in keys:
                 continue
-            _set_nested(new_data, key, existing_flat[key])
-
+            _set_nested_leaf(new_data, key, existing_flat[key])
         return new_data
 
     def scaffold(self) -> None:
@@ -183,6 +150,48 @@ class LocaleManager:
 
             with open(f, "w", encoding="utf-8") as f_obj:
                 yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
+
+
+def _collect_required_leaves(
+    keys: set[str],
+    existing_data: dict[str, LocaleNode],
+) -> dict[str, LocaleNode]:
+    """Resolve each dotted ``key`` against ``existing_data`` to its leaf value.
+
+    Returns a flat ``{dotted_key: value}`` map. A key that resolves to a
+    non-dict leaf carries its existing translation; a key that is
+    missing or whose path bottoms out at a dict (i.e. an interior node,
+    not a leaf) carries its own dotted path as a placeholder — the
+    scaffold convention for "no translation yet".
+    """
+    resolved: dict[str, LocaleNode] = {}
+    for key in keys:
+        leaf = _resolve_leaf(existing_data, key.split("."))
+        resolved[key] = leaf if leaf is not None else key
+    return resolved
+
+
+def _resolve_leaf(existing_data: dict[str, LocaleNode], parts: list[str]) -> LocaleNode | None:
+    """Walk ``parts`` through ``existing_data`` and return the leaf value, or None."""
+    curr: LocaleNode = existing_data
+    for part in parts:
+        if not isinstance(curr, dict) or part not in curr:
+            return None
+        curr = curr[part]
+    return None if isinstance(curr, dict) else curr
+
+
+def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: LocaleNode) -> None:
+    """Write ``value`` at ``dotted_key`` inside ``root``, creating sub-dicts as needed."""
+    parts = dotted_key.split(".")
+    curr: dict[str, LocaleNode] = root
+    for part in parts[:-1]:
+        if part not in curr or not isinstance(curr[part], dict):
+            curr[part] = {}
+        child = curr[part]
+        assert isinstance(child, dict)  # narrowed by the line above
+        curr = child
+    curr[parts[-1]] = value
 
 
 def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> dict[str, str]:

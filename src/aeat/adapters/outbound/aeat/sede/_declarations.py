@@ -332,8 +332,10 @@ async def _open_register_page(
     storage_state_path = session.storage_state_path
     if storage_state_path is None:
         raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat config auth status` first")
+    from ....application.workflow._models import require_active_bucket_id
+
     profile = Profile(
-        name=settings.aeat_default_profile_name,
+        name=require_active_bucket_id(),
         storage_state_path=storage_state_path,
     )
     if playwright is not None:

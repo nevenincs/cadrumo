@@ -162,27 +162,28 @@ def _extract_concat_prefixes(tree: ast.AST) -> set[str]:
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
             continue
-        callee = node.func
-        name: str | None = None
-        if isinstance(callee, ast.Name):
-            name = callee.id
-        elif isinstance(callee, ast.Attribute):
-            name = callee.attr
-        if name not in {"tr", "t"}:
+        if _callee_name(node.func) not in {"tr", "t"}:
             continue
         for argument in node.args:
-            if not isinstance(argument, ast.BinOp) or not isinstance(argument.op, ast.Add):
-                continue
-            left = argument.left
-            if not isinstance(left, ast.Constant) or not isinstance(left.value, str):
-                continue
-            literal = left.value.rstrip(".")
-            if not _is_dotted_literal(literal):
-                continue
-            if len(literal.split(".")) < _KEY_PATTERN_PREFIX_MIN_PARTS:
-                continue
-            findings.add(f"{literal}.*")
+            prefix = _concat_prefix_marker(argument)
+            if prefix is not None:
+                findings.add(prefix)
     return findings
+
+
+def _concat_prefix_marker(argument: ast.expr) -> str | None:
+    """Return the ``<prefix>.*`` marker for a ``"<literal>" + <expr>`` arg, or None."""
+    if not isinstance(argument, ast.BinOp) or not isinstance(argument.op, ast.Add):
+        return None
+    left = argument.left
+    if not isinstance(left, ast.Constant) or not isinstance(left.value, str):
+        return None
+    literal = left.value.rstrip(".")
+    if not _is_dotted_literal(literal):
+        return None
+    if len(literal.split(".")) < _KEY_PATTERN_PREFIX_MIN_PARTS:
+        return None
+    return f"{literal}.*"
 
 
 def scan_source_tree(root: Path) -> set[str]:

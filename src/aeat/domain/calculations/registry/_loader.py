@@ -175,37 +175,56 @@ def _load_catalogue_file_cached(path: str, byte_count: int, modified_ns: int) ->
     del byte_count, modified_ns
     source_path = Path(path)
     data = _freeze_toml(_read_toml(source_path))
-    legal: dict[str, LegalReference] = {}
-    sources: dict[str, SourceReference] = {}
-    raw_legal = data.get("legal")
-    if isinstance(raw_legal, dict):
-        for ref_id, payload in raw_legal.items():
-            if not isinstance(ref_id, str) or not isinstance(payload, dict):
-                raise RegistryLoadError(f"{source_path}: malformed legal reference entry")
-            try:
-                legal[ref_id] = LegalReference.model_validate({"id": ref_id, **payload})
-            except ValidationError as exc:
-                raise RegistryLoadError(f"{source_path}: invalid legal reference {ref_id!r}: {exc}") from exc
-    raw_sources = data.get("sources") or data.get("source")
-    if isinstance(raw_sources, dict):
-        for ref_id, payload in raw_sources.items():
-            if not isinstance(ref_id, str) or not isinstance(payload, dict):
-                raise RegistryLoadError(f"{source_path}: malformed source reference entry")
-            try:
-                sources[ref_id] = SourceReference.model_validate({"id": ref_id, **payload})
-            except ValidationError as exc:
-                raise RegistryLoadError(f"{source_path}: invalid source reference {ref_id!r}: {exc}") from exc
-    parameters: dict[str, LegalParameter] = {}
-    raw_parameters = data.get("parameters")
-    if isinstance(raw_parameters, dict):
-        for param_id, payload in raw_parameters.items():
-            if not isinstance(param_id, str) or not isinstance(payload, dict):
-                raise RegistryLoadError(f"{source_path}: malformed legal parameter entry")
-            try:
-                parameters[param_id] = LegalParameter.model_validate({"id": param_id, **payload})
-            except ValidationError as exc:
-                raise RegistryLoadError(f"{source_path}: invalid legal parameter {param_id!r}: {exc}") from exc
+    legal = _validate_catalogue_section(
+        source_path,
+        raw=data.get("legal"),
+        kind="legal reference",
+        model=LegalReference,
+    )
+    sources = _validate_catalogue_section(
+        source_path,
+        raw=data.get("sources") or data.get("source"),
+        kind="source reference",
+        model=SourceReference,
+    )
+    parameters = _validate_catalogue_section(
+        source_path,
+        raw=data.get("parameters"),
+        kind="legal parameter",
+        model=LegalParameter,
+    )
     return RegistryCatalogues(legal=legal, sources=sources, parameters=parameters)
+
+
+def _validate_catalogue_section[T](
+    source_path: Path,
+    *,
+    raw: object,
+    kind: str,
+    model: type[T],
+) -> dict[str, T]:
+    """Validate one ``{id: payload}`` section of a catalogue TOML into typed records.
+
+    Returns an empty dict when ``raw`` is not a dict (the section is
+    absent or malformed at the top level — the absent case is
+    legitimate for catalogues that don't declare every section).
+    Each ``(id, payload)`` pair is fed through ``model.model_validate``
+    with ``id`` injected; type-shape errors raise the typed
+    ``RegistryLoadError`` envelope so the catalogue loader's failure
+    mode stays uniform across the three sections (legal, sources,
+    parameters).
+    """
+    if not isinstance(raw, dict):
+        return {}
+    out: dict[str, T] = {}
+    for ref_id, payload in raw.items():
+        if not isinstance(ref_id, str) or not isinstance(payload, dict):
+            raise RegistryLoadError(f"{source_path}: malformed {kind} entry")
+        try:
+            out[ref_id] = model.model_validate({"id": ref_id, **payload})  # type: ignore[attr-defined]
+        except ValidationError as exc:
+            raise RegistryLoadError(f"{source_path}: invalid {kind} {ref_id!r}: {exc}") from exc
+    return out
 
 
 def load_legal_parameters_only(root: Path) -> Mapping[str, LegalParameter]:

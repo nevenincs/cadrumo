@@ -21,6 +21,7 @@ tautologies.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -32,11 +33,27 @@ from ._sessions import storage_state_paths
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _settings(token_dir: Path, profile_name: str = "operator") -> Settings:
-    return Settings(
-        aeat_token_dir=token_dir,
-        aeat_default_profile_name=profile_name,
-    )
+@pytest.fixture(autouse=True)
+def _active_profile(tmp_path: Path) -> Iterator[None]:
+    """Set the active-profile setting so the precedence chain resolves.
+
+    Routes through :func:`aeat.core.config.override_settings`, the
+    canonical Settings injection mechanism. Tests that exercise a
+    different profile name nest a further `override_settings` block
+    in their body.
+
+    The package-level `_isolated_aeat_root` conftest fixture handles
+    `aeat_local_storage_root` redirection separately.
+    """
+
+    from aeat.core.config import override_settings
+
+    with override_settings(aeat_active_profile="operator"):
+        yield
+
+
+def _settings(token_dir: Path) -> Settings:
+    return Settings(aeat_token_dir=token_dir)
 
 
 def test_storage_state_paths_certificate_uses_storage_stem(tmp_path: Path) -> None:
@@ -66,15 +83,25 @@ def test_storage_state_paths_none_defaults_to_certificate(tmp_path: Path) -> Non
     assert default_result.storage_state == explicit_result.storage_state
 
 
-def test_storage_state_paths_composes_profile_name_into_filename(tmp_path: Path) -> None:
-    """The profile name from Settings.aeat_default_profile_name is
-    interpolated into the filename — swapping profiles changes the
-    target path so two operator profiles do not share session state."""
-    settings_a = _settings(tmp_path, profile_name="operator")
-    settings_b = _settings(tmp_path, profile_name="other-profile")
+def test_storage_state_paths_composes_profile_name_into_filename(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The active profile name is interpolated into the filename so
+    two operator profiles do not share session state. The active
+    profile resolves through the operator-facing precedence chain
+    (env var > pointer file); switching it between calls changes the
+    target path."""
 
-    result_a = storage_state_paths(settings_a, AuthProviderKind.CERTIFICATE)
-    result_b = storage_state_paths(settings_b, AuthProviderKind.CERTIFICATE)
+    from aeat.core.config import override_settings
+
+    del monkeypatch  # unused; switching profiles via Settings override
+    settings = _settings(tmp_path)
+
+    with override_settings(aeat_active_profile="operator"):
+        result_a = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
+
+    with override_settings(aeat_active_profile="other-profile"):
+        result_b = storage_state_paths(settings, AuthProviderKind.CERTIFICATE)
 
     assert result_a.storage_state == tmp_path / "operator-storage.json"
     assert result_b.storage_state == tmp_path / "other-profile-storage.json"

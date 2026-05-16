@@ -1443,70 +1443,17 @@ def merge_transactions(
     catalogue = repository.load()
 
     children = tuple(_require_transaction(catalogue, child_id) for child_id in child_transaction_ids)
-    split_group_ids = {
-        child.split_lineage.split_group_id if child.split_lineage is not None else None for child in children
-    }
-    if None in split_group_ids or len(split_group_ids) != 1:
-        raise TransactionValidationError(
-            "ledger merge children must all share one split_group_id",
-            context={"bucket_id": bucket_id, "child_transaction_ids": tuple(child_transaction_ids)},
-        )
-    split_group_id = next(iter(split_group_ids))
-    assert split_group_id is not None  # narrowed: None already excluded by the guard above
-    for child in children:
-        if child.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-            raise TransactionValidationError(
-                "ledger merge children must all be active",
-                context={
-                    "child_transaction_id": child.transaction_id,
-                    "lifecycle_state": child.lifecycle_state.value,
-                },
-            )
-        if child.split_lineage is None or child.split_lineage.role is not SplitRole.CHILD:
-            raise TransactionValidationError(
-                "ledger merge children must carry split_lineage role=CHILD",
-                context={"child_transaction_id": child.transaction_id},
-            )
-
-    # Locate the parent by scanning the catalogue for the unique transaction
-    # that carries split_lineage role=PARENT for this split_group_id.
-    parent_candidates = tuple(
-        transaction
-        for transaction in catalogue.transactions.values()
-        if transaction.split_lineage is not None
-        and transaction.split_lineage.role is SplitRole.PARENT
-        and transaction.split_lineage.split_group_id == split_group_id
+    split_group_id = _resolve_merge_split_group(
+        children=children,
+        bucket_id=bucket_id,
+        child_transaction_ids=child_transaction_ids,
     )
-    if len(parent_candidates) != 1:
-        raise TransactionValidationError(
-            "ledger merge could not resolve a unique parent for the split_group_id",
-            context={
-                "bucket_id": bucket_id,
-                "split_group_id": split_group_id,
-                "candidate_count": len(parent_candidates),
-            },
-        )
-    parent = parent_candidates[0]
-    if parent.lifecycle_state is not TransactionLifecycleState.SPLIT:
-        raise TransactionValidationError(
-            "ledger merge parent must be in SPLIT state",
-            context={"parent_transaction_id": parent.transaction_id, "lifecycle_state": parent.lifecycle_state.value},
-        )
-    if parent.split_lineage is None or parent.split_lineage.role is not SplitRole.PARENT:
-        raise TransactionValidationError(
-            "ledger merge parent must carry split_lineage role=PARENT",
-            context={"parent_transaction_id": parent.transaction_id},
-        )
-    expected_children = set(parent.split_lineage.sibling_transaction_ids)
-    if expected_children != set(child_transaction_ids):
-        raise TransactionValidationError(
-            "ledger merge cohort is incomplete; every child of the split_group must be supplied",
-            context={
-                "parent_transaction_id": parent.transaction_id,
-                "expected_children": tuple(sorted(expected_children)),
-                "supplied": tuple(sorted(child_transaction_ids)),
-            },
-        )
+    parent = _resolve_merge_parent(
+        catalogue=catalogue,
+        bucket_id=bucket_id,
+        split_group_id=split_group_id,
+        child_transaction_ids=child_transaction_ids,
+    )
 
     # Finalized-modelo blocker — parent + every child.
     transaction_ids_under_check = (parent.transaction_id, *child_transaction_ids)
@@ -1653,6 +1600,102 @@ def merge_transactions(
         parent_transaction=parent_after,
         bucket_event_id=event.event_id,
     )
+
+
+def _resolve_merge_split_group(
+    *,
+    children: tuple[Transaction, ...],
+    bucket_id: str,
+    child_transaction_ids: tuple[str, ...],
+) -> str:
+    """Validate child shape and return the shared ``split_group_id``.
+
+    Rejects: any child without a split_lineage, any disagreement on
+    split_group_id across the cohort, any child not in ACTIVE state,
+    and any child not carrying split_lineage role=CHILD.
+    """
+    split_group_ids = {
+        child.split_lineage.split_group_id if child.split_lineage is not None else None for child in children
+    }
+    if None in split_group_ids or len(split_group_ids) != 1:
+        raise TransactionValidationError(
+            "ledger merge children must all share one split_group_id",
+            context={"bucket_id": bucket_id, "child_transaction_ids": tuple(child_transaction_ids)},
+        )
+    split_group_id = next(iter(split_group_ids))
+    assert split_group_id is not None  # narrowed: None excluded by the guard above
+    for child in children:
+        _require_child_active_and_role(child)
+    return split_group_id
+
+
+def _require_child_active_and_role(child: Transaction) -> None:
+    if child.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "ledger merge children must all be active",
+            context={
+                "child_transaction_id": child.transaction_id,
+                "lifecycle_state": child.lifecycle_state.value,
+            },
+        )
+    if child.split_lineage is None or child.split_lineage.role is not SplitRole.CHILD:
+        raise TransactionValidationError(
+            "ledger merge children must carry split_lineage role=CHILD",
+            context={"child_transaction_id": child.transaction_id},
+        )
+
+
+def _resolve_merge_parent(
+    *,
+    catalogue: TransactionCatalogue,
+    bucket_id: str,
+    split_group_id: str,
+    child_transaction_ids: tuple[str, ...],
+) -> Transaction:
+    """Find the unique split-parent for ``split_group_id`` and verify the cohort.
+
+    Rejects: zero / multiple parent candidates, parent not in SPLIT
+    state, parent not carrying split_lineage role=PARENT, or supplied
+    children not matching the parent's recorded sibling set.
+    """
+    parent_candidates = tuple(
+        transaction
+        for transaction in catalogue.transactions.values()
+        if transaction.split_lineage is not None
+        and transaction.split_lineage.role is SplitRole.PARENT
+        and transaction.split_lineage.split_group_id == split_group_id
+    )
+    if len(parent_candidates) != 1:
+        raise TransactionValidationError(
+            "ledger merge could not resolve a unique parent for the split_group_id",
+            context={
+                "bucket_id": bucket_id,
+                "split_group_id": split_group_id,
+                "candidate_count": len(parent_candidates),
+            },
+        )
+    parent = parent_candidates[0]
+    if parent.lifecycle_state is not TransactionLifecycleState.SPLIT:
+        raise TransactionValidationError(
+            "ledger merge parent must be in SPLIT state",
+            context={"parent_transaction_id": parent.transaction_id, "lifecycle_state": parent.lifecycle_state.value},
+        )
+    if parent.split_lineage is None or parent.split_lineage.role is not SplitRole.PARENT:
+        raise TransactionValidationError(
+            "ledger merge parent must carry split_lineage role=PARENT",
+            context={"parent_transaction_id": parent.transaction_id},
+        )
+    expected_children = set(parent.split_lineage.sibling_transaction_ids)
+    if expected_children != set(child_transaction_ids):
+        raise TransactionValidationError(
+            "ledger merge cohort is incomplete; every child of the split_group must be supplied",
+            context={
+                "parent_transaction_id": parent.transaction_id,
+                "expected_children": tuple(sorted(expected_children)),
+                "supplied": tuple(sorted(child_transaction_ids)),
+            },
+        )
+    return parent
 
 
 def _transaction_repository(

@@ -107,13 +107,19 @@ def test_census_help_lists_four_verbs(cli_runner: CliRunner) -> None:
         assert verb in result.output
 
 
-def test_refresh_refuses_until_sede_driver_lands(cli_runner: CliRunner) -> None:
+def test_refresh_refuses_without_live_gate(
+    cli_runner: CliRunner, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Live refresh requires AEAT_LIVE_TESTS_ENABLED=1 to pass the
+    access-gate. With the gate off (default), the CLI surfaces the
+    refusal without ever touching a browser session."""
+
     _seed_active_profile()
+    monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
 
     result = cli_runner.invoke(profile_app, ["census", "refresh"])
 
     assert result.exit_code != 0
-    assert "not wired" in result.output.lower() or "sede" in result.output.lower()
 
 
 def test_show_refuses_when_no_snapshot_exists(cli_runner: CliRunner) -> None:
@@ -169,3 +175,35 @@ def test_compare_matches_after_apply(cli_runner: CliRunner) -> None:
     assert result.exit_code == 0
     assert "matches\tcensus.establecimiento_type" in result.output
     assert "matches\tvivienda_office.total_m2" in result.output
+
+
+def test_apply_emits_census_applied_bucket_event(cli_runner: CliRunner) -> None:
+    """Persistence-audit follow-up: apply MUST emit CENSUS_APPLIED so the
+    stale-cascade walker (P05.S54) has a typed event to react to. The
+    CLI test never reached the catalogue before this assertion landed
+    — the emission was implemented but not witnessed end-to-end."""
+
+    from aeat.application.workflow._persistence import workflow_state_repository
+    from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+
+    _seed_active_profile()
+    snapshot_id = _capture_snapshot()
+
+    result = cli_runner.invoke(profile_app, ["census", "apply"])
+    assert result.exit_code == 0, result.output
+
+    catalogue = BucketEventHistoryRepository().load()
+    state = workflow_state_repository().load()
+    matching = [
+        event
+        for event in catalogue.events.values()
+        if event.event_type is BucketEventType.CENSUS_APPLIED
+        and event.object_id == state.active_profile
+    ]
+    assert matching, (
+        f"CENSUS_APPLIED must fire after apply; "
+        f"saw {[e.event_type.value for e in catalogue.events.values()]}"
+    )
+    payload = matching[-1].payload
+    assert payload["snapshot_id"] == snapshot_id
+    assert payload["profile_id"] == state.active_profile

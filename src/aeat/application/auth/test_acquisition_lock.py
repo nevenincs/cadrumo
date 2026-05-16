@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import socket
+from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -24,12 +25,17 @@ from ._acquisition_lock import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
+@pytest.fixture(autouse=True)
+def _active_profile() -> Iterator[None]:
+    from aeat.core.config import override_settings
+
+    with override_settings(aeat_active_profile="operator"):
+        yield
+
+
 def _settings(tmp_path: Path) -> Settings:
     return Settings().model_copy(
-        update={
-            "aeat_token_dir": tmp_path / "tokens",
-            "aeat_default_profile_name": "operator",
-        }
+        update={"aeat_token_dir": tmp_path / "tokens"}
     )
 
 
@@ -72,7 +78,7 @@ def test_auth_acquisition_lock_recovers_expired_owner(tmp_path: Path) -> None:
     now = datetime.now(UTC)
     stale = AuthAcquisitionLockRecord(
         provider_kind=AuthProviderKind.CLAVE_MOVIL,
-        profile_name=settings.aeat_default_profile_name,
+        profile_name="operator",
         pid=os.getpid(),
         hostname=socket.gethostname(),
         created_at=now - timedelta(minutes=20),

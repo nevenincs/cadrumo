@@ -451,7 +451,7 @@ def test_list_filed_data_cli_requires_live_gate_before_remote_read(tmp_path: Pat
         ],
         env={
             "AEAT_TOKEN_DIR": str(tmp_path),
-            "AEAT_DEFAULT_PROFILE_NAME": "default",
+            "AEAT_ACTIVE_PROFILE": "default",
             "AEAT_OUTPUT_LANGUAGE": "en",
         },
     )
@@ -489,7 +489,7 @@ def test_capture_filed_data_cli_requires_live_gate_before_local_writes(tmp_path:
         ],
         env={
             "AEAT_TOKEN_DIR": str(tmp_path),
-            "AEAT_DEFAULT_PROFILE_NAME": "default",
+            "AEAT_ACTIVE_PROFILE": "default",
             "AEAT_OUTPUT_LANGUAGE": "en",
         },
     )

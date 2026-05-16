@@ -315,25 +315,34 @@ def test_sensitive_financial_surfaces_do_not_bypass_secure_object_backend() -> N
     violations: list[str] = []
     for surface in _SENSITIVE_SURFACES:
         for path in _iter_python_files(surface):
-            text = path.read_text(encoding="utf-8")
-            relative = path.relative_to(_ROOT).as_posix()
-            for token in _FORBIDDEN_TEXT:
-                if token in text:
-                    violations.append(f"{relative}: contains {token!r}")
-            tree = ast.parse(text, filename=str(path))
-            for node in ast.walk(tree):
-                if not isinstance(node, ast.Call):
-                    continue
-                name = _call_name(node)
-                key = (relative, _function_for_line(path, node.lineno), _dotted_call_name(node) or name or "<unknown>")
-                if key in _SENSITIVE_DIRECT_WRITE_EXCEPTIONS:
-                    continue
-                if name in _FORBIDDEN_CALLS:
-                    violations.append(f"{relative}:{node.lineno}: calls {name}()")
-                if _calls_file_open_for_write(node):
-                    violations.append(f"{relative}:{node.lineno}: opens a file in write/append mode")
-
+            violations.extend(_sensitive_surface_violations(path))
     assert violations == []
+
+
+def _sensitive_surface_violations(path: Path) -> list[str]:
+    """Return every forbidden-text + forbidden-call offence in one source file."""
+    text = path.read_text(encoding="utf-8")
+    relative = path.relative_to(_ROOT).as_posix()
+    violations = [f"{relative}: contains {token!r}" for token in _FORBIDDEN_TEXT if token in text]
+    tree = ast.parse(text, filename=str(path))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            violations.extend(_sensitive_call_violations(node, path=path, relative=relative))
+    return violations
+
+
+def _sensitive_call_violations(node: ast.Call, *, path: Path, relative: str) -> list[str]:
+    """Return forbidden-call offences for one AST Call node, honouring the allowlist."""
+    name = _call_name(node)
+    key = (relative, _function_for_line(path, node.lineno), _dotted_call_name(node) or name or "<unknown>")
+    if key in _SENSITIVE_DIRECT_WRITE_EXCEPTIONS:
+        return []
+    offences: list[str] = []
+    if name in _FORBIDDEN_CALLS:
+        offences.append(f"{relative}:{node.lineno}: calls {name}()")
+    if _calls_file_open_for_write(node):
+        offences.append(f"{relative}:{node.lineno}: opens a file in write/append mode")
+    return offences
 
 
 def test_production_file_write_inventory_is_reviewed() -> None:

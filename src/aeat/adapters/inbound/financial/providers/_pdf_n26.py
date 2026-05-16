@@ -204,33 +204,47 @@ def _iter_statement_rows(
 ) -> Iterator[_ParsedRow]:
     """Yield the raw transaction rows found in statement pages."""
     for page_number, page_lines in enumerate(pages, start=1):
-        if _HEADER_LINE not in page_lines:
-            continue
-        header_index = page_lines.index(_HEADER_LINE)
-        current: _InProgressRow | None = None
-        for line in page_lines[header_index + 1 :]:
-            if _is_footer_or_section_line(line):
-                if current is not None:
-                    yield _finalize_row(current, page_number, page_lines)
-                break
-            match = _ROW_RE.match(line)
-            if match is not None:
-                if current is not None:
-                    yield _finalize_row(current, page_number, page_lines)
-                current = {
-                    "base_line": line,
-                    "narrative": match.group("narrative"),
-                    "booked_date": match.group("booked_date"),
-                    "amount": match.group("amount"),
-                    "continuations": [],
-                }
-                continue
-            if current is None:
-                continue
-            current["continuations"].append(line)
-        else:
+        yield from _iter_page_rows(page_lines, page_number)
+
+
+def _iter_page_rows(
+    page_lines: tuple[str, ...],
+    page_number: int,
+) -> Iterator[_ParsedRow]:
+    """Yield row records on one page; an unfinished row at end-of-page is finalised too."""
+    if _HEADER_LINE not in page_lines:
+        return
+    header_index = page_lines.index(_HEADER_LINE)
+    current: _InProgressRow | None = None
+    for line in page_lines[header_index + 1 :]:
+        if _is_footer_or_section_line(line):
             if current is not None:
                 yield _finalize_row(current, page_number, page_lines)
+            return
+        next_row = _start_new_row(line) if _ROW_RE.match(line) else None
+        if next_row is not None:
+            if current is not None:
+                yield _finalize_row(current, page_number, page_lines)
+            current = next_row
+            continue
+        if current is not None:
+            current["continuations"].append(line)
+    if current is not None:
+        yield _finalize_row(current, page_number, page_lines)
+
+
+def _start_new_row(line: str) -> _InProgressRow | None:
+    """Match ``line`` against ``_ROW_RE`` and return a fresh in-progress row, or ``None``."""
+    match = _ROW_RE.match(line)
+    if match is None:
+        return None
+    return {
+        "base_line": line,
+        "narrative": match.group("narrative"),
+        "booked_date": match.group("booked_date"),
+        "amount": match.group("amount"),
+        "continuations": [],
+    }
 
 
 def _finalize_row(

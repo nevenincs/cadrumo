@@ -166,6 +166,7 @@ def _parse_rule(raw_rule: object) -> ProportionalityRule:
             "kind": ProportionalityKind(str(data.get("kind"))),
             "fixed_pct": _decimal_or_none(data.get("fixed_pct")),
             "default_ratio": _decimal_or_none(data.get("default_ratio")),
+            "statutory_multiplier": _decimal_or_none(data.get("statutory_multiplier")),
             "statutory_cap_eur_per_day": _decimal_or_none(data.get("statutory_cap_eur_per_day")),
             "statutory_cap_eur": _decimal_or_none(data.get("statutory_cap_eur")),
             "statutory_cap_period": _cap_period_or_none(data.get("statutory_cap_period")),

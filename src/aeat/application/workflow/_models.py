@@ -136,6 +136,12 @@ class WorkflowState(BaseModel):
         auth: Local AEAT access readiness state.
         profiles: Profile-bucket pointers keyed by profile name.
         active_profile: Currently selected profile name, or ``None``.
+            Retained on the record during the lifecycle cutover; the
+            authoritative read path is :func:`resolve_active_bucket_id`
+            which consults Settings then the plaintext pointer file
+            before falling back to this field. Field deletion lands
+            once every reader (~30 production sites + tests) migrates
+            to the resolver.
         declarations: Filing draft pointers keyed by :func:`declaration_key`.
         invoice_reviews: Invoice review annotations keyed by ``invoice_id``.
         ledger_reviews: Ledger transaction review annotations keyed by
@@ -194,29 +200,75 @@ class WorkflowState(BaseModel):
         )
 
     def active_profile_record(self) -> UserProfileRecord | None:
-        """Return the active :class:`UserProfileRecord` from its secure bucket."""
-        if self.active_profile is None:
-            return None
-        pointer = self.profiles.get(self.active_profile)
-        if pointer is None:
+        """Return the active :class:`UserProfileRecord` from its secure bucket.
+
+        The active bucket id resolves via the precedence chain in
+        :func:`resolve_active_bucket_id` (env var > pointer file > state
+        fallback). The bucket id and profile name are 1:1 by orchestration
+        convention, so the resolved id is the lifecycle-service read key.
+        """
+
+        bucket_id = resolve_active_bucket_id(self)
+        if bucket_id is None:
             return None
         from ...domain.user_profile import ProfileNotFoundError
         from ..user_profile._orchestration import build_lifecycle_service
 
-        service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+        service = build_lifecycle_service(bucket_id=bucket_id)
         try:
-            return service.read(self.active_profile)
+            return service.read(bucket_id)
         except ProfileNotFoundError:
             return None
 
     def active_profile_bucket_id(self) -> str | None:
-        """Return the active profile's secure bucket id."""
-        if self.active_profile is None:
-            return None
-        pointer = self.profiles.get(self.active_profile)
-        if pointer is None:
-            return None
+        """Return the active profile's secure bucket id via the precedence chain."""
+
+        return resolve_active_bucket_id(self)
+
+
+def resolve_active_bucket_id(state: WorkflowState | None = None) -> str | None:
+    """Resolve the active bucket id via the operator-facing precedence chain.
+
+    Precedence, highest wins:
+
+    1. ``Settings.aeat_active_profile`` — surfaced from the
+       ``AEAT_ACTIVE_PROFILE`` environment variable (or an active
+       :func:`aeat.core.config.override_settings` block in tests).
+       Per-shell override useful for CI, headless invocations, and the
+       CLI ``--profile`` flag.
+    2. ``<aeat-root>/active-profile`` plaintext pointer file written by
+       ``profile create`` / ``profile switch``. This is the canonical
+       default for interactive sessions and resolves the chicken-and-egg
+       defect where an encrypted state row could not be read without
+       first knowing which bucket to unlock.
+
+    The CLI ``--profile`` flag, when supplied per-invocation, runs the
+    process under an :func:`aeat.core.config.override_settings` block
+    that sets ``aeat_active_profile`` so rung one handles it without a
+    fourth precedence rung.
+
+    The ``state`` argument is consulted as the third rung only while
+    the field migration is in flight; once every reader of
+    :attr:`WorkflowState.active_profile` adopts the resolver, the
+    field deletes and rung three disappears with it.
+    """
+
+    from ...core.config import load_settings
+    from ._bucket_pointer_io import read_pointer
+
+    settings = load_settings()
+    override = (settings.aeat_active_profile or "").strip()
+    if override:
+        return override
+    pointer = read_pointer(settings.aeat_local_storage_root)
+    if pointer is not None:
         return pointer.bucket_id
+    if state is not None and state.active_profile is not None:
+        bucket_pointer = state.profiles.get(state.active_profile)
+        if bucket_pointer is not None:
+            return bucket_pointer.bucket_id
+        return state.active_profile
+    return None
 
 
 def active_bucket_id_or_raise(state: WorkflowState) -> str:
@@ -226,7 +278,34 @@ def active_bucket_id_or_raise(state: WorkflowState) -> str:
     application services refuse to operate when no profile is selected.
     """
 
-    bucket_id = state.active_profile_bucket_id()
+    bucket_id = resolve_active_bucket_id(state)
+    if bucket_id is None:
+        from ._errors import NoActiveProfileError
+
+        raise NoActiveProfileError("no active profile bucket")
+    return bucket_id
+
+
+def require_active_bucket_id() -> str:
+    """Resolve the active bucket id via the precedence chain or raise.
+
+    Companion to :func:`active_bucket_id_or_raise` for call sites that
+    do not hold a :class:`WorkflowState` reference. The auth session-
+    path helpers, the Cl@ve Móvil persistence path, the SEDE
+    declarations-register profile name, and the
+    AuthAcquisitionLockRecord construction all sit on auth flows that
+    are operator-initiated and require a profile to be selected; a
+    missing profile is a genuine refusal, not a degraded read. Reads
+    env var > pointer file; raises :class:`NoActiveProfileError` if
+    neither rung resolves.
+
+    Diagnostic surfaces (browser-connectivity probe, status flows)
+    MUST NOT call this helper — they call
+    :func:`resolve_active_bucket_id` and supply their own fallback
+    label so a missing profile remains diagnosable.
+    """
+
+    bucket_id = resolve_active_bucket_id(state=None)
     if bucket_id is None:
         from ._errors import NoActiveProfileError
 

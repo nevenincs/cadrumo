@@ -109,7 +109,15 @@ async def default_browser_session_factory(settings: Settings) -> DefaultBrowserS
     when you are done — auth providers already do this in their
     ``close()`` path.
     """
-    profile_name = settings.aeat_default_profile_name
+    from ....application.workflow._models import resolve_active_bucket_id
+
+    # This factory is reachable from the diagnostic browser-connectivity
+    # probe under `aeat config status`, so a missing active profile MUST
+    # NOT raise here: the probe is exactly what an operator runs to
+    # diagnose a missing-profile condition. The sentinel label keeps
+    # the Profile model satisfied without pretending to be a real
+    # profile.
+    profile_name = resolve_active_bucket_id() or "diagnostic-probe"
     # Profile.storage_state_path is superseded by every auth-provider
     # passing an explicit kind-namespaced storage_state_path to
     # BrowserSession.create_context(). The value here is a fallback

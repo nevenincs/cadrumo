@@ -24,6 +24,8 @@ from ...domain.user_profile import (
     UserProfileRecord,
     load_user_profile_schema,
 )
+from ..workflow._bucket_pointer import BucketPointer
+from ..workflow._bucket_pointer_io import write_pointer
 from ..workflow._models import ProfileBucketPointer, WorkflowEvent, WorkflowState
 from ..workflow._utils import utc_now
 from . import (
@@ -68,6 +70,42 @@ def _append_workflow_event(state: WorkflowState, *, action: str, bucket_id: str,
     return state.model_copy(update={"bucket_events": (*state.bucket_events, event), "updated_at": utc_now()})
 
 
+def _write_active_profile_pointer(bucket_id: str) -> None:
+    """Atomically materialise the active-profile pointer file on disk.
+
+    The pointer file is the canonical default for the active-profile
+    precedence chain. Writing happens here so a successful register /
+    select call leaves the on-disk state self-consistent: the next
+    process invocation resolves the active profile from the pointer
+    before any encrypted state row needs to load.
+    """
+
+    from ...core.config import load_settings
+
+    settings = load_settings()
+    write_pointer(
+        settings.aeat_local_storage_root,
+        BucketPointer(bucket_id=bucket_id, schema_version=1),
+    )
+
+
+def _clear_active_profile_pointer() -> None:
+    """Remove the active-profile pointer file if present.
+
+    Tombstoning a profile clears the precedence-chain rung-2 entry so
+    the next CLI invocation reports no active profile rather than
+    pointing at a tombstoned record.
+    """
+
+    from ...core.config import load_settings
+    from ..workflow._bucket_pointer_io import pointer_path
+
+    settings = load_settings()
+    target = pointer_path(settings.aeat_local_storage_root)
+    if target.is_file():
+        target.unlink()
+
+
 def register_active_profile(
     state: WorkflowState,
     *,
@@ -102,6 +140,7 @@ def register_active_profile(
             updated = _append_workflow_event(
                 updated, action="profile.values.updated", bucket_id=profile_id, object_id=keys_id
             )
+    _write_active_profile_pointer(profile_id)
     return updated
 
 
@@ -124,6 +163,7 @@ def select_profile(
     profiles = dict(state.profiles)
     profiles[profile_id] = ProfileBucketPointer(bucket_id=profile_id)
     updated = state.model_copy(update={"active_profile": profile_id, "profiles": profiles, "updated_at": utc_now()})
+    _write_active_profile_pointer(profile_id)
     return _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
 
 
@@ -184,6 +224,7 @@ def remove_active_profile(
     profile_id = _require_active(state)
     service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
     service.remove(RemoveProfileCommand(profile_id=profile_id))
+    _clear_active_profile_pointer()
     updated = state.model_copy(update={"active_profile": None, "updated_at": utc_now()})
     return _append_workflow_event(updated, action="profile.tombstoned", bucket_id=profile_id, object_id=profile_id)
 
@@ -196,14 +237,14 @@ def read_active_profile(
 ) -> UserProfileRecord | None:
     """Return the active :class:`UserProfileRecord`, or ``None`` when none is selected."""
 
-    if state.active_profile is None:
+    from ..workflow._models import resolve_active_bucket_id
+
+    bucket_id = resolve_active_bucket_id(state)
+    if bucket_id is None:
         return None
-    pointer = state.profiles.get(state.active_profile)
-    if pointer is None:
-        return None
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id, secure_objects=secure_objects, schema=schema)
+    service = build_lifecycle_service(bucket_id=bucket_id, secure_objects=secure_objects, schema=schema)
     try:
-        return service.read(state.active_profile)
+        return service.read(bucket_id)
     except ProfileNotFoundError:
         return None
 
@@ -227,9 +268,18 @@ def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
 
 
 def _require_active(state: WorkflowState) -> str:
-    if state.active_profile is None:
+    """Return the active bucket id or raise.
+
+    Reads through the precedence chain (Settings > pointer file >
+    `state.active_profile` while the field migration is in flight).
+    """
+
+    from ..workflow._models import resolve_active_bucket_id
+
+    bucket_id = resolve_active_bucket_id(state)
+    if bucket_id is None:
         raise ProfileNotFoundError("no active profile selected")
-    return state.active_profile
+    return bucket_id
 
 
 __all__ = [

@@ -721,7 +721,8 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
-    storage_state_path = settings.aeat_token_dir / f"{settings.aeat_default_profile_name}-storage.json"
+    monkeypatch.setenv("AEAT_ACTIVE_PROFILE", "operator")
+    storage_state_path = settings.aeat_token_dir / "operator-storage.json"
     stale_storage_state: dict[str, object] = {"cookies": [], "origins": []}
     _session_store.save(
         storage_state_path,

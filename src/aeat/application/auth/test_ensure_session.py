@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
@@ -63,12 +64,17 @@ class _Provider:
         self.close_calls += 1
 
 
+@pytest.fixture(autouse=True)
+def _active_profile() -> Iterator[None]:
+    from aeat.core.config import override_settings
+
+    with override_settings(aeat_active_profile="operator"):
+        yield
+
+
 def _settings(tmp_path: Path) -> Settings:
     return Settings().model_copy(
-        update={
-            "aeat_token_dir": tmp_path / "tokens",
-            "aeat_default_profile_name": "operator",
-        }
+        update={"aeat_token_dir": tmp_path / "tokens"}
     )
 
 
