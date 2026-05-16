@@ -16,7 +16,38 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    computed_field,
+    field_serializer,
+    field_validator,
+    model_validator,
+)
+from typing import Annotated
+
+from ...domain.categories import SpendingCategory
+
+
+def _coerce_spending_category(value: object) -> object:
+    """Accept the canonical SpendingCategory value string AND the enum member.
+
+    Strict pydantic refuses str→Enum coercion by default. Wrapping the
+    field with a ``BeforeValidator`` keeps registry/JSON payloads (which
+    carry the enum's ``.value`` string) loadable without weakening
+    strict-mode for every other field on the model.
+    """
+
+    if value is None or isinstance(value, SpendingCategory):
+        return value
+    if isinstance(value, str):
+        return SpendingCategory(value)
+    return value
+
+
+_SpendingCategoryField = Annotated[SpendingCategory, BeforeValidator(_coerce_spending_category)]
 
 from ...core.i18n import Translatable as tr
 from ._errors import AggregationPeriodError
@@ -210,7 +241,12 @@ class CasillaProvenance(BaseModel):
     casilla: str = Field(min_length=2, max_length=8)
     transaction_ids: Sequence[str] = Field(default_factory=tuple)
     subtotal: Decimal
-    category_id: str | None = None
+    # Typed SpendingCategory enum (was bare ``str`` before R025/R026
+    # follow-up). The BeforeValidator coerces canonical string inputs
+    # to the enum member so existing TOML/JSON payloads round-trip
+    # without registry-data changes. Downstream comparisons no longer
+    # need a manual ``normalize_spending_category`` step.
+    category_id: _SpendingCategoryField | None = None
 
     @field_validator("transaction_ids")
     @classmethod
