@@ -28,6 +28,7 @@ from ...modelos._calculation_revision import (
 )
 from ._bindings import (
     CasillaObservation,
+    OracleFilingObservation,
     RegistryFilingObservation,
 )
 from ._schema import LiveCrossReferenceDecision
@@ -314,6 +315,45 @@ def test_filing_draft_snapshot_ref_full_roundtrip() -> None:
     assert roundtripped == original
     assert roundtripped.snapshot_ref == ref
     assert roundtripped.subject_tax_id == "12345678Z"
+
+
+def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
+    """``OracleFilingObservation`` marks oracle-originated values as a distinct subtype.
+
+    The parent :class:`RegistryFilingObservation` carries locally-computed
+    casilla values. The :class:`OracleFilingObservation` subtype attaches
+    an ``oracle_id`` field linking the observation to the cross-reference
+    decision that produced it. Both the subtype attribution and the
+    ``oracle_id`` linkage must survive strict JSON round-trip.
+    """
+
+    obs = CasillaObservation(
+        casilla_id="iva.devengado",
+        value=Decimal("20000.00"),
+        formula_id=None,
+        legal_refs=("LIVA.art-21",),
+        source_refs=("AEAT.IVA.2025",),
+    )
+    original = OracleFilingObservation(
+        modelo="303",
+        filing_year=2025,
+        period="1T",
+        observations=(obs,),
+        oracle_id="aeat-oracle.iva.q1",
+    )
+
+    roundtripped = OracleFilingObservation.model_validate_json(
+        original.model_dump_json(),
+    )
+
+    assert roundtripped == original
+    assert roundtripped.oracle_id == "aeat-oracle.iva.q1"
+    assert roundtripped.observations == (obs,)
+    # OracleFilingObservation IS a RegistryFilingObservation; the
+    # type distinction must be preserved structurally even though
+    # both have the same JSON shape on the wire.
+    assert isinstance(roundtripped, OracleFilingObservation)
+    assert isinstance(roundtripped, RegistryFilingObservation)
 
 
 def test_workflow_step_details_typed_envelope_roundtrip() -> None:
