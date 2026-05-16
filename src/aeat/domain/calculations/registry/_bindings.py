@@ -288,7 +288,16 @@ class _PreviousFilingSelector(BaseModel):
     filing_year_delta: int = 0
     period: str | None = Field(default=None, min_length=1, max_length=8)
     source_periods: tuple[str, ...] = ()
-    source_casillas: tuple[str, ...] = Field(min_length=1)
+    # Two-shape source spec: ``source_casillas`` (plural) carries a
+    # tuple of casillas on the source filing for aggregation; the
+    # singular ``source_output`` covers the direct-value-copy shape
+    # (one casilla on the source filing, often paired with the
+    # optional ``relation`` cross-reference id). The
+    # ``_validate_source_spec`` model-validator below requires exactly
+    # one of the two to be populated.
+    source_casillas: tuple[str, ...] = ()
+    source_output: str | None = Field(default=None, min_length=1)
+    relation: str | None = Field(default=None, min_length=1)
 
     @field_validator("source_periods")
     @classmethod
@@ -322,7 +331,25 @@ class _PreviousFilingSelector(BaseModel):
         if self.period is not None and self.source_periods:
             raise RegistryValidationError("previous-filing selector must use period or source_periods, not both")
         if self.period is None and not self.source_periods:
-            raise RegistryValidationError("previous-filing selector must declare period or source_periods")
+            # Direct-value-copy bindings (singular source_output)
+            # frequently omit the period anchor because the relation
+            # carries the period contract; only enforce period on the
+            # plural source_casillas shape.
+            if self.source_casillas:
+                raise RegistryValidationError("previous-filing selector must declare period or source_periods")
+        return self
+
+    @model_validator(mode="after")
+    def _validate_source_spec(self) -> _PreviousFilingSelector:
+        if bool(self.source_casillas) == bool(self.source_output):
+            raise RegistryValidationError(
+                "previous-filing selector must declare exactly one of source_casillas (aggregation) "
+                "or source_output (direct value copy)"
+            )
+        if self.relation is not None and self.source_output is None:
+            raise RegistryValidationError(
+                "previous-filing selector relation requires source_output"
+            )
         return self
 
 

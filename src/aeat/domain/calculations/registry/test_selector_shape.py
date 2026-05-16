@@ -85,6 +85,50 @@ def test_previous_filing_selector_accepts_well_shaped_selector() -> None:
     assert validate_binding_selector_shape(binding) == []
 
 
+def test_previous_filing_selector_accepts_singular_source_output_shape() -> None:
+    """The direct-value-copy shape (singular source_output + relation) passes.
+
+    Real registry bindings (e.g. M100 retenciones relations against
+    M111/M115/M123) declare a ``source_output`` casilla rather than
+    a ``source_casillas`` tuple. The typed selector must accept this
+    second shape, validated as the exclusive alternative to the
+    plural form.
+    """
+
+    binding = _binding(
+        source="previous_filing",
+        selector={
+            "source_modelo": "111",
+            "source_output": "28",
+            "relation": "retenciones-trabajo-actividades-premios",
+        },
+    )
+    assert validate_binding_selector_shape(binding) == []
+
+
+def test_previous_filing_selector_rejects_both_source_shapes() -> None:
+    """Declaring source_output AND source_casillas in the same selector fails.
+
+    The two shapes are exclusive: one for direct copy, one for
+    aggregation. A binding that declares both is malformed; the
+    typed model surfaces this as a validation failure.
+    """
+
+    binding = _binding(
+        source="previous_filing",
+        selector={
+            "source_modelo": "111",
+            "source_output": "28",
+            "source_casillas": ("28",),
+            "relation": "retenciones-trabajo-actividades-premios",
+        },
+        binding_id="bad-double-source",
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures
+    assert "bad-double-source" in failures[0]
+
+
 def test_previous_filing_selector_rejects_unknown_key() -> None:
     """An extra key on a previous_filing selector surfaces a typed diagnostic.
 
