@@ -24,6 +24,7 @@ Coverage:
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -90,7 +91,14 @@ def _populated_pull_result() -> PullResult:
             BindingEdit(binding="binding.modelo-100.unset", value=None),
         ),
         relation_edits=(
-            RelationEdit(relation="relation.cross.prior-period", value=Decimal("42.00")),
+            RelationEdit(
+                relation="relation.cross.prior-period",
+                value=Decimal("42.00"),
+                provenance="local_filing",
+                source_filing_year=2024,
+                source_periods=("1T", "2T", "3T"),
+                resolved_at=datetime(2025, 4, 10, 12, 0, 0, tzinfo=UTC),
+            ),
             RelationEdit(relation="relation.cross.unset", value=None),
         ),
         row_set_edits=(
@@ -154,6 +162,14 @@ def test_pull_result_json_roundtrip_preserves_decimal_precision() -> None:
     )
     assert isinstance(amount_cell.value, Decimal)
     assert amount_cell.value == Decimal("100.00")
+    # Relation provenance fields recovered from developer metadata must
+    # round-trip strictly: the apply adapter writes provenance / source
+    # year / periods / resolved_at; the pull adapter must read them back.
+    prior = next(edit for edit in roundtripped.relation_edits if edit.relation == "relation.cross.prior-period")
+    assert prior.provenance == "local_filing"
+    assert prior.source_filing_year == 2024
+    assert prior.source_periods == ("1T", "2T", "3T")
+    assert prior.resolved_at == datetime(2025, 4, 10, 12, 0, 0, tzinfo=UTC)
 
 
 def test_pull_result_round_trip_dropped_required_field_raises() -> None:
