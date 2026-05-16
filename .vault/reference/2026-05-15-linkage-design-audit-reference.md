@@ -687,15 +687,24 @@ becomes the operational tracker once an ADR commits to a subset.
 
 This appendix updates the coverage table earlier in this document
 with the verdict of a scripted re-audit (`scratch/reaudit_inventory.py`)
-that re-walked a 35-row sample against current code. The earlier
-"98 / 102 closed (96%)" claim was extrapolated from inventory
-edits rather than verified; the re-audit found that ~31% of the
-claimed-fixed rows in the sample are not actually fixed. The
-numerators below reflect the **verified** structural delivery only.
-Class-level numerators count inventory rows in the taxonomy class
-whose underlying defect has been structurally remediated and
-confirmed by the re-audit. Rows the re-audit script did not visit
-are excluded from these numerators.
+that re-walked **all 102 inventory rows** against current code.
+The earlier "98 / 102 closed (96%)" claim was extrapolated from
+inventory edits rather than verified.
+
+**Verified closure: 48 / 102 (47%)**. Real numbers across all
+rows:
+
+| verdict           | count | share |
+|-------------------|------:|------:|
+| verified          |    48 |   47% |
+| regressed         |    30 |   29% |
+| partial           |    16 |   16% |
+| open              |     2 |    2% |
+| wontfix-confirmed |     4 |    4% |
+| unverified        |     2 |    2% |
+
+Numerators in the per-class table below reflect verified
+structural delivery only; partials are not counted.
 
 | Class | Verified closures (re-audit sample) | Notes |
 |-------|--------------------------------------|-------|

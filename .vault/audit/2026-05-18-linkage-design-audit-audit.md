@@ -28,72 +28,121 @@ across all four waves measured against the 102-row inventory.
 
 The previous draft of this audit stated "98 of 102 inventory rows
 closed (96%)" based on inventory edits, not verification. A
-scripted re-audit (`scratch/reaudit_inventory.py`) re-walked a
-35-row sample against current code and found:
+scripted re-audit (`scratch/reaudit_inventory.py`) now covers
+**all 102 inventory rows** and produces verdicts derived from
+greps against current code:
 
-- **14 rows verified** (anti-pattern actually gone).
-- **11 rows regressed** (claim of `fixed` was wrong; the
-  anti-pattern is still present at the named site).
-- **3 rows partial** (a structural ingredient landed; the full fix
-  did not).
-- 2 rows `open` and 4 rows `wontfix-confirmed` (these match the
-  inventory's labels).
+| verdict           | count | share |
+|-------------------|------:|------:|
+| verified          |    48 |   47% |
+| regressed         |    30 |   29% |
+| partial           |    16 |   16% |
+| open              |     2 |    2% |
+| wontfix-confirmed |     4 |    4% |
+| unverified        |     2 |    2% |
 
-On the sampled subset, ~31% of `fixed` claims do not hold up.
-67 rows of the 102 were not visited by the re-audit script and
-remain unverified.
+Honest closure: **48 of 102 rows verified (47%)**, not 96%.
+Counting partials as "ingredient delivered" raises that to
+**64 of 102 (63%)**. The 30 regressed rows are fixes that were
+claimed `fixed (Wave N)` in the inventory but whose anti-pattern
+is still present at the named site.
 
-### Severity: high — structural fixes that did not land
+### Severity: high — full list of 30 regressed rows
 
-The following defect-class closures named in the reference
-appendix are wrong as written; the underlying anti-pattern is
-still present in current code:
+Every row listed below was marked `fixed (Wave N)` in the inventory
+but the re-audit found the original anti-pattern still present at
+the named site:
 
-- **Discriminated selector unions** on `DataBindingDefinition.selector`,
-  `RelationDefinition.source_revision_selector`, and
-  `period_alignment` (T-01 / T-02). All three are still bare
-  `Mapping[str, ...]`. The `BindingSelector` discriminated `Union`
-  does not exist in `_schema.py`.
-- **Snapshot referential-integrity gate** (T-03 / T-09). The
-  `_check_all_id_references` validator is defined and tested but
-  **not invoked by `build_snapshot`**. Production builds do not
-  run the 21-typed-ID existence check; only the dedicated tests do.
-- **`WorkflowStep.details` discriminated union** (operator surface).
-  `details: dict[str, str] | None` is still in `_models.py`. The
-  `WorkflowStepDetails` union does not exist.
-- **FilingDraft typed identity**. `subject_tax_id` was claimed
-  added; the field present is `profile_tax_id: str` (bare `str`).
-  `schema_version: str` is still bare `str`; no `snapshot_ref`
-  field exists.
-- **Oracle typing**. `LiveCrossReferenceDecision.oracle_id: str | None`
-  remains untyped. No `OracleFilingObservation` subtype exists.
-- **CLI `--relation` flag on `work calculate`** is absent. The
-  application-layer plumbing (`relation_values` kwarg) is present;
-  the CLI surface is not.
-- **`_load_snapshot` error handling** on the Google export path
-  does not import or catch `RegistrySnapshotError`.
-- **`RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS`** hardcoded mapping is
-  still present in `domain/renta/_ledger_expenses.py`.
+- **Typed observation envelope (Wave 3, T-01).** `R003`, `R004`,
+  `R005` — `RegistryCalculationResult.values` and
+  `CalculationRevision.casilla_values` still typed as
+  `Mapping[str, Decimal]`. The `CasillaObservation` envelope landed
+  on `RegistryFilingObservation` (`R002` verified) but the
+  surrounding calculation-result types kept the bare mapping.
+- **Discriminated selector unions (Wave 1, T-01 / T-02).** `R007`,
+  `R008`, `R009`, `R011` — `DataBindingDefinition.selector`,
+  `RelationDefinition.source_revision_selector`, `period_alignment`,
+  `RelationDefinition.source_output` all still bare `Mapping[str, ...]`
+  or `CasillaId | str` union escapes.
+- **Relation/selector internal plumbing (Wave 1/3).** `R014` —
+  `str(relation.source_output)` coercion still present; `R016` —
+  `binding.selector.get("source_modelo")` raw lookup still
+  present; `R020` — `WorkbookParityReference.fixture_id` still
+  bare `str`; `R024` — two `CasillaSchema` shapes still coexist
+  (`runtime.py` + `_protocols.py`).
+- **Renta constant (Wave 2, T-05).** `R025`, `R026` —
+  `RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS` constant still defined
+  in `domain/renta/_ledger_expenses.py` and the validator still
+  uses it. Note: the cross-package re-validation in
+  `_bindings.py` (`R027`) IS removed.
+- **Errors / CLI surfaces (Wave 3/4).** `R045` —
+  `RegistryValidationError` has no typed context field. `R050`,
+  `R053` — `--relation` flag absent on `work calculate`;
+  `RegistrySnapshotError` not caught in Google export. `R054` —
+  `str(work_unit.modelo)` coercion still present.
+- **Type-escape rows (Wave 1, T-11).** `R057`, `R058`, `R059` —
+  `tomllib.loads`, session_store, authenticator still produce
+  `dict[str, Any]`. `R068`, `R070` — magic-key `.get()` calls
+  in `sede/_declarations.py` and `master_key`. `R073` —
+  `CounterpartAggregationObservation.source_kind` still bare
+  `str`. `R075` — public query selector still `Mapping[str, object]`.
+  `R077` — `cast(RuleKind, ...)` still present.
+- **Export plumbing (Wave 3, T-12).** `R089` —
+  `fields_by_casilla: Mapping[str, ...]` still bare.
+- **Workflow + filing (Wave 4, F14 / F20).** `R096` —
+  `FilingDraft.schema_version: str` still bare; no `snapshot_ref`.
+  `R097` — `WorkflowStep.details: dict[str, str] | None` still
+  raw. `R101` — `LiveCrossReferenceDecision.oracle_id: str | None`
+  still untyped. `R102` — no `OracleFilingObservation` subtype.
 
-### Severity: informational — what actually did land
+### Severity: medium — 16 partial closures
 
-- `CasillaObservation` typed envelope on
-  `RegistryFilingObservation` (verified).
-- `AlgorithmBindingDefinition` target / inputs / outputs typed
-  (verified).
-- `_MODELO_100` gate replaced with capability lookup in
-  `_borrador_binding` (verified).
-- `_renta_ledger` modelo default removed (verified).
-- Registry → `domain/renta` import inversion (verified).
-- `RentaCCAA` migration to canonical CCAA enum (verified).
-- `SchemaEnvelope` adoption at 20+ `register_schema` sites in
-  `_modelo_payloads.py` (verified).
-- No raw-dict `_emit` calls remain in `_modelo.py` (verified).
-- Justificante repository reads `output_sensitivity` from schema
-  (verified).
-- `--prefill-relations` flag on `aeat config export` (verified).
-- M303 `form_number` declared; M100 2025 per-casilla `export_refs`
-  present (verified).
+These rows landed a structural ingredient but the full fix did not.
+Most actionable next-phase candidates: `R017`, `R018`, `R021` —
+the validation functions are defined and tested but **not wired
+into `build_snapshot`**, so production registry builds skip
+referential-integrity and relation-closure gates entirely. `R046`,
+`R047`, `R048` — CLI / review / diagnostics surfaces partially
+expose `legal_refs` / cross-domain checks. `R095` — only
+`profile_tax_id: str` (bare) on `FilingDraft`, not the typed
+`SubjectTaxId` claimed.
+
+Full partial list: `R006`, `R017`, `R018`, `R019`, `R021`, `R022`,
+`R046`, `R047`, `R048`, `R060`, `R064`, `R067`, `R069`, `R071`,
+`R074`, `R095`.
+
+### Severity: informational — the 48 verified rows
+
+What did actually land, grouped by theme:
+
+- **Typed envelope foundation.** `CasillaObservation` on
+  `RegistryFilingObservation` (`R002`); `AlgorithmBindingDefinition`
+  targets / inputs / outputs typed (`R012`).
+- **Capability flags replace hard-wired modelo strings.**
+  `_borrador_binding` migrated to capability lookup (`R034`);
+  renta-ledger default removed (`R035`); `ModeloDefinition.output_sensitivity`
+  schema field exists (`R036`); justificante repository reads
+  `output_sensitivity` from schema (`R037`).
+- **Registry → renta import inversion** (`R028`).
+- **CCAA canonicalisation.** RentaCCAA migrated (`R029`); CCAA
+  factories present (`R030`); M100 2025 dispatch labels canonical
+  (`R031`).
+- **Registry data backfill.** M100 2025 per-casilla `export_refs`
+  (`R032`); M100 cross_model_output backfilled for 2020-2024
+  (`R033`); M303 `form_number` declared (`R098`).
+- **CLI typed payloads + emit.** `SchemaEnvelope` at 20+
+  `register_schema` sites (`R043`); no raw-dict `_emit` in
+  `_modelo.py` (`R044`); `--prefill-relations` flag on Google
+  export (`R052`); `relation_values` plumbed through application
+  (`R051`); typed work_unit_id parse (`R055`).
+- **Other cross-domain.** `core/identity` propagated to filing
+  (`R094`); informative-class registry-wide invariant (`R100`);
+  `LiveCrossReferenceDecision` / `DependencyClassificationDefinition`
+  separation (`R099`).
+- **Type-escape clean-up (T-11 subset).** R001, R010, R015, R023,
+  R027, R056, R061-R063, R065-R066, R072, R076, R078-R086, R087,
+  R090-R093 — 25 individual type-escape and validation-erasure
+  sites confirmed clean.
 
 ### Severity: medium — gate status snapshot
 
