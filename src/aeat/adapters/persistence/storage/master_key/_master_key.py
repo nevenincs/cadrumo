@@ -44,7 +44,6 @@ import base64
 import binascii
 import contextlib
 import getpass
-import json
 import os
 import secrets
 from collections.abc import Callable
@@ -132,6 +131,19 @@ class _KdfParameters(BaseModel):
     time_cost: int
     parallelism: int
     salt_b64: str
+
+
+class _KdfVersionEnvelope(BaseModel):
+    """Minimal version-gate model for the master.kdf preflight check.
+
+    Reads only the ``version`` field and tolerates the rest of the
+    document so a v1 file does not trigger a strict-pydantic
+    ValidationError before the version-mismatch runbook can fire.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    version: int | str | None = None
 
 
 def _b64encode(data: bytes) -> str:
@@ -574,16 +586,12 @@ class FileFallbackMasterKeyProvider:
         # produces a typed runbook-pointing error instead of a raw
         # ValidationError.
         try:
-            preview = json.loads(raw_text)
-        except json.JSONDecodeError as exc:
+            preview = _KdfVersionEnvelope.model_validate_json(raw_text)
+        except ValidationError as exc:
             raise MasterKeyUnavailableError(
-                f"failed to parse KDF parameters at {self._kdf_params_path}: {exc}",
+                f"master.kdf at {self._kdf_params_path} must be a JSON object: {exc}",
             ) from exc
-        if not isinstance(preview, dict):
-            raise MasterKeyUnavailableError(
-                f"master.kdf at {self._kdf_params_path} must be a JSON object, got {type(preview).__name__}",
-            )
-        on_disk_version = preview.get("version")
+        on_disk_version = preview.version
         if on_disk_version != _KDF_PARAMS_VERSION:
             raise MasterKeyKdfVersionError(
                 f"master.kdf at {self._kdf_params_path} is version {on_disk_version!r}; "

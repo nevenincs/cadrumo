@@ -27,6 +27,7 @@ import json
 import re
 from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -615,13 +616,13 @@ def _parse_listbox(
 
     action_indexes = _listbox_action_indexes(listbox)
     if action_indexes is None:
-        justificante_index = 7
-        archive_index = 8
-        declaration_copy_index = None
+        justificante_index: int | None = 7
+        archive_index: int | None = 8
+        declaration_copy_index: int | None = None
     else:
-        justificante_index = action_indexes.get("justificante")
-        archive_index = action_indexes.get("submitted_file")
-        declaration_copy_index = action_indexes.get("declaration_pdf")
+        justificante_index = action_indexes.justificante
+        archive_index = action_indexes.submitted_file
+        declaration_copy_index = action_indexes.declaration_pdf
     if justificante_index is None:
         raise SedeParseError("declaraciones response missing justificante column")
     items = listbox.find_all(class_=_has_class("z-listitem"))
@@ -668,20 +669,35 @@ def _parse_listbox(
     return tuple(rows)
 
 
-def _listbox_action_indexes(listbox) -> dict[str, int] | None:
-    indexes: dict[str, int] = {}
+@dataclass(slots=True, frozen=True)
+class _ListboxActionIndexes:
+    """Column indexes for the three action links in the declaraciones listbox."""
+
+    justificante: int | None = None
+    submitted_file: int | None = None
+    declaration_pdf: int | None = None
+
+
+def _listbox_action_indexes(listbox) -> _ListboxActionIndexes | None:
     headers = listbox.find_all(class_=_has_class("z-listheader"))
     if not headers:
         return None
+    justificante: int | None = None
+    submitted_file: int | None = None
+    declaration_pdf: int | None = None
     for index, header in enumerate(headers):
         label = normalize_response_text(header.get_text(" ", strip=True))
         if "justificante" in label:
-            indexes["justificante"] = index
+            justificante = index
         elif "fichero presentado" in label or ("descarga" in label and "fichero" in label):
-            indexes["submitted_file"] = index
+            submitted_file = index
         elif "copia" in label and "declaracion" in label:
-            indexes["declaration_pdf"] = index
-    return indexes
+            declaration_pdf = index
+    return _ListboxActionIndexes(
+        justificante=justificante,
+        submitted_file=submitted_file,
+        declaration_pdf=declaration_pdf,
+    )
 
 
 def _cell_text(cell_texts: list[str], index: int | None) -> str | None:
