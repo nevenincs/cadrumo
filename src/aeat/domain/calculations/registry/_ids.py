@@ -33,6 +33,7 @@ type ExportLayoutId = Annotated[str, Field(min_length=1, max_length=128, pattern
 type RecordId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type ExportFieldId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
 type WorkbookFixtureId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
+type OracleId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 
 
 def is_registry_id(value: str) -> bool:

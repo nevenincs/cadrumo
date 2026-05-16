@@ -68,8 +68,8 @@ def relation_source_requirements(
             str(relation.source_modelo),
             source_year,
             tuple(source_periods),
-            str(relation.source_output),
-            str(relation.dependency_role),
+            relation.source_output,
+            relation.dependency_role,
             str(classification.treatment),
             str((relation.aggregation or {}).get("op", "copy")),
         )
