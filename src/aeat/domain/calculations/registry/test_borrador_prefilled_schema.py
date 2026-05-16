@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import ValidatedRegistryAuthority
 from ._schema import DataBindingDefinition
@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _modelo_100_bindings() -> dict[str, DataBindingDefinition]:
-    authority = ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+    authority = ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
     snapshot = authority.snapshot("100", filing_year=2025, period="0A")
     return {str(binding.id): binding for binding in snapshot.revision.bindings}
 

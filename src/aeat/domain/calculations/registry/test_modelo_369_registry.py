@@ -7,7 +7,7 @@ from datetime import date
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import (
     ModeloDefinition,
@@ -38,7 +38,7 @@ _FORBIDDEN_REMOTE_ACTIONS = frozenset(
 
 
 def _load_modelo_369() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(m for m in modelos if m.id == "369")
     return modelo, catalogues
 
@@ -48,7 +48,7 @@ def test_modelo_369_validator_accepts_committed_definition() -> None:
     assert modelo.id == "369"
     assert modelo.revisions, "369 must declare at least one revision"
     assert any(rev.casillas for rev in modelo.revisions.values()), "369 must declare casillas"
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_modelo(modelo)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
 def test_modelo_369_metadata_matches_hac_610_2021() -> None:
@@ -111,7 +111,7 @@ def test_modelo_369_snapshot_selects_scheme_by_period(period: str, expected_revi
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period=period,
     )
@@ -133,7 +133,7 @@ def test_modelo_369_snapshots_carry_scheme_authority(period: str, revision_id: s
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period=period,
         revision_id=revision_id,
@@ -560,7 +560,7 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period="1T",
         revision_id="esquema-union",
@@ -639,7 +639,7 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
     snapshot = build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period="01",
         revision_id="esquema-importacion",

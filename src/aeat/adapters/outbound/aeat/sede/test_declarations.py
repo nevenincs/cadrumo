@@ -33,7 +33,7 @@ from aeat.application.filing import (
     export_draft,
 )
 from aeat.core.config import Settings
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.calculations.registry import (
     RegistryValidationError,
     build_snapshot,
@@ -75,9 +75,9 @@ _MODELO_130_COMPUTED_CASILLAS = frozenset({"03", "04", "07", "09", "11", "12", "
 
 
 def _modelo_snapshot(modelo_id: str, *, filing_year: int, period: str):
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == modelo_id)
-    return build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period=period)
+    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period=period)
 
 
 def _modelo_130_snapshot():

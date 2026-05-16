@@ -17,7 +17,7 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._formula_runtime import calculate_registry_snapshot
 from ._loader import load_registry_tree
@@ -25,7 +25,7 @@ from ._snapshot import build_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def test_modelo_180_copies_three_relations_into_three_output_casillas() -> None:
@@ -59,7 +59,7 @@ def test_modelo_180_copies_three_relations_into_three_output_casillas() -> None:
     # three distinct output casillas. The fixture values are chosen
     # distinct so a swapped-wiring regression (e.g., base-total threaded
     # with the perceptores value) fails loudly.
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="0A")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="0A")
     relation_values = {
         "modelo-180-rel-115-perceptores-anual": Decimal("5"),
         "modelo-180-rel-115-base-anual": Decimal("2149.75"),

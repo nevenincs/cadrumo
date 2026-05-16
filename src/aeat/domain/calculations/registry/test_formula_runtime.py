@@ -53,7 +53,7 @@ def _modelo_180_snapshot_with_inactive_relation_period(
     return build_snapshot(
         widened_modelo,
         registry_authority.catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2026,
         period="1T",
     )

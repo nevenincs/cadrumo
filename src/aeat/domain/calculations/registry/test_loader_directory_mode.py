@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._errors import RegistryLoadError
 from ._loader import load_modelo_directory, load_modelo_file
@@ -62,7 +62,7 @@ def test_directory_mode_round_trip_matches_single_file_for_real_modelo(tmp_path:
     blocker for migrating modelos to directory mode.
     """
 
-    single_file_path = PROJECT_ROOT / "registry" / "aeat" / "modelos" / modelo_filename
+    single_file_path = bundled_path("registry", "aeat", "modelos") / modelo_filename
     if not single_file_path.is_file():
         pytest.skip(f"{modelo_filename} not present")
     expected = load_modelo_file(single_file_path)
@@ -174,8 +174,8 @@ def test_modelo_100_does_not_coexist_in_both_layouts() -> None:
       3. Delete ``100.toml`` and commit the merged directory state.
     """
 
-    single_file = PROJECT_ROOT / "registry" / "aeat" / "modelos" / "100.toml"
-    directory = PROJECT_ROOT / "registry" / "aeat" / "modelos" / "100"
+    single_file = bundled_path("registry", "aeat", "modelos", "100.toml")
+    directory = bundled_path("registry", "aeat", "modelos", "100")
     if single_file.is_file() and directory.is_dir():
         raise AssertionError(
             "modelo 100 exists in BOTH single-file and directory layouts:\n"
@@ -208,7 +208,7 @@ def test_modelo_100_directory_layout_loads_with_expected_revisions() -> None:
     revision file under ``revisions/``.
     """
 
-    directory = PROJECT_ROOT / "registry" / "aeat" / "modelos" / "100"
+    directory = bundled_path("registry", "aeat", "modelos", "100")
     if not (directory / "manifest.toml").is_file():
         pytest.skip("modelo 100 not in directory layout")
     modelo = load_modelo_directory(directory)

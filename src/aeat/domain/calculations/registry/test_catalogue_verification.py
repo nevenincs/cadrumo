@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._citation_blocklist import _KNOWN_BAD_CITATIONS, find_known_bad
 from ._coverage import audit_registry_model_law_coverage
@@ -23,26 +23,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _catalogues() -> RegistryCatalogues:
-    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return catalogues
 
 
 def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
 
     assert len(modelos) >= 5, "committed registry must declare several modelos"
     assert len(catalogues.legal) > 0, "shared legal catalogue must be non-empty"
     assert len(catalogues.sources) > 0, "shared sources catalogue must be non-empty"
-    verify_legal_catalogue(catalogues.legal, source_root=PROJECT_ROOT)
+    verify_legal_catalogue(catalogues.legal, source_root=bundled_path())
     verify_source_catalogue(PROJECT_ROOT, catalogues.sources)
-    validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)
+    validator = RegistryValidator(catalogues, source_root=bundled_path())
     validator.validate_registry(modelos)
 
 
 def test_committed_registry_tree_has_required_model_law_coverage() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
 
-    audit = audit_registry_model_law_coverage(modelos, catalogues, source_root=PROJECT_ROOT)
+    audit = audit_registry_model_law_coverage(modelos, catalogues, source_root=bundled_path())
 
     assert audit.ok
     assert audit.required_gate_failures == ()
@@ -55,7 +55,7 @@ def test_committed_registry_tree_has_required_model_law_coverage() -> None:
 
 
 def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
-    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     checked: list[str] = []
 
     for source in catalogues.sources.values():
@@ -83,8 +83,8 @@ def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
 
 
 def test_modelo_100_record_design_sources_match_manifest() -> None:
-    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
-    manifest_path = PROJECT_ROOT / "corpus" / "aeat_official" / "disenos_registro" / "modelo_100" / "manifest.json"
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    manifest_path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_100", "manifest.json")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}
     checked: list[str] = []
@@ -113,11 +113,11 @@ def test_modelo_100_record_design_sources_match_manifest() -> None:
 
 
 def test_renta_manual_sources_match_manifest() -> None:
-    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     sources_by_path = {source.corpus_path: source for source in catalogues.sources.values()}
     manual_roots = (
-        PROJECT_ROOT / "corpus" / "manuals" / "renta" / "2025" / "part1",
-        PROJECT_ROOT / "corpus" / "manuals" / "renta" / "2025" / "part2-deducciones-autonomicas",
+        bundled_path("corpus", "manuals", "renta", "2025", "part1"),
+        bundled_path("corpus", "manuals", "renta", "2025", "part2-deducciones-autonomicas"),
     )
     checked: list[str] = []
 
@@ -139,7 +139,7 @@ def test_renta_manual_sources_match_manifest() -> None:
 
 
 def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:
-    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
 
     assert {
         "ley-35-2006:art-27",
@@ -148,7 +148,7 @@ def test_renta_economic_activity_legal_basis_links_to_corpus() -> None:
         "ley-35-2006:art-31",
         "ley-35-2006:art-32",
     }.issubset(catalogues.legal)
-    verify_legal_catalogue(catalogues.legal, source_root=PROJECT_ROOT)
+    verify_legal_catalogue(catalogues.legal, source_root=bundled_path())
 
 
 def _legal_reference(

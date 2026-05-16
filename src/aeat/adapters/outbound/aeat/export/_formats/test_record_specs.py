@@ -38,7 +38,7 @@ from types import ModuleType
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.calculations.registry._authority import ValidatedRegistryAuthority
 
 from . import RecordFieldSpec, validate_record_specs
@@ -140,7 +140,7 @@ def _get_period(mod: ModuleType) -> str:
 
 
 def _registry() -> ValidatedRegistryAuthority:
-    return ValidatedRegistryAuthority.load(PROJECT_ROOT / "registry" / "aeat", source_root=PROJECT_ROOT)
+    return ValidatedRegistryAuthority.load(bundled_path("registry", "aeat"), source_root=bundled_path())
 
 
 # ---------------------------------------------------------------------------

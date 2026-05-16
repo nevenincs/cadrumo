@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree
 from ._coverage import build_model_law_coverage_ledger
@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _modelos_by_id() -> tuple[dict[str, ModeloDefinition], RegistryCatalogues]:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return {modelo.id: modelo for modelo in modelos}, catalogues
 
 
@@ -29,7 +29,7 @@ def _snapshot(period: str = "alta") -> RegistrySnapshot:
     return build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2025,
         period=period,
     )

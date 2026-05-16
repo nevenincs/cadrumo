@@ -59,7 +59,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 def _load_registry() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     from aeat.core.paths import PROJECT_ROOT
 
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     return modelos, catalogues
 
 

@@ -7,7 +7,7 @@ import sys
 
 import pytest
 
-from ...core.config import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ..calculations.registry import load_registry_tree
 from . import (
     UserProfileRegistryContractSeverity,
@@ -35,7 +35,7 @@ def test_schema_selector_index_contains_modelo_profile_namespaces() -> None:
 
 def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema() -> None:
     schema = load_user_profile_schema()
-    modelos, _catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
 
     report = validate_user_profile_registry_contract(modelos, schema)
 

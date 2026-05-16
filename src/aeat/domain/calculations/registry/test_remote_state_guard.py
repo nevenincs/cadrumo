@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import AnyUrl
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree
 from ._errors import RegistrySnapshotError, RegistryValidationError
@@ -225,7 +225,7 @@ def test_remote_state_guard_allows_public_read_surface_get() -> None:
 
 
 def test_committed_static_cross_references_reject_remote_state_operations() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
 
     policies = [
         remote_state_policy_from_cross_reference(cross_reference)
@@ -267,7 +267,7 @@ def _first_snapshot(modelo, catalogues):
             return build_snapshot(
                 modelo,
                 catalogues,
-                source_root=PROJECT_ROOT,
+                source_root=bundled_path(),
                 filing_year=year,
                 period=revision.period_selector.periods[0],
             )

@@ -9,7 +9,7 @@ import pytest
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree, resolve_export_layout
 from ._record_design import (
@@ -21,9 +21,9 @@ from ._record_design import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_MODELO_131_WORKBOOK_ROOT = PROJECT_ROOT / "corpus" / "aeat_official" / "disenos_registro" / "modelo_131" / "files"
+_MODELO_131_WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_131", "files")
 _MODELO_131_CURRENT = _MODELO_131_WORKBOOK_ROOT / "01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx"
-_RECORD_DESIGN_ROOT = PROJECT_ROOT / "corpus" / "aeat_official" / "disenos_registro"
+_RECORD_DESIGN_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
 
 
 def test_modelo_131_current_record_design_exposes_dpa_and_did_records() -> None:
@@ -250,7 +250,7 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
 
 
 def test_registered_record_design_sources_are_discovered_and_parseable() -> None:
-    _, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     sources = {
         source_id: PROJECT_ROOT / source.corpus_path
         for source_id, source in catalogues.sources.items()
@@ -339,9 +339,9 @@ def test_modelo_131_registry_bindings_cover_official_structured_records(
     workbook_name: str,
     source_ref: str,
 ) -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period="1T")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     sheets = {sheet.name: sheet for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)}
 
     official_fields = {
@@ -369,9 +369,9 @@ def test_modelo_131_registry_bindings_cover_official_structured_records(
 
 
 def test_modelo_131_2024_dpa_territorial_reduction_fields_carry_specific_legal_basis() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2024, period="4T")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="4T")
     sheets = {
         sheet.name: sheet
         for sheet in extract_record_design_workbook(
@@ -408,9 +408,9 @@ def test_modelo_131_registry_bindings_cover_official_page_one_structured_fields(
     filing_year: int,
     workbook_name: str,
 ) -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period="1T")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     page = next(
         sheet
         for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)
@@ -459,9 +459,9 @@ def test_modelo_131_page_one_la_palma_fields_are_year_scoped(
     workbook_name: str,
     palma_legal_ref: str,
 ) -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period="1T")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     page = next(
         sheet
         for sheet in extract_record_design_workbook(_MODELO_131_WORKBOOK_ROOT / workbook_name)
@@ -483,9 +483,9 @@ def test_modelo_131_page_one_la_palma_fields_are_year_scoped(
 
 
 def test_modelo_131_current_page_one_agrarian_fields_preserve_territorial_meaning() -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=2026, period="1T")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="1T")
     page = next(sheet for sheet in extract_record_design_workbook(_MODELO_131_CURRENT) if sheet.name == "Pág. 1")
     descriptions = {(field.offset, field.length): field.description for field in page.fields}
 
@@ -505,9 +505,9 @@ def test_modelo_131_current_page_one_agrarian_fields_preserve_territorial_meanin
 
 @pytest.mark.parametrize("filing_year", [2024, 2025, 2026])
 def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_year: int) -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period="1T")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     layout = resolve_export_layout(snapshot).layout
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
 
@@ -539,9 +539,9 @@ def test_modelo_131_export_records_derive_fields_from_reviewed_bindings(filing_y
 
 @pytest.mark.parametrize("filing_year", [2023, 2024, 2025, 2026])
 def test_modelo_131_submitted_file_profiles_target_exported_casillas(filing_year: int) -> None:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "131")
-    snapshot = build_snapshot(modelo, catalogues, source_root=PROJECT_ROOT, filing_year=filing_year, period="1T")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period="1T")
     layout = resolve_export_layout(snapshot).layout
     profile = next(
         item

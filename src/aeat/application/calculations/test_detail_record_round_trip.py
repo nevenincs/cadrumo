@@ -19,7 +19,7 @@ from decimal import Decimal
 
 import pytest
 
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ...domain.calculations.registry._bindings import (
     resolve_atribucion_binding_row_values,
     resolve_foreign_asset_binding_row_values,
@@ -47,7 +47,7 @@ class _Cell:
 
 
 def _modelo(modelo_id: str, revision_id: str):
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     return next(m for m in modelos if m.id == modelo_id).revisions[revision_id]
 
 

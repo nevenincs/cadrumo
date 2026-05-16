@@ -75,4 +75,4 @@ def test_validator_rejects_schedule_periods_outside_revision_selector(
     mutated_modelo = modelo.model_copy(update={"revisions": {revision.id: mutated_revision}})
 
     with pytest.raises(RegistryValidationError, match="declares periods outside revision selector"):
-        RegistryValidator(registry_authority.catalogues, source_root=PROJECT_ROOT).validate_modelo(mutated_modelo)
+        RegistryValidator(registry_authority.catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)

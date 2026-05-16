@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook, load_workbook
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._loader import load_registry_tree
 from ._schema import RegistrySnapshot
@@ -48,12 +48,12 @@ def _write_formula_workbook(path: Path) -> None:
 
 
 def _committed_modelo_130_snapshot() -> RegistrySnapshot:
-    modelos, catalogues = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "130")
     return build_snapshot(
         modelo,
         catalogues,
-        source_root=PROJECT_ROOT,
+        source_root=bundled_path(),
         filing_year=2026,
         period="1T",
     )
@@ -78,7 +78,7 @@ def test_scan_workbook_discovers_xlsx_formula_cells(tmp_path: Path) -> None:
 
 
 def test_committed_record_design_xlsx_is_not_tax_formula_parity_oracle() -> None:
-    root = PROJECT_ROOT / "corpus" / "aeat_official"
+    root = bundled_path("corpus", "aeat_official")
     workbook_path = (
         root
         / "disenos_registro"
@@ -96,7 +96,7 @@ def test_committed_record_design_xlsx_is_not_tax_formula_parity_oracle() -> None
 
 
 def test_committed_modelo_131_record_designs_cover_current_and_historical_layouts() -> None:
-    root = PROJECT_ROOT / "corpus" / "aeat_official"
+    root = bundled_path("corpus", "aeat_official")
     workbook_paths = (
         root / "disenos_registro" / "modelo_131" / "files" / "05-131-ejercicios-2019-a-2023-116-kb-xlsx.xlsx",
         root
@@ -129,7 +129,7 @@ def test_committed_modelo_131_record_designs_cover_current_and_historical_layout
 
 
 def test_committed_binary_xls_converts_to_layout_evidence_only() -> None:
-    root = PROJECT_ROOT / "corpus" / "aeat_official"
+    root = bundled_path("corpus", "aeat_official")
     workbook_path = (
         root
         / "disenos_registro"
@@ -149,7 +149,7 @@ def test_committed_binary_xls_converts_to_layout_evidence_only() -> None:
 
 
 def test_committed_binary_xls_context_yields_temporary_xlsx_workbook() -> None:
-    root = PROJECT_ROOT / "corpus" / "aeat_official"
+    root = bundled_path("corpus", "aeat_official")
     workbook_path = (
         root
         / "disenos_registro"

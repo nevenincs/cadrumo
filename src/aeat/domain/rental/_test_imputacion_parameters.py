@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 from aeat.domain.rental._aggregates import (
     CATASTRAL_REVISION_LOOKBACK_YEARS,
     IMPUTACION_RATE_OLD_OR_NO_REVISION,
@@ -28,7 +28,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _load_irpf_toml() -> dict[str, dict[str, dict[str, str]]]:
-    path = PROJECT_ROOT / "registry" / "aeat" / "legal" / "irpf.toml"
+    path = bundled_path("registry", "aeat", "legal", "irpf.toml")
     with path.open("rb") as handle:
         return tomllib.load(handle)
 
@@ -91,8 +91,8 @@ def test_lirpf_art_85_parameter_record_is_frozen() -> None:
 
 
 def test_lirpf_art_85_corpus_excerpt_is_present() -> None:
-    excerpt = Path("corpus/normatives/html/ley-35-2006-art-85.html")
-    assert excerpt.exists(), "LIRPF art. 85 BOE excerpt must live under corpus/normatives/html/"
+    excerpt = bundled_path("corpus", "normatives", "html", "ley-35-2006-art-85.html")
+    assert excerpt.exists(), "the LIRPF art. 85 BOE excerpt must be present in the bundled normatives corpus"
     body = excerpt.read_text(encoding="utf-8")
     assert "Imputación de rentas inmobiliarias" in body
     assert "1,1 por ciento" in body

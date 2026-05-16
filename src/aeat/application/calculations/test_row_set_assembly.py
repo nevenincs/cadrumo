@@ -16,7 +16,7 @@ from decimal import Decimal
 
 import pytest
 
-from ...core.paths import PROJECT_ROOT
+from ...core.resources import bundled_path
 from ...domain.calculations.registry._errors import RegistryValidationError
 from ...domain.calculations.registry._loader import load_registry_tree
 from ._row_set_assembly import (
@@ -46,7 +46,7 @@ class _Cell:
 
 
 def _modelo(modelo_id: str, revision_id: str):
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     return next(m for m in modelos if m.id == modelo_id).revisions[revision_id]
 
 

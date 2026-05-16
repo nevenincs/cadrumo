@@ -111,10 +111,12 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
 
     target = manifest_path(paths)
     text = target.read_text(encoding="utf-8")
-    # tomllib.loads returns dict[str, Any] by definition; the dict is
-    # immediately passed to a strict pydantic model on the next line,
-    # so the Any propagation stops at this boundary without a domain leak.
-    payload = tomllib.loads(text)
+    # ``tomllib.loads`` is typed ``dict[str, Any]`` upstream by stdlib
+    # convention; we narrow to ``dict[str, object]`` here so the
+    # ``Any`` lasts a single expression and never escapes this
+    # function. The dict is handed straight to a strict pydantic
+    # model on the next line, so the boundary is one line wide.
+    payload: dict[str, object] = dict(tomllib.loads(text))
     # TOML carries no native null; an absent ``last_unlocked_at`` key on disk
     # signals "never unlocked" and is hydrated to ``None`` at the boundary so
     # the strict pydantic model still rejects unknown keys.

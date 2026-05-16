@@ -168,9 +168,9 @@ def test_verdict_parser_negative_marker_wins_over_positive_token() -> None:
 # AEAT changes the response phrasing, this suite breaks loudly.
 # ---------------------------------------------------------------------------
 
-from aeat.core.paths import PROJECT_ROOT as _PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
-_GROI_RESPONSE_SAMPLES_DIR = _PROJECT_ROOT / "corpus" / "aeat_official" / "groi_response_samples"
+_GROI_RESPONSE_SAMPLES_DIR = bundled_path("corpus", "aeat_official", "groi_response_samples")
 
 
 def _discover_groi_response_samples() -> list[tuple[str, str]]:

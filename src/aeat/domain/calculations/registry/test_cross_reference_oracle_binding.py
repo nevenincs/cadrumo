@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import RegistryValidationError
 from ._loader import load_registry_tree
@@ -21,7 +21,7 @@ from ._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def _committed_cross_reference() -> LiveCrossReferenceDecision:
@@ -105,7 +105,7 @@ def test_registry_rejects_duplicate_oracle_binding_within_a_revision() -> None:
     duplicate_revision = _revision_with_cross_references(revision, (twin_a, twin_b))
     duplicate_modelo = _modelo_with_revision(modelo, duplicate_revision)
 
-    validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)
+    validator = RegistryValidator(catalogues, source_root=bundled_path())
     with pytest.raises(RegistryValidationError, match="aeat-nif-iva-checker"):
         validator.validate_modelo(duplicate_modelo)
 
@@ -131,7 +131,7 @@ def test_registry_accepts_distinct_oracle_bindings_within_a_revision() -> None:
         "modelo-100-renta-web-open",
     }, "distinct revision must carry both oracle bindings"
 
-    validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)
+    validator = RegistryValidator(catalogues, source_root=bundled_path())
     validator.validate_modelo(distinct_modelo)
 
 
@@ -140,7 +140,7 @@ def test_registry_accepts_no_oracle_binding_anywhere() -> None:
 
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
     assert len(modelos) >= 5, "committed registry must declare a meaningful number of modelos"
-    validator = RegistryValidator(catalogues, source_root=PROJECT_ROOT)
+    validator = RegistryValidator(catalogues, source_root=bundled_path())
     validated = 0
     for modelo in modelos:
         validator.validate_modelo(modelo)

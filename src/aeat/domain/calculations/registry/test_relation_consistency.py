@@ -4,13 +4,13 @@ from collections.abc import Iterable
 
 import pytest
 
-from ....core.paths import PROJECT_ROOT
+from ....core.resources import bundled_path
 from . import load_registry_tree
 from ._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RelationDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 
 
 def test_registry_relations_reference_existing_modelo_outputs_and_target_bindings() -> None:

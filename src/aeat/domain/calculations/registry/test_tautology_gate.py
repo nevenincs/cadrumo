@@ -34,14 +34,14 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _load_modelo_100_formulas_2025() -> dict[str, dict]:
     data = tomllib.loads(
-        (PROJECT_ROOT / "registry" / "aeat" / "modelos" / "100" / "revisions" / "2025.toml").read_text(encoding="utf-8")
+        (bundled_path("registry", "aeat", "modelos", "100", "revisions", "2025.toml")).read_text(encoding="utf-8")
     )
     return {f["target"]: f for f in data["revisions"]["2025"].get("formulas", [])}
 

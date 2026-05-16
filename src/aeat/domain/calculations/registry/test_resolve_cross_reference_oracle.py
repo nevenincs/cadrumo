@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from ._aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ._errors import RegistryValidationError
@@ -217,7 +217,7 @@ def test_orphan_oracle_collector_returns_empty_when_every_oracle_is_bound() -> N
     binds both NIF-IVA (Modelo 349 IXVI) and GROI (Modelo 349 GROI), so
     a catalogue containing both produces no orphans."""
 
-    modelos, _ = load_registry_tree(PROJECT_ROOT / "registry" / "aeat")
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
     catalogue = LiveParityCatalogue()
     catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
     catalogue.register(GroiOracle(), environment="production")

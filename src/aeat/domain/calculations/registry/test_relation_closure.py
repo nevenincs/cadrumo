@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.core.paths import PROJECT_ROOT
+from aeat.core.resources import bundled_path
 
 from . import RegistryCatalogues, RegistryLoadError, RegistryValidationError, load_modelo_file
 from ._bindings import CasillaObservation, RegistryFilingObservation
@@ -18,7 +18,7 @@ from ._validate import RegistryValidator
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_REGISTRY_ROOT = PROJECT_ROOT / "registry" / "aeat"
+_REGISTRY_ROOT = bundled_path("registry", "aeat")
 _MODELO_180_FILE = _REGISTRY_ROOT / "modelos" / "180.toml"
 
 
@@ -71,7 +71,7 @@ def test_registry_validator_checks_cross_model_relation_closure() -> None:
         "at least one modelo must declare cross-model relations for closure validation to be meaningful"
     )
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
 
 
 def test_modelo_180_relation_source_requirements_identify_source_filings() -> None:
@@ -79,7 +79,7 @@ def test_modelo_180_relation_source_requirements_identify_source_filings() -> No
     modelo = _modelo(modelos, "180")
     revision = modelo.revisions["2023-y-siguientes"]
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
     requirements = relation_source_requirements(revision, filing_year=2026, period="0A")
 
     assert len(requirements) == 3
@@ -101,7 +101,7 @@ def test_relation_source_requirements_obey_target_periods() -> None:
     modelo = _modelo(modelos, "180")
     revision = modelo.revisions["2023-y-siguientes"]
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
 
     assert relation_source_requirements(revision, filing_year=2026, period="1T") == ()
 
@@ -111,7 +111,7 @@ def test_relation_observation_resolution_obeys_target_periods() -> None:
     modelo = _modelo(modelos, "180")
     revision = modelo.revisions["2023-y-siguientes"]
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
 
     assert resolve_relation_values_from_observations(revision, (), filing_year=2026, period="1T") == {}
 
@@ -122,7 +122,7 @@ def test_modelo_180_relations_resolve_from_observed_source_filings() -> None:
     revision = modelo.revisions["2023-y-siguientes"]
     observations = _modelo_115_observations()
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
     values = resolve_relation_values_from_observations(
         revision,
         observations,
@@ -143,7 +143,7 @@ def test_relation_observation_resolution_fails_when_required_source_period_is_mi
     revision = modelo.revisions["2023-y-siguientes"]
     observations = tuple(item for item in _modelo_115_observations() if item.period != "4T")
 
-    RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(modelos)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(modelos)
 
     with pytest.raises(RegistryValidationError, match="expected one observed filing"):
         resolve_relation_values_from_observations(revision, observations, filing_year=2026, period="0A")
@@ -158,7 +158,7 @@ def test_registry_validator_rejects_relation_to_unknown_source_modelo() -> None:
     mutated_modelo = _with_revision(modelo, mutated_revision)
 
     with pytest.raises(RegistryValidationError, match="unknown source modelo"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
             _replace_modelo(modelos, mutated_modelo)
         )
 
@@ -172,7 +172,7 @@ def test_registry_validator_rejects_relation_source_period_outside_source_revisi
     mutated_modelo = _with_revision(modelo, mutated_revision)
 
     with pytest.raises(RegistryValidationError, match="does not support source periods"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
             _replace_modelo(modelos, mutated_modelo)
         )
 
@@ -192,7 +192,7 @@ def test_registry_validator_rejects_cross_model_relation_years_without_source_re
     mutated_target = _with_revision(target_modelo, widened_revision)
 
     with pytest.raises(RegistryValidationError, match="lacks source revision year coverage for 2014-2022"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry((source_modelo, mutated_target))
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry((source_modelo, mutated_target))
 
 
 def test_registry_validator_rejects_relation_to_unknown_source_output() -> None:
@@ -204,7 +204,7 @@ def test_registry_validator_rejects_relation_to_unknown_source_output() -> None:
     mutated_modelo = _with_revision(modelo, mutated_revision)
 
     with pytest.raises(RegistryValidationError, match="has no source output"):
-        RegistryValidator(catalogues, source_root=PROJECT_ROOT).validate_registry(
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_registry(
             _replace_modelo(modelos, mutated_modelo)
         )
 
