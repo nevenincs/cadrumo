@@ -155,3 +155,84 @@ def test_filing_record_catalogue_survives_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_filing_record_catalogue_supersession_chain_drift_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: corrupting the supersession chain must surface.
+
+    Persists a supersession chain (SUPERSEDED + CURRENT for the same
+    ``(bucket, modelo, year, period)`` tuple), then surgically mutates
+    the encrypted JSON envelope to flip the SUPERSEDED record's status
+    to CURRENT — creating two CURRENT records for the same tuple. The
+    catalogue's model_validator enforces "exactly one CURRENT per
+    tuple"; the mutated record must surface either as a
+    ValidationError or as strict inequality on the loaded catalogue.
+
+    If this test passes silently with two CURRENT records, the
+    catalogue boundary is tautological and every filing-record
+    roundtrip in the suite is suspect.
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ...adapters.persistence.storage.sql.session import session_scope
+    from ._filing_repository import _FILING_NAMESPACE, _FILING_OBJECT_KEY
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "filing-records-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+
+        repo = FilingRecordCatalogueRepository()
+        original = _populated_catalogue()
+        repo.save(original)
+
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _FILING_NAMESPACE,
+                SecureObjectRow.object_key == _FILING_OBJECT_KEY,
+            )
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            records = envelope["payload"]["records"]
+            superseded_id = next(
+                rid for rid, rec in records.items()
+                if rec["status"] == "superseded"
+            )
+            # Flip the SUPERSEDED record's status to CURRENT without
+            # clearing its supersession metadata. The catalogue's
+            # model_validator runs the "exactly one CURRENT per tuple"
+            # check AND the per-record "CURRENT must not carry
+            # supersession metadata" check; either invariant trips.
+            records[superseded_id]["status"] = "current"
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        regression_caught = False
+        try:
+            mutated = repo.load()
+        except Exception:  # noqa: BLE001 - boundary may raise different types
+            regression_caught = True
+        else:
+            if mutated != original:
+                regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: corrupting the supersession "
+            "chain did NOT surface on load. The catalogue boundary is "
+            "tautological and every filing-record roundtrip in the "
+            "suite is suspect."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
