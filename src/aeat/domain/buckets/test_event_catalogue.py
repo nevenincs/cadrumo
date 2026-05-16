@@ -384,3 +384,7 @@ def test_bucket_event_type_includes_ledger_ratios_mutation_kinds() -> None:
 
     assert BucketEventType.LEDGER_RATIOS_SET.value == "ledger.ratios.set"
     assert BucketEventType.LEDGER_RATIOS_UNSET.value == "ledger.ratios.unset"
+    assert (
+        BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING.value
+        == "ledger.ratios.census_override_warning"
+    )
