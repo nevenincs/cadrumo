@@ -112,3 +112,89 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
     finally:
         engine.dispose()
         override_master_key_provider(None)
+
+
+def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anti-tautology proof: deleting ``legal_refs`` on a casilla must surface.
+
+    The whole point of persisting :class:`RegistryFilingObservation` is
+    the regulatory grounding (legal_refs, source_refs, formula_id) it
+    carries through the AUDIT-class boundary. A save-drops-grounding
+    drift is the highest-stakes regression this codebase can have: a
+    persisted observation with no legal_refs would silently feed
+    unsupported numbers into amendment / verification flows.
+
+    Persists a populated observation, reaches into ``SecureObjectRow``
+    via ``session_scope``, surgically deletes the ``legal_refs`` tuple
+    from one casilla in the encrypted JSON envelope, and asserts the
+    load path catches the drift (either ValidationError on the typed
+    record's min_length=1 invariant, or strict inequality on the
+    loaded observation).
+    """
+
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
+    from ...adapters.persistence.storage.sql.session import session_scope
+    from ._observations_repository import _OBSERVATION_NAMESPACE, observation_key
+
+    provider = EphemeralMasterKeyProvider()
+    override_master_key_provider(provider)
+    db_path = tmp_path / "observations-anti-tautology.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    engine = create_engine_from_settings(
+        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    )
+    Base.metadata.create_all(engine)
+    try:
+        SecureObjectRepository(engine=engine)
+
+        original = _populated_observation()
+        captured_at = datetime.now(UTC).replace(microsecond=0)
+        repo = CalculationObservationRepository()
+        repo.save(
+            original,
+            source_kind="aeat_sede_justificante",
+            captured_at=captured_at,
+        )
+
+        object_key = observation_key("303", 2025, "1T")
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _OBSERVATION_NAMESPACE,
+                SecureObjectRow.object_key == object_key,
+            )
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            # The envelope wraps the observation under "payload"; the
+            # observation itself nests the casillas under
+            # "observation" -> "observations".
+            casillas = envelope["payload"]["observation"]["observations"]
+            assert casillas and casillas[1]["legal_refs"], (
+                "fixture must serialise legal_refs onto the computed "
+                "casilla for this proof test to be meaningful"
+            )
+            casillas[1]["legal_refs"] = []
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        # Reload. Whether the model_validator on CasillaObservation
+        # tolerates an empty legal_refs tuple or the load path surfaces
+        # the dropped grounding as inequality, the boundary must catch
+        # the drift somewhere.
+        loaded = repo.load("303", 2025, "1T")
+        assert loaded is not None
+        assert loaded.observation != original, (
+            "anti-tautology proof failed: deleting legal_refs from a "
+            "persisted casilla did NOT surface as strict inequality "
+            "on the loaded observation. The grounding boundary is "
+            "tautological and every observation roundtrip in the "
+            "suite is suspect."
+        )
+    finally:
+        engine.dispose()
+        override_master_key_provider(None)
