@@ -3,8 +3,8 @@
 The CLI exposes::
 
     aeat app overview status                                # bare readiness
-    aeat app overview status --calendar --from DATE --to DATE
     aeat app overview status --period {period} --verbose
+    aeat app overview calendar --from DATE --to DATE
 
 The calendar view uses a closed 4-state user-facing taxonomy that maps
 from the existing :class:`aeat.domain.deadlines.ObligationStatus`
@@ -109,7 +109,7 @@ def user_state_for(obligation_status: ObligationStatus) -> OverviewPeriodState:
 
 
 class OverviewCalendarRange(BaseModel):
-    """Inclusive date window for the ``overview status --calendar`` query.
+    """Inclusive date window for the ``overview calendar`` query.
 
     Attributes:
         from_date: Inclusive earliest date the operator wants to see
@@ -265,7 +265,7 @@ class CalendarCompleteness(BaseModel):
 
 
 class OverviewCalendar(BaseModel):
-    """Result of an ``aeat app overview status --calendar`` query.
+    """Result of an ``aeat app overview calendar`` query.
 
     Attributes:
         range: The :class:`OverviewCalendarRange` the query was scoped

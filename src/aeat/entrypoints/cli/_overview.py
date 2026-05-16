@@ -15,8 +15,6 @@ from ._common import (
     _canonical_period,
     _emit,
     _load_drafts,
-    _load_invoices,
-    _load_transactions,
     _parse_iso_date,
     _profile_to_autonomo,
     _state,
@@ -34,74 +32,17 @@ app = typer.Typer(
 @app.command("status", help=tr("cli.overview.status_help"))
 def overview_status(
     ctx: typer.Context,
-    calendar: bool = typer.Option(False, "--calendar", help=tr("cli.overview.calendar_help")),
     period: str | None = typer.Option(None, "--period", help=tr("cli.overview.period_help")),
-    from_date: str | None = typer.Option(None, "--from", help=tr("cli.overview.from_help")),
-    to_date: str | None = typer.Option(None, "--to", help=tr("cli.overview.to_help")),
     verbose: bool = typer.Option(False, "--verbose", help=tr("cli.overview.verbose_help")),
-    allow_incomplete: bool = typer.Option(
-        False,
-        "--allow-incomplete",
-        help=tr("cli.overview.allow_incomplete_help"),
-    ),
 ) -> None:
-    """Render workspace state, calendar view, or per-period detail."""
+    """Render workspace readiness or per-period detail.
+
+    The deadline-calendar surface that used to live behind `--calendar`
+    is now the first-class `aeat app overview calendar` verb per the
+    app-overview-shape ADR's Consequences section. No compatibility
+    shim is preserved; callers must use the dedicated verb.
+    """
     current = _state()
-    if calendar:
-        from ...domain.transactions import TransactionCatalogue
-
-        transactions = _load_transactions(current) if current.active_profile_bucket_id() else TransactionCatalogue()
-        invoices = _load_invoices()
-        drafts = _load_drafts()
-        if not from_date or not to_date:
-            raise _bad(tr("cli.overview.calendar_requires_dates"))
-        rng = OverviewCalendarRange(
-            from_date=_parse_iso_date(from_date, label="--from"),
-            to_date=_parse_iso_date(to_date, label="--to"),
-        )
-        from ...application.user_profile._projections import record_to_values
-
-        record = current.active_profile_record()
-        raw_values = record_to_values(record) if record is not None else None
-        cal: OverviewCalendar = build_overview_calendar(
-            _profile_to_autonomo(current),
-            rng,
-            today=_date.today(),
-            raw_values=raw_values,
-        )
-        if cal.warnings and not allow_incomplete:
-            warning_summary = ", ".join(warning.code for warning in cal.warnings)
-            raise _bad(
-                tr(
-                    "cli.overview.calendar_refused_incomplete",
-                    keys=warning_summary,
-                )
-            )
-        payload = {
-            "calendar": cal,
-            "transactions": len(transactions.transactions),
-            "invoices": len(invoices),
-            "drafts": len(drafts),
-        }
-        lines: list[str] = [tr("cli.overview.header")]
-        for entry in cal.entries:
-            lines.append(
-                f"{entry.modelo}\t{entry.period}\t{entry.user_state.value}\t{entry.opens_on.isoformat()}\t{entry.closes_on.isoformat()}"
-            )
-            if entry.recovery is not None:
-                band = entry.recovery.recargo_band
-                interest_marker = "+interest" if band.interest_applies else ""
-                lines.append(
-                    f"recovery\t{band.id}\t{band.surcharge_pct}%{interest_marker}\t{entry.recovery.next_command}"
-                )
-        for warning in cal.warnings:
-            lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
-        if cal.completeness.computable_modelos:
-            lines.append(
-                f"computable\t{len(cal.completeness.computable_modelos)}\tdefaulted\t{len(cal.completeness.defaulted_modelos)}"
-            )
-        _emit(ctx, payload, lines)
-        return
     if period is not None:
         drafts = _load_drafts()
         canonical = _canonical_period(period)

@@ -96,3 +96,22 @@ def test_backlog_late_count_matches_items_length() -> None:
     backlog = build_overview_backlog(_profile(), **_window_args())
 
     assert backlog.late_count == len(backlog.items)
+
+
+def test_backlog_default_lookback_is_365_days() -> None:
+    """When neither --from nor --to is supplied the window spans the
+    365 days preceding ``as_of`` through ``as_of`` itself.
+
+    Year-end as_of is chosen so the 365-day lookback stays inside a
+    single calendar year — multi-year windows trip the modelo 200
+    registry validation crash tracked as a cross-cutting follow-up,
+    so this test deliberately keeps the engine inside one year while
+    still exercising the default-window arithmetic in the service."""
+
+    from datetime import timedelta
+
+    as_of = date(2026, 12, 31)
+    backlog = build_overview_backlog(_profile(), as_of=as_of)
+
+    assert backlog.range.to_date == as_of
+    assert backlog.range.from_date == as_of - timedelta(days=365)

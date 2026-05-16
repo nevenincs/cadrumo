@@ -21,6 +21,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...domain.deadlines import AutonomoProfile, DeadlineEngine
+from ...domain.deadlines._errors import DeadlineValidationError, ScheduleComputationError
 from ._errors import OverviewExplainError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -127,7 +128,7 @@ def build_overview_explain(
     try:
         applicable = deadline_engine.applies_to(profile, modelo, year=resolved_year)
         rationale = deadline_engine.explain(profile, modelo, year=resolved_year)
-    except Exception as exc:
+    except (ScheduleComputationError, DeadlineValidationError) as exc:
         raise OverviewExplainError(
             f"could not evaluate modelo {modelo!r} for year {resolved_year}: {exc}",
         ) from exc
